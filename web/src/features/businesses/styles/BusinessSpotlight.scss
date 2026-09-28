@@ -1,0 +1,1553 @@
+/* ============================================================================
+   FOCKIS BUSINESS SPOTLIGHT
+   Business discovery rail for the Fockis Feed
+
+   FEATURES
+   - Horizontal business cards
+   - Cards never shrink
+   - Desktop scrollbar
+   - Mobile touch/swipe scrolling
+   - Business logo / cover image
+   - Category
+   - Location
+   - Special deal
+   - Deal expiration
+   - Phone / email
+   - Visit Website
+   - View Business
+============================================================================ */
+
+
+/* ============================================================================
+   SPOTLIGHT CONTAINER
+============================================================================ */
+
+.fk-business-spotlight {
+  position: relative;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  margin: 0 0 22px;
+
+  background: transparent;
+
+  overflow: visible;
+}
+
+
+/* ============================================================================
+   HEADER
+============================================================================ */
+
+.fk-business-spotlight__header {
+  width: 100%;
+  min-width: 0;
+
+  margin-bottom: 12px;
+
+  padding: 0 2px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+
+.fk-business-spotlight__heading {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+}
+
+
+.fk-business-spotlight__icon {
+  width: 40px;
+  height: 40px;
+
+  flex: 0 0 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background: var(--fk-fjord-soft);
+  color: var(--fk-fjord);
+
+  font-size: 20px;
+
+  user-select: none;
+}
+
+
+.fk-business-spotlight__title-group {
+  min-width: 0;
+}
+
+
+.fk-business-spotlight__title {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-size: 18px;
+  font-weight: 800;
+
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+
+.fk-business-spotlight__subtitle {
+  margin: 3px 0 0;
+
+  color: var(--fk-text-2);
+
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+
+/* ============================================================================
+   VIEW ALL BUTTON
+============================================================================ */
+
+.fk-business-spotlight__view-all {
+  flex: 0 0 auto;
+
+  padding: 7px 11px;
+
+  border: 0;
+  border-radius: 9px;
+
+  background: var(--fk-fjord-soft);
+  color: var(--fk-fjord);
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+
+.fk-business-spotlight__view-all:hover {
+  background: var(--fk-fjord);
+  color: #ffffff;
+}
+
+
+.fk-business-spotlight__view-all:active {
+  transform: scale(0.95);
+}
+
+
+.fk-business-spotlight__view-all:focus-visible {
+  outline: 2px solid var(--fk-fjord);
+  outline-offset: 2px;
+}
+
+
+/* ============================================================================
+   HORIZONTAL SCROLLER
+============================================================================ */
+
+.fk-business-spotlight__scroller {
+  position: relative;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: row;
+
+  align-items: stretch;
+  justify-content: flex-start;
+
+  gap: 12px;
+
+  flex-wrap: nowrap;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  padding:
+    2px
+    2px
+    14px;
+
+  box-sizing: border-box;
+
+  touch-action: pan-x;
+
+  -webkit-overflow-scrolling: touch;
+
+  overscroll-behavior-x: contain;
+
+  scroll-snap-type: x proximity;
+
+  scrollbar-width: auto;
+
+  scrollbar-color:
+    rgba(100, 116, 139, 0.70)
+    rgba(100, 116, 139, 0.14);
+}
+
+
+/* ============================================================================
+   DESKTOP SCROLLBAR
+============================================================================ */
+
+.fk-business-spotlight__scroller::-webkit-scrollbar {
+  width: 0;
+  height: 12px;
+
+  display: block;
+}
+
+
+.fk-business-spotlight__scroller::-webkit-scrollbar-track {
+  background: rgba(100, 116, 139, 0.12);
+
+  border-radius: 999px;
+
+  margin: 0 4px;
+}
+
+
+.fk-business-spotlight__scroller::-webkit-scrollbar-thumb {
+  min-width: 70px;
+
+  background: rgba(100, 116, 139, 0.68);
+
+  border-radius: 999px;
+
+  border: 3px solid var(--fk-bg);
+}
+
+
+.fk-business-spotlight__scroller::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.85);
+}
+
+
+.fk-business-spotlight__scroller::-webkit-scrollbar-thumb:active {
+  background: var(--fk-fjord);
+}
+
+
+.fk-business-spotlight__scroller::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+
+/* ============================================================================
+   BUSINESS CARD
+============================================================================ */
+
+.fk-business-card {
+  position: relative;
+
+  flex: 0 0 285px;
+  flex-shrink: 0;
+
+  width: 285px;
+  min-width: 285px;
+  max-width: 285px;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  scroll-snap-align: start;
+
+  background: var(--fk-surface);
+
+  border: 1px solid var(--fk-border);
+  border-radius: 17px;
+
+  box-shadow: var(--fk-shadow-sm);
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+
+.fk-business-card:hover {
+  transform: translateY(-2px);
+
+  box-shadow: var(--fk-shadow-md);
+
+  border-color: rgba(100, 116, 139, 0.35);
+}
+
+
+.fk-business-card:focus-within {
+  border-color: var(--fk-fjord);
+}
+
+
+.fk-business-card__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+
+/* ============================================================================
+   BUSINESS COVER
+============================================================================ */
+
+.fk-business-card__cover {
+  position: relative;
+
+  width: 100%;
+  height: 145px;
+
+  flex: 0 0 145px;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--fk-fjord-soft),
+      var(--fk-sunken)
+    );
+}
+
+
+.fk-business-card__cover-image {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+
+  transition: transform 250ms ease;
+}
+
+
+.fk-business-card:hover
+.fk-business-card__cover-image {
+  transform: scale(1.035);
+}
+
+
+.fk-business-card__cover-placeholder {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--fk-fjord-soft),
+      var(--fk-sunken)
+    );
+
+  color: var(--fk-fjord);
+
+  font-size: 42px;
+}
+
+
+/* ============================================================================
+   COVER OVERLAY
+============================================================================ */
+
+.fk-business-card__cover::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.02),
+      rgba(0, 0, 0, 0.18)
+    );
+}
+
+
+/* ============================================================================
+   BUSINESS LOGO
+============================================================================ */
+
+.fk-business-card__logo {
+  position: absolute;
+
+  left: 12px;
+  bottom: -20px;
+
+  width: 58px;
+  height: 58px;
+
+  z-index: 3;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border-radius: 16px;
+
+  background: var(--fk-surface);
+
+  border: 3px solid var(--fk-surface);
+
+  color: var(--fk-fjord);
+
+  font-size: 20px;
+  font-weight: 800;
+
+  box-shadow:
+    0 4px 14px rgba(15, 23, 42, 0.16);
+}
+
+
+.fk-business-card__logo img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+
+/* ============================================================================
+   VERIFIED BADGE
+============================================================================ */
+
+.fk-business-card__verified {
+  position: absolute;
+
+  right: 10px;
+  top: 10px;
+
+  z-index: 4;
+
+  width: 27px;
+  height: 27px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  background: var(--fk-fjord);
+
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  box-shadow:
+    0 3px 10px rgba(15, 23, 42, 0.2);
+}
+
+
+/* ============================================================================
+   CATEGORY BADGE
+============================================================================ */
+
+.fk-business-card__category {
+  position: absolute;
+
+  left: 10px;
+  top: 10px;
+
+  z-index: 4;
+
+  max-width: 65%;
+
+  padding: 5px 8px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: rgba(15, 23, 42, 0.78);
+
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 0.05em;
+
+  text-transform: uppercase;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+
+/* ============================================================================
+   CARD CONTENT
+============================================================================ */
+
+.fk-business-card__content {
+  min-width: 0;
+
+  padding: 30px 12px 12px;
+
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* ============================================================================
+   BUSINESS NAME
+============================================================================ */
+
+.fk-business-card__name {
+  min-width: 0;
+
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-size: 16px;
+  font-weight: 800;
+
+  line-height: 1.25;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+.fk-business-card__name-link {
+  color: inherit;
+
+  text-decoration: none;
+}
+
+
+.fk-business-card__name-link:hover {
+  color: var(--fk-fjord);
+}
+
+
+/* ============================================================================
+   BUSINESS CATEGORY
+============================================================================ */
+
+.fk-business-card__type {
+  margin-top: 4px;
+
+  color: var(--fk-fjord);
+
+  font-size: 10px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.06em;
+}
+
+
+/* ============================================================================
+   BUSINESS DESCRIPTION
+============================================================================ */
+
+.fk-business-card__description {
+  margin: 7px 0 0;
+
+  color: var(--fk-text-2);
+
+  font-size: 11px;
+
+  line-height: 1.45;
+
+  display: -webkit-box;
+
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+
+  overflow: hidden;
+}
+
+
+/* ============================================================================
+   LOCATION
+============================================================================ */
+
+.fk-business-card__location {
+  min-width: 0;
+
+  margin-top: 10px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  color: var(--fk-text-2);
+
+  font-size: 10px;
+
+  line-height: 1.35;
+}
+
+
+.fk-business-card__location-icon {
+  flex: 0 0 17px;
+
+  width: 17px;
+
+  text-align: center;
+}
+
+
+.fk-business-card__location-text {
+  min-width: 0;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================================
+   CONTACT INFORMATION
+============================================================================ */
+
+.fk-business-card__contacts {
+  margin-top: 8px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+
+.fk-business-card__contact {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  color: var(--fk-text-2);
+
+  font-size: 10px;
+
+  text-decoration: none;
+
+  line-height: 1.3;
+}
+
+
+.fk-business-card__contact:hover {
+  color: var(--fk-fjord);
+}
+
+
+.fk-business-card__contact-icon {
+  width: 17px;
+
+  flex: 0 0 17px;
+
+  text-align: center;
+}
+
+
+.fk-business-card__contact-value {
+  min-width: 0;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================================
+   SPECIAL DEAL
+============================================================================ */
+
+.fk-business-card__deal {
+  position: relative;
+
+  margin-top: 11px;
+
+  padding: 10px;
+
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--fk-fjord-soft),
+      var(--fk-surface)
+    );
+
+  border: 1px solid var(--fk-border);
+}
+
+
+.fk-business-card__deal-label {
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+
+  color: var(--fk-fjord);
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 0.06em;
+
+  text-transform: uppercase;
+}
+
+
+.fk-business-card__deal-title {
+  margin: 4px 0 0;
+
+  color: var(--fk-text);
+
+  font-size: 12px;
+  font-weight: 800;
+
+  line-height: 1.3;
+}
+
+
+.fk-business-card__deal-discount {
+  margin-top: 3px;
+
+  color: var(--fk-text);
+
+  font-size: 13px;
+  font-weight: 900;
+}
+
+
+.fk-business-card__deal-expires {
+  margin-top: 4px;
+
+  color: var(--fk-text-2);
+
+  font-size: 9px;
+
+  line-height: 1.3;
+}
+
+
+/* ============================================================================
+   DEAL ACTIVE BADGE
+============================================================================ */
+
+.fk-business-card__deal-status {
+  position: absolute;
+
+  top: 9px;
+  right: 9px;
+
+  padding: 4px 6px;
+
+  border-radius: 999px;
+
+  background: var(--fk-fjord);
+
+  color: #ffffff;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+}
+
+
+/* ============================================================================
+   SOCIAL LINKS
+============================================================================ */
+
+.fk-business-card__socials {
+  margin-top: 9px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+}
+
+
+.fk-business-card__social-link {
+  width: 28px;
+  height: 28px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 28px;
+
+  border: 1px solid var(--fk-border);
+  border-radius: 8px;
+
+  background: var(--fk-bg);
+
+  color: var(--fk-text-2);
+
+  font-size: 11px;
+
+  text-decoration: none;
+
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+
+.fk-business-card__social-link:hover {
+  background: var(--fk-fjord-soft);
+
+  color: var(--fk-fjord);
+
+  border-color: var(--fk-fjord);
+
+  transform: translateY(-1px);
+}
+
+
+/* ============================================================================
+   CARD FOOTER
+============================================================================ */
+
+.fk-business-card__footer {
+  min-width: 0;
+
+  margin-top: 12px;
+
+  padding-top: 10px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  border-top: 1px solid var(--fk-border);
+}
+
+
+/* ============================================================================
+   VISIT WEBSITE
+============================================================================ */
+
+.fk-business-card__website {
+  min-width: 0;
+
+  flex: 1;
+
+  height: 34px;
+
+  padding: 0 10px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  border: 0;
+  border-radius: 9px;
+
+  background: var(--fk-fjord);
+
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  text-decoration: none;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+
+.fk-business-card__website:hover {
+  opacity: 0.9;
+}
+
+
+.fk-business-card__website:active {
+  transform: scale(0.96);
+}
+
+
+.fk-business-card__website:focus-visible {
+  outline: 2px solid var(--fk-fjord);
+
+  outline-offset: 2px;
+}
+
+
+/* ============================================================================
+   VIEW BUSINESS
+============================================================================ */
+
+.fk-business-card__view {
+  flex: 0 0 auto;
+
+  height: 34px;
+
+  padding: 0 9px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--fk-border);
+
+  border-radius: 9px;
+
+  background: var(--fk-surface);
+
+  color: var(--fk-text);
+
+  font-size: 10px;
+  font-weight: 700;
+
+  text-decoration: none;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+
+.fk-business-card__view:hover {
+  background: var(--fk-surface-hover);
+
+  color: var(--fk-fjord);
+
+  border-color: var(--fk-fjord);
+}
+
+
+/* ============================================================================
+   SPOTLIGHT FOOTER
+============================================================================ */
+
+.fk-business-spotlight__footer {
+  margin-top: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.fk-business-spotlight__more {
+  padding: 8px 14px;
+
+  border: 1px solid var(--fk-border);
+
+  border-radius: 10px;
+
+  background: var(--fk-surface);
+
+  color: var(--fk-text);
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+
+.fk-business-spotlight__more:hover {
+  background: var(--fk-fjord-soft);
+
+  color: var(--fk-fjord);
+
+  border-color: var(--fk-fjord);
+}
+
+
+/* ============================================================================
+   EMPTY STATE
+============================================================================ */
+
+.fk-business-spotlight__empty {
+  width: 100%;
+
+  padding: 28px 20px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  background: var(--fk-surface);
+
+  border: 1px dashed var(--fk-border);
+
+  border-radius: 16px;
+}
+
+
+.fk-business-spotlight__empty-icon {
+  width: 44px;
+  height: 44px;
+
+  margin-bottom: 9px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background: var(--fk-fjord-soft);
+
+  font-size: 20px;
+}
+
+
+.fk-business-spotlight__empty-title {
+  margin: 0 0 5px;
+
+  color: var(--fk-text);
+
+  font-size: 14px;
+  font-weight: 800;
+}
+
+
+.fk-business-spotlight__empty-text {
+  max-width: 400px;
+
+  margin: 0;
+
+  color: var(--fk-text-2);
+
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+
+/* ============================================================================
+   LOADING SKELETON
+============================================================================ */
+
+.fk-business-card--loading {
+  pointer-events: none;
+}
+
+
+.fk-business-skeleton {
+  background:
+    linear-gradient(
+      90deg,
+      var(--fk-sunken) 0%,
+      var(--fk-surface-hover) 50%,
+      var(--fk-sunken) 100%
+    );
+
+  background-size: 200% 100%;
+
+  animation:
+    fk-business-skeleton-loading
+    1.4s
+    ease-in-out
+    infinite;
+}
+
+
+.fk-business-skeleton--cover {
+  width: 100%;
+  height: 145px;
+}
+
+
+.fk-business-skeleton--logo {
+  width: 58px;
+  height: 58px;
+
+  position: absolute;
+
+  left: 12px;
+  bottom: -20px;
+
+  border-radius: 16px;
+}
+
+
+.fk-business-skeleton--line {
+  width: 70%;
+  height: 12px;
+
+  margin-bottom: 8px;
+
+  border-radius: 7px;
+}
+
+
+.fk-business-skeleton--line-small {
+  width: 45%;
+  height: 9px;
+
+  border-radius: 7px;
+}
+
+
+@keyframes fk-business-skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+
+/* ============================================================================
+   TABLET
+============================================================================ */
+
+@media (max-width: 900px) {
+
+  .fk-business-spotlight {
+    margin-bottom: 18px;
+  }
+
+
+  .fk-business-card {
+    flex: 0 0 270px;
+
+    width: 270px;
+    min-width: 270px;
+    max-width: 270px;
+  }
+}
+
+
+/* ============================================================================
+   MOBILE
+============================================================================ */
+
+@media (max-width: 767px) {
+
+  .fk-business-spotlight {
+    width: 100%;
+    max-width: 100%;
+
+    margin-bottom: 16px;
+
+    overflow: visible;
+  }
+
+
+  .fk-business-spotlight__header {
+    margin-bottom: 10px;
+
+    padding:
+      0
+      2px;
+
+    gap: 8px;
+  }
+
+
+  .fk-business-spotlight__icon {
+    width: 36px;
+    height: 36px;
+
+    flex-basis: 36px;
+
+    border-radius: 10px;
+
+    font-size: 18px;
+  }
+
+
+  .fk-business-spotlight__title {
+    font-size: 16px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+  }
+
+
+  .fk-business-spotlight__subtitle {
+    max-width: 220px;
+
+    font-size: 10px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+  }
+
+
+  .fk-business-spotlight__view-all {
+    padding: 6px 9px;
+
+    font-size: 10px;
+  }
+
+
+  /* ========================================================================
+     MOBILE SCROLLER
+  ======================================================================== */
+
+  .fk-business-spotlight__scroller {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+
+    display: flex !important;
+
+    flex-direction: row !important;
+
+    flex-wrap: nowrap !important;
+
+    align-items: stretch;
+
+    justify-content: flex-start;
+
+    gap: 12px;
+
+    padding:
+      2px
+      12px
+      16px
+      2px;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+
+    touch-action: pan-x !important;
+
+    -webkit-overflow-scrolling: touch;
+
+    overscroll-behavior-x: contain;
+
+    scroll-snap-type: x mandatory;
+
+    scrollbar-width: auto;
+
+    scrollbar-color:
+      rgba(100, 116, 139, 0.70)
+      rgba(100, 116, 139, 0.14);
+
+    -ms-overflow-style: auto;
+  }
+
+
+  .fk-business-spotlight__scroller::-webkit-scrollbar {
+    width: 0;
+
+    height: 12px;
+
+    display: block;
+  }
+
+
+  .fk-business-spotlight__scroller::-webkit-scrollbar-track {
+    background: rgba(100, 116, 139, 0.12);
+
+    border-radius: 999px;
+
+    margin: 0 4px;
+  }
+
+
+  .fk-business-spotlight__scroller::-webkit-scrollbar-thumb {
+    min-width: 60px;
+
+    background: rgba(100, 116, 139, 0.68);
+
+    border-radius: 999px;
+
+    border: 3px solid var(--fk-bg);
+  }
+
+
+  .fk-business-spotlight__scroller::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.85);
+  }
+
+
+  /* ========================================================================
+     MOBILE CARD
+  ======================================================================== */
+
+  .fk-business-card {
+    flex: 0 0 78vw !important;
+
+    flex-shrink: 0 !important;
+
+    width: 78vw !important;
+    min-width: 78vw !important;
+    max-width: 78vw !important;
+
+    border-radius: 15px;
+
+    scroll-snap-align: start;
+  }
+
+
+  .fk-business-card__cover {
+    height: 145px;
+
+    flex-basis: 145px;
+  }
+
+
+  .fk-business-card__content {
+    padding:
+      30px
+      11px
+      11px;
+  }
+
+
+  .fk-business-card__name {
+    font-size: 15px;
+  }
+
+
+  .fk-business-card__description {
+    font-size: 10px;
+  }
+
+
+  .fk-business-card__location {
+    font-size: 10px;
+  }
+
+
+  .fk-business-card__contact {
+    font-size: 10px;
+  }
+
+
+  .fk-business-card__deal {
+    padding: 9px;
+  }
+
+
+  .fk-business-card__deal-title {
+    font-size: 11px;
+  }
+
+
+  .fk-business-card__deal-discount {
+    font-size: 12px;
+  }
+
+
+  .fk-business-card__footer {
+    gap: 6px;
+  }
+
+
+  .fk-business-card__website,
+  .fk-business-card__view {
+    height: 33px;
+
+    font-size: 9px;
+  }
+}
+
+
+/* ============================================================================
+   SMALL MOBILE
+============================================================================ */
+
+@media (max-width: 480px) {
+
+  .fk-business-spotlight {
+    width: 100%;
+    max-width: 100%;
+  }
+
+
+  .fk-business-spotlight__header {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+
+  .fk-business-spotlight__scroller {
+    width: 100vw !important;
+    max-width: 100vw !important;
+
+    margin-left: 0;
+    margin-right: 0;
+
+    padding-left: 14px;
+    padding-right: 14px;
+    padding-bottom: 16px;
+
+    gap: 12px;
+  }
+
+
+  .fk-business-card {
+    flex: 0 0 82vw !important;
+
+    width: 82vw !important;
+    min-width: 82vw !important;
+    max-width: 82vw !important;
+  }
+
+
+  .fk-business-card__cover {
+    height: 140px;
+
+    flex-basis: 140px;
+  }
+
+
+  .fk-business-card__logo {
+    width: 54px;
+    height: 54px;
+
+    left: 11px;
+    bottom: -19px;
+  }
+
+
+  .fk-business-card__content {
+    padding:
+      29px
+      11px
+      11px;
+  }
+
+
+  .fk-business-card__footer {
+    margin-top: 10px;
+  }
+
+
+  .fk-business-card__website {
+    height: 32px;
+
+    padding:
+      0
+      8px;
+
+    font-size: 9px;
+  }
+
+
+  .fk-business-card__view {
+    height: 32px;
+
+    padding:
+      0
+      8px;
+
+    font-size: 9px;
+  }
+
+
+  .fk-business-card__social-link {
+    width: 27px;
+    height: 27px;
+
+    flex-basis: 27px;
+  }
+}
+
+
+/* ============================================================================
+   REDUCED MOTION
+============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .fk-business-card,
+  .fk-business-card__cover-image,
+  .fk-business-spotlight__view-all,
+  .fk-business-spotlight__more,
+  .fk-business-card__website,
+  .fk-business-card__view,
+  .fk-business-card__social-link {
+    transition: none;
+  }
+
+
+  .fk-business-skeleton {
+    animation: none;
+  }
+
+
+  .fk-business-spotlight__scroller {
+    scroll-behavior: auto;
+  }
+}

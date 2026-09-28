@@ -1,0 +1,1700 @@
+/* ============================================================
+   FOCKIS ORGANIZATION IDENTITY
+   SECURITY & SETTINGS
+
+   Complete styling for:
+   - OrganizationIdentitySettingsPage.tsx
+   - SecurityPolicyCard.tsx
+   - Organization domain checker
+   - Selectable domain extensions
+
+   ============================================================ */
+
+.identity-layout {
+  --fockis-primary: #005a8d;
+  --fockis-primary-light: #0879b5;
+  --fockis-primary-dark: #003f63;
+
+  --fockis-gold: #f6b62c;
+  --fockis-gold-light: #ffd76a;
+  --fockis-gold-dark: #a86f00;
+
+  --fockis-ink: #172b4d;
+  --fockis-muted: #66788a;
+  --fockis-muted-light: #8a9aaa;
+
+  --fockis-bg: #f3f6f9;
+  --fockis-card: #ffffff;
+
+  --fockis-border: #dce4ea;
+  --fockis-border-dark: #c8d4dc;
+
+  --fockis-success: #16803c;
+  --fockis-success-bg: #edf9f1;
+
+  --fockis-danger: #c62828;
+  --fockis-danger-bg: #fff1f1;
+
+  --fockis-shadow:
+    0 10px 30px rgba(23, 43, 77, 0.07);
+
+  min-height: 100%;
+  width: 100%;
+  background: var(--fockis-bg);
+}
+
+/* ============================================================
+   PAGE MAIN
+   ============================================================ */
+
+.identity-main {
+  min-width: 0;
+  padding: 32px;
+}
+
+/* ============================================================
+   PAGE HEADER
+   ============================================================ */
+
+.identity-header {
+  max-width: 1180px;
+  margin: 0 auto 28px;
+}
+
+.identity-header .eyebrow,
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0 8px;
+  color: var(--fockis-primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.identity-header h1 {
+  margin: 0;
+  color: var(--fockis-ink);
+  font-size: clamp(28px, 3vw, 38px);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.identity-header > p {
+  max-width: 780px;
+  margin: 10px 0 0;
+  color: var(--fockis-muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+/* ============================================================
+   NOTICE
+   ============================================================ */
+
+.notice {
+  max-width: 1180px;
+  margin: 0 auto 22px;
+  padding: 14px 16px;
+  border: 1px solid var(--fockis-border);
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--fockis-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   ORGANIZATION DOMAIN CARD
+   ============================================================ */
+
+.domain-settings-card {
+  max-width: 1180px;
+  margin: 0 auto 24px;
+  overflow: hidden;
+  border: 1px solid var(--fockis-border);
+  border-radius: 18px;
+  background: var(--fockis-card);
+  box-shadow: var(--fockis-shadow);
+}
+
+.domain-settings-header {
+  padding: 24px 26px 20px;
+  border-bottom: 1px solid var(--fockis-border);
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #f8fbfd 100%
+    );
+}
+
+.domain-settings-header h2 {
+  margin: 0;
+  color: var(--fockis-ink);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.domain-settings-header p {
+  max-width: 720px;
+  margin: 8px 0 0;
+  color: var(--fockis-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   DOMAIN CHECK AREA
+   ============================================================ */
+
+.domain-check {
+  padding: 24px 26px;
+}
+
+.domain-check label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--fockis-ink);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.domain-check-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+/* ============================================================
+   DOMAIN INPUT WRAPPER
+
+   The input and extension selector visually form
+   one combined domain control.
+
+   Example:
+
+   ┌──────────────────────────────────────────────┐
+   │ springfieldchurch                  .org  ▼   │
+   └──────────────────────────────────────────────┘
+
+   ============================================================ */
+
+.domain-input-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+/* ============================================================
+   DOMAIN INPUT
+   ============================================================ */
+
+.domain-input-wrapper input,
+.domain-check-row input {
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  box-sizing: border-box;
+
+  /*
+   * Leave enough room for the extension selector.
+   */
+  padding: 0 128px 0 14px;
+
+  border: 1px solid var(--fockis-border-dark);
+  border-radius: 10px;
+
+  outline: none;
+  background: #ffffff;
+
+  color: var(--fockis-ink);
+
+  font: inherit;
+  font-size: 14px;
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.domain-input-wrapper input::placeholder,
+.domain-check-row input::placeholder {
+  color: var(--fockis-muted-light);
+}
+
+.domain-input-wrapper input:hover,
+.domain-check-row input:hover {
+  border-color: #b8c7d1;
+}
+
+.domain-input-wrapper input:focus,
+.domain-check-row input:focus {
+  border-color: var(--fockis-primary);
+
+  box-shadow:
+    0 0 0 3px rgba(0, 90, 141, 0.12);
+}
+
+.domain-input-wrapper input:disabled,
+.domain-check-row input:disabled {
+  cursor: not-allowed;
+  background: #f2f5f7;
+  color: var(--fockis-muted-light);
+  opacity: 0.75;
+}
+
+/* ============================================================
+   DOMAIN SUFFIX SELECTOR
+
+   This replaces the old fixed .fockis.com suffix.
+
+   The select is positioned inside the same input control.
+
+   Example:
+
+   springfieldchurch       .org ▼
+
+   ============================================================ */
+
+.domain-suffix-select {
+  position: absolute;
+
+  top: 50%;
+  right: 6px;
+
+  width: 112px;
+  height: 34px;
+
+  transform: translateY(-50%);
+
+  box-sizing: border-box;
+
+  padding: 0 24px 0 9px;
+
+  border: 0;
+  border-left: 1px solid var(--fockis-border);
+
+  border-radius: 0 7px 7px 0;
+
+  outline: none;
+
+  background: #ffffff;
+
+  color: var(--fockis-ink);
+
+  cursor: pointer;
+
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+
+  appearance: auto;
+
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.domain-suffix-select:hover {
+  color: var(--fockis-primary);
+  background: #f8fbfd;
+}
+
+.domain-suffix-select:focus {
+  color: var(--fockis-primary);
+
+  box-shadow:
+    0 0 0 2px rgba(0, 90, 141, 0.12);
+}
+
+.domain-suffix-select:disabled {
+  cursor: not-allowed;
+  background: #f2f5f7;
+  color: var(--fockis-muted-light);
+  opacity: 0.75;
+}
+
+/*
+ * Keep the native option list readable.
+ */
+.domain-suffix-select option {
+  background: #ffffff;
+  color: var(--fockis-ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ============================================================
+   DOMAIN BUTTON
+   ============================================================ */
+
+.domain-check-row button {
+  min-width: 160px;
+  height: 46px;
+
+  padding: 0 18px;
+
+  border: 0;
+  border-radius: 10px;
+
+  background: var(--fockis-primary);
+  color: #ffffff;
+
+  cursor: pointer;
+
+  font: inherit;
+  font-size: 14px;
+  font-weight: 750;
+
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.domain-check-row button:hover:not(:disabled) {
+  background: var(--fockis-primary-dark);
+
+  box-shadow:
+    0 6px 16px rgba(0, 63, 99, 0.18);
+}
+
+.domain-check-row button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.domain-check-row button:focus-visible {
+  outline: none;
+
+  box-shadow:
+    0 0 0 3px rgba(0, 90, 141, 0.16),
+    0 6px 16px rgba(0, 63, 99, 0.12);
+}
+
+.domain-check-row button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+/* ============================================================
+   DOMAIN HELP
+   ============================================================ */
+
+.domain-help {
+  margin: 8px 0 0;
+  color: var(--fockis-muted-light);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.domain-help strong {
+  color: var(--fockis-muted);
+  font-weight: 700;
+}
+
+/* ============================================================
+   DOMAIN PREVIEW
+   ============================================================ */
+
+.domain-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  margin-top: 16px;
+  padding: 14px 16px;
+
+  border: 1px solid var(--fockis-border);
+  border-radius: 10px;
+
+  background: var(--fockis-bg);
+}
+
+.domain-preview__label {
+  color: var(--fockis-muted);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.domain-preview__value {
+  min-width: 0;
+
+  color: var(--fockis-primary-dark);
+
+  font-size: 14px;
+  font-weight: 800;
+
+  word-break: break-all;
+
+  text-align: right;
+}
+
+/* ============================================================
+   DOMAIN STATUS
+   ============================================================ */
+
+.domain-available,
+.domain-unavailable {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 12px;
+
+  margin: 16px 0 0;
+  padding: 14px 16px;
+
+  border-radius: 12px;
+
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.domain-available {
+  border: 1px solid #b9e4c7;
+  background: var(--fockis-success-bg);
+  color: var(--fockis-success);
+}
+
+.domain-unavailable {
+  border: 1px solid #efc3c3;
+  background: var(--fockis-danger-bg);
+  color: var(--fockis-danger);
+}
+
+.domain-status-icon {
+  display: inline-flex;
+
+  flex: 0 0 auto;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 24px;
+  height: 24px;
+
+  border-radius: 50%;
+
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.domain-available .domain-status-icon {
+  background: #d7f2df;
+}
+
+.domain-unavailable .domain-status-icon {
+  background: #f8dada;
+}
+
+.domain-available strong,
+.domain-unavailable strong {
+  font-weight: 800;
+}
+
+/* ============================================================
+   DOMAIN RULES
+   ============================================================ */
+
+.domain-rules {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 10px;
+
+  padding: 0 26px 26px;
+}
+
+.domain-rule {
+  position: relative;
+
+  min-width: 0;
+
+  padding: 13px 14px 13px 38px;
+
+  border: 1px solid var(--fockis-border);
+  border-radius: 11px;
+
+  background: #fafcfd;
+
+  color: var(--fockis-muted);
+
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.domain-rule::before {
+  content: "✓";
+
+  position: absolute;
+
+  top: 12px;
+  left: 13px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 18px;
+  height: 18px;
+
+  border-radius: 50%;
+
+  background: #e8f3f8;
+
+  color: var(--fockis-primary);
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.domain-rule p {
+  margin: 0;
+}
+
+.domain-rule strong {
+  color: var(--fockis-ink);
+  font-weight: 750;
+}
+
+/* ============================================================
+   SECURITY CARD
+   ============================================================ */
+
+.settings-card {
+  max-width: 1180px;
+
+  margin: 0 auto 32px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--fockis-border);
+  border-radius: 18px;
+
+  background: var(--fockis-card);
+
+  box-shadow: var(--fockis-shadow);
+}
+
+/* ============================================================
+   SECURITY CARD HEADER
+   ============================================================ */
+
+.settings-card__heading {
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  padding: 26px 28px 24px;
+
+  border-bottom: 1px solid var(--fockis-border);
+
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #f8fbfd 100%
+    );
+}
+
+.settings-card__title-area {
+  min-width: 0;
+}
+
+.settings-card__heading .eyebrow {
+  margin-bottom: 7px;
+}
+
+.settings-card__heading h2 {
+  margin: 0;
+
+  color: var(--fockis-ink);
+
+  font-size: 24px;
+  font-weight: 800;
+
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.settings-card__heading p {
+  max-width: 700px;
+
+  margin: 8px 0 0;
+
+  color: var(--fockis-muted);
+
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   SAVING INDICATOR
+   ============================================================ */
+
+.settings-saving {
+  display: inline-flex;
+
+  flex: 0 0 auto;
+
+  align-items: center;
+
+  gap: 8px;
+
+  margin-top: 3px;
+
+  padding: 7px 11px;
+
+  border: 1px solid #d9e5eb;
+  border-radius: 999px;
+
+  background: #f6fafc;
+
+  color: var(--fockis-primary);
+
+  font-size: 11px;
+  font-weight: 800;
+
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.settings-saving__dot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: var(--fockis-primary);
+
+  animation:
+    fockis-saving-pulse 1.2s
+    ease-in-out infinite;
+}
+
+@keyframes fockis-saving-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================================
+   SETTINGS LIST
+   ============================================================ */
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+
+  padding: 0 28px 10px;
+}
+
+/* ============================================================
+   SECTION HEADINGS
+   ============================================================ */
+
+.settings-section-heading {
+  position: relative;
+
+  margin: 0 -28px;
+
+  padding: 28px 28px 20px;
+
+  border-top: 1px solid var(--fockis-border);
+
+  background: #ffffff;
+}
+
+.settings-section-heading:first-child {
+  border-top: 0;
+}
+
+.settings-section-heading::before {
+  content: "";
+
+  position: absolute;
+
+  top: 28px;
+  left: 0;
+
+  width: 4px;
+  height: 42px;
+
+  border-radius: 0 4px 4px 0;
+
+  background: var(--fockis-primary);
+}
+
+.settings-section-heading--password::before {
+  background: var(--fockis-primary);
+}
+
+.settings-section-heading--login::before {
+  background: var(--fockis-primary-light);
+}
+
+.settings-section-heading--session::before {
+  background: #4c82a3;
+}
+
+.settings-section-heading--authentication::before {
+  background: var(--fockis-gold);
+}
+
+.settings-section-heading--notifications::before {
+  background: #668a9e;
+}
+
+.settings-section-heading--protection::before {
+  background: #7b8d9a;
+}
+
+.settings-section-heading--compliance::before {
+  background: #53677a;
+}
+
+.settings-section-heading .eyebrow {
+  margin-bottom: 6px;
+}
+
+.settings-section-heading h3 {
+  margin: 0;
+
+  color: var(--fockis-ink);
+
+  font-size: 18px;
+  font-weight: 800;
+
+  letter-spacing: -0.012em;
+  line-height: 1.3;
+}
+
+.settings-section-heading p {
+  max-width: 720px;
+
+  margin: 6px 0 0;
+
+  color: var(--fockis-muted);
+
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* ============================================================
+   SETTING ROW
+   ============================================================ */
+
+.setting-row {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 28px;
+
+  min-height: 76px;
+
+  padding: 17px 0;
+
+  border-top: 1px solid #edf1f4;
+
+  background: #ffffff;
+
+  cursor: default;
+}
+
+.setting-row:hover {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 90, 141, 0.018),
+      rgba(0, 90, 141, 0)
+    );
+}
+
+.setting-row--nested {
+  margin-left: 18px;
+
+  padding-left: 18px;
+
+  border-left: 3px solid #e6eef3;
+}
+
+/* ============================================================
+   SETTING CONTENT
+   ============================================================ */
+
+.setting-row > div:first-child,
+.setting-row__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.setting-row strong {
+  display: block;
+
+  margin: 0;
+
+  color: var(--fockis-ink);
+
+  font-size: 14px;
+  font-weight: 750;
+
+  line-height: 1.45;
+}
+
+.setting-row span {
+  display: block;
+
+  max-width: 760px;
+
+  margin-top: 4px;
+
+  color: var(--fockis-muted);
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   NUMBER INPUT
+   ============================================================ */
+
+.setting-number {
+  flex: 0 0 auto;
+
+  width: 96px;
+  height: 42px;
+
+  padding: 0 11px;
+
+  border: 1px solid var(--fockis-border-dark);
+  border-radius: 9px;
+
+  outline: none;
+
+  background: #ffffff;
+
+  color: var(--fockis-ink);
+
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+
+  text-align: right;
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.setting-number:hover {
+  border-color: #b8c7d1;
+}
+
+.setting-number:focus {
+  border-color: var(--fockis-primary);
+
+  background: #ffffff;
+
+  box-shadow:
+    0 0 0 3px rgba(0, 90, 141, 0.11);
+}
+
+.setting-number:disabled {
+  cursor: not-allowed;
+
+  background: #f2f5f7;
+
+  color: var(--fockis-muted-light);
+
+  opacity: 0.7;
+}
+
+/* Chrome / Edge number controls */
+
+.setting-number::-webkit-inner-spin-button,
+.setting-number::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
+/* Firefox */
+
+.setting-number {
+  appearance: auto;
+}
+
+/* ============================================================
+   NUMBER + UNIT
+   ============================================================ */
+
+.setting-number-group {
+  display: flex;
+
+  flex: 0 0 auto;
+
+  align-items: center;
+
+  gap: 8px;
+}
+
+.setting-number-unit,
+.setting-number-group > span {
+  min-width: 32px;
+
+  color: var(--fockis-muted);
+
+  font-size: 12px;
+  font-weight: 650;
+}
+
+/* ============================================================
+   SECURITY TOGGLE
+   ============================================================ */
+
+.security-toggle {
+  display: inline-flex;
+
+  flex: 0 0 auto;
+
+  align-items: center;
+
+  gap: 9px;
+
+  min-width: 82px;
+
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  color: var(--fockis-muted);
+
+  cursor: pointer;
+
+  font: inherit;
+
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.security-toggle:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.security-toggle:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.security-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* ============================================================
+   TOGGLE TRACK
+   ============================================================ */
+
+.security-toggle__track {
+  position: relative;
+
+  display: flex;
+
+  align-items: center;
+
+  width: 50px;
+  height: 28px;
+
+  padding: 3px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #c9d4db;
+
+  border-radius: 999px;
+
+  background: #dce4e9;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+/* ============================================================
+   TOGGLE THUMB
+   ============================================================ */
+
+.security-toggle__thumb {
+  display: block;
+
+  width: 20px;
+  height: 20px;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 1px 4px rgba(23, 43, 77, 0.24);
+
+  transform: translateX(0);
+
+  transition:
+    transform 0.18s ease;
+}
+
+/* ============================================================
+   TOGGLE ON
+   ============================================================ */
+
+.security-toggle--on
+  .security-toggle__track {
+  border-color: var(--fockis-primary);
+
+  background: var(--fockis-primary);
+
+  box-shadow:
+    0 2px 6px rgba(0, 90, 141, 0.18);
+}
+
+.security-toggle--on
+  .security-toggle__thumb {
+  transform: translateX(21px);
+}
+
+.security-toggle--on
+  .security-toggle__label {
+  color: var(--fockis-success);
+}
+
+/* ============================================================
+   TOGGLE OFF
+   ============================================================ */
+
+.security-toggle--off
+  .security-toggle__label {
+  color: var(--fockis-muted-light);
+}
+
+/* ============================================================
+   TOGGLE LABEL
+   ============================================================ */
+
+.security-toggle__label {
+  min-width: 24px;
+
+  color: var(--fockis-muted);
+
+  font-size: 10px;
+  font-weight: 850;
+
+  letter-spacing: 0.06em;
+
+  text-align: left;
+
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   TOGGLE KEYBOARD FOCUS
+   ============================================================ */
+
+.security-toggle:focus-visible {
+  outline: none;
+}
+
+.security-toggle:focus-visible
+  .security-toggle__track {
+  box-shadow:
+    0 0 0 3px rgba(0, 90, 141, 0.15);
+}
+
+/* ============================================================
+   SAVING STATE
+   ============================================================ */
+
+.settings-card--saving
+  .setting-number {
+  opacity: 0.7;
+}
+
+.settings-card--saving
+  .setting-row {
+  cursor: wait;
+}
+
+/* ============================================================
+   EMPTY / LOADING SUPPORT
+   ============================================================ */
+
+.settings-card__loading,
+.settings-card__empty {
+  padding: 40px 28px;
+
+  color: var(--fockis-muted);
+
+  font-size: 14px;
+
+  text-align: center;
+}
+
+/* ============================================================
+   GENERAL LOADING STATE
+   ============================================================ */
+
+.loading-state {
+  max-width: 1180px;
+
+  margin: 0 auto 32px;
+
+  padding: 40px 28px;
+
+  border: 1px solid var(--fockis-border);
+
+  border-radius: 18px;
+
+  background: var(--fockis-card);
+
+  color: var(--fockis-muted);
+
+  font-size: 14px;
+
+  text-align: center;
+
+  box-shadow: var(--fockis-shadow);
+}
+
+/* ============================================================
+   LINKS
+   ============================================================ */
+
+.identity-main a {
+  color: var(--fockis-primary);
+
+  font-weight: 650;
+
+  text-decoration: none;
+}
+
+.identity-main a:hover {
+  text-decoration: underline;
+}
+
+/* ============================================================
+   TABLET
+   ============================================================ */
+
+@media (max-width: 1100px) {
+  .identity-main {
+    padding: 26px;
+  }
+
+  .settings-card__heading {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .settings-list {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .settings-section-heading {
+    margin-left: -24px;
+    margin-right: -24px;
+
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .domain-settings-header,
+  .domain-check {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .domain-rules {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+/* ============================================================
+   TABLET / SMALL SCREEN
+   ============================================================ */
+
+@media (max-width: 820px) {
+  .identity-layout {
+    display: block;
+  }
+
+  .identity-main {
+    padding: 22px 18px;
+  }
+
+  .identity-header {
+    margin-bottom: 22px;
+  }
+
+  .identity-header h1 {
+    font-size: 30px;
+  }
+
+  .settings-card__heading {
+    gap: 14px;
+  }
+
+  .setting-row {
+    gap: 18px;
+  }
+
+  .domain-rules {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 600px) {
+  .identity-main {
+    padding: 16px 12px 28px;
+  }
+
+  .identity-header h1 {
+    font-size: 27px;
+  }
+
+  .identity-header > p {
+    font-size: 14px;
+  }
+
+  /* ----------------------------------------------------------
+     Domain card
+     ---------------------------------------------------------- */
+
+  .domain-settings-card,
+  .settings-card {
+    border-radius: 14px;
+  }
+
+  .domain-settings-header,
+  .domain-check {
+    padding: 18px;
+  }
+
+  .domain-check-row {
+    flex-direction: column;
+  }
+
+  .domain-input-wrapper {
+    width: 100%;
+  }
+
+  .domain-input-wrapper input,
+  .domain-check-row input,
+  .domain-check-row button {
+    width: 100%;
+  }
+
+  .domain-check-row button {
+    min-width: 0;
+  }
+
+  /* ----------------------------------------------------------
+     Domain input
+
+     Keep enough space for the selector.
+     ---------------------------------------------------------- */
+
+  .domain-input-wrapper input {
+    padding-right: 108px;
+  }
+
+  /* ----------------------------------------------------------
+     Domain selector
+     ---------------------------------------------------------- */
+
+  .domain-suffix-select {
+    right: 5px;
+
+    width: 98px;
+    min-width: 98px;
+
+    height: 34px;
+
+    padding-left: 7px;
+    padding-right: 20px;
+
+    font-size: 12px;
+  }
+
+  /* ----------------------------------------------------------
+     Preview
+     ---------------------------------------------------------- */
+
+  .domain-preview {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 6px;
+  }
+
+  .domain-preview__value {
+    text-align: left;
+  }
+
+  /* ----------------------------------------------------------
+     Rules
+     ---------------------------------------------------------- */
+
+  .domain-rules {
+    padding: 0 18px 18px;
+  }
+
+  .domain-available,
+  .domain-unavailable {
+    margin-left: 18px;
+    margin-right: 18px;
+  }
+
+  /* ----------------------------------------------------------
+     Security
+     ---------------------------------------------------------- */
+
+  .settings-card__heading {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    padding: 20px 18px;
+  }
+
+  .settings-card__heading h2 {
+    font-size: 21px;
+  }
+
+  .settings-saving {
+    margin-top: 0;
+  }
+
+  .settings-list {
+    padding: 0 18px 8px;
+  }
+
+  .settings-section-heading {
+    margin-left: -18px;
+    margin-right: -18px;
+
+    padding: 22px 18px 17px;
+  }
+
+  .settings-section-heading::before {
+    top: 22px;
+  }
+
+  .settings-section-heading h3 {
+    font-size: 17px;
+  }
+
+  /* ----------------------------------------------------------
+     Setting rows
+     ---------------------------------------------------------- */
+
+  .setting-row {
+    align-items: flex-start;
+
+    min-height: 0;
+
+    padding: 16px 0;
+
+    gap: 14px;
+  }
+
+  .setting-row strong {
+    font-size: 13px;
+  }
+
+  .setting-row span {
+    font-size: 11.5px;
+  }
+
+  /* ----------------------------------------------------------
+     Toggles
+     ---------------------------------------------------------- */
+
+  .security-toggle {
+    min-width: 76px;
+
+    gap: 6px;
+  }
+
+  .security-toggle__track {
+    width: 46px;
+    height: 26px;
+  }
+
+  .security-toggle__thumb {
+    width: 18px;
+    height: 18px;
+  }
+
+  .security-toggle--on
+    .security-toggle__thumb {
+    transform: translateX(19px);
+  }
+
+  .security-toggle__label {
+    font-size: 9px;
+  }
+
+  /* ----------------------------------------------------------
+     Numbers
+     ---------------------------------------------------------- */
+
+  .setting-number {
+    width: 82px;
+    height: 40px;
+
+    font-size: 13px;
+  }
+
+  .setting-number-group {
+    gap: 6px;
+  }
+
+  .setting-number-unit,
+  .setting-number-group > span {
+    min-width: 27px;
+
+    font-size: 11px;
+  }
+
+  .setting-row--nested {
+    margin-left: 10px;
+
+    padding-left: 12px;
+  }
+}
+
+/* ============================================================
+   VERY SMALL PHONES
+   ============================================================ */
+
+@media (max-width: 400px) {
+  .identity-main {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  .identity-header h1 {
+    font-size: 24px;
+  }
+
+  .domain-settings-header,
+  .domain-check {
+    padding: 16px;
+  }
+
+  .domain-rules {
+    padding: 0 16px 16px;
+  }
+
+  .domain-available,
+  .domain-unavailable {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  /* ----------------------------------------------------------
+     Very small domain input
+     ---------------------------------------------------------- */
+
+  .domain-input-wrapper input {
+    padding-right: 96px;
+  }
+
+  .domain-suffix-select {
+    right: 4px;
+
+    width: 86px;
+    min-width: 86px;
+
+    height: 32px;
+
+    padding-left: 5px;
+    padding-right: 16px;
+
+    font-size: 11px;
+  }
+
+  /* ----------------------------------------------------------
+     Security
+     ---------------------------------------------------------- */
+
+  .settings-card__heading {
+    padding: 18px 16px;
+  }
+
+  .settings-list {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .settings-section-heading {
+    margin-left: -16px;
+    margin-right: -16px;
+
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .setting-row {
+    gap: 10px;
+  }
+
+  .setting-row strong {
+    font-size: 12.5px;
+  }
+
+  .setting-row span {
+    font-size: 11px;
+  }
+
+  .security-toggle {
+    min-width: 70px;
+  }
+
+  .security-toggle__track {
+    width: 42px;
+    height: 24px;
+  }
+
+  .security-toggle__thumb {
+    width: 16px;
+    height: 16px;
+  }
+
+  .security-toggle--on
+    .security-toggle__thumb {
+    transform: translateX(17px);
+  }
+
+  .security-toggle__label {
+    font-size: 8px;
+  }
+
+  .setting-number {
+    width: 72px;
+  }
+}
+
+/* ============================================================
+   ACCESSIBILITY
+   ============================================================ */
+
+.domain-input-wrapper input:focus-visible {
+  outline: none;
+
+  border-color: var(--fockis-primary);
+
+  box-shadow:
+    0 0 0 3px rgba(0, 90, 141, 0.14);
+}
+
+.domain-suffix-select:focus-visible {
+  outline: none;
+
+  box-shadow:
+    0 0 0 2px rgba(0, 90, 141, 0.16);
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .identity-layout *,
+  .identity-layout *::before,
+  .identity-layout *::after {
+    animation: none !important;
+
+    transition: none !important;
+
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   PRINT
+   ============================================================ */
+
+@media print {
+  .identity-layout {
+    display: block;
+
+    background: #ffffff;
+  }
+
+  .identity-main {
+    padding: 0;
+  }
+
+  .domain-settings-card,
+  .settings-card {
+    border: 1px solid #aaaaaa;
+
+    box-shadow: none;
+
+    break-inside: avoid;
+  }
+
+  .domain-check-row button {
+    display: none;
+  }
+
+  .settings-saving {
+    display: none;
+  }
+
+  /*
+   * Keep the selected extension visible when printing.
+   */
+  .domain-suffix-select {
+    color: #333333;
+
+    border-left-color: #aaaaaa;
+
+    background: #ffffff;
+  }
+}

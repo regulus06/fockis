@@ -1,0 +1,2252 @@
+/* ==========================================================================
+   FOCKIS ORGANIZATION — MEMBER PROFILE
+   ==========================================================================
+   Dedicated styles for:
+   - Organization member profile
+   - Profile hero
+   - Avatar
+   - Membership badges
+   - Summary cards
+   - Member history timeline
+   - History filters
+   - Departments / Teams
+   - Groups / Communities
+   - Contact information
+   - Membership details
+   - Private profile information
+   - Loading / error states
+   - Responsive layouts
+   - Accessibility
+   - Print
+   ========================================================================== */
+
+.organization-member-profile-page {
+  --omp-ink: #172b4d;
+  --omp-ink-soft: #29445f;
+
+  --omp-primary: #005a8d;
+  --omp-primary-light: #0879b5;
+  --omp-primary-dark: #003f63;
+
+  --omp-gold: #f6b62c;
+  --omp-gold-light: #ffd76a;
+  --omp-gold-dark: #a86f00;
+
+  --omp-background: #f3f6f9;
+  --omp-surface: #ffffff;
+  --omp-surface-soft: #f8fafc;
+  --omp-surface-blue: #f1f7fb;
+  --omp-surface-gold: #fff9e9;
+
+  --omp-border: #dce4ea;
+  --omp-border-strong: #ccd8e0;
+
+  --omp-muted: #718394;
+  --omp-muted-strong: #66788a;
+
+  --omp-success: #247a4b;
+  --omp-success-bg: #edf8f1;
+  --omp-success-border: #b9dfc7;
+
+  --omp-danger: #b42318;
+  --omp-danger-bg: #fff2f0;
+  --omp-danger-border: #efb8b2;
+
+  --omp-warning: #9a6700;
+  --omp-warning-bg: #fff8e5;
+  --omp-warning-border: #efd58b;
+
+  --omp-radius-sm: 7px;
+  --omp-radius: 10px;
+  --omp-radius-lg: 14px;
+  --omp-radius-xl: 18px;
+
+  --omp-shadow-xs:
+    0 1px 2px rgba(23, 43, 77, 0.04);
+
+  --omp-shadow-sm:
+    0 4px 14px rgba(23, 43, 77, 0.065);
+
+  --omp-shadow:
+    0 9px 28px rgba(23, 43, 77, 0.085);
+
+  --omp-shadow-lg:
+    0 18px 44px rgba(23, 43, 77, 0.12);
+
+  width: 100%;
+  min-height: 100vh;
+
+  color: var(--omp-ink);
+
+  background:
+    radial-gradient(
+      circle at 92% 0%,
+      rgba(0, 90, 141, 0.075),
+      transparent 27rem
+    ),
+    radial-gradient(
+      circle at 0% 45%,
+      rgba(246, 182, 44, 0.055),
+      transparent 24rem
+    ),
+    var(--omp-background);
+
+  font-family:
+    Inter,
+    ui-sans-serif,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+
+  box-sizing: border-box;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+}
+
+/* ==========================================================================
+   PAGE CONTAINER
+   ========================================================================== */
+
+.organization-member-profile-page .church-page__container {
+  width: min(
+    calc(100% - 40px),
+    1380px
+  );
+
+  margin-inline: auto;
+
+  padding-block: 26px 64px;
+}
+
+/* ==========================================================================
+   BREADCRUMBS
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-member-profile__breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  margin-bottom: 18px;
+
+  color: var(--omp-muted);
+
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.organization-member-profile-page
+  .church-member-profile__breadcrumbs
+  a {
+  color: var(--omp-primary);
+
+  text-decoration: none;
+
+  transition:
+    color 150ms ease,
+    opacity 150ms ease;
+}
+
+.organization-member-profile-page
+  .church-member-profile__breadcrumbs
+  a:hover {
+  color: var(--omp-primary-light);
+
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.organization-member-profile-page
+  .church-member-profile__breadcrumbs
+  > span[aria-hidden="true"] {
+  color: #a5b2bd;
+}
+
+.organization-member-profile-page
+  .church-member-profile__breadcrumbs
+  > span:last-child {
+  max-width: 280px;
+
+  overflow: hidden;
+
+  color: var(--omp-ink-soft);
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   PROFILE HERO
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-member-profile__hero {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+
+  width: 100%;
+
+  margin-bottom: 22px;
+  padding: 30px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--omp-border);
+  border-radius: var(--omp-radius-xl);
+
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(246, 182, 44, 0.17),
+      transparent 19rem
+    ),
+    radial-gradient(
+      circle at 0% 100%,
+      rgba(0, 90, 141, 0.08),
+      transparent 22rem
+    ),
+    linear-gradient(
+      135deg,
+      #ffffff,
+      #f5f9fc
+    );
+
+  box-shadow: var(--omp-shadow);
+}
+
+.organization-member-profile-page
+  .church-member-profile__hero::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 4px;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--omp-primary-dark),
+      var(--omp-primary),
+      var(--omp-gold)
+    );
+}
+
+.organization-member-profile-page
+  .church-member-profile__hero::after {
+  content: "";
+
+  position: absolute;
+
+  right: -100px;
+  bottom: -125px;
+
+  width: 280px;
+  height: 280px;
+
+  border: 1px solid rgba(0, 90, 141, 0.08);
+  border-radius: 50%;
+
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   PROFILE IDENTITY
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-member-profile__identity {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  align-items: center;
+  gap: 22px;
+
+  min-width: 0;
+}
+
+.organization-member-profile-page
+  .church-member-profile__identity-content {
+  min-width: 0;
+}
+
+.organization-member-profile-page
+  .church-member-profile__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 108px;
+
+  width: 108px;
+  height: 108px;
+
+  overflow: hidden;
+
+  border: 4px solid #ffffff;
+  border-radius: 50%;
+
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--omp-primary-dark),
+      var(--omp-primary-light)
+    );
+
+  box-shadow:
+    0 8px 22px rgba(0, 63, 99, 0.2),
+    0 0 0 1px rgba(0, 90, 141, 0.12);
+}
+
+.organization-member-profile-page
+  .church-member-profile__avatar
+  img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.organization-member-profile-page
+  .church-member-profile__avatar
+  span {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.organization-member-profile-page
+  .church-member-profile__eyebrow {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 25px;
+
+  margin-bottom: 6px;
+  padding: 5px 9px;
+
+  border: 1px solid #c6dce8;
+  border-radius: 999px;
+
+  color: var(--omp-primary);
+
+  background: var(--omp-surface-blue);
+
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.075em;
+  line-height: 1;
+
+  text-transform: uppercase;
+}
+
+.organization-member-profile-page
+  .church-member-profile__identity-content
+  h1 {
+  margin: 0;
+
+  overflow-wrap: anywhere;
+
+  color: var(--omp-ink);
+
+  font-size: clamp(1.65rem, 3vw, 2.45rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+.organization-member-profile-page
+  .church-member-profile__role {
+  margin: 7px 0 0;
+
+  color: var(--omp-muted-strong);
+
+  font-size: 0.94rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   PROFILE BADGES
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-member-profile__badges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+
+  margin-top: 13px;
+}
+
+.organization-member-profile-page
+  .church-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 28px;
+
+  padding: 5px 10px;
+
+  border: 1px solid var(--omp-border);
+  border-radius: 999px;
+
+  color: var(--omp-muted-strong);
+
+  background: #f6f8fa;
+
+  font-size: 0.7rem;
+  font-weight: 750;
+  line-height: 1;
+  text-transform: capitalize;
+}
+
+.organization-member-profile-page
+  .church-status-badge--active {
+  color: var(--omp-success);
+
+  background: var(--omp-success-bg);
+
+  border-color: var(--omp-success-border);
+}
+
+.organization-member-profile-page
+  .church-status-badge--inactive,
+.organization-member-profile-page
+  .church-status-badge--disabled {
+  color: var(--omp-danger);
+
+  background: var(--omp-danger-bg);
+
+  border-color: var(--omp-danger-border);
+}
+
+.organization-member-profile-page
+  .church-status-badge--pending {
+  color: var(--omp-warning);
+
+  background: var(--omp-warning-bg);
+
+  border-color: var(--omp-warning-border);
+}
+
+.organization-member-profile-page
+  .church-status-badge--owner {
+  color: var(--omp-gold-dark);
+
+  background: var(--omp-surface-gold);
+
+  border-color: #efd68d;
+}
+
+.organization-member-profile-page
+  .church-status-badge--admin {
+  color: var(--omp-primary);
+
+  background: var(--omp-surface-blue);
+
+  border-color: #c4dce8;
+}
+
+/* ==========================================================================
+   HERO ACTIONS
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-member-profile__actions {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  flex: 0 0 auto;
+}
+
+.organization-member-profile-page
+  .church-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  min-height: 43px;
+
+  padding: 10px 16px;
+
+  border: 1px solid transparent;
+  border-radius: var(--omp-radius);
+
+  font-size: 0.84rem;
+  font-weight: 720;
+  line-height: 1.2;
+
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transition:
+    transform 160ms ease,
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.organization-member-profile-page
+  .church-button--primary {
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--omp-primary-dark),
+      var(--omp-primary)
+    );
+
+  border-color: var(--omp-primary-dark);
+
+  box-shadow:
+    0 5px 14px rgba(0, 63, 99, 0.18);
+}
+
+.organization-member-profile-page
+  .church-button--primary:hover {
+  transform: translateY(-1px);
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--omp-primary),
+      var(--omp-primary-light)
+    );
+
+  box-shadow:
+    0 8px 18px rgba(0, 63, 99, 0.22);
+}
+
+.organization-member-profile-page
+  .church-button--secondary {
+  color: var(--omp-primary);
+
+  background: #ffffff;
+
+  border-color: #bfd2dd;
+}
+
+.organization-member-profile-page
+  .church-button--secondary:hover {
+  transform: translateY(-1px);
+
+  color: var(--omp-primary-dark);
+
+  background: var(--omp-surface-blue);
+
+  border-color: var(--omp-primary);
+}
+
+/* ==========================================================================
+   SUMMARY GRID
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-member-profile__summary-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 14px;
+
+  width: 100%;
+
+  margin-bottom: 22px;
+}
+
+.organization-member-profile-page
+  .church-member-profile__summary-card {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+
+  min-width: 0;
+  min-height: 92px;
+
+  padding: 16px;
+
+  border: 1px solid var(--omp-border);
+  border-radius: var(--omp-radius-lg);
+
+  background: var(--omp-surface);
+
+  box-shadow: var(--omp-shadow-sm);
+
+  transition:
+    transform 170ms ease,
+    border-color 170ms ease,
+    box-shadow 170ms ease;
+}
+
+.organization-member-profile-page
+  .church-member-profile__summary-card:hover {
+  transform: translateY(-2px);
+
+  border-color: #bfd2dd;
+
+  box-shadow: var(--omp-shadow);
+}
+
+.organization-member-profile-page
+  .church-member-profile__summary-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 42px;
+
+  width: 42px;
+  height: 42px;
+
+  border: 1px solid #c8dce7;
+  border-radius: 10px;
+
+  background: var(--omp-surface-blue);
+
+  font-size: 1.15rem;
+}
+
+.organization-member-profile-page
+  .church-member-profile__summary-card
+  > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  min-width: 0;
+}
+
+.organization-member-profile-page
+  .church-member-profile__summary-label {
+  color: var(--omp-muted);
+
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.045em;
+  line-height: 1.25;
+
+  text-transform: uppercase;
+}
+
+.organization-member-profile-page
+  .church-member-profile__summary-card
+  strong {
+  color: var(--omp-ink);
+
+  font-size: 0.87rem;
+  font-weight: 720;
+  line-height: 1.4;
+
+  overflow-wrap: anywhere;
+}
+
+/* ==========================================================================
+   MAIN TWO-COLUMN LAYOUT
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-member-profile__layout {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(300px, 360px);
+
+  gap: 22px;
+
+  align-items: start;
+}
+
+.organization-member-profile-page
+  .church-member-profile__main,
+.organization-member-profile-page
+  .church-member-profile__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  min-width: 0;
+}
+
+/* ==========================================================================
+   CARDS
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-member-profile__card {
+  position: relative;
+
+  width: 100%;
+
+  padding: 24px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--omp-border);
+  border-radius: var(--omp-radius-lg);
+
+  background: var(--omp-surface);
+
+  box-shadow: var(--omp-shadow-sm);
+}
+
+.organization-member-profile-page
+  .church-member-profile__card::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 3px;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--omp-primary),
+      var(--omp-primary-light),
+      var(--omp-gold)
+    );
+
+  opacity: 0.9;
+}
+
+/* ==========================================================================
+   CARD HEADER
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-member-profile__card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+
+  margin-bottom: 20px;
+}
+
+.organization-member-profile-page
+  .church-member-profile__card-header
+  > div:first-child {
+  min-width: 0;
+}
+
+.organization-member-profile-page
+  .church-member-profile__section-eyebrow {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: var(--omp-primary);
+
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.075em;
+  line-height: 1.3;
+
+  text-transform: uppercase;
+}
+
+.organization-member-profile-page
+  .church-member-profile__card-header
+  h2 {
+  margin: 0;
+
+  color: var(--omp-ink);
+
+  font-size: 1.18rem;
+  font-weight: 760;
+  line-height: 1.3;
+  letter-spacing: -0.012em;
+}
+
+.organization-member-profile-page
+  .church-member-profile__card-header
+  p {
+  max-width: 650px;
+
+  margin: 7px 0 0;
+
+  color: var(--omp-muted-strong);
+
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.organization-member-profile-page
+  .church-member-profile__history-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  min-width: 36px;
+  height: 36px;
+
+  padding-inline: 9px;
+
+  border: 1px solid #c5dce8;
+  border-radius: 9px;
+
+  color: var(--omp-primary);
+
+  background: var(--omp-surface-blue);
+
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   HISTORY FILTERS
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-member-profile__filters {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  width: 100%;
+
+  margin-bottom: 22px;
+  padding: 4px;
+
+  overflow-x: auto;
+
+  border: 1px solid var(--omp-border);
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff,
+      #f7f9fb
+    );
+
+  scrollbar-width: thin;
+}
+
+.organization-member-profile-page
+  .church-member-profile__filters
+  button {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 39px;
+
+  flex: 0 0 auto;
+
+  padding: 8px 14px;
+
+  border: 1px solid transparent;
+  border-radius: 7px;
+
+  color: var(--omp-muted-strong);
+
+  background: transparent;
+
+  font-size: 0.76rem;
+  font-weight: 720;
+  line-height: 1.2;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.organization-member-profile-page
+  .church-member-profile__filters
+  button:hover {
+  color: var(--omp-primary);
+
+  background: var(--omp-surface-blue);
+}
+
+.organization-member-profile-page
+  .church-member-profile__filters
+  button.is-active {
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--omp-primary-dark),
+      var(--omp-primary)
+    );
+
+  border-color: var(--omp-primary-dark);
+
+  box-shadow:
+    0 3px 9px rgba(0, 63, 99, 0.15);
+}
+
+.organization-member-profile-page
+  .church-member-profile__filters
+  button.is-active:hover {
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--omp-primary),
+      var(--omp-primary-light)
+    );
+}
+
+/* ==========================================================================
+   TIMELINE
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-member-profile__timeline {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+}
+
+.organization-member-profile-page
+  .church-member-profile__timeline-item {
+  display: grid;
+
+  grid-template-columns: 50px minmax(0, 1fr);
+
+  gap: 14px;
+
+  min-width: 0;
+}
+
+.organization-member-profile-page
+  .church-member-profile__timeline-rail {
+  position: relative;
+
+  display: flex;
+  justify-content: center;
+
+  width: 50px;
+}
+
+.organization-member-profile-page
+  .church-member-profile__timeline-icon {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 40px;
+  height: 40px;
+
+  border: 1px solid #c6dce8;
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 3px 10px rgba(23, 43, 77, 0.07);
+
+  font-size: 1rem;
+}
+
+.organization-member-profile-page
+  .church-member-profile__timeline-line {
+  position: absolute;
+
+  top: 40px;
+  bottom: 0;
+
+  left: 50%;
+
+  width: 1px;
+
+  transform: translateX(-50%);
+
+  background:
+    linear-gradient(
+      180deg,
+      #c6dce8,
+      #e4ebf0
+    );
+}
+
+.organization-member-profile-page
+  .church-member-profile__timeline-content {
+  min-width: 0;
+
+  margin-bottom: 22px;
+  padding: 2px 0 21px;
+
+  border-bottom: 1px solid var(--omp-border);
+}
+
+.organization-member-profile-page
+  .church-member-profile__timeline-item:last-child
+  .church-member-profile__timeline-content {
+  margin-bottom: 0;
+  padding-bottom: 0;
+
+  border-bottom: 0;
+}
+
+.organization-member-profile-page
+  .church-member-profile__timeline-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin-bottom: 6px;
+}
+
+.organization-member-profile-page
+  .church-member-profile__timeline-type {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 24px;
+
+  padding: 4px 8px;
+
+  border: 1px solid #c8dce7;
+  border-radius: 999px;
+
+  color: var(--omp-primary);
+
+  background: var(--omp-surface-blue);
+
+  font-size: 0.65rem;
+  font-weight: 780;
+  letter-spacing: 0.035em;
+  line-height: 1;
+
+  text-transform: uppercase;
+}
+
+.organization-member-profile-page
+  .church-member-profile__timeline-meta
+  time {
+  flex: 0 0 auto;
+
+  color: var(--omp-muted);
+
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.organization-member-profile-page
+  .church-member-profile__timeline-content
+  h3 {
+  margin: 0 0 6px;
+
+  color: var(--omp-ink);
+
+  font-size: 0.98rem;
+  font-weight: 740;
+  line-height: 1.4;
+}
+
+.organization-member-profile-page
+  .church-member-profile__timeline-content
+  p {
+  margin: 0;
+
+  color: var(--omp-muted-strong);
+
+  font-size: 0.84rem;
+  line-height: 1.65;
+}
+
+.organization-member-profile-page
+  .church-member-profile__timeline-location {
+  margin-top: 9px;
+
+  color: var(--omp-muted);
+
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   HISTORY LOADING
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-member-profile__history-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+
+  min-height: 150px;
+
+  color: var(--omp-muted-strong);
+
+  font-size: 0.84rem;
+}
+
+.organization-member-profile-page
+  .church-loading-spinner {
+  width: 28px;
+  height: 28px;
+
+  border: 3px solid #dce8ee;
+  border-top-color: var(--omp-primary);
+
+  border-radius: 50%;
+
+  animation:
+    omp-spin 800ms linear infinite;
+}
+
+/* ==========================================================================
+   EMPTY HISTORY
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-member-profile__empty-history {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 210px;
+
+  padding: 25px;
+
+  border: 1px dashed var(--omp-border-strong);
+  border-radius: var(--omp-radius);
+
+  background:
+    linear-gradient(
+      180deg,
+      #fafcfd,
+      #f6f9fb
+    );
+
+  text-align: center;
+}
+
+.organization-member-profile-page
+  .church-member-profile__empty-history-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 50px;
+  height: 50px;
+
+  margin-bottom: 12px;
+
+  border: 1px solid #c8dce7;
+  border-radius: 50%;
+
+  background: var(--omp-surface-blue);
+
+  font-size: 1.3rem;
+}
+
+.organization-member-profile-page
+  .church-member-profile__empty-history
+  h3 {
+  margin: 0 0 6px;
+
+  color: var(--omp-ink);
+
+  font-size: 0.98rem;
+  font-weight: 730;
+}
+
+.organization-member-profile-page
+  .church-member-profile__empty-history
+  p {
+  max-width: 480px;
+
+  margin: 0;
+
+  color: var(--omp-muted-strong);
+
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+/* ==========================================================================
+   TAGS — DEPARTMENTS / GROUPS
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-member-profile__tag-list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.organization-member-profile-page
+  .church-member-profile__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  min-height: 34px;
+
+  padding: 7px 11px;
+
+  border: 1px solid #c9dce7;
+  border-radius: 999px;
+
+  color: var(--omp-primary-dark);
+
+  background:
+    linear-gradient(
+      180deg,
+      #f6fbfe,
+      #edf6fa
+    );
+
+  font-size: 0.77rem;
+  font-weight: 680;
+  line-height: 1.3;
+}
+
+.organization-member-profile-page
+  .church-member-profile__muted {
+  margin: 0;
+
+  color: var(--omp-muted);
+
+  font-size: 0.83rem;
+  line-height: 1.6;
+}
+
+/* ==========================================================================
+   DETAILS
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-member-profile__details {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+}
+
+.organization-member-profile-page
+  .church-member-profile__detail {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+
+  min-width: 0;
+
+  padding: 13px 0;
+
+  border-bottom: 1px solid var(--omp-border);
+}
+
+.organization-member-profile-page
+  .church-member-profile__detail:first-child {
+  padding-top: 0;
+}
+
+.organization-member-profile-page
+  .church-member-profile__detail:last-child {
+  padding-bottom: 0;
+
+  border-bottom: 0;
+}
+
+.organization-member-profile-page
+  .church-member-profile__detail
+  > span:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 34px;
+
+  width: 34px;
+  height: 34px;
+
+  border: 1px solid #d4e2e9;
+  border-radius: 8px;
+
+  background: var(--omp-surface-soft);
+
+  font-size: 0.9rem;
+}
+
+.organization-member-profile-page
+  .church-member-profile__detail
+  > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  min-width: 0;
+}
+
+.organization-member-profile-page
+  .church-member-profile__detail
+  small {
+  color: var(--omp-muted);
+
+  font-size: 0.67rem;
+  font-weight: 750;
+  letter-spacing: 0.045em;
+  line-height: 1.3;
+
+  text-transform: uppercase;
+}
+
+.organization-member-profile-page
+  .church-member-profile__detail
+  strong {
+  color: var(--omp-ink);
+
+  font-size: 0.82rem;
+  font-weight: 680;
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+}
+
+.organization-member-profile-page
+  .church-member-profile__detail
+  a {
+  max-width: 100%;
+
+  color: var(--omp-primary);
+
+  font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+
+  text-decoration: none;
+}
+
+.organization-member-profile-page
+  .church-member-profile__detail
+  a:hover {
+  color: var(--omp-primary-light);
+
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ==========================================================================
+   PRIVATE PROFILE
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-member-profile__private-card {
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #fffdf6
+    );
+
+  border-color: #e5d7a9;
+}
+
+.organization-member-profile-page
+  .church-member-profile__private-card::before {
+  background:
+    linear-gradient(
+      90deg,
+      var(--omp-gold-dark),
+      var(--omp-gold),
+      var(--omp-primary)
+    );
+}
+
+.organization-member-profile-page
+  .church-member-profile__private-card
+  > p {
+  margin: 0 0 17px;
+
+  color: var(--omp-muted-strong);
+
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.organization-member-profile-page
+  .church-member-profile__address {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  margin-bottom: 17px;
+  padding: 13px;
+
+  border: 1px solid #eadcae;
+  border-radius: 9px;
+
+  background: rgba(255, 249, 233, 0.72);
+
+  color: var(--omp-muted-strong);
+
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.organization-member-profile-page
+  .church-member-profile__address
+  strong {
+  margin-bottom: 3px;
+
+  color: var(--omp-ink);
+
+  font-size: 0.7rem;
+  font-weight: 780;
+  letter-spacing: 0.045em;
+
+  text-transform: uppercase;
+}
+
+.organization-member-profile-page
+  .church-member-profile__private-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  padding-top: 14px;
+
+  border-top: 1px solid #eadfbd;
+
+  color: var(--omp-muted);
+
+  font-size: 0.76rem;
+}
+
+.organization-member-profile-page
+  .church-member-profile__private-row
+  strong {
+  color: var(--omp-ink);
+
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* ==========================================================================
+   LOADING CARD
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-loading-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 330px;
+
+  margin-top: 40px;
+  padding: 40px;
+
+  border: 1px solid var(--omp-border);
+  border-radius: var(--omp-radius-lg);
+
+  background: var(--omp-surface);
+
+  box-shadow: var(--omp-shadow-sm);
+
+  text-align: center;
+}
+
+.organization-member-profile-page
+  .church-loading-card
+  p {
+  margin: 14px 0 0;
+
+  color: var(--omp-muted-strong);
+
+  font-size: 0.86rem;
+}
+
+/* ==========================================================================
+   ERROR CARD
+   ========================================================================== */
+
+.organization-member-profile-page
+  .church-error-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 360px;
+
+  margin-top: 40px;
+  padding: 40px;
+
+  border: 1px solid var(--omp-danger-border);
+  border-radius: var(--omp-radius-lg);
+
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff,
+      #fff8f7
+    );
+
+  box-shadow: var(--omp-shadow-sm);
+
+  text-align: center;
+}
+
+.organization-member-profile-page
+  .church-error-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 58px;
+  height: 58px;
+
+  margin-bottom: 15px;
+
+  border: 1px solid var(--omp-danger-border);
+  border-radius: 50%;
+
+  background: var(--omp-danger-bg);
+
+  font-size: 1.45rem;
+}
+
+.organization-member-profile-page
+  .church-error-card
+  h1 {
+  margin: 0 0 8px;
+
+  color: var(--omp-ink);
+
+  font-size: 1.35rem;
+  font-weight: 760;
+}
+
+.organization-member-profile-page
+  .church-error-card
+  p {
+  max-width: 600px;
+
+  margin: 0 0 22px;
+
+  color: var(--omp-muted-strong);
+
+  font-size: 0.87rem;
+  line-height: 1.65;
+}
+
+/* ==========================================================================
+   FOCUS STATES
+   ========================================================================== */
+
+.organization-member-profile-page
+  a:focus-visible,
+.organization-member-profile-page
+  button:focus-visible {
+  outline: 3px solid rgba(246, 182, 44, 0.5);
+  outline-offset: 3px;
+
+  border-radius: 5px;
+}
+
+/* ==========================================================================
+   TABLET / SMALL DESKTOP
+   ========================================================================== */
+
+@media (max-width: 1100px) {
+  .organization-member-profile-page
+    .church-page__container {
+    width: min(
+      calc(100% - 32px),
+      1200px
+    );
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__layout {
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(270px, 320px);
+
+    gap: 18px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__hero {
+    padding: 26px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__avatar {
+    flex-basis: 96px;
+
+    width: 96px;
+    height: 96px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__summary-card {
+    padding: 14px;
+  }
+}
+
+/* ==========================================================================
+   TABLET
+   ========================================================================== */
+
+@media (max-width: 900px) {
+  .organization-member-profile-page
+    .church-page__container {
+    padding-block: 22px 50px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__hero {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 22px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__actions {
+    width: 100%;
+
+    justify-content: flex-start;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__summary-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__sidebar {
+    display: grid;
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    align-items: start;
+  }
+}
+
+/* ==========================================================================
+   MOBILE
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  .organization-member-profile-page
+    .church-page__container {
+    width: min(
+      calc(100% - 24px),
+      700px
+    );
+
+    padding-block: 17px 38px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__breadcrumbs {
+    margin-bottom: 13px;
+
+    font-size: 0.7rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__hero {
+    margin-bottom: 16px;
+    padding: 21px 17px;
+
+    border-radius: 13px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__identity {
+    align-items: flex-start;
+    gap: 15px;
+
+    width: 100%;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__avatar {
+    flex-basis: 74px;
+
+    width: 74px;
+    height: 74px;
+
+    border-width: 3px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__avatar
+    span {
+    font-size: 1.35rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__eyebrow {
+    margin-bottom: 5px;
+
+    font-size: 0.6rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__identity-content
+    h1 {
+    font-size: 1.45rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__role {
+    margin-top: 5px;
+
+    font-size: 0.8rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__badges {
+    margin-top: 9px;
+  }
+
+  .organization-member-profile-page
+    .church-status-badge {
+    min-height: 25px;
+
+    padding: 4px 8px;
+
+    font-size: 0.62rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__actions {
+    display: grid;
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    width: 100%;
+  }
+
+  .organization-member-profile-page
+    .church-button {
+    width: 100%;
+
+    min-height: 43px;
+
+    padding-inline: 11px;
+
+    font-size: 0.76rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__summary-grid {
+    gap: 10px;
+
+    margin-bottom: 16px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__summary-card {
+    min-height: 78px;
+
+    gap: 9px;
+
+    padding: 12px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__summary-icon {
+    flex-basis: 35px;
+
+    width: 35px;
+    height: 35px;
+
+    font-size: 0.92rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__summary-label {
+    font-size: 0.6rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__summary-card
+    strong {
+    font-size: 0.73rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__main,
+  .organization-member-profile-page
+    .church-member-profile__sidebar {
+    gap: 14px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__sidebar {
+    display: flex;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__card {
+    padding: 19px 16px;
+
+    border-radius: 12px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__card-header {
+    margin-bottom: 17px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__card-header
+    h2 {
+    font-size: 1.04rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__card-header
+    p {
+    font-size: 0.78rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__section-eyebrow {
+    font-size: 0.61rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__history-count {
+    min-width: 32px;
+    height: 32px;
+
+    font-size: 0.73rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__filters {
+    margin-bottom: 18px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__filters
+    button {
+    min-height: 37px;
+
+    padding-inline: 11px;
+
+    font-size: 0.7rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__timeline-item {
+    grid-template-columns: 39px minmax(0, 1fr);
+
+    gap: 9px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__timeline-rail {
+    width: 39px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__timeline-icon {
+    width: 34px;
+    height: 34px;
+
+    font-size: 0.85rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__timeline-line {
+    top: 34px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__timeline-content {
+    margin-bottom: 18px;
+    padding-bottom: 17px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__timeline-meta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__timeline-type {
+    font-size: 0.59rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__timeline-meta
+    time {
+    font-size: 0.67rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__timeline-content
+    h3 {
+    font-size: 0.9rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__timeline-content
+    p {
+    font-size: 0.77rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__tag {
+    min-height: 32px;
+
+    padding: 6px 9px;
+
+    font-size: 0.7rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__detail
+    > span:first-child {
+    flex-basis: 31px;
+
+    width: 31px;
+    height: 31px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__detail
+    small {
+    font-size: 0.61rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__detail
+    strong,
+  .organization-member-profile-page
+    .church-member-profile__detail
+    a {
+    font-size: 0.76rem;
+  }
+
+  .organization-member-profile-page
+    .church-error-card,
+  .organization-member-profile-page
+    .church-loading-card {
+    min-height: 280px;
+
+    margin-top: 20px;
+
+    padding: 28px 18px;
+  }
+}
+
+/* ==========================================================================
+   SMALL PHONES
+   ========================================================================== */
+
+@media (max-width: 430px) {
+  .organization-member-profile-page
+    .church-page__container {
+    width: min(
+      calc(100% - 18px),
+      700px
+    );
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__hero {
+    padding: 18px 14px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__identity {
+    gap: 11px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__avatar {
+    flex-basis: 62px;
+
+    width: 62px;
+    height: 62px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__identity-content
+    h1 {
+    font-size: 1.25rem;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__actions {
+    grid-template-columns: 1fr;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__summary-grid {
+    grid-template-columns: 1fr 1fr;
+
+    gap: 8px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__summary-card {
+    align-items: flex-start;
+    flex-direction: column;
+
+    min-height: 92px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__summary-icon {
+    flex-basis: 34px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__card {
+    padding: 17px 13px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__private-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__private-row
+    strong {
+    text-align: left;
+  }
+}
+
+/* ==========================================================================
+   VERY SMALL PHONES
+   ========================================================================== */
+
+@media (max-width: 350px) {
+  .organization-member-profile-page
+    .church-member-profile__summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__summary-card {
+    min-height: 70px;
+
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__identity {
+    align-items: center;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__avatar {
+    flex-basis: 56px;
+
+    width: 56px;
+    height: 56px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__identity-content
+    h1 {
+    font-size: 1.12rem;
+  }
+}
+
+/* ==========================================================================
+   REDUCED MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .organization-member-profile-page *,
+  .organization-member-profile-page *::before,
+  .organization-member-profile-page *::after {
+    scroll-behavior: auto !important;
+
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================================
+   PRINT
+   ========================================================================== */
+
+@media print {
+  .organization-member-profile-page {
+    min-height: auto;
+
+    color: #000000;
+
+    background: #ffffff;
+  }
+
+  .organization-member-profile-page
+    .church-page__container {
+    width: 100%;
+
+    padding: 0;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__breadcrumbs {
+    margin-bottom: 12px;
+
+    color: #555555;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__hero,
+  .organization-member-profile-page
+    .church-member-profile__card,
+  .organization-member-profile-page
+    .church-member-profile__summary-card {
+    box-shadow: none;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__hero {
+    border: 1px solid #cccccc;
+
+    background: #ffffff;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__summary-grid {
+    grid-template-columns:
+      repeat(4, 1fr);
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__layout {
+    grid-template-columns:
+      minmax(0, 1fr)
+      320px;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__actions,
+  .organization-member-profile-page
+    .church-member-profile__filters {
+    display: none !important;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__card {
+    break-inside: avoid;
+
+    border-color: #cccccc;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__card::before {
+    display: none;
+  }
+
+  .organization-member-profile-page
+    .church-member-profile__summary-card:hover {
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   ANIMATION
+   ========================================================================== */
+
+@keyframes omp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

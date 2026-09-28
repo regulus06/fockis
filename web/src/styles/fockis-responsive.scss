@@ -1,0 +1,50 @@
+// ─────────────────────────────────────────────────────────────────────────
+// Fockis Responsive — breakpoint mixins
+//
+// Breakpoints tested against: 320 / 375 / 414 (mobile) · 768 (tablet)
+// 1024 (laptop) · 1440 (desktop) · 1920 (large desktop)
+//
+// UNCHANGED by the Clark State College redesign — this file defines only
+// breakpoint values and mixins, no colors or other visual tokens.
+// ─────────────────────────────────────────────────────────────────────────
+
+$fk-bp-xs: 375px;
+$fk-bp-sm: 414px;
+$fk-bp-md: 768px;
+$fk-bp-lg: 1024px;
+$fk-bp-xl: 1440px;
+$fk-bp-2xl: 1920px;
+
+@mixin fk-up($bp) {
+  @media (min-width: $bp) {
+    @content;
+  }
+}
+
+@mixin fk-down($bp) {
+  @media (max-width: ($bp - 1px)) {
+    @content;
+  }
+}
+
+// Convenience aliases
+@mixin fk-tablet-up {
+  @include fk-up($fk-bp-md) {
+    @content;
+  }
+}
+@mixin fk-laptop-up {
+  @include fk-up($fk-bp-lg) {
+    @content;
+  }
+}
+@mixin fk-desktop-up {
+  @include fk-up($fk-bp-xl) {
+    @content;
+  }
+}
+@mixin fk-mobile-only {
+  @include fk-down($fk-bp-md) {
+    @content;
+  }
+}

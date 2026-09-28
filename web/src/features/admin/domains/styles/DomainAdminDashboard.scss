@@ -1,0 +1,273 @@
+.domain-admin-page,
+.domain-settings-page,
+.domain-campaigns-page,
+.domain-authorizations-page,
+.domain-management-page {
+  min-height: 100%;
+  padding: 32px;
+  background: #f5f7fa;
+  color: #111827;
+}
+
+.domain-admin-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.domain-eyebrow {
+  display: inline-block;
+  margin-bottom: 7px;
+  color: #005a8d;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.domain-admin-header h1 {
+  margin: 0;
+  color: #111827;
+  font-size: 32px;
+  line-height: 1.15;
+}
+
+.domain-admin-header p {
+  max-width: 720px;
+  margin: 10px 0 0;
+  color: #6b7280;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.domain-admin-error {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.domain-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.domain-stat-card {
+  min-height: 112px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04);
+}
+
+.domain-stat-card span {
+  display: block;
+  margin-bottom: 10px;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.domain-stat-card strong {
+  color: #111827;
+  font-size: 26px;
+}
+
+.domain-stat-card--loading {
+  min-height: 112px;
+  background: linear-gradient(
+    90deg,
+    #f3f4f6,
+    #e5e7eb,
+    #f3f4f6
+  );
+}
+
+.domain-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.domain-admin-card {
+  display: block;
+  padding: 26px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.domain-admin-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.domain-admin-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  background: #eef6fb;
+  color: #005a8d;
+  font-size: 20px;
+}
+
+.domain-admin-card h2 {
+  margin: 0 0 8px;
+  font-size: 19px;
+}
+
+.domain-admin-card p {
+  margin: 0 0 18px;
+  color: #6b7280;
+  line-height: 1.55;
+}
+
+.domain-admin-card strong {
+  color: #005a8d;
+  font-size: 13px;
+}
+
+.domain-admin-info {
+  margin-top: 28px;
+  padding: 26px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.domain-admin-info h2 {
+  margin: 0 0 22px;
+  font-size: 20px;
+}
+
+.domain-admin-info__steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.domain-admin-info__steps > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.domain-admin-info__steps span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin-bottom: 12px;
+  border-radius: 50%;
+  background: #005a8d;
+  color: #fff;
+  font-weight: 800;
+}
+
+.domain-admin-info__steps strong {
+  margin-bottom: 5px;
+}
+
+.domain-admin-info__steps p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.domain-primary-button,
+.domain-secondary-button,
+.domain-danger-button {
+  min-height: 42px;
+  padding: 0 17px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.domain-primary-button {
+  border: 1px solid #ff9900;
+  background: #ff9900;
+  color: #fff;
+}
+
+.domain-primary-button:hover {
+  background: #e68a00;
+  border-color: #e68a00;
+}
+
+.domain-secondary-button {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+}
+
+.domain-secondary-button:hover {
+  background: #f9fafb;
+}
+
+.domain-danger-button {
+  border: 1px solid #fecaca;
+  background: #fff;
+  color: #b91c1c;
+}
+
+.domain-danger-button:hover {
+  background: #fef2f2;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@media (max-width: 1200px) {
+  .domain-stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .domain-admin-info__steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .domain-admin-page,
+  .domain-settings-page,
+  .domain-campaigns-page,
+  .domain-authorizations-page,
+  .domain-management-page {
+    padding: 20px;
+  }
+
+  .domain-admin-header {
+    flex-direction: column;
+  }
+
+  .domain-stats-grid,
+  .domain-admin-grid,
+  .domain-admin-info__steps {
+    grid-template-columns: 1fr;
+  }
+}

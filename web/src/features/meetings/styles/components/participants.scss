@@ -1,0 +1,27 @@
+@use '../tokens' as t;
+
+.fm-participant-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+
+  &:hover { background: t.$void-800; }
+
+  &__info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+  &__name { color: t.$fog-0; font-size: t.$fs-sm; font-weight: 500; }
+  &__badge {
+    font-size: 9px;
+    text-transform: uppercase;
+    background: t.$signal-500;
+    color: white;
+    padding: 1px 6px;
+    border-radius: t.$radius-pill;
+    letter-spacing: 0.03em;
+  }
+  &__status { display: flex; align-items: center; gap: 8px; color: t.$fog-300; position: relative; }
+  &__muted { color: #ff8a8d; }
+  &__hand { color: t.$amber-500; }
+  &__more { background: none; border: none; color: t.$fog-300; display: flex; &:hover { color: t.$fog-0; } }
+  &__menu-wrap { position: relative; }
+}

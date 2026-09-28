@@ -1,0 +1,103 @@
+.fk-app-layout {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background: var(--fk-bg);
+  box-sizing: border-box;
+
+  transition: background-color 240ms ease;
+}
+
+.fk-app-layout > .fk-sidebar {
+  flex: 0 0 250px;
+  width: 250px;
+  min-width: 250px;
+  height: fit-content;
+  margin: 20px 0 20px 20px;
+}
+
+.fk-app-content {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  min-height: 100vh;
+  padding: 24px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+
+  background: var(--fk-bg);
+
+  transition: background-color 240ms ease;
+}
+
+// ============================================================================
+// MAP — full-bleed, fixed-viewport UI. The default padding + min-height
+// above stacks with FockisMap.scss's own height, overflowing one real
+// viewport and forcing the page to scroll — which clips the map's own
+// floating controls (compass, locate button) under the scrollbar. Locking
+// this to exactly 100vh with no padding and no overflow fixes that.
+// ============================================================================
+
+.fk-app-content--map {
+  padding: 0;
+  min-height: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.fk-app-layout *,
+.fk-app-layout *::before,
+.fk-app-layout *::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+
+  background: var(--fk-bg);
+}
+
+@media (max-width: 1100px) {
+  .fk-app-layout > .fk-sidebar {
+    flex: 0 0 76px;
+    width: 76px;
+    min-width: 76px;
+    margin-left: 10px;
+  }
+
+  .fk-app-content {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .fk-app-layout {
+    display: block;
+  }
+
+  .fk-app-layout > .fk-sidebar {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    flex: none;
+  }
+
+  .fk-app-content {
+    width: 100%;
+    min-height: auto;
+    padding: 16px;
+  }
+
+  .fk-app-content--map {
+    padding: 0;
+    height: 100vh;
+  }
+}

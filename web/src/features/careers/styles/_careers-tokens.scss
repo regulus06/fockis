@@ -1,0 +1,48 @@
+// Fockis Careers — design tokens
+// Import wherever a careers component needs the palette/type scale:
+//   @use '../../styles/careers-tokens' as ct;   (adjust relative path per file)
+
+:root {
+  --careers-ink: #14171f;
+  --careers-ink-soft: #575c6b;
+  --careers-ink-faint: #8a8fa0;
+
+  --careers-indigo: #332a8f;
+  --careers-indigo-deep: #211a63;
+  --careers-indigo-tint: #edebfa;
+
+  --careers-teal: #137e70;
+  --careers-teal-tint: #e3f6f1;
+
+  --careers-amber: #c97a1f;
+  --careers-amber-tint: #fbeedb;
+
+  --careers-bg: #f6f6fa;
+  --careers-bg-alt: #efeef8;
+  --careers-card: #ffffff;
+  --careers-line: #e4e3ee;
+
+  --careers-success: #1d9a6c;
+  --careers-danger: #c64545;
+
+  --careers-radius: 14px;
+  --careers-radius-sm: 9px;
+
+  --careers-shadow-sm: 0 1px 2px rgba(20, 23, 31, 0.06);
+  --careers-shadow-md: 0 6px 20px -6px rgba(30, 26, 90, 0.14);
+  --careers-shadow-lg: 0 20px 50px -12px rgba(30, 26, 90, 0.22);
+
+  --careers-font-display: 'Space Grotesk', sans-serif;
+  --careers-font-body: 'Inter', sans-serif;
+  --careers-font-mono: 'IBM Plex Mono', monospace;
+}
+
+// SCSS variable mirrors, for files that prefer $var over var(--x)
+$careers-indigo: #332a8f;
+$careers-indigo-deep: #211a63;
+$careers-teal: #137e70;
+$careers-amber: #c97a1f;
+$careers-bg: #f6f6fa;
+$careers-line: #e4e3ee;
+$careers-radius: 14px;
+$careers-radius-sm: 9px;

@@ -1,0 +1,63 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+.voice-recorder {
+  display: flex;
+  align-items: center;
+  gap: v.$space-3;
+  padding: v.$space-3 v.$space-4;
+  animation: fockis-slide-up 0.15s ease;
+}
+
+.voice-recorder__icon-btn {
+  @include m.icon-button(38px);
+  background: v.$color-bg-sunken;
+
+  &.is-danger {
+    color: v.$color-danger;
+  }
+}
+
+.voice-recorder__send-btn {
+  background: v.$fockis-primary;
+  color: #fff;
+
+  &:hover {
+    background: v.$fockis-primary-dark;
+    color: #fff;
+  }
+}
+
+.voice-recorder__pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: v.$color-danger;
+  animation: fockis-pulse 1.4s ease infinite;
+  flex-shrink: 0;
+}
+
+.voice-recorder__timer {
+  font-variant-numeric: tabular-nums;
+  font-size: v.$font-size-sm;
+  color: v.$color-text-secondary;
+  min-width: 40px;
+}
+
+.voice-recorder--error {
+  color: v.$color-danger;
+  font-size: v.$font-size-sm;
+
+  button {
+    margin-left: auto;
+    padding: 6px 12px;
+    border-radius: v.$radius-pill;
+    background: v.$color-bg-sunken;
+    color: v.$color-text-primary;
+  }
+}
+
+.voice-recorder--recording,
+.voice-recorder--preview {
+  flex: 1;
+}

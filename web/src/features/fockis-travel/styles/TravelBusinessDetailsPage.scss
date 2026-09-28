@@ -1,0 +1,563 @@
+// ============================================================
+// FOCKIS TRAVEL
+// TravelBusinessDetailsPage.scss
+// ============================================================
+
+@use "./fockis-tokens" as *;
+
+// ------------------------------------------------------------
+// PAGE
+// ------------------------------------------------------------
+
+.travel-business-page {
+  min-height: 100vh;
+  padding-bottom: 72px;
+  background: $cream-100;
+  color: $text-on-light;
+  font-family: $font-body;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+}
+
+// ------------------------------------------------------------
+// CONTAINER
+// ------------------------------------------------------------
+
+.travel-business-container {
+  @include wrap;
+
+  max-width: 1240px;
+}
+
+// ------------------------------------------------------------
+// BUTTONS
+// ------------------------------------------------------------
+
+.travel-business-page .btn {
+  @include btn-base;
+
+  min-height: 44px;
+  padding: 0.7rem 1.2rem;
+  border-radius: $radius-pill;
+  font-size: 0.9rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.travel-business-page .btn-primary {
+  background: $navy-900;
+  color: #fff;
+  border-color: $navy-900;
+  box-shadow: 0 5px 14px rgba(10, 24, 48, 0.14);
+
+  &:hover {
+    background: $navy-800;
+    border-color: $navy-800;
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $gold-500;
+    outline-offset: 3px;
+  }
+}
+
+.travel-business-page .btn-outline {
+  background: #fff;
+  color: $navy-900;
+  border-color: rgba(10, 24, 48, 0.24);
+
+  &:hover {
+    background: $navy-900;
+    border-color: $navy-900;
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $gold-500;
+    outline-offset: 3px;
+  }
+}
+
+// ------------------------------------------------------------
+// HERO
+// ------------------------------------------------------------
+
+.travel-business-hero {
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid rgba(22, 58, 95, 0.12);
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+}
+
+.travel-business-cover {
+  position: relative;
+  min-height: 300px;
+  background-color: $navy-800;
+  background-size: cover;
+  background-position: center;
+}
+
+.travel-business-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(10, 24, 48, 0.05) 0%,
+      rgba(10, 24, 48, 0.1) 40%,
+      rgba(10, 24, 48, 0.62) 100%
+    );
+}
+
+.travel-business-cover > div {
+  z-index: 1;
+}
+
+// ------------------------------------------------------------
+// HERO BUSINESS IDENTITY
+// ------------------------------------------------------------
+
+.travel-business-page h1 {
+  color: inherit;
+  font-family: $font-display;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.travel-business-page h2,
+.travel-business-page h3 {
+  color: $navy-900;
+  font-family: $font-display;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.travel-business-page p {
+  color: $text-on-light-muted;
+}
+
+// ------------------------------------------------------------
+// HERO BADGES
+// ------------------------------------------------------------
+
+.travel-business-cover span {
+  backdrop-filter: blur(5px);
+}
+
+// ------------------------------------------------------------
+// HERO INFORMATION BAR
+// ------------------------------------------------------------
+
+.travel-business-hero > div:last-child {
+  background: $cream-50;
+}
+
+.travel-business-hero > div:last-child strong {
+  color: $navy-900;
+  font-weight: 900;
+}
+
+.travel-business-hero > div:last-child a {
+  text-decoration: none;
+}
+
+// ------------------------------------------------------------
+// MAIN CONTENT
+// ------------------------------------------------------------
+
+.travel-business-page section:not(.travel-business-hero) {
+  min-width: 0;
+}
+
+// ------------------------------------------------------------
+// CONTENT CARDS
+// ------------------------------------------------------------
+
+.travel-business-page section > div > div {
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.travel-business-page section > div > div:hover {
+  border-color: rgba(22, 58, 95, 0.18);
+}
+
+// ------------------------------------------------------------
+// ABOUT
+// ------------------------------------------------------------
+
+.travel-business-page h2 {
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
+  line-height: 1.2;
+}
+
+.travel-business-page h3 {
+  font-size: 1.15rem;
+  line-height: 1.25;
+}
+
+// ------------------------------------------------------------
+// SERVICES
+// ------------------------------------------------------------
+
+.travel-business-page [style*="grid-template-columns"] > div {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.travel-business-page [style*="grid-template-columns"] > div:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(10, 24, 48, 0.08);
+  border-color: rgba(22, 58, 95, 0.16) !important;
+}
+
+// ------------------------------------------------------------
+// AMENITIES
+// ------------------------------------------------------------
+
+.travel-business-page span[style*="border-radius: 999px"] {
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.travel-business-page span[style*="border-radius: 999px"]:hover {
+  background: $gold-100 !important;
+  transform: translateY(-1px);
+}
+
+// ------------------------------------------------------------
+// LISTINGS
+// ------------------------------------------------------------
+
+#business-listings {
+  scroll-margin-top: 30px;
+}
+
+#business-listings > div:first-child {
+  min-width: 0;
+}
+
+#business-listings article {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(22, 58, 95, 0.12);
+  border-radius: $radius-md;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(10, 24, 48, 0.06);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+#business-listings article:hover {
+  transform: translateY(-3px);
+  border-color: rgba(22, 58, 95, 0.2);
+  box-shadow: $shadow-card-hover;
+}
+
+#business-listings article > div:first-child {
+  position: relative;
+  overflow: hidden;
+  background-color: $navy-800;
+}
+
+#business-listings article > div:first-child::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 24, 48, 0) 40%,
+    rgba(10, 24, 48, 0.32) 100%
+  );
+}
+
+#business-listings article > div:first-child span {
+  position: relative;
+  z-index: 1;
+}
+
+// ------------------------------------------------------------
+// LISTING CARD CONTENT
+// ------------------------------------------------------------
+
+#business-listings article h3 {
+  margin: 0;
+  color: $navy-900;
+  font-family: $font-display;
+  font-size: 1.3rem;
+  line-height: 1.2;
+}
+
+#business-listings article p {
+  color: $text-on-light-muted;
+  font-size: 0.88rem;
+}
+
+#business-listings article a {
+  text-decoration: none;
+}
+
+#business-listings article a:hover {
+  text-decoration: none;
+}
+
+// ------------------------------------------------------------
+// PRICE
+// ------------------------------------------------------------
+
+#business-listings article [style*="font-size: 17px"] {
+  color: $navy-900 !important;
+  font-family: $font-display;
+  font-size: 1.15rem !important;
+}
+
+// ------------------------------------------------------------
+// CONTACT CARD
+// ------------------------------------------------------------
+
+.travel-business-page aside > div {
+  border: 1px solid rgba(22, 58, 95, 0.12);
+  border-radius: $radius-md;
+  background: $cream-50;
+  box-shadow: $shadow-card;
+}
+
+.travel-business-page aside h3 {
+  margin-bottom: 8px;
+  font-size: 1.35rem;
+}
+
+.travel-business-page aside a {
+  transition:
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.travel-business-page aside a:hover {
+  color: $gold-600 !important;
+  transform: translateX(2px);
+}
+
+.travel-business-page aside a:focus-visible {
+  outline: 2px solid $gold-500;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+// ------------------------------------------------------------
+// VERIFIED STATUS
+// ------------------------------------------------------------
+
+.travel-business-page aside div[style*="background: #eef7ef"] {
+  border: 1px solid rgba(63, 166, 106, 0.18);
+}
+
+// ------------------------------------------------------------
+// EMPTY STATE
+// ------------------------------------------------------------
+
+.travel-business-page [style*="background: #eef4f9"] {
+  color: $navy-900;
+}
+
+.travel-business-page [style*="background: #eef4f9"] svg {
+  color: $navy-900;
+}
+
+// ------------------------------------------------------------
+// LOADING SPINNER
+// ------------------------------------------------------------
+
+.travel-spin {
+  display: inline-block;
+  animation: travel-business-spin 0.85s linear infinite;
+  color: $gold-600;
+}
+
+@keyframes travel-business-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ------------------------------------------------------------
+// ACCESSIBILITY
+// ------------------------------------------------------------
+
+.travel-business-page a:focus-visible,
+.travel-business-page button:focus-visible {
+  outline: 2px solid $gold-500;
+  outline-offset: 3px;
+}
+
+// ------------------------------------------------------------
+// TABLET
+// ------------------------------------------------------------
+
+@include bp-down($bp-lg) {
+  .travel-business-container {
+    max-width: 1100px;
+  }
+
+  .travel-business-cover {
+    min-height: 280px;
+  }
+}
+
+// ------------------------------------------------------------
+// MOBILE
+// ------------------------------------------------------------
+
+@include bp-down($bp-md) {
+  .travel-business-page {
+    padding-bottom: 45px;
+  }
+
+  .travel-business-container {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .travel-business-cover {
+    min-height: 330px;
+  }
+
+  .travel-business-cover > div {
+    padding: 22px !important;
+  }
+
+  .travel-business-cover > div > div {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 14px !important;
+  }
+
+  .travel-business-cover > div > div > div:first-child {
+    width: 82px !important;
+    height: 82px !important;
+    border-radius: 16px !important;
+  }
+
+  .travel-business-cover h1 {
+    font-size: clamp(27px, 8vw, 38px) !important;
+  }
+
+  .travel-business-hero > div:last-child {
+    padding: 18px !important;
+  }
+
+  .travel-business-hero > div:last-child > div {
+    width: 100%;
+  }
+
+  .travel-business-hero > div:last-child > div:last-child {
+    width: 100%;
+  }
+
+  .travel-business-hero > div:last-child a {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .travel-business-page section[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .travel-business-page aside > div {
+    position: static !important;
+  }
+
+  #business-listings article > div:first-child {
+    height: 210px !important;
+  }
+}
+
+// ------------------------------------------------------------
+// SMALL MOBILE
+// ------------------------------------------------------------
+
+@include bp-down($bp-sm) {
+  .travel-business-container {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .travel-business-cover {
+    min-height: 350px;
+  }
+
+  .travel-business-cover > div {
+    padding: 18px !important;
+  }
+
+  .travel-business-cover > div > div > div:first-child {
+    width: 72px !important;
+    height: 72px !important;
+  }
+
+  .travel-business-cover > div > div > div:first-child span {
+    font-size: 25px !important;
+  }
+
+  .travel-business-cover h1 {
+    font-size: 28px !important;
+  }
+
+  .travel-business-page .btn {
+    min-height: 42px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .travel-business-page section > div > div {
+    padding: 20px !important;
+  }
+
+  #business-listings article > div:last-child {
+    padding: 17px !important;
+  }
+
+  #business-listings article > div:first-child {
+    height: 185px !important;
+  }
+
+  #business-listings article > div:last-child > div:last-child {
+    flex-direction: column;
+  }
+
+  #business-listings article > div:last-child > div:last-child a {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .travel-business-page aside > div {
+    padding: 18px !important;
+  }
+}

@@ -1,0 +1,31 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+.voice-message {
+  display: flex;
+  align-items: center;
+  gap: v.$space-2;
+  min-width: 220px;
+  padding: v.$space-1;
+}
+
+.voice-message__play-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: v.$fockis-primary;
+  color: #fff;
+  flex-shrink: 0;
+  @include m.flex-center;
+
+  .is-own & {
+    background: rgba(255, 255, 255, 0.25);
+  }
+}
+
+.voice-message__duration {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+  flex-shrink: 0;
+}

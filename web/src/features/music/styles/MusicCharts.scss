@@ -1,0 +1,1438 @@
+/* ============================================================
+   FOCKIS MUSIC — CHARTS
+   Professional chart / streaming marketplace interface
+   ============================================================ */
+
+.music-charts-page {
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding-bottom: 72px;
+  background:
+    radial-gradient(
+      circle at 50% -10%,
+      rgba(124, 58, 237, 0.18),
+      transparent 38%
+    ),
+    #f6f7fb;
+  color: #111827;
+}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+
+.music-charts-page .music-charts-hero {
+  position: relative;
+  width: 100%;
+  min-height: 360px;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 48px;
+
+  padding: 64px clamp(24px, 6vw, 96px);
+
+  overflow: hidden;
+
+  color: #ffffff;
+
+  background:
+    radial-gradient(
+      circle at 82% 30%,
+      rgba(168, 85, 247, 0.34),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 15% 100%,
+      rgba(37, 99, 235, 0.25),
+      transparent 35%
+    ),
+    linear-gradient(
+      135deg,
+      #111827 0%,
+      #18122b 45%,
+      #251447 100%
+    );
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.music-charts-page .music-charts-hero::before {
+  content: "";
+  position: absolute;
+  width: 420px;
+  height: 420px;
+
+  right: -120px;
+  top: -180px;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.05);
+  filter: blur(2px);
+}
+
+.music-charts-page .music-charts-hero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.18),
+    transparent
+  );
+}
+
+.music-charts-page .music-charts-hero-content {
+  position: relative;
+  z-index: 1;
+
+  max-width: 760px;
+}
+
+.music-charts-page .music-hero-kicker {
+  display: inline-flex;
+  align-items: center;
+
+  margin-bottom: 14px;
+
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+
+  color: #c4b5fd;
+}
+
+.music-charts-page .music-charts-hero h1 {
+  margin: 0;
+
+  font-size: clamp(42px, 6vw, 76px);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  font-weight: 900;
+}
+
+.music-charts-page .music-charts-hero h1 span {
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.music-charts-page .music-charts-hero p {
+  max-width: 650px;
+
+  margin: 22px 0 0;
+
+  font-size: 18px;
+  line-height: 1.7;
+
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.music-charts-page .music-charts-hero-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  margin-top: 30px;
+}
+
+.music-charts-page .music-charts-hero-stat {
+  position: relative;
+  z-index: 1;
+
+  flex: 0 0 auto;
+
+  min-width: 170px;
+  padding: 28px 30px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.music-charts-page .music-charts-hero-stat strong {
+  font-size: 54px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+}
+
+.music-charts-page .music-charts-hero-stat span {
+  margin-top: 8px;
+
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+
+  color: rgba(255, 255, 255, 0.58);
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+
+.music-charts-page .music-charts-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 10px clamp(16px, 5vw, 80px);
+
+  overflow-x: auto;
+
+  background: rgba(255, 255, 255, 0.94);
+  border-bottom: 1px solid #e5e7eb;
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  scrollbar-width: none;
+}
+
+.music-charts-page .music-charts-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.music-charts-page .music-charts-nav a {
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 40px;
+  padding: 0 15px;
+
+  border-radius: 10px;
+
+  color: #6b7280;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  text-decoration: none;
+
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.music-charts-page .music-charts-nav a:hover {
+  color: #111827;
+  background: #f3f4f6;
+}
+
+.music-charts-page .music-charts-nav a.music-home-nav-active {
+  color: #ffffff;
+  background: linear-gradient(
+    135deg,
+    #7c3aed,
+    #5b21b6
+  );
+
+  box-shadow:
+    0 5px 14px rgba(124, 58, 237, 0.24);
+}
+
+/* ============================================================
+   TOOLBAR
+   ============================================================ */
+
+.music-charts-page .music-charts-toolbar {
+  width: min(1240px, calc(100% - 48px));
+  margin: 42px auto 26px;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 30px;
+}
+
+.music-charts-page .music-charts-toolbar-copy {
+  min-width: 0;
+}
+
+.music-charts-page .music-section-eyebrow {
+  display: inline-block;
+
+  margin-bottom: 8px;
+
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+
+  color: #7c3aed;
+}
+
+.music-charts-page .music-charts-toolbar h2,
+.music-charts-page .music-section-heading h2 {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 27px;
+  line-height: 1.15;
+  font-weight: 850;
+
+  letter-spacing: -0.025em;
+}
+
+.music-charts-page .music-charts-toolbar p {
+  margin: 8px 0 0;
+
+  color: #6b7280;
+
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+
+.music-charts-page .music-chart-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 5px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 6px 20px rgba(17, 24, 39, 0.06);
+}
+
+.music-charts-page .music-chart-tabs button {
+  min-height: 42px;
+  padding: 0 15px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  border: 0;
+  border-radius: 10px;
+
+  background: transparent;
+  color: #6b7280;
+
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.music-charts-page .music-chart-tabs button:hover {
+  color: #111827;
+  background: #f5f3ff;
+}
+
+.music-charts-page .music-chart-tabs button.is-active {
+  color: #ffffff;
+
+  background: linear-gradient(
+    135deg,
+    #7c3aed,
+    #5b21b6
+  );
+
+  box-shadow:
+    0 5px 12px rgba(124, 58, 237, 0.22);
+}
+
+.music-charts-page .music-chart-tabs button span {
+  min-width: 22px;
+  height: 22px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 5px;
+
+  border-radius: 999px;
+
+  background: rgba(17, 24, 39, 0.07);
+
+  font-size: 11px;
+}
+
+.music-charts-page .music-chart-tabs button.is-active span {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ============================================================
+   ERROR
+   ============================================================ */
+
+.music-charts-page .music-error {
+  width: min(1240px, calc(100% - 48px));
+  box-sizing: border-box;
+
+  margin: 0 auto 28px;
+  padding: 18px 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  border: 1px solid #fecaca;
+  border-radius: 16px;
+
+  background: #fff7f7;
+}
+
+.music-charts-page .music-error strong {
+  display: block;
+
+  color: #991b1b;
+
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.music-charts-page .music-error p {
+  margin: 5px 0 0;
+
+  color: #b91c1c;
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.music-charts-page .music-primary-button,
+.music-charts-page .music-secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 44px;
+  padding: 0 18px;
+
+  border-radius: 11px;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.music-charts-page .music-primary-button {
+  color: #ffffff;
+
+  border: 1px solid transparent;
+
+  background: linear-gradient(
+    135deg,
+    #7c3aed,
+    #5b21b6
+  );
+
+  box-shadow:
+    0 8px 18px rgba(124, 58, 237, 0.24);
+}
+
+.music-charts-page .music-primary-button:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 12px 24px rgba(124, 58, 237, 0.3);
+}
+
+.music-charts-page .music-secondary-button {
+  color: #374151;
+
+  border: 1px solid #d1d5db;
+
+  background: #ffffff;
+}
+
+.music-charts-page .music-secondary-button:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* ============================================================
+   TOP PERFORMERS
+   ============================================================ */
+
+.music-charts-page .music-charts-top {
+  width: min(1240px, calc(100% - 48px));
+  margin: 0 auto 42px;
+}
+
+.music-charts-page .music-charts-top > .music-section-heading {
+  margin-bottom: 18px;
+}
+
+.music-charts-page .music-section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.music-charts-page .music-charts-podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.music-charts-page .music-chart-podium-card {
+  position: relative;
+
+  min-width: 0;
+  min-height: 310px;
+
+  padding: 20px;
+
+  display: flex;
+  flex-direction: column;
+
+  text-align: left;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 22px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 28px rgba(17, 24, 39, 0.06);
+
+  cursor: pointer;
+
+  overflow: hidden;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.music-charts-page .music-chart-podium-card:hover {
+  transform: translateY(-5px);
+
+  border-color: #d8b4fe;
+
+  box-shadow:
+    0 18px 42px rgba(17, 24, 39, 0.12);
+}
+
+.music-charts-page .music-chart-podium-card::before {
+  content: "";
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 4px;
+
+  background: linear-gradient(
+    90deg,
+    #7c3aed,
+    #a855f7
+  );
+}
+
+.music-charts-page .music-chart-podium-card:nth-child(2)::before {
+  background: linear-gradient(
+    90deg,
+    #64748b,
+    #94a3b8
+  );
+}
+
+.music-charts-page .music-chart-podium-card:nth-child(3)::before {
+  background: linear-gradient(
+    90deg,
+    #b45309,
+    #d97706
+  );
+}
+
+.music-charts-page .music-chart-podium-rank {
+  display: inline-flex;
+  align-items: center;
+
+  width: fit-content;
+
+  margin-bottom: 14px;
+  padding: 5px 9px;
+
+  border-radius: 999px;
+
+  background: #f5f3ff;
+  color: #6d28d9;
+
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+}
+
+.music-charts-page .music-chart-podium-art {
+  position: relative;
+
+  width: 100%;
+  aspect-ratio: 1 / 0.72;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ede9fe,
+      #f5f3ff
+    );
+}
+
+.music-charts-page .music-chart-podium-art img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+.music-charts-page .music-chart-podium-art > span {
+  font-size: 54px;
+}
+
+.music-charts-page .music-chart-podium-art i {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+
+  background: rgba(17, 24, 39, 0.78);
+
+  font-size: 21px;
+  font-style: normal;
+
+  backdrop-filter: blur(8px);
+}
+
+.music-charts-page .music-chart-podium-info {
+  padding-top: 16px;
+}
+
+.music-charts-page .music-chart-podium-info h3 {
+  margin: 0;
+
+  overflow: hidden;
+
+  color: #111827;
+
+  font-size: 19px;
+  line-height: 1.25;
+  font-weight: 850;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.music-charts-page .music-chart-podium-info p {
+  margin: 6px 0 0;
+
+  color: #6b7280;
+
+  font-size: 13px;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.music-charts-page .music-chart-podium-info strong {
+  display: block;
+
+  margin-top: 10px;
+
+  color: #374151;
+
+  font-size: 13px;
+}
+
+.music-charts-page .music-chart-podium-type {
+  display: inline-flex;
+  align-items: center;
+
+  width: fit-content;
+
+  margin-top: auto;
+  padding-top: 14px;
+
+  color: #7c3aed;
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* ============================================================
+   FULL CHART
+   ============================================================ */
+
+.music-charts-page .music-charts-list-section {
+  width: min(1240px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+.music-charts-page .music-charts-list-section > .music-section-heading {
+  margin-bottom: 16px;
+}
+
+.music-charts-page .music-chart-total {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 32px;
+  padding: 0 11px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+
+  background: #ffffff;
+  color: #6b7280;
+
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.music-charts-page .music-charts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ============================================================
+   CHART ROW
+   ============================================================ */
+
+.music-charts-page .music-chart-row {
+  position: relative;
+
+  width: 100%;
+  min-height: 94px;
+  box-sizing: border-box;
+
+  padding: 10px 14px;
+
+  display: grid;
+  grid-template-columns:
+    58px
+    72px
+    minmax(0, 1fr)
+    auto
+    32px;
+
+  align-items: center;
+  gap: 14px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 3px 12px rgba(17, 24, 39, 0.035);
+
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.music-charts-page .music-chart-row:hover {
+  transform: translateY(-1px);
+
+  border-color: #ddd6fe;
+
+  background: #fdfcff;
+
+  box-shadow:
+    0 8px 24px rgba(17, 24, 39, 0.08);
+}
+
+.music-charts-page .music-chart-rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.music-charts-page .music-chart-rank-number {
+  color: #374151;
+
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.music-charts-page .music-chart-rank-medal {
+  font-size: 15px;
+}
+
+.music-charts-page .music-chart-art-button {
+  position: relative;
+
+  width: 72px;
+  height: 72px;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 12px;
+
+  background: #f3f4f6;
+
+  overflow: hidden;
+
+  cursor: pointer;
+}
+
+.music-charts-page .music-chart-art {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+.music-charts-page .music-chart-art-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ede9fe,
+      #f5f3ff
+    );
+}
+
+.music-charts-page .music-chart-art-placeholder span {
+  font-size: 28px;
+}
+
+.music-charts-page .music-chart-art-play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transform: translate(-50%, -50%) scale(0.86);
+
+  border-radius: 50%;
+
+  color: #ffffff;
+
+  background: rgba(17, 24, 39, 0.82);
+
+  font-size: 12px;
+
+  opacity: 0;
+
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.music-charts-page .music-chart-art-button:hover
+  .music-chart-art-play {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.music-charts-page .music-chart-main {
+  min-width: 0;
+
+  padding: 4px 0;
+
+  border: 0;
+
+  background: transparent;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.music-charts-page .music-chart-title-row {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.music-charts-page .music-chart-title-row h3 {
+  min-width: 0;
+
+  margin: 0;
+
+  overflow: hidden;
+
+  color: #111827;
+
+  font-size: 15px;
+  line-height: 1.3;
+  font-weight: 850;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.music-charts-page .music-chart-media-type {
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+
+  padding: 4px 7px;
+
+  border-radius: 7px;
+
+  background: #f5f3ff;
+  color: #6d28d9;
+
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.music-charts-page .music-chart-creator {
+  margin: 4px 0 0;
+
+  overflow: hidden;
+
+  color: #6b7280;
+
+  font-size: 12px;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.music-charts-page .music-chart-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+
+  margin-top: 7px;
+
+  color: #9ca3af;
+
+  font-size: 11px;
+}
+
+.music-charts-page .music-chart-meta strong {
+  color: #4b5563;
+}
+
+.music-charts-page .music-chart-progress {
+  width: 100%;
+  height: 4px;
+
+  margin-top: 10px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: #f3f4f6;
+}
+
+.music-charts-page .music-chart-progress span {
+  display: block;
+
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: linear-gradient(
+    90deg,
+    #7c3aed,
+    #a855f7
+  );
+}
+
+.music-charts-page .music-chart-price {
+  min-width: 72px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.music-charts-page .music-chart-paid,
+.music-charts-page .music-chart-free {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 30px;
+  padding: 0 9px;
+
+  border-radius: 8px;
+
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.music-charts-page .music-chart-paid {
+  color: #7c3aed;
+  background: #f5f3ff;
+}
+
+.music-charts-page .music-chart-free {
+  color: #047857;
+  background: #ecfdf5;
+}
+
+.music-charts-page .music-chart-open {
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 9px;
+
+  background: #f9fafb;
+  color: #6b7280;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.music-charts-page .music-chart-open:hover {
+  color: #6d28d9;
+  background: #f5f3ff;
+  transform: translateX(2px);
+}
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+
+.music-charts-page .music-empty-state {
+  width: min(700px, calc(100% - 48px));
+  box-sizing: border-box;
+
+  margin: 55px auto;
+
+  padding: 58px 30px;
+
+  text-align: center;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 24px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 10px 35px rgba(17, 24, 39, 0.06);
+}
+
+.music-charts-page .music-empty-state-icon {
+  width: 72px;
+  height: 72px;
+
+  margin: 0 auto 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 20px;
+
+  background: #f5f3ff;
+
+  font-size: 34px;
+}
+
+.music-charts-page .music-empty-state h2 {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 23px;
+  font-weight: 850;
+}
+
+.music-charts-page .music-empty-state p {
+  max-width: 520px;
+
+  margin: 10px auto 24px;
+
+  color: #6b7280;
+
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* ============================================================
+   CREATOR BANNER
+   ============================================================ */
+
+.music-charts-page .music-charts-creator-banner {
+  width: min(1240px, calc(100% - 48px));
+  box-sizing: border-box;
+
+  margin: 54px auto 0;
+  padding: 30px 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+
+  border: 1px solid #ddd6fe;
+  border-radius: 22px;
+
+  background:
+    radial-gradient(
+      circle at 90% 20%,
+      rgba(168, 85, 247, 0.16),
+      transparent 28%
+    ),
+    linear-gradient(
+      135deg,
+      #faf5ff,
+      #f5f3ff
+    );
+}
+
+.music-charts-page .music-charts-creator-banner h2 {
+  margin: 0;
+
+  color: #312e81;
+
+  font-size: 22px;
+  line-height: 1.25;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+}
+
+.music-charts-page .music-charts-creator-banner p {
+  max-width: 680px;
+
+  margin: 8px 0 0;
+
+  color: #6b7280;
+
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+/* ============================================================
+   SKELETON / LOADING
+   ============================================================ */
+
+.music-charts-page .music-charts-list
+  .music-chart-skeleton {
+  min-height: 94px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #f3f4f6 25%,
+      #e5e7eb 50%,
+      #f3f4f6 75%
+    );
+
+  background-size: 200% 100%;
+
+  animation: musicChartsSkeleton 1.5s ease-in-out infinite;
+}
+
+@keyframes musicChartsSkeleton {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ============================================================
+   ACCESSIBILITY
+   ============================================================ */
+
+.music-charts-page
+  button:focus-visible,
+.music-charts-page
+  a:focus-visible {
+  outline: 3px solid rgba(124, 58, 237, 0.32);
+  outline-offset: 3px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 900px) {
+  .music-charts-page .music-charts-hero {
+    min-height: auto;
+
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    padding-top: 52px;
+    padding-bottom: 48px;
+  }
+
+  .music-charts-page .music-charts-hero-stat {
+    align-self: flex-start;
+
+    min-width: 145px;
+  }
+
+  .music-charts-page .music-charts-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .music-charts-page .music-chart-tabs {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .music-charts-page .music-chart-tabs button {
+    flex: 1;
+  }
+
+  .music-charts-page .music-charts-podium {
+    grid-template-columns: 1fr;
+  }
+
+  .music-charts-page .music-chart-podium-card {
+    min-height: 0;
+  }
+
+  .music-charts-page .music-chart-podium-art {
+    aspect-ratio: 16 / 7;
+  }
+}
+
+@media (max-width: 720px) {
+  .music-charts-page .music-charts-hero {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .music-charts-page .music-charts-hero h1 {
+    font-size: 44px;
+  }
+
+  .music-charts-page .music-charts-hero p {
+    font-size: 15px;
+  }
+
+  .music-charts-page .music-charts-toolbar,
+  .music-charts-page .music-charts-top,
+  .music-charts-page .music-charts-list-section,
+  .music-charts-page .music-charts-creator-banner,
+  .music-charts-page .music-error {
+    width: min(100% - 28px, 1240px);
+  }
+
+  .music-charts-page .music-chart-row {
+    grid-template-columns:
+      38px
+      58px
+      minmax(0, 1fr)
+      30px;
+
+    gap: 10px;
+
+    padding: 9px;
+  }
+
+  .music-charts-page .music-chart-art-button {
+    width: 58px;
+    height: 58px;
+  }
+
+  .music-charts-page .music-chart-price {
+    display: none;
+  }
+
+  .music-charts-page .music-chart-title-row {
+    display: block;
+  }
+
+  .music-charts-page .music-chart-media-type {
+    margin-top: 5px;
+  }
+
+  .music-charts-page .music-chart-progress {
+    margin-top: 7px;
+  }
+
+  .music-charts-page .music-charts-creator-banner {
+    align-items: flex-start;
+    flex-direction: column;
+
+    padding: 24px;
+  }
+
+  .music-charts-page .music-section-heading {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 520px) {
+  .music-charts-page .music-charts-hero-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .music-charts-page .music-charts-hero-actions a {
+    width: 100%;
+  }
+
+  .music-charts-page .music-chart-tabs {
+    overflow-x: auto;
+  }
+
+  .music-charts-page .music-chart-tabs button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .music-charts-page .music-chart-podium-card {
+    padding: 15px;
+  }
+
+  .music-charts-page .music-chart-rank {
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .music-charts-page .music-chart-rank-medal {
+    font-size: 12px;
+  }
+
+  .music-charts-page .music-chart-title-row h3 {
+    font-size: 13px;
+  }
+
+  .music-charts-page .music-chart-meta {
+    font-size: 10px;
+  }
+
+  .music-charts-page .music-chart-open {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .music-charts-page *,
+  .music-charts-page *::before,
+  .music-charts-page *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}

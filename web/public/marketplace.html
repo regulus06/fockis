@@ -1,0 +1,969 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fockis — Feed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+/* ============================================================
+   FOCKIS — design tokens
+   Palette: Fjord (teal, primary) + Amber (secondary) + Coral (tertiary accent)
+   Type: Space Grotesk (display) / Inter (body) / JetBrains Mono (data)
+   Signature shape: the "Fockis Arch" — asymmetric rounded rectangle
+   ============================================================ */
+:root{
+  --fk-font-display:"Space Grotesk",system-ui,sans-serif;
+  --fk-font-body:"Inter",system-ui,sans-serif;
+  --fk-font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --fk-fjord:#0e7c74; --fk-fjord-bright:#17b3a3; --fk-fjord-soft:#d8f0ec;
+  --fk-amber:#e8a33d; --fk-amber-soft:#fbe8c8;
+  --fk-coral:#e8604b;
+  --fk-arch:22px 22px 22px 8px; --fk-arch-sm:14px 14px 14px 5px; --fk-arch-lg:32px 32px 32px 12px;
+  --fk-r-sm:10px; --fk-r-md:16px; --fk-r-lg:22px; --fk-r-pill:999px;
+  --fk-shadow-sm:0 1px 2px rgba(15,20,25,.06),0 1px 1px rgba(15,20,25,.04);
+  --fk-shadow-md:0 8px 24px rgba(15,20,25,.08),0 2px 6px rgba(15,20,25,.06);
+  --fk-shadow-lg:0 20px 48px rgba(15,20,25,.16),0 4px 12px rgba(15,20,25,.08);
+  --fk-ease:cubic-bezier(.2,.7,.3,1); --fk-fast:140ms; --fk-med:240ms;
+  --fk-sidebar-w:248px; --fk-rail-w:300px; --fk-center-max:600px;
+}
+[data-theme="light"]{
+  --fk-bg:#f5f6f4; --fk-surface:#fff; --fk-sunken:#eef0ed; --fk-border:#e4e7e2; --fk-border-strong:#d3d7d0;
+  --fk-text:#171b21; --fk-text-2:#565f6b; --fk-text-3:#8a929c; --fk-on-brand:#fff;
+  --fk-verified:#fff; --fk-overlay:rgba(15,18,22,.5); --fk-scrim:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.55));
+}
+[data-theme="dark"]{
+  --fk-bg:#0b0e12; --fk-surface:#12161c; --fk-sunken:#0e1116; --fk-border:#262d37; --fk-border-strong:#333c48;
+  --fk-text:#eef1f4; --fk-text-2:#a4adb8; --fk-text-3:#6d7580; --fk-on-brand:#06110f;
+  --fk-verified:#0b0e12; --fk-overlay:rgba(0,0,0,.65); --fk-scrim:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.7));
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--fk-bg);color:var(--fk-text);font-family:var(--fk-font-body);-webkit-font-smoothing:antialiased;}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer;padding:0;}
+input,textarea,select{font-family:inherit;color:inherit;}
+a{color:inherit;text-decoration:none;}
+:focus-visible{outline:2px solid var(--fk-fjord-bright);outline-offset:2px;border-radius:var(--fk-r-sm);}
+.mono{font-family:var(--fk-font-mono);font-variant-numeric:tabular-nums;}
+img{max-width:100%;}
+
+/* Shell */
+.shell{display:grid;grid-template-columns:1fr;max-width:1600px;margin:0 auto;}
+@media (min-width:1024px){.shell{grid-template-columns:var(--fk-sidebar-w) minmax(0,1fr);}}
+@media (min-width:1360px){.shell{grid-template-columns:var(--fk-sidebar-w) minmax(0,1fr) var(--fk-rail-w);}}
+.sidebar-col{display:none;}
+@media (min-width:1024px){.sidebar-col{display:block;position:sticky;top:0;height:100vh;border-right:1px solid var(--fk-border);}}
+.center-col{min-width:0;padding:16px 16px 90px;}
+@media (min-width:768px){.center-col{padding:20px 20px 48px;}}
+@media (min-width:1024px){.center-col{padding:24px 24px 48px;}}
+.center-inner{max-width:var(--fk-center-max);margin:0 auto;display:flex;flex-direction:column;gap:20px;}
+.rail-col{display:none;}
+@media (min-width:1360px){.rail-col{display:block;position:sticky;top:0;height:100vh;overflow-y:auto;border-left:1px solid var(--fk-border);padding:24px 20px;}}
+
+/* Logo */
+.logo{display:inline-flex;align-items:center;gap:8px;font-family:var(--fk-font-display);font-weight:700;font-size:20px;letter-spacing:-.01em;}
+.logo-mark{width:30px;height:30px;border-radius:var(--fk-arch-sm);background:linear-gradient(135deg,var(--fk-fjord),var(--fk-fjord-bright));position:relative;flex-shrink:0;}
+.logo-mark::after{content:"";position:absolute;inset:8px;border-radius:6px 6px 6px 2px;background:var(--fk-on-brand);opacity:.92;}
+
+/* Sidebar */
+.sidebar{height:100%;display:flex;flex-direction:column;padding:20px 16px;}
+.sidebar-logo{padding:8px 8px 24px;}
+.sidebar-nav{display:flex;flex-direction:column;gap:2px;flex:1;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:var(--fk-r-md);color:var(--fk-text-2);font-weight:500;font-size:15px;transition:background var(--fk-fast) var(--fk-ease),color var(--fk-fast) var(--fk-ease);position:relative;width:100%;text-align:left;}
+.nav-item:hover{background:var(--fk-sunken);color:var(--fk-text);}
+.nav-item.active{background:var(--fk-fjord-soft);color:var(--fk-fjord);font-weight:600;}
+[data-theme="dark"] .nav-item.active{background:rgba(23,179,163,.14);color:var(--fk-fjord-bright);}
+.nav-badge{margin-left:auto;background:var(--fk-coral);color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;border-radius:var(--fk-r-pill);display:inline-flex;align-items:center;justify-content:center;padding:0 5px;}
+.sidebar-divider{height:1px;background:var(--fk-border);margin:12px 8px;}
+.sidebar-profile{display:flex;align-items:center;gap:12px;padding:8px;border-radius:var(--fk-r-md);width:100%;text-align:left;transition:background var(--fk-fast) var(--fk-ease);}
+.sidebar-profile:hover{background:var(--fk-sunken);}
+.sidebar-profile-name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+.sidebar-profile-handle{font-size:12.5px;color:var(--fk-text-3);}
+.sidebar-utility{display:flex;align-items:center;gap:8px;padding:8px;margin-top:8px;}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:var(--fk-r-pill);color:var(--fk-text-2);transition:background var(--fk-fast) var(--fk-ease),color var(--fk-fast) var(--fk-ease);flex-shrink:0;}
+.icon-btn:hover{background:var(--fk-sunken);color:var(--fk-text);}
+
+/* Avatar / badges */
+.avatar{border-radius:var(--fk-arch-sm);object-fit:cover;display:block;flex-shrink:0;background:var(--fk-sunken);}
+.badge-seller{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;color:var(--fk-amber);background:var(--fk-amber-soft);border-radius:var(--fk-r-pill);padding:2px 7px 2px 5px;text-transform:uppercase;letter-spacing:.02em;}
+[data-theme="dark"] .badge-seller{background:rgba(232,163,61,.16);}
+.verified{color:var(--fk-fjord);flex-shrink:0;}
+
+/* Topbar */
+.topbar{display:none;align-items:center;gap:16px;padding-bottom:16px;}
+@media (min-width:1024px){.topbar{display:flex;}}
+.topbar-search{flex:1;max-width:400px;display:flex;align-items:center;gap:8px;background:var(--fk-surface);border:1px solid var(--fk-border);border-radius:var(--fk-r-pill);padding:9px 16px;color:var(--fk-text-3);transition:border-color var(--fk-fast) var(--fk-ease);}
+.topbar-search:focus-within{border-color:var(--fk-fjord-bright);}
+.topbar-search input{border:none;background:none;outline:none;width:100%;font-size:14px;color:var(--fk-text);}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
+
+/* Mobile header */
+.mobile-header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--fk-border);position:sticky;top:0;z-index:20;background:var(--fk-bg);}
+@media (min-width:1024px){.mobile-header{display:none;}}
+.mobile-header-actions{margin-left:auto;display:flex;align-items:center;gap:2px;}
+
+/* Stories — "Signal Strip": compact avatar chips with a waveform
+   indicator underneath instead of tall full-bleed photo cards. This is
+   a deliberate structural departure from the Facebook/Instagram stories
+   pattern (no filmstrip of photos, no ring-around-a-circle avatar). */
+.stories{position:relative;}
+.stories-track{display:flex;gap:6px;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;padding:6px 2px;}
+.stories-track::-webkit-scrollbar{display:none;}
+.stories-arrow{display:none;position:absolute;top:38px;transform:translateY(-50%);width:30px;height:30px;border-radius:var(--fk-r-pill);align-items:center;justify-content:center;background:var(--fk-surface);border:1px solid var(--fk-border);box-shadow:var(--fk-shadow-sm);color:var(--fk-text-2);z-index:5;}
+@media (min-width:1024px){.stories-arrow{display:flex;}}
+.stories-arrow:hover{box-shadow:var(--fk-shadow-md);color:var(--fk-text);}
+.stories-arrow.left{left:-14px;} .stories-arrow.right{right:-14px;}
+
+.story-chip{position:relative;flex:0 0 auto;width:76px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 2px 2px;cursor:pointer;border-radius:var(--fk-r-md);transition:background var(--fk-fast) var(--fk-ease);}
+.story-chip:hover{background:var(--fk-sunken);}
+.story-chip-avatar-wrap{position:relative;width:56px;height:56px;}
+.story-chip-avatar{width:56px;height:56px;border-radius:var(--fk-arch);object-fit:cover;display:block;background:var(--fk-sunken);border:2px solid var(--fk-surface);box-shadow:0 0 0 1.5px var(--fk-border);}
+.story-chip.unseen .story-chip-avatar{box-shadow:0 0 0 1.5px var(--fk-fjord-bright);}
+.story-chip.unseen.is-seller .story-chip-avatar{box-shadow:0 0 0 1.5px var(--fk-amber);}
+.story-chip-ping{position:absolute;top:-2px;right:-2px;width:14px;height:14px;border-radius:50%;background:var(--fk-fjord-bright);border:2px solid var(--fk-surface);}
+.story-chip.is-seller .story-chip-ping{background:var(--fk-amber);}
+.story-chip.unseen .story-chip-ping{animation:fk-ping 1.8s ease-out infinite;}
+@keyframes fk-ping{0%{box-shadow:0 0 0 0 rgba(23,179,163,.45);}70%{box-shadow:0 0 0 6px rgba(23,179,163,0);}100%{box-shadow:0 0 0 0 rgba(23,179,163,0);}}
+.story-chip.is-seller.unseen .story-chip-ping{animation-name:fk-ping-amber;}
+@keyframes fk-ping-amber{0%{box-shadow:0 0 0 0 rgba(232,163,61,.45);}70%{box-shadow:0 0 0 6px rgba(232,163,61,0);}100%{box-shadow:0 0 0 0 rgba(232,163,61,0);}}
+@media (prefers-reduced-motion: reduce){.story-chip-ping{animation:none !important;}}
+.story-chip-wave{width:44px;height:12px;color:var(--fk-border-strong);}
+.story-chip.unseen .story-chip-wave{color:var(--fk-fjord-bright);}
+.story-chip.is-seller.unseen .story-chip-wave{color:var(--fk-amber);}
+.story-chip-store-badge{position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:6px 6px 6px 2px;background:var(--fk-amber);color:#201200;display:flex;align-items:center;justify-content:center;border:2px solid var(--fk-surface);}
+.story-chip-name{font-size:11px;font-weight:600;color:var(--fk-text-2);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;}
+.story-chip.unseen .story-chip-name{color:var(--fk-text);}
+.story-chip-price{font-size:10px;font-weight:700;color:var(--fk-amber);margin-top:-4px;}
+
+.story-chip.create .story-chip-avatar-wrap{width:56px;height:56px;border-radius:var(--fk-arch);border:1.5px dashed var(--fk-border-strong);display:flex;align-items:center;justify-content:center;color:var(--fk-fjord);background:var(--fk-fjord-soft);}
+[data-theme="dark"] .story-chip.create .story-chip-avatar-wrap{background:rgba(23,179,163,.14);color:var(--fk-fjord-bright);}
+
+/* Story viewer modal reuses .modal-overlay; the full photo only ever
+   appears there, never as the rail thumbnail. */
+
+
+/* Tabs */
+.tabs{display:flex;gap:2px;background:var(--fk-surface);border:1px solid var(--fk-border);border-radius:var(--fk-r-pill);padding:4px;overflow-x:auto;scrollbar-width:none;box-shadow:var(--fk-shadow-sm);}
+.tabs::-webkit-scrollbar{display:none;}
+.tab-pill{flex:0 0 auto;padding:9px 16px;border-radius:var(--fk-r-pill);font-size:13.5px;font-weight:600;color:var(--fk-text-2);white-space:nowrap;transition:background var(--fk-med) var(--fk-ease),color var(--fk-fast) var(--fk-ease);}
+.tab-pill.active{color:var(--fk-on-brand);background:var(--fk-fjord);}
+.tab-pill:not(.active):hover{background:var(--fk-sunken);color:var(--fk-text);}
+
+/* Composer */
+.composer{background:var(--fk-surface);border:1px solid var(--fk-border);border-radius:var(--fk-r-lg);padding:16px;box-shadow:var(--fk-shadow-sm);}
+.composer-row{display:flex;align-items:center;gap:12px;}
+.composer-input{flex:1;text-align:left;padding:11px 16px;border-radius:var(--fk-r-pill);background:var(--fk-sunken);color:var(--fk-text-3);font-size:14.5px;transition:background var(--fk-fast) var(--fk-ease);}
+.composer-input:hover{background:var(--fk-border);}
+.composer-actions{display:flex;gap:2px;margin-top:12px;padding-top:12px;border-top:1px solid var(--fk-border);flex-wrap:wrap;}
+.composer-action{display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:var(--fk-r-md);font-size:13px;font-weight:600;color:var(--fk-text-2);transition:background var(--fk-fast) var(--fk-ease),color var(--fk-fast) var(--fk-ease);}
+.composer-action:hover{background:var(--fk-sunken);color:var(--fk-text);}
+.composer-action svg{color:var(--fk-fjord);}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:var(--fk-overlay);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;z-index:100;overflow-y:auto;animation:fadeIn var(--fk-med) var(--fk-ease);}
+.modal{background:var(--fk-surface);border-radius:var(--fk-r-lg);width:100%;max-width:520px;box-shadow:var(--fk-shadow-lg);animation:scaleIn var(--fk-med) var(--fk-ease);}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--fk-border);}
+.modal-title{font-family:var(--fk-font-display);font-weight:600;font-size:17px;}
+.modal-body{padding:20px;display:flex;flex-direction:column;gap:16px;}
+.modal-textarea{width:100%;min-height:100px;resize:vertical;border:none;outline:none;background:none;font-size:16px;line-height:1.5;font-family:inherit;}
+.modal-attach-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+@media(min-width:600px){.modal-attach-grid{grid-template-columns:repeat(7,1fr);}}
+.modal-attach{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 4px;border-radius:var(--fk-r-md);border:1px solid var(--fk-border);font-size:11px;font-weight:600;color:var(--fk-text-2);}
+.modal-attach svg{color:var(--fk-fjord);}
+.modal-attach:hover{background:var(--fk-sunken);}
+.modal-attach.active{border-color:var(--fk-fjord);background:var(--fk-fjord-soft);color:var(--fk-fjord);}
+[data-theme="dark"] .modal-attach.active{background:rgba(23,179,163,.14);color:var(--fk-fjord-bright);}
+.modal-footer{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid var(--fk-border);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:var(--fk-r-pill);font-weight:700;font-size:14px;transition:filter var(--fk-fast) var(--fk-ease),background var(--fk-fast) var(--fk-ease),opacity var(--fk-fast) var(--fk-ease);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn-primary{background:var(--fk-fjord);color:#fff;}
+.btn-primary:hover:not(:disabled){filter:brightness(1.08);}
+.btn-ghost{background:var(--fk-sunken);color:var(--fk-text);}
+.btn-ghost:hover{background:var(--fk-border);}
+.btn-sm{padding:6px 13px;font-size:12.5px;}
+
+/* Post card */
+.post{background:var(--fk-surface);border:1px solid var(--fk-border);border-radius:var(--fk-r-lg);padding:16px;box-shadow:var(--fk-shadow-sm);}
+.post-header{display:flex;align-items:flex-start;gap:12px;}
+.post-author-block{flex:1;min-width:0;}
+.post-name-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.post-name{font-weight:700;font-size:14.5px;}
+.post-meta{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--fk-text-3);margin-top:1px;}
+.post-meta-dot{width:3px;height:3px;border-radius:50%;background:currentColor;}
+.post-header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.follow-chip{font-size:12.5px;font-weight:700;color:var(--fk-fjord);background:var(--fk-fjord-soft);border-radius:var(--fk-r-pill);padding:6px 12px;white-space:nowrap;}
+[data-theme="dark"] .follow-chip{background:rgba(23,179,163,.16);color:var(--fk-fjord-bright);}
+.follow-chip.following{color:var(--fk-text-2);background:var(--fk-sunken);}
+.post-body{margin-top:12px;}
+.post-caption{font-size:14.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
+.hashtag{color:var(--fk-fjord);font-weight:600;}
+[data-theme="dark"] .hashtag{color:var(--fk-fjord-bright);}
+.post-media{margin-top:12px;border-radius:var(--fk-r-md);overflow:hidden;position:relative;background:var(--fk-sunken);}
+.post-media img{width:100%;display:block;max-height:520px;object-fit:cover;}
+.media-grid{display:grid;gap:2px;border-radius:var(--fk-r-md);overflow:hidden;margin-top:12px;}
+.media-grid[data-count="3"]{grid-template-columns:1.2fr 1fr;grid-template-rows:1fr 1fr;}
+.media-grid[data-count="3"] img:first-child{grid-row:1/span 2;}
+.media-grid[data-count="4"]{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;}
+.media-grid img{width:100%;height:100%;object-fit:cover;display:block;max-height:320px;}
+.media-more{position:relative;}
+.media-more::after{content:attr(data-more);position:absolute;inset:0;background:rgba(11,14,18,.45);color:#fff;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.play-btn{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
+.play-circle{width:60px;height:60px;border-radius:50%;background:rgba(11,14,18,.55);backdrop-filter:blur(3px);color:#fff;display:flex;align-items:center;justify-content:center;}
+.view-count{position:absolute;bottom:8px;left:8px;background:rgba(11,14,18,.55);color:#fff;font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:var(--fk-r-pill);}
+.post-stats{display:flex;align-items:center;gap:12px;margin-top:12px;font-size:12.5px;color:var(--fk-text-3);}
+.stats-spark{display:inline-flex;align-items:center;gap:4px;color:var(--fk-text-2);font-weight:600;}
+
+/* Action dock — original Fockis interaction system */
+.action-dock{margin-top:12px;padding-top:12px;border-top:1px solid var(--fk-border);display:flex;align-items:center;gap:2px;}
+.dock-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 11px;border-radius:var(--fk-r-pill);font-size:13px;font-weight:600;color:var(--fk-text-2);transition:background var(--fk-fast) var(--fk-ease),color var(--fk-fast) var(--fk-ease);}
+.dock-btn:hover{background:var(--fk-sunken);color:var(--fk-text);}
+.dock-btn.spark.active{color:var(--fk-coral);}
+.dock-btn.repost.active{color:var(--fk-fjord);}
+[data-theme="dark"] .dock-btn.repost.active{color:var(--fk-fjord-bright);}
+.dock-btn.save.active{color:var(--fk-amber);}
+.dock-spacer{margin-left:auto;}
+
+/* Poll */
+.poll{margin-top:12px;display:flex;flex-direction:column;gap:8px;}
+.poll-question{font-weight:600;font-size:14.5px;}
+.poll-option{position:relative;width:100%;border:1px solid var(--fk-border);border-radius:var(--fk-r-md);padding:10px 12px;overflow:hidden;text-align:left;font-size:13.5px;font-weight:600;}
+.poll-fill{position:absolute;inset:0;background:var(--fk-fjord-soft);width:0%;transition:width 480ms var(--fk-ease);}
+[data-theme="dark"] .poll-fill{background:rgba(23,179,163,.16);}
+.poll-option-content{position:relative;display:flex;justify-content:space-between;gap:8px;}
+.poll-pct{color:var(--fk-text-3);}
+.poll-total{font-size:12px;color:var(--fk-text-3);}
+
+/* Product card */
+.product-card{margin-top:12px;border:1px solid var(--fk-border);border-radius:var(--fk-r-md);overflow:hidden;}
+.product-media{position:relative;aspect-ratio:4/3;background:var(--fk-sunken);}
+.product-media img{width:100%;height:100%;object-fit:cover;display:block;}
+.product-discount{position:absolute;top:8px;left:8px;background:var(--fk-coral);color:#fff;font-size:11px;font-weight:700;padding:4px 8px;border-radius:var(--fk-r-sm);}
+.product-body{padding:12px 16px;display:flex;align-items:center;gap:12px;}
+.product-info{flex:1;min-width:0;}
+.product-name{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.product-price-row{display:flex;align-items:baseline;gap:6px;margin-top:2px;}
+.product-price{font-weight:600;color:var(--fk-fjord);font-size:14px;}
+[data-theme="dark"] .product-price{color:var(--fk-fjord-bright);}
+.product-compare{font-size:12px;color:var(--fk-text-3);text-decoration:line-through;}
+.product-rating{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--fk-text-3);margin-top:2px;}
+.product-rating svg{color:var(--fk-amber);}
+
+/* Property card */
+.property-card{margin-top:12px;border:1px solid var(--fk-border);border-radius:var(--fk-r-md);overflow:hidden;}
+.property-media{position:relative;aspect-ratio:16/10;background:var(--fk-sunken);}
+.property-media img{width:100%;height:100%;object-fit:cover;display:block;}
+.property-type{position:absolute;top:8px;left:8px;background:rgba(11,14,18,.6);color:#fff;font-size:11px;font-weight:700;padding:4px 9px;border-radius:var(--fk-r-pill);}
+.property-price{position:absolute;bottom:8px;left:8px;background:var(--fk-surface);font-weight:700;font-size:14px;padding:6px 11px;border-radius:var(--fk-r-sm);}
+.property-body{padding:16px;}
+.property-title{font-weight:700;font-size:15px;}
+.property-location{font-size:12.5px;color:var(--fk-text-3);margin-top:2px;}
+.property-specs{display:flex;gap:16px;margin-top:12px;font-size:12.5px;color:var(--fk-text-2);font-weight:600;}
+.property-actions{display:flex;gap:8px;margin-top:16px;}
+.property-agent{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12.5px;color:var(--fk-text-3);}
+
+/* Wave card */
+.wave{position:relative;border-radius:var(--fk-r-lg);overflow:hidden;background:#000;aspect-ratio:9/16;max-height:640px;margin:0 auto;width:100%;max-width:340px;}
+.wave-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.wave-scrim-top{position:absolute;top:0;left:0;right:0;height:90px;background:linear-gradient(180deg,rgba(0,0,0,.5),rgba(0,0,0,0));pointer-events:none;}
+.wave-scrim-bottom{position:absolute;bottom:0;left:0;right:0;height:55%;background:linear-gradient(0deg,rgba(0,0,0,.75),rgba(0,0,0,0));pointer-events:none;}
+.wave-top-row{position:absolute;top:12px;left:12px;right:12px;display:flex;align-items:center;justify-content:space-between;z-index:2;}
+.wave-badge{font-family:var(--fk-font-display);font-weight:700;font-size:13px;color:#fff;background:rgba(255,255,255,.14);backdrop-filter:blur(6px);padding:5px 11px;border-radius:var(--fk-r-pill);}
+.wave-meta{position:absolute;left:12px;right:12px;bottom:60px;z-index:2;color:#fff;}
+.wave-author-row{display:flex;align-items:center;gap:8px;}
+.wave-author-name{font-weight:700;font-size:14px;}
+.wave-caption{margin-top:8px;font-size:13.5px;line-height:1.4;}
+.wave-audio{margin-top:8px;display:flex;align-items:center;gap:6px;font-size:12px;opacity:.9;}
+.wave-dock{position:absolute;left:12px;right:12px;bottom:12px;z-index:2;display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.12);backdrop-filter:blur(10px);border-radius:var(--fk-r-pill);padding:6px;}
+.wave-dock-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;color:#fff;padding:6px 4px;border-radius:var(--fk-r-pill);font-size:10.5px;font-weight:700;}
+.wave-dock-btn.active{color:var(--fk-amber);}
+.wave-center-toggle{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;}
+.wave-progress{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.25);z-index:2;}
+.wave-progress-fill{height:100%;background:var(--fk-amber);width:0%;}
+.waves-grid{display:grid;gap:20px;grid-template-columns:1fr;}
+@media (min-width:700px){.waves-grid{grid-template-columns:1fr 1fr;}}
+
+/* Right rail */
+.rail-section{background:var(--fk-surface);border:1px solid var(--fk-border);border-radius:var(--fk-r-lg);padding:16px;margin-bottom:16px;}
+.rail-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.rail-title{font-family:var(--fk-font-display);font-weight:600;font-size:14.5px;display:flex;align-items:center;gap:6px;}
+.rail-see-all{font-size:12px;font-weight:600;color:var(--fk-fjord);}
+[data-theme="dark"] .rail-see-all{color:var(--fk-fjord-bright);}
+.trend-item{display:flex;flex-direction:column;padding:8px 0;border-bottom:1px solid var(--fk-border);}
+.trend-item:last-child{border-bottom:none;padding-bottom:0;}
+.trend-cat{font-size:11px;color:var(--fk-text-3);text-transform:uppercase;letter-spacing:.03em;}
+.trend-tag{font-weight:700;font-size:14px;margin-top:2px;}
+.trend-count{font-size:12px;color:var(--fk-text-3);margin-top:1px;}
+.suggestion-item{display:flex;align-items:center;gap:8px;padding:8px 0;}
+.suggestion-meta{flex:1;min-width:0;}
+.suggestion-name{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px;}
+.suggestion-sub{font-size:11.5px;color:var(--fk-text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.market-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.market-card{border-radius:var(--fk-r-md);overflow:hidden;border:1px solid var(--fk-border);}
+.market-card img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
+.market-card-body{padding:8px;}
+.market-card-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.market-card-price{font-size:12.5px;font-weight:700;color:var(--fk-fjord);margin-top:1px;}
+[data-theme="dark"] .market-card-price{color:var(--fk-fjord-bright);}
+
+/* Bottom nav */
+.bottom-nav{display:flex;align-items:center;justify-content:space-around;position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--fk-surface);border-top:1px solid var(--fk-border);padding:8px 8px calc(8px + env(safe-area-inset-bottom));}
+@media (min-width:1024px){.bottom-nav{display:none;}}
+.bn-item{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--fk-text-3);font-size:10.5px;font-weight:600;padding:4px 10px;border-radius:var(--fk-r-md);}
+.bn-item.active{color:var(--fk-fjord);}
+[data-theme="dark"] .bn-item.active{color:var(--fk-fjord-bright);}
+.bn-create{width:46px;height:34px;border-radius:var(--fk-arch-sm);background:linear-gradient(135deg,var(--fk-fjord),var(--fk-fjord-bright));color:#fff;display:flex;align-items:center;justify-content:center;}
+
+/* Empty state */
+.empty-state{text-align:center;padding:64px 16px;color:var(--fk-text-2);}
+.empty-icon{width:56px;height:56px;border-radius:var(--fk-arch);background:var(--fk-sunken);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--fk-text-3);}
+.empty-title{font-family:var(--fk-font-display);font-weight:600;font-size:16px;color:var(--fk-text);}
+.empty-body{font-size:13.5px;margin-top:4px;max-width:300px;margin:4px auto 0;}
+
+/* Preview chrome (not part of Fockis brand, just for this demo wrapper) */
+.demo-note{max-width:var(--fk-center-max);margin:0 auto 4px;font-size:12px;color:var(--fk-text-3);text-align:center;}
+</style>
+</head>
+<body data-theme="light">
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const {useState,useEffect,useRef,useMemo,useCallback} = React;
+
+/* ---------- Icons: original Fockis line-icon family ---------- */
+const S = ({size=22,children,style,...p}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={style} {...p}>{children}</svg>
+);
+const IconHome=(p)=><S {...p}><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></S>;
+const IconDiscover=(p)=><S {...p}><circle cx="12" cy="12" r="8.25"/><path d="m14.6 9.4-1.9 4.4-4.4 1.9 1.9-4.4z"/></S>;
+const IconFriends=(p)=><S {...p}><circle cx="8.5" cy="9" r="2.75"/><circle cx="16" cy="10.5" r="2.15"/><path d="M3.5 19c.6-3 2.4-4.6 5-4.6s4.4 1.6 5 4.6"/><path d="M14.6 14.9c2.1.2 3.5 1.6 4 4.1"/></S>;
+const IconWaves=(p)=><S {...p}><path d="M3 15c1.6 0 1.6-2 3.2-2s1.6 2 3.2 2 1.6-2 3.2-2 1.6 2 3.2 2 1.6-2 3.2-2"/><path opacity=".5" d="M3 10c1.6 0 1.6-2 3.2-2s1.6 2 3.2 2 1.6-2 3.2-2 1.6 2 3.2 2 1.6-2 3.2-2"/></S>;
+const IconMessages=(p)=><S {...p}><rect x="3.5" y="5.5" width="17" height="11.5" rx="3"/><path d="M7.5 9.5h9M7.5 12.5h5.5"/></S>;
+const IconNotifications=(p)=><S {...p}><path d="M6 10.5a6 6 0 0 1 12 0c0 3.2.9 5 2 6H4c1.1-1 2-2.8 2-6Z"/><path d="M9.5 19a2.6 2.6 0 0 0 5 0"/></S>;
+const IconMarketplace=(p)=><S {...p}><path d="M4.5 9 6 4.5h12L19.5 9"/><rect x="4.5" y="9" width="15" height="10.5" rx="1.5"/><path d="M9 12.5a3 3 0 0 0 6 0"/></S>;
+const IconGroups=(p)=><S {...p}><rect x="3.5" y="4.5" width="8" height="8" rx="2"/><rect x="12.5" y="4.5" width="8" height="8" rx="2"/><rect x="3.5" y="13.5" width="8" height="6" rx="2"/><rect x="12.5" y="13.5" width="8" height="6" rx="2"/></S>;
+const IconSaved=(p)=><S {...p}><path d="M6.5 4.5h11a1 1 0 0 1 1 1V20l-6.5-3.6L5.5 20V5.5a1 1 0 0 1 1-1Z"/></S>;
+const IconProfile=(p)=><S {...p}><circle cx="12" cy="8.3" r="3.3"/><path d="M4.8 19.5c1-3.6 3.4-5.4 7.2-5.4s6.2 1.8 7.2 5.4"/></S>;
+const IconSettings=(p)=><S {...p}><circle cx="12" cy="12" r="2.6"/><path d="M12 4.5v2M12 17.5v2M19.5 12h-2M6.5 12h-2M17.4 6.6l-1.4 1.4M8 16l-1.4 1.4M17.4 17.4 16 16M8 8 6.6 6.6"/></S>;
+const IconHelp=(p)=><S {...p}><circle cx="12" cy="12" r="8.25"/><path d="M9.6 9.3a2.4 2.4 0 1 1 3.4 2.2c-.8.4-1 .8-1 1.7"/><circle cx="12" cy="16.6" r="0.9" fill="currentColor" stroke="none"/></S>;
+const IconSearch=(p)=><S {...p}><circle cx="10.8" cy="10.8" r="6.3"/><path d="m19.5 19.5-4-4"/></S>;
+const IconSpark=(p)=><S {...p}><path d="M12 3.5c.6 3 1.9 4.6 4.7 5.3-2.8.7-4.1 2.3-4.7 5.3-.6-3-1.9-4.6-4.7-5.3 2.8-.7 4.1-2.3 4.7-5.3Z"/><path d="M18.3 15c.3 1.5 1 2.2 2.4 2.6-1.4.4-2.1 1.1-2.4 2.6-.3-1.5-1-2.2-2.4-2.6 1.4-.4 2.1-1.1 2.4-2.6Z"/></S>;
+const IconSparkFilled=(p)=><S {...p}><path d="M12 3.5c.6 3 1.9 4.6 4.7 5.3-2.8.7-4.1 2.3-4.7 5.3-.6-3-1.9-4.6-4.7-5.3 2.8-.7 4.1-2.3 4.7-5.3Z" fill="currentColor"/><path d="M18.3 15c.3 1.5 1 2.2 2.4 2.6-1.4.4-2.1 1.1-2.4 2.6-.3-1.5-1-2.2-2.4-2.6 1.4-.4 2.1-1.1 2.4-2.6Z" fill="currentColor"/></S>;
+const IconComment=(p)=><S {...p}><path d="M4.5 8.5c0 3.9 3.4 7 7.5 7 .8 0 1.6-.1 2.3-.3l3.7 1.3-.9-3.1c1.2-1.2 1.9-2.7 1.9-4.4 0-3.9-3.4-7-7.5-7s-7.5 3.1-7.5 6.5Z"/></S>;
+const IconRepost=(p)=><S {...p}><path d="M7 8h8a3 3 0 0 1 3 3v1"/><path d="m6 6-2 2 2 2"/><path d="M17 16H9a3 3 0 0 1-3-3v-1"/><path d="m18 18 2-2-2-2"/></S>;
+const IconShare=(p)=><S {...p}><path d="M12 14.5V4.5"/><path d="M8.2 8.3 12 4.5l3.8 3.8"/><path d="M5.5 12.5v6a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-6"/></S>;
+const IconSave=(p)=><S {...p}><path d="M6.5 4.5h11a1 1 0 0 1 1 1V20l-6.5-3.6L5.5 20V5.5a1 1 0 0 1 1-1Z"/></S>;
+const IconSaveFilled=(p)=><S {...p}><path d="M6.5 4.5h11a1 1 0 0 1 1 1V20l-6.5-3.6L5.5 20V5.5a1 1 0 0 1 1-1Z" fill="currentColor"/></S>;
+const IconShop=IconMarketplace;
+const IconPhoto=(p)=><S {...p}><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m5 17 4.5-4.5L13 16l2.5-2.5L20.5 18"/></S>;
+const IconMultiPhoto=(p)=><S {...p}><rect x="6.5" y="6.5" width="14" height="13" rx="2"/><path d="M3.5 15.5v-9a2 2 0 0 1 2-2h9"/></S>;
+const IconVideo=(p)=><S {...p}><rect x="3.5" y="6" width="12" height="12" rx="2"/><path d="m15.5 10.2 5-2.7v9l-5-2.7"/></S>;
+const IconPoll=(p)=><S {...p}><path d="M6 18V10M12 18V6M18 18v-5"/><path d="M4 20.5h16"/></S>;
+const IconProduct=(p)=><S {...p}><path d="M12.5 3.5h4a1 1 0 0 1 1 1v4l-9 9-5-5Z"/><circle cx="15" cy="6.5" r="1" fill="currentColor" stroke="none"/></S>;
+const IconProperty=(p)=><S {...p}><path d="M4 11 12 5l8 6"/><path d="M6 10v8.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10"/><path d="M10 19.5v-5h4v5"/></S>;
+const IconPlay=(p)=><S {...p}><path d="M8 5.5v13l10-6.5Z" fill="currentColor"/></S>;
+const IconMute=(p)=><S {...p}><path d="M4 10v4h3.5L12 17.5v-11L7.5 10Z"/><path d="m15.5 9.5 4 4M19.5 9.5l-4 4"/></S>;
+const IconUnmute=(p)=><S {...p}><path d="M4 10v4h3.5L12 17.5v-11L7.5 10Z"/><path d="M15.8 9.3a4 4 0 0 1 0 5.4M18 7.2a7 7 0 0 1 0 9.6"/></S>;
+const IconFullscreen=(p)=><S {...p}><path d="M4.5 9V6.5a2 2 0 0 1 2-2H9M15 4.5h2.5a2 2 0 0 1 2 2V9M19.5 15v2.5a2 2 0 0 1-2 2H15M9 19.5H6.5a2 2 0 0 1-2-2V15"/></S>;
+const IconVerified=(p)=><S {...p}><path d="M12 3.2 14 4.6l2.5-.3 1 2.3 2.3 1-.3 2.5 1.4 2-1.4 2 .3 2.5-2.3 1-1 2.3-2.5-.3L12 20.8l-2-1.4-2.5.3-1-2.3-2.3-1 .3-2.5-1.4-2 1.4-2-.3-2.5 2.3-1 1-2.3 2.5.3Z" fill="currentColor" stroke="none"/><path d="m8.5 12.3 2.2 2.2 4.6-4.8" stroke="var(--fk-verified)" strokeWidth="1.8" fill="none"/></S>;
+const IconSellerBadge=IconMarketplace;
+const IconMore=(p)=><S {...p}><circle cx="5.5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.4" fill="currentColor" stroke="none"/></S>;
+const IconClose=(p)=><S {...p}><path d="m5.5 5.5 13 13M18.5 5.5l-13 13"/></S>;
+const IconChevronLeft=(p)=><S {...p}><path d="M14.5 5.5 8 12l6.5 6.5"/></S>;
+const IconChevronRight=(p)=><S {...p}><path d="m9.5 5.5 6.5 6.5-6.5 6.5"/></S>;
+const IconPlus=(p)=><S {...p}><path d="M12 5v14M5 12h14"/></S>;
+const IconSun=(p)=><S {...p}><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></S>;
+const IconMoon=(p)=><S {...p}><path d="M20 14.2A8.2 8.2 0 1 1 9.8 4a6.4 6.4 0 0 0 10.2 10.2Z"/></S>;
+const IconTrend=(p)=><S {...p}><path d="m4 16 5-5 3.5 3.5L20 7"/><path d="M15 7h5v5"/></S>;
+const IconStar=(p)=><S {...p}><path d="m12 4.5 2.1 4.5 4.9.6-3.6 3.4.9 4.9-4.3-2.4-4.3 2.4.9-4.9-3.6-3.4 4.9-.6Z" fill="currentColor"/></S>;
+
+/* ---------- Mock data ---------- */
+const img=(seed,w=800,h=800)=>`https://picsum.photos/seed/${seed}/${w}/${h}`;
+const currentUser={id:"you",name:"Alex Rivera",handle:"alexrivera",avatar:img("fockis-you",200,200)};
+const users=[
+ {id:"u1",name:"Maya Chen",handle:"mayachen",avatar:img("fockis-u1",200,200),kind:"creator",verified:true,following:true},
+ {id:"u2",name:"Jordan Blake",handle:"jblake",avatar:img("fockis-u2",200,200),kind:"person",friend:true},
+ {id:"u3",name:"Nova Textiles",handle:"novatextiles",avatar:img("fockis-u3",200,200),kind:"seller",store:"Nova Textiles Co.",verified:true},
+ {id:"u4",name:"Priya Patel",handle:"priyap",avatar:img("fockis-u4",200,200),kind:"creator",verified:true},
+ {id:"u6",name:"Cedar & Stone Realty",handle:"cedarstone",avatar:img("fockis-u6",200,200),kind:"agent",verified:true},
+ {id:"u7",name:"Lena Ferro",handle:"lenaferro",avatar:img("fockis-u7",200,200),kind:"creator"},
+ {id:"u8",name:"Basecamp Roasters",handle:"basecamproasters",avatar:img("fockis-u8",200,200),kind:"seller",store:"Basecamp Roasters",verified:true},
+ {id:"u9",name:"Theo Nakamura",handle:"theon",avatar:img("fockis-u9",200,200),kind:"person",friend:true},
+ {id:"u10",name:"Wilder Studio",handle:"wilderstudio",avatar:img("fockis-u10",200,200),kind:"seller",store:"Wilder Studio"},
+];
+const u=(id)=>users.find(x=>x.id===id);
+const initialStories=[
+ {id:"s1",user:u("u2"),group:"friends",preview:img("fockis-story-1",400,640),seen:false},
+ {id:"s2",user:u("u9"),group:"friends",preview:img("fockis-story-2",400,640),seen:false},
+ {id:"s3",user:u("u1"),group:"creators",preview:img("fockis-story-3",400,640),seen:false},
+ {id:"s4",user:u("u4"),group:"creators",preview:img("fockis-story-4",400,640),seen:true},
+ {id:"s5",user:u("u7"),group:"creators",preview:img("fockis-story-5",400,640),seen:false},
+ {id:"s6",user:u("u3"),group:"sellers",preview:img("fockis-story-6",400,640),seen:false,product:{name:"Woven Throw",price:"$48"}},
+ {id:"s7",user:u("u8"),group:"sellers",preview:img("fockis-story-7",400,640),seen:false,product:{name:"Dark Roast 12oz",price:"$16"}},
+ {id:"s8",user:u("u10"),group:"businesses",preview:img("fockis-story-8",400,640),seen:true,product:{name:"Studio Hours",price:"Open"}},
+];
+const initialPosts=[
+ {id:"p1",type:"text",author:u("u2"),createdAt:"34m",caption:"Finally hit 10k steps before 9am. Sunrise over the east ridge trail was unreal today — worth the early alarm. #morningmiles #trailtime",reactionCount:128,commentCount:22,repostCount:4,shareCount:6},
+ {id:"p2",type:"image",author:u("u1"),createdAt:"1h",caption:"New studio setup is finally done. Three weeks of moving cables and second-guessing paint colors and it's ready to shoot in. #studio #behindthescenes",images:[img("fockis-post-2",1000,750)],reactionCount:942,commentCount:87,repostCount:31,shareCount:19,viewCount:12400},
+ {id:"p3",type:"multi-image",author:u("u6"),createdAt:"2h",caption:"Weekend market run turned into a full afternoon. A few frames from the ceramics stalls downtown. #weekendmarket #ceramics",images:[img("fockis-post-3a",900,900),img("fockis-post-3b",900,900),img("fockis-post-3c",900,900),img("fockis-post-3d",900,900)],reactionCount:356,commentCount:41,repostCount:9,shareCount:12},
+ {id:"p4",type:"product",author:u("u3"),createdAt:"3h",caption:"New summer collection has arrived. Limited run of 200 pieces — restocks aren't guaranteed. #novatextiles #summerdrop",reactionCount:214,commentCount:33,repostCount:5,shareCount:8,product:{name:"Sundrift Linen Throw",price:"$54",compareAtPrice:"$72",rating:4.8,ratingCount:312,storeName:"Nova Textiles Co.",image:img("fockis-product-1",900,900)}},
+ {id:"p5",type:"property",author:u("u6"),createdAt:"4h",caption:"Just listed — bright corner unit with a private balcony and skyline views. Open house Saturday.",reactionCount:76,commentCount:14,repostCount:3,shareCount:22,property:{title:"Skyline Corner Residence",location:"Harborview District",price:"$489,000",beds:2,baths:2,propertyType:"Condo",image:img("fockis-property-1",1000,720),agentName:"Cedar & Stone Realty",agentAvatar:u("u6").avatar}},
+ {id:"p6",type:"poll",author:u("u8"),createdAt:"5h",caption:"Helping us decide next month's seasonal blend. What are you feeling?",reactionCount:88,commentCount:46,repostCount:2,shareCount:3,poll:{question:"Which seasonal roast should we bring back?",totalVotes:1042,votedOptionId:null,options:[{id:"o1",label:"Maple Cask",votes:412},{id:"o2",label:"Cardamom Sunrise",votes:298},{id:"o3",label:"Smoked Cherry",votes:221},{id:"o4",label:"Honey Oat Cold Brew",votes:111}]}},
+ {id:"p7",type:"video",author:u("u6"),createdAt:"6h",caption:"A quiet minute with the studio's new kiln run. Full process video linked in bio.",videoPoster:img("fockis-video-1",1000,640),reactionCount:501,commentCount:58,repostCount:14,shareCount:27,viewCount:8300},
+ {id:"p9",type:"product",author:u("u10"),createdAt:"10h",caption:"Small batch candles restocked — six new scents inspired by the coastline.",reactionCount:189,commentCount:27,repostCount:8,shareCount:10,product:{name:"Coastline Candle Set",price:"$38",rating:4.9,ratingCount:154,storeName:"Wilder Studio",image:img("fockis-product-2",900,900)}},
+];
+const waves=[
+ {id:"w1",author:u("u4"),caption:"60 seconds of the best noodle stall in the district. Go before the line hits the corner.",reactionCount:18400,commentCount:612,repostCount:240,shareCount:980,wave:{poster:img("fockis-wave-1",720,1280),audioTitle:"Late Night Kitchen",audioOwner:"Priya Patel",duration:42}},
+ {id:"w2",author:u("u6"),caption:"Trimming clay on the wheel — this bowl took four attempts to get right.",reactionCount:9800,commentCount:341,repostCount:122,shareCount:410,wave:{poster:img("fockis-wave-2",720,1280),audioTitle:"Slow Turn",audioOwner:"Lena Ferro",duration:58}},
+ {id:"w3",author:u("u1"),caption:"Studio tour, part two — the corner nobody asked to see but everyone screenshots.",reactionCount:27100,commentCount:894,repostCount:512,shareCount:1200,wave:{poster:img("fockis-wave-3",720,1280),audioTitle:"Original audio",audioOwner:"Maya Chen",duration:35}},
+];
+const trending=[
+ {id:"t1",tag:"#SummerDrop",count:"42.1k posts",cat:"Marketplace"},
+ {id:"t2",tag:"#WavesOfTheWeek",count:"88.4k posts",cat:"Waves"},
+ {id:"t3",tag:"#StudioTour",count:"19.7k posts",cat:"Creators"},
+ {id:"t4",tag:"#OpenHouseSaturday",count:"6.2k posts",cat:"Real estate"},
+];
+const suggested=[u("u6"),u("u4"),u("u9")];
+const sellersList=[u("u8"),u("u10"),u("u3")];
+const marketHighlights=[
+ {id:"m1",name:"Sundrift Linen Throw",price:"$54",image:img("fockis-market-1",500,500)},
+ {id:"m2",name:"Coastline Candle Set",price:"$38",image:img("fockis-market-2",500,500)},
+ {id:"m3",name:"Dark Roast 12oz Bag",price:"$16",image:img("fockis-market-3",500,500)},
+ {id:"m4",name:"Hand-thrown Mug",price:"$29",image:img("fockis-market-4",500,500)},
+];
+
+function fmt(n){ if(n>=1000000) return (n/1000000).toFixed(1)+"M"; if(n>=1000) return (n/1000).toFixed(1)+"k"; return String(n); }
+function renderCaption(text){
+  return text.split(/(\s+)/).map((part,i)=> (part.startsWith("#")||part.startsWith("@")) && part.length>1
+    ? <span className="hashtag" key={i}>{part}</span>
+    : <React.Fragment key={i}>{part}</React.Fragment>
+  );
+}
+
+/* ---------- Action dock ---------- */
+function ActionDock({post,onReact,onComment,onRepost,onShare,onSave,showShop}){
+  return (
+    <div className="action-dock">
+      <button className={"dock-btn spark"+(post.reacted?" active":"")} onClick={onReact}>
+        {post.reacted?<IconSparkFilled size={18}/>:<IconSpark size={18}/>} {fmt(post.reactionCount)}
+      </button>
+      <button className="dock-btn" onClick={onComment}><IconComment size={18}/> {fmt(post.commentCount)}</button>
+      <button className={"dock-btn repost"+(post.reposted?" active":"")} onClick={onRepost}><IconRepost size={18}/> {fmt(post.repostCount)}</button>
+      <button className="dock-btn" onClick={onShare}><IconShare size={18}/> {fmt(post.shareCount)}</button>
+      <span className="dock-spacer"/>
+      {showShop && <button className="dock-btn"><IconShop size={18}/></button>}
+      <button className={"dock-btn save"+(post.saved?" active":"")} onClick={onSave}>
+        {post.saved?<IconSaveFilled size={18}/>:<IconSave size={18}/>}
+      </button>
+    </div>
+  );
+}
+
+/* ---------- Post card (text/image/multi-image/video/poll) ---------- */
+function PostCard({post,actions}){
+  const [expanded,setExpanded]=useState(false);
+  const caption=post.caption||"";
+  const isLong=caption.length>220;
+  const shown = expanded||!isLong ? caption : caption.slice(0,220)+"…";
+  return (
+    <article className="post">
+      <header className="post-header">
+        <img className="avatar" src={post.author.avatar} width="44" height="44" alt=""/>
+        <div className="post-author-block">
+          <div className="post-name-row">
+            <span className="post-name">{post.author.name}</span>
+            {post.author.verified && <IconVerified size={14} className="verified"/>}
+          </div>
+          <div className="post-meta"><span>@{post.author.handle}</span><span className="post-meta-dot"/><span>{post.createdAt}</span></div>
+        </div>
+        <div className="post-header-actions">
+          {!post.author.following && !post.author.friend &&
+            <button className={"follow-chip"+(post.author.following?" following":"")} onClick={()=>actions.onFollow(post.id)}>
+              {post.author.following?"Following":"Follow"}
+            </button>}
+          <button className="icon-btn"><IconMore size={18}/></button>
+        </div>
+      </header>
+
+      {caption && <div className="post-body"><p className="post-caption">{renderCaption(shown)}
+        {isLong && <button className="follow-chip" style={{marginLeft:6,background:"none",color:"var(--fk-fjord)",padding:0}} onClick={()=>setExpanded(e=>!e)}>{expanded?"Show less":"Show more"}</button>}
+      </p></div>}
+
+      {post.type==="image" && post.images && (
+        <div className="post-media"><img src={post.images[0]} alt=""/>
+          {post.viewCount && <span className="view-count">{fmt(post.viewCount)} views</span>}
+        </div>
+      )}
+
+      {post.type==="multi-image" && post.images && (
+        <div className="media-grid" data-count={Math.min(post.images.length,4)}>
+          {post.images.slice(0,4).map((im,idx)=>{
+            const more = idx===3 && post.images.length>4;
+            return <img key={idx} src={im} alt="" className={more?"media-more":""} data-more={more?`+${post.images.length-4}`:undefined}/>;
+          })}
+        </div>
+      )}
+
+      {post.type==="video" && post.videoPoster && (
+        <div className="post-media"><img src={post.videoPoster} alt=""/>
+          <button className="play-btn"><span className="play-circle"><IconPlay size={24}/></span></button>
+          {post.viewCount && <span className="view-count">{fmt(post.viewCount)} views</span>}
+        </div>
+      )}
+
+      {post.type==="poll" && post.poll && (
+        <div className="poll">
+          <p className="poll-question">{post.poll.question}</p>
+          {post.poll.options.map(opt=>{
+            const pct = post.poll.totalVotes>0 ? Math.round(opt.votes/post.poll.totalVotes*100) : 0;
+            const voted = post.poll.votedOptionId===opt.id;
+            return (
+              <button key={opt.id} className="poll-option" disabled={!!post.poll.votedOptionId} onClick={()=>actions.onVote(post.id,opt.id)}>
+                {post.poll.votedOptionId && <span className="poll-fill" style={{width:pct+"%"}}/>}
+                <span className="poll-option-content"><span>{opt.label}{voted?" ✓":""}</span>{post.poll.votedOptionId && <span className="poll-pct mono">{pct}%</span>}</span>
+              </button>
+            );
+          })}
+          <span className="poll-total mono">{post.poll.totalVotes.toLocaleString()} votes</span>
+        </div>
+      )}
+
+      <div className="post-stats">
+        <span className="stats-spark">{fmt(post.reactionCount)} reactions</span>
+        <span>{post.commentCount} comments</span>
+        <span>{post.shareCount} shares</span>
+      </div>
+
+      <ActionDock post={post}
+        onReact={()=>actions.onReact(post.id)} onComment={()=>actions.onComment(post.id)}
+        onRepost={()=>actions.onRepost(post.id)} onShare={()=>actions.onShare(post.id)} onSave={()=>actions.onSave(post.id)}/>
+    </article>
+  );
+}
+
+/* ---------- Product post card ---------- */
+function ProductPostCard({post,actions}){
+  const product=post.product;
+  return (
+    <article className="post">
+      <header className="post-header">
+        <img className="avatar" src={post.author.avatar} width="44" height="44" alt=""/>
+        <div className="post-author-block">
+          <div className="post-name-row">
+            <span className="post-name">{post.author.name}</span>
+            {post.author.verified && <IconVerified size={14} className="verified"/>}
+            <span className="badge-seller"><IconSellerBadge size={11}/> Seller</span>
+          </div>
+          <div className="post-meta"><span>{product.storeName}</span><span className="post-meta-dot"/><span>{post.createdAt}</span></div>
+        </div>
+        <div className="post-header-actions">
+          <button className={"follow-chip"+(post.author.following?" following":"")} onClick={()=>actions.onFollow(post.id)}>{post.author.following?"Following":"Follow Store"}</button>
+          <button className="icon-btn"><IconMore size={18}/></button>
+        </div>
+      </header>
+      {post.caption && <div className="post-body"><p className="post-caption">{renderCaption(post.caption)}</p></div>}
+      <div className="product-card">
+        <div className="product-media"><img src={product.image} alt={product.name}/>{product.compareAtPrice && <span className="product-discount">Sale</span>}</div>
+        <div className="product-body">
+          <div className="product-info">
+            <p className="product-name">{product.name}</p>
+            <div className="product-price-row"><span className="product-price mono">{product.price}</span>{product.compareAtPrice && <span className="product-compare mono">{product.compareAtPrice}</span>}</div>
+            <div className="product-rating"><IconStar size={12}/> {product.rating} · {product.ratingCount} ratings</div>
+          </div>
+          <button className="btn btn-primary btn-sm">Shop Now</button>
+        </div>
+      </div>
+      <div className="post-stats"><span className="stats-spark">{post.reactionCount} reactions</span><span>{post.commentCount} comments</span><span>{post.shareCount} shares</span></div>
+      <ActionDock post={post} showShop
+        onReact={()=>actions.onReact(post.id)} onComment={()=>actions.onComment(post.id)}
+        onRepost={()=>actions.onRepost(post.id)} onShare={()=>actions.onShare(post.id)} onSave={()=>actions.onSave(post.id)}/>
+    </article>
+  );
+}
+
+/* ---------- Property post card ---------- */
+function PropertyPostCard({post,actions}){
+  const property=post.property;
+  return (
+    <article className="post">
+      <header className="post-header">
+        <img className="avatar" src={post.author.avatar} width="44" height="44" alt=""/>
+        <div className="post-author-block">
+          <div className="post-name-row"><span className="post-name">{post.author.name}</span>{post.author.verified && <IconVerified size={14} className="verified"/>}</div>
+          <div className="post-meta"><span>Real estate agent</span><span className="post-meta-dot"/><span>{post.createdAt}</span></div>
+        </div>
+        <div className="post-header-actions"><button className="icon-btn"><IconMore size={18}/></button></div>
+      </header>
+      {post.caption && <div className="post-body"><p className="post-caption">{renderCaption(post.caption)}</p></div>}
+      <div className="property-card">
+        <div className="property-media"><img src={property.image} alt={property.title}/><span className="property-type">{property.propertyType}</span><span className="property-price mono">{property.price}</span></div>
+        <div className="property-body">
+          <p className="property-title">{property.title}</p>
+          <p className="property-location">{property.location}</p>
+          <div className="property-specs"><span>{property.beds} beds</span><span>{property.baths} baths</span></div>
+          <div className="property-actions"><button className="btn btn-primary btn-sm">View Property</button><button className="btn btn-ghost btn-sm">Contact Agent</button></div>
+          <div className="property-agent"><img className="avatar" src={property.agentAvatar} width="22" height="22" alt=""/> Listed by {property.agentName}</div>
+        </div>
+      </div>
+      <div className="post-stats"><span className="stats-spark">{post.reactionCount} reactions</span><span>{post.commentCount} comments</span><span>{post.shareCount} shares</span></div>
+      <ActionDock post={post}
+        onReact={()=>actions.onReact(post.id)} onComment={()=>actions.onComment(post.id)}
+        onRepost={()=>actions.onRepost(post.id)} onShare={()=>actions.onShare(post.id)} onSave={()=>actions.onSave(post.id)}/>
+    </article>
+  );
+}
+
+/* ---------- Wave card ---------- */
+function WaveCard({post,actions}){
+  const frameRef=useRef(null);
+  const [playing,setPlaying]=useState(false);
+  const [muted,setMuted]=useState(true);
+  const [progress,setProgress]=useState(0);
+  useEffect(()=>{
+    const el=frameRef.current; if(!el) return;
+    const obs=new IntersectionObserver(([e])=>setPlaying(e.isIntersecting),{threshold:.6});
+    obs.observe(el); return ()=>obs.disconnect();
+  },[]);
+  useEffect(()=>{
+    if(!playing) return;
+    const total=post.wave.duration*1000;
+    const id=setInterval(()=>setProgress(p=> (p + (100/(total/100))) >=100 ? 0 : p + 100/(total/100)),100);
+    return ()=>clearInterval(id);
+  },[playing]);
+  const w=post.wave;
+  return (
+    <div className="wave" ref={frameRef}>
+      <img className="wave-media" src={w.poster} alt=""/>
+      <div className="wave-scrim-top"/><div className="wave-scrim-bottom"/>
+      <div className="wave-top-row">
+        <span className="wave-badge">Waves</span>
+        <div style={{display:"flex",gap:6}}>
+          <button className="icon-btn" style={{color:"#fff"}} onClick={()=>setMuted(m=>!m)}>{muted?<IconMute size={18}/>:<IconUnmute size={18}/>}</button>
+          <button className="icon-btn" style={{color:"#fff"}}><IconFullscreen size={18}/></button>
+        </div>
+      </div>
+      <button className="wave-center-toggle" onClick={()=>setPlaying(p=>!p)}>
+        {!playing && <span className="play-circle" style={{width:68,height:68}}><IconPlay size={26}/></span>}
+      </button>
+      <div className="wave-meta">
+        <div className="wave-author-row"><img className="avatar" src={post.author.avatar} width="30" height="30" alt=""/><span className="wave-author-name">{post.author.name}</span></div>
+        {post.caption && <p className="wave-caption">{post.caption}</p>}
+        <div className="wave-audio">♪ {w.audioTitle} · {w.audioOwner}</div>
+      </div>
+      <div className="wave-dock">
+        <button className={"wave-dock-btn"+(post.reacted?" active":"")} onClick={()=>actions.onReact(post.id)}>{post.reacted?<IconSparkFilled size={19}/>:<IconSpark size={19}/>}{fmt(post.reactionCount)}</button>
+        <button className="wave-dock-btn" onClick={()=>actions.onComment(post.id)}><IconComment size={19}/>{fmt(post.commentCount)}</button>
+        <button className={"wave-dock-btn"+(post.reposted?" active":"")} onClick={()=>actions.onRepost(post.id)}><IconRepost size={19}/>{fmt(post.repostCount)}</button>
+        <button className="wave-dock-btn" onClick={()=>actions.onShare(post.id)}><IconShare size={19}/>{fmt(post.shareCount)}</button>
+        <button className={"wave-dock-btn"+(post.saved?" active":"")} onClick={()=>actions.onSave(post.id)}>{post.saved?<IconSaveFilled size={19}/>:<IconSave size={19}/>}Save</button>
+      </div>
+      <div className="wave-progress"><div className="wave-progress-fill" style={{width:progress+"%"}}/></div>
+    </div>
+  );
+}
+
+/* ---------- Stories rail ("Signal Strip") ---------- */
+function WaveGlyph({color}){
+  // A tiny waveform — the brand's original story indicator, echoing the
+  // Waves feature, instead of a ring-around-a-photo like FB/IG.
+  return (
+    <svg className="story-chip-wave" viewBox="0 0 44 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M1 6c2 0 2-4 4-4s2 4 4 4 2-4 4-4 2 4 4 4 2-4 4-4 2 4 4 4 2-4 4-4 2 4 4 4 2-4 4-4 2 4 4 4"
+        stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+function StoriesRail({stories,onOpen,onCreate}){
+  const trackRef=useRef(null);
+  const order=["friends","following","creators","sellers","businesses"];
+  const sorted=[...stories].sort((a,b)=>order.indexOf(a.group)-order.indexOf(b.group));
+  const scrollBy=(d)=>trackRef.current && trackRef.current.scrollBy({left:d,behavior:"smooth"});
+  return (
+    <section className="stories">
+      <button className="stories-arrow left" onClick={()=>scrollBy(-320)}><IconChevronLeft size={16}/></button>
+      <div className="stories-track" ref={trackRef}>
+        <button className="story-chip create" onClick={onCreate}>
+          <span className="story-chip-avatar-wrap"><IconPlus size={20}/></span>
+          <span className="story-chip-name">Your Story</span>
+        </button>
+        {sorted.map(s=>{
+          const isSeller = s.group==="sellers"||s.group==="businesses";
+          return (
+            <button key={s.id} className={"story-chip"+(s.seen?"":" unseen")+(isSeller?" is-seller":"")} onClick={()=>onOpen(s)}>
+              <span className="story-chip-avatar-wrap">
+                <img className="story-chip-avatar" src={s.user.avatar} alt=""/>
+                <span className="story-chip-ping"/>
+                {isSeller && <span className="story-chip-store-badge"><IconSellerBadge size={10}/></span>}
+              </span>
+              <WaveGlyph/>
+              <span className="story-chip-name">{isSeller ? (s.user.store||s.user.name) : s.user.name.split(" ")[0]}</span>
+              {s.product && <span className="story-chip-price mono">{s.product.price}</span>}
+            </button>
+          );
+        })}
+      </div>
+      <button className="stories-arrow right" onClick={()=>scrollBy(320)}><IconChevronRight size={16}/></button>
+    </section>
+  );
+}
+
+/* ---------- Feed tabs ---------- */
+function FeedTabs({active,onChange}){
+  const tabs=[["for-you","For You"],["following","Following"],["friends","Friends"],["waves","Waves"],["marketplace","Marketplace"]];
+  return (
+    <div className="tabs">
+      {tabs.map(([id,label])=>(
+        <button key={id} className={"tab-pill"+(active===id?" active":"")} onClick={()=>onChange(id)}>{label}</button>
+      ))}
+    </div>
+  );
+}
+
+/* ---------- Composer ---------- */
+const ATTACHMENTS=[["photo","Photo",IconPhoto],["video","Video",IconVideo],["multi-photo","Gallery",IconMultiPhoto],["wave","Wave",IconWaves],["poll","Poll",IconPoll],["product","Product",IconProduct],["property","Property",IconProperty]];
+function CreatePost({onCreate}){
+  const [open,setOpen]=useState(false);
+  const [text,setText]=useState("");
+  const [attach,setAttach]=useState("text");
+  const close=()=>{setOpen(false);setText("");setAttach("text");};
+  const submit=()=>{ if(!text.trim() && attach==="text") return; onCreate(text.trim(),attach); close(); };
+  return (
+    <React.Fragment>
+      <div className="composer">
+        <div className="composer-row">
+          <img className="avatar" src={currentUser.avatar} width="40" height="40" alt=""/>
+          <button className="composer-input" onClick={()=>setOpen(true)}>What's happening on Fockis?</button>
+        </div>
+        <div className="composer-actions">
+          {ATTACHMENTS.map(([id,label,Icon])=>(
+            <button key={id} className="composer-action" onClick={()=>{setAttach(id);setOpen(true);}}><Icon size={17}/>{label}</button>
+          ))}
+        </div>
+      </div>
+      {open && (
+        <div className="modal-overlay" onClick={close}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div className="modal-header"><span className="modal-title">Create post</span><button className="icon-btn" onClick={close}><IconClose size={18}/></button></div>
+            <div className="modal-body">
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <img className="avatar" src={currentUser.avatar} width="40" height="40" alt=""/>
+                <strong>{currentUser.name}</strong>
+              </div>
+              <textarea className="modal-textarea" placeholder="What's happening on Fockis?" value={text} onChange={e=>setText(e.target.value)} autoFocus/>
+              {(attach==="photo"||attach==="video"||attach==="multi-photo"||attach==="wave"||attach==="product"||attach==="property") && (
+                <div style={{borderRadius:16,overflow:"hidden",border:"1px solid var(--fk-border)"}}>
+                  <img src={`https://picsum.photos/seed/fockis-composer-${attach}/800/500`} style={{width:"100%",display:"block",maxHeight:280,objectFit:"cover"}} alt=""/>
+                </div>
+              )}
+              {attach==="poll" && (
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  <input style={{border:"1px solid var(--fk-border)",borderRadius:12,padding:"9px 12px",background:"var(--fk-sunken)"}} defaultValue="Option A"/>
+                  <input style={{border:"1px solid var(--fk-border)",borderRadius:12,padding:"9px 12px",background:"var(--fk-sunken)"}} defaultValue="Option B"/>
+                </div>
+              )}
+              <div className="modal-attach-grid">
+                {ATTACHMENTS.map(([id,label,Icon])=>(
+                  <button key={id} className={"modal-attach"+(attach===id?" active":"")} onClick={()=>setAttach(attach===id?"text":id)}><Icon size={20}/>{label}</button>
+                ))}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-ghost" onClick={close}>Cancel</button>
+              <button className="btn btn-primary" onClick={submit} disabled={!text.trim() && attach==="text"}>Post</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </React.Fragment>
+  );
+}
+
+/* ---------- Sidebar / header / rail / bottom nav ---------- */
+const NAV=[["home","Home",IconHome],["discover","Discover",IconDiscover],["friends","Friends",IconFriends],["waves","Waves",IconWaves],["messages","Messages",IconMessages,3],["notifications","Notifications",IconNotifications,12],["marketplace","Marketplace",IconMarketplace],["groups","Groups",IconGroups],["saved","Saved",IconSaved],["profile","Profile",IconProfile]];
+
+function Sidebar({active,onChange,theme,toggleTheme}){
+  return (
+    <nav className="sidebar">
+      <div className="sidebar-logo"><span className="logo"><span className="logo-mark"/>Fockis</span></div>
+      <div className="sidebar-nav">
+        {NAV.map(([id,label,Icon,badge])=>(
+          <button key={id} className={"nav-item"+(active===id?" active":"")} onClick={()=>onChange(id)}>
+            <Icon size={22}/><span>{label}</span>{badge && <span className="nav-badge">{badge}</span>}
+          </button>
+        ))}
+      </div>
+      <div className="sidebar-divider"/>
+      <button className="sidebar-profile" onClick={()=>onChange("profile")}>
+        <img className="avatar" src={currentUser.avatar} width="38" height="38" alt=""/>
+        <span><span className="sidebar-profile-name">{currentUser.name}</span><span className="sidebar-profile-handle">@{currentUser.handle}</span></span>
+      </button>
+      <div className="sidebar-utility">
+        <button className="icon-btn" onClick={toggleTheme}>{theme==="light"?<IconMoon size={19}/>:<IconSun size={19}/>}</button>
+        <button className="icon-btn"><IconSettings size={19}/></button>
+        <button className="icon-btn"><IconHelp size={19}/></button>
+      </div>
+    </nav>
+  );
+}
+function TopBar(){
+  return (
+    <header className="topbar">
+      <label className="topbar-search"><IconSearch size={18}/><input type="search" placeholder="Search Fockis"/></label>
+      <div className="topbar-actions"><button className="icon-btn"><IconMessages size={20}/></button><button className="icon-btn"><IconNotifications size={20}/></button></div>
+    </header>
+  );
+}
+function MobileHeader(){
+  return (
+    <header className="mobile-header">
+      <span className="logo"><span className="logo-mark"/>Fockis</span>
+      <div className="mobile-header-actions"><button className="icon-btn"><IconSearch size={20}/></button><button className="icon-btn"><IconNotifications size={20}/></button><button className="icon-btn"><IconMessages size={20}/></button></div>
+    </header>
+  );
+}
+function RightRail(){
+  const [followed,setFollowed]=useState({});
+  return (
+    <aside>
+      <section className="rail-section">
+        <div className="rail-header"><h2 className="rail-title"><IconTrend size={16}/>Trending</h2><a className="rail-see-all" href="#">See all</a></div>
+        {trending.map(t=>(<div key={t.id} className="trend-item"><span className="trend-cat">{t.cat}</span><span className="trend-tag">{t.tag}</span><span className="trend-count mono">{t.count}</span></div>))}
+      </section>
+      <section className="rail-section">
+        <div className="rail-header"><h2 className="rail-title"><IconFriends size={16}/>Suggested for you</h2></div>
+        {suggested.map(p=>(
+          <div key={p.id} className="suggestion-item">
+            <img className="avatar" src={p.avatar} width="38" height="38" alt=""/>
+            <div className="suggestion-meta"><p className="suggestion-name">{p.name}{p.verified && <IconVerified size={12} className="verified"/>}</p><p className="suggestion-sub">Suggested for you</p></div>
+            <button className={"follow-chip"+(followed[p.id]?" following":"")} onClick={()=>setFollowed(f=>({...f,[p.id]:!f[p.id]}))}>{followed[p.id]?"Following":"Follow"}</button>
+          </div>
+        ))}
+      </section>
+      <section className="rail-section">
+        <div className="rail-header"><h2 className="rail-title"><IconSellerBadge size={16}/>Discover sellers</h2></div>
+        {sellersList.map(s=>(
+          <div key={s.id} className="suggestion-item">
+            <img className="avatar" src={s.avatar} width="38" height="38" alt=""/>
+            <div className="suggestion-meta"><p className="suggestion-name">{s.store}</p><p className="suggestion-sub">Popular store</p></div>
+            <button className={"follow-chip"+(followed["s"+s.id]?" following":"")} onClick={()=>setFollowed(f=>({...f,["s"+s.id]:!f["s"+s.id]}))}>{followed["s"+s.id]?"Following":"Follow"}</button>
+          </div>
+        ))}
+      </section>
+      <section className="rail-section">
+        <div className="rail-header"><h2 className="rail-title"><IconMarketplace size={16}/>Marketplace highlights</h2><a className="rail-see-all" href="#">See all</a></div>
+        <div className="market-grid">
+          {marketHighlights.map(m=>(<div key={m.id} className="market-card"><img src={m.image} alt={m.name}/><div className="market-card-body"><p className="market-card-name">{m.name}</p><p className="market-card-price mono">{m.price}</p></div></div>))}
+        </div>
+      </section>
+    </aside>
+  );
+}
+function BottomNav({active,onChange,onCreate}){
+  return (
+    <nav className="bottom-nav">
+      <button className={"bn-item"+(active==="home"?" active":"")} onClick={()=>onChange("home")}><IconHome size={22}/>Home</button>
+      <button className={"bn-item"+(active==="discover"?" active":"")} onClick={()=>onChange("discover")}><IconDiscover size={22}/>Discover</button>
+      <button className="bn-item" onClick={onCreate}><span className="bn-create"><IconPlus size={20}/></span>Create</button>
+      <button className={"bn-item"+(active==="notifications"?" active":"")} onClick={()=>onChange("notifications")}><IconNotifications size={22}/>Activity</button>
+      <button className={"bn-item"+(active==="profile"?" active":"")} onClick={()=>onChange("profile")}><IconProfile size={22}/>Profile</button>
+    </nav>
+  );
+}
+
+/* ---------- Root app ---------- */
+function App(){
+  const [theme,setTheme]=useState("light");
+  const [activeNav,setActiveNav]=useState("home");
+  const [activeTab,setActiveTab]=useState("for-you");
+  const [posts,setPosts]=useState(initialPosts);
+  const [stories,setStories]=useState(initialStories);
+  const [openStory,setOpenStory]=useState(null);
+
+  const update=(id,fn)=> setPosts(prev=>prev.map(p=>p.id===id?fn(p):p));
+  const actions={
+    onReact:(id)=>update(id,p=>({...p,reacted:!p.reacted,reactionCount:p.reactionCount+(p.reacted?-1:1)})),
+    onComment:(id)=>update(id,p=>({...p,commentCount:p.commentCount+1})),
+    onRepost:(id)=>update(id,p=>({...p,reposted:!p.reposted,repostCount:p.repostCount+(p.reposted?-1:1)})),
+    onShare:(id)=>update(id,p=>({...p,shareCount:p.shareCount+1})),
+    onSave:(id)=>update(id,p=>({...p,saved:!p.saved})),
+    onFollow:(id)=>update(id,p=>({...p,author:{...p.author,following:!p.author.following}})),
+    onVote:(id,optId)=>update(id,p=>{
+      if(!p.poll || p.poll.votedOptionId) return p;
+      return {...p, poll:{...p.poll, votedOptionId:optId, totalVotes:p.poll.totalVotes+1,
+        options:p.poll.options.map(o=>o.id===optId?{...o,votes:o.votes+1}:o)}};
+    }),
+  };
+
+  const createPost=(text,attach)=>{
+    const typeMap={photo:"image","multi-photo":"multi-image",video:"video",wave:"wave",poll:"poll",product:"product",property:"property"};
+    const newPost={id:"local-"+Date.now(),type:typeMap[attach]||"text",author:currentUser,createdAt:"Just now",caption:text||undefined,
+      reactionCount:0,commentCount:0,repostCount:0,shareCount:0,
+      images: attach==="photo" ? [img("fockis-new")] : undefined,
+      poll: attach==="poll" ? {question:text||"New poll",totalVotes:0,votedOptionId:null,options:[{id:"a",label:"Option A",votes:0},{id:"b",label:"Option B",votes:0}]} : undefined};
+    setPosts(prev=>[newPost,...prev]);
+  };
+
+  useEffect(()=>{ document.body.setAttribute("data-theme",theme); },[theme]);
+
+  const filtered = useMemo(()=>{
+    if(activeTab==="following") return posts.filter(p=>p.author.following);
+    if(activeTab==="friends") return posts.filter(p=>p.author.friend);
+    if(activeTab==="marketplace") return posts.filter(p=>p.type==="product"||p.type==="property");
+    return posts;
+  },[activeTab,posts]);
+
+  return (
+    <div>
+      <MobileHeader/>
+      <div className="shell">
+        <div className="sidebar-col"><Sidebar active={activeNav} onChange={setActiveNav} theme={theme} toggleTheme={()=>setTheme(t=>t==="light"?"dark":"light")}/></div>
+        <main className="center-col">
+          <div className="center-inner">
+            <TopBar/>
+            <StoriesRail stories={stories} onOpen={(s)=>{setStories(prev=>prev.map(x=>x.id===s.id?{...x,seen:true}:x)); setOpenStory(s);}} onCreate={()=>alert("Fockis Story composer would open here.")}/>
+            <FeedTabs active={activeTab} onChange={setActiveTab}/>
+            {activeTab!=="waves" && <CreatePost onCreate={createPost}/>}
+
+            {activeTab==="waves" ? (
+              <div className="waves-grid">{waves.map(w=><WaveCard key={w.id} post={w} actions={actions}/>)}</div>
+            ) : filtered.length ? filtered.map(post=>{
+                if(post.type==="product") return <ProductPostCard key={post.id} post={post} actions={actions}/>;
+                if(post.type==="property") return <PropertyPostCard key={post.id} post={post} actions={actions}/>;
+                return <PostCard key={post.id} post={post} actions={actions}/>;
+              }) : (
+              <div className="empty-state">
+                <div className="empty-icon"><IconWaves size={24}/></div>
+                <p className="empty-title">Nothing here yet</p>
+                <p className="empty-body">Posts matching this tab will show up here as your network grows.</p>
+              </div>
+            )}
+          </div>
+        </main>
+        <div className="rail-col"><RightRail/></div>
+      </div>
+      <BottomNav active={activeNav} onChange={setActiveNav} onCreate={()=>document.querySelector(".composer-input")?.click()}/>
+
+      {openStory && (
+        <div className="modal-overlay" onClick={()=>setOpenStory(null)}>
+          <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:360,aspectRatio:"9/16",borderRadius:22,overflow:"hidden",position:"relative",background:"#000"}}>
+            <img src={openStory.preview} alt="" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover"}}/>
+            <div style={{position:"absolute",top:14,left:14,right:14,display:"flex",alignItems:"center",gap:8}}>
+              <img className="avatar" src={openStory.user.avatar} width="32" height="32" alt=""/>
+              <strong style={{color:"#fff",fontSize:14}}>{openStory.user.store||openStory.user.name}</strong>
+              <button className="icon-btn" style={{marginLeft:"auto",color:"#fff"}} onClick={()=>setOpenStory(null)}><IconClose size={18}/></button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

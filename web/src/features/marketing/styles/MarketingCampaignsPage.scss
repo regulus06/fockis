@@ -1,0 +1,9 @@
+/* ============================================================================
+   FOCKIS MARKETING CAMPAIGNS PAGE
+   Page-specific stylesheet for MarketingCampaignsPage.tsx
+   All visual rules (header, campaign grid via CampaignCard, states,
+   buttons) live in the shared partial — this page needs no
+   page-specific overrides.
+============================================================================ */
+
+@use "./fockis-marketing-shared";

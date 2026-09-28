@@ -1,0 +1,2486 @@
+/* ============================================================================
+   FOCKIS FEED PAGE
+   Main stylesheet for FockisFeedPage.tsx
+
+   MOBILE SIDEBAR / HEADER FIX
+   - Mobile header stays fixed above the feed.
+   - Hamburger remains clickable.
+   - Sidebar drawer is promoted above the backdrop.
+   - Sidebar links remain visible on small screens.
+   - Sidebar wrapper does not consume feed layout space.
+   - Backdrop sits BELOW the sidebar but ABOVE the feed.
+============================================================================ */
+
+@use "./fockis-theme";
+
+@use "./FockisPost";
+@use "./FockisFeedTabs";
+@use "./FockisNavigation";
+@use "./FockisSidebar";
+@use "./FockisRightRail";
+@use "./FockisWave";
+@use "./FockisProduct";
+@use "./FockisProperty";
+@use "./FockisModal";
+@use "./fockis-responsive";
+@use "./FockisVideoReel";
+
+@use "../features/businesses/styles/BusinessFeedRail";
+@use "../features/businesses/styles/SpotlightDealsRail";
+
+
+/* ============================================================================
+   GLOBAL BOX SIZING
+============================================================================ */
+
+.fk-app,
+.fk-app *,
+.fk-app *::before,
+.fk-app *::after {
+  box-sizing: border-box;
+}
+
+
+/* ============================================================================
+   GLOBAL HORIZONTAL OVERFLOW PROTECTION
+============================================================================ */
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+}
+
+
+/* ============================================================================
+   APP ROOT
+============================================================================ */
+
+.fk-app {
+  position: relative;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+
+  margin: 0;
+  padding: 0;
+
+  background: var(--fk-bg);
+  color: var(--fk-text);
+
+  overflow-x: hidden;
+  overflow-y: visible;
+
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+
+/* ============================================================================
+   APP LAYOUT
+============================================================================ */
+
+.app-layout:has(.fk-app) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  background: var(--fk-bg);
+
+  overflow-x: hidden;
+}
+
+.app-layout:has(.fk-app) .app-body {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  background: var(--fk-bg);
+
+  overflow-x: hidden;
+}
+
+.app-layout:has(.fk-app) .app-content {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  padding: 0 !important;
+
+  background: var(--fk-bg);
+
+  overflow-x: hidden;
+}
+
+
+/* ============================================================================
+   BUSINESS RAIL SAFETY
+============================================================================ */
+
+.fk-app .fk-business-feed-rail,
+.fk-app .fk-business-feed-rail__scroller,
+.fk-app .spotlight-deals-rail,
+.fk-app .spotlight-deals-list {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.fk-app .fk-business-feed-rail__scroller,
+.fk-app .spotlight-deals-list {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+
+/* ============================================================================
+   MOBILE HEADER
+============================================================================ */
+
+.fk-mobile-header {
+  display: none;
+
+  background: var(--fk-fjord);
+  border-bottom: none;
+
+  box-shadow:
+    inset 0 -3px 0 0 var(--fk-amber-bright);
+}
+
+.fk-mobile-header__brand strong {
+  color: #ffffff;
+  font-family: var(--fk-font-display);
+  letter-spacing: 0.01em;
+}
+
+.fk-mobile-menu-button span {
+  background: #ffffff;
+}
+
+
+/* ============================================================================
+   MOBILE SIDEBAR BACKDROP
+============================================================================ */
+
+.fk-sidebar-backdrop {
+  display: none;
+}
+
+
+/* ============================================================================
+   MAIN SHELL
+============================================================================ */
+
+.fk-shell {
+  width: 100%;
+  max-width: 1480px;
+  min-width: 0;
+  min-height: 100vh;
+
+  margin: 0 auto;
+  padding: 24px;
+
+  display: grid;
+
+  grid-template-columns:
+    240px
+    minmax(0, 680px)
+    280px;
+
+  justify-content: center;
+  align-items: start;
+
+  column-gap: 28px;
+
+  background: var(--fk-bg);
+
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+
+/* ============================================================================
+   LEFT SIDEBAR
+============================================================================ */
+
+.fk-shell__left {
+  width: 240px;
+  min-width: 240px;
+
+  position: sticky;
+  top: 24px;
+
+  align-self: start;
+
+  z-index: 20;
+
+  background: transparent;
+}
+
+.fk-shell__left .fk-sidebar {
+  width: 100%;
+  max-width: 240px;
+  min-width: 0;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  border-radius: var(--fk-r-lg);
+}
+
+
+/* ============================================================================
+   CENTER FEED
+============================================================================ */
+
+.fk-shell__center {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  display: block;
+
+  background: var(--fk-bg);
+
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+
+/* ============================================================================
+   CENTER FEED INNER
+============================================================================ */
+
+.fk-shell__center-inner {
+  width: 100%;
+  max-width: 680px;
+  min-width: 0;
+
+  margin: 0 auto;
+
+  padding: 24px 0 80px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+
+  background: var(--fk-bg);
+
+  overflow: visible;
+}
+
+
+/* ============================================================================
+   CENTER CHILDREN
+============================================================================ */
+
+.fk-shell__center-inner > * {
+  min-width: 0;
+  max-width: 100%;
+  flex-shrink: 0;
+}
+
+
+/* ============================================================================
+   EXPLICIT FEED ORDER
+============================================================================ */
+
+.fk-shell__center-inner > .fk-feed-topbar {
+  order: 1;
+}
+
+.fk-shell__center-inner > .fk-stories-rail,
+.fk-shell__center-inner > [class*="stories"] {
+  order: 2;
+}
+
+.fk-shell__center-inner > .fk-live-now-rail {
+  order: 3;
+
+  position: relative;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  display: block;
+
+  margin: 0 0 12px;
+  padding: 0;
+
+  visibility: visible;
+  opacity: 1;
+
+  z-index: 10;
+
+  background: transparent;
+
+  overflow: visible;
+}
+
+.fk-shell__center-inner > .fk-feed-tabs,
+.fk-shell__center-inner > .fk-feed-tab,
+.fk-shell__center-inner > [class*="feed-tab"] {
+  order: 4;
+}
+
+.fk-shell__center-inner > .fk-create-post,
+.fk-shell__center-inner > [class*="create-post"] {
+  order: 5;
+}
+
+.fk-shell__center-inner > * {
+  order: 50;
+}
+
+
+/* ============================================================================
+   LIVE NOW RAIL
+============================================================================ */
+
+.fk-live-now-rail {
+  position: relative;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  margin: 0 0 12px;
+  padding: 0;
+
+  display: block;
+
+  background: transparent;
+
+  overflow: visible;
+
+  z-index: 10;
+}
+
+
+/* ============================================================================
+   LIVE NOW HEADER
+============================================================================ */
+
+.fk-live-now-rail__header {
+  width: 100%;
+  min-width: 0;
+
+  margin-bottom: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.fk-live-now-rail__heading {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+}
+
+.fk-live-now-rail__live-icon {
+  width: 38px;
+  height: 38px;
+
+  flex: 0 0 38px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--fk-r-md);
+
+  background: var(--fk-fjord);
+  color: var(--fk-amber-bright);
+}
+
+.fk-live-now-rail__header h2 {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-size: 18px;
+  font-weight: 700;
+
+  line-height: 1.2;
+}
+
+.fk-live-now-rail__header p {
+  margin: 3px 0 0;
+
+  color: var(--fk-text-2);
+
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.fk-live-now-rail__count {
+  flex: 0 0 auto;
+
+  padding: 6px 10px;
+
+  border-radius: var(--fk-r-sm);
+
+  background: var(--fk-fjord);
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+
+/* ============================================================================
+   LIVE NOW SCROLLER
+============================================================================ */
+
+.fk-live-now-rail__scroller {
+  position: relative;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  margin: 0;
+  padding: 2px 2px 14px;
+
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+
+  align-items: stretch;
+  justify-content: flex-start;
+
+  gap: 12px;
+
+  box-sizing: border-box;
+
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+
+  overscroll-behavior-x: contain;
+  touch-action: pan-x !important;
+
+  -webkit-overflow-scrolling: touch;
+
+  scroll-behavior: smooth;
+
+  scrollbar-width: auto;
+
+  scrollbar-color:
+    var(--fk-border-strong)
+    var(--fk-sunken);
+}
+
+.fk-live-now-rail__scroller::-webkit-scrollbar {
+  width: 0;
+  height: 10px;
+}
+
+.fk-live-now-rail__scroller::-webkit-scrollbar-track {
+  background: var(--fk-sunken);
+  border-radius: 999px;
+}
+
+.fk-live-now-rail__scroller::-webkit-scrollbar-thumb {
+  background: var(--fk-border-strong);
+  border-radius: 999px;
+}
+
+.fk-live-now-rail__scroller::-webkit-scrollbar-thumb:hover {
+  background: var(--fk-fjord-bright);
+}
+
+
+/* ============================================================================
+   LIVE NOW CARD
+============================================================================ */
+
+.fk-live-now-card {
+  position: relative;
+
+  flex: 0 0 220px !important;
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+
+  width: 220px !important;
+  min-width: 220px !important;
+  max-width: 220px !important;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  padding: 0;
+
+  cursor: pointer;
+
+  text-align: left;
+
+  background: var(--fk-surface);
+
+  color: var(--fk-text);
+
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-lg);
+
+  box-shadow: var(--fk-shadow-sm);
+
+  white-space: normal;
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+.fk-live-now-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--fk-shadow-md);
+  border-color: var(--fk-fjord-bright);
+}
+
+.fk-live-now-card:focus-visible {
+  outline: 2px solid var(--fk-amber-bright);
+  outline-offset: 2px;
+}
+
+
+/* ============================================================================
+   LIVE CARD MEDIA
+============================================================================ */
+
+.fk-live-now-card__media {
+  position: relative;
+
+  width: 100%;
+  height: 125px;
+
+  flex: 0 0 125px;
+
+  overflow: hidden;
+
+  background: var(--fk-sunken);
+}
+
+.fk-live-now-card__thumbnail {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+.fk-live-now-card__placeholder {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--fk-fjord),
+      var(--fk-fjord-dark)
+    );
+
+  color: var(--fk-amber-bright);
+}
+
+
+/* ============================================================================
+   LIVE BADGE
+============================================================================ */
+
+.fk-live-now-card__live-badge {
+  position: absolute;
+
+  top: 8px;
+  left: 8px;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 5px;
+
+  padding: 5px 8px;
+
+  border-radius: var(--fk-r-sm);
+
+  background: rgba(10, 34, 64, 0.82);
+  color: #fff;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  letter-spacing: 0.06em;
+}
+
+.fk-live-now-card__live-dot {
+  width: 6px;
+  height: 6px;
+
+  flex: 0 0 6px;
+
+  border-radius: 50%;
+
+  background: var(--fk-amber-bright);
+}
+
+
+/* ============================================================================
+   LIVE VIEWER COUNT
+============================================================================ */
+
+.fk-live-now-card__viewers {
+  position: absolute;
+
+  right: 8px;
+  bottom: 8px;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 4px;
+
+  padding: 5px 7px;
+
+  border-radius: var(--fk-r-sm);
+
+  background: rgba(10, 34, 64, 0.75);
+  color: #fff;
+
+  font-size: 9px;
+  font-weight: 700;
+}
+
+
+/* ============================================================================
+   LIVE CREATOR
+============================================================================ */
+
+.fk-live-now-card__creator {
+  min-width: 0;
+
+  padding: 10px 10px 6px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+.fk-live-now-card__avatar {
+  width: 32px;
+  height: 32px;
+
+  flex: 0 0 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border-radius: var(--fk-r-sm);
+
+  background: var(--fk-fjord-soft);
+  color: var(--fk-fjord);
+
+  border: 1px solid var(--fk-border);
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.fk-live-now-card__avatar img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+.fk-live-now-card__identity {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.fk-live-now-card__identity strong {
+  min-width: 0;
+
+  color: var(--fk-text);
+
+  font-size: 12px;
+  font-weight: 800;
+
+  line-height: 1.2;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fk-live-now-card__identity span {
+  margin-top: 2px;
+
+  color: var(--fk-text-2);
+
+  font-size: 10px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================================
+   LIVE TITLE
+============================================================================ */
+
+.fk-live-now-card__title {
+  min-width: 0;
+
+  padding: 3px 10px 9px;
+
+  color: var(--fk-text);
+
+  font-size: 12px;
+  font-weight: 700;
+
+  line-height: 1.35;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+
+  overflow: hidden;
+}
+
+
+/* ============================================================================
+   LIVE WATCH BUTTON
+============================================================================ */
+
+.fk-live-now-card__watch {
+  margin-top: auto;
+
+  min-height: 34px;
+
+  padding: 7px 10px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+
+  color: var(--fk-fjord-bright);
+
+  border-top: 1px solid var(--fk-border);
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.fk-live-now-card__watch span {
+  flex: 1;
+}
+
+
+/* ============================================================================
+   LIVE SKELETON
+============================================================================ */
+
+.fk-live-now-card--skeleton {
+  min-height: 220px;
+
+  cursor: default;
+
+  pointer-events: none;
+}
+
+.fk-live-now-card__avatar-skeleton {
+  width: 100%;
+  height: 125px;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--fk-sunken),
+      var(--fk-surface-hover),
+      var(--fk-sunken)
+    );
+
+  animation: fk-live-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.fk-live-now-card__skeleton-line {
+  width: 75%;
+  height: 10px;
+
+  margin: 12px 10px 0;
+
+  border-radius: 999px;
+
+  background: var(--fk-sunken);
+
+  animation: fk-live-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.fk-live-now-card__skeleton-line--small {
+  width: 48%;
+  margin-top: 8px;
+}
+
+@keyframes fk-live-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+
+/* ============================================================================
+   FEED SECTION WRAPPERS
+============================================================================ */
+
+.fk-feed-section {
+  width: 100%;
+  min-width: 0;
+
+  margin: 0;
+  padding: 0;
+}
+
+
+/* ============================================================================
+   FEED RAIL WIDTH CONTROL
+============================================================================ */
+
+.fk-shell__center-inner
+.fk-event-rail,
+.fk-shell__center-inner
+.fk-business-feed-rail,
+.fk-shell__center-inner
+.spotlight-deals-rail,
+.fk-shell__center-inner
+.fk-live-now-rail {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+
+/* ============================================================================
+   RIGHT RAIL
+============================================================================ */
+
+.fk-shell__right {
+  width: 280px;
+  min-width: 0;
+
+  position: sticky;
+  top: 24px;
+
+  align-self: start;
+
+  z-index: 20;
+
+  background: transparent;
+}
+
+.fk-shell__right .fk-right-rail {
+  width: 100%;
+  max-width: 280px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 16px;
+
+  background: transparent;
+}
+
+
+/* ============================================================================
+   FEED TOP BAR
+============================================================================ */
+
+.fk-feed-topbar {
+  width: 100%;
+  min-width: 0;
+
+  margin-bottom: 18px;
+  padding: 14px 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  background: var(--fk-fjord);
+  border-radius: var(--fk-r-lg);
+
+  box-shadow:
+    inset 0 -3px 0 0 var(--fk-amber-bright),
+    var(--fk-shadow-sm);
+}
+
+.fk-feed-topbar__eyebrow {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: var(--fk-amber-bright);
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+
+  text-transform: uppercase;
+}
+
+.fk-feed-topbar__title {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-family: var(--fk-font-display);
+
+  font-size: 26px;
+  font-weight: 700;
+
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+.fk-feed-topbar .fk-icon-btn {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.fk-feed-topbar .fk-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+
+/* ============================================================================
+   THEME TOGGLE
+============================================================================ */
+
+.fk-theme-toggle {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+}
+
+.fk-theme-toggle .fk-icon-btn {
+  width: 40px;
+  height: 40px;
+}
+
+
+/* ============================================================================
+   ICON BUTTON
+============================================================================ */
+
+.fk-icon-btn {
+  width: 38px;
+  height: 38px;
+
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+
+  background: transparent;
+  color: var(--fk-text-2);
+
+  cursor: pointer;
+
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+
+  &:hover {
+    background: var(--fk-surface-hover);
+    color: var(--fk-fjord-bright);
+  }
+
+  &:active {
+    transform: scale(0.94);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fk-amber-bright);
+    outline-offset: 2px;
+  }
+}
+
+
+/* ============================================================================
+   POSTS
+============================================================================ */
+
+.fk-post {
+  position: relative;
+
+  width: 100%;
+  min-width: 0;
+
+  margin-bottom: 18px;
+
+  overflow: visible;
+
+  background: var(--fk-surface);
+
+  border: 1px solid var(--fk-border);
+  border-top: 3px solid var(--fk-fjord);
+  border-radius: var(--fk-r-md);
+
+  box-shadow: var(--fk-shadow-sm);
+
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+
+  &:hover {
+    box-shadow: var(--fk-shadow-md);
+  }
+}
+
+.fk-post__header {
+  position: relative;
+
+  min-height: 70px;
+
+  padding: 14px 16px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+}
+
+.fk-post__author-block {
+  min-width: 0;
+  flex: 1;
+}
+
+.fk-post__name-row {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+}
+
+.fk-post__name {
+  min-width: 0;
+
+  color: var(--fk-text);
+
+  font-size: 15px;
+  font-weight: 700;
+
+  line-height: 1.25;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fk-post__meta {
+  margin-top: 3px;
+
+  color: var(--fk-text-2);
+
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.fk-post__header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  flex-shrink: 0;
+}
+
+.fk-post__follow-button {
+  flex-shrink: 0;
+
+  min-height: 34px;
+
+  padding: 0 14px;
+
+  border: 1px solid var(--fk-fjord);
+  border-radius: var(--fk-r-sm);
+
+  background: transparent;
+  color: var(--fk-fjord);
+
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--fk-fjord);
+    color: #ffffff;
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fk-amber-bright);
+    outline-offset: 2px;
+  }
+}
+
+.fk-avatar {
+  width: 44px;
+  height: 44px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--fk-r-sm);
+
+  overflow: hidden;
+
+  background: var(--fk-fjord);
+  color: var(--fk-amber-bright);
+
+  border: 1px solid var(--fk-border);
+
+  font-family: var(--fk-font-display);
+  font-size: 16px;
+  font-weight: 700;
+
+  user-select: none;
+
+  img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+  }
+}
+
+.fk-post__body {
+  padding: 0 16px 16px;
+}
+
+.fk-post__caption {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-size: 15px;
+  line-height: 1.65;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.fk-post__media {
+  width: 100%;
+  min-width: 0;
+
+  overflow: hidden;
+
+  background: var(--fk-sunken);
+
+  border-top: 1px solid var(--fk-border);
+  border-bottom: 1px solid var(--fk-border);
+
+  img,
+  video {
+    width: 100%;
+    max-width: 100%;
+
+    display: block;
+
+    object-fit: cover;
+
+    max-height: 720px;
+  }
+
+  video {
+    background: #000;
+  }
+}
+
+
+/* ============================================================================
+   ACTION DOCK
+============================================================================ */
+
+.fk-action-dock {
+  min-height: 56px;
+
+  padding: 7px 12px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 4px;
+}
+
+.fk-action-dock__btn {
+  min-width: 38px;
+  height: 38px;
+
+  padding: 0 10px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+
+  background: transparent;
+  color: var(--fk-text-2);
+
+  cursor: pointer;
+
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+
+  &:hover {
+    background: var(--fk-surface-hover);
+    color: var(--fk-fjord-bright);
+  }
+
+  &:active {
+    transform: scale(0.94);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fk-amber-bright);
+    outline-offset: 2px;
+  }
+}
+
+.fk-action-dock__btn--spark:hover {
+  color: var(--fk-fjord-bright);
+}
+
+.fk-action-dock__btn--spark.is-active,
+.fk-action-dock__btn--save.is-active {
+  color: var(--fk-fjord);
+  background: var(--fk-amber-soft);
+}
+
+.fk-action-dock__spacer {
+  flex: 1;
+}
+
+
+/* ============================================================================
+   POST MENU
+============================================================================ */
+
+.fk-post-menu {
+  position: absolute;
+
+  top: 44px;
+  right: 0;
+
+  min-width: 150px;
+
+  padding: 6px;
+
+  z-index: 50;
+
+  background: var(--fk-surface);
+
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-md);
+
+  box-shadow: var(--fk-shadow-lg);
+}
+
+.fk-post-menu__delete {
+  width: 100%;
+
+  padding: 10px 12px;
+
+  display: flex;
+  align-items: center;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+
+  background: transparent;
+  color: var(--fk-danger);
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    background: var(--fk-surface-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fk-danger);
+    outline-offset: -2px;
+  }
+}
+
+
+/* ============================================================================
+   EVENT RAIL
+============================================================================ */
+
+.fk-event-rail {
+  position: relative;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  margin: 0 0 4px;
+  padding: 0;
+
+  background: transparent;
+
+  overflow: visible;
+}
+
+.fk-event-rail__header {
+  width: 100%;
+  min-width: 0;
+
+  margin-bottom: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.fk-event-rail__heading {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+}
+
+.fk-event-rail__emoji {
+  width: 40px;
+  height: 40px;
+
+  flex: 0 0 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--fk-r-md);
+
+  background: var(--fk-fjord);
+
+  font-size: 20px;
+}
+
+.fk-event-rail__title {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-family: var(--fk-font-display);
+
+  font-size: 18px;
+  font-weight: 700;
+
+  line-height: 1.2;
+}
+
+.fk-event-rail__subtitle {
+  margin: 3px 0 0;
+
+  color: var(--fk-text-2);
+
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.fk-event-rail__view-all {
+  flex: 0 0 auto;
+
+  padding: 7px 10px;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+
+  background: var(--fk-fjord);
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+
+/* ============================================================================
+   EVENT SCROLLER
+============================================================================ */
+
+.fk-event-rail__scroller {
+  position: relative;
+
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+
+  align-items: stretch;
+  justify-content: flex-start;
+
+  gap: 12px;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  margin: 0;
+
+  padding: 2px 2px 6px;
+
+  box-sizing: border-box;
+
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+
+  overscroll-behavior-x: contain;
+  touch-action: pan-x !important;
+
+  -webkit-overflow-scrolling: touch;
+
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+
+  scrollbar-width: auto;
+
+  scrollbar-color:
+    var(--fk-border-strong)
+    var(--fk-sunken);
+}
+
+.fk-event-rail__scroller::-webkit-scrollbar {
+  width: 0;
+  height: 12px;
+}
+
+.fk-event-rail__scroller::-webkit-scrollbar-track {
+  background: var(--fk-sunken);
+  border-radius: 999px;
+}
+
+.fk-event-rail__scroller::-webkit-scrollbar-thumb {
+  background: var(--fk-border-strong);
+  border-radius: 999px;
+
+  border: 3px solid var(--fk-bg);
+
+  min-width: 70px;
+}
+
+.fk-event-rail__scroller::-webkit-scrollbar-thumb:hover {
+  background: var(--fk-fjord-bright);
+}
+
+.fk-event-rail__scroller::-webkit-scrollbar-thumb:active {
+  background: var(--fk-fjord);
+}
+
+
+/* ============================================================================
+   EVENT CARD
+============================================================================ */
+
+.fk-event-card {
+  position: relative;
+
+  flex: 0 0 285px !important;
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+
+  width: 285px !important;
+  min-width: 285px !important;
+  max-width: 285px !important;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  scroll-snap-align: start;
+
+  cursor: pointer;
+
+  background: var(--fk-surface);
+
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-lg);
+
+  box-shadow: var(--fk-shadow-sm);
+
+  white-space: normal;
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+.fk-event-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--fk-shadow-md);
+}
+
+.fk-event-card:focus-visible {
+  outline: 2px solid var(--fk-amber-bright);
+  outline-offset: 2px;
+}
+
+
+/* ============================================================================
+   EVENT IMAGE
+============================================================================ */
+
+.fk-event-card__image-wrapper {
+  position: relative;
+
+  width: 100%;
+  height: 155px;
+
+  flex: 0 0 155px;
+
+  overflow: hidden;
+
+  background: var(--fk-sunken);
+}
+
+.fk-event-card__image {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+.fk-event-card__image-placeholder {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--fk-fjord),
+      var(--fk-fjord-dark)
+    );
+
+  font-size: 42px;
+}
+
+
+/* ============================================================================
+   EVENT CONTENT
+============================================================================ */
+
+.fk-event-card__content {
+  min-width: 0;
+
+  padding: 12px;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.fk-event-card__category {
+  margin-bottom: 5px;
+
+  color: var(--fk-fjord-bright);
+
+  font-size: 10px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.fk-event-card__title {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-size: 15px;
+  font-weight: 700;
+
+  line-height: 1.3;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+
+  overflow: hidden;
+}
+
+.fk-event-card__description {
+  margin: 6px 0 8px;
+
+  color: var(--fk-text-2);
+
+  font-size: 11px;
+  line-height: 1.4;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+
+  overflow: hidden;
+}
+
+
+/* ============================================================================
+   MOBILE LAYOUT
+============================================================================ */
+
+@media (max-width: 900px) {
+
+  /* --------------------------------------------------------------------------
+     MOBILE APP
+  -------------------------------------------------------------------------- */
+
+  .fk-app {
+    padding-top: 60px;
+
+    /*
+      Create a stacking context for the feed itself without allowing
+      children to escape over the mobile drawer.
+    */
+    position: relative;
+    z-index: 1;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     MOBILE HEADER
+  -------------------------------------------------------------------------- */
+
+  .fk-mobile-header {
+    display: flex;
+
+    position: fixed;
+
+    top: 0;
+    left: 0;
+    right: 0;
+
+    width: 100%;
+    height: 60px;
+
+    margin: 0;
+    padding: 0 16px;
+
+    align-items: center;
+    justify-content: space-between;
+
+    background: var(--fk-fjord);
+
+    box-shadow:
+      inset 0 -3px 0 0 var(--fk-amber-bright),
+      0 2px 12px rgba(0, 0, 0, 0.18);
+
+    /*
+      Header must remain above both feed and sidebar.
+    */
+    z-index: 100002;
+
+    isolation: isolate;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     MOBILE HAMBURGER
+  -------------------------------------------------------------------------- */
+
+  .fk-mobile-menu-button {
+    width: 42px;
+    height: 42px;
+
+    flex: 0 0 42px;
+
+    margin: 0;
+    padding: 8px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+
+    gap: 5px;
+
+    border: 0;
+
+    border-radius: var(--fk-r-sm);
+
+    background: transparent;
+
+    color: #ffffff;
+
+    cursor: pointer;
+
+    position: relative;
+
+    z-index: 100003;
+
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .fk-mobile-menu-button:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .fk-mobile-menu-button:active {
+    transform: scale(0.94);
+  }
+
+  .fk-mobile-menu-button:focus-visible {
+    outline: 2px solid var(--fk-amber-bright);
+    outline-offset: 2px;
+  }
+
+  .fk-mobile-menu-button span {
+    display: block;
+
+    width: 25px;
+    height: 3px;
+
+    flex: 0 0 3px;
+
+    margin: 0;
+
+    border-radius: 999px;
+
+    background: #ffffff;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     MOBILE BRAND
+  -------------------------------------------------------------------------- */
+
+  .fk-mobile-header__brand {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    min-width: 0;
+
+    flex: 1;
+
+    margin: 0;
+
+    color: #ffffff;
+
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  .fk-mobile-header__brand strong {
+    color: #ffffff;
+
+    font-family: var(--fk-font-display);
+
+    font-size: 18px;
+    font-weight: 800;
+
+    white-space: nowrap;
+  }
+
+  .fk-mobile-header__logo {
+    width: 34px;
+    height: 34px;
+
+    flex: 0 0 34px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: var(--fk-r-sm);
+
+    background: var(--fk-amber-bright);
+
+    color: var(--fk-fjord);
+
+    font-family: var(--fk-font-display);
+
+    font-weight: 900;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     MOBILE SHELL
+  -------------------------------------------------------------------------- */
+
+  .fk-shell {
+    display: block;
+
+    width: 100%;
+    max-width: none;
+
+    min-width: 0;
+    min-height: calc(100vh - 60px);
+
+    margin: 0;
+    padding: 0;
+
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     MOBILE CENTER
+  -------------------------------------------------------------------------- */
+
+  .fk-shell__center {
+    width: 100%;
+    max-width: 100%;
+
+    min-width: 0;
+
+    margin: 0;
+    padding: 0;
+
+    overflow-x: hidden;
+    overflow-y: visible;
+
+    position: relative;
+    z-index: 1;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     MOBILE CENTER INNER
+  -------------------------------------------------------------------------- */
+
+  .fk-shell__center-inner {
+    width: 100%;
+    max-width: none;
+
+    min-width: 0;
+
+    margin: 0;
+
+    padding:
+      12px
+      10px
+      110px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+    overflow: visible;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     MOBILE FEED TOPBAR
+  -------------------------------------------------------------------------- */
+
+  .fk-feed-topbar {
+    border-radius: 0;
+
+    margin:
+      -12px
+      -10px
+      18px;
+
+    padding: 14px 16px;
+
+    position: relative;
+    z-index: 1;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     MOBILE LIVE RAIL
+  -------------------------------------------------------------------------- */
+
+  .fk-shell__center-inner > .fk-live-now-rail {
+    order: 3;
+
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    margin-bottom: 12px;
+
+    display: block;
+
+    overflow: visible;
+  }
+
+  .fk-live-now-rail__scroller {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+
+    display: flex !important;
+
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+
+    touch-action: pan-x !important;
+
+    -webkit-overflow-scrolling: touch;
+
+    overscroll-behavior-x: contain;
+
+    scrollbar-width: auto;
+  }
+
+  .fk-live-now-card {
+    flex: 0 0 72vw !important;
+
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+
+    width: 72vw !important;
+    min-width: 72vw !important;
+    max-width: 72vw !important;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     MOBILE OTHER RAILS
+  -------------------------------------------------------------------------- */
+
+  .fk-event-rail__scroller,
+  .fk-business-feed-rail__scroller,
+  .spotlight-deals-list {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+
+    display: flex !important;
+
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+
+    touch-action: pan-x !important;
+
+    -webkit-overflow-scrolling: touch;
+
+    overscroll-behavior-x: contain;
+
+    scrollbar-width: auto;
+  }
+
+  .fk-event-card {
+    flex: 0 0 78vw !important;
+
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+
+    width: 78vw !important;
+    min-width: 78vw !important;
+    max-width: 78vw !important;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     MOBILE SIDEBAR WRAPPER
+
+     IMPORTANT:
+     This wrapper occupies ZERO layout width.
+
+     The drawer itself is independently fixed below.
+  -------------------------------------------------------------------------- */
+
+  .fk-shell__left {
+    position: static !important;
+
+    display: block !important;
+
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    border: 0 !important;
+
+    overflow: visible !important;
+
+    /*
+      Do NOT create a stacking context here.
+      The actual drawer needs to escape this wrapper.
+    */
+    z-index: auto !important;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     MOBILE SIDEBAR DRAWER
+
+     The sidebar is forced into the viewport.
+
+     This is the important fix for:
+     "I click hamburger but the screen becomes pale and links are not visible."
+  -------------------------------------------------------------------------- */
+
+  .fk-shell__left .fk-sidebar {
+    position: fixed !important;
+
+    top: 60px !important;
+    left: 0 !important;
+
+    width: min(310px, 86vw) !important;
+
+    height: calc(100vh - 60px) !important;
+
+    max-width: min(310px, 86vw) !important;
+    min-width: 0 !important;
+
+    margin: 0 !important;
+
+    padding: 0 !important;
+
+    border-radius: 0 !important;
+
+    /*
+      Sidebar MUST be above backdrop.
+    */
+    z-index: 100001 !important;
+
+    background: var(--fk-surface) !important;
+
+    color: var(--fk-text) !important;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+
+    -webkit-overflow-scrolling: touch;
+
+    box-shadow:
+      8px 0 24px rgba(0, 0, 0, 0.22);
+
+    isolation: isolate;
+  }
+
+
+  /*
+    Make sure all sidebar content is actually visible above its own
+    background and does not inherit a pale/transparent appearance.
+  */
+
+  .fk-shell__left .fk-sidebar > *,
+  .fk-shell__left .fk-sidebar nav,
+  .fk-shell__left .fk-sidebar ul,
+  .fk-shell__left .fk-sidebar li,
+  .fk-shell__left .fk-sidebar a,
+  .fk-shell__left .fk-sidebar button {
+    position: relative;
+
+    z-index: 1;
+  }
+
+
+  /*
+    Sidebar links remain readable on small screens.
+  */
+
+  .fk-shell__left .fk-sidebar a,
+  .fk-shell__left .fk-sidebar button {
+    color: var(--fk-text);
+  }
+
+
+  /* --------------------------------------------------------------------------
+     MOBILE RIGHT RAIL
+  -------------------------------------------------------------------------- */
+
+  .fk-shell__right {
+    display: none;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     SIDEBAR BACKDROP
+
+     Backdrop is BELOW sidebar and BELOW header,
+     but ABOVE the feed.
+  -------------------------------------------------------------------------- */
+
+  .fk-sidebar-backdrop {
+    display: block !important;
+
+    position: fixed !important;
+
+    top: 60px !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+
+    width: 100vw !important;
+    height: calc(100vh - 60px) !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background:
+      rgba(10, 34, 64, 0.55) !important;
+
+    border: 0 !important;
+
+    cursor: pointer;
+
+    /*
+      Above feed.
+      Below sidebar.
+    */
+    z-index: 100000 !important;
+
+    isolation: isolate;
+  }
+}
+
+
+/* ============================================================================
+   SMALL MOBILE
+============================================================================ */
+
+@media (max-width: 480px) {
+
+  .fk-app {
+    padding-top: 60px;
+  }
+
+  .fk-mobile-header {
+    height: 60px;
+
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .fk-mobile-menu-button {
+    width: 40px;
+    height: 40px;
+
+    flex-basis: 40px;
+  }
+
+  .fk-mobile-header__brand {
+    font-size: 17px;
+  }
+
+  .fk-mobile-header__brand strong {
+    font-size: 17px;
+  }
+
+  .fk-mobile-header__logo {
+    width: 32px;
+    height: 32px;
+
+    flex-basis: 32px;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     SMALL MOBILE SIDEBAR
+  -------------------------------------------------------------------------- */
+
+  .fk-shell__left .fk-sidebar {
+    top: 60px !important;
+    left: 0 !important;
+
+    width: min(300px, 88vw) !important;
+    max-width: min(300px, 88vw) !important;
+
+    height: calc(100vh - 60px) !important;
+
+    z-index: 100001 !important;
+  }
+
+  .fk-sidebar-backdrop {
+    top: 60px !important;
+    height: calc(100vh - 60px) !important;
+
+    z-index: 100000 !important;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     SMALL MOBILE CENTER
+  -------------------------------------------------------------------------- */
+
+  .fk-shell__center-inner {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 118px;
+
+    overflow: visible;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     SMALL MOBILE FEED TOPBAR
+  -------------------------------------------------------------------------- */
+
+  .fk-feed-topbar {
+    margin:
+      -12px
+      0
+      18px;
+
+    border-radius: 0;
+
+    padding:
+      14px
+      16px;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     SMALL MOBILE LIVE
+  -------------------------------------------------------------------------- */
+
+  .fk-live-now-rail {
+    margin-bottom: 12px;
+  }
+
+  .fk-live-now-rail__scroller {
+    width: 100% !important;
+    max-width: 100% !important;
+
+    padding-left: 14px;
+    padding-right: 14px;
+
+    gap: 12px;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+
+  .fk-live-now-card {
+    flex: 0 0 78vw !important;
+
+    width: 78vw !important;
+    min-width: 78vw !important;
+    max-width: 78vw !important;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     SMALL MOBILE EVENT / BUSINESS RAILS
+  -------------------------------------------------------------------------- */
+
+  .fk-event-rail__scroller,
+  .fk-business-feed-rail__scroller,
+  .spotlight-deals-list {
+    width: 100% !important;
+    max-width: 100% !important;
+
+    padding-left: 14px;
+    padding-right: 14px;
+
+    gap: 12px;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+
+  .fk-event-card {
+    flex: 0 0 82vw !important;
+
+    width: 82vw !important;
+    min-width: 82vw !important;
+    max-width: 82vw !important;
+  }
+}
+
+
+/* ============================================================================
+   REDUCED MOTION
+============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .fk-icon-btn,
+  .fk-action-dock__btn,
+  .fk-event-card,
+  .fk-live-now-card,
+  .fk-mobile-menu-button {
+    transition: none;
+  }
+
+  .fk-event-rail__scroller,
+  .fk-business-feed-rail__scroller,
+  .spotlight-deals-list,
+  .fk-live-now-rail__scroller {
+    scroll-behavior: auto;
+  }
+
+  .fk-live-now-card__avatar-skeleton,
+  .fk-live-now-card__skeleton-line {
+    animation: none;
+  }
+}
+
+
+/* ============================================================================
+   FINAL MOBILE HEADER / SIDEBAR SAFETY
+============================================================================ */
+
+@media (max-width: 900px) {
+
+  /*
+    Feed stays underneath the mobile navigation system.
+  */
+
+  .fk-feed-topbar,
+  .fk-shell__center,
+  .fk-shell__center-inner,
+  .fk-live-now-rail,
+  .fk-feed-section {
+    position: relative;
+  }
+
+  .fk-feed-topbar {
+    z-index: 1;
+  }
+
+
+  /*
+    FINAL STACKING ORDER
+
+    100003 = hamburger
+    100002 = mobile header
+    100001 = sidebar
+    100000 = backdrop
+    1      = feed
+  */
+
+  .fk-mobile-header {
+    position: fixed !important;
+    z-index: 100002 !important;
+  }
+
+  .fk-mobile-menu-button {
+    position: relative !important;
+    z-index: 100003 !important;
+  }
+
+  .fk-sidebar-backdrop {
+    position: fixed !important;
+    z-index: 100000 !important;
+  }
+
+  .fk-shell__left .fk-sidebar {
+    position: fixed !important;
+    z-index: 100001 !important;
+  }
+}

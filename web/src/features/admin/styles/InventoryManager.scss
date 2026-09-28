@@ -1,0 +1,120 @@
+.inventory-manager {
+
+  padding:24px;
+  background:#f8fafc;
+
+
+  .page-header {
+
+    margin-bottom:24px;
+
+
+    h1 {
+
+      margin:0;
+      font-size:28px;
+      color:#111827;
+
+    }
+
+
+    p {
+
+      color:#6b7280;
+      margin-top:8px;
+
+    }
+
+  }
+
+
+
+  .loading,
+  .empty-state {
+
+    background:white;
+    padding:30px;
+    border-radius:12px;
+    text-align:center;
+    color:#64748b;
+
+  }
+
+
+
+
+
+  .inventory-table {
+
+    width:100%;
+    background:white;
+    border-collapse:collapse;
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 4px 15px rgba(0,0,0,.06);
+
+
+
+    th {
+
+      background:#f1f5f9;
+      padding:14px;
+      text-align:left;
+
+    }
+
+
+
+    td {
+
+      padding:14px;
+      border-top:1px solid #e5e7eb;
+
+    }
+
+
+
+
+    input {
+
+      width:90px;
+      padding:8px;
+      border:1px solid #cbd5e1;
+      border-radius:8px;
+
+    }
+
+
+
+
+    button {
+
+      padding:8px 16px;
+      border:none;
+      border-radius:8px;
+      background:#2563eb;
+      color:white;
+      cursor:pointer;
+
+
+
+      &:hover {
+
+        background:#1d4ed8;
+
+      }
+
+
+
+      &:disabled {
+
+        opacity:.5;
+
+      }
+
+    }
+
+
+  }
+
+}

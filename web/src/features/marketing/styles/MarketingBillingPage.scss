@@ -1,0 +1,11 @@
+/* ============================================================================
+   FOCKIS MARKETING BILLING PAGE
+   Page-specific stylesheet for MarketingBillingPage.tsx
+   Shared marketing chrome (header, panel, states) lives in
+   _fockis-marketing-shared.scss
+============================================================================ */
+
+@use "./fockis-marketing-shared";
+
+/* No page-specific overrides needed — this page uses only the shared
+   fk-marketing-* classes (page, header, eyebrow, panel, loading, error). */

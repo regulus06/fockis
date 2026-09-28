@@ -1,0 +1,131 @@
+.review-manager {
+
+  padding:24px;
+  background:#f8fafc;
+
+
+  .page-header {
+
+    margin-bottom:24px;
+
+
+    h1 {
+      margin:0;
+      font-size:28px;
+      color:#111827;
+    }
+
+
+    p {
+      color:#6b7280;
+      margin-top:8px;
+    }
+
+  }
+
+
+
+  .loading {
+
+    padding:30px;
+    background:white;
+    border-radius:12px;
+    text-align:center;
+
+  }
+
+
+
+
+  .review-table {
+
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 4px 15px rgba(0,0,0,.06);
+
+
+
+    th {
+
+      padding:14px;
+      background:#f1f5f9;
+      text-align:left;
+
+    }
+
+
+    td {
+
+      padding:14px;
+      border-top:1px solid #e5e7eb;
+
+    }
+
+
+
+    button {
+
+      padding:8px 14px;
+      border:none;
+      border-radius:8px;
+      background:#16a34a;
+      color:white;
+      cursor:pointer;
+      margin-right:8px;
+
+
+      &:hover {
+        background:#15803d;
+      }
+
+    }
+
+
+
+    .danger {
+
+      background:#dc2626;
+
+
+      &:hover {
+        background:#b91c1c;
+      }
+
+    }
+
+
+
+    .status {
+
+      padding:5px 12px;
+      border-radius:20px;
+      font-size:13px;
+      font-weight:600;
+
+    }
+
+
+
+    .active {
+
+      background:#dcfce7;
+      color:#15803d;
+
+    }
+
+
+
+    .pending {
+
+      background:#fef3c7;
+      color:#92400e;
+
+    }
+
+
+  }
+
+}

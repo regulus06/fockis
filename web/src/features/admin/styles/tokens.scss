@@ -1,0 +1,121 @@
+:root {
+  /* =========================================
+     FOCKIS ADMIN — LIGHT THEME
+     ========================================= */
+
+  /* surfaces */
+  --fk-bg: #f5f7f9;
+  --fk-bg-elevated: #ffffff;
+  --fk-bg-panel: #ffffff;
+  --fk-bg-hover: #eef1f4;
+
+  /* borders */
+  --fk-border: #dde3e9;
+  --fk-border-strong: #c7d0d9;
+
+  /* text */
+  --fk-text-primary: #131a22;
+  --fk-text-secondary: #566270;
+  --fk-text-tertiary: #8894a1;
+
+  /* Fockis orange accent */
+  --fk-accent: #ff9900;
+  --fk-accent-strong: #e87500;
+  --fk-accent-dim: rgba(255, 153, 0, 0.14);
+
+  /* semantic */
+  --fk-warning: #f5a623;
+  --fk-warning-dim: rgba(245, 166, 35, 0.14);
+
+  --fk-danger: #e0443e;
+  --fk-danger-dim: rgba(224, 68, 62, 0.14);
+
+  --fk-success: #22a866;
+  --fk-success-dim: rgba(34, 168, 102, 0.14);
+
+  --fk-info: #4f7fe8;
+  --fk-info-dim: rgba(79, 127, 232, 0.14);
+
+  /* typography */
+  --fk-font-display: 'Space Grotesk', 'Inter', sans-serif;
+  --fk-font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --fk-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* layout */
+  --fk-sidebar-w: 248px;
+  --fk-sidebar-w-collapsed: 68px;
+  --fk-topbar-h: 60px;
+
+  /* radius */
+  --fk-radius-sm: 6px;
+  --fk-radius-md: 10px;
+  --fk-radius-lg: 14px;
+}
+
+/* =========================================
+   LIGHT THEME
+   ========================================= */
+
+[data-theme='light'] {
+  --fk-bg: #f5f7f9;
+  --fk-bg-elevated: #ffffff;
+  --fk-bg-panel: #ffffff;
+  --fk-bg-hover: #eef1f4;
+
+  --fk-border: #dde3e9;
+  --fk-border-strong: #c7d0d9;
+
+  --fk-text-primary: #131a22;
+  --fk-text-secondary: #566270;
+  --fk-text-tertiary: #8894a1;
+
+  --fk-accent: #ff9900;
+  --fk-accent-strong: #e87500;
+  --fk-accent-dim: rgba(255, 153, 0, 0.14);
+
+  --fk-warning: #f5a623;
+  --fk-warning-dim: rgba(245, 166, 35, 0.14);
+
+  --fk-danger: #e0443e;
+  --fk-danger-dim: rgba(224, 68, 62, 0.14);
+
+  --fk-success: #22a866;
+  --fk-success-dim: rgba(34, 168, 102, 0.14);
+
+  --fk-info: #4f7fe8;
+  --fk-info-dim: rgba(79, 127, 232, 0.14);
+}
+
+/* =========================================
+   OPTIONAL DARK THEME
+   ========================================= */
+
+[data-theme='dark'] {
+  --fk-bg: #0a0e13;
+  --fk-bg-elevated: #10151c;
+  --fk-bg-panel: #141a22;
+  --fk-bg-hover: #1a212b;
+
+  --fk-border: #232b36;
+  --fk-border-strong: #2e3947;
+
+  --fk-text-primary: #e9eef3;
+  --fk-text-secondary: #93a1b0;
+  --fk-text-tertiary: #5c6773;
+
+  --fk-accent: #ff9900;
+  --fk-accent-strong: #ffad33;
+  --fk-accent-dim: rgba(255, 153, 0, 0.14);
+
+  --fk-warning: #f5a623;
+  --fk-warning-dim: rgba(245, 166, 35, 0.14);
+
+  --fk-danger: #f0554b;
+  --fk-danger-dim: rgba(240, 85, 75, 0.14);
+
+  --fk-success: #3ddc84;
+  --fk-success-dim: rgba(61, 220, 132, 0.14);
+
+  --fk-info: #5b8def;
+  --fk-info-dim: rgba(91, 141, 239, 0.14);
+}

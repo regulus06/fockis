@@ -1,0 +1,203 @@
+/* ============================================================================
+   FOCKIS CAMPAIGN DETAILS PAGE
+   Page-specific stylesheet for CampaignDetailsPage.tsx
+   Shared marketing chrome (header, grid, cards, detail lists, action
+   lists, buttons, states) lives in _fockis-marketing-shared.scss.
+   This file only adds the Create Ad modal, which is specific to this
+   page (CreateAdModal.tsx is rendered from here).
+============================================================================ */
+
+@use "./fockis-marketing-shared";
+
+/* ============================================================================
+   CREATE AD MODAL — BACKDROP
+============================================================================ */
+
+.fk-marketing-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+
+  padding: 60px 16px;
+
+  overflow-y: auto;
+
+  background: color-mix(in srgb, black 55%, transparent);
+
+  animation: fk-modal-fade-in 160ms ease;
+}
+
+@keyframes fk-modal-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* ============================================================================
+   CREATE AD MODAL — PANEL
+============================================================================ */
+
+.fk-marketing-modal {
+  width: 100%;
+  max-width: 560px;
+
+  padding: 24px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 16px;
+
+  background: var(--fk-surface);
+  color: var(--fk-text);
+
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-lg);
+
+  box-shadow: var(--fk-shadow-md);
+
+  animation: fk-modal-slide-up 180ms ease;
+}
+
+@keyframes fk-modal-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fk-marketing-modal .fk-marketing-card-header {
+  margin-bottom: 0;
+
+  h2 {
+    margin: 0;
+
+    color: var(--fk-text);
+
+    font-family: var(--fk-font-display);
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  button {
+    width: 28px;
+    height: 28px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+    border-radius: var(--fk-r-sm);
+
+    background: transparent;
+    color: var(--fk-text-2);
+
+    font-size: 15px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+      background-color 150ms ease,
+      color 150ms ease;
+
+    &:hover {
+      background: var(--fk-sunken);
+      color: var(--fk-text);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--fk-fjord);
+      outline-offset: 2px;
+    }
+  }
+}
+
+.fk-marketing-modal .fk-form-field {
+  gap: 6px;
+}
+
+.fk-marketing-modal .fk-marketing-action-list {
+  margin-top: 4px;
+
+  flex-direction: row;
+
+  button {
+    width: auto;
+    flex: 1;
+  }
+}
+
+/* ============================================================================
+   AD LIST ROWS (inside the "Ads" card on this page)
+============================================================================ */
+
+.fk-marketing-detail-list > div .fk-marketing-action-list {
+  flex-direction: row;
+
+  width: auto;
+
+  gap: 8px;
+
+  button {
+    width: auto;
+
+    height: 32px;
+
+    padding: 0 12px;
+
+    font-size: 12px;
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE
+============================================================================ */
+
+@media (max-width: 767px) {
+  .fk-marketing-modal-backdrop {
+    padding: 24px 12px;
+    align-items: center;
+  }
+
+  .fk-marketing-modal {
+    padding: 18px;
+  }
+
+  .fk-marketing-modal .fk-marketing-action-list {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .fk-marketing-detail-list > div {
+    flex-direction: column;
+    align-items: flex-start;
+
+    gap: 8px;
+  }
+
+  .fk-marketing-detail-list > div .fk-marketing-action-list {
+    width: 100%;
+
+    button {
+      flex: 1;
+    }
+  }
+}

@@ -1,0 +1,1576 @@
+/* ============================================================================
+   FOCKIS CINEMATIC GIFT ANIMATION
+============================================================================ */
+
+.gift-animation {
+  --gift-main: #ffffff;
+  --gift-secondary: #ff9900;
+  --gift-glow: rgba(255, 153, 0, 0.65);
+
+  position: fixed;
+  inset: 0;
+
+  width: 100vw;
+  height: 100dvh;
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+
+  z-index: 50000;
+  isolation: isolate;
+
+  animation:
+    giftCinematicIn
+    0.35s
+    cubic-bezier(0.16, 1, 0.3, 1)
+    forwards;
+}
+
+
+/* ============================================================================
+   RARITY THEMES
+============================================================================ */
+
+.gift-animation.gift-animation-common {
+  --gift-main: #ffffff;
+  --gift-secondary: #ff9900;
+  --gift-glow: rgba(255, 153, 0, 0.65);
+}
+
+.gift-animation.gift-animation-rare {
+  --gift-main: #72b7ff;
+  --gift-secondary: #4c8dff;
+  --gift-glow: rgba(75, 145, 255, 0.75);
+}
+
+.gift-animation.gift-animation-epic {
+  --gift-main: #d18aff;
+  --gift-secondary: #8f45ff;
+  --gift-glow: rgba(164, 82, 255, 0.8);
+}
+
+.gift-animation.gift-animation-legendary {
+  --gift-main: #ffe06a;
+  --gift-secondary: #ff9d00;
+  --gift-glow: rgba(255, 193, 35, 0.9);
+}
+
+.gift-animation.gift-animation-diamond {
+  --gift-main: #a8f7ff;
+  --gift-secondary: #39cfff;
+  --gift-glow: rgba(77, 224, 255, 0.95);
+}
+
+.gift-animation.gift-animation-ultimate {
+  --gift-main: #fff4a8;
+  --gift-secondary: #ff5cdb;
+  --gift-glow: rgba(255, 105, 215, 1);
+}
+
+
+/* ============================================================================
+   BACKDROP
+============================================================================ */
+
+.gift-animation-backdrop {
+  position: absolute;
+  inset: 0;
+
+  z-index: 0;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(255, 153, 0, 0.16),
+      rgba(0, 0, 0, 0.22) 28%,
+      rgba(0, 0, 0, 0.72) 72%,
+      rgba(0, 0, 0, 0.94)
+    );
+
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+
+  animation:
+    giftBackdropIn
+    0.5s
+    ease
+    forwards;
+}
+
+
+/* ============================================================================
+   FLASH
+============================================================================ */
+
+.gift-animation-flash {
+  position: absolute;
+  inset: 0;
+
+  z-index: 1;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(255, 255, 255, 0.95),
+      var(--gift-glow) 18%,
+      transparent 55%
+    );
+
+  opacity: 0;
+
+  animation:
+    giftFlash
+    0.9s
+    ease-out
+    forwards;
+}
+
+
+/* ============================================================================
+   CENTER ORB
+============================================================================ */
+
+.gift-animation-orb {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width: min(70vw, 700px);
+  height: min(70vw, 700px);
+
+  transform: translate(-50%, -50%);
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      var(--gift-glow),
+      rgba(255, 255, 255, 0.08) 24%,
+      transparent 68%
+    );
+
+  filter: blur(18px);
+
+  opacity: 0.85;
+
+  z-index: 2;
+
+  pointer-events: none;
+
+  animation:
+    giftOrbPulse
+    2.5s
+    ease-in-out
+    infinite;
+}
+
+
+/* ============================================================================
+   RAYS
+============================================================================ */
+
+.gift-animation-rays {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 3;
+
+  pointer-events: none;
+}
+
+.gift-animation-ray {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width: 2px;
+  height: 75vh;
+
+  transform:
+    translate(-50%, -50%)
+    rotate(
+      calc(
+        360deg / var(--ray-count) * var(--ray-index)
+      )
+    );
+
+  transform-origin: center;
+
+  background:
+    linear-gradient(
+      to bottom,
+      transparent,
+      var(--gift-main),
+      transparent
+    );
+
+  opacity: 0;
+
+  filter:
+    drop-shadow(
+      0 0 12px var(--gift-glow)
+    );
+
+  animation:
+    giftRayBurst
+    1.8s
+    cubic-bezier(0.16, 1, 0.3, 1)
+    forwards;
+
+  animation-delay:
+    calc(
+      var(--ray-index) * 0.025s
+    );
+}
+
+
+/* ============================================================================
+   PARTICLES
+============================================================================ */
+
+.gift-animation-particles {
+  position: absolute;
+  inset: 0;
+
+  z-index: 4;
+
+  overflow: hidden;
+
+  pointer-events: none;
+}
+
+.gift-animation-particle {
+  position: absolute;
+
+  left: var(--particle-x);
+  top: var(--particle-y);
+
+  width: var(--particle-size);
+  height: var(--particle-size);
+
+  border-radius: 50%;
+
+  background: var(--gift-main);
+
+  box-shadow:
+    0 0 8px var(--gift-main),
+    0 0 18px var(--gift-glow);
+
+  opacity: 0;
+
+  animation:
+    giftParticleExplosion
+    var(--particle-duration)
+    cubic-bezier(0.16, 1, 0.3, 1)
+    infinite;
+
+  animation-delay: var(--particle-delay);
+}
+
+
+/* ============================================================================
+   EXPLOSION RINGS
+============================================================================ */
+
+.gift-animation-rings {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width: 10px;
+  height: 10px;
+
+  transform:
+    translate(-50%, -50%);
+
+  z-index: 5;
+
+  pointer-events: none;
+}
+
+.gift-animation-rings span {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width: 80px;
+  height: 80px;
+
+  border:
+    2px solid
+    var(--gift-main);
+
+  border-radius: 50%;
+
+  transform:
+    translate(-50%, -50%)
+    scale(0.1);
+
+  opacity: 0;
+
+  box-shadow:
+    0 0 25px var(--gift-glow);
+
+  animation:
+    giftRingExplosion
+    2.8s
+    cubic-bezier(0.16, 1, 0.3, 1)
+    infinite;
+}
+
+.gift-animation-rings span:nth-child(2) {
+  animation-delay: 0.35s;
+}
+
+.gift-animation-rings span:nth-child(3) {
+  animation-delay: 0.7s;
+}
+
+.gift-animation-rings span:nth-child(4) {
+  animation-delay: 1.05s;
+}
+
+
+/* ============================================================================
+   CENTER CONTENT
+============================================================================ */
+
+.gift-animation-center {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  width: min(92vw, 700px);
+
+  text-align: center;
+
+  z-index: 20;
+
+  pointer-events: none;
+
+  animation:
+    giftCenterEntrance
+    1.15s
+    cubic-bezier(0.16, 1, 0.3, 1)
+    forwards;
+}
+
+
+/* ============================================================================
+   SENDER
+============================================================================ */
+
+.gift-animation-sender {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  margin-bottom: 10px;
+
+  opacity: 0;
+
+  text-transform: uppercase;
+
+  animation:
+    giftSenderEntrance
+    0.8s
+    0.2s
+    cubic-bezier(0.16, 1, 0.3, 1)
+    forwards;
+}
+
+.gift-animation-sender span {
+  color: rgba(255, 255, 255, 0.88);
+
+  font-size:
+    clamp(
+      14px,
+      2.5vw,
+      22px
+    );
+
+  font-weight: 800;
+
+  letter-spacing: 0.8px;
+
+  text-shadow:
+    0 3px 20px
+    rgba(0, 0, 0, 0.7);
+}
+
+.gift-animation-sender strong {
+  margin-top: 4px;
+
+  color: var(--gift-main);
+
+  font-size:
+    clamp(
+      10px,
+      1.5vw,
+      13px
+    );
+
+  font-weight: 1000;
+
+  letter-spacing: 4px;
+
+  text-shadow:
+    0 0 20px var(--gift-glow);
+}
+
+
+/* ============================================================================
+   GIFT STAGE
+============================================================================ */
+
+.gift-animation-stage {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width:
+    clamp(
+      220px,
+      48vw,
+      470px
+    );
+
+  height:
+    clamp(
+      220px,
+      48vw,
+      470px
+    );
+
+  margin: 0 auto;
+
+  pointer-events: none;
+}
+
+
+/* ============================================================================
+   EMOJI GLOW
+============================================================================ */
+
+.gift-animation-emoji-glow {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width: 60%;
+  height: 60%;
+
+  transform:
+    translate(-50%, -50%);
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      var(--gift-glow),
+      transparent 68%
+    );
+
+  filter: blur(20px);
+
+  pointer-events: none;
+
+  animation:
+    giftEmojiGlow
+    1.8s
+    ease-in-out
+    infinite;
+}
+
+
+/* ============================================================================
+   VIDEO
+============================================================================ */
+
+.gift-animation-video {
+  position: relative;
+
+  z-index: 10;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  background: transparent;
+
+  border: 0;
+
+  pointer-events: none;
+
+  filter:
+    drop-shadow(
+      0 25px 55px
+      rgba(0, 0, 0, 0.7)
+    )
+    drop-shadow(
+      0 0 35px
+      var(--gift-glow)
+    );
+
+  animation:
+    giftVideoEntrance
+    1.2s
+    cubic-bezier(0.16, 1, 0.3, 1)
+    forwards;
+}
+
+
+/* ============================================================================
+   FALLBACK EMOJI
+============================================================================ */
+
+.gift-animation-fallback {
+  position: relative;
+
+  z-index: 10;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+
+  pointer-events: none;
+}
+
+.gift-animation-emoji {
+  display: block;
+
+  font-size:
+    clamp(
+      130px,
+      25vw,
+      260px
+    );
+
+  line-height: 1;
+
+  pointer-events: none;
+
+  filter:
+    drop-shadow(
+      0 25px 45px
+      rgba(0, 0, 0, 0.55)
+    )
+    drop-shadow(
+      0 0 35px
+      var(--gift-glow)
+    );
+
+  animation:
+    giftEmojiEntrance
+    1.35s
+    cubic-bezier(0.16, 1, 0.3, 1)
+    forwards;
+}
+
+
+/* ============================================================================
+   GIFT TITLE
+============================================================================ */
+
+.gift-animation-title {
+  margin-top: -20px;
+
+  color: #fff;
+
+  font-size:
+    clamp(
+      28px,
+      5vw,
+      56px
+    );
+
+  font-weight: 1000;
+
+  line-height: 1;
+
+  letter-spacing: -1.5px;
+
+  text-transform: uppercase;
+
+  text-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.65),
+    0 0 30px var(--gift-glow);
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  animation:
+    giftTitleEntrance
+    0.8s
+    0.45s
+    cubic-bezier(0.16, 1, 0.3, 1)
+    forwards;
+}
+
+
+/* ============================================================================
+   RARITY
+============================================================================ */
+
+.gift-animation-rarity {
+  margin-top: 12px;
+
+  padding: 5px 13px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.18);
+
+  border-radius: 999px;
+
+  color: var(--gift-main);
+
+  background:
+    rgba(0, 0, 0, 0.25);
+
+  box-shadow:
+    0 0 25px var(--gift-glow);
+
+  font-size: 10px;
+  font-weight: 1000;
+
+  letter-spacing: 2px;
+
+  text-transform: uppercase;
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  animation:
+    giftBadgeEntrance
+    0.7s
+    0.75s
+    ease
+    forwards;
+}
+
+.gift-rarity-common {
+  color: #fff;
+}
+
+.gift-rarity-rare {
+  color: #72b7ff;
+}
+
+.gift-rarity-epic {
+  color: #d18aff;
+}
+
+.gift-rarity-legendary {
+  color: #ffe06a;
+}
+
+.gift-rarity-diamond {
+  color: #a8f7ff;
+}
+
+
+/* ============================================================================
+   COIN VALUE
+============================================================================ */
+
+.gift-animation-value {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  margin-top: 12px;
+
+  color:
+    rgba(255, 255, 255, 0.85);
+
+  font-size:
+    clamp(
+      11px,
+      1.8vw,
+      15px
+    );
+
+  font-weight: 800;
+
+  letter-spacing: 1px;
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  animation:
+    giftValueEntrance
+    0.7s
+    0.9s
+    ease
+    forwards;
+}
+
+.gift-animation-value span:first-child {
+  font-size: 18px;
+
+  filter:
+    drop-shadow(
+      0 0 8px #ffca28
+    );
+}
+
+.gift-animation-value strong {
+  color: var(--gift-main);
+
+  font-size:
+    clamp(
+      17px,
+      3vw,
+      26px
+    );
+
+  text-shadow:
+    0 0 18px var(--gift-glow);
+}
+
+
+/* ============================================================================
+   SPECIAL LABEL
+============================================================================ */
+
+.gift-animation-special {
+  margin-top: 15px;
+
+  color: var(--gift-main);
+
+  font-size:
+    clamp(
+      8px,
+      1.4vw,
+      11px
+    );
+
+  font-weight: 1000;
+
+  letter-spacing: 3px;
+
+  text-transform: uppercase;
+
+  text-shadow:
+    0 0 15px var(--gift-glow);
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  animation:
+    giftSpecialEntrance
+    0.7s
+    1.05s
+    ease
+    forwards;
+}
+
+
+/* ============================================================================
+   CORNER SPARKLES
+============================================================================ */
+
+.gift-animation-sparkles {
+  position: absolute;
+  inset: 0;
+
+  z-index: 15;
+
+  pointer-events: none;
+}
+
+.gift-animation-sparkles span {
+  position: absolute;
+
+  color: var(--gift-main);
+
+  font-size:
+    clamp(
+      20px,
+      4vw,
+      45px
+    );
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  text-shadow:
+    0 0 15px var(--gift-glow);
+
+  animation:
+    giftSparkle
+    2.5s
+    ease-in-out
+    infinite;
+}
+
+.gift-animation-sparkles span:nth-child(1) {
+  left: 12%;
+  top: 18%;
+
+  animation-delay: 0.1s;
+}
+
+.gift-animation-sparkles span:nth-child(2) {
+  right: 15%;
+  top: 23%;
+
+  animation-delay: 0.45s;
+}
+
+.gift-animation-sparkles span:nth-child(3) {
+  left: 18%;
+  bottom: 22%;
+
+  animation-delay: 0.8s;
+}
+
+.gift-animation-sparkles span:nth-child(4) {
+  right: 18%;
+  bottom: 18%;
+
+  animation-delay: 1.15s;
+}
+
+.gift-animation-sparkles span:nth-child(5) {
+  left: 30%;
+  top: 12%;
+
+  animation-delay: 1.5s;
+}
+
+.gift-animation-sparkles span:nth-child(6) {
+  right: 30%;
+  bottom: 12%;
+
+  animation-delay: 1.85s;
+}
+
+
+/* ============================================================================
+   ULTIMATE MODE
+============================================================================ */
+
+.gift-animation.gift-animation-ultimate
+  .gift-animation-backdrop {
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(255, 91, 218, 0.25),
+      rgba(255, 160, 50, 0.14) 25%,
+      rgba(0, 0, 0, 0.72) 70%,
+      rgba(0, 0, 0, 0.94)
+    );
+
+  animation:
+    ultimateBackdropPulse
+    1.4s
+    ease-in-out
+    infinite;
+}
+
+.gift-animation.gift-animation-ultimate
+  .gift-animation-stage {
+  animation:
+    ultimateStageShake
+    1.8s
+    ease-in-out
+    infinite;
+}
+
+.gift-animation.gift-animation-ultimate
+  .gift-animation-title {
+  animation:
+    giftTitleEntrance
+    0.8s
+    0.45s
+    cubic-bezier(0.16, 1, 0.3, 1)
+    forwards,
+    ultimateTitlePulse
+    1.2s
+    1.4s
+    ease-in-out
+    infinite;
+}
+
+
+/* ============================================================================
+   DIAMOND MODE
+============================================================================ */
+
+.gift-animation.gift-animation-diamond
+  .gift-animation-ray {
+  width: 3px;
+
+  filter:
+    drop-shadow(
+      0 0 18px
+      #a8f7ff
+    );
+}
+
+.gift-animation.gift-animation-diamond
+  .gift-animation-particle {
+  border-radius: 2px;
+
+  transform:
+    rotate(45deg);
+}
+
+
+/* ============================================================================
+   LEGENDARY MODE
+============================================================================ */
+
+.gift-animation.gift-animation-legendary
+  .gift-animation-stage {
+  animation:
+    legendaryStagePulse
+    1.5s
+    ease-in-out
+    infinite;
+}
+
+
+/* ============================================================================
+   EPIC MODE
+============================================================================ */
+
+.gift-animation.gift-animation-epic
+  .gift-animation-stage {
+  animation:
+    epicStagePulse
+    1.8s
+    ease-in-out
+    infinite;
+}
+
+
+/* ============================================================================
+   KEYFRAMES
+============================================================================ */
+
+@keyframes giftCinematicIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes giftBackdropIn {
+  from {
+    opacity: 0;
+    transform: scale(1.3);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes giftFlash {
+  0% {
+    opacity: 0;
+  }
+
+  8% {
+    opacity: 1;
+  }
+
+  25% {
+    opacity: 0.15;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes giftOrbPulse {
+  0%,
+  100% {
+    transform:
+      translate(-50%, -50%)
+      scale(0.9);
+
+    opacity: 0.55;
+  }
+
+  50% {
+    transform:
+      translate(-50%, -50%)
+      scale(1.15);
+
+    opacity: 1;
+  }
+}
+
+@keyframes giftRayBurst {
+  0% {
+    opacity: 0;
+    height: 0;
+  }
+
+  15% {
+    opacity: 0.9;
+  }
+
+  100% {
+    opacity: 0;
+    height: 90vh;
+  }
+}
+
+@keyframes giftParticleExplosion {
+  0% {
+    opacity: 0;
+
+    transform:
+      translate(0, 0)
+      scale(0.1)
+      rotate(var(--particle-rotation));
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+
+    transform:
+      translate(
+        var(--particle-drift),
+        -45vh
+      )
+      scale(0.35)
+      rotate(
+        calc(
+          var(--particle-rotation)
+          + 360deg
+        )
+      );
+  }
+}
+
+@keyframes giftRingExplosion {
+  0% {
+    opacity: 0;
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.1);
+  }
+
+  10% {
+    opacity: 0.9;
+  }
+
+  100% {
+    opacity: 0;
+
+    transform:
+      translate(-50%, -50%)
+      scale(35);
+  }
+}
+
+@keyframes giftCenterEntrance {
+  0% {
+    opacity: 0;
+
+    transform:
+      scale(0.45)
+      translateY(50px);
+  }
+
+  55% {
+    opacity: 1;
+
+    transform:
+      scale(1.08)
+      translateY(-5px);
+  }
+
+  75% {
+    transform:
+      scale(0.97)
+      translateY(0);
+  }
+
+  100% {
+    opacity: 1;
+
+    transform:
+      scale(1)
+      translateY(0);
+  }
+}
+
+@keyframes giftSenderEntrance {
+  0% {
+    opacity: 0;
+
+    transform:
+      translateY(30px)
+      scale(0.8);
+  }
+
+  100% {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+@keyframes giftVideoEntrance {
+  0% {
+    opacity: 0;
+
+    transform:
+      scale(0.15)
+      rotate(-12deg);
+  }
+
+  35% {
+    opacity: 1;
+
+    transform:
+      scale(1.18)
+      rotate(4deg);
+  }
+
+  55% {
+    transform:
+      scale(0.92)
+      rotate(-2deg);
+  }
+
+  75% {
+    transform:
+      scale(1.05)
+      rotate(1deg);
+  }
+
+  100% {
+    opacity: 1;
+
+    transform:
+      scale(1)
+      rotate(0);
+  }
+}
+
+@keyframes giftEmojiEntrance {
+  0% {
+    opacity: 0;
+
+    transform:
+      scale(0.05)
+      rotate(-30deg);
+  }
+
+  30% {
+    opacity: 1;
+
+    transform:
+      scale(1.35)
+      rotate(12deg);
+  }
+
+  55% {
+    transform:
+      scale(0.85)
+      rotate(-7deg);
+  }
+
+  75% {
+    transform:
+      scale(1.1)
+      rotate(3deg);
+  }
+
+  100% {
+    opacity: 1;
+
+    transform:
+      scale(1)
+      rotate(0);
+  }
+}
+
+@keyframes giftEmojiGlow {
+  0%,
+  100% {
+    transform:
+      translate(-50%, -50%)
+      scale(0.8);
+
+    opacity: 0.45;
+  }
+
+  50% {
+    transform:
+      translate(-50%, -50%)
+      scale(1.25);
+
+    opacity: 1;
+  }
+}
+
+@keyframes giftTitleEntrance {
+  0% {
+    opacity: 0;
+
+    transform:
+      translateY(25px)
+      scale(0.7);
+  }
+
+  100% {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+@keyframes giftBadgeEntrance {
+  0% {
+    opacity: 0;
+
+    transform:
+      scale(0.5);
+  }
+
+  100% {
+    opacity: 1;
+
+    transform:
+      scale(1);
+  }
+}
+
+@keyframes giftValueEntrance {
+  0% {
+    opacity: 0;
+
+    transform:
+      translateY(15px)
+      scale(0.8);
+  }
+
+  100% {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+@keyframes giftSpecialEntrance {
+  0% {
+    opacity: 0;
+
+    transform:
+      scale(0.7);
+
+    letter-spacing: 8px;
+  }
+
+  100% {
+    opacity: 1;
+
+    transform:
+      scale(1);
+
+    letter-spacing: 3px;
+  }
+}
+
+@keyframes giftSparkle {
+  0%,
+  100% {
+    opacity: 0;
+
+    transform:
+      scale(0.3)
+      rotate(0);
+  }
+
+  25% {
+    opacity: 1;
+
+    transform:
+      scale(1.25)
+      rotate(25deg);
+  }
+
+  50% {
+    opacity: 0.35;
+
+    transform:
+      scale(0.7)
+      rotate(50deg);
+  }
+
+  75% {
+    opacity: 1;
+
+    transform:
+      scale(1.15)
+      rotate(75deg);
+  }
+}
+
+@keyframes legendaryStagePulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes epicStagePulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.025);
+  }
+}
+
+@keyframes ultimateBackdropPulse {
+  0%,
+  100% {
+    filter:
+      hue-rotate(0deg)
+      brightness(0.95);
+  }
+
+  50% {
+    filter:
+      hue-rotate(18deg)
+      brightness(1.15);
+  }
+}
+
+@keyframes ultimateStageShake {
+  0%,
+  100% {
+    transform:
+      translate(0, 0);
+  }
+
+  20% {
+    transform:
+      translate(-3px, 2px);
+  }
+
+  40% {
+    transform:
+      translate(3px, -2px);
+  }
+
+  60% {
+    transform:
+      translate(-2px, -1px);
+  }
+
+  80% {
+    transform:
+      translate(2px, 1px);
+  }
+}
+
+@keyframes ultimateTitlePulse {
+  0%,
+  100% {
+    transform: scale(1);
+
+    text-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.65),
+      0 0 30px var(--gift-glow);
+  }
+
+  50% {
+    transform: scale(1.08);
+
+    text-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.7),
+      0 0 60px var(--gift-glow),
+      0 0 100px var(--gift-glow);
+  }
+}
+
+
+/* ============================================================================
+   MOBILE
+============================================================================ */
+
+@media (max-width: 600px) {
+  .gift-animation-center {
+    width: 96vw;
+  }
+
+  .gift-animation-stage {
+    width: 82vw;
+    height: 82vw;
+
+    max-width: 380px;
+    max-height: 380px;
+  }
+
+  .gift-animation-title {
+    margin-top: -8px;
+
+    font-size:
+      clamp(
+        24px,
+        8vw,
+        40px
+      );
+  }
+
+  .gift-animation-sender span {
+    font-size: 14px;
+  }
+
+  .gift-animation-sender strong {
+    font-size: 9px;
+
+    letter-spacing: 3px;
+  }
+
+  .gift-animation-value {
+    font-size: 10px;
+  }
+
+  .gift-animation-special {
+    font-size: 8px;
+
+    letter-spacing: 2px;
+  }
+
+  .gift-animation-particle {
+    width:
+      calc(
+        var(--particle-size) * 0.8
+      );
+
+    height:
+      calc(
+        var(--particle-size) * 0.8
+      );
+  }
+}
+
+
+/* ============================================================================
+   VERY SMALL PHONES
+============================================================================ */
+
+@media (max-width: 380px) {
+  .gift-animation-stage {
+    width: 90vw;
+    height: 90vw;
+  }
+
+  .gift-animation-title {
+    font-size: 23px;
+  }
+
+  .gift-animation-sender {
+    margin-bottom: 0;
+  }
+}
+
+
+/* ============================================================================
+   REDUCED MOTION
+============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .gift-animation,
+  .gift-animation * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .gift-animation {
+    opacity: 1;
+  }
+}
+
+
+/* ============================================================================
+   NEVER BLOCK LIVE UI
+============================================================================ */
+
+.gift-animation,
+.gift-animation *,
+.gift-animation-backdrop,
+.gift-animation-flash,
+.gift-animation-orb,
+.gift-animation-rays,
+.gift-animation-particles,
+.gift-animation-rings,
+.gift-animation-center,
+.gift-animation-stage,
+.gift-animation-video,
+.gift-animation-fallback,
+.gift-animation-sparkles {
+  pointer-events: none !important;
+}

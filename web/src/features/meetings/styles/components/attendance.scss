@@ -1,0 +1,49 @@
+@use '../tokens' as t;
+
+.fm-attendance-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid t.$paper-100;
+  background: t.$paper-0;
+
+  &:first-child { border-radius: t.$radius-lg t.$radius-lg 0 0; }
+  &:last-child { border-radius: 0 0 t.$radius-lg t.$radius-lg; border-bottom: none; }
+
+  &__info { flex: 1; display: flex; align-items: center; gap: 10px; }
+  &__name { font-weight: 600; font-size: t.$fs-md; color: t.$ink-900; }
+  &__time { text-align: right; font-size: t.$fs-sm; color: t.$ink-500; display: flex; flex-direction: column; gap: 2px; }
+  &__minutes { font-size: t.$fs-xs; color: t.$ink-300; }
+  &__absent { color: t.$ink-300; }
+}
+
+.fm-attendance-list {
+  border: 1px solid t.$paper-200;
+  border-radius: t.$radius-lg;
+  overflow: hidden;
+}
+
+.fm-attendance-timeline {
+  margin-top: 30px;
+  &__track {
+    height: 8px;
+    background: t.$paper-100;
+    border-radius: t.$radius-pill;
+    position: relative;
+    overflow: hidden;
+  }
+  &__bar {
+    position: absolute;
+    top: 0; bottom: 0;
+    background: t.$signal-500;
+    border-radius: t.$radius-pill;
+  }
+  &__labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: t.$fs-2xs;
+    color: t.$ink-300;
+    margin-top: 6px;
+  }
+}

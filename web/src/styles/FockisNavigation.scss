@@ -1,0 +1,193 @@
+/* ============================================================================
+   MOBILE BOTTOM NAVIGATION
+
+   REDESIGN: navy bar (was surface/white) with gold accents on the active
+   item and the Create button, matching the Clark State navy/royal/gold
+   identity used everywhere else in the redesign.
+============================================================================ */
+
+.fk-bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  display: none;
+
+  padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+
+  background: var(--fk-fjord);
+  border-top: none;
+  box-shadow:
+    inset 0 3px 0 0 var(--fk-amber-bright),
+    0 -6px 20px rgba(6, 21, 48, 0.25);
+
+  z-index: 10001;
+
+  @media (max-width: 767px) {
+    display: block;
+  }
+}
+
+.fk-bottom-nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 4px;
+
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+
+/* ---- ordinary item: icon + label, gold tint on active, no box ----------- */
+
+.fk-bottom-nav__item {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  flex: 1 1 0;
+  min-width: 0;
+
+  padding: 4px 2px;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+  background: transparent;
+
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: none;
+
+  transition:
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.fk-bottom-nav__item:active {
+  transform: scale(0.94);
+}
+
+.fk-bottom-nav__item--active {
+  background: transparent;
+  color: var(--fk-amber-bright);
+}
+
+.fk-bottom-nav__icon {
+  position: relative;
+
+  width: 24px;
+  height: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: inherit;
+}
+
+.fk-bottom-nav__icon svg {
+  width: 22px;
+  height: 22px;
+
+  display: block;
+
+  color: inherit;
+  stroke-width: 1.8;
+}
+
+.fk-bottom-nav__label {
+  max-width: 100%;
+
+  overflow: hidden;
+
+  color: inherit;
+
+  font-size: 10.5px;
+  font-weight: 600;
+
+  line-height: 1.1;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+/* ---- badge (Cart) --------------------------------------------------------- */
+
+.fk-bottom-nav__badge {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+
+  min-width: 16px;
+  height: 16px;
+
+  padding: 0 4px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+  border: 2px solid var(--fk-fjord);
+
+  background: var(--fk-amber-bright);
+  color: var(--fk-fjord-dark);
+
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+
+/* ---- Create: gold circular background (was navy/brand color) ------------ */
+
+.fk-bottom-nav__item--create {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  color: var(--fk-fjord-dark) !important;
+}
+
+.fk-bottom-nav__item--create .fk-bottom-nav__icon {
+  width: 40px !important;
+  height: 40px !important;
+
+  border-radius: var(--fk-r-sm) !important;
+
+  background: var(--fk-amber-bright) !important;
+  color: var(--fk-fjord-dark) !important;
+
+  box-shadow: 0 6px 14px rgba(6, 21, 48, 0.3);
+  border: none !important;
+}
+
+.fk-bottom-nav__item--create .fk-bottom-nav__icon svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.2;
+}
+
+.fk-bottom-nav__item--create .fk-bottom-nav__label {
+  display: none;
+}
+
+.fk-bottom-nav__item--create:active .fk-bottom-nav__icon {
+  transform: scale(0.94);
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-bottom-nav__item,
+  .fk-bottom-nav__item--create .fk-bottom-nav__icon {
+    transition: none;
+  }
+}

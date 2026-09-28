@@ -1,0 +1,833 @@
+/* ============================================================
+   FOCKIS ORGANIZATION IDENTITY
+   Create Managed User Modal
+   ============================================================ */
+
+.identity-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(15, 31, 45, 0.62);
+  backdrop-filter: blur(6px);
+
+  animation: identityBackdropIn 0.18s ease-out;
+}
+
+.identity-modal {
+  --fockis-primary: #005a8d;
+  --fockis-primary-light: #0879b5;
+  --fockis-primary-dark: #003f63;
+
+  --fockis-gold: #f6b62c;
+  --fockis-gold-dark: #a86f00;
+
+  --fockis-ink: #172b4d;
+  --fockis-muted: #66788a;
+
+  --fockis-bg: #f3f6f9;
+  --fockis-border: #dce4ea;
+  --fockis-border-dark: #c7d3dc;
+
+  --fockis-success: #18864b;
+  --fockis-success-bg: #edf9f2;
+
+  --fockis-danger: #c62828;
+  --fockis-danger-bg: #fff1f1;
+
+  width: min(760px, 100%);
+  max-height: calc(100vh - 48px);
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 18px;
+
+  box-shadow:
+    0 28px 80px rgba(15, 31, 45, 0.24),
+    0 8px 24px rgba(15, 31, 45, 0.12);
+
+  color: var(--fockis-ink);
+
+  animation: identityModalIn 0.22s ease-out;
+
+  /* ----------------------------------------------------------
+     Header
+     ---------------------------------------------------------- */
+
+  &__header {
+    position: relative;
+
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+
+    padding: 28px 30px 24px;
+
+    background:
+      linear-gradient(
+        135deg,
+        #ffffff 0%,
+        #f8fbfd 100%
+      );
+
+    border-bottom: 1px solid var(--fockis-border);
+
+    &::before {
+      content: "";
+
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+
+      height: 4px;
+
+      background:
+        linear-gradient(
+          90deg,
+          var(--fockis-primary-dark),
+          var(--fockis-primary),
+          var(--fockis-gold)
+        );
+    }
+
+    h2 {
+      margin: 5px 0 8px;
+
+      font-size: 25px;
+      line-height: 1.2;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+
+      color: var(--fockis-ink);
+    }
+
+    p {
+      max-width: 590px;
+
+      margin: 0;
+
+      font-size: 14px;
+      line-height: 1.6;
+
+      color: var(--fockis-muted);
+    }
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    font-size: 11px;
+    line-height: 1;
+
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+
+    color: var(--fockis-primary);
+
+    &::before {
+      content: "";
+
+      width: 7px;
+      height: 7px;
+
+      border-radius: 50%;
+
+      background: var(--fockis-gold);
+      box-shadow: 0 0 0 3px rgba(246, 182, 44, 0.15);
+    }
+  }
+
+  .modal-close {
+    flex: 0 0 auto;
+
+    width: 38px;
+    height: 38px;
+
+    display: grid;
+    place-items: center;
+
+    margin-top: 2px;
+
+    border: 1px solid var(--fockis-border);
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    color: #53677a;
+
+    font-size: 25px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease,
+      transform 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: #f4f8fa;
+      border-color: var(--fockis-border-dark);
+      color: var(--fockis-ink);
+
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:focus-visible {
+      outline: 3px solid rgba(8, 121, 181, 0.18);
+      outline-offset: 2px;
+      border-color: var(--fockis-primary);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  /* ----------------------------------------------------------
+     Error banner
+     ---------------------------------------------------------- */
+
+  .form-error {
+    margin: 20px 30px 0;
+    padding: 13px 15px;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    border: 1px solid #f1c3c3;
+    border-radius: 11px;
+
+    background: var(--fockis-danger-bg);
+
+    color: var(--fockis-danger);
+
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 600;
+
+    &::before {
+      content: "!";
+      flex: 0 0 auto;
+
+      width: 19px;
+      height: 19px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 50%;
+
+      background: var(--fockis-danger);
+      color: #ffffff;
+
+      font-size: 12px;
+      font-weight: 800;
+    }
+  }
+
+  /* ----------------------------------------------------------
+     Form body
+     ---------------------------------------------------------- */
+
+  .form-grid {
+    display: grid;
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 20px 18px;
+
+    padding: 26px 30px 24px;
+
+    overflow-y: auto;
+
+    scrollbar-width: thin;
+    scrollbar-color:
+      #c9d4dc
+      transparent;
+
+    label {
+      min-width: 0;
+
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      font-size: 13px;
+      font-weight: 750;
+
+      color: var(--fockis-ink);
+    }
+
+    label:has(input[required])::after {
+      display: none;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 46px;
+
+      box-sizing: border-box;
+
+      padding: 11px 13px;
+
+      border: 1px solid var(--fockis-border-dark);
+      border-radius: 10px;
+
+      background: #ffffff;
+
+      color: var(--fockis-ink);
+
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+
+      outline: none;
+
+      transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        background 0.15s ease;
+
+      &::placeholder {
+        color: #9aa9b5;
+      }
+
+      &:hover:not(:disabled) {
+        border-color: #aebdc7;
+      }
+
+      &:focus {
+        border-color: var(--fockis-primary);
+
+        box-shadow:
+          0 0 0 3px
+          rgba(0, 90, 141, 0.12);
+      }
+
+      &:disabled {
+        background: #f4f7f9;
+        color: #7c8c99;
+        cursor: not-allowed;
+      }
+    }
+
+    select {
+      appearance: auto;
+      cursor: pointer;
+
+      &:disabled {
+        cursor: not-allowed;
+      }
+    }
+
+    small {
+      margin-top: -2px;
+
+      font-size: 11.5px;
+      line-height: 1.45;
+
+      font-weight: 500;
+
+      color: var(--fockis-muted);
+
+      strong {
+        color: var(--fockis-primary);
+        font-weight: 700;
+      }
+    }
+
+    .form-grid__wide {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* ----------------------------------------------------------
+     Member Fockis domain
+     ---------------------------------------------------------- */
+
+  .form-grid__wide {
+    &:has(input[aria-invalid="false"]) {
+      input {
+        border-color: #58aa7b;
+
+        background:
+          linear-gradient(
+            180deg,
+            #ffffff,
+            #f7fcf9
+          );
+
+        box-shadow:
+          0 0 0 3px
+          rgba(24, 134, 75, 0.07);
+      }
+    }
+
+    &:has(input[aria-invalid="true"]) {
+      input {
+        border-color: #dc7777;
+
+        background:
+          linear-gradient(
+            180deg,
+            #ffffff,
+            #fffafa
+          );
+
+        box-shadow:
+          0 0 0 3px
+          rgba(198, 40, 40, 0.06);
+      }
+    }
+  }
+
+  .form-success {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    color: var(--fockis-success) !important;
+
+    font-weight: 700 !important;
+  }
+
+  .form-error-text {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+
+    color: var(--fockis-danger) !important;
+
+    font-weight: 650 !important;
+  }
+
+  /* ----------------------------------------------------------
+     Checkbox section
+     ---------------------------------------------------------- */
+
+  .checkbox-list {
+    display: grid;
+
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+
+    gap: 10px;
+
+    padding:
+      0 30px 26px;
+
+    label {
+      min-height: 48px;
+
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      padding: 11px 12px;
+
+      border: 1px solid var(--fockis-border);
+      border-radius: 10px;
+
+      background: #f9fbfc;
+
+      color: #42566a;
+
+      font-size: 12px;
+      line-height: 1.4;
+      font-weight: 650;
+
+      cursor: pointer;
+
+      transition:
+        border-color 0.15s ease,
+        background 0.15s ease,
+        box-shadow 0.15s ease;
+
+      &:hover {
+        border-color: #bdccd5;
+        background: #f5f9fb;
+      }
+
+      &:has(input:checked) {
+        border-color: rgba(0, 90, 141, 0.35);
+        background: #f0f7fb;
+
+        color: var(--fockis-primary-dark);
+
+        box-shadow:
+          0 2px 8px
+          rgba(0, 90, 141, 0.05);
+      }
+    }
+
+    input[type="checkbox"] {
+      flex: 0 0 auto;
+
+      width: 17px;
+      height: 17px;
+
+      margin: 0;
+
+      accent-color: var(--fockis-primary);
+
+      cursor: pointer;
+    }
+  }
+
+  /* ----------------------------------------------------------
+     Footer
+     ---------------------------------------------------------- */
+
+  &__footer {
+    flex: 0 0 auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 11px;
+
+    padding: 18px 30px;
+
+    border-top: 1px solid var(--fockis-border);
+
+    background: #fbfcfd;
+
+    button {
+      min-height: 43px;
+
+      padding: 10px 18px;
+
+      border: 1px solid var(--fockis-border-dark);
+      border-radius: 10px;
+
+      background: #ffffff;
+
+      color: #53677a;
+
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 750;
+
+      cursor: pointer;
+
+      transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease,
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+
+      &:hover:not(:disabled) {
+        background: #f4f8fa;
+        border-color: #aebdc7;
+        color: var(--fockis-ink);
+
+        transform: translateY(-1px);
+      }
+
+      &:focus-visible {
+        outline: 3px solid rgba(8, 121, 181, 0.16);
+        outline-offset: 2px;
+      }
+
+      &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      &.primary {
+        min-width: 132px;
+
+        border-color: var(--fockis-primary);
+
+        background:
+          linear-gradient(
+            135deg,
+            var(--fockis-primary),
+            var(--fockis-primary-light)
+          );
+
+        color: #ffffff;
+
+        box-shadow:
+          0 5px 14px
+          rgba(0, 90, 141, 0.2);
+
+        &:hover:not(:disabled) {
+          border-color: var(--fockis-primary-dark);
+
+          background:
+            linear-gradient(
+              135deg,
+              var(--fockis-primary-dark),
+              var(--fockis-primary)
+            );
+
+          color: #ffffff;
+
+          box-shadow:
+            0 7px 18px
+            rgba(0, 90, 141, 0.25);
+
+          transform: translateY(-1px);
+        }
+
+        &:disabled {
+          background: #aab9c3;
+          border-color: #aab9c3;
+          box-shadow: none;
+        }
+      }
+    }
+  }
+}
+
+/* ============================================================
+   Domain field enhancement
+   ============================================================ */
+
+.identity-modal {
+  input[placeholder*="springfieldchurch"] {
+    font-family:
+      "SFMono-Regular",
+      "Cascadia Code",
+      "Roboto Mono",
+      Consolas,
+      monospace;
+
+    letter-spacing: -0.01em;
+  }
+
+  input[aria-invalid="false"] {
+    border-color: #54a777;
+
+    &:focus {
+      border-color: var(--fockis-success);
+
+      box-shadow:
+        0 0 0 3px
+        rgba(24, 134, 75, 0.11);
+    }
+  }
+
+  input[aria-invalid="true"] {
+    border-color: #d96f6f;
+
+    &:focus {
+      border-color: var(--fockis-danger);
+
+      box-shadow:
+        0 0 0 3px
+        rgba(198, 40, 40, 0.1);
+    }
+  }
+}
+
+/* ============================================================
+   Animations
+   ============================================================ */
+
+@keyframes identityBackdropIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes identityModalIn {
+  from {
+    opacity: 0;
+    transform:
+      translateY(12px)
+      scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+/* ============================================================
+   Tablet
+   ============================================================ */
+
+@media (max-width: 700px) {
+  .identity-modal-backdrop {
+    align-items: flex-end;
+
+    padding: 0;
+  }
+
+  .identity-modal {
+    width: 100%;
+    max-height: 94vh;
+
+    border-radius:
+      18px 18px 0 0;
+
+    &__header {
+      padding:
+        25px 20px 21px;
+
+      h2 {
+        font-size: 22px;
+      }
+
+      p {
+        font-size: 13px;
+      }
+    }
+
+    .form-error {
+      margin:
+        16px 20px 0;
+    }
+
+    .form-grid {
+      grid-template-columns: 1fr;
+
+      padding:
+        22px 20px 20px;
+
+      gap: 17px;
+
+      .form-grid__wide {
+        grid-column: auto;
+      }
+    }
+
+    .checkbox-list {
+      grid-template-columns: 1fr;
+
+      padding:
+        0 20px 20px;
+    }
+
+    &__footer {
+      padding:
+        15px 20px;
+
+      button {
+        flex: 1;
+      }
+    }
+  }
+}
+
+/* ============================================================
+   Small phones
+   ============================================================ */
+
+@media (max-width: 430px) {
+  .identity-modal {
+    max-height: 96vh;
+
+    &__header {
+      gap: 12px;
+
+      h2 {
+        font-size: 20px;
+      }
+    }
+
+    .modal-close {
+      width: 34px;
+      height: 34px;
+
+      font-size: 22px;
+    }
+
+    .form-grid {
+      input,
+      select {
+        min-height: 44px;
+
+        font-size: 14px;
+      }
+    }
+
+    &__footer {
+      flex-direction: column-reverse;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+/* ============================================================
+   Reduced motion
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .identity-modal-backdrop,
+  .identity-modal {
+    animation: none;
+  }
+
+  .identity-modal *,
+  .identity-modal *::before,
+  .identity-modal *::after {
+    transition: none !important;
+  }
+}
+
+/* ============================================================
+   Print
+   ============================================================ */
+
+@media print {
+  .identity-modal-backdrop {
+    position: static;
+
+    padding: 0;
+
+    background: #ffffff;
+  }
+
+  .identity-modal {
+    width: 100%;
+    max-height: none;
+
+    border: 0;
+    box-shadow: none;
+
+    &__footer,
+    .modal-close {
+      display: none;
+    }
+  }
+}

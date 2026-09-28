@@ -1,0 +1,1049 @@
+@use "./fockis-tokens" as fockis;
+
+.travel-partner-dashboard {
+min-height: 100vh;
+background:
+radial-gradient(
+circle at top right,
+rgba(47, 127, 166, 0.08),
+transparent 34%
+),
+fockis.$cream-100;
+color: fockis.$text-on-light;
+font-family: fockis.$font-body;
+
+&__container {
+@include fockis.wrap;
+padding-top: 42px;
+padding-bottom: 64px;
+}
+
+&__loading {
+min-height: 60vh;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 12px;
+padding: 40px 20px;
+color: fockis.$text-on-light-muted;
+font-size: 0.98rem;
+}
+
+&__spin {
+animation: travel-partner-dashboard-spin 0.9s linear infinite;
+}
+
+&__empty {
+width: min(100%, 680px);
+margin: 80px auto;
+padding: 48px 36px;
+text-align: center;
+background: fockis.$cream-50;
+border: 1px solid rgba(10, 24, 48, 0.08);
+border-radius: fockis.$radius-lg;
+box-shadow: fockis.$shadow-card;
+}
+
+&__empty-icon {
+width: 72px;
+height: 72px;
+margin: 0 auto 22px;
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 50%;
+background: fockis.$gold-100;
+color: fockis.$gold-600;
+}
+
+&__empty h1 {
+margin: 0;
+color: fockis.$navy-900;
+font-family: fockis.$font-display;
+font-size: clamp(2rem, 4vw, 2.8rem);
+line-height: 1.1;
+}
+
+&__empty p {
+max-width: 560px;
+margin: 16px auto 28px;
+color: fockis.$text-on-light-muted;
+font-size: 1rem;
+line-height: 1.7;
+}
+
+&__topbar {
+display: flex;
+align-items: flex-start;
+justify-content: space-between;
+gap: 28px;
+margin-bottom: 28px;
+}
+
+&__eyebrow {
+margin-bottom: 8px;
+color: fockis.$gold-600;
+font-size: 0.76rem;
+font-weight: 700;
+letter-spacing: 0.12em;
+text-transform: uppercase;
+}
+
+&__topbar h1 {
+margin: 0;
+color: fockis.$navy-900;
+font-family: fockis.$font-display;
+font-size: clamp(2.1rem, 4vw, 3.15rem);
+line-height: 1.05;
+letter-spacing: -0.025em;
+}
+
+&__topbar p {
+max-width: 680px;
+margin: 12px 0 0;
+color: fockis.$text-on-light-muted;
+font-size: 1rem;
+line-height: 1.65;
+}
+
+&__topbar-actions {
+flex-shrink: 0;
+}
+
+&__refresh,
+&__primary-button,
+&__secondary-button,
+&__icon-button,
+&__panel-link,
+&__wide-link,
+&__operation-card {
+transition:
+background 0.18s ease,
+border-color 0.18s ease,
+color 0.18s ease,
+box-shadow 0.18s ease,
+transform 0.18s ease;
+}
+
+&__refresh {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: 8px;
+min-height: 42px;
+padding: 0.68rem 1rem;
+border: 1px solid rgba(10, 24, 48, 0.14);
+border-radius: fockis.$radius-pill;
+background: fockis.$cream-50;
+color: fockis.$navy-900;
+font: inherit;
+font-size: 0.9rem;
+font-weight: 650;
+cursor: pointer;
+}
+
+&__refresh:hover:not(:disabled) {
+border-color: fockis.$gold-500;
+background: fockis.$gold-100;
+}
+
+&__refresh:disabled {
+cursor: not-allowed;
+opacity: 0.6;
+}
+
+&__primary-button {
+@include fockis.btn-amber;
+}
+
+&__secondary-button {
+@include fockis.btn-outline;
+
+background: fockis.$cream-50;
+
+
+}
+
+&__alert {
+display: flex;
+align-items: flex-start;
+gap: 14px;
+margin-bottom: 22px;
+padding: 17px 18px;
+border: 1px solid transparent;
+border-radius: fockis.$radius-md;
+
+> svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+> div {
+  min-width: 0;
+  flex: 1;
+}
+
+strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.94rem;
+  line-height: 1.35;
+}
+
+span {
+  display: block;
+  color: inherit;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  opacity: 0.86;
+}
+
+> button,
+> a {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+}
+
+&__alert--error {
+background: rgba(209, 85, 74, 0.08);
+border-color: rgba(209, 85, 74, 0.24);
+color: #9e382f;
+}
+
+&__alert--warning {
+background: rgba(240, 169, 62, 0.12);
+border-color: rgba(214, 144, 31, 0.28);
+color: #855813;
+}
+
+&__business-card {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 24px;
+margin-bottom: 22px;
+padding: 22px 24px;
+background: fockis.$navy-900;
+border: 1px solid fockis.$navy-700;
+border-radius: fockis.$radius-lg;
+box-shadow: 0 14px 36px rgba(10, 24, 48, 0.14);
+color: fockis.$text-on-dark;
+}
+
+&__business-identity {
+min-width: 0;
+display: flex;
+align-items: center;
+gap: 16px;
+}
+
+&__business-avatar {
+width: 62px;
+height: 62px;
+flex: 0 0 62px;
+display: flex;
+align-items: center;
+justify-content: center;
+overflow: hidden;
+border: 2px solid rgba(240, 169, 62, 0.65);
+border-radius: 16px;
+background:
+linear-gradient(
+135deg,
+fockis.$gold-500,
+fockis.$gold-600
+);
+color: fockis.$navy-900;
+font-family: fockis.$font-display;
+font-size: 1.25rem;
+font-weight: 700;
+}
+
+&__business-avatar img {
+width: 100%;
+height: 100%;
+display: block;
+object-fit: cover;
+}
+
+&__business-name {
+overflow: hidden;
+color: fockis.$text-on-dark;
+font-family: fockis.$font-display;
+font-size: 1.35rem;
+font-weight: 700;
+line-height: 1.2;
+text-overflow: ellipsis;
+white-space: nowrap;
+}
+
+&__business-meta {
+display: flex;
+align-items: center;
+flex-wrap: wrap;
+gap: 6px;
+margin-top: 6px;
+color: fockis.$text-on-dark-muted;
+font-size: 0.84rem;
+}
+
+&__business-meta svg {
+color: fockis.$gold-500;
+}
+
+&__business-actions {
+display: flex;
+align-items: center;
+justify-content: flex-end;
+flex-wrap: wrap;
+gap: 10px;
+}
+
+&__business-actions .travel-partner-dashboard__secondary-button {
+color: fockis.$text-on-dark;
+border-color: rgba(255, 255, 255, 0.28);
+background: transparent;
+}
+
+&__business-actions .travel-partner-dashboard__secondary-button:hover {
+color: fockis.$navy-900;
+border-color: fockis.$gold-500;
+background: fockis.$gold-500;
+}
+
+&__status,
+&__listing-status {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: 6px;
+width: fit-content;
+border-radius: fockis.$radius-pill;
+font-size: 0.76rem;
+font-weight: 700;
+line-height: 1;
+white-space: nowrap;
+}
+
+&__status {
+min-height: 34px;
+padding: 0 11px;
+}
+
+&__listing-status {
+min-height: 28px;
+padding: 0 9px;
+}
+
+.is-success {
+background: rgba(63, 166, 106, 0.12);
+color: #287448;
+border: 1px solid rgba(63, 166, 106, 0.25);
+}
+
+.is-warning {
+background: rgba(240, 169, 62, 0.15);
+color: #8a5a12;
+border: 1px solid rgba(214, 144, 31, 0.28);
+}
+
+.is-danger {
+background: rgba(209, 85, 74, 0.1);
+color: #a03d34;
+border: 1px solid rgba(209, 85, 74, 0.25);
+}
+
+.is-neutral {
+background: rgba(10, 24, 48, 0.06);
+color: fockis.$text-on-light-muted;
+border: 1px solid rgba(10, 24, 48, 0.1);
+}
+
+&__actions {
+display: flex;
+align-items: center;
+flex-wrap: wrap;
+gap: 10px;
+margin: 24px 0;
+}
+
+&__actions .travel-partner-dashboard__secondary-button,
+&__actions .travel-partner-dashboard__primary-button {
+min-height: 44px;
+}
+
+&__stats {
+display: grid;
+grid-template-columns: repeat(4, minmax(0, 1fr));
+gap: 14px;
+margin-bottom: 28px;
+}
+
+&__stat {
+display: flex;
+align-items: center;
+gap: 13px;
+min-width: 0;
+padding: 19px;
+background: fockis.$cream-50;
+border: 1px solid rgba(10, 24, 48, 0.08);
+border-radius: fockis.$radius-md;
+box-shadow: 0 5px 18px rgba(10, 24, 48, 0.06);
+}
+
+&__stat-icon {
+width: 42px;
+height: 42px;
+flex: 0 0 42px;
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 12px;
+background: fockis.$gold-100;
+color: fockis.$gold-600;
+}
+
+&__stat span {
+display: block;
+color: fockis.$text-on-light-muted;
+font-size: 0.77rem;
+line-height: 1.3;
+}
+
+&__stat strong {
+display: block;
+margin-top: 4px;
+color: fockis.$navy-900;
+font-family: fockis.$font-display;
+font-size: 1.65rem;
+line-height: 1;
+}
+
+&__grid {
+display: grid;
+grid-template-columns: minmax(0, 1.7fr) minmax(300px, 0.9fr);
+align-items: start;
+gap: 22px;
+}
+
+&__main,
+&__sidebar {
+min-width: 0;
+}
+
+&__sidebar {
+display: grid;
+gap: 22px;
+}
+
+&__panel {
+min-width: 0;
+padding: 24px;
+background: fockis.$cream-50;
+border: 1px solid rgba(10, 24, 48, 0.08);
+border-radius: fockis.$radius-lg;
+box-shadow: fockis.$shadow-card;
+}
+
+&__panel-header {
+display: flex;
+align-items: flex-start;
+justify-content: space-between;
+gap: 18px;
+margin-bottom: 20px;
+}
+
+&__panel-header h2 {
+margin: 0;
+color: fockis.$navy-900;
+font-family: fockis.$font-display;
+font-size: 1.45rem;
+line-height: 1.2;
+}
+
+&__panel-header p {
+max-width: 650px;
+margin: 7px 0 0;
+color: fockis.$text-on-light-muted;
+font-size: 0.86rem;
+line-height: 1.55;
+}
+
+&__panel-link {
+display: inline-flex;
+align-items: center;
+gap: 5px;
+flex-shrink: 0;
+color: fockis.$navy-900;
+font-size: 0.82rem;
+font-weight: 700;
+text-decoration: none;
+}
+
+&__panel-link:hover {
+color: fockis.$gold-600;
+}
+
+&__first-listing {
+display: flex;
+align-items: center;
+gap: 22px;
+padding: 24px;
+border: 1px dashed rgba(10, 24, 48, 0.18);
+border-radius: fockis.$radius-md;
+background: rgba(247, 244, 236, 0.65);
+}
+
+&__first-listing-icon {
+width: 58px;
+height: 58px;
+flex: 0 0 58px;
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 15px;
+background: fockis.$gold-100;
+color: fockis.$gold-600;
+}
+
+&__first-listing h3 {
+margin: 0;
+color: fockis.$navy-900;
+font-size: 1.08rem;
+}
+
+&__first-listing p {
+max-width: 650px;
+margin: 7px 0 16px;
+color: fockis.$text-on-light-muted;
+font-size: 0.86rem;
+line-height: 1.6;
+}
+
+&__listing-list {
+display: grid;
+gap: 8px;
+}
+
+&__listing {
+display: grid;
+grid-template-columns: 58px minmax(0, 1fr) auto auto;
+align-items: center;
+gap: 13px;
+min-width: 0;
+padding: 11px;
+border: 1px solid rgba(10, 24, 48, 0.07);
+border-radius: fockis.$radius-md;
+background: #ffffff;
+transition:
+border-color 0.18s ease,
+box-shadow 0.18s ease,
+transform 0.18s ease;
+}
+
+&__listing:hover {
+border-color: rgba(214, 144, 31, 0.35);
+box-shadow: 0 7px 20px rgba(10, 24, 48, 0.07);
+transform: translateY(-1px);
+}
+
+&__listing-image {
+width: 58px;
+height: 58px;
+display: flex;
+align-items: center;
+justify-content: center;
+overflow: hidden;
+border-radius: 10px;
+background:
+linear-gradient(
+135deg,
+fockis.$navy-800,
+fockis.$blue-600
+);
+color: fockis.$gold-500;
+}
+
+&__listing-image img {
+width: 100%;
+height: 100%;
+display: block;
+object-fit: cover;
+}
+
+&__listing-info {
+min-width: 0;
+}
+
+&__listing-title {
+overflow: hidden;
+color: fockis.$navy-900;
+font-size: 0.94rem;
+font-weight: 700;
+line-height: 1.35;
+text-overflow: ellipsis;
+white-space: nowrap;
+}
+
+&__listing-meta {
+display: flex;
+align-items: center;
+flex-wrap: wrap;
+gap: 5px;
+margin-top: 5px;
+color: fockis.$text-on-light-muted;
+font-size: 0.75rem;
+line-height: 1.4;
+}
+
+&__listing-meta svg {
+color: fockis.$gold-600;
+}
+
+&__icon-button {
+width: 34px;
+height: 34px;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+border: 1px solid rgba(10, 24, 48, 0.12);
+border-radius: 9px;
+background: #ffffff;
+color: fockis.$navy-900;
+text-decoration: none;
+}
+
+&__icon-button:hover {
+border-color: fockis.$gold-500;
+background: fockis.$gold-100;
+color: fockis.$gold-600;
+}
+
+&__check-list {
+display: grid;
+gap: 4px;
+}
+
+&__check-list > div {
+display: grid;
+grid-template-columns: 22px minmax(0, 1fr) auto;
+align-items: center;
+gap: 9px;
+min-height: 45px;
+padding: 8px 0;
+border-bottom: 1px solid rgba(10, 24, 48, 0.07);
+}
+
+&__check-list > div:last-child {
+border-bottom: 0;
+}
+
+&__check-list svg {
+color: fockis.$success;
+}
+
+&__check-list span {
+min-width: 0;
+color: fockis.$text-on-light-muted;
+font-size: 0.81rem;
+}
+
+&__check-list strong {
+color: fockis.$navy-900;
+font-size: 0.79rem;
+text-align: right;
+}
+
+&__wide-link {
+width: 100%;
+min-height: 42px;
+margin-top: 18px;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: 7px;
+box-sizing: border-box;
+padding: 0.65rem 1rem;
+border: 1px solid rgba(10, 24, 48, 0.12);
+border-radius: fockis.$radius-pill;
+background: fockis.$cream-100;
+color: fockis.$navy-900;
+font-size: 0.83rem;
+font-weight: 700;
+text-decoration: none;
+}
+
+&__wide-link:hover {
+border-color: fockis.$gold-500;
+background: fockis.$gold-100;
+}
+
+&__profile-details {
+display: grid;
+gap: 3px;
+}
+
+&__profile-details > div {
+display: grid;
+grid-template-columns: 22px 1fr;
+gap: 9px;
+align-items: start;
+padding: 10px 0;
+border-bottom: 1px solid rgba(10, 24, 48, 0.07);
+}
+
+&__profile-details > div:last-child {
+border-bottom: 0;
+}
+
+&__profile-details svg {
+margin-top: 2px;
+color: fockis.$gold-600;
+}
+
+&__profile-details span {
+display: block;
+color: fockis.$text-on-light-muted;
+font-size: 0.75rem;
+}
+
+&__profile-details strong {
+grid-column: 2;
+margin-top: -5px;
+overflow-wrap: anywhere;
+color: fockis.$navy-900;
+font-size: 0.84rem;
+line-height: 1.4;
+}
+
+&__operations {
+margin-top: 28px;
+padding: 30px;
+border-radius: fockis.$radius-lg;
+background: fockis.gradient-hero();
+color: fockis.$text-on-dark;
+box-shadow: 0 14px 36px rgba(10, 24, 48, 0.14);
+}
+
+&__operations-header {
+margin-bottom: 22px;
+}
+
+&__operations-header .travel-partner-dashboard__eyebrow {
+color: fockis.$gold-500;
+}
+
+&__operations-header h2 {
+margin: 0;
+color: fockis.$text-on-dark;
+font-family: fockis.$font-display;
+font-size: clamp(1.7rem, 3vw, 2.2rem);
+line-height: 1.15;
+}
+
+&__operations-header p {
+max-width: 720px;
+margin: 8px 0 0;
+color: fockis.$text-on-dark-muted;
+font-size: 0.9rem;
+line-height: 1.6;
+}
+
+&__operation-grid {
+display: grid;
+grid-template-columns: repeat(4, minmax(0, 1fr));
+gap: 12px;
+}
+
+&__operation-card {
+min-width: 0;
+min-height: 190px;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 19px;
+border: 1px solid rgba(255, 255, 255, 0.13);
+border-radius: fockis.$radius-md;
+background: rgba(255, 255, 255, 0.055);
+color: fockis.$text-on-dark;
+text-decoration: none;
+}
+
+&__operation-card:hover {
+border-color: rgba(240, 169, 62, 0.55);
+background: rgba(255, 255, 255, 0.09);
+transform: translateY(-3px);
+}
+
+&__operation-card > svg {
+margin-top: auto;
+align-self: flex-end;
+color: fockis.$gold-500;
+}
+
+&__operation-icon {
+width: 44px;
+height: 44px;
+display: flex;
+align-items: center;
+justify-content: center;
+margin-bottom: 17px;
+border-radius: 12px;
+background: rgba(240, 169, 62, 0.14);
+color: fockis.$gold-500;
+}
+
+&__operation-card h3 {
+margin: 0;
+color: fockis.$text-on-dark;
+font-size: 0.97rem;
+line-height: 1.35;
+}
+
+&__operation-card p {
+margin: 7px 0 18px;
+color: fockis.$text-on-dark-muted;
+font-size: 0.78rem;
+line-height: 1.55;
+}
+
+&__summary {
+display: grid;
+grid-template-columns: repeat(3, minmax(0, 1fr));
+gap: 12px;
+margin-top: 18px;
+}
+
+&__summary > div {
+display: flex;
+align-items: flex-start;
+gap: 10px;
+padding: 15px 16px;
+border: 1px solid rgba(10, 24, 48, 0.08);
+border-radius: fockis.$radius-md;
+background: fockis.$cream-50;
+color: fockis.$text-on-light-muted;
+font-size: 0.78rem;
+line-height: 1.5;
+}
+
+&__summary svg {
+flex-shrink: 0;
+margin-top: 1px;
+color: fockis.$gold-600;
+}
+
+&__summary span {
+min-width: 0;
+}
+
+@include fockis.bp-down(fockis.$bp-lg) {
+&__stats {
+grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+&__grid {
+  grid-template-columns: 1fr;
+}
+
+&__sidebar {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+&__operation-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+}
+
+@include fockis.bp-down(fockis.$bp-md) {
+&__container {
+padding-top: 28px;
+padding-bottom: 45px;
+}
+
+&__topbar {
+  flex-direction: column;
+}
+
+&__topbar-actions {
+  width: 100%;
+}
+
+&__topbar-actions .travel-partner-dashboard__secondary-button,
+&__topbar-actions .travel-partner-dashboard__refresh {
+  flex: 1;
+}
+
+&__business-card {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+&__business-actions {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+&__sidebar {
+  grid-template-columns: 1fr;
+}
+
+&__summary {
+  grid-template-columns: 1fr;
+}
+
+}
+
+@include fockis.bp-down(fockis.$bp-sm) {
+&__container {
+padding-left: 14px;
+padding-right: 14px;
+}
+
+&__empty {
+  margin: 35px auto;
+  padding: 34px 20px;
+}
+
+&__topbar h1 {
+  font-size: 2rem;
+}
+
+&__topbar-actions {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+&__topbar-actions .travel-partner-dashboard__secondary-button,
+&__topbar-actions .travel-partner-dashboard__refresh {
+  width: 100%;
+  flex: none;
+}
+
+&__business-card {
+  padding: 18px;
+}
+
+&__business-name {
+  white-space: normal;
+}
+
+&__business-actions {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+&__business-actions .travel-partner-dashboard__secondary-button {
+  width: 100%;
+}
+
+&__stats {
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+&__stat {
+  padding: 14px;
+  gap: 9px;
+}
+
+&__stat-icon {
+  width: 36px;
+  height: 36px;
+  flex-basis: 36px;
+}
+
+&__stat strong {
+  font-size: 1.4rem;
+}
+
+&__stat span {
+  font-size: 0.7rem;
+}
+
+&__panel {
+  padding: 18px;
+  border-radius: fockis.$radius-md;
+}
+
+&__panel-header {
+  flex-direction: column;
+  gap: 9px;
+}
+
+&__first-listing {
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 19px;
+}
+
+&__listing {
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 9px;
+}
+
+&__listing-image {
+  width: 48px;
+  height: 48px;
+}
+
+&__listing-status {
+  grid-column: 2;
+  justify-self: start;
+}
+
+&__listing .travel-partner-dashboard__icon-button {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+}
+
+&__operations {
+  padding: 22px 18px;
+}
+
+&__operation-grid {
+  grid-template-columns: 1fr;
+}
+
+&__operation-card {
+  min-height: auto;
+}
+
+&__alert {
+  flex-wrap: wrap;
+}
+
+&__alert > div {
+  flex-basis: calc(100% - 50px);
+}
+
+&__alert > a,
+&__alert > button {
+  margin-left: 34px;
+}
+
+}
+}
+
+@keyframes travel-partner-dashboard-spin {
+from {
+transform: rotate(0deg);
+}
+
+to {
+transform: rotate(360deg);
+}
+}

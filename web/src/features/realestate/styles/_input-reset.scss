@@ -1,0 +1,38 @@
+/* ============================================================================
+   REALESTATE INPUT RESET
+
+   The app has a global input/select/textarea style (likely dark-mode
+   related) that overrides unset background/color on form fields.
+   This file forces every input inside any realestate page back to
+   a plain white/light appearance, regardless of what the global
+   theme sets elsewhere.
+============================================================================ */
+
+.re-page input,
+.re-page select,
+.re-page textarea,
+.pd-page input,
+.pd-page select,
+.pd-page textarea,
+.cp-page input,
+.cp-page select,
+.cp-page textarea,
+.agent-page input,
+.agent-page select,
+.agent-page textarea {
+  background-color: white !important;
+  color: #16211d !important;
+  -webkit-text-fill-color: #16211d !important;
+}
+
+.re-page input::placeholder,
+.re-page textarea::placeholder,
+.pd-page input::placeholder,
+.pd-page textarea::placeholder,
+.cp-page input::placeholder,
+.cp-page textarea::placeholder,
+.agent-page input::placeholder,
+.agent-page textarea::placeholder {
+  color: #53615b !important;
+  opacity: 0.6;
+}

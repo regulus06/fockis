@@ -1,0 +1,455 @@
+/* ============================================================================
+FOCKIS WAVE
+REDESIGN: navy/gold accents replace the previous black/white gradient
+avatar and generic accent color.
+============================================================================ */
+
+.fk-wave-card {
+width: 100%;
+overflow: hidden;
+
+background: var(--fk-card-bg, #ffffff);
+border: 1px solid var(--fk-border, #d6dde8);
+border-radius: 12px;
+
+transition:
+border-color 0.2s ease,
+box-shadow 0.2s ease,
+transform 0.2s ease;
+
+&:hover {
+border-color: var(--fk-border-hover, #aab8cf);
+box-shadow: 0 8px 24px rgba(10, 27, 48, 0.1);
+}
+}
+
+/* ============================================================================
+WAVE HEADER
+============================================================================ */
+
+.fk-wave-card__header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+
+gap: 12px;
+padding: 16px 18px 12px;
+}
+
+.fk-wave-card__identity {
+display: flex;
+align-items: center;
+min-width: 0;
+gap: 11px;
+}
+
+/* ============================================================================
+AVATAR
+============================================================================ */
+
+.fk-wave-card__avatar,
+.fk-wave-card__avatar-image {
+width: 42px;
+height: 42px;
+flex: 0 0 42px;
+
+border-radius: 8px;
+}
+
+.fk-wave-card__avatar {
+display: flex;
+align-items: center;
+justify-content: center;
+
+background: linear-gradient(
+135deg,
+#0a2240,
+#1d4fa3
+);
+
+color: #ffc72c;
+
+font-family: var(--fk-font-display, Georgia, serif);
+font-size: 15px;
+font-weight: 700;
+}
+
+.fk-wave-card__avatar-image {
+display: block;
+object-fit: cover;
+}
+
+/* ============================================================================
+AUTHOR
+============================================================================ */
+
+.fk-wave-card__author {
+display: flex;
+flex-direction: column;
+min-width: 0;
+gap: 3px;
+}
+
+.fk-wave-card__username {
+overflow: hidden;
+
+color: var(--fk-text, #101b30);
+
+font-size: 14px;
+font-weight: 700;
+line-height: 1.2;
+
+text-overflow: ellipsis;
+white-space: nowrap;
+}
+
+.fk-wave-card__time {
+color: var(--fk-muted, #7c879b);
+
+font-size: 12px;
+line-height: 1.2;
+}
+
+/* ============================================================================
+MORE BUTTON
+============================================================================ */
+
+.fk-wave-card__more {
+display: flex;
+align-items: center;
+justify-content: center;
+
+width: 36px;
+height: 36px;
+flex: 0 0 36px;
+
+padding: 0;
+
+border: 0;
+border-radius: 8px;
+
+background: transparent;
+color: var(--fk-muted, #7c879b);
+
+cursor: pointer;
+
+transition:
+background 0.2s ease,
+color 0.2s ease;
+
+&:hover {
+background: var(--fk-hover, #edf1f7);
+color: var(--fk-fjord-bright, #1d4fa3);
+}
+
+&:active {
+transform: scale(0.94);
+}
+}
+
+/* ============================================================================
+WAVE VISUALIZER
+============================================================================ */
+
+.fk-wave-card__wave {
+display: flex;
+align-items: center;
+
+gap: 4px;
+
+height: 24px;
+
+padding: 0 18px;
+
+color: var(--fk-accent, #0a2240);
+}
+
+.fk-wave-card__wave span {
+display: block;
+
+width: 3px;
+
+border-radius: 999px;
+
+background: currentColor;
+
+animation:
+fk-wave-animation 1.4s ease-in-out infinite;
+}
+
+.fk-wave-card__wave span:nth-child(1) {
+height: 7px;
+animation-delay: 0s;
+}
+
+.fk-wave-card__wave span:nth-child(2) {
+height: 13px;
+animation-delay: 0.1s;
+}
+
+.fk-wave-card__wave span:nth-child(3) {
+height: 19px;
+animation-delay: 0.2s;
+}
+
+.fk-wave-card__wave span:nth-child(4) {
+height: 11px;
+animation-delay: 0.3s;
+}
+
+.fk-wave-card__wave span:nth-child(5) {
+height: 17px;
+animation-delay: 0.4s;
+}
+
+.fk-wave-card__wave span:nth-child(6) {
+height: 9px;
+animation-delay: 0.5s;
+}
+
+.fk-wave-card__wave span:nth-child(7) {
+height: 14px;
+animation-delay: 0.6s;
+}
+
+@keyframes fk-wave-animation {
+0%,
+100% {
+opacity: 0.45;
+transform: scaleY(0.7);
+}
+
+50% {
+opacity: 1;
+transform: scaleY(1);
+}
+}
+
+/* ============================================================================
+CONTENT
+============================================================================ */
+
+.fk-wave-card__content {
+padding: 12px 18px 16px;
+}
+
+.fk-wave-card__content p {
+margin: 0;
+
+color: var(--fk-text, #14202f);
+
+font-size: 15px;
+line-height: 1.65;
+
+white-space: pre-wrap;
+overflow-wrap: anywhere;
+}
+
+/* ============================================================================
+MEDIA
+============================================================================ */
+
+.fk-wave-card__media {
+position: relative;
+
+width: 100%;
+
+overflow: hidden;
+
+background: var(--fk-media-bg, #e8ecf3);
+}
+
+.fk-wave-card__media img,
+.fk-wave-card__media video {
+display: block;
+
+width: 100%;
+
+object-fit: cover;
+}
+
+.fk-wave-card__media img {
+max-height: 620px;
+
+aspect-ratio: 4 / 3;
+}
+
+.fk-wave-card__media--video video {
+max-height: 620px;
+
+aspect-ratio: 16 / 9;
+}
+
+/* ============================================================================
+VIDEO PLAY BUTTON
+============================================================================ */
+
+.fk-wave-card__play {
+position: absolute;
+top: 50%;
+left: 50%;
+
+display: flex;
+align-items: center;
+justify-content: center;
+
+width: 54px;
+height: 54px;
+
+border: 1px solid rgba(255, 255, 255, 0.35);
+border-radius: 50%;
+
+background: rgba(10, 34, 64, 0.6);
+
+color: #ffffff;
+
+pointer-events: none;
+
+transform: translate(-50%, -50%);
+
+backdrop-filter: blur(8px);
+}
+
+/* ============================================================================
+ACTION BAR
+============================================================================ */
+
+.fk-wave-card__actions {
+display: flex;
+align-items: center;
+
+min-height: 58px;
+
+padding: 8px 12px;
+
+border-top: 1px solid var(--fk-border, #eeeeee);
+}
+
+.fk-wave-card__action {
+display: flex;
+align-items: center;
+justify-content: center;
+
+width: 40px;
+height: 40px;
+
+padding: 0;
+
+border: 0;
+border-radius: 8px;
+
+background: transparent;
+
+color: var(--fk-muted, #7c879b);
+
+cursor: pointer;
+
+transition:
+background 0.2s ease,
+color 0.2s ease,
+transform 0.15s ease;
+
+&:hover {
+background: var(--fk-hover, #edf1f7);
+color: var(--fk-fjord-bright, #1d4fa3);
+}
+
+&:active {
+transform: scale(0.9);
+}
+
+&.is-active {
+color: var(--fk-fjord, #0a2240);
+}
+}
+
+.fk-wave-card__spacer {
+flex: 1;
+}
+
+/* ============================================================================
+DARK MODE
+============================================================================ */
+
+[data-theme="dark"] {
+.fk-wave-card {
+--fk-card-bg: #0f2038;
+--fk-border: #223a5e;
+--fk-border-hover: #33517e;
+--fk-text: #eef2f9;
+--fk-muted: #a9b8cf;
+--fk-hover: #17294a;
+--fk-media-bg: #0b1a2e;
+--fk-accent: #ffc72c;
+
+background: var(--fk-card-bg);
+border-color: var(--fk-border);
+
+}
+
+.fk-wave-card__avatar {
+background: linear-gradient(
+135deg,
+#1d4fa3,
+#5b90ea
+);
+
+color: #ffc72c;
+}
+
+.fk-wave-card__actions {
+border-color: var(--fk-border);
+}
+}
+
+/* ============================================================================
+MOBILE
+============================================================================ */
+
+@media (max-width: 640px) {
+.fk-wave-card {
+border-radius: 10px;
+}
+
+.fk-wave-card__header {
+padding: 14px 14px 10px;
+}
+
+.fk-wave-card__wave {
+padding: 0 14px;
+}
+
+.fk-wave-card__content {
+padding: 10px 14px 14px;
+}
+
+.fk-wave-card__content p {
+font-size: 14px;
+line-height: 1.55;
+}
+
+.fk-wave-card__actions {
+padding: 6px 8px;
+}
+
+.fk-wave-card__action {
+width: 38px;
+height: 38px;
+}
+}
+
+/* ============================================================================
+ACCESSIBILITY
+============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+.fk-wave-card__wave span {
+animation: none;
+}
+
+.fk-wave-card,
+.fk-wave-card__action,
+.fk-wave-card__more {
+transition: none;
+}
+}

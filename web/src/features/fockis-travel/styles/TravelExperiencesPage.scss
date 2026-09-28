@@ -1,0 +1,185 @@
+@use "./_fockis-tokens" as fockis;
+
+.travel-experiences-page {
+  min-height: 100%;
+  background: fockis.$cream-50;
+  color: fockis.$text-on-light;
+
+  .wrap {
+    @include fockis.wrap;
+  }
+
+  .tight {
+    padding: 38px 0 26px;
+  }
+
+  .eyebrow {
+    @include fockis.eyebrow;
+    margin-bottom: 8px;
+  }
+
+  .experiences-title {
+    margin: 0;
+    max-width: 760px;
+    font-family: fockis.$font-display;
+    font-size: clamp(28px, 4vw, 42px);
+    line-height: 1.08;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .experiences-description {
+    max-width: 520px;
+    margin: 10px 0 0;
+    color: fockis.$text-on-light-muted;
+    font-family: fockis.$font-body;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .category-filter-row {
+    margin: 0 0 24px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(14, 26, 43, 0.16);
+      border-radius: fockis.$radius-pill;
+    }
+  }
+
+  .exp-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px;
+    padding-bottom: 42px;
+  }
+
+  .ft-empty-state {
+    @include fockis.card-surface;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 250px;
+    margin: 8px 0 42px;
+    padding: 36px 24px;
+
+    text-align: center;
+    border: 1px solid rgba(14, 26, 43, 0.08);
+  }
+
+  .ft-empty-state .ic {
+    display: grid;
+    width: 54px;
+    height: 54px;
+    margin-bottom: 14px;
+    place-items: center;
+
+    font-size: 26px;
+    line-height: 1;
+
+    background: fockis.$gold-100;
+    border-radius: 50%;
+  }
+
+  .ft-empty-state h4 {
+    margin: 0;
+    color: fockis.$text-on-light;
+    font-family: fockis.$font-body;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .ft-empty-state p {
+    max-width: 520px;
+    margin: 8px auto 0;
+    color: fockis.$text-on-light-muted;
+    font-family: fockis.$font-body;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .btn {
+    @include fockis.btn-base;
+
+    margin-top: 18px;
+  }
+
+  .btn-outline {
+    @include fockis.btn-outline;
+  }
+
+  @include fockis.bp-down(lg) {
+    .exp-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+  }
+
+  @include fockis.bp-down(md) {
+    .tight {
+      padding: 32px 0 22px;
+    }
+
+    .category-filter-row {
+      margin-bottom: 20px;
+    }
+
+    .exp-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .ft-empty-state {
+      min-height: 220px;
+      padding: 30px 20px;
+    }
+  }
+
+  @include fockis.bp-down(sm) {
+    .tight {
+      padding: 28px 0 20px;
+    }
+
+    .experiences-title {
+      font-size: clamp(28px, 9vw, 36px);
+    }
+
+    .experiences-description {
+      max-width: 100%;
+      font-size: 14px;
+    }
+
+    .category-filter-row {
+      margin-right: -#{fockis.$gutter};
+      margin-left: -#{fockis.$gutter};
+      padding: 0 fockis.$gutter 4px;
+    }
+
+    .exp-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+      padding-bottom: 32px;
+    }
+
+    .ft-empty-state {
+      min-height: 210px;
+      margin-bottom: 32px;
+      padding: 28px 18px;
+    }
+  }
+}

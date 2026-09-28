@@ -1,0 +1,102 @@
+/* =========================
+   GLOBAL APP WRAPPER
+========================= */
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #0b0f17;
+  font-family: Inter, system-ui, Arial, sans-serif;
+}
+
+/* Root app container (React mount) */
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* =========================
+   GLOBAL LAYOUT (Layout.tsx)
+========================= */
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* If you have sidebar + content */
+.app-body {
+  display: flex;
+  flex: 1;
+  min-height: 0; /* important for scroll */
+}
+
+/* main content area */
+.app-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: #0b0f17;
+}
+
+/* =========================
+   SELLER LAYOUT
+========================= */
+
+.seller-layout {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+/* IMPORTANT: prevents dashboard escaping layout */
+.seller-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: #0f1522;
+  padding: 20px;
+}
+
+/* =========================
+   SCROLL FIXES (CRITICAL)
+========================= */
+
+/* prevents double scrollbars */
+* {
+  box-sizing: border-box;
+}
+
+/* ensures nested flex children behave correctly */
+main,
+div {
+  min-height: 0;
+}
+
+/* =========================
+   OPTIONAL: NICE SCROLLBAR
+========================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b0f17;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a3550;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3a4a70;
+}

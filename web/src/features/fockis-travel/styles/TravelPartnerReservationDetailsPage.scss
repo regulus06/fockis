@@ -1,0 +1,727 @@
+@use "./_fockis-tokens" as *;
+
+.travel-partner-reservation-details-page {
+  min-height: 100vh;
+  background: $cream-100;
+  color: $text-on-light;
+  font-family: $font-body;
+  padding: 32px 0 64px;
+  box-sizing: border-box;
+
+  .travel-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    box-sizing: border-box;
+  }
+
+  /* ============================================================
+     LOADING
+     ============================================================ */
+
+  .travel-loading-state {
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: $text-on-light-muted;
+    text-align: center;
+  }
+
+  .travel-loading-spinner {
+    width: 42px;
+    height: 42px;
+    border: 4px solid rgba(10, 24, 48, 0.12);
+    border-top-color: $gold-500;
+    border-radius: 50%;
+    animation: travelReservationSpin 0.8s linear infinite;
+  }
+
+  /* ============================================================
+     ERROR
+     ============================================================ */
+
+  .travel-back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: $navy-900;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+
+    &:hover {
+      color: $blue-600;
+      text-decoration: underline;
+    }
+  }
+
+  .travel-error-state {
+    max-width: 720px;
+    margin: 48px auto;
+    padding: 32px;
+    background: $cream-50;
+    border: 1px solid rgba(209, 85, 74, 0.2);
+    border-radius: $radius-lg;
+    box-shadow: $shadow-card;
+    text-align: center;
+
+    h1,
+    h2,
+    h3 {
+      margin: 0 0 12px;
+      color: $navy-900;
+    }
+
+    p {
+      margin: 0 0 24px;
+      color: $text-on-light-muted;
+      line-height: 1.6;
+    }
+  }
+
+  /* ============================================================
+     PAGE HEADER
+     ============================================================ */
+
+  .travel-page-header {
+    margin-bottom: 28px;
+  }
+
+  .travel-reservation-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 28px;
+    background: $navy-900;
+    color: $text-on-dark;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-card;
+  }
+
+  .travel-eyebrow {
+    margin: 0 0 8px;
+    color: $gold-500;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .travel-reservation-header h1 {
+    margin: 0;
+    color: $text-on-dark;
+    font-family: $font-display;
+    font-size: clamp(1.8rem, 4vw, 2.7rem);
+    line-height: 1.1;
+    font-weight: 700;
+  }
+
+  .travel-reservation-header > div:first-child {
+    min-width: 0;
+  }
+
+  /* ============================================================
+     STATUS
+     ============================================================ */
+
+  .travel-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-height: 34px;
+    padding: 7px 13px;
+    border-radius: $radius-pill;
+    font-size: 0.78rem;
+    font-weight: 800;
+    line-height: 1;
+    text-transform: capitalize;
+    border: 1px solid transparent;
+  }
+
+  .travel-status-badge.confirmed {
+    background: rgba(63, 166, 106, 0.16);
+    color: #b9f0cd;
+    border-color: rgba(63, 166, 106, 0.45);
+  }
+
+  .travel-status-badge.pending {
+    background: rgba(240, 169, 62, 0.18);
+    color: $gold-100;
+    border-color: rgba(240, 169, 62, 0.45);
+  }
+
+  .travel-status-badge.cancelled {
+    background: rgba(209, 85, 74, 0.16);
+    color: #ffc5bf;
+    border-color: rgba(209, 85, 74, 0.45);
+  }
+
+  .travel-status-badge.completed {
+    background: rgba(47, 127, 166, 0.2);
+    color: #bde7fa;
+    border-color: rgba(47, 127, 166, 0.45);
+  }
+
+  .travel-status-badge.refunded {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e8edf5;
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  /* ============================================================
+     ALERT
+     ============================================================ */
+
+  .travel-alert {
+    margin: 20px 0;
+    padding: 15px 18px;
+    border-radius: $radius-md;
+    line-height: 1.5;
+    font-size: 0.92rem;
+  }
+
+  .travel-alert-error {
+    color: #8f2f27;
+    background: #fff0ee;
+    border: 1px solid rgba(209, 85, 74, 0.28);
+  }
+
+  /* ============================================================
+     ACTIONS
+     ============================================================ */
+
+  .travel-reservation-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0 28px;
+  }
+
+  .travel-primary-button,
+  .travel-secondary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 10px 17px;
+    border-radius: $radius-pill;
+    font-family: $font-body;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease,
+      border-color 0.15s ease,
+      box-shadow 0.15s ease,
+      transform 0.1s ease;
+    box-sizing: border-box;
+
+    &:active {
+      transform: translateY(1px);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $gold-500;
+      outline-offset: 2px;
+    }
+  }
+
+  .travel-primary-button {
+    background: $navy-900;
+    color: #ffffff;
+    border: 1px solid $navy-900;
+    box-shadow: 0 4px 12px rgba(10, 24, 48, 0.14);
+
+    &:hover {
+      background: $navy-800;
+      border-color: $navy-800;
+    }
+  }
+
+  .travel-secondary-button {
+    background: #ffffff;
+    color: $navy-900;
+    border: 1px solid rgba(10, 24, 48, 0.18);
+
+    &:hover {
+      background: $cream-100;
+      border-color: rgba(10, 24, 48, 0.3);
+    }
+
+    &.danger {
+      color: $danger;
+      border-color: rgba(209, 85, 74, 0.35);
+      background: #ffffff;
+
+      &:hover {
+        background: #fff0ee;
+        border-color: $danger;
+      }
+    }
+  }
+
+  /* ============================================================
+     MAIN GRID
+     ============================================================ */
+
+  .travel-reservation-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.85fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* ============================================================
+     CARDS
+     ============================================================ */
+
+  .travel-card {
+    min-width: 0;
+    background: $cream-50;
+    border: 1px solid rgba(10, 24, 48, 0.08);
+    border-radius: $radius-lg;
+    box-shadow: $shadow-card;
+    overflow: hidden;
+  }
+
+  .travel-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 22px;
+    border-bottom: 1px solid rgba(10, 24, 48, 0.08);
+    background: rgba(247, 244, 236, 0.72);
+
+    h2,
+    h3 {
+      margin: 0;
+      color: $navy-900;
+      font-size: 1.08rem;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+  }
+
+  .travel-card > *:not(.travel-card-header) {
+    box-sizing: border-box;
+  }
+
+  .travel-section-label {
+    margin: 0;
+    color: $text-on-light-muted;
+    font-size: 0.76rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  /* ============================================================
+     RESERVATION SUMMARY
+     ============================================================ */
+
+  .travel-reservation-summary,
+  .travel-listing-summary,
+  .travel-date-summary,
+  .travel-pricing-summary,
+  .travel-customer-card,
+  .travel-notes-card,
+  .travel-history-card {
+    padding: 0;
+  }
+
+  .travel-reservation-summary .travel-detail-list,
+  .travel-listing-summary .travel-detail-list,
+  .travel-date-summary .travel-detail-list,
+  .travel-pricing-summary .travel-detail-list {
+    padding: 8px 22px 20px;
+  }
+
+  /* ============================================================
+     DETAIL LIST
+     ============================================================ */
+
+  .travel-detail-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .travel-detail-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(10, 24, 48, 0.07);
+  }
+
+  .travel-detail-row:last-child {
+    border-bottom: 0;
+  }
+
+  .travel-detail-row > span:first-child,
+  .travel-detail-row > strong:first-child {
+    color: $text-on-light-muted;
+    font-size: 0.86rem;
+    line-height: 1.45;
+  }
+
+  .travel-detail-row > span:last-child,
+  .travel-detail-row > strong:last-child {
+    color: $navy-900;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .travel-detail-row.total {
+    margin-top: 4px;
+    padding-top: 18px;
+    border-top: 2px solid rgba(10, 24, 48, 0.1);
+    border-bottom: 0;
+  }
+
+  .travel-detail-row.total > span:first-child,
+  .travel-detail-row.total > strong:first-child {
+    color: $navy-900;
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  .travel-detail-row.total > span:last-child,
+  .travel-detail-row.total > strong:last-child {
+    color: $navy-900;
+    font-size: 1.2rem;
+    font-weight: 900;
+  }
+
+  /* ============================================================
+     LISTING
+     ============================================================ */
+
+  .travel-listing-summary .travel-card-header {
+    align-items: flex-start;
+  }
+
+  .travel-inline-link {
+    color: $blue-600;
+    font-weight: 700;
+    text-decoration: none;
+
+    &:hover {
+      color: $navy-900;
+      text-decoration: underline;
+    }
+  }
+
+  /* ============================================================
+     CUSTOMER
+     ============================================================ */
+
+  .travel-customer-card {
+    .travel-card-header {
+      margin-bottom: 0;
+    }
+  }
+
+  .travel-customer-profile {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 22px;
+  }
+
+  .travel-customer-avatar {
+    width: 68px;
+    height: 68px;
+    flex: 0 0 68px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #ffffff;
+    background: $navy-800;
+    box-shadow: 0 4px 14px rgba(10, 24, 48, 0.14);
+  }
+
+  .travel-customer-profile > div {
+    min-width: 0;
+  }
+
+  .travel-customer-profile h3 {
+    margin: 0 0 5px;
+    color: $navy-900;
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .travel-customer-profile p {
+    margin: 0;
+    color: $text-on-light-muted;
+    font-size: 0.86rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .travel-customer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    padding: 0 22px 22px;
+  }
+
+  .travel-customer-actions a,
+  .travel-customer-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 40px;
+    padding: 8px 13px;
+    border-radius: $radius-pill;
+    background: #ffffff;
+    color: $navy-900;
+    border: 1px solid rgba(10, 24, 48, 0.16);
+    font-family: $font-body;
+    font-size: 0.83rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    box-sizing: border-box;
+
+    &:hover {
+      background: $cream-100;
+      border-color: rgba(10, 24, 48, 0.3);
+    }
+  }
+
+  /* ============================================================
+     NOTES
+     ============================================================ */
+
+  .travel-notes-content {
+    padding: 20px 22px 24px;
+    color: $text-on-light;
+    font-size: 0.92rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .travel-muted {
+    color: $text-on-light-muted;
+  }
+
+  /* ============================================================
+     HISTORY
+     ============================================================ */
+
+  .travel-history-card {
+    .travel-card-header {
+      margin-bottom: 0;
+    }
+  }
+
+  .travel-empty-state {
+    padding: 30px 22px;
+    color: $text-on-light-muted;
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .travel-reservation-history {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .travel-history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 17px 22px;
+    border-bottom: 1px solid rgba(10, 24, 48, 0.07);
+    transition: background 0.15s ease;
+
+    &:last-child {
+      border-bottom: 0;
+    }
+
+    &:hover {
+      background: rgba(247, 244, 236, 0.75);
+    }
+
+    a {
+      color: $navy-900;
+      text-decoration: none;
+
+      &:hover {
+        color: $blue-600;
+      }
+    }
+  }
+
+  /* ============================================================
+     RIGHT COLUMN SPACING
+     ============================================================ */
+
+  .travel-reservation-grid > .travel-customer-card,
+  .travel-reservation-grid > .travel-notes-card,
+  .travel-reservation-grid > .travel-history-card {
+    min-width: 0;
+  }
+
+  /* ============================================================
+     TABLET
+     ============================================================ */
+
+  @include bp-down($bp-md) {
+    padding-top: 24px;
+
+    .travel-container {
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+
+    .travel-reservation-header {
+      padding: 22px;
+    }
+
+    .travel-reservation-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .travel-customer-profile {
+      padding: 20px;
+    }
+
+    .travel-customer-actions {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+  }
+
+  /* ============================================================
+     MOBILE
+     ============================================================ */
+
+  @include bp-down($bp-sm) {
+    padding: 16px 0 42px;
+
+    .travel-container {
+      padding-left: 14px;
+      padding-right: 14px;
+    }
+
+    .travel-reservation-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 20px;
+      border-radius: $radius-md;
+    }
+
+    .travel-reservation-header h1 {
+      font-size: 1.75rem;
+    }
+
+    .travel-reservation-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .travel-primary-button,
+    .travel-secondary-button {
+      width: 100%;
+    }
+
+    .travel-card {
+      border-radius: $radius-md;
+    }
+
+    .travel-card-header {
+      padding: 17px 16px;
+    }
+
+    .travel-reservation-summary .travel-detail-list,
+    .travel-listing-summary .travel-detail-list,
+    .travel-date-summary .travel-detail-list,
+    .travel-pricing-summary .travel-detail-list {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    .travel-detail-row {
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .travel-detail-row > span:last-child,
+    .travel-detail-row > strong:last-child {
+      text-align: left;
+    }
+
+    .travel-customer-profile {
+      padding: 18px 16px;
+    }
+
+    .travel-customer-avatar {
+      width: 58px;
+      height: 58px;
+      flex-basis: 58px;
+    }
+
+    .travel-customer-actions {
+      padding: 0 16px 18px;
+      flex-direction: column;
+    }
+
+    .travel-customer-actions a,
+    .travel-customer-actions button {
+      width: 100%;
+    }
+
+    .travel-notes-content {
+      padding: 17px 16px 20px;
+    }
+
+    .travel-history-item {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 9px;
+      padding: 15px 16px;
+    }
+  }
+}
+
+@keyframes travelReservationSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}

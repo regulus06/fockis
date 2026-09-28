@@ -1,0 +1,452 @@
+/**
+ * ProducerMusicPage.scss
+ * Drop-in location: web/src/features/playlists/styles/ProducerMusicPage.scss
+ * (or merge relevant blocks into your existing Playlists.scss)
+ */
+
+// ---- tokens -----------------------------------------------------------
+$bg: #0f1117;
+$surface: #171a24;
+$surface-raised: #1d2130;
+$border: #262b3a;
+$text: #f5f5f7;
+$text-muted: #8b8fa3;
+$violet: #7c3aed;
+$pink: #db2777;
+$gradient: linear-gradient(120deg, #7c3aed 0%, #db2777 100%);
+$radius: 14px;
+$radius-sm: 8px;
+
+.producer-music-page {
+  background: $bg;
+  color: $text;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  padding-bottom: 96px; // room for sticky player
+
+  // ---- hero -------------------------------------------------------
+  &__hero {
+    position: relative;
+    height: 280px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: flex-end;
+    padding: 32px 40px;
+  }
+
+  &__hero-scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba($bg, 0.2) 0%,
+      rgba($bg, 0.75) 75%,
+      $bg 100%
+    );
+  }
+
+  &__hero-content {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+  }
+
+  &__avatar {
+    width: 104px;
+    height: 104px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid $bg;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  &__eyebrow {
+    font-size: 13px;
+    color: $text-muted;
+    margin: 0 0 4px;
+  }
+
+  &__name {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+
+  &__tagline {
+    font-size: 15px;
+    color: $text-muted;
+    margin: 0 0 6px;
+  }
+
+  &__stats {
+    font-size: 13px;
+    color: $text-muted;
+    margin: 0;
+  }
+}
+
+// ---- unlock-all banner --------------------------------------------
+.unlock-banner {
+  margin: 24px 40px 0;
+  padding: 20px 24px;
+  border-radius: $radius;
+  background: $gradient;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  &__title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 2px;
+  }
+
+  &__subtitle {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.85);
+    margin: 0;
+  }
+}
+
+// ---- buttons ---------------------------------------------------------
+.btn {
+  border: none;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &--primary {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    padding: 11px 22px;
+    font-size: 14px;
+  }
+
+  &--ghost {
+    background: transparent;
+    border: 1px solid $border;
+    color: $text;
+
+    &:hover {
+      border-color: $violet;
+      color: $violet;
+    }
+  }
+
+  &--muted {
+    background: $surface-raised;
+    color: $text-muted;
+    padding: 11px 22px;
+    font-size: 14px;
+  }
+
+  &--small {
+    padding: 6px 14px;
+    font-size: 13px;
+  }
+}
+
+// ---- track list --------------------------------------------------
+.track-list {
+  margin: 32px 40px 0;
+
+  &__header {
+    display: grid;
+    grid-template-columns: 32px 1fr 120px 100px 80px 90px;
+    gap: 16px;
+    padding: 0 16px 10px;
+    font-size: 12px;
+    color: $text-muted;
+    border-bottom: 1px solid $border;
+  }
+}
+
+.track-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 120px 100px 80px 90px;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  border-radius: $radius-sm;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: $surface;
+  }
+
+  &--active {
+    background: $surface-raised;
+  }
+
+  &--locked {
+    .track-row__title,
+    .track-row__album {
+      color: $text-muted;
+    }
+  }
+
+  &__index {
+    color: $text-muted;
+    font-size: 13px;
+    text-align: center;
+  }
+
+  &__main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+    min-width: 0;
+  }
+
+  &__art-wrap {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  &__art {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__play-icon {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.35);
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+  }
+
+  &__main:hover &__play-icon,
+  .track-row--locked &__play-icon {
+    opacity: 1;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__album {
+    font-size: 12px;
+    color: $text-muted;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__genre,
+  &__plays,
+  &__duration {
+    font-size: 13px;
+    color: $text-muted;
+  }
+
+  &__action {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
+.pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+
+  &--free {
+    background: rgba(124, 58, 237, 0.15);
+    color: #a78bfa;
+  }
+
+  &--owned {
+    background: rgba(219, 39, 119, 0.15);
+    color: #f472b6;
+  }
+}
+
+// ---- sticky player footer -----------------------------------------
+.player-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  background: $surface;
+  border-top: 1px solid $border;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 24px;
+  z-index: 20;
+
+  &__track {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 240px;
+
+    img {
+      width: 44px;
+      height: 44px;
+      border-radius: 6px;
+      object-fit: cover;
+    }
+  }
+
+  &__title {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__album {
+    font-size: 12px;
+    color: $text-muted;
+    margin: 0;
+  }
+
+  &__toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: $gradient;
+    color: #fff;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  &__time {
+    font-size: 12px;
+    color: $text-muted;
+  }
+}
+
+// ---- purchase modal --------------------------------------------------
+.modal-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal {
+  width: 320px;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius;
+  padding: 28px;
+  text-align: center;
+
+  &__art {
+    width: 88px;
+    height: 88px;
+    border-radius: 10px;
+    object-fit: cover;
+    margin: 0 auto 16px;
+  }
+
+  &__eyebrow {
+    font-size: 12px;
+    color: $text-muted;
+    margin: 0 0 6px;
+  }
+
+  &__title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+
+  &__subtitle {
+    font-size: 13px;
+    color: $text-muted;
+    margin: 0 0 18px;
+  }
+
+  &__price {
+    font-size: 28px;
+    font-weight: 700;
+    background: $gradient;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 20px;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 10px;
+
+    .btn {
+      flex: 1;
+    }
+  }
+}
+
+// ---- responsive --------------------------------------------------
+@media (max-width: 640px) {
+  .producer-music-page__hero {
+    padding: 20px;
+    height: 220px;
+  }
+
+  .unlock-banner,
+  .track-list {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  .track-list__header,
+  .track-row {
+    grid-template-columns: 24px 1fr 70px;
+  }
+
+  .track-row__genre,
+  .track-row__plays {
+    display: none;
+  }
+}

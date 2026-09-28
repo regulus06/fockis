@@ -1,0 +1,87 @@
+@use 'variables' as v;
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin icon-button($size: 36px) {
+  width: $size;
+  height: $size;
+  border-radius: v.$radius-pill;
+  border: none;
+  background: transparent;
+  color: v.$color-text-secondary;
+  cursor: pointer;
+  @include flex-center;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+
+  &:hover {
+    background: v.$color-bg-hover;
+    color: v.$color-text-primary;
+  }
+
+  &:active {
+    transform: scale(0.94);
+  }
+}
+
+@mixin card {
+  background: v.$color-bg-panel;
+  border-radius: v.$radius-md;
+  box-shadow: v.$shadow-sm;
+}
+
+@mixin scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: v.$color-border-strong transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: v.$color-border-strong;
+    border-radius: v.$radius-pill;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin mobile {
+  @media (max-width: v.$bp-mobile) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: (v.$bp-mobile + 1px)) and (max-width: v.$bp-tablet) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: (v.$bp-tablet + 1px)) {
+    @content;
+  }
+}
+
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}

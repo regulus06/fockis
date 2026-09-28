@@ -1,0 +1,115 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+.forward-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: v.$z-modal;
+  background: rgba(10, 10, 16, 0.5);
+  @include m.flex-center;
+  animation: fockis-fade-in 0.15s ease;
+}
+
+.forward-modal {
+  width: 380px;
+  max-height: 70vh;
+  background: v.$color-bg-panel;
+  border-radius: v.$radius-lg;
+  box-shadow: v.$shadow-lg;
+  display: flex;
+  flex-direction: column;
+  animation: fockis-scale-in 0.18s ease;
+}
+
+.forward-modal__header {
+  @include m.flex-between;
+  padding: v.$space-4 v.$space-5;
+  border-bottom: 1px solid v.$color-border;
+
+  h3 {
+    font-size: v.$font-size-md;
+    font-weight: 700;
+  }
+
+  button {
+    @include m.icon-button(28px);
+  }
+}
+
+.forward-modal__list {
+  flex: 1;
+  overflow-y: auto;
+  padding: v.$space-2;
+  @include m.scrollbar-thin;
+}
+
+.forward-modal__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: v.$space-3;
+  padding: v.$space-2 v.$space-3;
+  border-radius: v.$radius-sm;
+
+  img {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  span:nth-child(2) {
+    flex: 1;
+    text-align: left;
+    font-size: v.$font-size-sm;
+  }
+
+  &:hover {
+    background: v.$color-bg-hover;
+  }
+
+  &.is-selected {
+    background: v.$fockis-primary-light;
+  }
+}
+
+.forward-modal__checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid v.$color-border-strong;
+  @include m.flex-center;
+  color: #fff;
+
+  .is-selected & {
+    background: v.$fockis-primary;
+    border-color: v.$fockis-primary;
+  }
+}
+
+.forward-modal__footer {
+  padding: v.$space-3 v.$space-4;
+  border-top: 1px solid v.$color-border;
+}
+
+.forward-modal__send-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: v.$space-2;
+  padding: v.$space-3;
+  background: v.$fockis-primary;
+  color: #fff;
+  border-radius: v.$radius-pill;
+  font-weight: 600;
+
+  &:hover {
+    background: v.$fockis-primary-dark;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

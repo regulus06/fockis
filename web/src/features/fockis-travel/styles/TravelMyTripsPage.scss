@@ -1,0 +1,394 @@
+@use "./_fockis-tokens" as fockis;
+
+.travel-my-trips-page {
+  min-height: 100%;
+  background: fockis.$cream-50;
+  color: fockis.$text-on-light;
+
+  .wrap {
+    width: min(100% - (fockis.$gutter * 2), fockis.$max-width);
+    margin-inline: auto;
+  }
+
+  .tight {
+    padding-block: 34px 28px;
+  }
+
+  .eyebrow {
+    margin: 0 0 8px;
+    color: fockis.$gold-600;
+    font-family: fockis.$font-body;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    max-width: 800px;
+    margin: 0;
+    color: fockis.$text-on-light;
+    font-family: fockis.$font-display;
+    font-size: clamp(2rem, 4vw, 2.65rem);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+  }
+
+  .wrap > p {
+    max-width: 600px;
+    margin: 10px 0 0;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+
+  .trips-tabs {
+    margin-bottom: 24px;
+  }
+
+  .trips-tabs > * {
+    min-width: 0;
+  }
+
+  .ft-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 330px;
+    padding: 38px 24px;
+    border: 1px dashed rgba(14, 26, 43, 0.16);
+    border-radius: fockis.$radius-lg;
+    background: rgba(255, 255, 255, 0.78);
+    text-align: center;
+  }
+
+  .ft-empty-state .ic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    margin-bottom: 16px;
+    border-radius: 50%;
+    background: fockis.$gold-100;
+    color: fockis.$gold-600;
+    font-size: 1.6rem;
+    line-height: 1;
+  }
+
+  .ft-empty-state h4 {
+    margin: 0 0 8px;
+    color: fockis.$text-on-light;
+    font-family: fockis.$font-display;
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .ft-empty-state p {
+    max-width: 520px;
+    margin: 0;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .ft-empty-state .btn {
+    margin-top: 20px;
+  }
+
+  .travel-spin {
+    animation: travel-my-trips-spin 1s linear infinite;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 42px;
+    padding: 9px 17px;
+    border-radius: fockis.$radius-pill;
+    font-family: fockis.$font-body;
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease,
+      box-shadow 160ms ease,
+      transform 160ms ease;
+  }
+
+  .btn svg {
+    width: 15px;
+    height: 15px;
+    flex: 0 0 auto;
+  }
+
+  .btn-outline {
+    border: 1px solid rgba(14, 35, 66, 0.24);
+    background: #ffffff;
+    color: fockis.$navy-800;
+  }
+
+  .btn-outline:hover {
+    border-color: fockis.$gold-600;
+    color: fockis.$gold-600;
+    box-shadow: fockis.$shadow-card;
+    transform: translateY(-1px);
+  }
+
+  .btn-ghost-dark {
+    border: 1px solid rgba(14, 35, 66, 0.18);
+    background: fockis.$navy-800;
+    color: #ffffff;
+  }
+
+  .btn-ghost-dark:hover {
+    background: fockis.$navy-700;
+    box-shadow: fockis.$shadow-cta;
+    transform: translateY(-1px);
+  }
+
+  .travel-trips-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding-bottom: 48px;
+  }
+
+  .trip-card {
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    border: 1px solid rgba(14, 26, 43, 0.1);
+    border-radius: fockis.$radius-lg;
+    background: #ffffff;
+    box-shadow: fockis.$shadow-card;
+    transition:
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      transform 180ms ease;
+  }
+
+  .trip-card:hover {
+    border-color: rgba(fockis.$gold-600, 0.28);
+    box-shadow: fockis.$shadow-card-hover;
+    transform: translateY(-2px);
+  }
+
+  .trip-card--completed {
+    border-color: rgba(fockis.$success, 0.14);
+  }
+
+  .trip-card--cancelled {
+    border-color: rgba(fockis.$danger, 0.16);
+  }
+
+  .trip-card > div:first-child {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .trip-card .eyebrow {
+    margin-bottom: 6px;
+  }
+
+  .trip-card h3 {
+    margin: 0;
+    color: fockis.$text-on-light;
+    font-family: fockis.$font-display;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .dates {
+    display: flex;
+    align-items: center;
+    margin-top: 9px;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .dates svg {
+    flex: 0 0 auto;
+    margin-right: 5px;
+  }
+
+  .trip-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-height: 30px;
+    padding: 6px 11px;
+    border-radius: fockis.$radius-pill;
+    background: rgba(14, 35, 66, 0.07);
+    color: fockis.$navy-800;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    text-transform: capitalize;
+  }
+
+  .trip-status--upcoming {
+    background: rgba(fockis.$gold-500, 0.16);
+    color: fockis.$gold-600;
+  }
+
+  .trip-status--completed {
+    background: rgba(fockis.$success, 0.12);
+    color: fockis.$success;
+  }
+
+  .trip-status--cancelled {
+    background: rgba(fockis.$danger, 0.1);
+    color: fockis.$danger;
+  }
+
+  .trip-card > p {
+    max-width: 700px;
+    margin: 14px 0 0;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.9rem;
+    line-height: 1.65;
+  }
+
+  .trip-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 17px;
+  }
+
+  .trip-item {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 6px 10px;
+    border: 1px solid rgba(14, 35, 66, 0.1);
+    border-radius: fockis.$radius-pill;
+    background: fockis.$cream-100;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .trip-card .btn-ghost-dark {
+    align-self: flex-start;
+    margin-top: 16px;
+  }
+
+  @include fockis.bp-down(fockis.$bp-md) {
+    .tight {
+      padding-block: 28px 24px;
+    }
+
+    .trip-card {
+      padding: 20px;
+    }
+
+    .trip-card > div:first-child {
+      gap: 14px;
+    }
+  }
+
+  @include fockis.bp-down(fockis.$bp-sm) {
+    .wrap {
+      width: min(100% - 30px, fockis.$max-width);
+    }
+
+    .tight {
+      padding-block: 24px 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+    }
+
+    .wrap > p {
+      font-size: 0.88rem;
+    }
+
+    .trips-tabs {
+      margin-bottom: 18px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .ft-empty-state {
+      min-height: 290px;
+      padding: 30px 18px;
+    }
+
+    .ft-empty-state h4 {
+      font-size: 1.3rem;
+    }
+
+    .trip-card {
+      padding: 18px;
+      border-radius: fockis.$radius-md;
+    }
+
+    .trip-card > div:first-child {
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .trip-status {
+      align-self: flex-start;
+    }
+
+    .trip-card h3 {
+      font-size: 1.15rem;
+    }
+
+    .dates {
+      font-size: 0.78rem;
+    }
+
+    .trip-card .btn {
+      width: 100%;
+    }
+
+    .travel-trips-list {
+      gap: 14px;
+      padding-bottom: 32px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .travel-spin {
+      animation: none;
+    }
+
+    .trip-card,
+    .btn {
+      transition: none;
+    }
+  }
+}
+
+@keyframes travel-my-trips-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

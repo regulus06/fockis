@@ -1,0 +1,41 @@
+@use '../tokens' as t;
+@use '../mixins' as m;
+
+.fm-toolbar {
+  height: 84px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-top: 1px solid t.$void-700;
+  background: t.$void-900;
+
+  &__group { display: flex; align-items: center; gap: 6px; position: relative; }
+  &__reactions-wrap { position: relative; }
+
+  @include m.mobile {
+    height: 68px;
+    padding: 0 6px;
+    &__group { gap: 2px; }
+  }
+}
+
+.fm-leave-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: t.$red-500;
+  color: white;
+  border: none;
+  border-radius: t.$radius-md;
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: t.$fs-sm;
+  margin-left: 10px;
+  transition: background t.$dur-fast t.$ease-out;
+
+  &:hover { background: t.$red-600; }
+
+  @include m.mobile { padding: 10px 12px; span { display: none; } }
+}

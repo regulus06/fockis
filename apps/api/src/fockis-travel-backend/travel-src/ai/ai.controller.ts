@@ -1,0 +1,1 @@
+import {Body,Controller,Post} from '@nestjs/common'; import {ApiTags} from '@nestjs/swagger'; import {AiService} from './ai.service'; @ApiTags('travel-ai') @Controller('travel/ai') export class AiController{constructor(private service:AiService){} @Post('plan') plan(@Body('prompt')prompt:string){return this.service.plan(prompt||'');}}

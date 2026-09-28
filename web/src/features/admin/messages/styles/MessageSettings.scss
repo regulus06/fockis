@@ -1,0 +1,618 @@
+/* ============================================================
+   FOCKIS ADMIN — MESSAGE SETTINGS
+   File:
+   web/src/features/admin/messages/styles/MessageSettings.scss
+   ============================================================ */
+
+.message-admin-settings-page {
+  width: 100%;
+  min-height: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+  background: #faf7f0;
+  color: #142331;
+}
+
+/* ============================================================
+   LOADING
+   ============================================================ */
+
+.message-admin-settings-page__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+  padding: 40px 24px;
+  box-sizing: border-box;
+  color: #5c6b78;
+  font-size: 15px;
+  text-align: center;
+}
+
+.message-admin-settings-page__loading::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #eda934;
+  border-radius: 50%;
+  animation: message-settings-spin 0.75s linear infinite;
+}
+
+@keyframes message-settings-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================
+   ALERT
+   ============================================================ */
+
+.message-admin-alert {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto 20px;
+  padding: 14px 16px;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.message-admin-alert--error {
+  color: #991b1b;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+/* ============================================================
+   MESSAGE SETTINGS FORM
+   ============================================================ */
+
+.message-settings-form {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+/* ============================================================
+   FORM HEADER
+   ============================================================ */
+
+.message-settings-form__header {
+  margin-bottom: 26px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eef0f3;
+}
+
+.message-settings-form__title {
+  font-family: Georgia, 'Times New Roman', serif;
+  margin: 0;
+  color: #142331;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.message-settings-form__description {
+  max-width: 720px;
+  margin: 7px 0 0;
+  color: #5c6b78;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   FORM SECTIONS
+   ============================================================ */
+
+.message-settings-section {
+  margin-bottom: 24px;
+  padding: 20px;
+  box-sizing: border-box;
+  background: #f7f4ec;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.message-settings-section:last-child {
+  margin-bottom: 0;
+}
+
+.message-settings-section__header {
+  margin-bottom: 18px;
+}
+
+.message-settings-section__title {
+  font-family: Georgia, 'Times New Roman', serif;
+  margin: 0;
+  color: #142331;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.message-settings-section__description {
+  margin: 5px 0 0;
+  color: #5c6b78;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   FORM GRID
+   ============================================================ */
+
+.message-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.message-settings-grid--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.message-settings-grid--full {
+  grid-template-columns: 1fr;
+}
+
+/* ============================================================
+   FIELD
+   ============================================================ */
+
+.message-settings-field {
+  min-width: 0;
+}
+
+.message-settings-field--full {
+  grid-column: 1 / -1;
+}
+
+.message-settings-field label {
+  display: block;
+  margin-bottom: 7px;
+  color: #334a5c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.message-settings-field__hint {
+  margin-top: 6px;
+  color: #5c6b78;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
+
+.message-settings-form input[type='text'],
+.message-settings-form input[type='number'],
+.message-settings-form input[type='url'],
+.message-settings-form select,
+.message-settings-form textarea,
+.message-settings-form input:not([type='checkbox']):not([type='radio']) {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  color: #142331;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 9px;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.message-settings-form textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.message-settings-form input::placeholder,
+.message-settings-form textarea::placeholder {
+  color: #93a1ac;
+}
+
+.message-settings-form input:hover,
+.message-settings-form select:hover,
+.message-settings-form textarea:hover {
+  border-color: #93a1ac;
+}
+
+.message-settings-form input:focus,
+.message-settings-form select:focus,
+.message-settings-form textarea:focus {
+  border-color: #eda934;
+  box-shadow: 0 0 0 3px rgba(237, 169, 52, 0.15);
+}
+
+.message-settings-form input:disabled,
+.message-settings-form select:disabled,
+.message-settings-form textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  background: #f3f4f6;
+}
+
+/* ============================================================
+   NUMBER INPUTS
+   ============================================================ */
+
+.message-settings-form input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.message-settings-form input[type='number']::-webkit-inner-spin-button,
+.message-settings-form input[type='number']::-webkit-outer-spin-button {
+  margin: 0;
+}
+
+/* ============================================================
+   TOGGLE LIST
+   ============================================================ */
+
+.message-settings-toggle-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.message-settings-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 62px;
+  padding: 13px 15px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.message-settings-toggle:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+.message-settings-toggle__content {
+  min-width: 0;
+}
+
+.message-settings-toggle__label {
+  display: block;
+  margin: 0;
+  color: #142331;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.message-settings-toggle__description {
+  margin: 3px 0 0;
+  color: #5c6b78;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* ============================================================
+   CHECKBOXES
+   ============================================================ */
+
+.message-settings-form input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  margin: 0;
+  accent-color: #eda934;
+  cursor: pointer;
+}
+
+/* ============================================================
+   CUSTOM SWITCH
+   ============================================================ */
+
+.message-settings-switch {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 26px;
+}
+
+.message-settings-switch input {
+  position: absolute;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0 !important;
+}
+
+.message-settings-switch__track {
+  position: absolute;
+  inset: 0;
+  background: #d1d5db;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+}
+
+.message-settings-switch__track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.18s ease;
+}
+
+.message-settings-switch input:checked + .message-settings-switch__track {
+  background: #eda934;
+}
+
+.message-settings-switch
+  input:checked
+  + .message-settings-switch__track::after {
+  transform: translateX(20px);
+}
+
+.message-settings-switch
+  input:focus-visible
+  + .message-settings-switch__track {
+  outline: 3px solid rgba(237, 169, 52, 0.2);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   FORM ACTIONS
+   ============================================================ */
+
+.message-settings-form__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid #eef0f3;
+}
+
+.message-settings-form button {
+  min-height: 42px;
+  padding: 9px 18px;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.message-settings-form button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.message-settings-form button:focus-visible {
+  outline: 3px solid rgba(237, 169, 52, 0.2);
+  outline-offset: 2px;
+}
+
+.message-settings-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.message-settings-form button[type='submit'] {
+  color: #ffffff;
+  background: #eda934;
+  border-color: #eda934;
+  box-shadow: 0 2px 5px rgba(237, 169, 52, 0.2);
+}
+
+.message-settings-form button[type='submit']:hover:not(:disabled) {
+  background: #d99424;
+  border-color: #d99424;
+  box-shadow: 0 4px 10px rgba(237, 169, 52, 0.24);
+}
+
+/* ============================================================
+   SAVING STATE
+   ============================================================ */
+
+.message-settings-form__saving {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #5c6b78;
+  font-size: 13px;
+}
+
+.message-settings-form__saving::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border: 2px solid #d1d5db;
+  border-top-color: #eda934;
+  border-radius: 50%;
+  animation: message-settings-spin 0.7s linear infinite;
+}
+
+/* ============================================================
+   FORM ERROR / SUCCESS
+   ============================================================ */
+
+.message-settings-form__error {
+  margin-top: 8px;
+  color: #dc2626;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.message-settings-form__success {
+  margin-top: 12px;
+  color: #15803d;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ============================================================
+   GENERIC COMPATIBILITY SELECTORS
+   ============================================================ */
+
+.message-admin-settings-page .form-group {
+  margin-bottom: 18px;
+}
+
+.message-admin-settings-page .form-group:last-child {
+  margin-bottom: 0;
+}
+
+.message-admin-settings-page .form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.message-admin-settings-page .form-section {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: #f7f4ec;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.message-admin-settings-page .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 900px) {
+  .message-admin-settings-page {
+    padding: 20px;
+  }
+
+  .message-settings-grid--three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .message-admin-settings-page {
+    padding: 16px;
+  }
+
+  .message-settings-form {
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  .message-settings-grid,
+  .message-settings-grid--three,
+  .message-admin-settings-page .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .message-settings-field--full {
+    grid-column: auto;
+  }
+
+  .message-settings-toggle {
+    align-items: flex-start;
+  }
+
+  .message-settings-form__actions,
+  .message-admin-settings-page .form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .message-settings-form button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .message-admin-settings-page {
+    padding: 12px;
+  }
+
+  .message-settings-form {
+    padding: 15px;
+  }
+
+  .message-settings-section {
+    padding: 14px;
+  }
+
+  .message-settings-form__title {
+    font-size: 19px;
+  }
+
+  .message-settings-toggle {
+    padding: 12px;
+  }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .message-admin-settings-page__loading::before,
+  .message-settings-form__saving::before {
+    animation: none;
+  }
+
+  .message-settings-form input,
+  .message-settings-form select,
+  .message-settings-form textarea,
+  .message-settings-form button,
+  .message-settings-toggle,
+  .message-settings-switch__track,
+  .message-settings-switch__track::after {
+    transition: none;
+  }
+
+  .message-settings-form button:hover:not(:disabled) {
+    transform: none;
+  }
+}

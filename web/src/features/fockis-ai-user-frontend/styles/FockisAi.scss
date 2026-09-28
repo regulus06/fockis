@@ -1,0 +1,1040 @@
+$blue:#2563eb;
+$ink:#111827;
+$muted:#64748b;
+$line:#e5e7eb;
+
+.fai-page{
+  min-height:100vh;
+  display:flex;
+  background:#fff;
+  color:$ink;
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+
+.fai-sidebar{
+  width:292px;
+  flex:0 0 292px;
+  background:#f8fafc;
+  border-right:1px solid $line;
+  display:flex;
+  flex-direction:column;
+  z-index:20;
+}
+
+.fai-brand{
+  height:76px;
+  padding:0 18px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  border-bottom:1px solid $line;
+}
+
+.fai-brand>b{
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  border-radius:11px;
+  background:linear-gradient(145deg,$blue,#60a5fa);
+  color:#fff;
+  font-size:19px;
+}
+
+.fai-brand strong{
+  font-size:18px;
+}
+
+.fai-brand i{
+  color:$blue;
+  font-style:normal;
+  font-size:12px;
+}
+
+.fai-new{
+  border:0;
+  border-radius:11px;
+  background:$blue;
+  color:#fff;
+  font-weight:750;
+  cursor:pointer;
+  padding:11px 15px;
+}
+
+.fai-side-new{
+  margin:16px;
+}
+
+.fai-history{
+  flex:1;
+  overflow:auto;
+  padding:0 12px;
+}
+
+.fai-history>input{
+  width:100%;
+  box-sizing:border-box;
+  height:40px;
+  border:1px solid $line;
+  border-radius:10px;
+  padding:0 12px;
+  outline:0;
+}
+
+.fai-history>label{
+  display:block;
+  margin:20px 8px 8px;
+  color:$muted;
+  font-size:10px;
+  text-transform:uppercase;
+  font-weight:800;
+  letter-spacing:.1em;
+}
+
+.fai-chat-row{
+  display:flex;
+  border-radius:10px;
+}
+
+.fai-chat-row.active,
+.fai-chat-row:hover{
+  background:#eaf1ff;
+}
+
+.fai-chat-row>button:first-child{
+  min-width:0;
+  flex:1;
+  border:0;
+  background:transparent;
+  padding:10px;
+  text-align:left;
+  display:flex;
+  gap:9px;
+  cursor:pointer;
+}
+
+.fai-chat-row span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.fai-chat-row small{
+  display:block;
+  color:$muted;
+  font-size:10px;
+  margin-top:3px;
+}
+
+.fai-chat-row aside{
+  display:flex;
+  align-items:center;
+  opacity:0;
+}
+
+.fai-chat-row:hover aside,
+.fai-chat-row.active aside{
+  opacity:1;
+}
+
+.fai-chat-row aside button{
+  border:0;
+  background:transparent;
+  cursor:pointer;
+  color:$muted;
+}
+
+.fai-sidebar footer{
+  padding:14px;
+  border-top:1px solid $line;
+}
+
+.fai-sidebar footer>*{
+  display:block;
+}
+
+.fai-sidebar footer span{
+  font-size:11px;
+  color:$muted;
+  margin-top:4px;
+}
+
+.fai-sidebar footer small{
+  font-size:9px;
+  color:#94a3b8;
+  margin-top:9px;
+}
+
+.fai-main{
+  flex:1;
+  min-width:0;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  background:
+    radial-gradient(
+      circle at 50% -10%,
+      rgba(37,99,235,.08),
+      transparent 34rem
+    ),
+    #fff;
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.fai-header-row{
+  width:100%;
+  min-height:76px;
+
+  display:flex;
+  align-items:stretch;
+
+  border-bottom:1px solid $line;
+
+  background:rgba(255,255,255,.9);
+
+  backdrop-filter:blur(12px);
+
+  box-sizing:border-box;
+}
+
+/*
+ * AiChatHeader already has .fai-header styling.
+ * We allow it to occupy the main header area while
+ * the Vapi call button stays on the right.
+ */
+
+.fai-header-row .fai-header{
+  flex:1;
+  min-width:0;
+  border-bottom:0;
+}
+
+.fai-header{
+  height:76px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 28px;
+  background:rgba(255,255,255,.9);
+  backdrop-filter:blur(12px);
+}
+
+.fai-header-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.fai-header-title>span{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  background:$blue;
+  color:#fff;
+}
+
+.fai-header-title small{
+  display:block;
+  color:$muted;
+  font-size:10px;
+  margin-top:3px;
+}
+
+.fai-header-title i{
+  display:inline-block;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#22c55e;
+  margin-right:5px;
+}
+
+.fai-new em{
+  font-style:normal;
+}
+
+.fai-mobile{
+  display:none;
+}
+
+
+/* ============================================================
+   VAPI CALL BUTTON
+   ============================================================ */
+
+.fai-call-button{
+  flex:0 0 auto;
+
+  align-self:center;
+
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+
+  min-height:42px;
+
+  margin:0 18px 0 8px;
+  padding:0 16px;
+
+  border:0;
+  border-radius:12px;
+
+  background:$blue;
+  color:#fff;
+
+  font-size:13px;
+  font-weight:750;
+
+  cursor:pointer;
+
+  box-shadow:
+    0 6px 18px rgba(37,99,235,.22);
+
+  transition:
+    transform .16s ease,
+    box-shadow .16s ease,
+    background .16s ease,
+    opacity .16s ease;
+}
+
+.fai-call-button:hover{
+  transform:translateY(-1px);
+
+  box-shadow:
+    0 9px 25px rgba(37,99,235,.30);
+}
+
+.fai-call-button:active{
+  transform:translateY(0);
+}
+
+.fai-call-button:disabled{
+  cursor:wait;
+  opacity:.7;
+}
+
+.fai-call-button--connecting{
+  background:#64748b;
+  box-shadow:none;
+}
+
+.fai-call-button--active{
+  background:#dc2626;
+
+  box-shadow:
+    0 6px 18px rgba(220,38,38,.24);
+}
+
+.fai-call-button--active:hover{
+  box-shadow:
+    0 9px 25px rgba(220,38,38,.30);
+}
+
+.fai-call-button__icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.fai-call-button__label{
+  white-space:nowrap;
+}
+
+
+/* ============================================================
+   CHAT
+   ============================================================ */
+
+.fai-chat{
+  width:min(920px,calc(100% - 40px));
+  flex:1;
+  margin:auto;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+}
+
+.fai-welcome{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:60px 0 25px;
+}
+
+.fai-mark{
+  width:68px;
+  height:68px;
+  display:grid;
+  place-items:center;
+  border-radius:20px;
+  background:linear-gradient(145deg,$blue,#60a5fa);
+  color:#fff;
+  font-size:30px;
+  box-shadow:0 18px 45px rgba(37,99,235,.22);
+}
+
+.fai-welcome h1{
+  font-size:clamp(28px,4vw,42px);
+  letter-spacing:-.045em;
+  margin:20px 0 8px;
+}
+
+.fai-welcome>p{
+  margin:0;
+  color:$muted;
+}
+
+
+/* ============================================================
+   CALL CARD
+   ============================================================ */
+
+.fai-call-card{
+  width:min(700px,100%);
+
+  margin:26px auto 4px;
+
+  padding:14px 16px;
+
+  display:flex;
+  align-items:center;
+  gap:13px;
+
+  border:1px solid rgba(37,99,235,.15);
+  border-radius:15px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(37,99,235,.055),
+      rgba(96,165,250,.035)
+    );
+
+  box-sizing:border-box;
+
+  text-align:left;
+}
+
+.fai-call-card__icon{
+  width:44px;
+  height:44px;
+
+  flex:0 0 44px;
+
+  display:grid;
+  place-items:center;
+
+  border-radius:13px;
+
+  background:$blue;
+  color:#fff;
+
+  box-shadow:
+    0 8px 20px rgba(37,99,235,.18);
+}
+
+.fai-call-card__content{
+  min-width:0;
+  flex:1;
+
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+
+.fai-call-card__content strong{
+  font-size:14px;
+  font-weight:800;
+}
+
+.fai-call-card__content span{
+  color:$muted;
+  font-size:11px;
+  line-height:1.45;
+}
+
+.fai-call-card__button{
+  flex:0 0 auto;
+
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+
+  min-height:37px;
+
+  padding:0 13px;
+
+  border:0;
+  border-radius:9px;
+
+  background:$blue;
+  color:#fff;
+
+  font-size:11px;
+  font-weight:750;
+
+  cursor:pointer;
+
+  transition:
+    transform .16s ease,
+    opacity .16s ease,
+    background .16s ease;
+}
+
+.fai-call-card__button:hover{
+  transform:translateY(-1px);
+}
+
+.fai-call-card__button:disabled{
+  cursor:wait;
+  opacity:.65;
+}
+
+.fai-call-card__button--active{
+  background:#dc2626;
+}
+
+
+/* ============================================================
+   PROMPTS
+   ============================================================ */
+
+.fai-prompts{
+  width:100%;
+  margin-top:30px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+
+.fai-prompts button{
+  min-height:110px;
+  padding:15px;
+  text-align:left;
+  border:1px solid $line;
+  border-radius:14px;
+  background:#fff;
+  cursor:pointer;
+}
+
+.fai-prompts button:hover{
+  border-color:#b8cdfb;
+  box-shadow:0 10px 25px rgba(15,23,42,.07);
+}
+
+.fai-prompts b{
+  display:block;
+  color:$blue;
+  font-size:19px;
+}
+
+.fai-prompts strong{
+  display:block;
+  font-size:12px;
+  margin-top:8px;
+}
+
+.fai-prompts small{
+  display:block;
+  color:$muted;
+  font-size:10px;
+  margin-top:4px;
+}
+
+
+/* ============================================================
+   MESSAGES
+   ============================================================ */
+
+.fai-messages{
+  padding:30px 0 140px;
+  display:grid;
+  gap:23px;
+}
+
+.fai-message-row{
+  display:flex;
+  gap:10px;
+}
+
+.fai-message-row.user{
+  justify-content:flex-end;
+}
+
+.fai-avatar{
+  width:30px;
+  height:30px;
+  display:grid;
+  place-items:center;
+  border-radius:9px;
+  background:#eaf1ff;
+  color:$blue;
+}
+
+.fai-message-content{
+  max-width:min(760px,85%);
+}
+
+.fai-bubble{
+  padding:13px 15px;
+  border-radius:15px;
+  background:#f3f5f8;
+  line-height:1.65;
+  font-size:14px;
+}
+
+.user .fai-bubble{
+  background:$blue;
+  color:#fff;
+  border-bottom-right-radius:5px;
+}
+
+.fai-bubble.sending{
+  opacity:.6;
+}
+
+.fai-bubble.error{
+  background:#fff1f2;
+  color:#991b1b;
+}
+
+.fai-bubble small{
+  display:block;
+  font-size:9px;
+  text-transform:uppercase;
+  font-weight:800;
+  opacity:.6;
+  margin-bottom:4px;
+}
+
+.fai-tools{
+  display:flex;
+  gap:8px;
+  margin-top:4px;
+}
+
+.fai-tools button{
+  border:0;
+  background:transparent;
+  color:#94a3b8;
+  font-size:10px;
+  cursor:pointer;
+}
+
+
+/* ============================================================
+   ACTIVE CALL BAR
+   ============================================================ */
+
+.fai-active-call{
+  width:100%;
+
+  margin:0 auto;
+
+  padding:11px 13px;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+
+  border:1px solid rgba(37,99,235,.16);
+  border-radius:13px;
+
+  background:rgba(37,99,235,.055);
+
+  box-sizing:border-box;
+}
+
+.fai-active-call__info{
+  display:flex;
+  align-items:center;
+  gap:10px;
+
+  min-width:0;
+}
+
+.fai-active-call__info>div{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+
+.fai-active-call__info strong{
+  font-size:12px;
+  font-weight:750;
+}
+
+.fai-active-call__info span:not(.fai-active-call__dot){
+  color:$muted;
+  font-size:10px;
+}
+
+.fai-active-call__dot{
+  width:9px;
+  height:9px;
+
+  flex:0 0 9px;
+
+  border-radius:50%;
+
+  background:#2563eb;
+
+  box-shadow:
+    0 0 0 5px rgba(37,99,235,.10);
+
+  animation:fai-call-dot-pulse 1.3s ease-in-out infinite;
+}
+
+@keyframes fai-call-dot-pulse{
+  0%,
+  100%{
+    opacity:.55;
+    transform:scale(.85);
+  }
+
+  50%{
+    opacity:1;
+    transform:scale(1.1);
+  }
+}
+
+.fai-active-call__end{
+  flex:0 0 auto;
+
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+
+  min-height:34px;
+
+  padding:0 11px;
+
+  border:0;
+  border-radius:9px;
+
+  background:#dc2626;
+  color:#fff;
+
+  font-size:11px;
+  font-weight:750;
+
+  cursor:pointer;
+}
+
+.fai-active-call__end:hover{
+  background:#b91c1c;
+}
+
+
+/* ============================================================
+   COMPOSER
+   ============================================================ */
+
+.fai-composer-wrap{
+  width:min(920px,calc(100% - 40px));
+  margin:auto auto 0;
+  padding:12px 0 7px;
+  background:linear-gradient(to bottom,transparent,#fff 22%);
+}
+
+.fai-composer{
+  min-height:58px;
+  display:flex;
+  align-items:flex-end;
+  gap:7px;
+  padding:8px 8px 8px 16px;
+  border:1px solid #d8dee8;
+  border-radius:17px;
+  background:#fff;
+  box-shadow:0 12px 35px rgba(15,23,42,.07);
+}
+
+.fai-composer textarea{
+  flex:1;
+  min-height:40px;
+  border:0;
+  outline:0;
+  resize:none;
+  padding:10px 0;
+  font:inherit;
+}
+
+.fai-composer>button{
+  width:40px;
+  height:40px;
+  border:0;
+  border-radius:11px;
+  cursor:pointer;
+}
+
+.fai-composer>button:first-of-type{
+  background:#f1f5f9;
+}
+
+.fai-composer>button.active{
+  background:#fee2e2;
+  color:#dc2626;
+}
+
+.fai-send{
+  background:$blue;
+  color:#fff;
+  font-size:19px;
+}
+
+.fai-send:disabled{
+  opacity:.35;
+}
+
+.fai-hint,
+.fai-footer{
+  text-align:center;
+  color:#94a3b8;
+  font-size:9px;
+}
+
+.fai-hint{
+  padding-top:6px;
+}
+
+.fai-footer{
+  padding:4px 20px 14px;
+}
+
+
+/* ============================================================
+   VOICE PANEL
+   ============================================================ */
+
+.fai-voice{
+  width:100%;
+  max-width:700px;
+
+  margin-top:28px;
+
+  padding:13px 15px;
+
+  display:flex;
+  align-items:center;
+  gap:11px;
+
+  border:1px solid $line;
+  border-radius:14px;
+}
+
+.fai-voice>span{
+  width:40px;
+  height:40px;
+
+  display:grid;
+  place-items:center;
+
+  border-radius:50%;
+
+  background:#eaf1ff;
+  color:$blue;
+}
+
+.fai-voice div{
+  flex:1;
+}
+
+.fai-voice small{
+  display:block;
+  color:$muted;
+  font-size:10px;
+  margin-top:3px;
+}
+
+.fai-voice button{
+  border:0;
+  border-radius:8px;
+  padding:8px 11px;
+  background:#eaf1ff;
+  color:$blue;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.fai-voice.active{
+  border-color:#bfd3ff;
+}
+
+.fai-voice.active button{
+  background:#fee2e2;
+  color:#b91c1c;
+}
+
+
+/* ============================================================
+   ERROR
+   ============================================================ */
+
+.fai-error{
+  width:min(920px,calc(100% - 40px));
+  margin:10px auto 0;
+  padding:9px 12px;
+  border-radius:9px;
+  background:#fff1f2;
+  color:#991b1b;
+  font-size:11px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.fai-error button{
+  border:0;
+  background:#fff;
+  border-radius:6px;
+  padding:4px 8px;
+  color:inherit;
+  font-weight:700;
+}
+
+
+/* ============================================================
+   BACKDROP
+   ============================================================ */
+
+.fai-backdrop{
+  display:none;
+}
+
+
+/* ============================================================
+   TABLET
+   ============================================================ */
+
+@media(max-width:900px){
+
+  .fai-prompts{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media(max-width:720px){
+
+  .fai-mobile{
+    display:grid;
+    place-items:center;
+    border:0;
+    background:transparent;
+    font-size:18px;
+  }
+
+  .fai-sidebar{
+    position:fixed;
+    inset:0 auto 0 0;
+    width:min(88vw,320px);
+    transform:translateX(-105%);
+    transition:.2s;
+    box-shadow:15px 0 40px rgba(15,23,42,.16);
+  }
+
+  .fai-sidebar.open{
+    transform:translateX(0);
+  }
+
+  .fai-backdrop.show{
+    display:block;
+    position:fixed;
+    inset:0;
+    z-index:10;
+    background:rgba(15,23,42,.35);
+  }
+
+  .fai-header{
+    padding:0 14px;
+  }
+
+  .fai-header-row{
+    min-height:64px;
+  }
+
+  .fai-header-row .fai-header{
+    height:64px;
+  }
+
+  .fai-new em{
+    display:none;
+  }
+
+  .fai-call-button{
+    width:42px;
+    min-width:42px;
+    height:42px;
+
+    margin-left:4px;
+    margin-right:10px;
+
+    padding:0;
+
+    border-radius:11px;
+  }
+
+  .fai-call-button__label{
+    display:none;
+  }
+
+  .fai-chat,
+  .fai-composer-wrap,
+  .fai-error{
+    width:calc(100% - 24px);
+  }
+
+  .fai-prompts{
+    grid-template-columns:1fr;
+  }
+
+  .fai-prompts button{
+    min-height:75px;
+  }
+
+  .fai-message-content{
+    max-width:88%;
+  }
+
+  .fai-call-card{
+    width:100%;
+    flex-wrap:wrap;
+    align-items:flex-start;
+  }
+
+  .fai-call-card__content{
+    flex:1 1 calc(100% - 58px);
+  }
+
+  .fai-call-card__button{
+    width:100%;
+  }
+
+  .fai-active-call{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .fai-active-call__end{
+    width:100%;
+  }
+
+}

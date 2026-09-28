@@ -1,0 +1,2 @@
+import {Body,Controller,Post,UseGuards} from '@nestjs/common'; import {ApiBearerAuth,ApiTags} from '@nestjs/swagger'; import {JwtAuthGuard} from '../common/auth.guard'; import {PaymentsService} from './payments.service';
+@ApiTags('payments') @ApiBearerAuth() @UseGuards(JwtAuthGuard) @Controller('travel/payments') export class PaymentsController{constructor(private service:PaymentsService){} @Post('checkout') checkout(@Body()d:any){return this.service.checkout(d);}}

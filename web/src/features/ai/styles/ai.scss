@@ -1,0 +1,67 @@
+@use "studio";
+@use "video";
+@use "music";
+@use "image";
+@use "design";
+@use "voice";
+
+.fockis-ai-page {
+  min-height: 100vh;
+  padding: 28px clamp(18px, 4vw, 64px) 70px;
+  background: #f8f8f7;
+  color: #171717;
+}
+
+.fockis-ai-page__header {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.fockis-ai-page__header a {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.fockis-ai-page__hero {
+  max-width: 1000px;
+  margin: 72px auto 32px;
+}
+
+.fockis-ai-page__hero h1 {
+  font-size: clamp(40px, 7vw, 78px);
+  line-height: 0.98;
+  margin: 10px 0 18px;
+  letter-spacing: -0.045em;
+}
+
+.fockis-ai-page__hero p {
+  max-width: 700px;
+  color: #666;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.fockis-ai-page > .fockis-ai-generator,
+.fockis-ai-page > .fockis-ai-history__grid {
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.fockis-ai-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.fockis-ai-section-heading h2 {
+  margin: 5px 0 0;
+  font-size: 28px;
+}

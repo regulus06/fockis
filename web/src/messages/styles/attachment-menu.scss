@@ -1,0 +1,43 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+.attachment-menu {
+  position: absolute;
+  bottom: 52px;
+  left: 0;
+  background: v.$color-bg-panel;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-md;
+  box-shadow: v.$shadow-lg;
+  padding: v.$space-3;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: v.$space-2;
+  min-width: 200px;
+  animation: fockis-scale-in 0.15s ease;
+  z-index: 20;
+}
+
+.attachment-menu__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: v.$space-3;
+  border-radius: v.$radius-sm;
+  font-size: v.$font-size-xs;
+  color: v.$color-text-secondary;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: v.$color-bg-hover;
+  }
+}
+
+.attachment-menu__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  color: #fff;
+  @include m.flex-center;
+}

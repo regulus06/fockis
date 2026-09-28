@@ -1,0 +1,102 @@
+@use './tokens' as *;
+
+.topnav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+
+.topnav-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: linear-gradient(155deg, var(--navy-900), var(--blue-600));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 16px;
+  box-shadow: var(--shadow-sm);
+
+  &.sm {
+    width: 26px;
+    height: 26px;
+    font-size: 13px;
+  }
+}
+
+.brand-name {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--navy-900);
+  letter-spacing: 0.01em;
+
+  &.sm {
+    font-size: 15px;
+  }
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted-2);
+  padding-left: 14px;
+  border-left: 1px solid var(--border);
+
+  a {
+    color: var(--muted-2);
+
+    &:hover {
+      color: var(--blue-600);
+    }
+  }
+
+  .sep {
+    color: var(--border-strong);
+  }
+
+  .current {
+    color: var(--navy-800);
+    font-weight: 600;
+  }
+
+  @media (max-width: $bp-mobile) {
+    display: none;
+  }
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

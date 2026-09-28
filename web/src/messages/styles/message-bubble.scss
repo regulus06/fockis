@@ -1,0 +1,127 @@
+.message-bubble-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 2px 0;
+  position: relative;
+
+  &.is-own {
+    flex-direction: row-reverse;
+  }
+}
+
+.message-bubble-row__avatar,
+.message-bubble-row__avatar-spacer {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+}
+
+.message-bubble-row__avatar {
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--fk-navy-900);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.message-bubble-row__content {
+  display: flex;
+  flex-direction: column;
+  max-width: 68%;
+  min-width: 0;
+  position: relative;
+}
+
+.message-bubble-row.is-own .message-bubble-row__content {
+  align-items: flex-end;
+}
+
+/* ============================================================================
+   BUBBLE
+============================================================================ */
+
+.message-bubble {
+  padding: 9px 13px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.4;
+  position: relative;
+  word-break: break-word;
+}
+
+.message-bubble.is-other {
+  background: var(--fk-white);
+  border: 1px solid var(--fk-border);
+  color: var(--fk-ink);
+  border-bottom-left-radius: 4px;
+}
+
+.message-bubble.is-own {
+  background: var(--fk-navy-900);
+  color: var(--fk-white);
+  border-bottom-right-radius: 4px;
+}
+
+.message-bubble.has-tail.is-other {
+  border-bottom-left-radius: 4px;
+}
+
+.message-bubble.has-tail.is-own {
+  border-bottom-right-radius: 4px;
+}
+
+.message-bubble--deleted {
+  background: var(--fk-canvas);
+  color: var(--fk-muted);
+  font-style: italic;
+  border: 1px dashed var(--fk-border);
+}
+
+.message-bubble__text {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* ============================================================================
+   META (edited / starred / time / status)
+============================================================================ */
+
+.message-bubble__meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.message-bubble.is-other .message-bubble__meta {
+  color: var(--fk-muted);
+}
+
+.message-bubble.is-own .message-bubble__meta {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.message-bubble__edited {
+  font-style: italic;
+}
+
+.message-bubble__starred {
+  color: var(--fk-gold-500);
+}
+
+.message-bubble.is-own .message-bubble__starred {
+  color: var(--fk-gold-500);
+}
+
+.message-bubble__time {
+  white-space: nowrap;
+}

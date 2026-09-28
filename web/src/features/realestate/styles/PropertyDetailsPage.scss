@@ -1,0 +1,743 @@
+.pd-page {
+  --pd-ink: #16211d;
+  --pd-ink-soft: #53615b;
+  --pd-paper: #f5f6f2;
+  --pd-line: #e2e6df;
+  --pd-line-strong: #cbd2ca;
+  --pd-green: #1f6f5c;
+  --pd-green-dark: #123f34;
+  --pd-green-light: #e7f0eb;
+  --pd-gold: #b8863c;
+  --pd-gold-light: #f6eedf;
+  --pd-red: #c5573d;
+  --pd-red-light: #fdf1ef;
+
+  min-height: 100vh;
+  background: var(--pd-paper);
+  color: var(--pd-ink) !important;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.pd-page * {
+  box-sizing: border-box;
+}
+
+.pd-page button,
+.pd-page input,
+.pd-page select,
+.pd-page textarea {
+  font: inherit;
+}
+
+.pd-page button {
+  cursor: pointer;
+}
+
+.pd-page h1,
+.pd-page h2,
+.pd-page h3 {
+  margin: 0;
+  letter-spacing: -0.025em;
+  color: var(--pd-ink) !important;
+}
+
+.pd-container {
+  width: min(1400px, calc(100% - 48px));
+  margin: 0 auto;
+  padding-bottom: 60px;
+}
+
+/* ---------- loading / empty ---------- */
+
+.pd-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 60vh;
+  color: var(--pd-ink-soft) !important;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pd-loading-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--pd-line);
+  border-top-color: var(--pd-green);
+  border-radius: 50%;
+  animation: pd-spin 0.7s linear infinite;
+}
+
+@keyframes pd-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pd-empty {
+  display: grid;
+  justify-items: center;
+  padding: 100px 20px;
+  text-align: center;
+}
+
+.pd-empty h2 {
+  font-family: Georgia, serif;
+  font-size: 24px;
+}
+
+.pd-alert {
+  padding: 12px 16px;
+  border-radius: 11px;
+}
+
+.pd-alert--error {
+  background: var(--pd-red-light);
+  border: 1px solid #f5c6bd;
+  color: #8a3323 !important;
+}
+
+.pd-alert--error p {
+  color: #8a3323 !important;
+}
+
+/* ---------- top bar ---------- */
+
+.pd-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.pd-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--pd-ink-soft) !important;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.pd-back:hover {
+  color: var(--pd-green-dark) !important;
+}
+
+/* ---------- gallery ---------- */
+
+.pd-gallery {
+  margin-top: 20px;
+}
+
+.pd-gallery__main {
+  position: relative;
+  height: min(580px, 55vw);
+  overflow: hidden;
+  border-radius: 20px;
+  background: #dce4dd;
+}
+
+.pd-gallery__main img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pd-gallery__nav {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--pd-ink) !important;
+}
+
+.pd-gallery__nav--left {
+  left: 15px;
+}
+
+.pd-gallery__nav--right {
+  right: 15px;
+}
+
+.pd-gallery__count,
+.pd-gallery__tour {
+  position: absolute;
+  bottom: 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 9px;
+  padding: 7px 10px;
+  background: rgba(20, 30, 25, 0.75);
+  color: white !important;
+  font-size: 11px;
+}
+
+.pd-gallery__count {
+  left: 15px;
+}
+
+.pd-gallery__tour {
+  right: 15px;
+}
+
+.pd-gallery__thumbs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-top: 10px;
+}
+
+.pd-gallery__thumbs button {
+  width: 86px;
+  height: 62px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: 9px;
+  padding: 0;
+}
+
+.pd-gallery__thumbs button.is-active {
+  border-color: var(--pd-green);
+}
+
+.pd-gallery__thumbs img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---------- layout ---------- */
+
+.pd-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 350px;
+  gap: 32px;
+  padding: 35px 0 0;
+}
+
+/* ---------- header ---------- */
+
+.pd-header {
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--pd-line);
+}
+
+.pd-header h1 {
+  margin-top: 15px;
+  font-family: Georgia, serif;
+  font-size: clamp(32px, 4vw, 48px);
+}
+
+.pd-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: max-content;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: white;
+  color: var(--pd-ink) !important;
+  font-size: 11px;
+  font-weight: 800;
+  margin-right: 6px;
+}
+
+.pd-badge--sale {
+  background: var(--pd-green-light);
+  color: var(--pd-green-dark) !important;
+}
+
+.pd-badge--rent {
+  background: var(--pd-gold-light);
+  color: var(--pd-gold) !important;
+}
+
+.pd-badge--verified {
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.pd-address {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  color: var(--pd-ink-soft) !important;
+}
+
+.pd-price {
+  display: block;
+  margin-top: 14px;
+  font-family: Georgia, serif;
+  font-size: 30px;
+  color: var(--pd-ink) !important;
+}
+
+.pd-price small {
+  margin-left: 5px;
+  font-family: Inter, sans-serif;
+  color: var(--pd-ink-soft) !important;
+  font-size: 14px;
+}
+
+.pd-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 18px;
+}
+
+.pd-stats span {
+  border: 1px solid var(--pd-line);
+  border-radius: 9px;
+  padding: 8px 11px;
+  background: white;
+  color: var(--pd-ink-soft) !important;
+  font-size: 12px;
+}
+
+.pd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.pd-btn-primary,
+.pd-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 11px;
+  padding: 12px 18px;
+  font-weight: 800;
+  font-size: 13.5px;
+}
+
+.pd-btn-primary {
+  border: 0;
+  background: var(--pd-green);
+  color: white !important;
+}
+
+.pd-btn-primary:hover {
+  background: var(--pd-green-dark);
+}
+
+.pd-btn-secondary {
+  border: 1px solid var(--pd-line);
+  background: white;
+  color: var(--pd-ink) !important;
+}
+
+.pd-btn-secondary:hover {
+  border-color: var(--pd-green);
+  color: var(--pd-green-dark) !important;
+}
+
+.pd-btn-secondary.is-saved {
+  border-color: var(--pd-red);
+  background: var(--pd-red-light);
+  color: var(--pd-red) !important;
+}
+
+/* ---------- sections ---------- */
+
+.pd-section {
+  padding: 28px 0;
+  border-bottom: 1px solid var(--pd-line);
+}
+
+.pd-section h2 {
+  margin-bottom: 13px;
+  font-family: Georgia, serif;
+  font-size: 25px;
+}
+
+.pd-section > p {
+  color: var(--pd-ink-soft) !important;
+  line-height: 1.8;
+}
+
+.pd-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.pd-feature {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--pd-line);
+  border-radius: 10px;
+  padding: 12px;
+  background: white;
+  font-size: 13px;
+  color: var(--pd-ink) !important;
+}
+
+.pd-feature svg {
+  color: var(--pd-green);
+  flex: 0 0 auto;
+}
+
+.pd-spec-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.pd-spec-grid > div {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--pd-line);
+  border-radius: 11px;
+  padding: 13px;
+  background: white;
+}
+
+.pd-spec-icon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--pd-ink-soft) !important;
+  font-size: 11px;
+}
+
+.pd-spec-icon svg {
+  color: var(--pd-green);
+  flex: 0 0 auto;
+}
+
+.pd-spec-grid strong {
+  font-size: 13px;
+  color: var(--pd-ink) !important;
+}
+
+.pd-location-map {
+  display: grid;
+  place-items: center;
+  min-height: 280px;
+  gap: 8px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #dce5dc, #eef0e9);
+  color: var(--pd-green-dark) !important;
+}
+
+/* ---------- mortgage ---------- */
+
+.pd-mortgage {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid var(--pd-line);
+  border-radius: 15px;
+  background: white;
+}
+
+.pd-mortgage__inputs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.pd-mortgage label {
+  display: grid;
+  gap: 6px;
+}
+
+.pd-mortgage label span {
+  color: var(--pd-ink-soft) !important;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pd-mortgage input,
+.pd-mortgage select {
+  width: 100%;
+  border: 1px solid var(--pd-line);
+  border-radius: 9px;
+  padding: 11px;
+  outline: none;
+  background: white !important;
+  color: var(--pd-ink) !important;
+}
+
+.pd-mortgage__result {
+  display: grid;
+  align-content: center;
+  border-radius: 13px;
+  padding: 20px;
+  background: var(--pd-green-dark);
+  color: white !important;
+}
+
+.pd-mortgage__result span,
+.pd-mortgage__result small {
+  color: #bdd2c8 !important;
+  font-size: 11px;
+}
+
+.pd-mortgage__result strong {
+  margin: 7px 0;
+  font-family: Georgia, serif;
+  font-size: 30px;
+  color: white !important;
+}
+
+.pd-mortgage__breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pd-mortgage__breakdown div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #bdd2c8 !important;
+}
+
+/* ---------- sidebar / agent card ---------- */
+
+.pd-agent-card,
+.pd-social-card {
+  position: sticky;
+  top: 20px;
+  border: 1px solid var(--pd-line);
+  border-radius: 17px;
+  padding: 20px;
+  background: white;
+  box-shadow: 0 10px 30px rgba(20, 42, 34, 0.05);
+}
+
+.pd-agent-card__top {
+  display: flex;
+  gap: 13px;
+}
+
+.pd-agent-avatar {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--pd-green-light);
+  color: var(--pd-green-dark) !important;
+  font-weight: 900;
+}
+
+.pd-agent-card h3 {
+  font-size: 17px;
+}
+
+.pd-agent-card p {
+  margin: 4px 0;
+  color: var(--pd-ink-soft) !important;
+  font-size: 12px;
+}
+
+.pd-agent-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--pd-green) !important;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pd-agent-response {
+  margin: 18px 0;
+  padding: 10px;
+  border-radius: 9px;
+  background: var(--pd-green-light);
+  color: var(--pd-green-dark) !important;
+}
+
+.pd-agent-buttons {
+  display: grid;
+  gap: 8px;
+}
+
+.pd-agent-buttons button,
+.pd-agent-buttons a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  border: 1px solid var(--pd-line);
+  border-radius: 10px;
+  padding: 11px;
+  background: white;
+  color: var(--pd-ink) !important;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.pd-agent-buttons .primary {
+  border-color: var(--pd-green);
+  background: var(--pd-green);
+  color: white !important;
+}
+
+.pd-social-card {
+  position: static;
+  margin-top: 15px;
+}
+
+.pd-social-card h3 {
+  margin-bottom: 12px;
+}
+
+.pd-social-card button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  border: 0;
+  padding: 10px 0;
+  background: transparent;
+  color: var(--pd-ink-soft) !important;
+  font-size: 12px;
+  text-align: left;
+}
+
+/* ---------- modals (contact / tour) ---------- */
+
+.pd-modal-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(8, 22, 17, 0.52);
+}
+
+.pd-modal {
+  position: relative;
+  width: min(500px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  border-radius: 18px;
+  padding: 25px;
+  background: white;
+}
+
+.pd-modal__close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  border: 0;
+  background: transparent;
+  color: var(--pd-ink) !important;
+}
+
+.pd-modal h2 {
+  font-family: Georgia, serif;
+  font-size: 27px;
+}
+
+.pd-modal__subtitle {
+  color: var(--pd-ink-soft) !important;
+}
+
+.pd-modal form {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.pd-modal label {
+  display: grid;
+  gap: 6px;
+}
+
+.pd-modal label span {
+  color: var(--pd-ink-soft) !important;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pd-modal input,
+.pd-modal textarea {
+  width: 100%;
+  border: 1px solid var(--pd-line);
+  border-radius: 9px;
+  padding: 11px;
+  outline: none;
+  background: white !important;
+  color: var(--pd-ink) !important;
+}
+
+.pd-modal__success {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 30px 10px;
+  text-align: center;
+}
+
+.pd-modal__success svg {
+  color: var(--pd-green);
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 1000px) {
+  .pd-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .pd-agent-card {
+    position: static;
+  }
+
+  .pd-mortgage {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .pd-container {
+    width: min(100% - 24px, 1400px);
+  }
+
+  .pd-feature-grid,
+  .pd-spec-grid,
+  .pd-mortgage__inputs {
+    grid-template-columns: 1fr;
+  }
+
+  .pd-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pd-actions .pd-btn-primary {
+    grid-column: 1 / -1;
+  }
+
+  .pd-gallery__main {
+    height: 65vw;
+  }
+}

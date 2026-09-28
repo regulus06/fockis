@@ -1,0 +1,428 @@
+@use "./_fockis-tokens" as fockis;
+
+.travel-sign-in-page {
+  min-height: calc(100vh - 72px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  background:
+    radial-gradient(
+      circle at 15% 15%,
+      rgba(fockis.$gold-500, 0.08),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 85% 85%,
+      rgba(fockis.$teal-500, 0.07),
+      transparent 32%
+    ),
+    fockis.$cream-50;
+  color: fockis.$text-on-light;
+
+  &__card {
+    width: min(100%, 440px);
+    padding: 34px 34px 28px;
+    border: 1px solid rgba(14, 26, 43, 0.1);
+    border-radius: fockis.$radius-lg;
+    background: #ffffff;
+    box-shadow:
+      0 22px 55px rgba(10, 24, 48, 0.1),
+      0 4px 14px rgba(10, 24, 48, 0.05);
+  }
+
+  &__header {
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  &__header .logo {
+    align-items: center;
+    gap: 6px;
+    color: fockis.$navy-900;
+    font-family: fockis.$font-display;
+    font-size: 1.55rem;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+  }
+
+  &__header .logo:hover {
+    color: fockis.$navy-700;
+  }
+
+  &__header .logo small {
+    align-self: flex-end;
+    margin-bottom: 1px;
+    color: fockis.$gold-600;
+    font-family: fockis.$font-body;
+    font-size: 0.48rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+  }
+
+  &__header .logo-mark {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    border-radius: 4px 4px 4px 1px;
+    background: fockis.$gold-500;
+    box-shadow:
+      5px -4px 0 rgba(fockis.$gold-500, 0.35),
+      9px -7px 0 rgba(fockis.$gold-500, 0.15);
+  }
+
+  &__header h1 {
+    margin: 18px 0 0 !important;
+    color: fockis.$text-on-light !important;
+    font-family: fockis.$font-display;
+    font-size: 1.55rem !important;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  &__header p {
+    max-width: 350px;
+    margin: 6px auto 0 !important;
+    color: fockis.$text-on-light-muted !important;
+    font-family: fockis.$font-body;
+    font-size: 0.84rem !important;
+    line-height: 1.55;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .ft-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .ft-field label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: fockis.$text-on-light;
+    font-size: 0.76rem;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .ft-field label svg {
+    color: fockis.$teal-500;
+    flex: 0 0 auto;
+  }
+
+  .ft-field input {
+    width: 100%;
+    min-height: 45px;
+    box-sizing: border-box;
+    padding: 10px 13px;
+    border: 1px solid rgba(14, 26, 43, 0.16);
+    border-radius: fockis.$radius-md;
+    outline: none;
+    background: #ffffff;
+    color: fockis.$text-on-light;
+    font-family: fockis.$font-body;
+    font-size: 0.84rem;
+    line-height: 1.4;
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease,
+      background 160ms ease;
+  }
+
+  .ft-field input::placeholder {
+    color: rgba(91, 107, 129, 0.68);
+  }
+
+  .ft-field input:hover {
+    border-color: rgba(14, 35, 66, 0.27);
+  }
+
+  .ft-field input:focus {
+    border-color: fockis.$teal-500;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(fockis.$teal-500, 0.1);
+  }
+
+  .ft-field input[aria-invalid="true"] {
+    border-color: rgba(fockis.$danger, 0.65);
+  }
+
+  .ft-field input[aria-invalid="true"]:focus {
+    box-shadow: 0 0 0 3px rgba(fockis.$danger, 0.08);
+  }
+
+  .ft-field > div {
+    color: fockis.$text-on-light-muted !important;
+    font-size: 0.71rem !important;
+    line-height: 1.5 !important;
+  }
+
+  .ft-field > div strong {
+    color: fockis.$text-on-light;
+    font-weight: 700;
+  }
+
+  .ft-field > div[style] {
+    position: relative;
+  }
+
+  .ft-field > div > button {
+    position: absolute !important;
+    top: 50% !important;
+    right: 8px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 4px !important;
+    border: 0 !important;
+    border-radius: 8px;
+    background: transparent !important;
+    color: fockis.$text-on-light-muted !important;
+    cursor: pointer;
+    transform: translateY(-50%) !important;
+    transition:
+      background 160ms ease,
+      color 160ms ease;
+  }
+
+  .ft-field > div > button:hover {
+    background: rgba(14, 35, 66, 0.06) !important;
+    color: fockis.$navy-800 !important;
+  }
+
+  .ft-field > div > button:focus-visible {
+    outline: 2px solid fockis.$teal-500;
+    outline-offset: 2px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: -2px;
+  }
+
+  .ft-checkbox-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .ft-checkbox-row input {
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    accent-color: fockis.$teal-500;
+    cursor: pointer;
+  }
+
+  .section-link {
+    color: fockis.$teal-500;
+    font-size: 0.76rem;
+    font-weight: 750;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .section-link:hover {
+    color: fockis.$navy-800;
+    text-decoration: underline;
+  }
+
+  .btn-block {
+    width: 100%;
+  }
+
+  form > .btn-primary {
+    min-height: 46px;
+    margin-top: 2px;
+    border: 1px solid fockis.$navy-800;
+    border-radius: fockis.$radius-pill;
+    background: fockis.$navy-800;
+    color: #ffffff;
+    font-family: fockis.$font-body;
+    font-size: 0.84rem;
+    font-weight: 850;
+    cursor: pointer;
+    transition:
+      background 160ms ease,
+      border-color 160ms ease,
+      box-shadow 160ms ease,
+      transform 160ms ease;
+  }
+
+  form > .btn-primary:hover:not(:disabled) {
+    border-color: fockis.$navy-900;
+    background: fockis.$navy-900;
+    box-shadow: 0 8px 20px rgba(10, 24, 48, 0.16);
+    transform: translateY(-1px);
+  }
+
+  form > .btn-primary:focus-visible {
+    outline: 2px solid fockis.$gold-500;
+    outline-offset: 3px;
+  }
+
+  form > .btn-primary:disabled {
+    opacity: 0.7 !important;
+    cursor: wait !important;
+  }
+
+  [role="alert"] {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin-bottom: 0 !important;
+    padding: 11px 13px !important;
+    border: 1px solid rgba(fockis.$danger, 0.22) !important;
+    border-radius: fockis.$radius-md !important;
+    background: rgba(fockis.$danger, 0.055) !important;
+    color: fockis.$danger !important;
+    font-size: 0.78rem !important;
+    line-height: 1.5 !important;
+  }
+
+  [role="alert"] svg {
+    flex: 0 0 auto;
+    margin-top: 1px;
+  }
+
+  &__divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0 16px;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.72rem;
+    font-weight: 650;
+    white-space: nowrap;
+  }
+
+  &__divider::before,
+  &__divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(14, 26, 43, 0.1);
+  }
+
+  &__social {
+    display: grid;
+    gap: 9px;
+  }
+
+  &__social .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 43px;
+    border: 1px solid rgba(14, 35, 66, 0.16);
+    border-radius: fockis.$radius-pill;
+    background: #ffffff;
+    color: fockis.$navy-800;
+    font-family: fockis.$font-body;
+    font-size: 0.79rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition:
+      border-color 160ms ease,
+      background 160ms ease,
+      transform 160ms ease;
+  }
+
+  &__social .btn-outline:hover {
+    border-color: rgba(fockis.$gold-600, 0.5);
+    background: fockis.$cream-100;
+    transform: translateY(-1px);
+  }
+
+  &__social .btn-outline:focus-visible {
+    outline: 2px solid fockis.$gold-500;
+    outline-offset: 2px;
+  }
+
+  &__footer {
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(14, 26, 43, 0.08);
+    color: fockis.$text-on-light-muted;
+    font-size: 0.76rem;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  &__footer a {
+    color: fockis.$teal-500 !important;
+    font-weight: 700 !important;
+    text-decoration: none;
+  }
+
+  &__footer a:hover {
+    color: fockis.$navy-800 !important;
+    text-decoration: underline;
+  }
+
+  @include fockis.bp-down(fockis.$bp-sm) {
+    min-height: calc(100vh - 56px);
+    align-items: flex-start;
+    padding: 24px 15px 36px;
+
+    &__card {
+      width: 100%;
+      padding: 27px 20px 23px;
+      border-radius: fockis.$radius-md;
+      box-shadow:
+        0 15px 35px rgba(10, 24, 48, 0.08),
+        0 3px 10px rgba(10, 24, 48, 0.04);
+    }
+
+    &__header {
+      margin-bottom: 18px;
+    }
+
+    &__header h1 {
+      font-size: 1.4rem !important;
+    }
+
+    &__header p {
+      font-size: 0.8rem !important;
+    }
+
+    &__row {
+      align-items: flex-start;
+    }
+
+    .ft-checkbox-row,
+    .section-link {
+      font-size: 0.72rem;
+    }
+
+    &__divider {
+      margin-top: 21px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ft-field input,
+    .ft-field > div > button,
+    form > .btn-primary,
+    &__social .btn-outline {
+      transition: none;
+    }
+  }
+}

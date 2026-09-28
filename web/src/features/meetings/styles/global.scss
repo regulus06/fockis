@@ -1,0 +1,33 @@
+@use 'tokens' as t;
+@use 'mixins' as m;
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+.fockis-meetings-root {
+  font-family: t.$font-body;
+  color: t.$ink-900;
+  -webkit-font-smoothing: antialiased;
+
+  h1, h2, h3, h4 {
+    font-family: t.$font-display;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .mono { font-family: t.$font-mono; font-variant-numeric: tabular-nums; }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  * { box-sizing: border-box; }
+
+  @include m.focus-ring;
+}
+
+.fockis-meetings-root--dark {
+  background: t.$void-950;
+  color: t.$fog-0;
+}

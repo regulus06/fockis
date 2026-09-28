@@ -1,0 +1,1039 @@
+// =============================================================
+// Marketing Admin — Fockis theme
+// Styles the EXISTING class names in MarketingAdminCenterPage.tsx.
+// No .tsx changes needed. Fonts (Fraunces + Inter) load from index.html.
+// =============================================================
+
+@mixin btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 22px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font: 600 14px/1 var(--ma-sans);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+@mixin btn-primary {
+  @include btn;
+  background: var(--ma-amber);
+  color: var(--ma-ink);
+  box-shadow: 0 8px 22px rgba(242, 169, 59, 0.28);
+
+  &:hover:not(:disabled) {
+    border-color: transparent;
+    background: var(--ma-amber-strong);
+  }
+}
+
+@mixin btn-outline {
+  @include btn;
+  height: 34px;
+  padding: 0 14px;
+  border-color: var(--ma-border);
+  background: var(--ma-surface);
+  color: var(--ma-text);
+  font-size: 13px;
+
+  &:hover:not(:disabled) {
+    border-color: #cbd5e1;
+    background: var(--ma-soft);
+  }
+}
+
+@mixin field {
+  height: 44px;
+  border: 1px solid var(--ma-border);
+  border-radius: 999px;
+  background-color: var(--ma-surface);
+  color: var(--ma-text);
+  font: 400 14px var(--ma-sans);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:focus {
+    border-color: var(--ma-amber);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(242, 169, 59, 0.18);
+  }
+}
+
+@mixin select {
+  @include field;
+  padding: 0 40px 0 18px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.8' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  font-weight: 500;
+  appearance: none;
+  cursor: pointer;
+}
+
+// Colours & fonts available everywhere (pages without the
+// .marketing-admin wrapper need them too). Prefixed, so harmless.
+:root {
+  --ma-ink: #0a1220;
+  --ma-navy-900: #0d2238;
+  --ma-navy-700: #133a5e;
+  --ma-navy-500: #1d5285;
+  --ma-amber: #f2a93b;
+  --ma-amber-strong: #e39520;
+  --ma-bg: #eef2f7;
+  --ma-surface: #ffffff;
+  --ma-soft: #f8fafc;
+  --ma-border: #e2e8f0;
+  --ma-text: #0f172a;
+  --ma-muted: #64748b;
+  --ma-faint: #94a3b8;
+  --ma-serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --ma-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ma-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+  --ma-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+// =============================================================
+// Page
+// =============================================================
+.marketing-admin {
+  --ma-ink: #0a1220;
+  --ma-navy-900: #0d2238;
+  --ma-navy-700: #133a5e;
+  --ma-navy-500: #1d5285;
+  --ma-amber: #f2a93b;
+  --ma-amber-strong: #e39520;
+  --ma-bg: #eef2f7;
+  --ma-surface: #ffffff;
+  --ma-soft: #f8fafc;
+  --ma-border: #e2e8f0;
+  --ma-text: #0f172a;
+  --ma-muted: #64748b;
+  --ma-faint: #94a3b8;
+  --ma-serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --ma-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ma-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+  --ma-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 24px 32px 64px;
+  background: var(--ma-bg);
+  color: var(--ma-text);
+  font-family: var(--ma-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  // headings follow their container, not global rules
+  :is(h1, h2, h3, p) {
+    text-align: inherit;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--ma-amber);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 640px) {
+    gap: 18px;
+    padding: 14px 12px 48px;
+  }
+}
+
+// =============================================================
+// Header (navy hero)
+// =============================================================
+.marketing-admin__header {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0;
+  padding: 40px 44px 36px;
+  border-radius: 24px;
+  border-bottom: 3px solid var(--ma-amber);
+  background:
+    radial-gradient(380px 260px at 82% 38%, rgba(242, 169, 59, 0.18), transparent 70%),
+    linear-gradient(115deg, var(--ma-ink) 0%, var(--ma-navy-900) 55%, #16456e 100%);
+  color: #fff;
+
+  &::after {
+    content: "";
+    position: absolute;
+    right: -70px;
+    bottom: -130px;
+    width: 290px;
+    height: 290px;
+    border: 3px solid rgba(29, 82, 133, 0.55);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  > div {
+    max-width: 64ch;
+  }
+
+  h1 {
+    margin: 0;
+    color: #fff;
+    font-family: var(--ma-serif);
+    font-size: clamp(30px, 4.2vw, 48px);
+    font-weight: 800;
+    line-height: 1.06;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    margin: 12px 0 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  > button {
+    @include btn-primary;
+  }
+
+  @media (max-width: 640px) {
+    padding: 28px 20px 26px;
+    border-radius: 18px;
+  }
+}
+
+.marketing-admin__eyebrow {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--ma-amber);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+// =============================================================
+// Tabs
+// =============================================================
+.marketing-admin__tabs {
+  display: flex;
+  gap: 8px;
+  padding: 2px 2px 6px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.marketing-admin__tab {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 40px;
+  padding: 0 18px;
+  border: 1px solid var(--ma-border);
+  border-radius: 999px;
+  background: var(--ma-surface);
+  color: var(--ma-text);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    border-color: #cbd5e1;
+    background: var(--ma-soft);
+    color: var(--ma-text);
+  }
+
+  &--active,
+  &--active:hover {
+    border-color: var(--ma-navy-700);
+    background: var(--ma-navy-700);
+    color: #fff;
+  }
+}
+
+// =============================================================
+// Error
+// =============================================================
+.marketing-admin__error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  padding: 14px 18px;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #b91c1c;
+  border-radius: 10px;
+  background: #fee2e2;
+  color: #7f1d1d;
+  font-size: 14px;
+
+  button {
+    @include btn-outline;
+    margin-left: auto;
+    border-color: currentColor;
+    color: inherit;
+  }
+}
+
+// =============================================================
+// Filters
+// =============================================================
+.marketing-admin__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--ma-border);
+  border-radius: 18px;
+  background: var(--ma-surface);
+
+  input {
+    @include field;
+    flex: 1 1 280px;
+    max-width: 520px;
+    padding: 0 18px 0 44px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 18px center;
+
+    &::placeholder {
+      color: var(--ma-faint);
+    }
+  }
+
+  select {
+    @include select;
+  }
+}
+
+// =============================================================
+// Stats
+// =============================================================
+.marketing-admin__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.marketing-admin__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 20px 22px;
+  border: 1px solid var(--ma-border);
+  border-radius: 16px;
+  background: var(--ma-surface);
+
+  span {
+    color: var(--ma-muted);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  strong {
+    color: var(--ma-text);
+    font-family: var(--ma-serif);
+    font-size: clamp(24px, 2.4vw, 30px);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+    text-transform: capitalize;
+  }
+
+  // first card gets the hero treatment
+  &:first-child {
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--ma-ink), var(--ma-navy-700));
+
+    span {
+      color: rgba(255, 255, 255, 0.68);
+    }
+
+    strong {
+      color: var(--ma-amber);
+    }
+  }
+}
+
+// =============================================================
+// Cards
+// =============================================================
+.marketing-admin__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.marketing-admin__card {
+  min-width: 0;
+  margin: 0;
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid var(--ma-border);
+  border-radius: 22px;
+  background: var(--ma-surface);
+  box-shadow: var(--ma-shadow);
+
+  > h2 {
+    margin: 0 0 16px;
+    color: var(--ma-text);
+    font-family: var(--ma-serif);
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+  }
+
+  > p {
+    margin: 0;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--ma-border);
+    color: var(--ma-text);
+    font-size: 14px;
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  // tables inside a card run edge to edge
+  > .marketing-admin__table-wrap {
+    margin: 0 -24px -24px;
+    border: 0;
+    border-top: 1px solid var(--ma-border);
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  @media (max-width: 640px) {
+    padding: 20px 16px;
+
+    > .marketing-admin__table-wrap {
+      margin: 0 -16px -20px;
+    }
+  }
+}
+
+// Capability chips
+.marketing-admin .chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: rgba(19, 58, 94, 0.07);
+    color: var(--ma-navy-700);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+}
+
+// =============================================================
+// Tables
+// =============================================================
+.marketing-admin__table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--ma-border);
+  border-radius: 20px;
+  background: var(--ma-surface);
+  box-shadow: var(--ma-shadow);
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  th {
+    padding: 13px 18px;
+    background: var(--ma-soft);
+    border-bottom: 1px solid var(--ma-border);
+    color: var(--ma-muted);
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--ma-border);
+    color: var(--ma-text);
+    vertical-align: middle;
+
+    // name on one line, id / date under it
+    b {
+      display: block;
+      font-weight: 600;
+    }
+
+    small {
+      display: block;
+      max-width: 240px;
+      overflow: hidden;
+      color: var(--ma-muted);
+      font-family: var(--ma-mono);
+      font-size: 11px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  tbody tr:hover {
+    background: var(--ma-soft);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  // Action buttons (ads + MarketingActionButtons)
+  td:last-child {
+    button {
+      @include btn-outline;
+      height: 30px;
+      padding: 0 12px;
+      font-size: 12px;
+    }
+  }
+}
+
+.marketing-admin__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 180px;
+}
+
+// =============================================================
+// Status badges
+// =============================================================
+.marketing-admin-status {
+  --tone: #64748b;
+  --tone-bg: #f1f5f9;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--tone-bg);
+  color: var(--tone);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+
+  &::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  &--active,
+  &--approved {
+    --tone: #15803d;
+    --tone-bg: #dcfce7;
+  }
+
+  &--scheduled {
+    --tone: #1d4ed8;
+    --tone-bg: #dbeafe;
+  }
+
+  &--pending-review,
+  &--paused {
+    --tone: #b45309;
+    --tone-bg: #fef3c7;
+  }
+
+  &--blocked,
+  &--rejected {
+    --tone: #b91c1c;
+    --tone-bg: #fee2e2;
+  }
+
+  &--draft,
+  &--expired,
+  &--archived {
+    --tone: #64748b;
+    --tone-bg: #f1f5f9;
+  }
+}
+
+// =============================================================
+// Workflow form
+// =============================================================
+.marketing-admin__form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 20px;
+
+  // dropdown fields
+  > label:not(.marketing-admin__check) {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: var(--ma-muted);
+    font-size: 13px;
+    font-weight: 600;
+
+    select {
+      @include select;
+      width: 100%;
+    }
+  }
+
+  > button {
+    @include btn-primary;
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin-top: 8px;
+  }
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Toggle rows: checkbox styled as a switch
+.marketing-admin__check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--ma-border);
+  border-radius: 14px;
+  background: var(--ma-soft);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    border-color: #cbd5e1;
+  }
+
+  &:has(input:checked) {
+    border-color: rgba(19, 58, 94, 0.3);
+    background: var(--ma-surface);
+  }
+
+  input {
+    position: relative;
+    flex: none;
+    width: 40px;
+    height: 22px;
+    margin: 0;
+    border-radius: 999px;
+    background: #cbd5e1;
+    appearance: none;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+      transition: transform 0.15s ease;
+    }
+
+    &:checked {
+      background: var(--ma-navy-700);
+    }
+
+    &:checked::after {
+      transform: translateX(18px);
+    }
+  }
+
+  span {
+    min-width: 0;
+    color: var(--ma-text);
+    font-family: var(--ma-mono);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-admin *,
+  .marketing-admin *::before,
+  .marketing-admin *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+// =============================================================
+// Extra classes used by pages/MarketingAdminCenterPage.tsx
+// =============================================================
+
+// Stat detail line
+.marketing-admin__stat small {
+  color: var(--ma-muted);
+  font-size: 12px;
+}
+
+.marketing-admin__stat:first-child small {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+// Card header: title + description (+ status or button on the right)
+.marketing-admin__card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 16px;
+  margin-bottom: 18px;
+
+  h2 {
+    margin: 0;
+    color: var(--ma-text);
+    font-family: var(--ma-serif);
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: var(--ma-muted);
+    font-size: 14px;
+  }
+}
+
+.marketing-admin__ready {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+// Capability chips
+.marketing-admin__capabilities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.marketing-admin__capability {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(19, 58, 94, 0.07);
+  color: var(--ma-navy-700);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+// Empty message
+.marketing-admin__empty {
+  padding: 36px 20px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  background: var(--ma-soft);
+  color: var(--ma-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+// Table cells: bold line + small lines under it
+.marketing-admin__table-wrap td {
+  strong {
+    display: block;
+    font-weight: 600;
+  }
+
+  small {
+    font-family: var(--ma-sans);
+    font-size: 12px;
+  }
+}
+
+// Card that holds a table: table runs edge to edge under the header
+.marketing-admin__card > .marketing-admin__card-header + .marketing-admin__table-wrap {
+  margin: 0 -24px -24px;
+  border: 0;
+  border-top: 1px solid var(--ma-border);
+  border-radius: 0;
+  box-shadow: none;
+
+  @media (max-width: 640px) {
+    margin: 0 -16px -20px;
+  }
+}
+
+// Review queues put a table card inside a card: flatten the inner one
+.marketing-admin__card .marketing-admin__card {
+  margin: 0 -24px -24px;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--ma-border);
+  border-radius: 0;
+  box-shadow: none;
+
+  > .marketing-admin__card-header {
+    display: none;
+  }
+
+  > .marketing-admin__table-wrap {
+    margin: 0;
+  }
+}
+
+// Audit action name
+.marketing-admin__action {
+  display: inline-flex;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: var(--ma-navy-700);
+  font-family: var(--ma-mono);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+// Workflow summary rows
+.marketing-admin__workflow-summary {
+  display: flex;
+  flex-direction: column;
+}
+
+.marketing-admin__workflow-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--ma-border);
+  font-size: 14px;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  span {
+    color: var(--ma-muted);
+  }
+
+  strong {
+    color: var(--ma-text);
+    font-weight: 600;
+  }
+}
+
+// Workflow editor
+.marketing-admin__primary-button {
+  @include btn-primary;
+}
+
+.marketing-admin__form > label:not(.marketing-admin__check):not(.marketing-admin__toggle) > span {
+  color: var(--ma-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.marketing-admin__form > .marketing-admin__toggle {
+  flex-direction: row;
+}
+
+.marketing-admin__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--ma-border);
+  border-radius: 14px;
+  background: var(--ma-soft);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    border-color: #cbd5e1;
+  }
+
+  &:has(input:checked) {
+    border-color: rgba(19, 58, 94, 0.3);
+    background: var(--ma-surface);
+  }
+
+  span {
+    color: var(--ma-text);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  // checkbox drawn as a switch
+  input {
+    position: relative;
+    flex: none;
+    width: 40px;
+    height: 22px;
+    margin: 0;
+    border-radius: 999px;
+    background: #cbd5e1;
+    appearance: none;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+      transition: transform 0.15s ease;
+    }
+
+    &:checked {
+      background: var(--ma-navy-700);
+    }
+
+    &:checked::after {
+      transform: translateX(18px);
+    }
+  }
+}
+
+// Guard: stop global section/heading rules leaking in
+.marketing-admin__card,
+.marketing-admin__header {
+  min-height: 0;
+}
+
+// =============================================================
+// Pages that render WITHOUT the .marketing-admin wrapper
+// (MarketingOverviewPage and the other files in pages/)
+// =============================================================
+
+// Use the app font and left alignment on every marketing block
+:is(
+  .marketing-admin__header,
+  .marketing-admin__tabs,
+  .marketing-admin__error,
+  .marketing-admin__filters,
+  .marketing-admin__stats,
+  .marketing-admin__grid,
+  .marketing-admin__card,
+  .marketing-admin__table-wrap
+) {
+  box-sizing: border-box;
+  font-family: var(--ma-sans);
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  :is(h1, h2, h3, p) {
+    text-align: inherit;
+  }
+}
+
+// Space the blocks out when they sit straight in the layout's <main>
+main:not(.marketing-admin) > :is(
+  .marketing-admin__header,
+  .marketing-admin__tabs,
+  .marketing-admin__error,
+  .marketing-admin__filters,
+  .marketing-admin__stats,
+  .marketing-admin__grid,
+  .marketing-admin__card,
+  .marketing-admin__table-wrap
+) {
+  margin: 0 0 24px;
+}
+
+// Overview's workflow rows are plain <div>s
+.marketing-admin__workflow-summary > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--ma-border);
+  font-size: 14px;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  span {
+    color: var(--ma-muted);
+  }
+
+  strong {
+    color: var(--ma-text);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+}

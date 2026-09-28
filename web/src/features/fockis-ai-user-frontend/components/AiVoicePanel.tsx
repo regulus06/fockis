@@ -1,0 +1,2 @@
+import React from "react";
+export default function AiVoicePanel({status,onStart,onStop}:{status:string;onStart:()=>void;onStop:()=>void}){const active=["connecting","listening","speaking"].includes(status);return <div className={`fai-voice ${active?"active":""}`}><span>✦</span><div><b>Fockis AI Voice</b><small>{status==="listening"?"Listening":status==="speaking"?"Fockis AI is speaking":status==="connecting"?"Connecting…":"Voice mode is ready"}</small></div>{active?<button onClick={onStop}>End</button>:<button onClick={onStart}>Start voice</button>}</div>}

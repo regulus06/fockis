@@ -1,0 +1,36 @@
+{
+"extends": "./tsconfig.json",
+"compilerOptions": {
+"module": "commonjs",
+"moduleResolution": "node",
+"target": "ES2021",
+"outDir": "./dist",
+"rootDir": "./src",
+"sourceMap": true,
+"declaration": true,
+"removeComments": true,
+"emitDecoratorMetadata": true,
+"experimentalDecorators": true,
+"esModuleInterop": true,
+"allowSyntheticDefaultImports": true,
+"incremental": false,
+"skipLibCheck": true,
+"strict": true,
+"strictNullChecks": true,
+"forceConsistentCasingInFileNames": true,
+"noImplicitAny": false,
+"strictBindCallApply": false,
+"strictPropertyInitialization": false,
+"noFallthroughCasesInSwitch": false
+},
+"include": [
+"src/**/*.ts"
+],
+"exclude": [
+"node_modules",
+"dist",
+"test",
+"**/*.spec.ts",
+"**/*.test.ts"
+]
+}

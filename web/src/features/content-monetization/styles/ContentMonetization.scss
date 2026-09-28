@@ -1,0 +1,134 @@
+.content-price-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.paid-content-card {
+  width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--fockis-card-bg, #ffffff);
+  border: 1px solid
+    var(--fockis-border, #e6e6e6);
+  box-shadow:
+    0 8px 25px
+      rgba(0, 0, 0, 0.06);
+}
+
+.paid-content-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+}
+
+.paid-content-header h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.paid-content-header span {
+  display: block;
+  margin-top: 4px;
+  color: #777;
+  font-size: 13px;
+}
+
+.monetized-label {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 4px;
+  margin: 0 !important;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #fff3d6;
+  color: #9a6200 !important;
+  font-weight: 700;
+}
+
+.paid-content-description {
+  margin: 0;
+  padding: 0 16px 16px;
+  color: #666;
+}
+
+.paid-content-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 11px 18px;
+  background: #111;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.paid-content-button:hover {
+  opacity: 0.9;
+}
+
+.content-download-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 9px 15px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+  color: #222;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.content-download-button:hover {
+  background: #f6f6f6;
+}
+
+.content-download-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.download-price {
+  margin-left: 3px;
+}
+
+.paid-media-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 10px 12px;
+}
+
+.content-purchase-page {
+  min-height: 100vh;
+  padding: 30px 20px;
+}
+
+.content-purchase-container {
+  width: min(850px, 100%);
+  margin: 0 auto;
+}
+
+.content-back-button {
+  margin-bottom: 20px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.content-purchase-empty {
+  max-width: 500px;
+  margin: 100px auto;
+  text-align: center;
+}

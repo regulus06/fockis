@@ -1,0 +1,45 @@
+@use 'sass:color';
+@use 'tokens' as t;
+
+@mixin focus-ring($color: t.$signal-500) {
+  &:focus-visible {
+    outline: 2px solid $color;
+    outline-offset: 2px;
+  }
+}
+
+@mixin card-light {
+  background: t.$paper-0;
+  border: 1px solid t.$paper-200;
+  border-radius: t.$radius-lg;
+  box-shadow: t.$shadow-sm;
+}
+
+@mixin card-dark {
+  background: t.$void-850;
+  border: 1px solid t.$void-700;
+  border-radius: t.$radius-lg;
+}
+
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin scrollbar-thin($track: transparent, $thumb: t.$ink-300) {
+  scrollbar-width: thin;
+  scrollbar-color: $thumb $track;
+  &::-webkit-scrollbar { width: 6px; height: 6px; }
+  &::-webkit-scrollbar-track { background: $track; }
+  &::-webkit-scrollbar-thumb { background: $thumb; border-radius: 4px; }
+}
+
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+@mixin mobile { @media (max-width: 640px) { @content; } }
+@mixin tablet { @media (max-width: 1024px) { @content; } }

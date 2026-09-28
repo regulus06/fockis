@@ -1,0 +1,15 @@
+// Fockis Create page styles.
+// Split into partials for maintainability; this file is the single entry
+// point imported by FockisCreatePage.tsx, matching the pattern used by
+// sibling features (e.g. MarketplacePage, SellerDashboard).
+
+@use './tokens';
+@use './base';
+@use './buttons';
+@use './topnav';
+@use './hero';
+@use './grids';
+@use './featured';
+@use './tabs';
+@use './templates';
+@use './misc';

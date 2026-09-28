@@ -1,0 +1,709 @@
+/* ============================================================================
+   FOCKIS — LIVE NOW RAIL
+============================================================================ */
+
+.fk-live-now-rail {
+  width: 100%;
+  margin: 0 0 16px;
+  padding: 16px;
+  box-sizing: border-box;
+
+  background: var(--fk-surface, #ffffff);
+
+  border: 1px solid var(--fk-border, #e5e7eb);
+  border-radius: 16px;
+
+  overflow: hidden;
+}
+
+/* ============================================================================
+   HEADER
+============================================================================ */
+
+.fk-live-now-rail__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 14px;
+}
+
+.fk-live-now-rail__title {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  min-width: 0;
+}
+
+.fk-live-now-rail__icon {
+  width: 34px;
+  height: 34px;
+
+  flex: 0 0 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #ffffff;
+
+  background: #ef4444;
+
+  border-radius: 10px;
+
+  box-shadow:
+    0 4px 12px rgba(239, 68, 68, 0.22);
+}
+
+.fk-live-now-rail__title h2 {
+  margin: 0;
+
+  color: var(--fk-text, #111827);
+
+  font-size: 16px;
+  font-weight: 800;
+
+  line-height: 1.2;
+}
+
+.fk-live-now-rail__title p {
+  margin: 3px 0 0;
+
+  color: var(--fk-muted, #6b7280);
+
+  font-size: 12px;
+
+  line-height: 1.2;
+}
+
+.fk-live-now-rail__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  flex: 0 0 auto;
+
+  padding: 5px 9px;
+
+  color: #dc2626;
+
+  background: #fef2f2;
+
+  border: 1px solid #fecaca;
+
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  white-space: nowrap;
+}
+
+.fk-live-now-rail__count-dot {
+  width: 6px;
+  height: 6px;
+
+  flex: 0 0 6px;
+
+  border-radius: 50%;
+
+  background: #ef4444;
+
+  animation:
+    fk-live-pulse
+    1.4s
+    ease-in-out
+    infinite;
+}
+
+/* ============================================================================
+   HORIZONTAL SCROLLER
+============================================================================ */
+
+.fk-live-now-rail__scroller {
+  display: flex;
+
+  width: 100%;
+
+  gap: 12px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  padding: 2px 2px 7px;
+
+  scroll-snap-type: x proximity;
+
+  scrollbar-width: thin;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+.fk-live-now-rail__scroller::-webkit-scrollbar {
+  height: 5px;
+}
+
+.fk-live-now-rail__scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.fk-live-now-rail__scroller::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+
+  border-radius: 999px;
+}
+
+/* ============================================================================
+   LOADING
+============================================================================ */
+
+.fk-live-now-rail__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-height: 110px;
+
+  color: var(--fk-muted, #6b7280);
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fk-live-now-rail__spinner {
+  animation: fk-live-spin 0.9s linear infinite;
+}
+
+@keyframes fk-live-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================================
+   CARD
+============================================================================ */
+
+.fk-live-now-card {
+  position: relative;
+
+  display: block;
+
+  flex: 0 0 190px;
+
+  width: 190px;
+
+  padding: 0;
+  margin: 0;
+
+  overflow: hidden;
+
+  text-align: left;
+
+  color: inherit;
+
+  background: var(--fk-surface, #ffffff);
+
+  border: 1px solid var(--fk-border, #e5e7eb);
+
+  border-radius: 14px;
+
+  cursor: pointer;
+
+  scroll-snap-align: start;
+
+  appearance: none;
+
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.fk-live-now-card:hover {
+  transform: translateY(-2px);
+
+  border-color: #f87171;
+
+  box-shadow:
+    0 8px 24px rgba(17, 24, 39, 0.12);
+}
+
+.fk-live-now-card:focus-visible {
+  outline: 3px solid rgba(239, 68, 68, 0.25);
+
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   MEDIA
+============================================================================ */
+
+.fk-live-now-card__media {
+  position: relative;
+
+  width: 100%;
+  height: 112px;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      135deg,
+      #111827,
+      #374151
+    );
+}
+
+.fk-live-now-card__thumbnail {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.fk-live-now-card__thumbnail--avatar {
+  object-fit: cover;
+}
+
+.fk-live-now-card__placeholder {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ef4444,
+      #7f1d1d
+    );
+}
+
+/* ============================================================================
+   PLAY BUTTON
+============================================================================ */
+
+.fk-live-now-card__play {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 38px;
+  height: 38px;
+
+  color: #ffffff;
+
+  background: rgba(0, 0, 0, 0.58);
+
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+
+  transform:
+    translate(
+      -50%,
+      -50%
+    );
+
+  opacity: 0.92;
+
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    opacity 160ms ease;
+}
+
+.fk-live-now-card:hover .fk-live-now-card__play {
+  transform:
+    translate(
+      -50%,
+      -50%
+    )
+    scale(1.08);
+
+  background: rgba(239, 68, 68, 0.9);
+
+  opacity: 1;
+}
+
+/* ============================================================================
+   LIVE BADGE
+============================================================================ */
+
+.fk-live-now-card__live {
+  position: absolute;
+
+  top: 9px;
+  left: 9px;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 5px;
+
+  padding: 5px 8px;
+
+  color: #ffffff;
+
+  background: #ef4444;
+
+  border-radius: 7px;
+
+  font-size: 10px;
+  font-weight: 900;
+
+  letter-spacing: 0.04em;
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.fk-live-now-card__live > span {
+  width: 6px;
+  height: 6px;
+
+  flex: 0 0 6px;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  animation:
+    fk-live-pulse
+    1.4s
+    ease-in-out
+    infinite;
+}
+
+@keyframes fk-live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.45;
+    transform: scale(0.72);
+  }
+}
+
+/* ============================================================================
+   VIEWERS
+============================================================================ */
+
+.fk-live-now-card__viewers {
+  position: absolute;
+
+  right: 9px;
+  bottom: 9px;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 4px;
+
+  padding: 4px 7px;
+
+  color: #ffffff;
+
+  background: rgba(0, 0, 0, 0.65);
+
+  border-radius: 6px;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* ============================================================================
+   CREATOR
+============================================================================ */
+
+.fk-live-now-card__creator {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 10px 10px 5px;
+}
+
+.fk-live-now-card__avatar {
+  width: 30px;
+  height: 30px;
+
+  flex: 0 0 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ef4444,
+      #b91c1c
+    );
+
+  border: 2px solid #ffffff;
+
+  border-radius: 50%;
+
+  box-shadow:
+    0 0 0 1px #fecaca;
+}
+
+.fk-live-now-card__avatar img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.fk-live-now-card__avatar span {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.fk-live-now-card__creator-info {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+}
+
+.fk-live-now-card__creator-info strong {
+  overflow: hidden;
+
+  color: var(--fk-text, #111827);
+
+  font-size: 12px;
+  font-weight: 800;
+
+  line-height: 1.3;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.fk-live-now-card__creator-info span {
+  overflow: hidden;
+
+  color: var(--fk-muted, #6b7280);
+
+  font-size: 10px;
+
+  line-height: 1.3;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   TITLE
+============================================================================ */
+
+.fk-live-now-card__title {
+  display: -webkit-box;
+  display: box;
+
+  min-height: 32px;
+
+  margin: 2px 10px 10px;
+
+  overflow: hidden;
+
+  color: var(--fk-text, #111827);
+
+  font-size: 12px;
+  font-weight: 650;
+
+  line-height: 1.35;
+
+  /*
+   * Standard property for modern browsers.
+   * Vendor-prefixed property retained for older WebKit support.
+   */
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+
+  -webkit-box-orient: vertical;
+  box-orient: vertical;
+}
+
+/* ============================================================================
+   WATCH BAR
+============================================================================ */
+
+.fk-live-now-card__watch {
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+
+  margin: 0 10px 10px;
+
+  padding: 7px 9px;
+
+  color: #dc2626;
+
+  background: #fef2f2;
+
+  border: 1px solid #fee2e2;
+
+  border-radius: 8px;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.fk-live-now-card__watch svg:nth-of-type(2) {
+  margin-left: auto;
+}
+
+/* ============================================================================
+   SKELETON
+============================================================================ */
+
+.fk-live-now-card--skeleton {
+  padding: 0;
+
+  cursor: default;
+
+  pointer-events: none;
+}
+
+.fk-live-now-card__avatar-skeleton {
+  width: 100%;
+  height: 112px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #f3f4f6 25%,
+      #e5e7eb 50%,
+      #f3f4f6 75%
+    );
+
+  background-size: 200% 100%;
+
+  animation:
+    fk-live-skeleton
+    1.4s
+    infinite;
+}
+
+.fk-live-now-card__skeleton-line {
+  width: 65%;
+  height: 9px;
+
+  margin: 11px 10px 5px;
+
+  border-radius: 5px;
+
+  background: #e5e7eb;
+}
+
+.fk-live-now-card__skeleton-line--small {
+  width: 40%;
+
+  margin-top: 5px;
+  margin-bottom: 12px;
+}
+
+@keyframes fk-live-skeleton {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ============================================================================
+   ERROR
+============================================================================ */
+
+.fk-live-now-rail__error {
+  padding: 12px;
+
+  color: #6b7280;
+
+  font-size: 12px;
+
+  text-align: center;
+}
+
+/* ============================================================================
+   RESPONSIVE
+============================================================================ */
+
+@media (max-width: 768px) {
+  .fk-live-now-rail {
+    margin-bottom: 12px;
+
+    padding: 12px;
+
+    border-radius: 14px;
+  }
+
+  .fk-live-now-card {
+    flex-basis: 168px;
+
+    width: 168px;
+  }
+
+  .fk-live-now-card__media {
+    height: 100px;
+  }
+}
+
+@media (max-width: 480px) {
+  .fk-live-now-rail {
+    width: calc(100% + 4px);
+
+    margin-right: -2px;
+    margin-left: -2px;
+
+    border-right: 0;
+    border-left: 0;
+
+    border-radius: 0;
+  }
+
+  .fk-live-now-card {
+    flex-basis: 155px;
+
+    width: 155px;
+  }
+
+  .fk-live-now-card__media {
+    height: 92px;
+  }
+}

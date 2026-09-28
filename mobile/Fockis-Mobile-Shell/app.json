@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Fockis",
+    "slug": "fockis-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+
+    "icon": "./assets/fockis-icon.png",
+
+    "splash": {
+      "image": "./assets/fockis-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#071B3A"
+    },
+
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fockis.mobile"
+    },
+
+    "android": {
+      "package": "com.fockis.mobile",
+      "usesCleartextTraffic": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/fockis-icon.png",
+        "backgroundColor": "#071B3A"
+      }
+    },
+
+    "web": {},
+
+    "extra": {
+      "eas": {
+        "projectId": "7c3917a2-b39c-4086-a80f-c2edac41b7a1"
+      }
+    }
+  }
+}

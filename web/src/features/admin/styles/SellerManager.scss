@@ -1,0 +1,105 @@
+.seller-manager {
+  padding: 24px;
+  background: #f8fafc;
+
+  .page-header {
+    margin-bottom: 24px;
+
+    h1 {
+      font-size: 28px;
+      color: #111827;
+      margin: 0;
+    }
+
+    p {
+      color: #6b7280;
+      margin-top: 8px;
+    }
+  }
+
+  .loading,
+  .empty-state {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    color: #64748b;
+  }
+
+
+  .seller-table {
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 4px 15px rgba(0,0,0,.06);
+
+
+    th {
+      padding:14px;
+      background:#f1f5f9;
+      text-align:left;
+      color:#475569;
+    }
+
+
+    td {
+      padding:14px;
+      border-top:1px solid #e5e7eb;
+    }
+
+
+    button {
+      border:none;
+      padding:8px 14px;
+      margin-right:8px;
+      border-radius:8px;
+      background:#2563eb;
+      color:white;
+      cursor:pointer;
+
+
+      &:hover {
+        background:#1d4ed8;
+      }
+
+
+      &:disabled {
+        opacity:.5;
+        cursor:not-allowed;
+      }
+    }
+
+
+    .danger {
+      background:#dc2626;
+
+
+      &:hover {
+        background:#b91c1c;
+      }
+    }
+
+
+    .status {
+      padding:5px 12px;
+      border-radius:20px;
+      font-size:13px;
+      font-weight:600;
+    }
+
+
+    .active {
+      background:#dcfce7;
+      color:#15803d;
+    }
+
+
+    .pending {
+      background:#fef3c7;
+      color:#92400e;
+    }
+
+  }
+}

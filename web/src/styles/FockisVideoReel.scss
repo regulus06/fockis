@@ -1,0 +1,183 @@
+/* ============================================================================
+   FOCKIS VIDEO REEL
+   src/styles/FockisVideoReel.scss
+   REDESIGN: gold active state on reel action icons (was fjord-bright
+   teal), otherwise unchanged — this surface is full-screen black video,
+   so it needed the least retinting.
+============================================================================ */
+
+.fk-video-reel {
+  position: fixed;
+  inset: 0;
+
+  z-index: 2000;
+
+  background: #000;
+
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+}
+
+.fk-video-reel__close {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  right: 16px;
+
+  z-index: 2001;
+
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 999px;
+
+  background: rgba(10, 34, 64, 0.5);
+  color: #fff;
+
+  cursor: pointer;
+}
+
+.fk-video-reel__scroller {
+  width: 100%;
+  height: 100%;
+
+  overflow-y: scroll;
+
+  scroll-snap-type: y mandatory;
+
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.fk-video-reel__slide {
+  position: relative;
+
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+}
+
+.fk-video-reel__media {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fk-video-reel__video {
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+}
+
+.fk-video-reel__header {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  left: 16px;
+
+  z-index: 3;
+
+  strong {
+    color: #fff;
+    font-family: var(--fk-font-display, Georgia, serif);
+    font-size: 15px;
+    font-weight: 700;
+
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  }
+}
+
+.fk-video-reel__overlay {
+  position: absolute;
+  left: 0;
+  right: 88px;
+  bottom: 0;
+
+  padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.75),
+    rgba(0, 0, 0, 0)
+  );
+}
+
+.fk-video-reel__caption {
+  margin: 0;
+
+  color: #fff;
+  font-size: 14.5px;
+  line-height: 1.5;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.fk-video-reel__actions {
+  position: absolute;
+  right: 12px;
+  bottom: 24px;
+
+  z-index: 4;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 18px;
+
+  button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 4px;
+
+    background: none;
+    border: none;
+
+    color: #fff;
+
+    cursor: pointer;
+
+    padding: 6px;
+
+    svg {
+      width: 26px;
+      height: 26px;
+
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+    }
+
+    span {
+      font-size: 11px;
+      font-weight: 700;
+
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    }
+
+    &.is-active {
+      color: var(--fk-amber-bright, #ffc72c);
+    }
+  }
+}

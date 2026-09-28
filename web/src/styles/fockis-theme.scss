@@ -1,0 +1,435 @@
+/* ============================================================================
+   FOCKIS DESIGN TOKENS
+   src/styles/fockis-theme.scss
+
+   REDESIGN NOTE (Facebook-style pass):
+   Palette now follows the Fockis Creator Studio / Travel brand — Navy
+   (#0f2d4a / #163a5f) and Gold (#e8a33d / #b8862f) — the same colors used
+   in Creator Manager and the Travel pages, replacing the prior Clark State
+   College navy/royal-blue/gold scheme. Layout language now follows
+   Facebook's feed conventions: flat cards, hairline borders, an 8px radius
+   scale, light shadows, and a plain sans-serif type system with no serif
+   display face (Facebook does not use serif headings anywhere).
+
+   All custom property NAMES are unchanged so every other partial that
+   references var(--fk-*) keeps working without edits.
+
+   Used by:
+   - FockisTopBar
+   - FockisStoriesRail
+   - FockisPostCard
+   - FockisFeedPage
+   - FockisSidebar
+   - FockisRightRail
+   - FockisNavigation
+============================================================================ */
+
+
+/* ============================================================================
+   LIGHT THEME
+============================================================================ */
+
+:root,
+[data-theme="light"] {
+
+  /* --------------------------------------------------------------------------
+     CORE BRAND COLORS
+     "--fk-fjord*" carries the Fockis Navy; "--fk-amber*" carries the
+     Fockis Gold. Names kept as-is so nothing downstream needs to change.
+  -------------------------------------------------------------------------- */
+
+  --fk-fjord: #163a5f;              /* Fockis Navy (primary) */
+  --fk-fjord-bright: #2f6690;       /* Lighter navy — accent / links / active */
+  --fk-fjord-dark: #0f2d4a;
+  --fk-fjord-soft: rgba(22, 58, 95, 0.12);
+
+  --fk-amber: #b8862f;              /* Gold, dialed back for text contrast */
+  --fk-amber-bright: #e8a33d;       /* Gold, full brightness for accents */
+  --fk-amber-dark: #96701f;
+  --fk-amber-soft: rgba(232, 163, 61, 0.20);
+
+
+  /* --------------------------------------------------------------------------
+     BACKGROUNDS
+     --fk-bg matches Facebook's canonical feed background.
+  -------------------------------------------------------------------------- */
+
+  --fk-bg: #f0f2f5;
+  --fk-bg-secondary: #ffffff;
+
+  --fk-surface: #ffffff;
+  --fk-surface-hover: #eef1f5;
+
+  --fk-sunken: #e4e6eb;
+
+
+  /* --------------------------------------------------------------------------
+     BORDERS
+  -------------------------------------------------------------------------- */
+
+  --fk-border: #dadde1;
+  --fk-border-strong: #b0b6bd;
+
+
+  /* --------------------------------------------------------------------------
+     TEXT
+  -------------------------------------------------------------------------- */
+
+  --fk-text: #1c2b39;
+  --fk-text-2: #5b6b76;
+  --fk-text-3: #8a97a3;
+
+  --fk-text-inverse: #ffffff;
+
+
+  /* --------------------------------------------------------------------------
+     STATUS
+  -------------------------------------------------------------------------- */
+
+  --fk-success: #146c43;
+  --fk-danger: #d6363c;
+  --fk-warning: #a1670c;
+  --fk-info: #2f6690;
+
+
+  /* --------------------------------------------------------------------------
+     TYPOGRAPHY
+     Single sans-serif system for both display and body text — Facebook
+     uses no serif face anywhere, so headings and body now share one
+     grotesque stack instead of the old serif/sans pairing.
+  -------------------------------------------------------------------------- */
+
+  --fk-font-display:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Helvetica,
+    Arial,
+    sans-serif;
+
+  --fk-font-body:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Helvetica,
+    Arial,
+    sans-serif;
+
+
+  /* --------------------------------------------------------------------------
+     BORDER RADIUS
+     Facebook-style flat scale: an 8px "md" radius covers cards, posts,
+     and buttons; true pills (badges, counters) still use --fk-r-pill.
+  -------------------------------------------------------------------------- */
+
+  --fk-r-xs: 3px;
+  --fk-r-sm: 5px;
+  --fk-r-md: 8px;
+  --fk-r-lg: 12px;
+  --fk-r-xl: 16px;
+  --fk-r-pill: 999px;
+
+  /* Avatar shape: simple squared corner, matches Facebook's avatar radius */
+  --fk-arch: 8px 8px 8px 8px;
+
+
+  /* --------------------------------------------------------------------------
+     SHADOWS
+     Flat and subtle — Facebook leans on hairline borders over drop
+     shadows, so these stay light even at the "lg" step.
+  -------------------------------------------------------------------------- */
+
+  --fk-shadow-xs: 0 1px 2px rgba(15, 27, 43, 0.06);
+  --fk-shadow-sm: 0 1px 3px rgba(15, 27, 43, 0.08);
+  --fk-shadow-md: 0 2px 10px rgba(15, 27, 43, 0.1);
+  --fk-shadow-lg: 0 6px 20px rgba(15, 27, 43, 0.14);
+
+
+  /* --------------------------------------------------------------------------
+     ANIMATION
+  -------------------------------------------------------------------------- */
+
+  --fk-fast: 150ms;
+  --fk-normal: 220ms;
+  --fk-slow: 340ms;
+
+  --fk-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+
+  /* --------------------------------------------------------------------------
+     LAYOUT
+  -------------------------------------------------------------------------- */
+
+  --fk-topbar-height: 64px;
+  --fk-sidebar-width: 248px;
+  --fk-right-rail-width: 300px;
+
+  --fk-content-max-width: 760px;
+
+
+  /* --------------------------------------------------------------------------
+     GOLD RULE
+     A single-purpose token for the thin gold accent line used under the
+     top bar, active tabs, and section headers throughout the redesign.
+  -------------------------------------------------------------------------- */
+
+  --fk-gold-rule: linear-gradient(
+    90deg,
+    var(--fk-amber-bright),
+    var(--fk-amber-dark)
+  );
+}
+
+
+/* ============================================================================
+   DARK THEME
+============================================================================ */
+
+[data-theme="dark"] {
+
+  /* --------------------------------------------------------------------------
+     CORE BRAND COLORS
+  -------------------------------------------------------------------------- */
+
+  --fk-fjord: #3d6a9c;
+  --fk-fjord-bright: #5b8ac2;
+  --fk-fjord-dark: #16324f;
+  --fk-fjord-soft: rgba(91, 138, 194, 0.18);
+
+  --fk-amber: #e8a33d;
+  --fk-amber-bright: #f2b95e;
+  --fk-amber-dark: #b8862f;
+  --fk-amber-soft: rgba(232, 163, 61, 0.18);
+
+
+  /* --------------------------------------------------------------------------
+     BACKGROUNDS
+  -------------------------------------------------------------------------- */
+
+  --fk-bg: #18191a;
+  --fk-bg-secondary: #242526;
+
+  --fk-surface: #242526;
+  --fk-surface-hover: #3a3b3c;
+
+  --fk-sunken: #18191a;
+
+
+  /* --------------------------------------------------------------------------
+     BORDERS
+  -------------------------------------------------------------------------- */
+
+  --fk-border: #3e4042;
+  --fk-border-strong: #52545a;
+
+
+  /* --------------------------------------------------------------------------
+     TEXT
+  -------------------------------------------------------------------------- */
+
+  --fk-text: #e4e6eb;
+  --fk-text-2: #b0b3b8;
+  --fk-text-3: #8a8d91;
+
+  --fk-text-inverse: #18191a;
+
+
+  /* --------------------------------------------------------------------------
+     STATUS
+  -------------------------------------------------------------------------- */
+
+  --fk-success: #3ec281;
+  --fk-danger: #e5726b;
+  --fk-warning: #e3ac3f;
+  --fk-info: #5b8ac2;
+
+
+  /* --------------------------------------------------------------------------
+     SHADOWS
+  -------------------------------------------------------------------------- */
+
+  --fk-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --fk-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --fk-shadow-md: 0 2px 10px rgba(0, 0, 0, 0.45);
+  --fk-shadow-lg: 0 6px 20px rgba(0, 0, 0, 0.5);
+
+  --fk-gold-rule: linear-gradient(
+    90deg,
+    var(--fk-amber-bright),
+    var(--fk-amber-dark)
+  );
+}
+
+
+/* ============================================================================
+   GLOBAL FOCKIS APP
+============================================================================ */
+
+.fk-app {
+  background: var(--fk-bg);
+  color: var(--fk-text);
+  font-family: var(--fk-font-body);
+
+  min-height: 100vh;
+  width: 100%;
+
+  transition:
+    background var(--fk-normal) var(--fk-ease),
+    color var(--fk-normal) var(--fk-ease);
+}
+
+
+/* ============================================================================
+   HEADINGS SHARE THE SAME SANS-SERIF FACE AS BODY TEXT
+============================================================================ */
+
+.fk-app h1,
+.fk-app h2,
+.fk-app h3 {
+  font-family: var(--fk-font-display);
+  letter-spacing: -0.01em;
+}
+
+
+/* ============================================================================
+   COMMON FOCKIS SURFACE
+============================================================================ */
+
+.fk-surface {
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-border);
+  color: var(--fk-text);
+}
+
+
+/* ============================================================================
+   COMMON ICON BUTTON
+============================================================================ */
+
+.fk-icon-btn {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 40px;
+  height: 40px;
+
+  padding: 0;
+
+  border: 1px solid transparent;
+  border-radius: var(--fk-r-md);
+
+  background: transparent;
+  color: var(--fk-text-2);
+
+  cursor: pointer;
+
+  transition:
+    background var(--fk-fast) var(--fk-ease),
+    color var(--fk-fast) var(--fk-ease),
+    border-color var(--fk-fast) var(--fk-ease),
+    transform var(--fk-fast) var(--fk-ease);
+}
+
+.fk-icon-btn:hover {
+  background: var(--fk-sunken);
+  color: var(--fk-fjord-bright);
+  border-color: var(--fk-border);
+}
+
+.fk-icon-btn:active {
+  transform: scale(0.95);
+}
+
+
+/* ============================================================================
+   FOCUS ACCESSIBILITY
+   Gold focus ring — matches the brand's accent color and gives strong
+   contrast against both navy and white surfaces.
+============================================================================ */
+
+.fk-icon-btn:focus-visible,
+.fk-app button:focus-visible,
+.fk-app input:focus-visible,
+.fk-app textarea:focus-visible,
+.fk-app select:focus-visible {
+  outline: 2px solid var(--fk-amber-bright);
+  outline-offset: 2px;
+}
+
+
+/* ============================================================================
+   SELECTION
+============================================================================ */
+
+.fk-app ::selection {
+  background: var(--fk-fjord-bright);
+  color: #ffffff;
+}
+
+
+/* ============================================================================
+   GLOBAL BOX SIZING
+============================================================================ */
+
+.fk-app *,
+.fk-app *::before,
+.fk-app *::after {
+  box-sizing: border-box;
+}
+
+
+/* ============================================================================
+   BUTTON RESET
+============================================================================ */
+
+.fk-app button {
+  font: inherit;
+}
+
+
+/* ============================================================================
+   LINK RESET
+============================================================================ */
+
+.fk-app a {
+  color: inherit;
+  text-decoration: none;
+}
+
+
+/* ============================================================================
+   SMOOTH THEME TRANSITIONS
+============================================================================ */
+
+.fk-app,
+.fk-app button,
+.fk-app input,
+.fk-app textarea,
+.fk-app select,
+.fk-surface {
+  transition:
+    background-color var(--fk-normal) var(--fk-ease),
+    border-color var(--fk-normal) var(--fk-ease),
+    color var(--fk-normal) var(--fk-ease),
+    box-shadow var(--fk-normal) var(--fk-ease);
+}
+
+
+/* ============================================================================
+   REDUCED MOTION
+============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-app,
+  .fk-app *,
+  .fk-app *::before,
+  .fk-app *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

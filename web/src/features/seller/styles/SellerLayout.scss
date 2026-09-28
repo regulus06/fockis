@@ -1,0 +1,564 @@
+/* ==========================================================================
+   FOCKIS SELLER CENTER — LAYOUT
+   ========================================================================== */
+
+:root {
+  --seller-green: #1D7A3E;
+  --seller-green-dark: #145C2E;
+  --seller-gold: #B8862E;
+  --seller-gold-light: #E2A63B;
+  --seller-paper: #FFFFFF;
+  --seller-paper-2: #F6F7F4;
+  --seller-paper-3: #ECECE6;
+  --seller-ink: #0D2740;
+  --seller-slate: #5C655F;
+  --seller-line: #E7E7E1;
+  --seller-footer: #14304D;
+  --seller-max-width: 1440px;
+}
+
+/* ==========================================================================
+   MAIN SELLER LAYOUT
+   ========================================================================== */
+
+.seller-layout {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--seller-paper-2);
+  color: var(--seller-ink);
+  display: flex;
+  flex-direction: column;
+  font-family: "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.seller-layout__body {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: stretch;
+}
+
+.seller-layout__main {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.seller-layout__content {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  background: var(--seller-paper-2);
+  padding: 0;
+}
+
+/* ==========================================================================
+   GLOBAL SELLER ELEMENTS
+   ========================================================================== */
+
+.seller-layout h1,
+.seller-layout h2,
+.seller-layout h3,
+.seller-layout h4,
+.seller-layout h5 {
+  color: var(--seller-ink);
+}
+
+.seller-layout a {
+  text-decoration: none;
+}
+
+.seller-layout button,
+.seller-layout input,
+.seller-layout select,
+.seller-layout textarea {
+  font-family: inherit;
+}
+
+.seller-layout :focus-visible {
+  outline: 2px solid var(--seller-green);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   SELLER FOOTER
+   ========================================================================== */
+
+.seller-footer {
+  width: 100%;
+  margin-top: auto;
+  background: var(--seller-footer);
+  color: rgba(255, 255, 255, 0.65);
+  padding: 56px 0 26px;
+}
+
+.seller-footer__inner {
+  width: 100%;
+  max-width: var(--seller-max-width);
+  margin: 0 auto;
+  padding: 0 32px;
+
+  display: grid;
+  grid-template-columns: 1.4fr repeat(4, 1fr);
+  gap: 30px;
+}
+
+/* ==========================================================================
+   FOOTER BRAND
+   ========================================================================== */
+
+.seller-footer__brand {
+  min-width: 0;
+}
+
+.seller-footer__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  color: #fff;
+  font-family: "Libre Franklin", sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.seller-footer__crest {
+  width: 34px;
+  height: 34px;
+
+  border: 2px solid #fff;
+  border-radius: 50%;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #fff;
+  font-family: "Libre Franklin", sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+
+  flex-shrink: 0;
+}
+
+.seller-footer__logo small {
+  color: var(--seller-gold-light);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  margin-left: 1px;
+}
+
+.seller-footer__description {
+  max-width: 250px;
+  margin: 14px 0 0;
+
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ==========================================================================
+   FOOTER COLUMNS
+   ========================================================================== */
+
+.seller-footer__column {
+  min-width: 0;
+}
+
+.seller-footer__column h3 {
+  margin: 0 0 14px;
+
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.3;
+
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.seller-footer__column a {
+  display: block;
+
+  padding: 5px 0;
+
+  color: rgba(255, 255, 255, 0.6);
+
+  font-size: 13.5px;
+  font-weight: 400;
+  line-height: 1.4;
+
+  transition:
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.seller-footer__column a:hover {
+  color: #fff;
+  transform: translateX(2px);
+}
+
+/* ==========================================================================
+   FOOTER BOTTOM
+   ========================================================================== */
+
+.seller-footer__bottom {
+  width: 100%;
+  margin-top: 40px;
+  padding: 20px 0 0;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.seller-footer__bottom-inner {
+  max-width: var(--seller-max-width);
+  margin: 0 auto;
+  padding: 0 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+  flex-wrap: wrap;
+
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 12px;
+}
+
+.seller-footer__bottom-links {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.seller-footer__bottom-links a {
+  color: rgba(255, 255, 255, 0.4);
+  transition: color 0.15s ease;
+}
+
+.seller-footer__bottom-links a:hover {
+  color: #fff;
+}
+
+/* ==========================================================================
+   SELLER CONTENT SURFACES
+   ========================================================================== */
+
+.seller-layout__content .seller-page,
+.seller-layout__content .seller-dashboard,
+.seller-layout__content .seller-products,
+.seller-layout__content .seller-orders,
+.seller-layout__content .seller-analytics,
+.seller-layout__content .seller-settings,
+.seller-layout__content .seller-messages,
+.seller-layout__content .seller-shipping {
+  min-height: 100%;
+}
+
+/* ==========================================================================
+   SHARED SELLER PAGE CONTAINER
+   ========================================================================== */
+
+.seller-layout__content .seller-page-container {
+  width: 100%;
+  max-width: var(--seller-max-width);
+  margin: 0 auto;
+  padding: 32px;
+}
+
+/* ==========================================================================
+   SHARED SELLER CARD
+   ========================================================================== */
+
+.seller-layout__content .seller-card {
+  background: #fff;
+  border: 1px solid var(--seller-line);
+  border-radius: 6px;
+}
+
+/* ==========================================================================
+   SHARED SELLER BUTTONS
+   ========================================================================== */
+
+.seller-layout__content .seller-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 42px;
+  padding: 10px 18px;
+
+  border: 1px solid var(--seller-green);
+  border-radius: 6px;
+
+  background: var(--seller-green);
+  color: #fff;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.seller-layout__content .seller-btn-primary:hover {
+  background: var(--seller-green-dark);
+  border-color: var(--seller-green-dark);
+}
+
+.seller-layout__content .seller-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 42px;
+  padding: 10px 18px;
+
+  border: 1px solid var(--seller-line);
+  border-radius: 6px;
+
+  background: #fff;
+  color: var(--seller-ink);
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.seller-layout__content .seller-btn-secondary:hover {
+  border-color: var(--seller-green);
+  background: var(--seller-paper-2);
+}
+
+/* ==========================================================================
+   SELLER STORE GUARD
+   ========================================================================== */
+
+.seller-store-guard {
+  min-height: 60vh;
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 48px 24px;
+
+  background: var(--seller-paper-2);
+}
+
+.seller-store-guard__card {
+  width: 100%;
+  max-width: 460px;
+
+  padding: 40px 32px;
+
+  background: #fff;
+  border: 1px solid var(--seller-line);
+  border-radius: 6px;
+
+  text-align: center;
+
+  box-shadow: 0 8px 30px rgba(13, 39, 64, 0.06);
+}
+
+.seller-store-guard__spinner {
+  width: 34px;
+  height: 34px;
+
+  margin: 0 auto 20px;
+
+  border: 3px solid var(--seller-paper-3);
+  border-top-color: var(--seller-green);
+
+  border-radius: 50%;
+
+  animation: seller-store-guard-spin 0.8s linear infinite;
+}
+
+.seller-store-guard__card h2 {
+  margin: 0 0 8px;
+
+  color: var(--seller-ink);
+
+  font-family: "Libre Franklin", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.seller-store-guard__card p {
+  margin: 0;
+
+  color: var(--seller-slate);
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@keyframes seller-store-guard-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   SELLER RESPONSIVE — TABLET
+   ========================================================================== */
+
+@media (max-width: 1200px) {
+  .seller-footer__inner {
+    grid-template-columns: 1.2fr repeat(4, 1fr);
+    gap: 22px;
+  }
+
+  .seller-footer__column a {
+    font-size: 13px;
+  }
+}
+
+/* ==========================================================================
+   SELLER RESPONSIVE — 1080
+   ========================================================================== */
+
+@media (max-width: 1080px) {
+  .seller-footer__inner {
+    grid-template-columns: repeat(3, 1fr);
+    row-gap: 38px;
+  }
+
+  .seller-footer__brand {
+    grid-column: span 3;
+  }
+
+  .seller-footer__description {
+    max-width: 360px;
+  }
+}
+
+/* ==========================================================================
+   SELLER RESPONSIVE — MOBILE
+   ========================================================================== */
+
+@media (max-width: 760px) {
+  .seller-layout__body {
+    min-height: 100vh;
+  }
+
+  .seller-layout__content {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .seller-layout__content .seller-page-container {
+    padding: 24px 20px;
+  }
+
+  .seller-footer {
+    padding: 42px 0 22px;
+  }
+
+  .seller-footer__inner {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px 24px;
+    padding: 0 20px;
+  }
+
+  .seller-footer__brand {
+    grid-column: span 2;
+  }
+
+  .seller-footer__logo {
+    font-size: 20px;
+  }
+
+  .seller-footer__description {
+    max-width: 320px;
+    font-size: 12.5px;
+  }
+
+  .seller-footer__column h3 {
+    font-size: 11.5px;
+  }
+
+  .seller-footer__column a {
+    font-size: 12.5px;
+    padding: 4px 0;
+  }
+
+  .seller-footer__bottom {
+    margin-top: 34px;
+  }
+
+  .seller-footer__bottom-inner {
+    padding: 0 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .seller-footer__bottom-links {
+    gap: 14px;
+  }
+
+  .seller-store-guard {
+    min-height: 50vh;
+    padding: 32px 16px;
+  }
+
+  .seller-store-guard__card {
+    padding: 32px 22px;
+  }
+}
+
+/* ==========================================================================
+   SELLER RESPONSIVE — SMALL MOBILE
+   ========================================================================== */
+
+@media (max-width: 480px) {
+  .seller-footer__inner {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .seller-footer__brand {
+    grid-column: span 1;
+  }
+
+  .seller-footer__bottom-inner {
+    font-size: 11px;
+  }
+}
+
+/* ==========================================================================
+   REDUCED MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .seller-footer__column a,
+  .seller-footer__bottom-links a,
+  .seller-layout__content .seller-btn-primary,
+  .seller-layout__content .seller-btn-secondary,
+  .seller-store-guard__spinner {
+    transition: none;
+    animation: none;
+  }
+}

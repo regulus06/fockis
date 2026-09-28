@@ -1,0 +1,154 @@
+.domain-filter-panel {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.domain-filter-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.domain-filter-panel label > span {
+  color: #374151;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.domain-filter-panel input,
+.domain-filter-panel select {
+  min-height: 42px;
+  box-sizing: border-box;
+  padding: 0 11px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  outline: none;
+}
+
+.domain-filter-panel input:focus,
+.domain-filter-panel select:focus {
+  border-color: #005a8d;
+  box-shadow: 0 0 0 3px rgba(0, 90, 141, 0.08);
+}
+
+.domain-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.domain-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.domain-table th {
+  padding: 13px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.domain-table td {
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #374151;
+  font-size: 13px;
+}
+
+.domain-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.domain-owner {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.domain-owner strong {
+  color: #111827;
+}
+
+.domain-owner small {
+  color: #9ca3af;
+  text-transform: capitalize;
+}
+
+.domain-badge {
+  display: inline-flex;
+  min-height: 25px;
+  align-items: center;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #eef6fb;
+  color: #005a8d;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.domain-status--active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.domain-status--available {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.domain-status--suspended {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.domain-status--expired {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.domain-table-state {
+  padding: 60px 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  color: #6b7280;
+  text-align: center;
+}
+
+.domain-table-state strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #111827;
+}
+
+.domain-table-state p {
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .domain-filter-panel {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .domain-filter-panel {
+    grid-template-columns: 1fr;
+  }
+}

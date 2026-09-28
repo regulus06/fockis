@@ -1,0 +1,14 @@
+.fockis-map-shell{display:flex;flex-direction:column;gap:10px;width:100%;min-height:520px}
+.fockis-map-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fockis-map-toolbar input{flex:1;min-width:220px;padding:10px 12px;border:1px solid #c8cdd3;border-radius:8px}
+.fockis-map-toolbar button,.fockis-address-form button{padding:10px 14px;border:0;border-radius:8px;cursor:pointer}
+.fockis-map-role{font-size:12px;font-weight:600}
+.fockis-map-canvas{width:100%;height:620px;border-radius:12px;overflow:hidden}
+.fockis-map-error{padding:10px;border-radius:8px;background:#fee2e2}
+.fockis-address-manager{display:flex;flex-direction:column;gap:16px}
+.fockis-address-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.fockis-address-form label{display:flex;flex-direction:column;gap:5px;font-weight:600}
+.fockis-address-form input{padding:9px;border:1px solid #c8cdd3;border-radius:7px}
+.fockis-address-list{display:grid;gap:8px}
+.fockis-address-list article{display:grid;grid-template-columns:1.2fr 2fr .8fr .8fr;gap:10px;padding:12px;border:1px solid #ddd;border-radius:8px}
+@media(max-width:800px){.fockis-address-form{grid-template-columns:1fr}.fockis-address-list article{grid-template-columns:1fr}}

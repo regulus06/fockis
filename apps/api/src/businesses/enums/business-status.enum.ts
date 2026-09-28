@@ -1,0 +1,7 @@
+export enum BusinessStatus {
+  DRAFT = "DRAFT",
+  PENDING_REVIEW = "PENDING_REVIEW",
+  ACTIVE = "ACTIVE",
+  PAUSED = "PAUSED",
+  REJECTED = "REJECTED",
+}

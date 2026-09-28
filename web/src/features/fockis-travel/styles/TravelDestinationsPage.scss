@@ -1,0 +1,403 @@
+@use "./_fockis-tokens" as fockis;
+
+.travel-destinations-page {
+  min-height: 100%;
+  background: fockis.$cream-50;
+  color: fockis.$text-on-light;
+
+  .wrap {
+    @include fockis.wrap;
+  }
+
+  .tight {
+    padding: 38px 0 30px;
+  }
+
+  .eyebrow {
+    @include fockis.eyebrow;
+    margin-bottom: 8px;
+  }
+
+  .destinations-hero {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    padding: 42px 24px 46px;
+
+    overflow: hidden;
+    text-align: center;
+
+    color: fockis.$text-on-dark;
+    background:
+      linear-gradient(
+        135deg,
+        rgba(10, 24, 48, 0.98),
+        rgba(14, 35, 66, 0.96)
+      );
+    border-radius: fockis.$radius-lg;
+    box-shadow: fockis.$shadow-card;
+
+    &::before {
+      position: absolute;
+      top: -100px;
+      right: -80px;
+
+      width: 280px;
+      height: 280px;
+
+      content: "";
+      background: rgba(240, 169, 62, 0.09);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    &::after {
+      position: absolute;
+      bottom: -130px;
+      left: -90px;
+
+      width: 300px;
+      height: 300px;
+
+      content: "";
+      background: rgba(47, 127, 166, 0.1);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      margin-bottom: 10px;
+
+      color: fockis.$gold-500;
+    }
+
+    h1 {
+      margin: 0;
+
+      color: fockis.$text-on-dark;
+      font-family: fockis.$font-display;
+      font-size: clamp(32px, 5vw, 50px);
+      font-weight: 700;
+      line-height: 1.04;
+      letter-spacing: -0.025em;
+    }
+
+    > p {
+      max-width: 620px;
+      margin: 12px auto 0;
+
+      color: fockis.$text-on-dark-muted;
+      font-family: fockis.$font-body;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+  }
+
+  .destination-search {
+    width: 100%;
+    max-width: 420px;
+    margin: 20px auto 0;
+  }
+
+  .ft-field {
+    min-width: 0;
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+
+      color: rgba(250, 246, 238, 0.6);
+      font-family: fockis.$font-body;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: left;
+    }
+
+    input,
+    select {
+      display: block;
+      width: 100%;
+      min-height: 46px;
+      padding: 0 14px;
+
+      color: fockis.$text-on-dark;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: fockis.$radius-md;
+
+      font-family: fockis.$font-body;
+      font-size: 14px;
+      outline: none;
+
+      transition:
+        border-color 160ms ease,
+        background-color 160ms ease,
+        box-shadow 160ms ease;
+
+      &:focus {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: fockis.$gold-500;
+        box-shadow: 0 0 0 3px rgba(240, 169, 62, 0.14);
+      }
+
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.48);
+      }
+    }
+  }
+
+  .section-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    margin-bottom: 20px;
+
+    h2 {
+      margin: 5px 0 0;
+
+      color: fockis.$text-on-light;
+      font-family: fockis.$font-display;
+      font-size: clamp(22px, 3vw, 30px);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.015em;
+    }
+  }
+
+  .region-tabs {
+    margin: 0 0 24px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(14, 26, 43, 0.16);
+      border-radius: fockis.$radius-pill;
+    }
+  }
+
+  .ft-scroll-x {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(260px, 340px);
+
+    gap: 18px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    padding: 2px 2px 16px;
+
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      height: 5px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(14, 26, 43, 0.16);
+      border-radius: fockis.$radius-pill;
+    }
+  }
+
+  .destination-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 22px;
+
+    padding-bottom: 42px;
+  }
+
+  .destination-grid > * {
+    min-width: 0;
+  }
+
+  .ft-empty-state {
+    @include fockis.card-surface;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 250px;
+    margin: 8px 0 42px;
+    padding: 36px 24px;
+
+    text-align: center;
+
+    border: 1px solid rgba(14, 26, 43, 0.08);
+  }
+
+  .ft-empty-state .ic {
+    display: grid;
+    width: 54px;
+    height: 54px;
+    margin-bottom: 14px;
+
+    place-items: center;
+
+    background: fockis.$gold-100;
+    border-radius: 50%;
+
+    font-size: 26px;
+    line-height: 1;
+  }
+
+  .ft-empty-state h4 {
+    margin: 0;
+
+    color: fockis.$text-on-light;
+    font-family: fockis.$font-body;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .ft-empty-state p {
+    max-width: 520px;
+    margin: 8px auto 0;
+
+    color: fockis.$text-on-light-muted;
+    font-family: fockis.$font-body;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .btn {
+    @include fockis.btn-base;
+
+    margin-top: 16px;
+  }
+
+  .btn-primary {
+    @include fockis.btn-primary;
+  }
+
+  @include fockis.bp-down(lg) {
+    .destination-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .ft-scroll-x {
+      grid-auto-columns: minmax(250px, 310px);
+    }
+  }
+
+  @include fockis.bp-down(md) {
+    .tight {
+      padding: 32px 0 24px;
+    }
+
+    .destinations-hero {
+      padding: 36px 20px 38px;
+    }
+
+    .destination-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .section-head {
+      margin-bottom: 16px;
+    }
+
+    .ft-empty-state {
+      min-height: 220px;
+      padding: 30px 20px;
+    }
+  }
+
+  @include fockis.bp-down(sm) {
+    .tight {
+      padding: 28px 0 20px;
+    }
+
+    .destinations-hero {
+      padding: 32px 18px 34px;
+      border-radius: fockis.$radius-md;
+
+      h1 {
+        font-size: clamp(30px, 9vw, 38px);
+      }
+
+      > p {
+        font-size: 14px;
+      }
+    }
+
+    .destination-search {
+      margin-top: 18px;
+    }
+
+    .ft-field {
+      input,
+      select {
+        min-height: 44px;
+      }
+    }
+
+    .region-tabs {
+      margin-right: -#{fockis.$gutter};
+      margin-left: -#{fockis.$gutter};
+      padding: 0 fockis.$gutter 4px;
+    }
+
+    .ft-scroll-x {
+      grid-auto-columns: minmax(235px, 82vw);
+      gap: 14px;
+
+      margin-right: -#{fockis.$gutter};
+      margin-left: -#{fockis.$gutter};
+      padding-right: fockis.$gutter;
+      padding-left: fockis.$gutter;
+    }
+
+    .destination-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+      padding-bottom: 32px;
+    }
+
+    .section-head h2 {
+      font-size: 24px;
+    }
+
+    .ft-empty-state {
+      min-height: 210px;
+      margin-bottom: 32px;
+      padding: 28px 18px;
+    }
+  }
+}

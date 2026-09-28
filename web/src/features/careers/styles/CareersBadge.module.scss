@@ -1,0 +1,10 @@
+@use '../styles/careers-mixins' as *;
+
+.badge {
+  @include careers-badge;
+}
+.internship { background: var(--careers-teal-tint); color: var(--careers-teal); }
+.coop { background: #e9e6fb; color: var(--careers-indigo); }
+.remote { background: var(--careers-bg-alt); color: var(--careers-ink-soft); }
+.paid { background: var(--careers-amber-tint); color: var(--careers-amber); }
+.fulltime { background: #e4f0ea; color: var(--careers-success); }

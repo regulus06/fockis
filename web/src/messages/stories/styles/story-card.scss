@@ -1,0 +1,157 @@
+.messages-story-card {
+  position: relative;
+  flex: 0 0 108px;
+  width: 108px;
+  height: 154px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 17px;
+  background: #0f172a;
+  cursor: pointer;
+  box-shadow:
+    0 4px 14px
+      rgba(15, 23, 42, 0.14);
+
+  &--unseen {
+    box-shadow:
+      0 0 0 3px #0284c7,
+      0 4px 16px
+        rgba(2, 132, 199, 0.25);
+  }
+
+  &--create {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+  }
+
+  &__media {
+    position: absolute;
+    inset: 0;
+
+    > img,
+    > video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__create-image {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 112px;
+    display: grid;
+    place-items: center;
+    background: #e0f2fe;
+
+    img,
+    > span {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+    }
+
+    img {
+      object-fit: cover;
+    }
+
+    > span {
+      display: grid;
+      place-items: center;
+      background: #0284c7;
+      color: #ffffff;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    strong {
+      position: absolute;
+      left: 50%;
+      bottom: -15px;
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      transform: translateX(-50%);
+      border: 4px solid #ffffff;
+      border-radius: 50%;
+      background: #0284c7;
+      color: #ffffff;
+      font-size: 21px;
+    }
+  }
+
+  &__avatar {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    background: #075985;
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 800;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__text {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    display: grid;
+    place-items: center;
+    padding: 35px 12px;
+    background:
+      linear-gradient(
+        145deg,
+        #0c4a6e,
+        #0284c7
+      );
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.35;
+    text-align: center;
+  }
+
+  &__name {
+    position: absolute;
+    right: 8px;
+    bottom: 9px;
+    left: 8px;
+    z-index: 3;
+    overflow: hidden;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-shadow:
+      0 1px 5px
+        rgba(0, 0, 0, 0.85);
+  }
+
+  &--create &__name {
+    color: #0f172a;
+    text-shadow: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .messages-story-card {
+    flex-basis: 90px;
+    width: 90px;
+    height: 135px;
+  }
+}

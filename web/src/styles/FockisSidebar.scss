@@ -1,0 +1,1362 @@
+/* ============================================================================
+   FOCKIS SIDEBAR
+   Desktop + Mobile Drawer
+
+   REDESIGN: navy sidebar background (was app-background/transparent) with
+   gold active-state accents and squared nav items — reads like a campus
+   portal's left navigation rather than a social app's sidebar.
+============================================================================ */
+
+.fk-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  width: 260px;
+  height: 100vh;
+  min-height: 100vh;
+  max-height: 100vh;
+
+  margin: 0;
+  padding: 20px 14px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--fk-fjord);
+  color: #ffffff;
+
+  border-right: none;
+
+  box-shadow: inset -3px 0 0 0 var(--fk-amber-bright);
+
+  overflow: hidden;
+
+  z-index: 100;
+
+  transition:
+    width 200ms ease,
+    padding 200ms ease;
+}
+
+
+/* ============================================================================
+   CLOSE BUTTON
+============================================================================ */
+
+.fk-sidebar__close {
+  display: none;
+}
+
+
+/* ============================================================================
+   BRAND
+============================================================================ */
+
+.fk-sidebar__brand {
+  width: 100%;
+
+  flex: 0 0 auto;
+
+  margin: 0 0 18px;
+  padding: 0 4px;
+
+  box-sizing: border-box;
+}
+
+.fk-sidebar__logo {
+  min-height: 42px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  color: #ffffff;
+
+  text-decoration: none;
+}
+
+.fk-sidebar__logo-mark {
+  width: 34px;
+  height: 34px;
+
+  flex: 0 0 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--fk-r-sm);
+
+  background: var(--fk-amber-bright);
+  color: var(--fk-fjord-dark);
+
+  font-family: var(--fk-font-display);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.fk-sidebar__logo-text {
+  color: #ffffff;
+
+  font-family: var(--fk-font-display);
+  font-size: 20px;
+  font-weight: 800;
+
+  letter-spacing: 0;
+
+  white-space: nowrap;
+}
+
+
+/* ============================================================================
+   CREATE BUTTON
+============================================================================ */
+
+.fk-sidebar__create-button {
+  width: 100%;
+  min-height: 48px;
+
+  flex: 0 0 auto;
+
+  margin: 0 0 18px;
+  padding: 0 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+
+  background: var(--fk-amber-bright);
+  color: var(--fk-fjord-dark);
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 5px 14px rgba(6, 21, 48, 0.25);
+
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.fk-sidebar__create-button:hover {
+  background: var(--fk-amber);
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 7px 18px rgba(6, 21, 48, 0.3);
+}
+
+.fk-sidebar__create-button:active {
+  transform: scale(0.97);
+}
+
+
+/* ============================================================================
+   MESSAGES
+============================================================================ */
+
+.fk-sidebar__messages-link {
+  width: 100%;
+  min-height: 42px;
+
+  flex: 0 0 auto;
+
+  margin: 0 0 14px;
+  padding: 9px 11px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  border-radius: var(--fk-r-sm);
+
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+
+  line-height: 1.2;
+
+  text-decoration: none;
+
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.fk-sidebar__messages-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+
+  color: #ffffff;
+}
+
+.fk-sidebar__messages-link:active {
+  transform: scale(0.98);
+}
+
+.fk-sidebar__messages-link--active {
+  background: rgba(255, 199, 44, 0.16);
+
+  color: var(--fk-amber-bright);
+
+  font-weight: 700;
+}
+
+.fk-sidebar__messages-link svg {
+  width: 20px;
+  height: 20px;
+
+  flex: 0 0 20px;
+
+  display: block;
+}
+
+
+/* ============================================================================
+   NAVIGATION
+============================================================================ */
+
+.fk-sidebar__nav {
+  width: 100%;
+
+  min-width: 0;
+  min-height: 0;
+
+  flex: 1 1 auto;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 18px;
+
+  padding: 0 0 18px;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  scrollbar-width: thin;
+
+  scrollbar-color:
+    rgba(255, 255, 255, 0.25)
+    transparent;
+}
+
+.fk-sidebar__nav::-webkit-scrollbar {
+  width: 5px;
+}
+
+.fk-sidebar__nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.fk-sidebar__nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+
+  border-radius: 999px;
+}
+
+.fk-sidebar__nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+
+/* ============================================================================
+   NAVIGATION GROUP
+============================================================================ */
+
+.fk-sidebar__nav-group {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  flex: 0 0 auto;
+}
+
+
+/* ============================================================================
+   SECTION LABEL
+============================================================================ */
+
+.fk-sidebar__section-label {
+  display: block;
+
+  margin: 0 11px 6px;
+
+  color: rgba(255, 255, 255, 0.55);
+
+  font-size: 10px;
+  font-weight: 800;
+
+  line-height: 1.2;
+
+  letter-spacing: 0.12em;
+
+  text-transform: uppercase;
+
+  white-space: nowrap;
+}
+
+
+/* ============================================================================
+   NAV ITEM
+============================================================================ */
+
+.fk-sidebar__nav-item {
+  position: relative;
+
+  width: 100%;
+  min-height: 42px;
+
+  box-sizing: border-box;
+
+  padding: 9px 11px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+
+  line-height: 1.2;
+
+  text-decoration: none;
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.fk-sidebar__nav-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+
+  color: #ffffff;
+}
+
+.fk-sidebar__nav-item:active {
+  transform: scale(0.98);
+}
+
+.fk-sidebar__nav-item.is-active {
+  background: rgba(255, 199, 44, 0.16);
+
+  color: var(--fk-amber-bright);
+
+  font-weight: 700;
+}
+
+
+/* ============================================================================
+   NAV ICON
+============================================================================ */
+
+.fk-sidebar__nav-icon {
+  width: 22px;
+  height: 22px;
+
+  flex: 0 0 22px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  color: inherit;
+
+  transition:
+    transform 150ms ease,
+    color 150ms ease;
+}
+
+.fk-sidebar__nav-item:hover .fk-sidebar__nav-icon {
+  transform: translateY(-1px);
+}
+
+.fk-sidebar__nav-icon svg {
+  width: 20px;
+  height: 20px;
+
+  display: block;
+}
+
+
+/* ============================================================================
+   NAV LABEL
+============================================================================ */
+
+.fk-sidebar__nav-label {
+  min-width: 0;
+
+  flex: 1;
+
+  overflow: hidden;
+
+  color: inherit;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================================
+   BADGE
+============================================================================ */
+
+.fk-sidebar__badge {
+  min-width: 20px;
+  height: 20px;
+
+  padding: 0 6px;
+
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  background: var(--fk-amber-bright);
+  color: var(--fk-fjord-dark);
+
+  font-size: 10px;
+  font-weight: 800;
+
+  line-height: 1;
+}
+
+
+/* ============================================================================
+   ADMINISTRATION
+============================================================================ */
+
+.fk-sidebar__admin-divider {
+  width: 100%;
+  height: 1px;
+
+  margin: 14px 0 9px;
+
+  flex: 0 0 auto;
+
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.fk-sidebar__admin-link {
+  position: relative;
+
+  width: 100%;
+  min-height: 44px;
+
+  flex: 0 0 auto;
+
+  box-sizing: border-box;
+
+  padding: 10px 11px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+
+  line-height: 1.2;
+
+  text-decoration: none;
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.fk-sidebar__admin-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+
+  color: #ffffff;
+}
+
+.fk-sidebar__admin-link:active {
+  transform: scale(0.98);
+}
+
+.fk-sidebar__admin-link--active {
+  background: rgba(255, 199, 44, 0.16);
+
+  color: var(--fk-amber-bright);
+
+  font-weight: 700;
+}
+
+.fk-sidebar__admin-icon {
+  width: 22px;
+  height: 22px;
+
+  flex: 0 0 22px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 18px;
+
+  line-height: 1;
+}
+
+.fk-sidebar__admin-label {
+  min-width: 0;
+
+  flex: 1;
+
+  overflow: hidden;
+
+  color: inherit;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+.fk-sidebar__admin-link--active
+.fk-sidebar__admin-icon {
+  transform: translateY(-1px);
+}
+
+
+/* ============================================================================
+   PROFILE AREA
+============================================================================ */
+
+.fk-sidebar__bottom {
+  width: 100%;
+
+  flex: 0 0 auto;
+
+  margin: 0;
+  padding: 12px 0 0;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+
+  background: transparent;
+}
+
+
+/* ============================================================================
+   PROFILE CARD
+============================================================================ */
+
+.fk-sidebar__profile-card {
+  width: 100%;
+  min-height: 58px;
+
+  padding: 8px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+
+  background: transparent;
+  color: #ffffff;
+
+  font-family: inherit;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+
+.fk-sidebar__profile-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.fk-sidebar__profile-card:active {
+  transform: scale(0.98);
+}
+
+
+/* ============================================================================
+   PROFILE AVATAR
+============================================================================ */
+
+.fk-sidebar__profile-avatar {
+  width: 40px;
+  height: 40px;
+
+  flex: 0 0 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border-radius: var(--fk-r-sm);
+
+  background: var(--fk-amber-bright);
+  color: var(--fk-fjord-dark);
+
+  font-family: var(--fk-font-display);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.fk-sidebar__profile-avatar img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+
+/* ============================================================================
+   PROFILE INFO
+============================================================================ */
+
+.fk-sidebar__profile-info {
+  min-width: 0;
+
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.fk-sidebar__profile-info strong {
+  overflow: hidden;
+
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  line-height: 1.2;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+.fk-sidebar__profile-info span {
+  overflow: hidden;
+
+  color: rgba(255, 255, 255, 0.6);
+
+  font-size: 11px;
+
+  line-height: 1.2;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================================
+   LOGOUT
+============================================================================ */
+
+.fk-sidebar__logout-container {
+  width: 100%;
+
+  flex: 0 0 auto;
+
+  margin-top: auto;
+
+  padding: 12px 0 0;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+
+  background: transparent;
+}
+
+.fk-sidebar__logout-button {
+  width: 100%;
+  min-height: 44px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 10px 14px;
+
+  box-sizing: border-box;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+
+  background: transparent;
+
+  color: #f0938c;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.fk-sidebar__logout-button:hover {
+  background: rgba(220, 38, 38, 0.18);
+
+  color: #ffb4ae;
+}
+
+.fk-sidebar__logout-button:active {
+  transform: scale(0.98);
+}
+
+.fk-sidebar__logout-icon {
+  width: 22px;
+  height: 22px;
+
+  flex: 0 0 22px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 20px;
+
+  line-height: 1;
+}
+
+.fk-sidebar__logout-button span:last-child {
+  min-width: 0;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================================
+   COLLAPSED DESKTOP SIDEBAR
+============================================================================ */
+
+.fk-sidebar--collapsed {
+  width: 76px;
+
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.fk-sidebar--collapsed .fk-sidebar__logo-text,
+.fk-sidebar--collapsed .fk-sidebar__nav-label,
+.fk-sidebar--collapsed .fk-sidebar__section-label,
+.fk-sidebar--collapsed .fk-sidebar__profile-info,
+.fk-sidebar--collapsed .fk-sidebar__create-button span,
+.fk-sidebar--collapsed .fk-sidebar__messages-link span,
+.fk-sidebar--collapsed .fk-sidebar__admin-label {
+  display: none;
+}
+
+.fk-sidebar--collapsed .fk-sidebar__nav-item,
+.fk-sidebar--collapsed .fk-sidebar__messages-link,
+.fk-sidebar--collapsed .fk-sidebar__admin-link,
+.fk-sidebar--collapsed .fk-sidebar__create-button {
+  justify-content: center;
+
+  gap: 0;
+}
+
+.fk-sidebar--collapsed .fk-sidebar__brand {
+  padding: 0;
+
+  display: flex;
+  justify-content: center;
+}
+
+.fk-sidebar--collapsed .fk-sidebar__logo {
+  gap: 0;
+}
+
+.fk-sidebar--collapsed .fk-sidebar__profile-card {
+  justify-content: center;
+}
+
+.fk-sidebar--collapsed .fk-sidebar__badge {
+  position: absolute;
+
+  top: 4px;
+  right: 4px;
+
+  min-width: 16px;
+  height: 16px;
+
+  font-size: 9px;
+}
+
+.fk-sidebar--collapsed .fk-sidebar__admin-divider {
+  margin-left: 4px;
+  margin-right: 4px;
+
+  width: calc(100% - 8px);
+}
+
+.fk-sidebar--collapsed .fk-sidebar__logout-button {
+  justify-content: center;
+
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.fk-sidebar--collapsed .fk-sidebar__logout-button span:last-child {
+  display: none;
+}
+
+
+/* ============================================================================
+   MOBILE DRAWER
+============================================================================ */
+
+@media (max-width: 767px) {
+
+  .fk-sidebar {
+    position: fixed;
+
+    top: 0;
+    left: 0;
+
+    width: min(310px, 86vw);
+
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
+
+    margin: 0;
+
+    padding:
+      18px
+      14px
+      calc(18px + env(safe-area-inset-bottom));
+
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+
+    background: var(--fk-fjord);
+    color: #ffffff;
+
+    border-right: none;
+
+    box-shadow:
+      12px 0 40px rgba(6, 21, 48, 0.35);
+
+    overflow: hidden;
+
+    z-index: 10002;
+
+    transform: translate3d(-105%, 0, 0);
+
+    visibility: hidden;
+    pointer-events: none;
+
+    transition:
+      transform 220ms ease,
+      visibility 220ms ease;
+  }
+
+
+  /* ========================================================================
+     OPEN STATE
+  ======================================================================== */
+
+  .fk-sidebar.fk-sidebar--mobile-open,
+  .fk-sidebar.is-open,
+  .fk-sidebar.fk-sidebar--open,
+  .fk-sidebar[data-mobile-open="true"] {
+    transform: translate3d(0, 0, 0);
+
+    visibility: visible;
+
+    pointer-events: auto;
+
+    z-index: 10002;
+  }
+
+
+  /* ========================================================================
+     CLOSE BUTTON
+  ======================================================================== */
+
+  .fk-sidebar__close {
+    display: flex;
+
+    position: absolute;
+
+    top: 14px;
+    right: 14px;
+
+    width: 38px;
+    height: 38px;
+
+    padding: 0;
+
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+    border-radius: var(--fk-r-sm);
+
+    background: transparent;
+
+    color: rgba(255, 255, 255, 0.75);
+
+    font-size: 28px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    z-index: 10003;
+
+    transition:
+      background-color 160ms ease,
+      color 160ms ease;
+  }
+
+  .fk-sidebar__close:hover {
+    background: rgba(255, 255, 255, 0.1);
+
+    color: #ffffff;
+  }
+
+
+  /* ========================================================================
+     BRAND
+  ======================================================================== */
+
+  .fk-sidebar__brand {
+    width: 100%;
+
+    flex: 0 0 auto;
+
+    margin: 0 0 16px;
+
+    padding: 0 48px 0 4px;
+
+    box-sizing: border-box;
+  }
+
+  .fk-sidebar__logo-mark {
+    width: 34px;
+    height: 34px;
+
+    flex: 0 0 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: var(--fk-r-sm);
+
+    background: var(--fk-amber-bright);
+    color: var(--fk-fjord-dark);
+
+    font-family: var(--fk-font-display);
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  .fk-sidebar__logo-text {
+    color: #ffffff;
+
+    font-family: var(--fk-font-display);
+    font-size: 20px;
+    font-weight: 800;
+
+    letter-spacing: 0;
+  }
+
+
+  /* ========================================================================
+     CREATE BUTTON
+  ======================================================================== */
+
+  .fk-sidebar__create-button {
+    width: 100%;
+    min-height: 48px;
+
+    flex: 0 0 auto;
+
+    margin: 0 0 18px;
+
+    padding: 0 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+
+    border: 0;
+    border-radius: var(--fk-r-sm);
+
+    background: var(--fk-amber-bright);
+    color: var(--fk-fjord-dark);
+
+    font-size: 14px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    box-shadow:
+      0 5px 14px rgba(6, 21, 48, 0.25);
+  }
+
+
+  /* ========================================================================
+     MESSAGES
+  ======================================================================== */
+
+  .fk-sidebar__messages-link {
+    width: 100%;
+
+    min-height: 44px;
+
+    margin-bottom: 14px;
+
+    padding: 9px 11px;
+
+    gap: 11px;
+  }
+
+  .fk-sidebar__messages-link svg {
+    width: 20px;
+    height: 20px;
+  }
+
+
+  /* ========================================================================
+     NAVIGATION
+  ======================================================================== */
+
+  .fk-sidebar__nav {
+    width: 100%;
+
+    min-width: 0;
+    min-height: 0;
+
+    flex: 1 1 auto;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 18px;
+
+    padding: 0 0 18px;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .fk-sidebar__nav-group {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+
+    flex: 0 0 auto;
+  }
+
+  .fk-sidebar__section-label {
+    margin: 0 11px 6px;
+
+    font-size: 10px;
+  }
+
+
+  /* ========================================================================
+     NAV ITEM
+  ======================================================================== */
+
+  .fk-sidebar__nav-item {
+    width: 100%;
+
+    min-height: 44px;
+
+    padding: 9px 11px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+
+    border-radius: var(--fk-r-sm);
+  }
+
+  .fk-sidebar__nav-item:active {
+    transform: scale(0.98);
+  }
+
+  .fk-sidebar__nav-icon {
+    width: 24px;
+    height: 24px;
+
+    flex: 0 0 24px;
+  }
+
+  .fk-sidebar__nav-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+
+  /* ========================================================================
+     ADMINISTRATION
+  ======================================================================== */
+
+  .fk-sidebar__admin-divider {
+    width: 100%;
+
+    margin: 14px 0 9px;
+
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .fk-sidebar__admin-link {
+    width: 100%;
+
+    min-height: 46px;
+
+    padding: 10px 11px;
+
+    gap: 11px;
+
+    border-radius: var(--fk-r-sm);
+
+    font-size: 14px;
+  }
+
+  .fk-sidebar__admin-icon {
+    width: 24px;
+    height: 24px;
+
+    flex: 0 0 24px;
+
+    font-size: 19px;
+  }
+
+  .fk-sidebar__admin-label {
+    display: block;
+  }
+
+
+  /* ========================================================================
+     PROFILE
+  ======================================================================== */
+
+  .fk-sidebar__bottom {
+    width: 100%;
+
+    flex: 0 0 auto;
+
+    padding: 12px 0 0;
+  }
+
+  .fk-sidebar__profile-card {
+    min-height: 58px;
+
+    padding: 8px;
+
+    gap: 10px;
+  }
+
+  .fk-sidebar__profile-avatar {
+    width: 40px;
+    height: 40px;
+
+    flex: 0 0 40px;
+  }
+
+
+  /* ========================================================================
+     LOGOUT
+  ======================================================================== */
+
+  .fk-sidebar__logout-container {
+    margin-top: auto;
+
+    padding:
+      12px 0
+      calc(4px + env(safe-area-inset-bottom));
+  }
+
+  .fk-sidebar__logout-button {
+    min-height: 44px;
+
+    padding: 10px 14px;
+
+    gap: 12px;
+  }
+
+
+  /* ========================================================================
+     MOBILE COLLAPSED STATE
+  ======================================================================== */
+
+  .fk-sidebar--collapsed {
+    width: min(310px, 86vw);
+
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .fk-sidebar--collapsed .fk-sidebar__logo-text,
+  .fk-sidebar--collapsed .fk-sidebar__nav-label,
+  .fk-sidebar--collapsed .fk-sidebar__section-label,
+  .fk-sidebar--collapsed .fk-sidebar__profile-info,
+  .fk-sidebar--collapsed .fk-sidebar__create-button span,
+  .fk-sidebar--collapsed .fk-sidebar__messages-link span,
+  .fk-sidebar--collapsed .fk-sidebar__admin-label {
+    display: initial;
+  }
+
+  .fk-sidebar--collapsed .fk-sidebar__nav-item,
+  .fk-sidebar--collapsed .fk-sidebar__messages-link,
+  .fk-sidebar--collapsed .fk-sidebar__admin-link {
+    justify-content: flex-start;
+
+    padding-left: 11px;
+    padding-right: 11px;
+  }
+
+  .fk-sidebar--collapsed .fk-sidebar__profile-card {
+    justify-content: flex-start;
+  }
+
+  .fk-sidebar--collapsed .fk-sidebar__badge {
+    position: static;
+
+    min-width: 20px;
+    height: 20px;
+
+    font-size: 10px;
+  }
+
+  .fk-sidebar--collapsed .fk-sidebar__logout-button {
+    justify-content: flex-start;
+
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .fk-sidebar--collapsed .fk-sidebar__logout-button span:last-child {
+    display: initial;
+  }
+
+
+  /* ========================================================================
+     SMALL MOBILE
+  ======================================================================== */
+
+  @media (max-width: 480px) {
+
+    .fk-sidebar {
+      width: min(300px, 88vw);
+
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+
+    .fk-sidebar__brand {
+      margin-bottom: 14px;
+    }
+
+    .fk-sidebar__nav {
+      gap: 16px;
+    }
+
+    .fk-sidebar__nav-item {
+      min-height: 43px;
+
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+
+    .fk-sidebar__admin-link {
+      min-height: 43px;
+
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+
+    .fk-sidebar__section-label {
+      margin-bottom: 5px;
+    }
+
+    .fk-sidebar__logout-container {
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+}

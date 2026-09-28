@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+
+# Expo
+.expo/
+**/.expo/
+
+# Build output
+dist/
+build/
+.next/
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local uploads / generated files
+uploads/
+**/uploads/
+
+# Archives
+*.zip
+
+# Large media accidentally stored in project
+*.mp3
+*.mp4
+*.mov
+*.wav
+
+# Local certificates / secrets
+fockis-secrets/

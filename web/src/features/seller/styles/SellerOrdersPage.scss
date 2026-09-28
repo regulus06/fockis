@@ -1,0 +1,342 @@
+@use "./seller-console-shared";
+
+.seller-orders {
+  min-height: 100vh;
+  background: var(--fk-bg);
+  padding-bottom: 70px;
+}
+
+.orders-body {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+
+  @media (max-width: 768px) { padding: 16px; }
+}
+
+.orders-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.header-copy {
+  min-width: 0;
+
+  h1 {
+    margin: 4px 0 4px;
+    color: var(--fk-text);
+    font-family: var(--fk-font-display);
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  p {
+    margin: 0;
+    color: var(--fk-text-2);
+    font-size: 13px;
+  }
+}
+
+.order-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  min-width: 0;
+
+  @media (max-width: 768px) {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+
+    padding-bottom: 6px;
+    margin-bottom: -6px;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+  }
+
+  button {
+    flex-shrink: 0;
+
+    padding: 7px 14px;
+    border: 1px solid var(--fk-border);
+    border-radius: var(--fk-r-pill);
+    background: var(--fk-surface);
+    color: var(--fk-text-2);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover { border-color: var(--fk-border-strong); }
+
+    &.is-active {
+      background: var(--fk-fjord);
+      border-color: var(--fk-fjord);
+      color: #fff;
+    }
+  }
+}
+
+.orders-table {
+  .order-id {
+    font-weight: 700;
+    white-space: nowrap;
+  }
+}
+
+.invoice-cell,
+.customer-info,
+.items-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  small { color: var(--fk-text-3); font-size: 11px; }
+}
+
+.invoice-cell strong {
+  /* Long UUIDs (INV-b3758ba9-e8fb-491f-...) were wrapping onto many
+     lines and blowing out row height. Truncate instead. */
+  max-width: 160px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  display: block;
+}
+
+.invoice-date { color: var(--fk-text-3); }
+
+.shipping-address {
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+  color: var(--fk-text-3);
+  font-size: 11px;
+}
+
+.item-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.item-qty { color: var(--fk-text-3); flex-shrink: 0; }
+
+.total-cell { font-weight: 800; white-space: nowrap; }
+
+.action-cell { white-space: nowrap; }
+
+.tracking-form-cell { padding: 0 !important; }
+
+/* ============================================================================
+   MOBILE TABLE SCROLL
+   The table itself stays a real <table> (8 columns of tabular order data
+   doesn't translate cleanly to cards without restructuring the markup),
+   but on small screens the scroll needs to be obviously usable: tighter
+   cells, a visible scrollbar, and touch momentum scrolling.
+============================================================================ */
+
+@media (max-width: 768px) {
+  .table-wrapper {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+
+    &::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--fk-border-strong);
+      border-radius: var(--fk-r-pill);
+    }
+  }
+
+  .orders-table {
+    min-width: 760px;
+
+    thead th,
+    tbody td {
+      padding: 10px 8px;
+      font-size: 12px;
+    }
+  }
+
+  .invoice-cell strong {
+    max-width: 120px;
+  }
+}
+
+.tracking-info {
+  margin-top: 8px;
+  padding: 10px;
+  background: var(--fk-sunken);
+  border-radius: var(--fk-r-sm);
+}
+
+.tracking-info-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--fk-text-2);
+
+  strong { color: var(--fk-text); }
+
+  a {
+    color: var(--fk-fjord);
+    font-weight: 700;
+    text-decoration: underline;
+  }
+}
+
+.tracking-events {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--fk-border);
+}
+
+.tracking-events-title {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--fk-text-3);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.tracking-event {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.tracking-event-dot {
+  width: 6px;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--fk-fjord);
+  flex-shrink: 0;
+}
+
+.tracking-event-content {
+  display: flex;
+  flex-direction: column;
+
+  strong { color: var(--fk-text); font-size: 12px; }
+  span { color: var(--fk-text-2); font-size: 12px; }
+  small { color: var(--fk-text-3); font-size: 11px; }
+}
+
+.tracking-form {
+  padding: 16px;
+  background: var(--fk-sunken);
+}
+
+.tracking-form-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+
+  strong { display: block; color: var(--fk-text); font-size: 14px; }
+  span { color: var(--fk-text-2); font-size: 12px; }
+}
+
+.tracking-cancel-btn {
+  border: 0;
+  background: transparent;
+  color: var(--fk-text-2);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover { color: var(--fk-text); }
+}
+
+.tracking-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.tracking-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  span {
+    color: var(--fk-text-2);
+    font-size: 12px;
+    font-weight: 700;
+
+    em { color: var(--fk-danger); font-style: normal; margin-left: 2px; }
+    small { color: var(--fk-text-3); font-weight: 500; margin-left: 4px; }
+  }
+
+  input, select {
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid var(--fk-border);
+    border-radius: var(--fk-r-sm);
+    background: var(--fk-surface);
+    color: var(--fk-text);
+    font-size: 13px;
+
+    &:focus {
+      outline: none;
+      border-color: var(--fk-fjord-bright);
+      box-shadow: 0 0 0 3px var(--fk-fjord-soft);
+    }
+  }
+}
+
+.tracking-field-wide {
+  grid-column: 1 / -1;
+}
+
+.tracking-provider-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: var(--fk-r-sm);
+  background: var(--fk-fjord-soft);
+  color: var(--fk-fjord-dark);
+  font-size: 12px;
+}
+
+.tracking-error {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: var(--fk-r-sm);
+  background: color-mix(in srgb, var(--fk-danger) 10%, transparent);
+  color: var(--fk-danger);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tracking-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}

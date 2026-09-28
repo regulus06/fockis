@@ -1,0 +1,1008 @@
+/* ============================================================================
+   FOCKIS PROFILE PAGE
+   src/styles/FockisProfilePage.scss
+
+   Styles FockisProfilePage.tsx (features/fockisprofile/pages). Matches the
+   Clark State College identity used across the redesigned feed: navy /
+   royal blue / gold, collegiate serif headings, squared institutional
+   radii.
+
+   NOTE: FockisProfileHeader, FockisProfileCard, FockisProfileTabs,
+   FockisProfilePosts, FockisProfileAbout, FockisProfileFriends, and
+   FockisProfileSettings render their own markup that isn't covered here —
+   only classes rendered directly by FockisProfilePage.tsx are styled.
+
+   DARK MODE NOTE: this page toggles a local
+   .fk-profile-page-wrapper--dark class rather than setting
+   data-theme="dark" on the document, so the [data-theme="dark"] block in
+   fockis-theme.scss won't reach it automatically. The dark token block
+   below re-declares the same values locally, scoped to this wrapper.
+============================================================================ */
+
+@use "./fockis-theme";
+
+
+/* ============================================================================
+   PAGE WRAPPER
+============================================================================ */
+
+.fk-profile-page-wrapper {
+  position: relative;
+
+  width: 100%;
+  min-height: 100vh;
+
+  background: var(--fk-bg);
+  color: var(--fk-text);
+  font-family: var(--fk-font-body);
+}
+
+.fk-profile-page-wrapper--dark {
+  --fk-fjord: #3d72c9;
+  --fk-fjord-bright: #5b90ea;
+  --fk-fjord-dark: #1c3f7a;
+  --fk-fjord-soft: rgba(91, 144, 234, 0.18);
+
+  --fk-amber: #ffc72c;
+  --fk-amber-bright: #ffd75e;
+  --fk-amber-dark: #cc9c1f;
+  --fk-amber-soft: rgba(255, 199, 44, 0.18);
+
+  --fk-bg: #0a1526;
+  --fk-bg-secondary: #0e1c31;
+
+  --fk-surface: #0f2038;
+  --fk-surface-hover: #17294a;
+
+  --fk-sunken: #0b1a2e;
+
+  --fk-border: #223a5e;
+  --fk-border-strong: #33517e;
+
+  --fk-text: #eef2f9;
+  --fk-text-2: #a9b8cf;
+  --fk-text-3: #7d8fab;
+
+  --fk-danger: #e5726b;
+  --fk-success: #3ec281;
+
+  --fk-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --fk-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --fk-shadow-md: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --fk-shadow-lg: 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+
+
+/* ============================================================================
+   ACCOUNT CONTROLS
+============================================================================ */
+
+.fk-profile-page__account-controls {
+  position: absolute;
+
+  top: 16px;
+  right: 16px;
+
+  z-index: 60;
+}
+
+.fk-profile-page__settings-button {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-sm);
+
+  background: var(--fk-surface);
+  color: var(--fk-text-2);
+
+  cursor: pointer;
+
+  box-shadow: var(--fk-shadow-sm);
+
+  transition:
+    background-color var(--fk-fast) var(--fk-ease),
+    color var(--fk-fast) var(--fk-ease),
+    border-color var(--fk-fast) var(--fk-ease);
+
+  &:hover {
+    background: var(--fk-surface-hover);
+    color: var(--fk-fjord-bright);
+    border-color: var(--fk-fjord-bright);
+  }
+
+  &[aria-expanded="true"] {
+    background: var(--fk-fjord);
+    color: #ffffff;
+    border-color: var(--fk-fjord);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fk-amber-bright);
+    outline-offset: 2px;
+  }
+}
+
+
+/* ============================================================================
+   ACCOUNT MENU
+============================================================================ */
+
+.fk-profile-page__account-menu {
+  position: absolute;
+
+  top: calc(100% + 8px);
+  right: 0;
+
+  width: 260px;
+
+  padding: 6px;
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--fk-surface);
+
+  border: 1px solid var(--fk-border);
+  border-top: 3px solid var(--fk-fjord);
+  border-radius: var(--fk-r-md);
+
+  box-shadow: var(--fk-shadow-lg);
+}
+
+.fk-profile-page__account-menu-header {
+  padding: 8px 10px 10px;
+
+  strong {
+    color: var(--fk-text);
+
+    font-family: var(--fk-font-display);
+    font-size: 13px;
+    font-weight: 700;
+
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+}
+
+.fk-profile-page__account-menu-item {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  padding: 10px 10px;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+
+  background: transparent;
+  color: var(--fk-text);
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background-color var(--fk-fast) var(--fk-ease),
+    color var(--fk-fast) var(--fk-ease);
+
+  svg {
+    flex: 0 0 18px;
+
+    color: var(--fk-fjord-bright);
+  }
+
+  &:hover {
+    background: var(--fk-sunken);
+  }
+}
+
+.fk-profile-page__account-menu-item--danger {
+  color: var(--fk-danger);
+
+  svg {
+    color: var(--fk-danger);
+  }
+
+  &:hover {
+    background: rgba(179, 38, 30, 0.1);
+  }
+}
+
+.fk-profile-page__account-menu-divider {
+  height: 1px;
+
+  margin: 6px 4px;
+
+  background: var(--fk-border);
+}
+
+
+/* ============================================================================
+   LOADING STATE
+============================================================================ */
+
+.fk-profile-page__loading {
+  width: 100%;
+  min-height: 60vh;
+
+  padding: 40px 20px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 16px;
+
+  color: var(--fk-text-2);
+
+  font-size: 13px;
+}
+
+.fk-profile-page__loading-card {
+  width: 100%;
+  max-width: 420px;
+
+  padding: 20px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-lg);
+
+  box-shadow: var(--fk-shadow-sm);
+}
+
+.fk-profile-page__loading-avatar {
+  width: 56px;
+  height: 56px;
+
+  flex: 0 0 56px;
+
+  border-radius: var(--fk-r-sm);
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--fk-sunken),
+      var(--fk-surface-hover),
+      var(--fk-sunken)
+    );
+
+  animation: fk-profile-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.fk-profile-page__loading-lines {
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+
+  span {
+    display: block;
+
+    height: 10px;
+
+    border-radius: 999px;
+
+    background: var(--fk-sunken);
+
+    animation: fk-profile-skeleton-pulse 1.5s ease-in-out infinite;
+
+    &:nth-child(1) {
+      width: 55%;
+    }
+
+    &:nth-child(2) {
+      width: 80%;
+    }
+
+    &:nth-child(3) {
+      width: 40%;
+    }
+  }
+}
+
+@keyframes fk-profile-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+
+/* ============================================================================
+   EMPTY / ERROR STATES
+   Shared visual language: dashed navy-top card, centered icon + copy.
+============================================================================ */
+
+.fk-profile-page__empty,
+.fk-profile-page__error {
+  width: 100%;
+  min-height: 60vh;
+
+  padding: 40px 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fk-profile-page__empty-card,
+.fk-profile-page__error-card {
+  width: 100%;
+  max-width: 420px;
+
+  padding: 32px 24px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 8px;
+
+  text-align: center;
+
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-border);
+  border-top: 3px solid var(--fk-fjord);
+  border-radius: var(--fk-r-lg);
+
+  box-shadow: var(--fk-shadow-sm);
+}
+
+.fk-profile-page__empty-icon {
+  width: 56px;
+  height: 56px;
+
+  margin-bottom: 6px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--fk-r-md);
+
+  background: var(--fk-fjord-soft);
+
+  font-size: 26px;
+}
+
+.fk-profile-page__empty-card h2,
+.fk-profile-page__error-card strong {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-family: var(--fk-font-display);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.fk-profile-page__empty-card p,
+.fk-profile-page__error-card p {
+  margin: 0;
+
+  color: var(--fk-text-2);
+
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.fk-profile-page__empty-card button,
+.fk-profile-page__error-card button {
+  margin-top: 10px;
+
+  min-height: 42px;
+
+  padding: 0 20px;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+
+  background: var(--fk-fjord);
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: background-color var(--fk-fast) var(--fk-ease);
+
+  &:hover:not(:disabled) {
+    background: var(--fk-fjord-bright);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+
+/* ============================================================================
+   PROFILE MAIN
+============================================================================ */
+
+.fk-profile-page {
+  width: 100%;
+  max-width: var(--fk-content-max-width, 760px);
+
+  margin: 0 auto;
+
+  padding: 24px 20px 80px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 18px;
+}
+
+.fk-profile-page--settings-open {
+  gap: 0;
+}
+
+
+/* ============================================================================
+   FOLLOW SECTION
+============================================================================ */
+
+.fk-profile-follow-section {
+  width: 100%;
+
+  padding: 16px 18px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-lg);
+
+  box-shadow: var(--fk-shadow-sm);
+}
+
+.fk-profile-follow-stats {
+  display: flex;
+  align-items: center;
+
+  gap: 4px;
+}
+
+.fk-profile-follow-stat {
+  flex: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 10px 8px;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+
+  background: transparent;
+  color: var(--fk-text-2);
+
+  cursor: pointer;
+
+  transition: background-color var(--fk-fast) var(--fk-ease);
+
+  &:hover:not(:disabled) {
+    background: var(--fk-sunken);
+    color: var(--fk-fjord-bright);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+.fk-profile-follow-stat__number {
+  color: var(--fk-text);
+
+  font-family: var(--fk-font-display);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.fk-profile-follow-stat__label {
+  color: var(--fk-text-2);
+
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.fk-profile-follow-divider {
+  width: 1px;
+  height: 24px;
+
+  background: var(--fk-border);
+}
+
+.fk-profile-follow-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-height: 42px;
+
+  padding: 0 16px;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+
+  background: var(--fk-fjord);
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: background-color var(--fk-fast) var(--fk-ease);
+
+  &:hover:not(:disabled) {
+    background: var(--fk-fjord-bright);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: default;
+  }
+}
+
+.fk-profile-follow-button--following {
+  background: var(--fk-sunken);
+  color: var(--fk-text);
+
+  border: 1px solid var(--fk-border);
+
+  &:hover:not(:disabled) {
+    background: var(--fk-surface-hover);
+  }
+}
+
+.fk-profile-follow-button__spinner {
+  animation: fk-profile-spin 0.8s linear infinite;
+}
+
+@keyframes fk-profile-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fk-profile-follow-error {
+  padding: 8px 10px;
+
+  border-radius: var(--fk-r-sm);
+
+  background: rgba(179, 38, 30, 0.08);
+  color: var(--fk-danger);
+
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+
+/* ============================================================================
+   MESSAGE SECTION
+============================================================================ */
+
+.fk-profile-message-section {
+  width: 100%;
+}
+
+.fk-profile-message-button {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-height: 44px;
+
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-sm);
+
+  background: var(--fk-surface);
+  color: var(--fk-fjord);
+
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background-color var(--fk-fast) var(--fk-ease),
+    border-color var(--fk-fast) var(--fk-ease);
+
+  &:hover:not(:disabled) {
+    background: var(--fk-fjord-soft);
+    border-color: var(--fk-fjord-bright);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+
+/* ============================================================================
+   FRIEND SECTION
+============================================================================ */
+
+.fk-profile-friend-section {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.fk-profile-friend-actions {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 8px;
+}
+
+.fk-profile-friend-button {
+  flex: 1 1 auto;
+  min-width: 120px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-height: 42px;
+
+  padding: 0 14px;
+
+  border: 1px solid transparent;
+  border-radius: var(--fk-r-sm);
+
+  background: var(--fk-fjord);
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background-color var(--fk-fast) var(--fk-ease),
+    color var(--fk-fast) var(--fk-ease),
+    border-color var(--fk-fast) var(--fk-ease),
+    opacity var(--fk-fast) var(--fk-ease);
+
+  &:hover:not(:disabled) {
+    background: var(--fk-fjord-bright);
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: default;
+  }
+}
+
+.fk-profile-friend-button--accept {
+  background: var(--fk-success);
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+}
+
+.fk-profile-friend-button--friends {
+  background: var(--fk-fjord-soft);
+  color: var(--fk-fjord);
+
+  &:hover:not(:disabled) {
+    background: var(--fk-fjord-soft);
+  }
+}
+
+.fk-profile-friend-button--pending {
+  background: var(--fk-amber-soft);
+  color: var(--fk-amber-dark);
+
+  &:hover:not(:disabled) {
+    background: var(--fk-amber-soft);
+    filter: brightness(0.97);
+  }
+}
+
+.fk-profile-friend-button--blocked {
+  background: var(--fk-sunken);
+  color: var(--fk-text-3);
+}
+
+.fk-profile-friend-button--danger {
+  background: transparent;
+  color: var(--fk-danger);
+
+  border-color: var(--fk-border);
+
+  &:hover:not(:disabled) {
+    background: rgba(179, 38, 30, 0.08);
+    border-color: var(--fk-danger);
+  }
+}
+
+.fk-profile-friend-button__spinner {
+  animation: fk-profile-spin 0.8s linear infinite;
+}
+
+.fk-profile-friend-error {
+  padding: 8px 10px;
+
+  border-radius: var(--fk-r-sm);
+
+  background: rgba(179, 38, 30, 0.08);
+  color: var(--fk-danger);
+
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+
+/* ============================================================================
+   TAB CONTENT
+============================================================================ */
+
+.fk-profile-page__content {
+  width: 100%;
+}
+
+.fk-profile-page__tab-content {
+  width: 100%;
+}
+
+
+/* ============================================================================
+   PLACEHOLDER TABS (Photos / Marketplace)
+============================================================================ */
+
+.fk-profile-page__placeholder {
+  width: 100%;
+
+  padding: 48px 20px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 6px;
+
+  text-align: center;
+
+  background: var(--fk-surface);
+  border: 1px dashed var(--fk-border-strong);
+  border-radius: var(--fk-r-lg);
+}
+
+.fk-profile-page__placeholder-icon {
+  width: 52px;
+  height: 52px;
+
+  margin-bottom: 6px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--fk-r-md);
+
+  background: var(--fk-fjord-soft);
+
+  font-size: 24px;
+}
+
+.fk-profile-page__placeholder h3 {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-family: var(--fk-font-display);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.fk-profile-page__placeholder p {
+  margin: 0;
+
+  max-width: 320px;
+
+  color: var(--fk-text-2);
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+
+/* ============================================================================
+   SETTINGS WRAPPER
+============================================================================ */
+
+.fk-profile-page__settings-wrapper {
+  width: 100%;
+}
+
+.fk-profile-page__settings-topbar {
+  width: 100%;
+
+  padding: 16px 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  background: var(--fk-fjord);
+  border-radius: var(--fk-r-lg);
+
+  box-shadow:
+    inset 0 -3px 0 0 var(--fk-amber-bright),
+    var(--fk-shadow-sm);
+
+  margin-bottom: 18px;
+
+  h2 {
+    margin: 0;
+
+    color: #ffffff;
+
+    font-family: var(--fk-font-display);
+    font-size: 19px;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 3px 0 0;
+
+    color: rgba(255, 255, 255, 0.78);
+
+    font-size: 12.5px;
+  }
+}
+
+.fk-profile-page__settings-close {
+  width: 38px;
+  height: 38px;
+
+  flex: 0 0 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+
+  cursor: pointer;
+
+  transition: background-color var(--fk-fast) var(--fk-ease);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fk-amber-bright);
+    outline-offset: 2px;
+  }
+}
+
+
+/* ============================================================================
+   RESPONSIVE
+============================================================================ */
+
+@media (max-width: 640px) {
+
+  .fk-profile-page {
+    padding: 60px 14px 100px;
+
+    gap: 14px;
+  }
+
+  .fk-profile-page__account-controls {
+    top: 12px;
+    right: 12px;
+  }
+
+  .fk-profile-page__account-menu {
+    width: min(280px, calc(100vw - 24px));
+  }
+
+  .fk-profile-friend-actions {
+    flex-direction: column;
+  }
+
+  .fk-profile-friend-button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .fk-profile-page__settings-topbar {
+    padding: 14px;
+
+    h2 {
+      font-size: 17px;
+    }
+  }
+}
+
+
+/* ============================================================================
+   REDUCED MOTION
+============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-profile-page__loading-avatar,
+  .fk-profile-page__loading-lines span,
+  .fk-profile-follow-button__spinner,
+  .fk-profile-friend-button__spinner {
+    animation: none;
+  }
+
+  .fk-profile-page__settings-button,
+  .fk-profile-page__account-menu-item,
+  .fk-profile-follow-stat,
+  .fk-profile-follow-button,
+  .fk-profile-message-button,
+  .fk-profile-friend-button,
+  .fk-profile-page__settings-close {
+    transition: none;
+  }
+}

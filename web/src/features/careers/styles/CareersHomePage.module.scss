@@ -1,0 +1,54 @@
+.page { display: flex; flex-direction: column; }
+
+.hero {
+  background:
+    radial-gradient(900px 420px at 85% -10%, rgba(19, 126, 112, 0.14), transparent 60%),
+    radial-gradient(700px 380px at 5% -20%, rgba(51, 42, 143, 0.16), transparent 55%),
+    linear-gradient(180deg, #fbfaff 0%, var(--careers-bg) 100%);
+  padding: 64px 28px 40px;
+  border-bottom: 1px solid var(--careers-line);
+}
+
+.eyebrow {
+  font-family: var(--careers-font-mono); font-size: 12px; font-weight: 600; color: var(--careers-teal);
+  letter-spacing: 0.08em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+  &::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--careers-teal); }
+}
+
+.h1 {
+  font-family: var(--careers-font-display); font-weight: 700;
+  font-size: clamp(32px, 5vw, 54px); line-height: 1.05; letter-spacing: -0.02em;
+  max-width: 720px;
+  em { font-style: normal; color: var(--careers-indigo); }
+}
+
+.sub { margin-top: 16px; font-size: 17px; color: var(--careers-ink-soft); max-width: 580px; line-height: 1.6; }
+
+.chipRow { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
+.chip {
+  font-size: 13px; font-weight: 500; padding: 7px 14px; border-radius: 99px;
+  background: var(--careers-card); border: 1px solid var(--careers-line); color: var(--careers-ink-soft);
+  cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s;
+  &:hover { border-color: var(--careers-indigo); color: var(--careers-indigo); background: var(--careers-indigo-tint); }
+}
+
+.section { padding: 52px 28px; max-width: 1240px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+.sectionHead {
+  display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 22px; gap: 16px; flex-wrap: wrap;
+  h2 { font-family: var(--careers-font-display); font-weight: 700; font-size: 24px; letter-spacing: -0.01em; }
+  button {
+    background: none; border: none; font-size: 13.5px; font-weight: 600; color: var(--careers-indigo);
+    cursor: pointer; white-space: nowrap;
+    &:hover { text-decoration: underline; }
+  }
+}
+
+.rail { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.railWide { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+@media (max-width: 900px) {
+  .rail, .railWide { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .rail, .railWide { grid-template-columns: 1fr; }
+}

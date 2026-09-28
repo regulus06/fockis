@@ -1,0 +1,537 @@
+// Shared building blocks used across the Travel admin pages/styles.
+// Not in your original tree, but split out so the 5 page-specific files
+// below don't duplicate the same table/badge/panel rules. Import it from
+// each page-level scss file, or hoist these rules into your existing
+// admin shared stylesheet (e.g. AdminComponents.scss) if you prefer.
+
+.travel-admin-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.travel-admin-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: #0f1b24;
+  color: #faf6ee;
+  padding: 20px 14px;
+
+  .travel-admin-sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    padding: 0 10px 20px;
+    border-bottom: 1px solid rgba(250, 246, 238, 0.1);
+    margin-bottom: 14px;
+  }
+
+  nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .travel-admin-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: rgba(250, 246, 238, 0.75);
+    text-decoration: none;
+    font-size: 14px;
+
+    &:hover {
+      background: rgba(250, 246, 238, 0.06);
+      color: #faf6ee;
+    }
+
+    &.active {
+      background: rgba(230, 155, 60, 0.16);
+      color: #e69b3c;
+    }
+  }
+}
+
+.travel-admin-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.travel-admin-topbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  border-bottom: 1px solid #e7e2d8;
+
+  .travel-admin-topbar-title {
+    font-weight: 600;
+    font-size: 15px;
+  }
+}
+
+.travel-admin-content {
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.travel-admin-page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+
+  h1 {
+    font-size: 22px;
+    margin: 0 0 4px;
+  }
+
+  p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 13.5px;
+  }
+}
+
+.travel-admin-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+
+  select,
+  input[type="search"] {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #d8d2c4;
+    font-size: 13.5px;
+  }
+
+  .status-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .status-tab {
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid #d8d2c4;
+    background: #fff;
+    font-size: 13px;
+    cursor: pointer;
+
+    &.active {
+      background: #0f1b24;
+      color: #faf6ee;
+      border-color: #0f1b24;
+    }
+  }
+
+  .flagged-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13.5px;
+  }
+}
+
+.travel-admin-actions-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.admin-panel {
+  background: #fff;
+  border: 1px solid #eee6d6;
+  border-radius: 12px;
+  padding: 24px;
+  color: #6b7280;
+  font-size: 14px;
+
+  &.admin-panel-error {
+    background: #fdecec;
+    border-color: #f3b9b9;
+    color: #9a2f2f;
+  }
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid #eee6d6;
+  border-radius: 12px;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+
+  th,
+  td {
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1ece0;
+    vertical-align: top;
+  }
+
+  th {
+    color: #8a8375;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr.row-flagged {
+    background: #fff7ec;
+  }
+
+  a {
+    color: #0f1b24;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.admin-table-subtext {
+  color: #9aa0a6;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.flag-note {
+  color: #b45309;
+}
+
+.admin-table-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &.btn-small {
+    padding: 6px 10px;
+    font-size: 12.5px;
+  }
+
+  &.btn-approve {
+    background: #e5f5e8;
+    color: #1c7a37;
+  }
+
+  &.btn-reject {
+    background: #fdecec;
+    color: #b3261e;
+  }
+
+  &.btn-ghost {
+    background: #f3f0e8;
+    color: #4a4536;
+  }
+}
+
+.travel-status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+
+  &.badge-green {
+    background: #e5f5e8;
+    color: #1c7a37;
+  }
+
+  &.badge-red {
+    background: #fdecec;
+    color: #b3261e;
+  }
+
+  &.badge-amber {
+    background: #fdf1dd;
+    color: #b45309;
+  }
+
+  &.badge-blue {
+    background: #e6f0fd;
+    color: #1d4ed8;
+  }
+
+  &.badge-gray {
+    background: #f0efe9;
+    color: #6b7280;
+  }
+}
+
+.travel-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.travel-stat-card {
+  background: #fff;
+  border: 1px solid #eee6d6;
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .label {
+    font-size: 12.5px;
+    color: #8a8375;
+  }
+
+  .value {
+    font-size: 24px;
+    font-weight: 700;
+
+    .sub {
+      font-size: 14px;
+      font-weight: 500;
+      color: #9aa0a6;
+    }
+  }
+
+  a {
+    font-size: 12.5px;
+    color: #0f1b24;
+    text-decoration: none;
+    margin-top: 4px;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &.highlight {
+    border-color: #e69b3c;
+  }
+
+  &.warning .value {
+    color: #b45309;
+  }
+
+  &.danger .value {
+    color: #b3261e;
+  }
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #6b7280;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ---------------------------------------------------------------------
+// Application review page (approve / reject / timeline / services)
+// ---------------------------------------------------------------------
+
+.application-review-actions {
+  margin-bottom: 24px;
+}
+
+.application-review-actions-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  .btn {
+    padding: 10px 18px;
+    font-size: 14px;
+  }
+}
+
+.reject-form {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f1ece0;
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  textarea {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #d8d2c4;
+    padding: 10px 12px;
+    font-size: 13.5px;
+    font-family: inherit;
+    resize: vertical;
+  }
+}
+
+.reject-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.decision-banner {
+  margin-bottom: 24px;
+  font-weight: 600;
+
+  &.approved {
+    background: #e5f5e8;
+    border-color: #bfe6c8;
+    color: #1c7a37;
+  }
+
+  &.rejected {
+    background: #fdecec;
+    border-color: #f3b9b9;
+    color: #b3261e;
+  }
+}
+
+.verification-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 28px;
+}
+
+.timeline-step {
+  display: flex;
+  gap: 14px;
+  padding-bottom: 22px;
+  position: relative;
+
+  &:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    left: 13px;
+    top: 28px;
+    bottom: 0;
+    width: 2px;
+    background: #eee6d6;
+  }
+
+  &.complete:not(:last-child)::before {
+    background: #1c7a37;
+  }
+
+  .timeline-dot {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 12.5px;
+    font-weight: 700;
+    background: #f0efe9;
+    color: #8a8375;
+  }
+
+  &.complete .timeline-dot {
+    background: #1c7a37;
+    color: #fff;
+  }
+
+  &.active .timeline-dot {
+    background: #e69b3c;
+    color: #fff;
+  }
+
+  .timeline-title {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .timeline-date {
+    font-size: 12.5px;
+    color: #9aa0a6;
+    margin-top: 2px;
+  }
+}
+
+.service-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.service-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #eee6d6;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13px;
+
+  &.primary {
+    border-color: #e69b3c;
+    background: #fdf1dd;
+  }
+
+  .primary-tag {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #b45309;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+}
+
+.application-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+
+  .k {
+    display: block;
+    font-size: 12px;
+    color: #8a8375;
+    margin-bottom: 4px;
+  }
+
+  .v {
+    display: block;
+    font-size: 13.5px;
+    color: #2a2a26;
+  }
+}

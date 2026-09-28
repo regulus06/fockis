@@ -1,0 +1,73 @@
+/* ============================================================================
+   FOCKIS FRIENDS PAGE
+   ============================================================================ */
+
+.fockis-friends-page {
+  width: 100%;
+  min-height: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.fockis-friends-page__container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.fockis-friends-page__header {
+  margin-bottom: 24px;
+}
+
+.fockis-friends-page__title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.fockis-friends-page__subtitle {
+  margin: 8px 0 0;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.fockis-friends-page__content {
+  width: 100%;
+}
+
+.fockis-friends-page__section {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.fockis-friends-page__empty {
+  width: 100%;
+  padding: 40px 24px;
+  text-align: center;
+  border-radius: 18px;
+  border: 1px solid rgba(127, 127, 127, 0.18);
+  background: rgba(127, 127, 127, 0.05);
+}
+
+.fockis-friends-page__empty-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.fockis-friends-page__empty-text {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.65;
+}
+
+@media (max-width: 768px) {
+  .fockis-friends-page {
+    padding: 16px;
+  }
+
+  .fockis-friends-page__title {
+    font-size: 24px;
+  }
+}

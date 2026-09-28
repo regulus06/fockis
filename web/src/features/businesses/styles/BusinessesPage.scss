@@ -1,0 +1,1810 @@
+/* ============================================================================
+   FOCKIS BUSINESSES DIRECTORY
+   COMPACT MOBILE / DESKTOP
+============================================================================ */
+
+.fk-businesses-page {
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+
+  padding: 12px 16px 24px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #fffaf5 0%,
+      #f8fafc 50%,
+      #ffffff 100%
+    );
+
+  color: #172033;
+}
+
+/* ============================================================================
+   HEADER
+============================================================================ */
+
+.fk-businesses-page__header {
+  width: 100%;
+  max-width: 1280px;
+
+  margin: 0 auto 10px;
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.fk-businesses-page__header-copy {
+  min-width: 0;
+}
+
+.fk-businesses-page__eyebrow {
+  display: block;
+
+  margin: 0 0 2px;
+
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+
+  color: #f97316;
+}
+
+.fk-businesses-page__header h1 {
+  margin: 0;
+
+  font-size: clamp(1.7rem, 4vw, 2.6rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.fk-businesses-page__header p {
+  max-width: 600px;
+
+  margin: 5px 0 0;
+
+  color: #64748b;
+
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
+.fk-businesses-page__manage {
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 38px;
+
+  padding: 0 13px;
+
+  border-radius: 10px;
+
+  background: #172033;
+  color: #ffffff;
+
+  text-decoration: none;
+
+  font-size: 0.76rem;
+  font-weight: 800;
+
+  white-space: nowrap;
+
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+.fk-businesses-page__manage:hover {
+  transform: translateY(-1px);
+  opacity: 0.92;
+}
+
+/* ============================================================================
+   SEARCH TOOLBAR
+============================================================================ */
+
+.fk-businesses-page__toolbar {
+  width: 100%;
+  max-width: 1280px;
+
+  /*
+   * IMPORTANT:
+   * Keep this very small so the cards begin immediately underneath.
+   */
+  margin: 0 auto 10px;
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+.fk-businesses-page__search {
+  flex: 1;
+  min-width: 0;
+
+  min-height: 40px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 0 11px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #dfe5ec;
+  border-radius: 11px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 4px 14px rgba(15, 23, 42, 0.05);
+}
+
+.fk-businesses-page__search span {
+  flex: 0 0 auto;
+
+  font-size: 0.9rem;
+}
+
+.fk-businesses-page__search input {
+  width: 100%;
+  min-width: 0;
+
+  padding: 0;
+
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+  color: #172033;
+
+  font: inherit;
+  font-size: 0.78rem;
+}
+
+.fk-businesses-page__search input::placeholder {
+  color: #94a3b8;
+}
+
+.fk-businesses-page__count {
+  flex: 0 0 auto;
+
+  color: #64748b;
+
+  font-size: 0.72rem;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   BUSINESS GRID
+============================================================================ */
+
+.fk-businesses-page__grid {
+  width: 100%;
+  max-width: 1280px;
+
+  /*
+   * IMPORTANT FIX:
+   * No extra top margin/padding.
+   */
+  margin: 0 auto !important;
+  padding: 0 !important;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      auto-fill,
+      minmax(250px, 1fr)
+    );
+
+  gap: 12px;
+
+  align-items: start;
+}
+
+/* ============================================================================
+   BUSINESS CARD
+============================================================================ */
+
+.fk-business-card {
+  width: 100%;
+  min-width: 0;
+
+  overflow: hidden;
+
+  box-sizing: border-box;
+
+  border: 1px solid #e6ebf0;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 5px 18px rgba(15, 23, 42, 0.06);
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.fk-business-card:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.09);
+}
+
+/* ============================================================================
+   CARD IMAGE
+============================================================================ */
+
+.fk-business-card__image-link {
+  display: block;
+
+  margin: 0;
+  padding: 0;
+
+  color: inherit;
+  text-decoration: none;
+}
+
+.fk-business-card__image {
+  position: relative;
+
+  width: 100%;
+
+  /*
+   * Shorter than before.
+   */
+  aspect-ratio: 16 / 8;
+
+  overflow: hidden;
+
+  background: #f1f5f9;
+}
+
+.fk-business-card__image img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  margin: 0;
+  padding: 0;
+
+  object-fit: cover;
+
+  transition:
+    transform 220ms ease;
+}
+
+.fk-business-card:hover
+.fk-business-card__image img {
+  transform: scale(1.025);
+}
+
+.fk-business-card__image-placeholder {
+  width: 100%;
+  height: 100%;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0;
+  padding: 0;
+
+  font-size: 2.2rem;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fff7ed,
+      #ffedd5
+    );
+}
+
+/* ============================================================================
+   CARD CONTENT
+============================================================================ */
+
+.fk-business-card__content {
+  margin: 0;
+  padding: 10px;
+}
+
+.fk-business-card__identity {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  min-width: 0;
+}
+
+.fk-business-card__logo {
+  flex: 0 0 40px;
+
+  width: 40px;
+  height: 40px;
+
+  overflow: hidden;
+
+  display: grid;
+  place-items: center;
+
+  border: 2px solid #ffffff;
+  border-radius: 11px;
+
+  background: #f8fafc;
+
+  box-shadow:
+    0 3px 9px rgba(15, 23, 42, 0.1);
+}
+
+.fk-business-card__logo img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+.fk-business-card__logo span {
+  font-size: 1.1rem;
+}
+
+.fk-business-card__identity-copy {
+  min-width: 0;
+}
+
+.fk-business-card__identity-copy h2 {
+  margin: 0;
+
+  overflow: hidden;
+
+  color: #172033;
+
+  font-size: 0.82rem;
+  line-height: 1.15;
+  font-weight: 800;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fk-business-card__category {
+  display: block;
+
+  margin: 2px 0 0;
+
+  color: #f97316;
+
+  font-size: 0.56rem;
+  font-weight: 800;
+
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+/* ============================================================================
+   DESCRIPTION
+============================================================================ */
+
+.fk-business-card__description {
+  display: -webkit-box;
+
+  margin: 8px 0 6px;
+  padding: 0;
+
+  overflow: hidden;
+
+  color: #64748b;
+
+  font-size: 0.7rem;
+  line-height: 1.3;
+
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* ============================================================================
+   LOCATION
+============================================================================ */
+
+.fk-business-card__location {
+  margin: 0 0 7px;
+  padding: 0;
+
+  color: #64748b;
+
+  font-size: 0.62rem;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   BUTTON
+============================================================================ */
+
+.fk-business-card__button {
+  width: 100%;
+
+  min-height: 32px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 7px;
+
+  margin: 0;
+  padding: 0 9px;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: #f97316;
+  color: #ffffff;
+
+  text-decoration: none;
+
+  font-size: 0.66rem;
+  font-weight: 800;
+
+  transition:
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.fk-business-card__button:hover {
+  background: #ea580c;
+
+  transform: translateY(-1px);
+}
+
+.fk-business-card__button span {
+  font-size: 0.8rem;
+}
+
+/* ============================================================================
+   LOADING
+============================================================================ */
+
+.fk-businesses-page__loading {
+  min-height: 40vh;
+
+  display: grid;
+  place-items: center;
+  align-content: center;
+
+  text-align: center;
+}
+
+.fk-businesses-page__loading h2 {
+  margin: 10px 0 5px;
+}
+
+.fk-businesses-page__loading p {
+  margin: 0;
+
+  color: #64748b;
+}
+
+.fk-businesses-page__spinner {
+  width: 34px;
+  height: 34px;
+
+  border: 3px solid #fed7aa;
+  border-top-color: #f97316;
+
+  border-radius: 50%;
+
+  animation:
+    fk-businesses-spin 800ms linear infinite;
+}
+
+@keyframes fk-businesses-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================================
+   EMPTY / ERROR
+============================================================================ */
+
+.fk-businesses-page__empty,
+.fk-businesses-page__error {
+  width: 100%;
+  max-width: 600px;
+
+  min-height: 35vh;
+
+  margin: 0 auto;
+
+  display: grid;
+  place-items: center;
+  align-content: center;
+
+  text-align: center;
+}
+
+.fk-businesses-page__empty-icon,
+.fk-businesses-page__error-icon {
+  font-size: 2.5rem;
+}
+
+.fk-businesses-page__empty h2,
+.fk-businesses-page__error h1 {
+  margin: 10px 0 6px;
+}
+
+.fk-businesses-page__empty p,
+.fk-businesses-page__error p {
+  max-width: 480px;
+
+  margin: 0;
+
+  color: #64748b;
+
+  line-height: 1.5;
+}
+
+.fk-businesses-page__clear,
+.fk-businesses-page__retry {
+  margin-top: 12px;
+
+  min-height: 36px;
+
+  padding: 0 13px;
+
+  border: 0;
+  border-radius: 9px;
+
+  background: #f97316;
+  color: #ffffff;
+
+  cursor: pointer;
+
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.fk-businesses-page__clear:hover,
+.fk-businesses-page__retry:hover {
+  background: #ea580c;
+}
+
+/* ============================================================================
+   TABLET
+============================================================================ */
+
+@media (max-width: 900px) {
+  .fk-businesses-page {
+    padding: 12px 12px 22px;
+  }
+
+  .fk-businesses-page__grid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+
+    gap: 10px;
+  }
+}
+
+/* ============================================================================
+   MOBILE
+   ALWAYS TWO COLUMNS
+============================================================================ */
+
+@media (max-width: 760px) {
+  .fk-businesses-page {
+    padding: 8px 7px 18px;
+  }
+
+  .fk-businesses-page__header {
+    margin-bottom: 8px;
+
+    gap: 7px;
+  }
+
+  .fk-businesses-page__eyebrow {
+    font-size: 0.55rem;
+  }
+
+  .fk-businesses-page__header h1 {
+    font-size: 1.4rem;
+  }
+
+  .fk-businesses-page__header p {
+    margin-top: 3px;
+
+    font-size: 0.64rem;
+    line-height: 1.25;
+  }
+
+  .fk-businesses-page__manage {
+    min-height: 34px;
+
+    padding: 0 9px;
+
+    border-radius: 8px;
+
+    font-size: 0.63rem;
+  }
+
+  .fk-businesses-page__toolbar {
+    margin-bottom: 8px;
+
+    gap: 6px;
+  }
+
+  .fk-businesses-page__search {
+    min-height: 38px;
+
+    padding: 0 9px;
+
+    border-radius: 9px;
+  }
+
+  .fk-businesses-page__search input {
+    font-size: 0.7rem;
+  }
+
+  .fk-businesses-page__search span {
+    font-size: 0.78rem;
+  }
+
+  .fk-businesses-page__count {
+    font-size: 0.63rem;
+  }
+
+  /*
+   * THE IMPORTANT PART:
+   * Never switch to one column.
+   */
+  .fk-businesses-page__grid {
+  width: calc(100% - 10px) !important;
+  max-width: none;
+
+  box-sizing: border-box;
+
+  margin: 0 10px 0 0 !important;
+  padding: 0 !important;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr);
+
+  column-gap: 12px;
+  row-gap: 14px;
+
+  align-items: start;
+}
+
+  .fk-business-card {
+  width: calc(100% - 4px);
+  max-width: 100%;
+  min-width: 0;
+
+  margin: 0 4px 0 0;
+
+  box-sizing: border-box;
+
+  border-radius: 11px;
+}
+
+  .fk-business-card__image-link,
+  .fk-business-card__image {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .fk-business-card__image {
+    aspect-ratio: 1.5 / 1;
+  }
+
+  .fk-business-card__content {
+    padding: 8px;
+  }
+
+  .fk-business-card__identity {
+    gap: 6px;
+  }
+
+  .fk-business-card__logo {
+    flex-basis: 34px;
+
+    width: 34px;
+    height: 34px;
+
+    border-radius: 9px;
+  }
+
+  .fk-business-card__identity-copy h2 {
+    font-size: 0.68rem;
+  }
+
+  .fk-business-card__category {
+    font-size: 0.48rem;
+  }
+
+  .fk-business-card__description {
+    margin: 6px 0 5px;
+
+    font-size: 0.59rem;
+    line-height: 1.25;
+  }
+
+  .fk-business-card__location {
+    margin-bottom: 6px;
+
+    font-size: 0.55rem;
+  }
+
+  .fk-business-card__button {
+    min-height: 29px;
+
+    padding: 0 8px;
+
+    border-radius: 7px;
+
+    font-size: 0.57rem;
+  }
+}
+
+/* ============================================================================
+   VERY SMALL PHONES
+============================================================================ */
+
+@media (max-width: 400px) {
+  .fk-businesses-page {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  .fk-businesses-page__grid {
+    padding-left: 7px !important;
+    padding-right: 7px !important;
+
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(0, 1fr);
+
+    column-gap: 10px;
+    row-gap: 12px;
+  }
+
+  .fk-businesses-page__header h1 {
+    font-size: 1.25rem;
+  }
+
+  .fk-businesses-page__header p {
+    font-size: 0.59rem;
+  }
+
+  .fk-businesses-page__manage {
+    min-height: 31px;
+
+    padding: 0 7px;
+
+    font-size: 0.56rem;
+  }
+
+  .fk-business-card__content {
+    padding: 7px;
+  }
+
+  .fk-business-card__logo {
+    flex-basis: 31px;
+
+    width: 31px;
+    height: 31px;
+  }
+
+  .fk-business-card__identity-copy h2 {
+    font-size: 0.63rem;
+  }
+
+  .fk-business-card__description {
+    font-size: 0.55rem;
+  }
+
+  .fk-business-card__location {
+    font-size: 0.51rem;
+  }
+
+  .fk-business-card__button {
+    min-height: 27px;
+
+    font-size: 0.53rem;
+  }
+}
+
+/* ============================================================================
+   REDUCED MOTION
+============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-business-card,
+  .fk-business-card__image img,
+  .fk-businesses-page__manage,
+  .fk-businesses-page__retry,
+  .fk-businesses-page__clear,
+  .fk-business-card__button {
+    transition: none;
+  }
+
+  .fk-businesses-page__spinner {
+    animation: none;
+  }
+}
+
+
+/* ============================================================================
+   FINAL MOBILE GRID FIX
+   Prevent card overlap and preserve two columns with visible outer margins.
+============================================================================ */
+
+@media (max-width: 760px) {
+  .fk-businesses-page__grid {
+    display: grid !important;
+
+    width: 100% !important;
+    max-width: 100% !important;
+
+    box-sizing: border-box !important;
+
+    /*
+     * 8px left/right breathing room inside the page.
+     */
+    padding: 0 8px !important;
+    margin: 0 !important;
+
+    /*
+     * Two real, equal columns.
+     */
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(0, 1fr) !important;
+
+    column-gap: 14px !important;
+    row-gap: 14px !important;
+
+    align-items: start !important;
+  }
+
+  .fk-businesses-page__grid > .fk-business-card {
+    display: block !important;
+
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    box-sizing: border-box !important;
+
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none;
+  }
+
+  .fk-businesses-page__grid > .fk-business-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .fk-business-card__image-link,
+  .fk-business-card__image,
+  .fk-business-card__content {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .fk-business-card__image {
+    overflow: hidden !important;
+  }
+}
+
+/* Extra-small phones: retain two columns, slightly tighter gap. */
+@media (max-width: 400px) {
+  .fk-businesses-page__grid {
+    width: 100% !important;
+    padding: 0 7px !important;
+
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(0, 1fr) !important;
+
+    column-gap: 10px !important;
+    row-gap: 12px !important;
+  }
+}
+
+
+/* ============================================================================
+   FOCKIS SHOP STORES
+============================================================================ */
+
+.fk-businesses-page__stores-section {
+  width: 100%;
+  max-width: 1280px;
+
+  margin: 28px auto 0;
+  padding: 0;
+}
+
+.fk-businesses-page__stores-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  margin: 0 0 14px;
+}
+
+.fk-businesses-page__stores-header h2 {
+  margin: 2px 0 0;
+
+  color: #172033;
+
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.fk-businesses-page__stores-header p {
+  margin: 5px 0 0;
+
+  color: #64748b;
+
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.fk-businesses-page__stores-count {
+  flex: 0 0 auto;
+
+  color: #64748b;
+
+  font-size: 0.8rem;
+  font-weight: 800;
+
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   STORE GRID
+============================================================================ */
+
+.fk-businesses-page__stores-grid {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      auto-fill,
+      minmax(250px, 1fr)
+    );
+
+  gap: 14px;
+
+  align-items: start;
+}
+
+/* ============================================================================
+   STORE CARD
+============================================================================ */
+
+.fk-store-card {
+  width: 100%;
+  min-width: 0;
+
+  overflow: hidden;
+
+  box-sizing: border-box;
+
+  border: 1px solid #e6ebf0;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 5px 18px rgba(15, 23, 42, 0.06);
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.fk-store-card:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.09);
+}
+
+.fk-store-card__image-link {
+  display: block;
+
+  margin: 0;
+  padding: 0;
+
+  color: inherit;
+  text-decoration: none;
+}
+
+.fk-store-card__image {
+  width: 100%;
+  aspect-ratio: 16 / 8;
+
+  overflow: hidden;
+
+  background: #f1f5f9;
+}
+
+.fk-store-card__image img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+
+  transition:
+    transform 220ms ease;
+}
+
+.fk-store-card:hover
+.fk-store-card__image img {
+  transform: scale(1.025);
+}
+
+.fk-store-card__image-placeholder {
+  width: 100%;
+  height: 100%;
+
+  display: grid;
+  place-items: center;
+
+  font-size: 2.2rem;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fff7ed,
+      #ffedd5
+    );
+}
+
+.fk-store-card__content {
+  padding: 10px;
+}
+
+.fk-store-card__identity {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  min-width: 0;
+}
+
+.fk-store-card__logo {
+  flex: 0 0 40px;
+
+  width: 40px;
+  height: 40px;
+
+  overflow: hidden;
+
+  display: grid;
+  place-items: center;
+
+  border: 2px solid #ffffff;
+  border-radius: 11px;
+
+  background: #f8fafc;
+
+  box-shadow:
+    0 3px 9px rgba(15, 23, 42, 0.1);
+}
+
+.fk-store-card__logo img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+.fk-store-card__logo span {
+  font-size: 1.1rem;
+}
+
+.fk-store-card__identity-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.fk-store-card__identity-copy h3 {
+  margin: 0;
+
+  overflow: hidden;
+
+  color: #172033;
+
+  font-size: 0.82rem;
+  line-height: 1.15;
+  font-weight: 800;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fk-store-card__category {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #f97316;
+
+  font-size: 0.56rem;
+  font-weight: 800;
+
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.fk-store-card__verified {
+  flex: 0 0 auto;
+
+  width: 19px;
+  height: 19px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #2563eb;
+  color: #ffffff;
+
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+
+.fk-store-card__description {
+  display: -webkit-box;
+
+  margin: 8px 0 6px;
+
+  overflow: hidden;
+
+  color: #64748b;
+
+  font-size: 0.7rem;
+  line-height: 1.3;
+
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.fk-store-card__location {
+  margin: 0 0 6px;
+
+  color: #64748b;
+
+  font-size: 0.62rem;
+  font-weight: 600;
+}
+
+.fk-store-card__stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin: 0 0 8px;
+
+  color: #64748b;
+
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+
+.fk-store-card__button {
+  width: 100%;
+
+  min-height: 32px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 7px;
+
+  padding: 0 9px;
+
+  border-radius: 8px;
+
+  background: #f97316;
+  color: #ffffff;
+
+  text-decoration: none;
+
+  font-size: 0.66rem;
+  font-weight: 800;
+
+  transition:
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.fk-store-card__button:hover {
+  background: #ea580c;
+  transform: translateY(-1px);
+}
+
+/* ============================================================================
+   STORE LOADING / EMPTY / ERROR
+============================================================================ */
+
+.fk-businesses-page__stores-loading {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 14px;
+}
+
+.fk-businesses-page__store-skeleton {
+  min-height: 180px;
+
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #f1f5f9 25%,
+      #ffffff 50%,
+      #f1f5f9 75%
+    );
+
+  background-size: 200% 100%;
+
+  animation:
+    fk-business-store-loading 1.3s ease-in-out infinite;
+}
+
+@keyframes fk-business-store-loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.fk-businesses-page__stores-empty,
+.fk-businesses-page__stores-error {
+  min-height: 160px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+
+  padding: 24px;
+
+  box-sizing: border-box;
+
+  border: 1px dashed #dbe2ea;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  text-align: center;
+}
+
+.fk-businesses-page__stores-empty > span,
+.fk-businesses-page__stores-error > span {
+  font-size: 2rem;
+}
+
+.fk-businesses-page__stores-empty strong,
+.fk-businesses-page__stores-error strong {
+  display: block;
+
+  color: #172033;
+}
+
+.fk-businesses-page__stores-empty p,
+.fk-businesses-page__stores-error p {
+  margin: 4px 0 0;
+
+  color: #64748b;
+
+  font-size: 0.78rem;
+}
+
+/* ============================================================================
+   MOBILE STORE GRID
+============================================================================ */
+
+@media (max-width: 760px) {
+  .fk-businesses-page__stores-section {
+    width: 100%;
+
+    margin-top: 22px;
+
+    padding: 0 8px;
+
+    box-sizing: border-box;
+  }
+
+  .fk-businesses-page__stores-header {
+    align-items: center;
+
+    margin-bottom: 10px;
+
+    gap: 8px;
+  }
+
+  .fk-businesses-page__stores-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .fk-businesses-page__stores-header p {
+    font-size: 0.64rem;
+  }
+
+  .fk-businesses-page__stores-count {
+    font-size: 0.63rem;
+  }
+
+  .fk-businesses-page__stores-grid {
+    width: 100%;
+
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(0, 1fr);
+
+    column-gap: 12px;
+    row-gap: 14px;
+  }
+
+  .fk-store-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .fk-store-card__image {
+    aspect-ratio: 1.5 / 1;
+  }
+
+  .fk-store-card__content {
+    padding: 8px;
+  }
+
+  .fk-store-card__identity {
+    gap: 6px;
+  }
+
+  .fk-store-card__logo {
+    flex-basis: 34px;
+
+    width: 34px;
+    height: 34px;
+
+    border-radius: 9px;
+  }
+
+  .fk-store-card__identity-copy h3 {
+    font-size: 0.68rem;
+  }
+
+  .fk-store-card__category {
+    font-size: 0.48rem;
+  }
+
+  .fk-store-card__verified {
+    width: 16px;
+    height: 16px;
+
+    font-size: 0.55rem;
+  }
+
+  .fk-store-card__description {
+    margin: 6px 0 5px;
+
+    font-size: 0.59rem;
+  }
+
+  .fk-store-card__location {
+    font-size: 0.55rem;
+  }
+
+  .fk-store-card__stats {
+    font-size: 0.52rem;
+  }
+
+  .fk-store-card__button {
+    min-height: 29px;
+
+    padding: 0 8px;
+
+    border-radius: 7px;
+
+    font-size: 0.57rem;
+  }
+
+  .fk-businesses-page__stores-loading {
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(0, 1fr);
+
+    gap: 10px;
+  }
+
+  .fk-businesses-page__store-skeleton {
+    min-height: 130px;
+  }
+
+  .fk-businesses-page__stores-empty,
+  .fk-businesses-page__stores-error {
+    min-height: 130px;
+
+    padding: 16px;
+  }
+}
+
+@media (max-width: 400px) {
+  .fk-businesses-page__stores-section {
+    padding: 0 7px;
+  }
+
+  .fk-businesses-page__stores-grid {
+    column-gap: 10px;
+    row-gap: 12px;
+  }
+
+  .fk-store-card__content {
+    padding: 7px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-store-card,
+  .fk-store-card__image img,
+  .fk-store-card__button {
+    transition: none;
+  }
+
+  .fk-businesses-page__store-skeleton {
+    animation: none;
+  }
+}
+/* ============================================================================
+   BUSINESS CATEGORY NAVIGATION
+============================================================================ */
+
+.fk-businesses-page__categories {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto 14px;
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.fk-businesses-page__category-button {
+  flex: 0 0 auto;
+
+  min-height: 34px;
+  padding: 0 12px;
+
+  border: 1px solid #dfe5ec;
+  border-radius: 999px;
+
+  background: #ffffff;
+  color: #475569;
+
+  cursor: pointer;
+
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+  white-space: nowrap;
+
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.fk-businesses-page__category-button:hover {
+  border-color: #f97316;
+  color: #ea580c;
+  transform: translateY(-1px);
+}
+
+.fk-businesses-page__category-button--active {
+  border-color: #f97316;
+  background: #f97316;
+  color: #ffffff;
+}
+
+.fk-businesses-page__category-button--active:hover {
+  border-color: #ea580c;
+  background: #ea580c;
+  color: #ffffff;
+}
+
+/* ============================================================================
+   CATEGORY SECTIONS
+============================================================================ */
+
+.fk-businesses-page__categories-list {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.fk-businesses-page__category-section {
+  width: 100%;
+  margin: 0 0 24px;
+  padding: 0;
+}
+
+.fk-businesses-page__category-section:last-child {
+  margin-bottom: 0;
+}
+
+.fk-businesses-page__category-header {
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 0;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.fk-businesses-page__category-eyebrow {
+  display: block;
+
+  margin: 0 0 2px;
+
+  color: #f97316;
+
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.fk-businesses-page__category-header h2 {
+  margin: 0;
+
+  color: #172033;
+
+  font-size: clamp(1.05rem, 2.2vw, 1.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+
+.fk-businesses-page__category-count {
+  flex: 0 0 auto;
+
+  color: #64748b;
+
+  font-size: 0.68rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.fk-businesses-page__category-section .fk-businesses-page__grid {
+  margin: 0 !important;
+}
+
+/* ============================================================================
+   BUSINESS CARD ACTIONS
+============================================================================ */
+
+.fk-business-card__actions {
+  width: 100%;
+
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.fk-business-card__website-button,
+.fk-business-card__store-button {
+  width: 100%;
+  min-height: 32px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 7px;
+
+  margin: 0;
+  padding: 0 9px;
+
+  border-radius: 8px;
+
+  text-decoration: none;
+
+  font-size: 0.66rem;
+  font-weight: 800;
+
+  transition:
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.fk-business-card__website-button {
+  background: #eef2ff;
+  color: #3730a3;
+}
+
+.fk-business-card__website-button:hover {
+  background: #e0e7ff;
+  transform: translateY(-1px);
+}
+
+.fk-business-card__store-button {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.fk-business-card__store-button:hover {
+  background: #d1fae5;
+  transform: translateY(-1px);
+}
+
+.fk-business-card__website-button span,
+.fk-business-card__store-button span {
+  font-size: 0.8rem;
+}
+
+/* ============================================================================
+   CATEGORY / ACTION MOBILE
+============================================================================ */
+
+@media (max-width: 760px) {
+  .fk-businesses-page__categories {
+    margin-bottom: 10px;
+    gap: 6px;
+  }
+
+  .fk-businesses-page__category-button {
+    min-height: 31px;
+    padding: 0 9px;
+    border-radius: 999px;
+    font-size: 0.58rem;
+  }
+
+  .fk-businesses-page__category-section {
+    margin-bottom: 18px;
+  }
+
+  .fk-businesses-page__category-header {
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+
+  .fk-businesses-page__category-eyebrow {
+    font-size: 0.48rem;
+  }
+
+  .fk-businesses-page__category-header h2 {
+    font-size: 0.9rem;
+  }
+
+  .fk-businesses-page__category-count {
+    font-size: 0.57rem;
+  }
+
+  .fk-business-card__actions {
+    gap: 5px;
+  }
+
+  .fk-business-card__website-button,
+  .fk-business-card__store-button {
+    min-height: 29px;
+    padding: 0 8px;
+    border-radius: 7px;
+    font-size: 0.55rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .fk-businesses-page__categories {
+    gap: 5px;
+  }
+
+  .fk-businesses-page__category-button {
+    min-height: 29px;
+    padding: 0 8px;
+    font-size: 0.54rem;
+  }
+
+  .fk-businesses-page__category-header h2 {
+    font-size: 0.82rem;
+  }
+
+  .fk-businesses-page__category-count {
+    font-size: 0.52rem;
+  }
+
+  .fk-business-card__website-button,
+  .fk-business-card__store-button {
+    min-height: 27px;
+    font-size: 0.52rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-businesses-page__category-button,
+  .fk-business-card__website-button,
+  .fk-business-card__store-button {
+    transition: none;
+  }
+}

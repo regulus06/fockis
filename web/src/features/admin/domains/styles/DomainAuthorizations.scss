@@ -1,0 +1,71 @@
+.domain-authorization-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.domain-authorization-card {
+  position: relative;
+  padding: 22px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.domain-authorization-card h2 {
+  margin: 0 0 5px;
+  font-size: 18px;
+}
+
+.domain-authorization-card p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.domain-authorization-card__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 22px 0;
+}
+
+.domain-authorization-card__stats div {
+  padding: 14px;
+  border-radius: 9px;
+  background: #f8fafc;
+  text-align: center;
+}
+
+.domain-authorization-card__stats strong {
+  display: block;
+  color: #111827;
+  font-size: 21px;
+}
+
+.domain-authorization-card__stats span {
+  display: block;
+  margin-top: 3px;
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.domain-authorization-reason {
+  margin-bottom: 18px !important;
+  padding: 10px 12px;
+  border-left: 3px solid #ff9900;
+  background: #fffbeb;
+  color: #78350f !important;
+}
+
+@media (max-width: 850px) {
+  .domain-authorization-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 550px) {
+  .domain-authorization-card__stats {
+    grid-template-columns: 1fr;
+  }
+}

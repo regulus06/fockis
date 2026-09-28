@@ -1,0 +1,35 @@
+export enum NotificationType {
+
+
+  LIKE = "LIKE",
+
+  COMMENT = "COMMENT",
+
+  REPOST = "REPOST",
+
+  FOLLOW = "FOLLOW",
+
+  MENTION = "MENTION",
+
+
+  MESSAGE = "MESSAGE",
+
+  GROUP_MESSAGE = "GROUP_MESSAGE",
+
+
+  ORDER = "ORDER",
+
+  PAYMENT = "PAYMENT",
+
+  SHIPPING = "SHIPPING",
+
+  REVIEW = "REVIEW",
+
+  DISPUTE = "DISPUTE",
+
+
+  PROPERTY = "PROPERTY",
+
+  SYSTEM = "SYSTEM",
+
+}

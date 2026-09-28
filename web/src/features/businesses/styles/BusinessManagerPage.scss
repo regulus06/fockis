@@ -1,0 +1,769 @@
+/* ============================================================================
+   FOCKIS BUSINESS MANAGER PAGE
+============================================================================ */
+
+.business-manager-page {
+
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  box-sizing: border-box;
+
+  * {
+    box-sizing: border-box;
+  }
+
+
+
+  /* ==========================================================================
+     HEADER
+  ========================================================================== */
+
+  .manager-header {
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 20px;
+
+    padding: 28px 32px;
+
+    border-radius: 20px;
+
+    background: linear-gradient(135deg, #ff9900, #ff5e00);
+    box-shadow: 0 12px 30px rgba(255, 94, 0, .25);
+
+    color: white;
+
+
+    h1 {
+
+      margin: 0 0 6px;
+
+      font-size: 30px;
+      line-height: 1.2;
+
+      font-weight: 800;
+      letter-spacing: -.02em;
+
+    }
+
+
+
+    p {
+
+      margin: 0;
+
+      opacity: .9;
+
+      font-size: 15px;
+
+    }
+
+
+
+    .primary-button {
+
+      flex-shrink: 0;
+
+      border: none;
+
+      padding: 13px 24px;
+
+      border-radius: 12px;
+
+      cursor: pointer;
+
+      background: white;
+
+      color: #ff6500;
+
+      font-size: 14px;
+      font-weight: 800;
+
+      transition: transform .2s ease, box-shadow .2s ease;
+
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+
+
+
+      &:hover {
+
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, .16);
+
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+    }
+
+  }
+
+
+
+
+
+  /* ==========================================================================
+     FORM PANEL
+  ========================================================================== */
+
+  .panel {
+
+    background: white;
+
+    border-radius: 20px;
+
+    padding: 28px;
+
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
+
+  }
+
+
+
+
+
+  /* ==========================================================================
+     BUSINESS GRID
+  ========================================================================== */
+
+  .business-grid {
+
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+
+    gap: 24px;
+
+  }
+
+  .empty-state {
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 60px 24px;
+
+    text-align: center;
+
+    background: white;
+    border-radius: 20px;
+    border: 1px dashed #e2e2e2;
+
+    color: #888;
+
+    grid-column: 1 / -1;
+
+    strong {
+
+      font-size: 17px;
+
+      color: #333;
+
+    }
+
+    p {
+
+      max-width: 320px;
+
+      margin: 0;
+
+      font-size: 14px;
+      line-height: 1.5;
+
+    }
+
+  }
+
+
+
+
+
+  /* ==========================================================================
+     BUSINESS CARD
+  ========================================================================== */
+
+  .business-card {
+
+    display: flex;
+
+    flex-direction: column;
+
+    min-height: 420px;
+
+    background: white;
+
+    border-radius: 20px;
+
+    overflow: hidden;
+
+    border: 1px solid #eeeeee;
+
+    box-shadow: 0 8px 25px rgba(0, 0, 0, .08);
+
+    transition: transform .2s ease, box-shadow .2s ease;
+
+
+
+    &:hover {
+
+      transform: translateY(-5px);
+
+      box-shadow: 0 15px 35px rgba(0, 0, 0, .14);
+
+    }
+
+  }
+
+
+
+
+
+  /* ==========================================================================
+     BUSINESS IMAGE
+  ========================================================================== */
+
+  .business-logo {
+
+    width: 100%;
+
+    height: 210px;
+
+    object-fit: cover;
+
+    display: block;
+
+    background: linear-gradient(135deg, #ff9900, #ff5e00);
+
+  }
+
+
+
+
+  .business-logo-placeholder {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    height: 210px;
+
+    font-size: 64px;
+
+    color: white;
+
+    background: linear-gradient(135deg, #ff9900, #ff5e00);
+
+  }
+
+
+
+
+
+  /* ==========================================================================
+     BUSINESS CONTENT
+  ========================================================================== */
+
+  .business-content {
+
+    display: flex;
+
+    flex-direction: column;
+
+    flex: 1;
+
+    padding: 20px;
+
+
+
+    h2 {
+
+      margin: 0 0 10px;
+
+      font-size: 20px;
+
+      font-weight: 800;
+
+      line-height: 1.3;
+
+      overflow: hidden;
+
+      text-overflow: ellipsis;
+
+      white-space: nowrap;
+
+    }
+
+
+
+    p {
+
+      flex: 1;
+
+      margin: 0 0 18px;
+
+      color: #666;
+
+      font-size: 14px;
+
+      line-height: 1.55;
+
+
+      display: -webkit-box;
+
+      -webkit-box-orient: vertical;
+
+      -webkit-line-clamp: 3;
+
+      line-clamp: 3;
+
+      overflow: hidden;
+
+    }
+
+  }
+
+
+
+
+
+  /* ==========================================================================
+     STATUS BADGES
+  ========================================================================== */
+
+  .status-badge-row {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    align-items: center;
+
+    gap: 8px;
+
+    margin-bottom: 12px;
+
+  }
+
+
+  .status-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 4px;
+
+    padding: 5px 12px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    line-height: 1.4;
+
+    white-space: nowrap;
+
+
+    &--live {
+
+      background: #e6f7ec;
+
+      color: #1c8a44;
+
+    }
+
+
+    &--pending {
+
+      background: #f1f1f1;
+
+      color: #777;
+
+    }
+
+
+    &--spotlight {
+
+      background: #fff1e6;
+
+      color: #d9540a;
+
+    }
+
+  }
+
+
+
+
+
+  /* ==========================================================================
+     ACTION BUTTONS
+  ========================================================================== */
+
+  .business-actions {
+
+    display: grid;
+
+    grid-template-columns: repeat(2, 1fr);
+
+    gap: 8px;
+
+    margin-top: auto;
+
+
+
+    button {
+
+      height: 40px;
+
+      border: none;
+
+      border-radius: 10px;
+
+      cursor: pointer;
+
+      font-size: 13px;
+
+      font-weight: 700;
+
+      background: #f1f1f1;
+
+      color: #333;
+
+      transition: transform .2s ease, opacity .2s ease, box-shadow .2s ease;
+
+
+
+      &:hover:not(:disabled) {
+
+        transform: translateY(-2px);
+
+      }
+
+
+      &:disabled {
+
+        cursor: not-allowed;
+
+        opacity: .6;
+
+        transform: none;
+
+      }
+
+    }
+
+
+    > button:first-child,
+    > button:nth-child(2) {
+
+      grid-column: span 1;
+
+    }
+
+
+    .danger {
+
+      grid-column: 1 / -1;
+
+      background: transparent;
+
+      color: #ff3b30;
+
+      border: 1px solid #ffd6d3;
+
+
+      &:hover:not(:disabled) {
+
+        background: #fff5f4;
+
+      }
+
+    }
+
+
+    .secondary {
+
+      background: #f1f1f1;
+
+      color: #444;
+
+    }
+
+
+    .primary-button {
+
+      border: none;
+
+      border-radius: 10px;
+
+      background: linear-gradient(135deg, #ff9900, #ff5e00);
+
+      color: white;
+
+      box-shadow: 0 4px 12px rgba(255, 94, 0, .25);
+
+    }
+
+
+    .spotlight-button {
+
+      background: linear-gradient(135deg, #ffb300, #ff7a00);
+
+      color: white;
+
+      box-shadow: 0 4px 12px rgba(255, 122, 0, .25);
+
+    }
+
+  }
+
+
+
+
+
+  /* ==========================================================================
+     SELECTED BUSINESS
+  ========================================================================== */
+
+  .selected-panel {
+
+    background: white;
+
+    border-radius: 20px;
+
+    padding: 28px;
+
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
+
+
+
+    h2 {
+
+      margin: 0 0 4px;
+
+      font-size: 26px;
+      font-weight: 800;
+
+    }
+
+
+
+    h3 {
+
+      margin: 24px 0 4px;
+
+      font-size: 16px;
+      font-weight: 700;
+
+      color: #555;
+
+      text-transform: uppercase;
+      letter-spacing: .04em;
+
+    }
+
+
+
+    > p {
+
+      margin: 8px 0 0;
+
+      color: #888;
+      font-size: 14px;
+
+    }
+
+  }
+
+
+
+
+
+  /* ==========================================================================
+     DEAL ROW
+  ========================================================================== */
+
+  .deal-row {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 15px;
+
+    padding: 14px 16px;
+
+    margin-top: 10px;
+
+    border-radius: 12px;
+
+    background: #fafafa;
+
+    border: 1px solid #eeeeee;
+
+    transition: background .2s ease;
+
+
+    &:hover {
+
+      background: #f5f5f5;
+
+    }
+
+
+
+    strong {
+
+      font-weight: 700;
+      font-size: 14px;
+
+    }
+
+
+
+    span {
+
+      flex-shrink: 0;
+
+      color: #ff6a00;
+
+      font-weight: 800;
+      font-size: 14px;
+
+    }
+
+  }
+
+}
+
+
+
+
+
+/* ============================================================================
+   MOBILE
+============================================================================ */
+
+@media (max-width: 768px) {
+
+
+  .business-manager-page {
+
+    padding: 15px;
+    gap: 16px;
+
+
+
+    .manager-header {
+
+      flex-direction: column;
+
+      align-items: flex-start;
+
+      padding: 20px;
+
+
+
+      h1 {
+
+        font-size: 24px;
+
+      }
+
+
+
+      .primary-button {
+
+        width: 100%;
+
+      }
+
+    }
+
+
+
+
+    .business-grid {
+
+      grid-template-columns: 1fr;
+
+      gap: 16px;
+
+    }
+
+
+
+    /* ==========================================================================
+       Explicit spacing between stacked cards on mobile.
+
+       This is a safeguard in addition to the grid `gap` above — some
+       mobile webviews / older browsers don't reliably render `gap` on
+       grid containers, which caused cards to visually touch with no
+       space between them.
+    ========================================================================== */
+
+    .business-card {
+
+      margin-bottom: 16px;
+
+
+
+      &:last-child {
+
+        margin-bottom: 0;
+
+      }
+
+    }
+
+
+
+    .business-actions {
+
+      grid-template-columns: 1fr;
+
+
+
+      .danger {
+
+        grid-column: 1;
+
+      }
+
+    }
+
+
+
+    .panel,
+    .selected-panel {
+
+      padding: 20px;
+
+    }
+
+  }
+
+}

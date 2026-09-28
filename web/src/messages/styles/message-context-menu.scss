@@ -1,0 +1,34 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+.message-context-menu {
+  position: fixed;
+  z-index: v.$z-context-menu;
+  background: v.$color-bg-panel;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-sm;
+  box-shadow: v.$shadow-lg;
+  padding: 6px;
+  min-width: 180px;
+  animation: fockis-scale-in 0.12s ease;
+}
+
+.message-context-menu__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: v.$space-3;
+  padding: 9px 10px;
+  border-radius: v.$radius-xs;
+  font-size: v.$font-size-sm;
+  color: v.$color-text-primary;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: v.$color-bg-hover;
+  }
+
+  &.is-danger {
+    color: v.$color-danger;
+  }
+}
