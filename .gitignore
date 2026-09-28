@@ -32,8 +32,8 @@ pnpm-debug.log*
 Thumbs.db
 
 # Local uploads / generated files
-uploads/
-**/uploads/
+/uploads/
+/apps/api/uploads/
 
 # Archives
 *.zip
