@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import {
   useEffect,
   useMemo,
@@ -64,7 +66,7 @@ API
 ============================================================================ */
 
 const API_URL =
-  "http://localhost:3000";
+  FOCKIS_API_URL;
 
 /* ============================================================================
 PARTICLE DATA

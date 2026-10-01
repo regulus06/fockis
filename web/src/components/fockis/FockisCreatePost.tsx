@@ -21,12 +21,13 @@ import {
 import "../../styles/FockisCreatePost.scss";
 
 import { sellerApi } from "../../features/seller/services/sellerApi";
+import { FOCKIS_API_URL } from "../../config/fockisConfig";
 
 /* ============================================================================
 CONSTANTS
 ============================================================================ */
 
-const API_URL = "http://localhost:3000";
+const API_URL = FOCKIS_API_URL;
 
 const CONTENT_MAX_HEIGHT = 160;
 
@@ -297,18 +298,16 @@ function getCurrentUserPhoto(): string {
 
   if (
     typeof raw !== "string" ||
-    !raw
+    !raw.trim()
   ) {
     return "";
   }
 
-  return raw.startsWith("http")
-    ? raw
-    : `${API_URL}${raw}`;
+  return normalizeImageUrl(raw);
 }
 
 /* ============================================================================
-IMAGE NORMALIZER
+   IMAGE NORMALIZER
 ============================================================================ */
 
 function normalizeImageUrl(
@@ -318,15 +317,81 @@ function normalizeImageUrl(
     return "";
   }
 
-  if (image.startsWith("http")) {
-    return image;
+  let clean = image.trim();
+
+  if (!clean) {
+    return "";
   }
 
-  return `${API_URL}${
-    image.startsWith("/")
-      ? image
-      : `/${image}`
-  }`;
+  /*
+   * Keep browser-local preview URLs and data URLs.
+   */
+  if (
+    clean.startsWith("blob:") ||
+    clean.startsWith("data:")
+  ) {
+    return clean;
+  }
+
+  /*
+   * Convert legacy localhost media URLs to the current backend.
+   */
+  if (
+    clean.startsWith(FOCKIS_API_URL) ||
+    clean.startsWith("https://localhost:3000") ||
+    clean.startsWith("http://127.0.0.1:3000") ||
+    clean.startsWith("https://127.0.0.1:3000")
+  ) {
+    try {
+      const parsed = new URL(clean);
+
+      clean =
+        parsed.pathname +
+        parsed.search +
+        parsed.hash;
+    } catch {
+      clean = clean.replace(
+        /^https?:\/\/(?:localhost|127\.0\.0\.1):3000/i,
+        "",
+      );
+    }
+  }
+
+  /*
+   * Keep valid external URLs.
+   */
+  if (
+    clean.startsWith("http://") ||
+    clean.startsWith("https://")
+  ) {
+    return clean;
+  }
+
+  clean = clean.replace(/\\/g, "/");
+
+  const path = clean.replace(/^\/+/, "");
+
+  if (!path) {
+    return "";
+  }
+
+  /*
+   * Paths already returned by the backend.
+   */
+  if (
+    path.startsWith("uploads/") ||
+    path.startsWith("api/uploads/") ||
+    path.startsWith("media/") ||
+    path.startsWith("public/uploads/") ||
+    path.startsWith("upload/")
+  ) {
+    return `${API_URL}/${path}`;
+  }
+
+  /*
+   * Product/profile images that are stored as a filename only.
+   */
+  return `${API_URL}/uploads/${path}`;
 }
 
 /* ============================================================================

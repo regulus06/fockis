@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import {
   ChangeEvent,
   FormEvent,
@@ -320,7 +322,7 @@ function getApiOrigin(): string {
   const configured =
     import.meta.env.VITE_API_URL ||
     import.meta.env.VITE_API_BASE_URL ||
-    "http://localhost:3000";
+    FOCKIS_API_URL;
 
   return String(configured)
     .trim()

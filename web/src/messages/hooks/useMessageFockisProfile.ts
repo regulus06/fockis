@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../config/fockisConfig";
+
 import {
   useCallback,
   useEffect,
@@ -45,7 +47,7 @@ const API_URL =
       | string
       | undefined
   )?.replace(/\/+$/, "") ||
-  "http://localhost:3000";
+  FOCKIS_API_URL;
 
 function getToken(): string {
   return (

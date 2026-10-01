@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import type {
   Subscription,
   ChangePlanPayload,
@@ -11,7 +13,7 @@ import type {
 ============================================================ */
 
 const API_URL =
-  "http://localhost:3000";
+  FOCKIS_API_URL;
 
 /* ============================================================
    TOKEN

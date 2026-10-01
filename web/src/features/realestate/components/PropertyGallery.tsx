@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import React, {
   useEffect,
   useMemo,
@@ -26,7 +28,7 @@ interface PropertyGalleryProps {
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
-  "http://localhost:3000";
+  FOCKIS_API_URL;
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=85";

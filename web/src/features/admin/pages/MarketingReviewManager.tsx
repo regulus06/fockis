@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import { useCallback, useEffect, useState } from "react";
 
 interface MarketingCampaign {
@@ -17,7 +19,7 @@ interface MarketingCampaign {
   placements?: string[];
 }
 
-const API_BASE_URL = "http://localhost:3000";
+const API_BASE_URL = FOCKIS_API_URL;
 
 export default function MarketingReviewManager() {
   const [campaigns, setCampaigns] = useState<MarketingCampaign[]>([]);

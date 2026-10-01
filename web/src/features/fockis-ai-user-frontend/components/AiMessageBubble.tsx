@@ -1,9 +1,11 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import React, { useState } from "react";
 import type { AiMessage } from "../types/fockisAi.types";
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
-  "http://localhost:3000";
+  FOCKIS_API_URL;
 
 type ShopResult = {
   id: string;

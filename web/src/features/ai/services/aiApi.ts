@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import type {
   AiCredits,
   AiJob,
@@ -13,7 +15,7 @@ import type {
 const API_BASE = (
   import.meta.env.VITE_API_URL ||
   import.meta.env.VITE_API_BASE_URL ||
-  "http://localhost:3000"
+  FOCKIS_API_URL
 ).replace(/\/+$/, "");
 
 function getAccessToken(): string | null {

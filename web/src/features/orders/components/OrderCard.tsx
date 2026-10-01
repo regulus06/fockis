@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import React from 'react';
 import type { Order } from '../types/Order';
 
@@ -14,7 +16,7 @@ const OrderCard: React.FC<Props> = ({ order }) => {
   // =========================
   const downloadInvoice = () => {
     const baseUrl =
-      import.meta.env.VITE_API_URL || "http://localhost:3000";
+      import.meta.env.VITE_API_URL || FOCKIS_API_URL;
 
     window.open(
       `${baseUrl}/marketplace/orders/${order._id}/invoice/pdf`,

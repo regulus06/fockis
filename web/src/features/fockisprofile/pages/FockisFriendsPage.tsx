@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import React, { useState } from "react";
 
 import {
@@ -102,7 +104,7 @@ function getImageUrl(src: string | null): string | null {
 
   const apiUrl =
     import.meta.env.VITE_API_URL ||
-    "http://localhost:3000";
+    FOCKIS_API_URL;
 
   if (src.startsWith("/")) {
     return `${apiUrl}${src}`;

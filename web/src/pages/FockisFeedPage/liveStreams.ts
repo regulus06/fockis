@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../config/fockisConfig";
+
 export interface PublicLiveStream {
   id: string;
   title: string;
@@ -43,11 +45,7 @@ function getLiveAuthToken(): string {
 export async function getPublicLiveStreams(): Promise<
   PublicLiveStream[]
 > {
-  const apiUrl = (
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:3000"
-  ).replace(/\/+$/, "");
-
+  const apiUrl = FOCKIS_API_URL.replace(/\/+$/, "");
   const endpoint = `${apiUrl}/live/public`;
   const token = getLiveAuthToken();
 

@@ -1,6 +1,8 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 const API = (
   import.meta.env.VITE_API_URL ||
-  "http://localhost:3000"
+  FOCKIS_API_URL
 ).replace(/\/+$/, "");
 
 const KEY = "fockis-ai-conversations-v1";

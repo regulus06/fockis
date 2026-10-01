@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import { useMemo, useState } from "react";
 
 import { Link, useNavigate } from "react-router-dom";
@@ -57,7 +59,7 @@ interface MusicCardProps {
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_URL ||
-  "http://localhost:3000"
+  FOCKIS_API_URL
 ).replace(/\/+$/, "");
 
 // ============================================================================

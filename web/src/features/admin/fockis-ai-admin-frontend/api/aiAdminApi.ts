@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../../config/fockisConfig";
+
 export type AiFeature =
   | "chat"
   | "voice"
@@ -393,7 +395,7 @@ export interface VapiAssistant {
 
 const API_BASE =
   import.meta.env.VITE_API_URL ||
-  "http://localhost:3000";
+  FOCKIS_API_URL;
 
 const API_PREFIX = `${API_BASE}/api/admin/ai`;
 

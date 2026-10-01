@@ -1,440 +1,440 @@
 import React, {
-useMemo,
-useState,
+  useMemo,
+  useState,
 } from "react";
 
+import { buildMediaUrl } from "../../utils/fockisFeedHelpers";
+
 /* ============================================================================
-TYPES
+   TYPES
 ============================================================================ */
 
 export type FockisPostMediaType =
-| "image"
-| "video";
+  | "image"
+  | "video";
 
 export interface FockisPostMediaItem {
-url: string;
-type: FockisPostMediaType;
+  url: string;
+  type: FockisPostMediaType;
 }
 
 interface FockisPostMediaProps {
-media?: string;
-mediaItems?: FockisPostMediaItem[];
-type?: FockisPostMediaType | "none";
-postId: string;
+  media?: string;
+  mediaItems?: FockisPostMediaItem[];
+  type?: FockisPostMediaType | "none";
+  postId: string;
 }
 
 /* ============================================================================
-MEDIA URL
+   MEDIA URL
 ============================================================================ */
 
 const getSafeMediaUrl = (
-value: string,
+  value: string,
 ): string => {
-if (!value) {
-return "";
-}
+  if (!value) {
+    return "";
+  }
 
-const clean = value.trim();
+  const clean = value.trim();
 
-if (
-!clean ||
-clean === "undefined" ||
-clean === "null"
-) {
-return "";
-}
+  if (
+    !clean ||
+    clean === "undefined" ||
+    clean === "null"
+  ) {
+    return "";
+  }
 
-if (
-clean.startsWith("http://") ||
-clean.startsWith("https://") ||
-clean.startsWith("blob:") ||
-clean.startsWith("data:")
-) {
-return clean;
-}
-
-if (
-clean.startsWith("/uploads/") ||
-clean.startsWith("/media/")
-) {
-return `http://localhost:3000${clean}`;
-}
-
-if (
-clean.startsWith("uploads/") ||
-clean.startsWith("media/")
-) {
-return `http://localhost:3000/${clean}`;
-}
-
-return `http://localhost:3000/uploads/${clean}`;
+  /*
+   * Use the same centralized media URL logic as the feed mapper.
+   *
+   * This is important in production because relative upload paths and
+   * legacy localhost URLs must resolve through the Render backend.
+   */
+  return buildMediaUrl(clean);
 };
 
 /* ============================================================================
-DETECT VIDEO
+   DETECT VIDEO
 ============================================================================ */
 
 const detectVideo = (
-url: string,
+  url: string,
 ): boolean => {
-const cleanUrl =
-url
-.toLowerCase()
-.split("?")[0];
+  const cleanUrl =
+    url
+      .toLowerCase()
+      .split("?")[0];
 
-return [
-".mp4",
-".webm",
-".mov",
-".m4v",
-".avi",
-".mkv",
-".3gp",
-".mpeg",
-".mpg",
-].some(
-(extension) =>
-cleanUrl.endsWith(extension),
-);
+  return [
+    ".mp4",
+    ".webm",
+    ".mov",
+    ".m4v",
+    ".avi",
+    ".mkv",
+    ".3gp",
+    ".mpeg",
+    ".mpg",
+  ].some(
+    (extension) =>
+      cleanUrl.endsWith(extension),
+  );
 };
 
 /* ============================================================================
-POST MEDIA
+   POST MEDIA
 ============================================================================ */
 
 export default function FockisPostMedia({
-media,
-mediaItems,
-type = "none",
-postId,
+  media,
+  mediaItems,
+  type = "none",
+  postId,
 }: FockisPostMediaProps) {
-const [
-activeMedia,
-setActiveMedia,
-] = useState(0);
+  const [
+    activeMedia,
+    setActiveMedia,
+  ] = useState<number | null>(null);
 
-/* ==========================================================================
-BUILD MEDIA LIST
-========================================================================== */
+  /* ==========================================================================
+     BUILD MEDIA LIST
+  ========================================================================== */
 
-const items =
-useMemo<FockisPostMediaItem[]>(
-() => {
-if (
-mediaItems &&
-mediaItems.length > 0
-) {
-return mediaItems
-.map(
-(item) => {
-const url =
-getSafeMediaUrl(
-item.url,
-);
+  const items =
+    useMemo<FockisPostMediaItem[]>(
+      () => {
+        if (
+          mediaItems &&
+          mediaItems.length > 0
+        ) {
+          return mediaItems
+            .map((item) => {
+              const url =
+                getSafeMediaUrl(
+                  item.url,
+                );
 
-            if (!url) {
-              return null;
-            }
+              if (!url) {
+                return null;
+              }
 
-            return {
+              return {
+                url,
+                type:
+                  item.type ||
+                  (detectVideo(
+                    url,
+                  )
+                    ? "video"
+                    : "image"),
+              };
+            })
+            .filter(
+              (
+                item,
+              ): item is FockisPostMediaItem =>
+                item !== null,
+            );
+        }
+
+        if (
+          media &&
+          type !== "none"
+        ) {
+          const url =
+            getSafeMediaUrl(
+              media,
+            );
+
+          if (!url) {
+            return [];
+          }
+
+          return [
+            {
               url,
               type:
-                item.type ||
-                (detectVideo(
-                  url,
-                )
+                type === "video"
                   ? "video"
-                  : "image"),
-            };
-          },
-        )
-        .filter(
-          (
-            item,
-          ): item is FockisPostMediaItem =>
-            item !== null,
-        );
-    }
+                  : "image",
+            },
+          ];
+        }
 
-    if (
-      media &&
-      type !== "none"
-    ) {
-      const url =
-        getSafeMediaUrl(
-          media,
-        );
-
-      if (!url) {
         return [];
-      }
+      },
+      [
+        media,
+        mediaItems,
+        type,
+      ],
+    );
 
-      return [
-        {
-          url,
-          type:
-            type === "video"
-              ? "video"
-              : "image",
-        },
-      ];
+  /* ==========================================================================
+     NO MEDIA
+  ========================================================================== */
+
+  if (
+    items.length === 0
+  ) {
+    return null;
+  }
+
+  /* ==========================================================================
+     SINGLE MEDIA
+  ========================================================================== */
+
+  if (
+    items.length === 1
+  ) {
+    const item =
+      items[0];
+
+    if (!item) {
+      return null;
     }
 
-    return [];
-  },
-  [
-    media,
-    mediaItems,
-    type,
-  ],
-);
+    return (
+      <div
+        className="fk-post-media fk-post-media--single"
+        data-post-id={postId}
+      >
+        {item.type ===
+        "video" ? (
+          <video
+            className="fk-post-media__single-video"
+            src={item.url}
+            controls
+            playsInline
+            preload="metadata"
+          />
+        ) : (
+          <img
+            className="fk-post-media__single-image"
+            src={item.url}
+            alt="Post media"
+            loading="lazy"
+          />
+        )}
+      </div>
+    );
+  }
 
-/* ==========================================================================
-NO MEDIA
-========================================================================== */
+  /* ==========================================================================
+     MULTIPLE MEDIA
+  ========================================================================== */
 
-if (
-items.length === 0
-) {
-return null;
-}
+  const visibleItems =
+    items.slice(
+      0,
+      4,
+    );
 
-/* ==========================================================================
-SINGLE MEDIA
-========================================================================== */
+  const extraCount =
+    items.length - 4;
 
-if (
-items.length === 1
-) {
-const item =
-items[0];
-
-if (!item) {
-  return null;
-}
-
-return (
-  <div
-    className="fk-post-media fk-post-media--single"
-    data-post-id={postId}
-  >
-    {item.type ===
-    "video" ? (
-      <video
-        className="fk-post-media__single-video"
-        src={item.url}
-        controls
-        playsInline
-        preload="metadata"
-      />
-    ) : (
-      <img
-        className="fk-post-media__single-image"
-        src={item.url}
-        alt="Post media"
-        loading="lazy"
-      />
-    )}
-  </div>
-);
-
-}
-
-/* ==========================================================================
-MULTIPLE MEDIA
-========================================================================== */
-
-const visibleItems =
-items.slice(
-0,
-4,
-);
-
-const extraCount =
-items.length - 4;
-
-return (
-<div
-className={`fk-post-media fk-post-media--grid fk-post-media--count-${Math.min(
+  return (
+    <div
+      className={`fk-post-media fk-post-media--grid fk-post-media--count-${Math.min(
         items.length,
         4,
       )}`}
-data-post-id={postId}
->
-{visibleItems.map(
-(
-item,
-index,
-) => (
-<button
-key={`${postId}-media-${index}`}
-type="button"
-className="fk-post-media__grid-item"
-onClick={() =>
-setActiveMedia(
-index,
-)
-}
->
-{item.type ===
-"video" ? ( <video
-             className="fk-post-media__grid-video"
-             src={item.url}
-             muted
-             playsInline
-             preload="metadata"
-           />
-) : (
-<img
-className="fk-post-media__grid-image"
-src={item.url}
-alt={`Post media ${index + 1}`}
-loading="lazy"
-/>
-)}
+      data-post-id={postId}
+    >
+      {visibleItems.map(
+        (
+          item,
+          index,
+        ) => (
+          <button
+            key={`${postId}-media-${index}`}
+            type="button"
+            className="fk-post-media__grid-item"
+            onClick={() =>
+              setActiveMedia(
+                index,
+              )
+            }
+          >
+            {item.type ===
+            "video" ? (
+              <video
+                className="fk-post-media__grid-video"
+                src={item.url}
+                muted
+                playsInline
+                preload="metadata"
+              />
+            ) : (
+              <img
+                className="fk-post-media__grid-image"
+                src={item.url}
+                alt={`Post media ${index + 1}`}
+                loading="lazy"
+              />
+            )}
 
-```
-        {item.type ===
-          "video" && (
-          <span className="fk-post-media__video-icon">
-            ▶
-          </span>
-        )}
+            {item.type ===
+              "video" && (
+              <span className="fk-post-media__video-icon">
+                ▶
+              </span>
+            )}
 
-        {index === 3 &&
-          extraCount >
-            0 && (
-            <span className="fk-post-media__more">
-              +{extraCount}
-            </span>
-          )}
-      </button>
-    ),
-  )}
+            {index === 3 &&
+              extraCount >
+                0 && (
+                <span className="fk-post-media__more">
+                  +{extraCount}
+                </span>
+              )}
+          </button>
+        ),
+      )}
 
-  {/* ======================================================================
-      LARGE MEDIA VIEWER
-  ====================================================================== */}
+      {/* ======================================================================
+          LARGE MEDIA VIEWER
+      ====================================================================== */}
 
-  {activeMedia !==
-    null &&
-    items[
-      activeMedia
-    ] && (
-      <div
-        className="fk-media-lightbox"
-        role="dialog"
-        aria-modal="true"
-        onClick={() =>
-          setActiveMedia(
-            -1,
-          )
-        }
-      >
-        <button
-          type="button"
-          className="fk-media-lightbox__close"
-          onClick={() =>
-            setActiveMedia(
-              -1,
-            )
-          }
-          aria-label="Close media viewer"
-        >
-          ×
-        </button>
-
-        <button
-          type="button"
-          className="fk-media-lightbox__prev"
-          onClick={(
-            event,
-          ) => {
-            event.stopPropagation();
-
-            setActiveMedia(
-              (
-                current,
-              ) =>
-                current <= 0
-                  ? items.length -
-                    1
-                  : current -
-                    1,
-            );
-          }}
-          aria-label="Previous media"
-        >
-          ‹
-        </button>
-
-        <div
-          className="fk-media-lightbox__content"
-          onClick={(event) =>
-            event.stopPropagation()
-          }
-        >
-          {items[
-            activeMedia
-          ]?.type ===
-          "video" ? (
-            <video
-              className="fk-media-lightbox__media"
-              src={
-                items[
-                  activeMedia
-                ]?.url
+      {activeMedia !==
+        null &&
+        items[
+          activeMedia
+        ] && (
+          <div
+            className="fk-media-lightbox"
+            role="dialog"
+            aria-modal="true"
+            onClick={() =>
+              setActiveMedia(
+                null,
+              )
+            }
+          >
+            <button
+              type="button"
+              className="fk-media-lightbox__close"
+              onClick={() =>
+                setActiveMedia(
+                  null,
+                )
               }
-              controls
-              autoPlay
-              playsInline
-            />
-          ) : (
-            <img
-              className="fk-media-lightbox__media"
-              src={
-                items[
-                  activeMedia
-                ]?.url
-              }
-              alt="Post media enlarged"
-            />
-          )}
+              aria-label="Close media viewer"
+            >
+              ×
+            </button>
 
-          <div className="fk-media-lightbox__counter">
-            {activeMedia +
-              1}{" "}
-            /{" "}
-            {items.length}
+            <button
+              type="button"
+              className="fk-media-lightbox__prev"
+              onClick={(
+                event,
+              ) => {
+                event.stopPropagation();
+
+                setActiveMedia(
+                  (
+                    current,
+                  ) => {
+                    if (
+                      current ===
+                      null
+                    ) {
+                      return (
+                        items.length -
+                        1
+                      );
+                    }
+
+                    return current <=
+                      0
+                      ? items.length -
+                        1
+                      : current - 1;
+                  },
+                );
+              }}
+              aria-label="Previous media"
+            >
+              ‹
+            </button>
+
+            <div
+              className="fk-media-lightbox__content"
+              onClick={(event) =>
+                event.stopPropagation()
+              }
+            >
+              {items[
+                activeMedia
+              ]?.type ===
+              "video" ? (
+                <video
+                  className="fk-media-lightbox__media"
+                  src={
+                    items[
+                      activeMedia
+                    ]?.url
+                  }
+                  controls
+                  autoPlay
+                  playsInline
+                />
+              ) : (
+                <img
+                  className="fk-media-lightbox__media"
+                  src={
+                    items[
+                      activeMedia
+                    ]?.url
+                  }
+                  alt="Post media enlarged"
+                />
+              )}
+
+              <div className="fk-media-lightbox__counter">
+                {activeMedia +
+                  1}{" "}
+                /{" "}
+                {items.length}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="fk-media-lightbox__next"
+              onClick={(
+                event,
+              ) => {
+                event.stopPropagation();
+
+                setActiveMedia(
+                  (
+                    current,
+                  ) => {
+                    if (
+                      current ===
+                      null
+                    ) {
+                      return 0;
+                    }
+
+                    return current >=
+                      items.length -
+                        1
+                      ? 0
+                      : current + 1;
+                  },
+                );
+              }}
+              aria-label="Next media"
+            >
+              ›
+            </button>
           </div>
-        </div>
-
-        <button
-          type="button"
-          className="fk-media-lightbox__next"
-          onClick={(
-            event,
-          ) => {
-            event.stopPropagation();
-
-            setActiveMedia(
-              (
-                current,
-              ) =>
-                current >=
-                items.length -
-                  1
-                  ? 0
-                  : current +
-                    1,
-            );
-          }}
-          aria-label="Next media"
-        >
-          ›
-        </button>
-      </div>
-    )}
-</div>
-);
+        )}
+    </div>
+  );
 }

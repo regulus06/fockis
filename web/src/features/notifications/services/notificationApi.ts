@@ -1,6 +1,8 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import type { AppNotification } from "../type/Notification";
 
-const API_URL = "http://localhost:3000";
+const API_URL = FOCKIS_API_URL;
 
 function getToken(): string | null {
   return localStorage.getItem("token");

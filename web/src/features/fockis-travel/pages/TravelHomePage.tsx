@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 
 import LanguageSelector from "../../../i18n/components/LanguageSelector";
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
 
 import { travelApi, unwrapApiData } from "../services/travelApi";
 import partnersApi from "../services/partnersApi";
@@ -59,7 +60,7 @@ function getApiOrigin(): string {
       .replace(/\/+$/, "");
   }
 
-  return "http://192.168.1.112:3000";
+  return FOCKIS_API_URL;
 }
 
 function resolveMediaUrl(value?: string | null): string {

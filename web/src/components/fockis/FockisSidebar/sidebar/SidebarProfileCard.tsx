@@ -54,7 +54,7 @@ export default function SidebarProfileCard({
               src={
                 currentUser.avatar.startsWith("http")
                   ? currentUser.avatar
-                  : `http://localhost:3000${currentUser.avatar}`
+                  : `${FOCKIS_API_URL}${currentUser.avatar}`
               }
               alt={
                 currentUser.username || "Profile"

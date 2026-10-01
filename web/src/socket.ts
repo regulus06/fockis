@@ -1,6 +1,11 @@
+import { FOCKIS_API_URL } from "config/fockisConfig";
+
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:3000", {
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || FOCKIS_API_URL;
+
+const socket = io(API_BASE_URL, {
   transports: ["websocket"],
   autoConnect: false,
   query: {
@@ -17,6 +22,10 @@ socket.on("connect", () => {
 
 socket.on("disconnect", () => {
   console.log("🔴 socket disconnected");
+});
+
+socket.on("connect_error", (error) => {
+  console.error("🔴 socket connection error:", error.message);
 });
 
 // ======================

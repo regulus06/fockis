@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import { useEffect, useMemo, useState } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 
@@ -32,7 +34,7 @@ interface ListingsResponse {
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_URL ||
-  'http://localhost:3000';
+  FOCKIS_API_URL;
 
 function getListingImage(listing: Listing): string {
   return (

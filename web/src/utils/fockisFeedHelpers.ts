@@ -1,399 +1,2882 @@
 import type {
+
+
+
+
+
+
+
   FockisPost,
+
+
+
+
+
+
+
   FockisPostComment,
+
+
+
+
+
+
+
   FockisPostMediaItem,
+
+
+
+
+
+
+
 } from "../components/fockis/FockisPostCard";
+
+
+
+
+
+
+
 import type { FockisStory } from "../components/fockis/FockisStoriesRail";
 
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
    API CONFIG
+
+
+
+
+
+
+
 ============================================================================ */
 
-export const API_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+
+
+
+
+
+
+
+
+
+
+import { FOCKIS_API_URL } from "../config/fockisConfig";
+
+
+
+
+
+
+
+export const API_URL = FOCKIS_API_URL;
+
+
+
+
+
+
+
+
+
+
 
 /* ============================================================================
+
+
+
+
+
+
+
    TYPES
+
+
+
+
+
+
+
 ============================================================================ */
+
+
+
+
+
+
+
+
+
+
 
 export type MediaType = "image" | "video" | "none";
 
+
+
+
+
+
+
+
+
+
+
 export type ShareDestination =
+
+
+
+
+
+
+
   | "friend"
+
+
+
+
+
+
+
   | "group"
+
+
+
+
+
+
+
   | "copy_link"
+
+
+
+
+
+
+
   | "whatsapp"
+
+
+
+
+
+
+
   | "facebook"
+
+
+
+
+
+
+
   | "instagram"
+
+
+
+
+
+
+
   | "x"
+
+
+
+
+
+
+
   | "messenger"
+
+
+
+
+
+
+
   | "other";
 
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
    BACKEND POST DATA
+
+
+
+
+
+
+
 ============================================================================ */
 
+
+
+
+
+
+
+
+
+
+
 export interface BackendPostData {
+
+
+
+
+
+
+
   _id?: string;
+
+
+
+
+
+
+
   id?: string;
 
+
+
+
+
+
+
+
+
+
+
   /**
+
+
+
+
+
+
+
    * Explicit post-owner ID.
+
+
+
+
+
+
+
    *
+
+
+
+
+
+
+
    * This must be preferred over the currently logged-in user.
+
+
+
+
+
+
+
    */
+
+
+
+
+
+
+
   userId?: string;
 
+
+
+
+
+
+
+
+
+
+
   user?:
+
+
+
+
+
+
+
     | string
+
+
+
+
+
+
+
     | {
+
+
+
+
+
+
+
         _id?: string;
+
+
+
+
+
+
+
         id?: string;
+
+
+
+
+
+
+
         userId?: string;
+
+
+
+
+
+
+
         username?: string;
+
+
+
+
+
+
+
         name?: string;
+
+
+
+
+
+
+
         avatar?: string;
+
+
+
+
+
+
+
         photo?: string;
+
+
+
+
+
+
+
         profilePhoto?: string;
+
+
+
+
+
+
+
         userPhoto?: string;
+
+
+
+
+
+
+
       };
 
+
+
+
+
+
+
+
+
+
+
   username?: string;
+
+
+
+
+
+
+
   userPhoto?: string;
 
+
+
+
+
+
+
+
+
+
+
   content?: string;
+
+
+
+
+
+
+
   caption?: string;
+
+
+
+
+
+
+
   text?: string;
+
+
+
+
+
+
+
+
+
+
 
   media?: unknown;
 
+
+
+
+
+
+
+
+
+
+
   image?: unknown;
+
+
+
+
+
+
+
   imageUrl?: unknown;
+
+
+
+
+
+
+
   imageURL?: unknown;
 
+
+
+
+
+
+
+
+
+
+
   photo?: unknown;
+
+
+
+
+
+
+
   photoUrl?: unknown;
+
+
+
+
+
+
+
   photoURL?: unknown;
 
+
+
+
+
+
+
+
+
+
+
   file?: unknown;
+
+
+
+
+
+
+
   fileUrl?: unknown;
+
+
+
+
+
+
+
   fileURL?: unknown;
+
+
+
+
+
+
+
   filePath?: unknown;
 
+
+
+
+
+
+
+
+
+
+
   video?: unknown;
+
+
+
+
+
+
+
   videoUrl?: unknown;
+
+
+
+
+
+
+
   videoURL?: unknown;
+
+
+
+
+
+
+
   videoPath?: unknown;
+
+
+
+
+
+
+
   videoFile?: unknown;
 
+
+
+
+
+
+
+
+
+
+
   images?: unknown[];
+
+
+
+
+
+
+
   imageUrls?: unknown[];
+
+
+
+
+
+
+
   attachments?: unknown[];
+
+
+
+
+
+
+
   files?: unknown[];
 
+
+
+
+
+
+
+
+
+
+
   src?: unknown;
+
+
+
+
+
+
+
   url?: unknown;
+
+
+
+
+
+
+
+
+
+
 
   type?: string;
 
+
+
+
+
+
+
+
+
+
+
   mediaType?: string;
+
+
+
+
+
+
+
   mimeType?: string;
+
+
+
+
+
+
+
   mime?: string;
+
+
+
+
+
+
+
   fileType?: string;
+
+
+
+
+
+
+
   contentType?: string;
 
+
+
+
+
+
+
+
+
+
+
   createdAt?: string;
+
+
+
+
+
+
+
   date?: string;
 
+
+
+
+
+
+
+
+
+
+
   likes?: number;
+
+
+
+
+
+
+
   reposts?: number;
+
+
+
+
+
+
+
   shares?: number;
+
+
+
+
+
+
+
   views?: number;
 
+
+
+
+
+
+
+
+
+
+
   /**
+
+
+
+
+
+
+
    * Total number of gifts sent to this post.
+
+
+
+
+
+
+
    *
+
+
+
+
+
+
+
    * Persisted on the backend Post document
+
+
+
+
+
+
+
    * (see PostsService.incrementGiftsCount).
+
+
+
+
+
+
+
    */
+
+
+
+
+
+
+
   giftsCount?: number;
 
+
+
+
+
+
+
+
+
+
+
   likedBy?: unknown[];
+
+
+
+
+
+
+
   repostedBy?: unknown[];
+
+
+
+
+
+
+
   viewedBy?: unknown[];
 
+
+
+
+
+
+
+
+
+
+
   shareEvents?: unknown[];
+
+
+
+
+
+
+
   sharedBy?: unknown[];
+
+
+
+
+
+
+
+
+
+
 
   comments?: unknown[];
 
+
+
+
+
+
+
+
+
+
+
   price?: number;
+
+
+
+
+
+
+
   productId?: string;
 
+
+
+
+
+
+
+
+
+
+
   score?: number;
+
+
+
+
+
+
+
 }
 
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
    BACKEND STORY DATA
+
+
+
+
+
+
+
 ============================================================================ */
 
+
+
+
+
+
+
+
+
+
+
 export interface BackendStoryData {
+
+
+
+
+
+
+
   _id?: string;
+
+
+
+
+
+
+
   id?: string;
 
+
+
+
+
+
+
+
+
+
+
   user?:
+
+
+
+
+
+
+
     | string
+
+
+
+
+
+
+
     | {
+
+
+
+
+
+
+
         _id?: string;
+
+
+
+
+
+
+
         id?: string;
+
+
+
+
+
+
+
         username?: string;
+
+
+
+
+
+
+
         name?: string;
+
+
+
+
+
+
+
         avatar?: string;
+
+
+
+
+
+
+
         photo?: string;
+
+
+
+
+
+
+
         profilePhoto?: string;
+
+
+
+
+
+
+
         userPhoto?: string;
+
+
+
+
+
+
+
       };
+
+
+
+
+
+
+
+
+
+
 
   userId?: string;
 
+
+
+
+
+
+
+
+
+
+
   username?: string;
+
+
+
+
+
+
+
   name?: string;
 
+
+
+
+
+
+
+
+
+
+
   userPhoto?: string;
+
+
+
+
+
+
+
   avatar?: string;
+
+
+
+
+
+
+
   photo?: string;
+
+
+
+
+
+
+
   profilePhoto?: string;
 
+
+
+
+
+
+
+
+
+
+
   media?: unknown;
+
+
+
+
+
+
+
   image?: unknown;
+
+
+
+
+
+
+
   imageUrl?: unknown;
+
+
+
+
+
+
+
   imageURL?: unknown;
 
+
+
+
+
+
+
+
+
+
+
   video?: unknown;
+
+
+
+
+
+
+
   videoUrl?: unknown;
+
+
+
+
+
+
+
   videoURL?: unknown;
+
+
+
+
+
+
+
+
+
+
 
   type?: string;
 
+
+
+
+
+
+
+
+
+
+
   createdAt?: string;
+
+
+
+
+
+
+
   expiresAt?: string;
+
+
+
+
+
+
+
+
+
+
 
   viewedBy?: unknown[];
 
+
+
+
+
+
+
+
+
+
+
   isSeller?: boolean;
+
+
+
+
+
+
+
 }
 
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
    STORY API RESPONSE
+
+
+
+
+
+
+
 ============================================================================ */
+
+
+
+
+
+
+
+
+
+
 
 export type StoryApiResponse =
+
+
+
+
+
+
+
   | BackendStoryData[]
+
+
+
+
+
+
+
   | { stories?: BackendStoryData[]; data?: BackendStoryData[] }
+
+
+
+
+
+
+
   | null
+
+
+
+
+
+
+
   | undefined;
 
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
    EXTRACT STORY ARRAY
+
+
+
+
+
+
+
 ============================================================================ */
+
+
+
+
+
+
+
+
+
+
 
 export function extractStoryArray(response: unknown): BackendStoryData[] {
+
+
+
+
+
+
+
   if (Array.isArray(response)) {
+
+
+
+
+
+
+
     return response as BackendStoryData[];
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
 
   if (response && typeof response === "object") {
+
+
+
+
+
+
+
     const data = response as {
+
+
+
+
+
+
+
       stories?: unknown;
+
+
+
+
+
+
+
       data?: unknown;
+
+
+
+
+
+
+
     };
 
+
+
+
+
+
+
+
+
+
+
     if (Array.isArray(data.stories)) {
+
+
+
+
+
+
+
       return data.stories as BackendStoryData[];
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
+
+
+
 
     if (Array.isArray(data.data)) {
+
+
+
+
+
+
+
       return data.data as BackendStoryData[];
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
 
   return [];
+
+
+
+
+
+
+
 }
 
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
    NORMALIZE COMMENTS
+
+
+
+
+
+
+
 ============================================================================ */
 
+
+
+
+
+
+
+
+
+
+
 export function normalizeComments(
+
+
+
+
+
+
+
   value: unknown,
+
+
+
+
+
+
+
 ): FockisPostComment[] {
+
+
+
+
+
+
+
   if (!Array.isArray(value)) {
+
+
+
+
+
+
+
     return [];
+
+
+
+
+
+
+
   }
 
+
+
+
+
+
+
+
+
+
+
   return value
+
+
+
+
+
+
+
     .map((item): FockisPostComment | null => {
+
+
+
+
+
+
+
       if (!item || typeof item !== "object") {
+
+
+
+
+
+
+
         return null;
+
+
+
+
+
+
+
       }
+
+
+
+
+
+
+
+
+
+
 
       const comment = item as Record<string, unknown>;
 
+
+
+
+
+
+
+
+
+
+
       /*
+
+
+
+
+
+
+
        * Support both comment formats:
+
+
+
+
+
+
+
        *
+
+
+
+
+
+
+
        * 1. Direct:
+
+
+
+
+
+
+
        *    { userId, username, userPhoto }
+
+
+
+
+
+
+
        *
+
+
+
+
+
+
+
        * 2. Populated:
+
+
+
+
+
+
+
        *    {
+
+
+
+
+
+
+
        *      userId,
+
+
+
+
+
+
+
        *      user: {
+
+
+
+
+
+
+
        *        _id,
+
+
+
+
+
+
+
        *        username,
+
+
+
+
+
+
+
        *        avatar,
+
+
+
+
+
+
+
        *        profilePicture,
+
+
+
+
+
+
+
        *        profilePhoto,
+
+
+
+
+
+
+
        *        userPhoto
+
+
+
+
+
+
+
        *      }
+
+
+
+
+
+
+
        *    }
+
+
+
+
+
+
+
        */
+
+
+
+
+
+
+
       const nestedUser =
+
+
+
+
+
+
+
         comment.user &&
+
+
+
+
+
+
+
         typeof comment.user === "object"
+
+
+
+
+
+
+
           ? (comment.user as Record<string, unknown>)
+
+
+
+
+
+
+
           : undefined;
 
+
+
+
+
+
+
+
+
+
+
       const rawUserId =
+
+
+
+
+
+
+
         comment.userId ??
+
+
+
+
+
+
+
         nestedUser?.userId ??
+
+
+
+
+
+
+
         nestedUser?._id ??
+
+
+
+
+
+
+
         nestedUser?.id ??
+
+
+
+
+
+
+
         comment._id ??
+
+
+
+
+
+
+
         comment.id ??
+
+
+
+
+
+
+
         "";
+
+
+
+
+
+
+
+
+
+
 
       const userId =
+
+
+
+
+
+
+
         typeof rawUserId === "string"
+
+
+
+
+
+
+
           ? rawUserId.trim()
+
+
+
+
+
+
+
           : String(rawUserId || "").trim();
 
+
+
+
+
+
+
+
+
+
+
       const content =
+
+
+
+
+
+
+
         typeof comment.content === "string"
+
+
+
+
+
+
+
           ? comment.content.trim()
+
+
+
+
+
+
+
           : "";
 
+
+
+
+
+
+
+
+
+
+
       if (!userId || !content) {
+
+
+
+
+
+
+
         return null;
+
+
+
+
+
+
+
       }
+
+
+
+
+
+
+
+
+
+
 
       const rawUsername =
+
+
+
+
+
+
+
         comment.username ??
+
+
+
+
+
+
+
         nestedUser?.username ??
+
+
+
+
+
+
+
         nestedUser?.name ??
+
+
+
+
+
+
+
         "";
+
+
+
+
+
+
+
+
+
+
 
       const username =
+
+
+
+
+
+
+
         typeof rawUsername === "string"
+
+
+
+
+
+
+
           ? rawUsername.trim()
+
+
+
+
+
+
+
           : String(rawUsername || "").trim();
 
+
+
+
+
+
+
+
+
+
+
       const rawPhoto =
+
+
+
+
+
+
+
         comment.userPhoto ??
+
+
+
+
+
+
+
         comment.profilePicture ??
+
+
+
+
+
+
+
         comment.profilePhoto ??
+
+
+
+
+
+
+
         comment.avatar ??
+
+
+
+
+
+
+
         comment.photo ??
+
+
+
+
+
+
+
         nestedUser?.profilePicture ??
+
+
+
+
+
+
+
         nestedUser?.profilePhoto ??
+
+
+
+
+
+
+
         nestedUser?.userPhoto ??
+
+
+
+
+
+
+
         nestedUser?.avatar ??
+
+
+
+
+
+
+
         nestedUser?.photo ??
+
+
+
+
+
+
+
         "";
 
+
+
+
+
+
+
+
+
+
+
       const userPhoto =
+
+
+
+
+
+
+
         typeof rawPhoto === "string"
+
+
+
+
+
+
+
           ? rawPhoto.trim()
+
+
+
+
+
+
+
           : extractMediaValue(rawPhoto);
 
+
+
+
+
+
+
+
+
+
+
       return {
+
+
+
+
+
+
+
         userId,
+
+
+
+
+
+
+
         username,
+
+
+
+
+
+
+
         userPhoto: userPhoto
+
+
+
+
+
+
+
           ? buildMediaUrl(userPhoto)
+
+
+
+
+
+
+
           : undefined,
+
+
+
+
+
+
+
         content,
+
+
+
+
+
+
+
         createdAt:
+
+
+
+
+
+
+
           typeof comment.createdAt === "string"
+
+
+
+
+
+
+
             ? comment.createdAt
+
+
+
+
+
+
+
             : undefined,
+
+
+
+
+
+
+
       };
+
+
+
+
+
+
+
     })
+
+
+
+
+
+
+
     .filter(
+
+
+
+
+
+
+
       (comment): comment is FockisPostComment =>
+
+
+
+
+
+
+
         comment !== null,
+
+
+
+
+
+
+
     );
+
+
+
+
+
+
+
 }
 
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
    EXTRACT MEDIA VALUE
+
+
+
+
+
+
+
 ============================================================================ */
+
+
+
+
+
+
+
+
+
+
 
 export function extractMediaValue(value: unknown): string {
+
+
+
+
+
+
+
   if (!value) {
+
+
+
+
+
+
+
     return "";
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
 
   if (typeof value === "string") {
+
+
+
+
+
+
+
     const result = value.trim();
 
+
+
+
+
+
+
+
+
+
+
     if (
+
+
+
+
+
+
+
       !result ||
+
+
+
+
+
+
+
       result === "undefined" ||
+
+
+
+
+
+
+
       result === "null"
+
+
+
+
+
+
+
     ) {
+
+
+
+
+
+
+
       return "";
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
+
+
+
 
     return result;
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
 
   if (
+
+
+
+
+
+
+
     typeof value === "object" &&
+
+
+
+
+
+
+
     value !== null
+
+
+
+
+
+
+
   ) {
+
+
+
+
+
+
+
     const mediaObject =
+
+
+
+
+
+
+
       value as Record<string, unknown>;
 
+
+
+
+
+
+
+
+
+
+
     const possibleValues = [
+
+
+
+
+
+
+
       mediaObject.url,
+
+
+
+
+
+
+
       mediaObject.path,
+
+
+
+
+
+
+
       mediaObject.src,
+
+
+
+
+
+
+
       mediaObject.fileUrl,
+
+
+
+
+
+
+
       mediaObject.filePath,
+
+
+
+
+
+
+
       mediaObject.filename,
+
+
+
+
+
+
+
       mediaObject.fileName,
+
+
+
+
+
+
+
       mediaObject.location,
+
+
+
+
+
+
+
       mediaObject.key,
+
+
+
+
+
+
+
       mediaObject.originalUrl,
+
+
+
+
+
+
+
       mediaObject.publicUrl,
+
+
+
+
+
+
+
     ];
 
+
+
+
+
+
+
+
+
+
+
     for (const item of possibleValues) {
+
+
+
+
+
+
+
       const result = extractMediaValue(item);
 
+
+
+
+
+
+
+
+
+
+
       if (result) {
+
+
+
+
+
+
+
         return result;
+
+
+
+
+
+
+
       }
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
   }
 
+
+
+
+
+
+
+
+
+
+
   return "";
+
+
+
+
+
+
+
 }
 
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
    BUILD MEDIA URL
+
+
+
+
+
+
+
 ============================================================================ */
+
+
+
+
+
+
+
+
+
+
 
 export function buildMediaUrl(media: string): string {
   if (!media) {
@@ -411,10 +2894,42 @@ export function buildMediaUrl(media: string): string {
   }
 
   if (
-    cleanMedia.startsWith("http://") ||
-    cleanMedia.startsWith("https://") ||
     cleanMedia.startsWith("blob:") ||
     cleanMedia.startsWith("data:")
+  ) {
+    return cleanMedia;
+  }
+
+  if (
+    cleanMedia.startsWith("http://localhost:3000") ||
+    cleanMedia.startsWith("https://localhost:3000") ||
+    cleanMedia.startsWith("http://127.0.0.1:3000") ||
+    cleanMedia.startsWith("https://127.0.0.1:3000") ||
+    cleanMedia.startsWith("http://192.168.1.112:3000") ||
+    cleanMedia.startsWith("https://192.168.1.112:3000")
+  ) {
+    try {
+      const parsed = new URL(cleanMedia);
+
+      cleanMedia =
+        parsed.pathname +
+        parsed.search +
+        parsed.hash;
+    } catch {
+      cleanMedia = cleanMedia.replace(
+        /^https?:\/\/(?:localhost|127\.0\.0\.1|192\.168\.1\.112):3000/i,
+        "",
+      );
+    }
+  }
+
+  if (cleanMedia.startsWith(FOCKIS_API_URL)) {
+    return cleanMedia;
+  }
+
+  if (
+    cleanMedia.startsWith("http://") ||
+    cleanMedia.startsWith("https://")
   ) {
     return cleanMedia;
   }
@@ -444,653 +2959,4752 @@ export function buildMediaUrl(media: string): string {
   return `${API_URL}/uploads/${path}`;
 }
 
-/* ============================================================================
-   DETECT MEDIA TYPE
-============================================================================ */
-
 export function detectMediaType(
+
+
+
+
+
+
+
   mediaUrl: string,
+
+
+
+
+
+
+
   rawMedia: string,
+
+
+
+
+
+
+
   post?: BackendPostData,
+
+
+
+
+
+
+
 ): MediaType {
+
+
+
+
+
+
+
   if (!mediaUrl) {
+
+
+
+
+
+
+
     return "none";
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
 
   const backendType = String(
+
+
+
+
+
+
+
     post?.mediaType ||
+
+
+
+
+
+
+
       post?.mimeType ||
+
+
+
+
+
+
+
       post?.mime ||
+
+
+
+
+
+
+
       post?.fileType ||
+
+
+
+
+
+
+
       post?.contentType ||
+
+
+
+
+
+
+
       "",
+
+
+
+
+
+
+
   ).toLowerCase();
 
+
+
+
+
+
+
+
+
+
+
   if (backendType.includes("video")) {
+
+
+
+
+
+
+
     return "video";
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
 
   if (backendType.includes("image")) {
+
+
+
+
+
+
+
     return "image";
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
 
   const videoExtensions = [
+
+
+
+
+
+
+
     ".mp4",
+
+
+
+
+
+
+
     ".webm",
+
+
+
+
+
+
+
     ".mov",
+
+
+
+
+
+
+
     ".m4v",
+
+
+
+
+
+
+
     ".avi",
+
+
+
+
+
+
+
     ".mkv",
+
+
+
+
+
+
+
     ".3gp",
+
+
+
+
+
+
+
     ".mpeg",
+
+
+
+
+
+
+
     ".mpg",
+
+
+
+
+
+
+
   ];
+
+
+
+
+
+
+
+
+
+
 
   const imageExtensions = [
+
+
+
+
+
+
+
     ".jpg",
+
+
+
+
+
+
+
     ".jpeg",
+
+
+
+
+
+
+
     ".png",
+
+
+
+
+
+
+
     ".gif",
+
+
+
+
+
+
+
     ".webp",
+
+
+
+
+
+
+
     ".bmp",
+
+
+
+
+
+
+
     ".svg",
+
+
+
+
+
+
+
     ".avif",
+
+
+
+
+
+
+
   ];
 
+
+
+
+
+
+
+
+
+
+
   const cleanMediaUrl =
+
+
+
+
+
+
+
     mediaUrl.toLowerCase().split("?")[0];
 
+
+
+
+
+
+
+
+
+
+
   const cleanRawMedia =
+
+
+
+
+
+
+
     rawMedia.toLowerCase().split("?")[0];
 
-  if (
-    videoExtensions.some(
-      (extension) =>
-        cleanMediaUrl.endsWith(extension) ||
-        cleanRawMedia.endsWith(extension),
-    )
-  ) {
-    return "video";
-  }
+
+
+
+
+
+
+
+
+
 
   if (
-    imageExtensions.some(
+
+
+
+
+
+
+
+    videoExtensions.some(
+
+
+
+
+
+
+
       (extension) =>
+
+
+
+
+
+
+
         cleanMediaUrl.endsWith(extension) ||
+
+
+
+
+
+
+
         cleanRawMedia.endsWith(extension),
+
+
+
+
+
+
+
     )
+
+
+
+
+
+
+
   ) {
-    return "image";
+
+
+
+
+
+
+
+    return "video";
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
+
+  if (
+
+
+
+
+
+
+
+    imageExtensions.some(
+
+
+
+
+
+
+
+      (extension) =>
+
+
+
+
+
+
+
+        cleanMediaUrl.endsWith(extension) ||
+
+
+
+
+
+
+
+        cleanRawMedia.endsWith(extension),
+
+
+
+
+
+
+
+    )
+
+
+
+
+
+
+
+  ) {
+
+
+
+
+
+
+
+    return "image";
+
+
+
+
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+
 
   return "image";
+
+
+
+
+
+
+
 }
 
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
    GET ALL MEDIA FROM POST
+
+
+
+
+
+
+
 ============================================================================ */
+
+
+
+
+
+
+
+
+
+
 
 export function getAllRawMedia(
+
+
+
+
+
+
+
   post: BackendPostData,
+
+
+
+
+
+
+
 ): Array<{ raw: string; type?: string }> {
+
+
+
+
+
+
+
   const results: Array<{
+
+
+
+
+
+
+
     raw: string;
+
+
+
+
+
+
+
     type?: string;
+
+
+
+
+
+
+
   }> = [];
 
+
+
+
+
+
+
+
+
+
+
   const addMedia = (
+
+
+
+
+
+
+
     value: unknown,
+
+
+
+
+
+
+
     forcedType?: string,
+
+
+
+
+
+
+
   ) => {
+
+
+
+
+
+
+
     const raw = extractMediaValue(value);
 
+
+
+
+
+
+
+
+
+
+
     if (!raw) {
+
+
+
+
+
+
+
       return;
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
+
+
+
 
     const duplicate = results.some(
+
+
+
+
+
+
+
       (item) => item.raw === raw,
+
+
+
+
+
+
+
     );
+
+
+
+
+
+
+
+
+
+
 
     if (!duplicate) {
+
+
+
+
+
+
+
       results.push({
+
+
+
+
+
+
+
         raw,
+
+
+
+
+
+
+
         type: forcedType,
+
+
+
+
+
+
+
       });
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
   };
 
+
+
+
+
+
+
+
+
+
+
   if (Array.isArray(post.media)) {
+
+
+
+
+
+
+
     post.media.forEach((item) =>
+
+
+
+
+
+
+
       addMedia(item),
+
+
+
+
+
+
+
     );
+
+
+
+
+
+
+
   } else {
+
+
+
+
+
+
+
     addMedia(post.media);
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
 
   if (Array.isArray(post.images)) {
+
+
+
+
+
+
+
     post.images.forEach((item) =>
+
+
+
+
+
+
+
       addMedia(item, "image"),
+
+
+
+
+
+
+
     );
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
 
   if (Array.isArray(post.imageUrls)) {
+
+
+
+
+
+
+
     post.imageUrls.forEach((item) =>
+
+
+
+
+
+
+
       addMedia(item, "image"),
+
+
+
+
+
+
+
     );
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
 
   if (Array.isArray(post.attachments)) {
+
+
+
+
+
+
+
     post.attachments.forEach((item) =>
+
+
+
+
+
+
+
       addMedia(item),
+
+
+
+
+
+
+
     );
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
 
   if (Array.isArray(post.files)) {
+
+
+
+
+
+
+
     post.files.forEach((item) =>
+
+
+
+
+
+
+
       addMedia(item),
+
+
+
+
+
+
+
     );
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
 
   addMedia(post.image, "image");
+
+
+
+
+
+
+
   addMedia(post.imageUrl, "image");
+
+
+
+
+
+
+
   addMedia(post.imageURL, "image");
+
+
+
+
+
+
+
   addMedia(post.photo, "image");
+
+
+
+
+
+
+
   addMedia(post.photoUrl, "image");
+
+
+
+
+
+
+
   addMedia(post.photoURL, "image");
 
+
+
+
+
+
+
+
+
+
+
   addMedia(post.video, "video");
+
+
+
+
+
+
+
   addMedia(post.videoUrl, "video");
+
+
+
+
+
+
+
   addMedia(post.videoURL, "video");
+
+
+
+
+
+
+
   addMedia(post.videoPath, "video");
+
+
+
+
+
+
+
   addMedia(post.videoFile, "video");
 
+
+
+
+
+
+
+
+
+
+
   addMedia(post.file);
+
+
+
+
+
+
+
   addMedia(post.fileUrl);
+
+
+
+
+
+
+
   addMedia(post.fileURL);
+
+
+
+
+
+
+
   addMedia(post.filePath);
+
+
+
+
+
+
+
   addMedia(post.src);
+
+
+
+
+
+
+
   addMedia(post.url);
 
+
+
+
+
+
+
+
+
+
+
   return results;
+
+
+
+
+
+
+
 }
 
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
    NORMALIZE USER IDS
+
+
+
+
+
+
+
 ============================================================================ */
+
+
+
+
+
+
+
+
+
+
 
 export function normalizeUserIds(
+
+
+
+
+
+
+
   value: unknown,
+
+
+
+
+
+
+
 ): string[] {
+
+
+
+
+
+
+
   if (!Array.isArray(value)) {
+
+
+
+
+
+
+
     return [];
+
+
+
+
+
+
+
   }
 
+
+
+
+
+
+
+
+
+
+
   return value
+
+
+
+
+
+
+
     .map((item: unknown) => {
+
+
+
+
+
+
+
       if (typeof item === "string") {
+
+
+
+
+
+
+
         return item;
+
+
+
+
+
+
+
       }
 
+
+
+
+
+
+
+
+
+
+
       if (
+
+
+
+
+
+
+
         item &&
+
+
+
+
+
+
+
         typeof item === "object"
+
+
+
+
+
+
+
       ) {
+
+
+
+
+
+
+
         const object =
+
+
+
+
+
+
+
           item as Record<string, unknown>;
 
+
+
+
+
+
+
+
+
+
+
         return String(
+
+
+
+
+
+
+
           object._id ??
+
+
+
+
+
+
+
             object.id ??
+
+
+
+
+
+
+
             object.userId ??
+
+
+
+
+
+
+
             "",
+
+
+
+
+
+
+
         );
+
+
+
+
+
+
+
       }
+
+
+
+
+
+
+
+
+
+
 
       return "";
+
+
+
+
+
+
+
     })
+
+
+
+
+
+
+
     .filter(Boolean);
+
+
+
+
+
+
+
 }
 
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
    GET POST OWNER ID
+
+
+
+
+
+
+
 ============================================================================ */
+
+
+
+
+
+
+
+
+
+
 
 /**
+
+
+
+
+
+
+
  * Resolve the ACTUAL author of the post.
+
+
+
+
+
+
+
  *
+
+
+
+
+
+
+
  * IMPORTANT:
+
+
+
+
+
+
+
  * This function never uses the currently authenticated user.
+
+
+
+
+
+
+
  * It only reads identity information supplied by the backend post.
+
+
+
+
+
+
+
  */
+
+
+
+
+
+
+
 export function getPostOwnerId(
+
+
+
+
+
+
+
   post: BackendPostData,
+
+
+
+
+
+
+
 ): string {
+
+
+
+
+
+
+
   const nestedUser =
+
+
+
+
+
+
+
     post.user &&
+
+
+
+
+
+
+
     typeof post.user === "object"
+
+
+
+
+
+
+
       ? post.user
+
+
+
+
+
+
+
       : undefined;
+
+
+
+
+
+
+
+
+
+
 
   const resolved =
+
+
+
+
+
+
+
     post.userId ||
+
+
+
+
+
+
+
     nestedUser?.userId ||
+
+
+
+
+
+
+
     nestedUser?._id ||
+
+
+
+
+
+
+
     nestedUser?.id ||
+
+
+
+
+
+
+
     (typeof post.user === "string"
+
+
+
+
+
+
+
       ? post.user
+
+
+
+
+
+
+
       : "");
 
+
+
+
+
+
+
+
+
+
+
   return resolved ? String(resolved) : "";
+
+
+
+
+
+
+
 }
 
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
    GET POST USERNAME
+
+
+
+
+
+
+
 ============================================================================ */
+
+
+
+
+
+
+
+
+
+
 
 export function getPostUsername(
+
+
+
+
+
+
+
   post: BackendPostData,
+
+
+
+
+
+
+
 ): string {
+
+
+
+
+
+
+
   const nestedUser =
+
+
+
+
+
+
+
     post.user &&
+
+
+
+
+
+
+
     typeof post.user === "object"
+
+
+
+
+
+
+
       ? post.user
+
+
+
+
+
+
+
       : undefined;
 
+
+
+
+
+
+
+
+
+
+
   return (
+
+
+
+
+
+
+
     post.username ||
+
+
+
+
+
+
+
     nestedUser?.username ||
+
+
+
+
+
+
+
     nestedUser?.name ||
+
+
+
+
+
+
+
     "Unknown"
+
+
+
+
+
+
+
   );
+
+
+
+
+
+
+
 }
 
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
    GET POST USER PHOTO
+
+
+
+
+
+
+
 ============================================================================ */
+
+
+
+
+
+
+
+
+
+
 
 export function getPostUserPhoto(
+
+
+
+
+
+
+
   post: BackendPostData,
+
+
+
+
+
+
+
 ): string {
+
+
+
+
+
+
+
   const nestedUser =
+
+
+
+
+
+
+
     post.user &&
+
+
+
+
+
+
+
     typeof post.user === "object"
+
+
+
+
+
+
+
       ? post.user
+
+
+
+
+
+
+
       : undefined;
 
+
+
+
+
+
+
+
+
+
+
   return (
+
+
+
+
+
+
+
     post.userPhoto ||
+
+
+
+
+
+
+
     nestedUser?.userPhoto ||
+
+
+
+
+
+
+
     nestedUser?.avatar ||
+
+
+
+
+
+
+
     nestedUser?.photo ||
+
+
+
+
+
+
+
     nestedUser?.profilePhoto ||
+
+
+
+
+
+
+
     ""
+
+
+
+
+
+
+
   );
+
+
+
+
+
+
+
 }
 
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
    MAP FEED ITEMS TO POSTS
+
+
+
+
+
+
+
 ============================================================================ */
 
+
+
+
+
+
+
+
+
+
+
 export function mapFeedItemsToPosts(
+
+
+
+
+
+
+
   feedItems: BackendPostData[],
+
+
+
+
+
+
+
 ): FockisPost[] {
+
+
+
+
+
+
+
   return feedItems
+
+
+
+
+
+
+
     .filter((item) => {
+
+
+
+
+
+
+
       if (!item) {
+
+
+
+
+
+
+
         return false;
+
+
+
+
+
+
+
       }
+
+
+
+
+
+
+
+
+
+
 
       /*
+
+
+
+
+
+
+
        * Keep marketplace products out of the normal
+
+
+
+
+
+
+
        * social feed.
+
+
+
+
+
+
+
        */
-      if (
-        item.type === "product" ||
-        item.type === "marketplace" ||
-        item.productId
-      ) {
-        return false;
-      }
+
+
+
+
+
+
 
       if (
-        item.price !== undefined &&
-        item.price !== null
+
+
+
+
+
+
+
+        item.type === "product" ||
+
+
+
+
+
+
+
+        item.type === "marketplace" ||
+
+
+
+
+
+
+
+        item.productId
+
+
+
+
+
+
+
       ) {
+
+
+
+
+
+
+
         return false;
+
+
+
+
+
+
+
       }
+
+
+
+
+
+
+
+
+
+
+
+      if (
+
+
+
+
+
+
+
+        item.price !== undefined &&
+
+
+
+
+
+
+
+        item.price !== null
+
+
+
+
+
+
+
+      ) {
+
+
+
+
+
+
+
+        return false;
+
+
+
+
+
+
+
+      }
+
+
+
+
+
+
+
+
+
+
 
       return true;
+
+
+
+
+
+
+
     })
+
+
+
+
+
+
+
     .map((p): FockisPost => {
+
+
+
+
+
+
+
       /* ----------------------------------------------------------
+
+
+
+
+
+
+
          MEDIA
+
+
+
+
+
+
+
       ---------------------------------------------------------- */
+
+
+
+
+
+
+
+
+
+
 
       const rawMediaItems =
+
+
+
+
+
+
+
         getAllRawMedia(p);
 
+
+
+
+
+
+
+
+
+
+
       const mediaItems: FockisPostMediaItem[] =
+
+
+
+
+
+
+
         rawMediaItems
+
+
+
+
+
+
+
           .map((item) => {
+
+
+
+
+
+
+
             const url = buildMediaUrl(
+
+
+
+
+
+
+
               item.raw,
+
+
+
+
+
+
+
             );
 
+
+
+
+
+
+
+
+
+
+
             if (!url) {
+
+
+
+
+
+
+
               return null;
+
+
+
+
+
+
+
             }
 
+
+
+
+
+
+
+
+
+
+
             const type =
+
+
+
+
+
+
+
               item.type === "video"
+
+
+
+
+
+
+
                 ? "video"
+
+
+
+
+
+
+
                 : detectMediaType(
+
+
+
+
+
+
+
                     url,
+
+
+
+
+
+
+
                     item.raw,
+
+
+
+
+
+
+
                     p,
+
+
+
+
+
+
+
                   );
 
+
+
+
+
+
+
+
+
+
+
             return {
+
+
+
+
+
+
+
               url,
+
+
+
+
+
+
+
               type:
+
+
+
+
+
+
+
                 type === "video"
+
+
+
+
+
+
+
                   ? "video"
+
+
+
+
+
+
+
                   : "image",
+
+
+
+
+
+
+
             } as FockisPostMediaItem;
+
+
+
+
+
+
+
           })
+
+
+
+
+
+
+
           .filter(
+
+
+
+
+
+
+
             (
+
+
+
+
+
+
+
               item,
+
+
+
+
+
+
+
             ): item is FockisPostMediaItem =>
+
+
+
+
+
+
+
               item !== null,
+
+
+
+
+
+
+
           );
 
+
+
+
+
+
+
+
+
+
+
       const firstMedia =
+
+
+
+
+
+
+
         mediaItems[0];
 
+
+
+
+
+
+
+
+
+
+
       const mediaType =
+
+
+
+
+
+
+
         firstMedia?.type ?? "none";
 
+
+
+
+
+
+
+
+
+
+
       /* ----------------------------------------------------------
+
+
+
+
+
+
+
          POST ID
+
+
+
+
+
+
+
       ---------------------------------------------------------- */
+
+
+
+
+
+
+
+
+
+
 
       const postId = String(
+
+
+
+
+
+
+
         p._id ||
+
+
+
+
+
+
+
           p.id ||
+
+
+
+
+
+
+
           `${Date.now()}-${Math.random()}`,
+
+
+
+
+
+
+
       );
 
+
+
+
+
+
+
+
+
+
+
       /* ----------------------------------------------------------
+
+
+
+
+
+
+
          ACTUAL POST OWNER
+
+
+
+
+
+
+
       ---------------------------------------------------------- */
+
+
+
+
+
+
+
+
+
+
 
       const userId =
+
+
+
+
+
+
+
         getPostOwnerId(p);
 
+
+
+
+
+
+
+
+
+
+
       const username =
+
+
+
+
+
+
+
         getPostUsername(p);
 
+
+
+
+
+
+
+
+
+
+
       const rawUserPhoto =
+
+
+
+
+
+
+
         getPostUserPhoto(p);
 
+
+
+
+
+
+
+
+
+
+
       /* ----------------------------------------------------------
+
+
+
+
+
+
+
          ENGAGEMENT
+
+
+
+
+
+
+
       ---------------------------------------------------------- */
+
+
+
+
+
+
+
+
+
+
 
       const likedBy =
+
+
+
+
+
+
+
         normalizeUserIds(
+
+
+
+
+
+
+
           p.likedBy,
+
+
+
+
+
+
+
         );
+
+
+
+
+
+
+
+
+
+
 
       const repostedBy =
+
+
+
+
+
+
+
         normalizeUserIds(
+
+
+
+
+
+
+
           p.repostedBy,
+
+
+
+
+
+
+
         );
+
+
+
+
+
+
+
+
+
+
 
       const viewedBy =
+
+
+
+
+
+
+
         normalizeUserIds(
+
+
+
+
+
+
+
           p.viewedBy,
+
+
+
+
+
+
+
         );
+
+
+
+
+
+
+
+
+
+
 
       const comments =
+
+
+
+
+
+
+
         normalizeComments(
+
+
+
+
+
+
+
           p.comments,
+
+
+
+
+
+
+
         );
 
+
+
+
+
+
+
+
+
+
+
       /* ----------------------------------------------------------
+
+
+
+
+
+
+
          FINAL FOCKIS POST
+
+
+
+
+
+
+
       ---------------------------------------------------------- */
 
+
+
+
+
+
+
+
+
+
+
       return {
+
+
+
+
+
+
+
         id: postId,
 
+
+
+
+
+
+
+
+
+
+
         /*
+
+
+
+
+
+
+
          * CRITICAL:
+
+
+
+
+
+
+
          *
+
+
+
+
+
+
+
          * This is the author ID from the backend.
+
+
+
+
+
+
+
          *
+
+
+
+
+
+
+
          * FockisPostHeader uses this value to navigate to:
+
+
+
+
+
+
+
          *
+
+
+
+
+
+
+
          * /profile/${post.userId}
+
+
+
+
+
+
+
          *
+
+
+
+
+
+
+
          * It is NOT the current logged-in user's ID.
+
+
+
+
+
+
+
          */
+
+
+
+
+
+
+
         userId:
+
+
+
+
+
+
+
           userId || undefined,
+
+
+
+
+
+
+
+
+
+
 
         user: username,
 
+
+
+
+
+
+
+
+
+
+
         userPhoto:
+
+
+
+
+
+
+
           rawUserPhoto
+
+
+
+
+
+
+
             ? buildMediaUrl(
+
+
+
+
+
+
+
                 rawUserPhoto,
+
+
+
+
+
+
+
               )
+
+
+
+
+
+
+
             : undefined,
 
+
+
+
+
+
+
+
+
+
+
         content:
+
+
+
+
+
+
+
           p.content ||
+
+
+
+
+
+
+
           p.caption ||
+
+
+
+
+
+
+
           p.text ||
+
+
+
+
+
+
+
           "",
 
+
+
+
+
+
+
+
+
+
+
         media:
+
+
+
+
+
+
+
           firstMedia?.url ||
+
+
+
+
+
+
+
           undefined,
+
+
+
+
+
+
+
+
+
+
 
         type: mediaType,
 
+
+
+
+
+
+
+
+
+
+
         mediaItems,
 
+
+
+
+
+
+
+
+
+
+
         createdAt:
+
+
+
+
+
+
+
           p.createdAt ||
+
+
+
+
+
+
+
           p.date ||
+
+
+
+
+
+
+
           "Just now",
 
+
+
+
+
+
+
+
+
+
+
         likes: Number(
+
+
+
+
+
+
+
           p.likes ??
+
+
+
+
+
+
+
             likedBy.length ??
+
+
+
+
+
+
+
             0,
+
+
+
+
+
+
+
         ),
+
+
+
+
+
+
+
+
+
+
 
         reposts: Number(
+
+
+
+
+
+
+
           p.reposts ??
+
+
+
+
+
+
+
             repostedBy.length ??
+
+
+
+
+
+
+
             0,
+
+
+
+
+
+
+
         ),
+
+
+
+
+
+
+
+
+
+
 
         shares: Number(
+
+
+
+
+
+
+
           p.shares ??
+
+
+
+
+
+
+
             p.shareEvents?.length ??
+
+
+
+
+
+
+
             0,
+
+
+
+
+
+
+
         ),
+
+
+
+
+
+
+
+
+
+
 
         views: Number(
+
+
+
+
+
+
+
           p.views ??
+
+
+
+
+
+
+
             viewedBy.length ??
+
+
+
+
+
+
+
             0,
+
+
+
+
+
+
+
         ),
+
+
+
+
+
+
+
+
+
+
 
         giftsCount: Number(
+
+
+
+
+
+
+
           p.giftsCount ?? 0,
+
+
+
+
+
+
+
         ),
 
+
+
+
+
+
+
+
+
+
+
         likedBy,
+
+
+
+
+
+
+
         repostedBy,
+
+
+
+
+
+
+
         viewedBy,
+
+
+
+
+
+
+
         comments,
 
+
+
+
+
+
+
+
+
+
+
         score:
+
+
+
+
+
+
+
           typeof p.score === "number"
+
+
+
+
+
+
+
             ? p.score
+
+
+
+
+
+
+
             : undefined,
+
+
+
+
+
+
+
       };
+
+
+
+
+
+
+
     });
+
+
+
+
+
+
+
 }
 
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
    CURRENT STORY VIEW
+
+
+
+
+
+
+
 ============================================================================ */
+
+
+
+
+
+
+
+
+
+
 
 export function currentStoryViewed(
+
+
+
+
+
+
+
   viewedBy: string[],
+
+
+
+
+
+
+
 ): boolean {
+
+
+
+
+
+
+
   const userId =
+
+
+
+
+
+
+
     localStorage.getItem(
+
+
+
+
+
+
+
       "userId",
+
+
+
+
+
+
+
     );
 
+
+
+
+
+
+
+
+
+
+
   return Boolean(
+
+
+
+
+
+
+
     userId &&
+
+
+
+
+
+
+
       viewedBy.includes(userId),
+
+
+
+
+
+
+
   );
+
+
+
+
+
+
+
 }
 
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
    MAP STORIES
+
+
+
+
+
+
+
 ============================================================================ */
 
+
+
+
+
+
+
+
+
+
+
 export function mapStories(
+
+
+
+
+
+
+
   storyItems: BackendStoryData[],
+
+
+
+
+
+
+
 ): FockisStory[] {
+
+
+
+
+
+
+
   return storyItems
+
+
+
+
+
+
+
     .filter(Boolean)
+
+
+
+
+
+
+
     .map(
+
+
+
+
+
+
+
       (
+
+
+
+
+
+
+
         story,
+
+
+
+
+
+
+
         index,
+
+
+
+
+
+
+
       ): FockisStory => {
+
+
+
+
+
+
+
         const storyUser =
+
+
+
+
+
+
+
           typeof story.user ===
+
+
+
+
+
+
+
           "object"
+
+
+
+
+
+
+
             ? story.user
+
+
+
+
+
+
+
             : undefined;
 
+
+
+
+
+
+
+
+
+
+
         const userId =
+
+
+
+
+
+
+
           story.userId ||
+
+
+
+
+
+
+
           (typeof story.user ===
+
+
+
+
+
+
+
           "string"
+
+
+
+
+
+
+
             ? story.user
+
+
+
+
+
+
+
             : storyUser?._id ||
+
+
+
+
+
+
+
               storyUser?.id);
 
+
+
+
+
+
+
+
+
+
+
         const username =
+
+
+
+
+
+
+
           story.username ||
+
+
+
+
+
+
+
           story.name ||
+
+
+
+
+
+
+
           storyUser?.username ||
+
+
+
+
+
+
+
           storyUser?.name ||
+
+
+
+
+
+
+
           "Unknown";
 
+
+
+
+
+
+
+
+
+
+
         const userPhoto =
+
+
+
+
+
+
+
           story.userPhoto ||
+
+
+
+
+
+
+
           story.avatar ||
+
+
+
+
+
+
+
           story.photo ||
+
+
+
+
+
+
+
           story.profilePhoto ||
+
+
+
+
+
+
+
           storyUser?.avatar ||
+
+
+
+
+
+
+
           storyUser?.photo ||
+
+
+
+
+
+
+
           storyUser?.profilePhoto ||
+
+
+
+
+
+
+
           storyUser?.userPhoto;
 
+
+
+
+
+
+
+
+
+
+
         const rawMedia =
+
+
+
+
+
+
+
           extractMediaValue(
+
+
+
+
+
+
+
             story.media,
+
+
+
+
+
+
+
           ) ||
+
+
+
+
+
+
+
           extractMediaValue(
+
+
+
+
+
+
+
             story.image,
+
+
+
+
+
+
+
           ) ||
+
+
+
+
+
+
+
           extractMediaValue(
+
+
+
+
+
+
+
             story.imageUrl,
+
+
+
+
+
+
+
           ) ||
+
+
+
+
+
+
+
           extractMediaValue(
+
+
+
+
+
+
+
             story.imageURL,
+
+
+
+
+
+
+
           ) ||
+
+
+
+
+
+
+
           extractMediaValue(
+
+
+
+
+
+
+
             story.video,
+
+
+
+
+
+
+
           ) ||
+
+
+
+
+
+
+
           extractMediaValue(
+
+
+
+
+
+
+
             story.videoUrl,
+
+
+
+
+
+
+
           ) ||
+
+
+
+
+
+
+
           extractMediaValue(
+
+
+
+
+
+
+
             story.videoURL,
+
+
+
+
+
+
+
           );
+
+
+
+
+
+
+
+
+
+
 
         const viewedBy =
+
+
+
+
+
+
+
           normalizeUserIds(
+
+
+
+
+
+
+
             story.viewedBy,
+
+
+
+
+
+
+
           );
 
+
+
+
+
+
+
+
+
+
+
         const storyType =
+
+
+
+
+
+
+
           String(
+
+
+
+
+
+
+
             story.type || "",
+
+
+
+
+
+
+
           ).toLowerCase();
 
+
+
+
+
+
+
+
+
+
+
         const type =
+
+
+
+
+
+
+
           storyType === "video"
+
+
+
+
+
+
+
             ? "video"
+
+
+
+
+
+
+
             : "image";
 
+
+
+
+
+
+
+
+
+
+
         return {
+
+
+
+
+
+
+
           id: String(
+
+
+
+
+
+
+
             story._id ||
+
+
+
+
+
+
+
               story.id ||
+
+
+
+
+
+
+
               `story-${index}`,
+
+
+
+
+
+
+
           ),
 
+
+
+
+
+
+
+
+
+
+
           userId: userId
+
+
+
+
+
+
+
             ? String(userId)
+
+
+
+
+
+
+
             : undefined,
+
+
+
+
+
+
+
+
+
+
 
           username,
 
+
+
+
+
+
+
+
+
+
+
           avatar: userPhoto
+
+
+
+
+
+
+
             ? buildMediaUrl(
+
+
+
+
+
+
+
                 userPhoto,
+
+
+
+
+
+
+
               )
+
+
+
+
+
+
+
             : undefined,
 
+
+
+
+
+
+
+
+
+
+
           media: rawMedia
+
+
+
+
+
+
+
             ? buildMediaUrl(
+
+
+
+
+
+
+
                 rawMedia,
+
+
+
+
+
+
+
               )
+
+
+
+
+
+
+
             : undefined,
+
+
+
+
+
+
+
+
+
+
 
           type,
 
+
+
+
+
+
+
+
+
+
+
           hasUnseen:
+
+
+
+
+
+
+
             !currentStoryViewed(
+
+
+
+
+
+
+
               viewedBy,
+
+
+
+
+
+
+
             ),
 
+
+
+
+
+
+
+
+
+
+
           isSeller: Boolean(
+
+
+
+
+
+
+
             story.isSeller,
+
+
+
+
+
+
+
           ),
 
+
+
+
+
+
+
+
+
+
+
           createdAt:
+
+
+
+
+
+
+
             story.createdAt,
 
+
+
+
+
+
+
+
+
+
+
           expiresAt:
+
+
+
+
+
+
+
             story.expiresAt,
+
+
+
+
+
+
+
         };
+
+
+
+
+
+
+
       },
+
+
+
+
+
+
+
     );
+
+
+
+
+
+
+
 }

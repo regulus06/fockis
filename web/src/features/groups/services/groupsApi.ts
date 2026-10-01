@@ -1,5 +1,7 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 const API_URL =
-  "http://localhost:3000";
+  FOCKIS_API_URL;
 
 
 export const groupsApi = {

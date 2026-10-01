@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../config/fockisConfig";
+
 import type {
   ChatMessage,
   StreamInfo,
@@ -7,7 +9,7 @@ import type {
 
 const BASE = (
   import.meta.env.VITE_API_URL ||
-  "http://localhost:3000"
+  FOCKIS_API_URL
 ).replace(/\/+$/, "");
 
 function getAuthToken(): string | null {

@@ -1,8 +1,10 @@
+import { FOCKIS_API_URL } from "../config/fockisConfig";
+
 import type { AddressRequest, FockisAddress } from "./types";
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_URL ??
-  "http://localhost:3000"
+  FOCKIS_API_URL
 ).replace(/\/+$/, "");
 
 function authHeaders(): HeadersInit {

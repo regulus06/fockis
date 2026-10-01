@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 /*
  * ============================================================================
  * FOCKIS PROFILE PAGE
@@ -191,7 +193,7 @@ interface FriendRequestResponse {
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
-  "http://localhost:3000";
+  FOCKIS_API_URL;
 
 /*
  * ============================================================================

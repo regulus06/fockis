@@ -1,4 +1,6 @@
-const DEFAULT_API_URL = "http://localhost:3000";
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
+const DEFAULT_API_URL = FOCKIS_API_URL;
 
 function removeTrailingSlashes(value: string): string {
   let result = value.trim();

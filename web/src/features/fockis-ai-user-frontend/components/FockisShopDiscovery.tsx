@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -38,7 +40,7 @@ type Props = {
 };
 
 const API = String(
-  import.meta.env.VITE_API_URL || "http://localhost:3000",
+  import.meta.env.VITE_API_URL || FOCKIS_API_URL,
 ).replace(/\/+$/, "");
 
 const SHOP_WORDS = [

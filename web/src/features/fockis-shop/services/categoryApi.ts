@@ -1,9 +1,11 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import type { Category } from "../types/category.types";
 
 const API_BASE_URL =
 import.meta.env.VITE_API_BASE_URL ||
 import.meta.env.VITE_API_URL ||
-"http://localhost:3000";
+FOCKIS_API_URL;
 
 function buildUrl(path: string): string {
 return new URL(

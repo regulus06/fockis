@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 
 
 /* ============================================================================
@@ -11,7 +13,7 @@ import type {
   MarketingEvent,
 } from "../types/marketingTypes";
 
-const API_URL = "http://localhost:3000";
+const API_URL = FOCKIS_API_URL;
 
 /* ============================================================================
    REQUEST

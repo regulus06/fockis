@@ -1,4 +1,6 @@
-const API = import.meta.env.VITE_API_URL || "http://localhost:3000";
+import { FOCKIS_API_URL } from "../../../../config/fockisConfig";
+
+const API = import.meta.env.VITE_API_URL || FOCKIS_API_URL;
 
 const getToken = () => localStorage.getItem("token");
 

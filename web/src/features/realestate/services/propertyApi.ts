@@ -1,8 +1,10 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import type { Property } from "../types/Property";
 
 const API =
   import.meta.env.VITE_API_URL ||
-  "http://localhost:3000";
+  FOCKIS_API_URL;
 
 /* ============================================================================
    AUTH

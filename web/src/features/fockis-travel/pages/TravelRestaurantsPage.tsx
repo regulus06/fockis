@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import { useEffect, useMemo, useState } from 'react';
 import RestaurantCard from '../components/RestaurantCard';
 import CategoryTabs from '../components/CategoryTabs';
@@ -48,7 +50,7 @@ const CUISINES = [
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   import.meta.env.VITE_API_BASE_URL ||
-  'http://localhost:3000';
+  FOCKIS_API_URL;
 
 function getCuisineTag(listing: TravelListing): string {
   const tags = listing.tags ?? [];

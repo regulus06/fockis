@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../config/fockisConfig";
+
 export type AcademyRole =
   | "student"
   | "instructor"
@@ -10,7 +12,7 @@ export type AcademyRole =
 const BASE = (
   import.meta.env.VITE_ACADEMY_API_URL ||
   import.meta.env.VITE_API_URL ||
-  "http://localhost:3000/academy"
+  FOCKIS_API_URL + "/academy"
 ).replace(/\/+$/, "");
 
 export function getAcademyApiBaseUrl(): string {

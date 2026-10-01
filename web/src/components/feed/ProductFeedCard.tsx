@@ -27,7 +27,7 @@ image?.startsWith("http")
 ?
 image
 :
-`http://localhost:3000${image}`;
+`${FOCKIS_API_URL}${image}`;
 
 
 

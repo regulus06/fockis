@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -6,7 +8,7 @@ export default function AdminRulesPage() {
   const [loading, setLoading] = useState(false);
 
   const fetchRules = async () => {
-    const res = await axios.get("http://localhost:3000/marketplace/rules");
+    const res = await axios.get(`${FOCKIS_API_URL}/marketplace/rules`);
     setRules(res.data);
   };
 
@@ -15,7 +17,7 @@ export default function AdminRulesPage() {
   }, []);
 
   const toggleRule = async (rule: any) => {
-    await axios.put(`http://localhost:3000/marketplace/rules`, {
+    await axios.put(`${FOCKIS_API_URL}/marketplace/rules`, {
       rules: rules.map((r) =>
         r._id === rule._id
           ? { ...r, active: !r.active }

@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../config/fockisConfig";
+
 // LOCATION:
 // web/src/socket/events/createSocket.ts
 
@@ -10,7 +12,7 @@ import {
 
 
 const BASE_URL =
-  "http://localhost:3000";
+  FOCKIS_API_URL;
 
 
 

@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 /* ============================================================================
    CAMPAIGN API
 ============================================================================ */
@@ -8,7 +10,7 @@ import type {
   UpdateCampaignPayload,
 } from "../types/marketingTypes";
 
-const API_URL = "http://localhost:3000";
+const API_URL = FOCKIS_API_URL;
 
 /* ============================================================================
    AUTH

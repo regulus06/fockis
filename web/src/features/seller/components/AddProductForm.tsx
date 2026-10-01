@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import {
   useEffect,
   useState,
@@ -612,13 +614,13 @@ export default function AddProductForm({
     ) {
 
       return (
-        "http://localhost:3000" +
+        FOCKIS_API_URL +
         imageUrl
       );
     }
 
     return (
-      "http://localhost:3000/uploads/" +
+      FOCKIS_API_URL + "/uploads/" +
       imageUrl
     );
   }

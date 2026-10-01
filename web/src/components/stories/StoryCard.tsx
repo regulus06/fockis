@@ -14,7 +14,7 @@ const imageUrl = story.media?.startsWith("http")
 ?
 story.media
 :
-`http://localhost:3000${story.media}`;
+`${FOCKIS_API_URL}${story.media}`;
 
 
 

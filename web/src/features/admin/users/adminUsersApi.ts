@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import type {
   AdminUser,
   AdminUserActivity,
@@ -22,7 +24,7 @@ import type {
   AdminUserVerificationUpdatePayload,
 } from "./types/adminUsers.types";
 
-const DEFAULT_API_BASE_URL = "http://localhost:3000";
+const DEFAULT_API_BASE_URL = FOCKIS_API_URL;
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_URL ??

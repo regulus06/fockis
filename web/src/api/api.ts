@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../config/fockisConfig";
+
 import axios from "axios";
 
 import {
@@ -10,39 +12,20 @@ import {
 ============================================================ */
 
 /*
- * Supports both:
- *
- * VITE_API_URL
- * VITE_API_BASE_URL
+ * Local development:
+ *   http://localhost:3000
  *
  * Production:
  *   https://fockis.onrender.com
  *
- * Local development:
- *   http://localhost:3000
+ * Vite automatically sets import.meta.env.DEV:
+ *   true  = development
+ *   false = production build
  */
 
-const configuredApiUrl =
-  String(
-    import.meta.env.VITE_API_URL ||
-      import.meta.env.VITE_API_BASE_URL ||
-      "",
-  )
-    .trim()
-    .replace(/\/+$/, "");
-
-const isLocalBrowser =
-  typeof window !== "undefined" &&
-  (
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1"
-  );
-
-const API_BASE_URL =
-  configuredApiUrl ||
-  (isLocalBrowser
-    ? "http://localhost:3000"
-    : "https://fockis.onrender.com");
+const API_BASE_URL = import.meta.env.DEV
+  ? FOCKIS_API_URL
+  : "https://fockis.onrender.com";
 
 /* ============================================================
    TOKEN HELPER
@@ -73,9 +56,7 @@ function getAuthToken(): string {
    * Fallback storage keys.
    */
 
-  if (
-    typeof window !== "undefined"
-  ) {
+  if (typeof window !== "undefined") {
     const storageKeys = [
       "access_token",
       "token",
@@ -100,7 +81,7 @@ function getAuthToken(): string {
 
     /*
      * Some authentication flows store
-     * the token inside `user`.
+     * the token inside "user".
      */
 
     try {
@@ -171,9 +152,7 @@ api.interceptors.request.use(
      * Development debugging.
      */
 
-    if (
-      import.meta.env.DEV
-    ) {
+    if (import.meta.env.DEV) {
       console.log(
         "API REQUEST:",
         {
@@ -235,7 +214,7 @@ api.interceptors.response.use(
       );
 
       /*
-       * Clear the local authentication state.
+       * Clear authentication state.
        */
 
       try {
@@ -252,19 +231,13 @@ api.interceptors.response.use(
        * user is not already on an auth page.
        */
 
-      if (
-        typeof window !== "undefined"
-      ) {
+      if (typeof window !== "undefined") {
         const pathname =
           window.location.pathname;
 
         const isAuthPage =
-          pathname.startsWith(
-            "/login",
-          ) ||
-          pathname.startsWith(
-            "/register",
-          );
+          pathname.startsWith("/login") ||
+          pathname.startsWith("/register");
 
         if (!isAuthPage) {
           window.location.href =
@@ -273,9 +246,7 @@ api.interceptors.response.use(
       }
     }
 
-    return Promise.reject(
-      error,
-    );
+    return Promise.reject(error);
   },
 );
 

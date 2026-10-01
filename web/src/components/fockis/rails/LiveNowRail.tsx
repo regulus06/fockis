@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import {
   useCallback,
   useEffect,
@@ -64,7 +66,7 @@ interface LiveNowRailProps {
 
 const API_BASE =
   import.meta.env.VITE_API_URL ||
-  "http://localhost:3000";
+  FOCKIS_API_URL;
 
 async function getPublicLiveStreams(): Promise<LiveStream[]> {
   const token =

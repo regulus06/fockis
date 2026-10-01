@@ -1,7 +1,9 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import axios from "axios";
 
 const API =
-"http://localhost:3000";
+FOCKIS_API_URL;
 
 
 export const savedApi={

@@ -1,8 +1,10 @@
+import { FOCKIS_API_URL } from "../../config/fockisConfig";
+
 // web/src/create/services/createApi.ts
 
 const API_BASE =
   import.meta.env.VITE_API_URL?.replace(/\/$/, '') ||
-  'http://localhost:3000';
+  FOCKIS_API_URL;
 
 export const CREATE_API_BASE = `${API_BASE}/create`;
 

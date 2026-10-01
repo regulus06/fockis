@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import React from "react";
 import { Check, UserPlus, X, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -114,7 +116,7 @@ function getImageUrl(src: string | null): string | null {
 
   const apiUrl =
     import.meta.env.VITE_API_URL ||
-    "http://localhost:3000";
+    FOCKIS_API_URL;
 
   if (src.startsWith("/")) {
     return `${apiUrl}${src}`;

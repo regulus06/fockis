@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -47,14 +49,14 @@ function getImageUrl(image: any) {
   }
 
   if (img.startsWith("/uploads")) {
-    return "http://localhost:3000" + img;
+    return FOCKIS_API_URL + img;
   }
 
   if (img.startsWith("/")) {
-    return "http://localhost:3000" + img;
+    return FOCKIS_API_URL + img;
   }
 
-  return "http://localhost:3000/uploads/" + img;
+  return FOCKIS_API_URL + "/uploads/" + img;
 }
 
 const LOW_STOCK_THRESHOLD = 5;

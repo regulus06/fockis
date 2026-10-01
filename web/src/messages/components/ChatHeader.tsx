@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../config/fockisConfig";
+
 import "../styles/chat-header.scss";
 
 import {
@@ -77,7 +79,7 @@ function normalizeMediaUrl(
 
   const apiBase =
     import.meta.env.VITE_API_URL ||
-    "http://localhost:3000";
+    FOCKIS_API_URL;
 
   const cleanBase =
     apiBase.replace(/\/+$/, "");

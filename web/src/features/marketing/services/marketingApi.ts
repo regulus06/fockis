@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 /* ============================================================================
 
    FOCKIS MARKETING API
@@ -40,7 +42,7 @@ const API_URL =
 
   import.meta.env.VITE_API_URL?.replace(/\/$/, "") ||
 
-  "http://localhost:3000";
+  FOCKIS_API_URL;
 
 
 

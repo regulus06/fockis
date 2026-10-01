@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import {
   getCachedTranslation,
   setCachedTranslation,
@@ -14,7 +16,7 @@ import type {
 // ============================================================================
 
 const API_BASE_URL = (
-  import.meta.env.VITE_API_URL || "http://localhost:3000"
+  import.meta.env.VITE_API_URL || FOCKIS_API_URL
 ).replace(/\/+$/, "");
 
 const TRANSLATION_ENDPOINT =

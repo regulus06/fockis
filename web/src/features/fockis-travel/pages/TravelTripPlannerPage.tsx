@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertCircle,
@@ -85,7 +87,7 @@ interface ApiErrorResponse {
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_URL ||
-  'http://localhost:3000';
+  FOCKIS_API_URL;
 
 const FALLBACK_STEPS: TripPlannerItem[] = [
   {

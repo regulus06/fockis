@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import {
   useEffect,
   useState,
@@ -20,7 +22,7 @@ import "../styles/MarketingBillingPage.scss";
 ============================================================================ */
 
 const API_URL =
-  "http://localhost:3000";
+  FOCKIS_API_URL;
 
 /* ============================================================================
    BILLING REQUEST

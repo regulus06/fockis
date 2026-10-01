@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Heart, Star } from 'lucide-react';
-import '../styles/StayCard.scss';
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Heart, Star } from "lucide-react";
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+import "../styles/StayCard.scss";
 
 export interface StayCardProps {
   id: string;
@@ -16,30 +17,22 @@ export interface StayCardProps {
   onToggleSave?: (id: string, saved: boolean) => void;
 }
 
-const API_ORIGIN = String(
-  import.meta.env.VITE_API_URL ||
-    import.meta.env.VITE_API_BASE_URL ||
-    'http://192.168.1.112:3000',
-)
-  .replace(/\/+$/, '')
-  .replace(/\/travel$/, '');
-
 function resolveMediaUrl(value?: string | null): string {
   if (!value) {
-    return '';
+    return "";
   }
 
   const trimmed = value.trim();
 
   if (!trimmed) {
-    return '';
+    return "";
   }
 
   // Already a complete URL or browser-local URL.
   if (
     /^https?:\/\//i.test(trimmed) ||
-    trimmed.startsWith('blob:') ||
-    trimmed.startsWith('data:')
+    trimmed.startsWith("blob:") ||
+    trimmed.startsWith("data:")
   ) {
     return trimmed;
   }
@@ -47,11 +40,11 @@ function resolveMediaUrl(value?: string | null): string {
   // Backend uploads are commonly returned as:
   // /uploads/filename.jpg
   //
-  // Make sure the browser requests them from NestJS instead
-  // of Vite.
-  return `${API_ORIGIN}${
-    trimmed.startsWith('/') ? trimmed : `/${trimmed}`
-  }`;
+  // Resolve them against the Fockis API instead of
+  // the Vite/Vercel frontend origin.
+  const cleanPath = trimmed.replace(/^\/+/, "");
+
+  return `${FOCKIS_API_URL}/${cleanPath}`;
 }
 
 export default function StayCard({
@@ -62,7 +55,7 @@ export default function StayCard({
   rating,
   amenities,
   price,
-  currency = '$',
+  currency = "$",
   isSaved = false,
   onToggleSave,
 }: StayCardProps) {
@@ -72,7 +65,9 @@ export default function StayCard({
   const imageUrl = resolveMediaUrl(image);
   const showImage = Boolean(imageUrl) && !imageFailed;
 
-  function handleSave(e: React.MouseEvent<HTMLButtonElement>) {
+  function handleSave(
+    e: React.MouseEvent<HTMLButtonElement>,
+  ) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -88,7 +83,7 @@ export default function StayCard({
 
   return (
     <article className="stay-card">
-      <div className={`thumb${showImage ? '' : ' no-image'}`}>
+      <div className={`thumb${showImage ? "" : " no-image"}`}>
         {showImage ? (
           <img
             src={imageUrl}
@@ -107,15 +102,19 @@ export default function StayCard({
 
         <button
           type="button"
-          className={`fav${saved ? ' is-saved' : ''}`}
-          aria-label={saved ? 'Remove from wishlist' : 'Save to wishlist'}
+          className={`fav${saved ? " is-saved" : ""}`}
+          aria-label={
+            saved
+              ? "Remove from wishlist"
+              : "Save to wishlist"
+          }
           aria-pressed={saved}
           onClick={handleSave}
         >
           <Heart
             size={15}
             aria-hidden="true"
-            fill={saved ? 'currentColor' : 'none'}
+            fill={saved ? "currentColor" : "none"}
           />
         </button>
       </div>
@@ -126,10 +125,16 @@ export default function StayCard({
 
           <div className="rating">
             <span className="star">
-              <Star size={12} fill="currentColor" aria-hidden="true" />
+              <Star
+                size={12}
+                fill="currentColor"
+                aria-hidden="true"
+              />
             </span>
 
-            {Number.isFinite(rating) ? rating.toFixed(1) : '0.0'}
+            {Number.isFinite(rating)
+              ? rating.toFixed(1)
+              : "0.0"}
           </div>
         </div>
 
@@ -144,7 +149,10 @@ export default function StayCard({
             <span>/night</span>
           </div>
 
-          <Link to={`/travel/stays/${id}`} className="view-link">
+          <Link
+            to={`/travel/stays/${id}`}
+            className="view-link"
+          >
             View stay →
           </Link>
         </div>

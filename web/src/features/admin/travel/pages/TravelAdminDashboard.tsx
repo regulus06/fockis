@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../../config/fockisConfig";
+
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -14,7 +16,7 @@ interface TravelUser {
   _id?: string;
 }
 
-const DEFAULT_API_BASE_URL = "http://localhost:3000";
+const DEFAULT_API_BASE_URL = FOCKIS_API_URL;
 
 const API_BASE_URL = String(
   import.meta.env.VITE_API_URL ??

@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 /* ============================================================================
    MARKETING ADMIN API
 
@@ -8,7 +10,7 @@
 
 import type { Campaign } from "../types/marketingTypes";
 
-const API_URL = "http://localhost:3000";
+const API_URL = FOCKIS_API_URL;
 
 function getToken(): string | null {
   return localStorage.getItem("token");

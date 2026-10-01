@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import {
   useEffect,
   useRef,
@@ -40,7 +42,7 @@ type DeviceStatus = "checking" | "ready" | "blocked";
 const MEETINGS_API_BASE_URL = String(
   import.meta.env.VITE_API_URL ||
     import.meta.env.VITE_API_BASE_URL ||
-    "http://localhost:3000",
+    FOCKIS_API_URL,
 ).replace(/\/+$/, "");
 
 type JoinTokenResolution = {

@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../config/fockisConfig";
+
 import {
   useCallback,
   useEffect,
@@ -917,7 +919,7 @@ export function useLiveViewer({
       try {
         const response =
           await fetch(
-            `http://localhost:3000/live/public/${encodeURIComponent(
+            `${FOCKIS_API_URL}/live/public/${encodeURIComponent(
               streamId,
             )}/messages`,
             {
@@ -1081,7 +1083,7 @@ export function useLiveViewer({
           );
 
         await fetch(
-          `http://localhost:3000/live/${encodeURIComponent(
+          `${FOCKIS_API_URL}/live/${encodeURIComponent(
             stream.id,
           )}/follow`,
           {
@@ -1139,7 +1141,7 @@ export function useLiveViewer({
 
           const response =
             await fetch(
-              `http://localhost:3000/live/public/${encodeURIComponent(
+              `${FOCKIS_API_URL}/live/public/${encodeURIComponent(
                 stream.id,
               )}/messages`,
               {

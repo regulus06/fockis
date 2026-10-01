@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../config/fockisConfig";
+
 /**
  * ============================================================================
  * FOCKIS MESSAGES - REAL SOCKET.IO CLIENT
@@ -52,7 +54,7 @@ import type {
 
 const API_BASE = (
   import.meta.env.VITE_API_URL ||
-  "http://localhost:3000"
+  FOCKIS_API_URL
 ).replace(/\/+$/, "");
 
 /* ============================================================================

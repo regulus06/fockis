@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
 import {
   useEffect,
   useState,
@@ -37,11 +39,11 @@ GiftsGateway uses:
 
 Therefore the client MUST connect to:
 
-http://localhost:3000/gifts
+${FOCKIS_API_URL}/gifts
 ============================================================================ */
 
 const socket: Socket = io(
-  "http://localhost:3000/gifts",
+  FOCKIS_API_URL + "/gifts",
   {
     transports: [
       "websocket",

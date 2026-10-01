@@ -1,3 +1,5 @@
+import { FOCKIS_API_URL } from "../../config/fockisConfig";
+
 import {
   Search,
   SquarePen,
@@ -65,7 +67,7 @@ function getApiBase(): string {
 
   return (
     configured ||
-    "http://localhost:3000"
+    FOCKIS_API_URL
   ).replace(/\/+$/, "");
 }
 
