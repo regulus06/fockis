@@ -9,23 +9,57 @@ import {
    API CONFIGURATION
 ============================================================ */
 
+/*
+ * Supports both:
+ *
+ * VITE_API_URL
+ * VITE_API_BASE_URL
+ *
+ * Production:
+ *   https://fockis.onrender.com
+ *
+ * Local development:
+ *   http://localhost:3000
+ */
+
+const configuredApiUrl =
+  String(
+    import.meta.env.VITE_API_URL ||
+      import.meta.env.VITE_API_BASE_URL ||
+      "",
+  )
+    .trim()
+    .replace(/\/+$/, "");
+
+const isLocalBrowser =
+  typeof window !== "undefined" &&
+  (
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+  );
+
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  "http://localhost:3000";
+  configuredApiUrl ||
+  (isLocalBrowser
+    ? "http://localhost:3000"
+    : "https://fockis.onrender.com");
 
 /* ============================================================
    TOKEN HELPER
 ============================================================ */
 
 function getAuthToken(): string {
-  /* ----------------------------------------------------------
-     First use the application's official auth helper.
-  ---------------------------------------------------------- */
+  /*
+   * First use the application's official auth helper.
+   */
 
   try {
     const token = getToken();
 
-    if (token && typeof token === "string") {
+    if (
+      token &&
+      typeof token === "string"
+    ) {
       return token.trim();
     }
   } catch (error) {
@@ -35,52 +69,64 @@ function getAuthToken(): string {
     );
   }
 
-  /* ----------------------------------------------------------
-     Fallback storage keys used by the application.
-  ---------------------------------------------------------- */
+  /*
+   * Fallback storage keys.
+   */
 
-  const storageKeys = [
-    "access_token",
-    "token",
-    "authToken",
-  ];
+  if (
+    typeof window !== "undefined"
+  ) {
+    const storageKeys = [
+      "access_token",
+      "token",
+      "authToken",
+    ];
 
-  for (const key of storageKeys) {
-    const value =
-      localStorage.getItem(key);
+    for (const key of storageKeys) {
+      try {
+        const value =
+          localStorage.getItem(key);
 
-    if (value && value.trim()) {
-      return value.trim();
-    }
-  }
-
-  /* ----------------------------------------------------------
-     Some authentication flows store the token inside `user`.
-  ---------------------------------------------------------- */
-
-  try {
-    const storedUser =
-      localStorage.getItem("user");
-
-    if (storedUser) {
-      const parsed =
-        JSON.parse(storedUser);
-
-      const userToken =
-        parsed?.access_token ||
-        parsed?.accessToken ||
-        parsed?.token ||
-        parsed?.jwt;
-
-      if (
-        typeof userToken === "string" &&
-        userToken.trim()
-      ) {
-        return userToken.trim();
+        if (
+          value &&
+          value.trim()
+        ) {
+          return value.trim();
+        }
+      } catch {
+        // Ignore storage errors.
       }
     }
-  } catch {
-    // Ignore invalid stored user data.
+
+    /*
+     * Some authentication flows store
+     * the token inside `user`.
+     */
+
+    try {
+      const storedUser =
+        localStorage.getItem("user");
+
+      if (storedUser) {
+        const parsed =
+          JSON.parse(storedUser);
+
+        const userToken =
+          parsed?.access_token ||
+          parsed?.accessToken ||
+          parsed?.token ||
+          parsed?.jwt;
+
+        if (
+          typeof userToken === "string" &&
+          userToken.trim()
+        ) {
+          return userToken.trim();
+        }
+      }
+    } catch {
+      // Ignore invalid stored user data.
+    }
   }
 
   return "";
@@ -109,6 +155,10 @@ api.interceptors.request.use(
     const token =
       getAuthToken();
 
+    /*
+     * Attach JWT to authenticated requests.
+     */
+
     if (token) {
       config.headers =
         config.headers || {};
@@ -117,9 +167,9 @@ api.interceptors.request.use(
         `Bearer ${token}`;
     }
 
-    /* --------------------------------------------------------
-       Debug authentication requests during development.
-    -------------------------------------------------------- */
+    /*
+     * Development debugging.
+     */
 
     if (
       import.meta.env.DEV
@@ -185,8 +235,7 @@ api.interceptors.response.use(
       );
 
       /*
-       * Only clear authentication when the server
-       * actually confirms that the request is unauthorized.
+       * Clear the local authentication state.
        */
 
       try {
@@ -198,16 +247,13 @@ api.interceptors.response.use(
         );
       }
 
-      /* ------------------------------------------------------
-         Redirect to login.
-
-         Prevent duplicate redirects if several API requests
-         return 401 at the same time.
-      ------------------------------------------------------ */
+      /*
+       * Redirect to login only when the
+       * user is not already on an auth page.
+       */
 
       if (
-        typeof window !==
-          "undefined"
+        typeof window !== "undefined"
       ) {
         const pathname =
           window.location.pathname;
