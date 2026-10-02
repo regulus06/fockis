@@ -19,9 +19,9 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
 
   async canActivate(
     context: ExecutionContext,
-  ) {
+  ): Promise<boolean> {
     // ========================================================================
-    // PUBLIC ROUTES
+    // 1. PUBLIC ROUTES
     // ========================================================================
 
     const isPublic =
@@ -38,56 +38,65 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
     }
 
     // ========================================================================
-    // REQUEST
+    // 2. REQUEST
     // ========================================================================
 
     const request =
       context.switchToHttp().getRequest();
 
     const path =
-      request?.path ||
-      request?.url ||
-      request?.originalUrl ||
-      "";
+      typeof request?.path === "string"
+        ? request.path
+        : typeof request?.url === "string"
+          ? request.url.split("?")[0]
+          : typeof request?.originalUrl === "string"
+            ? request.originalUrl.split("?")[0]
+            : "";
 
     // ========================================================================
-    // ACADEMY ROUTES
+    // 3. PUBLIC POST MEDIA
     // ========================================================================
     //
-    // Academy has its own authentication system:
+    // Post photos/videos are delivered through the GCS-backed media gateway.
     //
-    //   AcademyJwtAuthGuard
-    //   academy-jwt Passport strategy
-    //   Academy JWT secret
+    // <img> and <video> browser requests cannot reliably attach the Fockis
+    // Authorization header, so this media delivery route must be public.
     //
-    // Therefore the global Fockis JWT guard must completely
-    // bypass Academy requests.
+    // This does NOT make the rest of the API public.
     // ========================================================================
+
+    const normalizedPath =
+      String(path || "")
+        .trim()
+        .replace(/\/+$/, "")
+        .toLowerCase();
 
     if (
-      typeof path === "string" &&
-      (
-        path === "/academy" ||
-        path.startsWith("/academy/")
-      )
+      normalizedPath === "/post-media" ||
+      normalizedPath.startsWith("/post-media/")
     ) {
       return true;
     }
 
     // ========================================================================
-    // NORMAL FOCKIS AUTHENTICATION
+    // 4. ACADEMY ROUTES
     // ========================================================================
     //
-    // First authenticate the request.
-    // JwtStrategy will:
+    // Academy has its own authentication system.
     //
-    // - validate the JWT
-    // - load the current user
-    // - verify the account is active
-    // - check account lockout
-    // - check inactivity
-    // - attach req.user
-    //
+    // The global Fockis JWT guard must not authenticate Academy routes.
+    // Academy controllers/guards remain responsible for protecting them.
+    // ========================================================================
+
+    if (
+      normalizedPath === "/academy" ||
+      normalizedPath.startsWith("/academy/")
+    ) {
+      return true;
+    }
+
+    // ========================================================================
+    // 5. NORMAL FOCKIS AUTHENTICATION
     // ========================================================================
 
     const authenticated =
@@ -98,35 +107,35 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
     }
 
     // ========================================================================
-    // FIRST-LOGIN PASSWORD CHANGE
-    // ========================================================================
-    //
-    // Organization-created users can have:
-    //
-    //   mustChangePassword = true
-    //
-    // This means the user has authenticated successfully but
-    // must change the temporary/administrator-generated password
-    // before accessing the rest of Fockis.
-    //
-    // The password endpoint is intentionally allowed.
+    // 6. REQUEST USER
     // ========================================================================
 
-    const user =
-      request?.user;
+    const user = request?.user;
+
+    if (!user) {
+      return false;
+    }
+
+    // ========================================================================
+    // 7. FIRST-LOGIN PASSWORD CHANGE
+    // ========================================================================
+    //
+    // Users created with mustChangePassword=true may authenticate, but
+    // cannot continue into the application until the password is changed.
+    //
+    // Only the password-change endpoint is allowed through.
+    // ========================================================================
 
     const isPasswordChangeRoute =
-      typeof path === "string" &&
+      normalizedPath.endsWith("/password") &&
       (
-        path.endsWith("/password") ||
-        (
-          path.includes("/users/") &&
-          path.endsWith("/password")
-        )
+        normalizedPath.startsWith("/users/") ||
+        normalizedPath.includes("/users/") ||
+        normalizedPath.includes("/auth/")
       );
 
     if (
-      user?.mustChangePassword &&
+      user.mustChangePassword === true &&
       !isPasswordChangeRoute
     ) {
       throw new ForbiddenException(
@@ -135,7 +144,7 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
     }
 
     // ========================================================================
-    // AUTHENTICATION SUCCESS
+    // 8. AUTHENTICATION SUCCESS
     // ========================================================================
 
     return true;
