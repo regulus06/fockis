@@ -1,0 +1,96 @@
+/* ============================================================================
+   FOCKIS ORDER CARD
+   src/features/orders/styles/OrderCard.scss
+============================================================================ */
+
+@use "../../../styles/fockis-theme";
+
+.order-card {
+  padding: 16px;
+  margin-bottom: 12px;
+
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-lg);
+  box-shadow: var(--fk-shadow-sm);
+}
+
+.order-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  h3 {
+    margin: 0;
+    color: var(--fk-text);
+    font-size: 15px;
+    font-weight: 700;
+  }
+}
+
+.order-card__status {
+  flex-shrink: 0;
+
+  padding: 4px 10px;
+
+  border-radius: var(--fk-r-pill);
+
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+
+  background: color-mix(in srgb, var(--fk-info) 12%, transparent);
+  color: var(--fk-info);
+}
+
+.order-card__status--delivered {
+  background: color-mix(in srgb, var(--fk-success) 12%, transparent);
+  color: var(--fk-success);
+}
+
+.order-card__status--pending {
+  background: color-mix(in srgb, var(--fk-warning) 14%, transparent);
+  color: var(--fk-warning);
+}
+
+.order-card__total {
+  margin: 8px 0 0;
+  color: var(--fk-text);
+  font-size: 14px;
+
+  strong { font-weight: 800; }
+}
+
+.order-card__items {
+  margin-top: 10px;
+  color: var(--fk-text-2);
+  font-size: 13px;
+}
+
+.order-card__item {
+  margin-bottom: 4px;
+}
+
+.order-card__download-btn {
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+
+  background: linear-gradient(135deg, var(--fk-fjord), var(--fk-fjord-dark));
+  color: #fff;
+
+  font-weight: 700;
+  font-size: 13px;
+
+  cursor: pointer;
+
+  transition: opacity 150ms ease;
+
+  &:hover {
+    opacity: 0.9;
+  }
+}

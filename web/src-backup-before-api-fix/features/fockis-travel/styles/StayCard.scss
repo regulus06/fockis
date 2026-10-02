@@ -1,0 +1,277 @@
+@use "./_fockis-tokens" as fockis;
+
+.stay-card {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(10, 24, 48, 0.08);
+  border-radius: fockis.$radius-md;
+  background: #ffffff;
+  box-shadow: 0 5px 18px rgba(10, 24, 48, 0.08);
+  color: fockis.$text-on-light;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: rgba(240, 169, 62, 0.45);
+    box-shadow: 0 10px 26px rgba(10, 24, 48, 0.13);
+  }
+
+  .thumb {
+    position: relative;
+    flex: 0 0 auto;
+    width: 100%;
+    height: 190px;
+    min-height: 190px;
+    overflow: hidden; // clip anything that escapes the box
+    background-color: fockis.$cream-100;
+
+    // The real <img>: fills the box and crops instead of overflowing
+    .stay-card-image {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    // Subtle gradient over the image
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(
+        to bottom,
+        rgba(10, 24, 48, 0.02),
+        rgba(10, 24, 48, 0.08)
+      );
+      pointer-events: none;
+    }
+
+    // Shown when there is no image or it failed to load
+    .stay-card-image-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: fockis.$cream-100;
+      color: fockis.$text-on-light-muted;
+      font-family: fockis.$font-display;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+  }
+
+  .fav {
+    position: absolute;
+    z-index: 2; // above the image and gradient
+    top: 10px;
+    right: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    color: fockis.$navy-900;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(10, 24, 48, 0.14);
+    transition:
+      background 0.15s ease,
+      color 0.15s ease,
+      transform 0.15s ease;
+
+    svg {
+      width: 15px;
+      height: 15px;
+      display: block;
+    }
+
+    &:hover {
+      background: #ffffff;
+      color: #c54b55;
+      transform: scale(1.05);
+    }
+
+    &:focus-visible {
+      outline: 2px solid fockis.$gold-500;
+      outline-offset: 2px;
+    }
+
+    &.is-saved {
+      color: #c54b55;
+      background: #ffffff;
+    }
+  }
+
+  .body {
+    position: relative; // keeps text stacked above the thumb if anything spills
+    z-index: 1;
+    min-width: 0;
+    padding: 13px 14px 14px;
+    background: #ffffff;
+  }
+
+  .row1 {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  h4 {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    color: fockis.$navy-900;
+    font-family: fockis.$font-display;
+    font-size: 1.02rem;
+    font-weight: 700;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rating {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    color: fockis.$navy-900;
+    font-family: fockis.$font-body;
+    font-size: 0.74rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .star {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: fockis.$gold-600;
+
+    svg {
+      width: 12px;
+      height: 12px;
+      display: block;
+    }
+  }
+
+  .loc {
+    margin-top: 5px;
+    overflow: hidden;
+    color: fockis.$text-on-light-muted;
+    font-family: fockis.$font-body;
+    font-size: 0.76rem;
+    font-weight: 600;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .amenities {
+    min-height: 34px;
+    margin-top: 7px;
+    display: -webkit-box;
+    overflow: hidden;
+    color: fockis.$text-on-light-muted;
+    font-family: fockis.$font-body;
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .price-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(10, 24, 48, 0.07);
+  }
+
+  .price {
+    color: fockis.$navy-900;
+    font-family: fockis.$font-body;
+    font-size: 0.95rem;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+
+    span {
+      margin-left: 3px;
+      color: fockis.$text-on-light-muted;
+      font-size: 0.68rem;
+      font-weight: 600;
+    }
+  }
+
+  .view-link {
+    flex: 0 0 auto;
+    color: fockis.$navy-900;
+    font-family: fockis.$font-body;
+    font-size: 0.74rem;
+    font-weight: 750;
+    line-height: 1.2;
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      color 0.15s ease,
+      transform 0.15s ease;
+
+    &:hover {
+      color: fockis.$gold-600;
+    }
+
+    &:focus-visible {
+      outline: 2px solid fockis.$gold-500;
+      outline-offset: 3px;
+      border-radius: 3px;
+    }
+  }
+
+  @include fockis.bp-down(fockis.$bp-md) {
+    .thumb {
+      height: 175px;
+      min-height: 175px;
+    }
+  }
+
+  @include fockis.bp-down(fockis.$bp-sm) {
+    .thumb {
+      height: 185px;
+      min-height: 185px;
+    }
+
+    .body {
+      padding: 12px 13px 13px;
+    }
+
+    h4 {
+      font-size: 0.98rem;
+    }
+
+    .price-row {
+      margin-top: 10px;
+      padding-top: 9px;
+    }
+  }
+}

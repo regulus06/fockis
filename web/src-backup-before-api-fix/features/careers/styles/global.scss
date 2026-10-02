@@ -1,0 +1,11 @@
+// Import once at the careers feature root (e.g. in CareersRoutes.tsx or app entry)
+// so the CSS custom properties in _careers-tokens.scss are available to all
+// .module.scss files that reference var(--careers-*).
+@use './careers-tokens';
+@use './careers-mixins';
+
+.careers-root {
+  font-family: var(--careers-font-body);
+  color: var(--careers-ink);
+  background: var(--careers-bg);
+}

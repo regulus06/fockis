@@ -1,0 +1,684 @@
+/* =========================================================
+   FOCKIS ID PRICING
+   FockisIdPricing.scss
+   ========================================================= */
+
+.message-admin-page {
+  width: 100%;
+  min-height: 100%;
+  padding: 28px;
+  box-sizing: border-box;
+
+  background: #faf7f0;
+  color: #142331;
+
+  @media (max-width: 768px) {
+    padding: 20px;
+  }
+
+  @media (max-width: 520px) {
+    padding: 14px;
+  }
+}
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.message-admin-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 180px;
+  margin-top: 24px;
+  padding: 30px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #e3e6eb;
+  border-radius: 18px;
+
+  background: #ffffff;
+  color: #5c6b78;
+
+  font-size: 15px;
+  font-weight: 500;
+
+  box-shadow:
+    0 2px 5px rgba(15, 23, 42, 0.04),
+    0 12px 30px rgba(15, 23, 42, 0.04);
+
+  &::before {
+    content: '';
+
+    width: 18px;
+    height: 18px;
+
+    margin-right: 12px;
+
+    border: 2px solid #e5e7eb;
+    border-top-color: #eda934;
+    border-radius: 50%;
+
+    animation: fockisPricingSpinner 700ms linear infinite;
+  }
+
+  @media (max-width: 520px) {
+    min-height: 150px;
+    padding: 22px;
+  }
+}
+
+/* =========================================================
+   ALERT
+   ========================================================= */
+
+.message-admin-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  width: 100%;
+  margin: 20px 0;
+
+  padding: 14px 16px;
+
+  box-sizing: border-box;
+
+  border-radius: 12px;
+
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 500;
+
+  animation: fockisPricingAlertIn 180ms ease-out;
+}
+
+.message-admin-alert--error {
+  border: 1px solid #fecaca;
+  background: #fff1f2;
+  color: #b42318;
+}
+
+/* =========================================================
+   PRICING FORM
+   ========================================================= */
+
+.fockis-id-pricing-form {
+  width: 100%;
+  max-width: 900px;
+
+  margin-top: 24px;
+  padding: 26px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #e3e6eb;
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 2px 5px rgba(15, 23, 42, 0.04),
+    0 12px 32px rgba(15, 23, 42, 0.05);
+
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 4px;
+
+    background: #eda934;
+  }
+
+  @media (max-width: 650px) {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 16px;
+    border-radius: 14px;
+  }
+}
+
+/* =========================================================
+   FORM HEADER
+   ========================================================= */
+
+.fockis-id-pricing-form__header {
+  padding-bottom: 22px;
+
+  border-bottom: 1px solid #edf0f3;
+}
+
+.fockis-id-pricing-form__title {
+  font-family: Georgia, 'Times New Roman', serif;
+  margin: 0;
+
+  color: #142331;
+
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.fockis-id-pricing-form__description {
+  max-width: 680px;
+
+  margin: 7px 0 0;
+
+  color: #5c6b78;
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* =========================================================
+   PRICING GRID
+   ========================================================= */
+
+.fockis-id-pricing-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+
+  margin-top: 24px;
+
+  @media (max-width: 650px) {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+/* =========================================================
+   PRICE CARD
+   ========================================================= */
+
+.fockis-id-pricing-card {
+  position: relative;
+
+  min-width: 0;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #e4e7ec;
+  border-radius: 16px;
+
+  background: #f9f6ef;
+
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+
+  &:hover {
+    transform: translateY(-2px);
+
+    border-color: #eecb8e;
+
+    background: #ffffff;
+
+    box-shadow:
+      0 6px 16px rgba(15, 23, 42, 0.05),
+      0 12px 28px rgba(15, 23, 42, 0.04);
+  }
+}
+
+.fockis-id-pricing-card--primary {
+  border-color: #e9c079;
+  background: #fdf6ea;
+
+  &::before {
+    content: 'FOCKIS ID';
+
+    position: absolute;
+    top: 14px;
+    right: 14px;
+
+    padding: 5px 8px;
+
+    border: 1px solid #eecb8e;
+    border-radius: 7px;
+
+    background: #fdf3e2;
+    color: #a8671f;
+
+    font-size: 9px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+  }
+}
+
+/* =========================================================
+   CARD ICON
+   ========================================================= */
+
+.fockis-id-pricing-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 48px;
+  height: 48px;
+
+  margin-bottom: 14px;
+
+  border: 1px solid #f0dcae;
+  border-radius: 13px;
+
+  background: #fdf3e2;
+
+  font-size: 23px;
+}
+
+/* =========================================================
+   CARD TEXT
+   ========================================================= */
+
+.fockis-id-pricing-card__title {
+  margin: 0 0 5px;
+
+  color: #1c2e3d;
+
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.fockis-id-pricing-card__description {
+  margin: 0 0 17px;
+
+  color: #5c6b78;
+
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+/* =========================================================
+   FORM FIELD
+   ========================================================= */
+
+.fockis-id-pricing-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+
+  margin-top: 14px;
+}
+
+.fockis-id-pricing-field:first-child {
+  margin-top: 0;
+}
+
+.fockis-id-pricing-field label {
+  color: #223142;
+
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.fockis-id-pricing-field small {
+  color: #5c6b78;
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   INPUT WRAPPER
+   ========================================================= */
+
+.fockis-id-pricing-input {
+  position: relative;
+}
+
+.fockis-id-pricing-input__prefix {
+  position: absolute;
+  top: 50%;
+  left: 13px;
+
+  transform: translateY(-50%);
+
+  color: #5c6b78;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  pointer-events: none;
+}
+
+.fockis-id-pricing-input input {
+  width: 100%;
+  min-height: 46px;
+
+  padding: 10px 12px 10px 34px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d9dde4;
+  border-radius: 10px;
+
+  outline: none;
+
+  background: #ffffff;
+  color: #142331;
+
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.fockis-id-pricing-input input:hover {
+  border-color: #c5cad3;
+}
+
+.fockis-id-pricing-input input:focus {
+  border-color: #eda934;
+
+  box-shadow:
+    0 0 0 3px rgba(237, 169, 52, 0.13);
+}
+
+.fockis-id-pricing-input input::placeholder {
+  color: #93a1ac;
+  font-weight: 400;
+}
+
+/* =========================================================
+   STANDARD FORM INPUTS
+   ========================================================= */
+
+.fockis-id-pricing-form input,
+.fockis-id-pricing-form select,
+.fockis-id-pricing-form textarea {
+  font-family: inherit;
+}
+
+.fockis-id-pricing-form input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.fockis-id-pricing-form input[type='number']::-webkit-inner-spin-button,
+.fockis-id-pricing-form input[type='number']::-webkit-outer-spin-button {
+  margin: 0;
+}
+
+/* =========================================================
+   PRICING SUMMARY
+   ========================================================= */
+
+.fockis-id-pricing-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+
+  margin-top: 24px;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fockis-id-pricing-summary__item {
+  padding: 15px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  background: #ffffff;
+}
+
+.fockis-id-pricing-summary__label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #5c6b78;
+
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fockis-id-pricing-summary__value {
+  color: #142331;
+
+  font-size: 19px;
+  line-height: 1.25;
+  font-weight: 750;
+}
+
+/* =========================================================
+   CURRENCY / PRICE DISPLAY
+   ========================================================= */
+
+.fockis-id-price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.fockis-id-price__currency {
+  color: #a8671f;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.fockis-id-price__amount {
+  color: #142331;
+
+  font-size: 22px;
+  font-weight: 750;
+}
+
+.fockis-id-price__period {
+  margin-left: 4px;
+
+  color: #5c6b78;
+
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.fockis-id-pricing-form__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+
+  margin-top: 26px;
+  padding-top: 20px;
+
+  border-top: 1px solid #edf0f3;
+
+  @media (max-width: 520px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.fockis-id-pricing-form__actions button {
+  min-height: 44px;
+
+  padding: 10px 20px;
+
+  border-radius: 999px;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 650;
+
+  cursor: pointer;
+
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    background 150ms ease,
+    border-color 150ms ease;
+
+  &:focus-visible {
+    outline: 3px solid rgba(237, 169, 52, 0.22);
+    outline-offset: 2px;
+  }
+}
+
+.fockis-id-pricing-form__actions button[type='submit'] {
+  border: 1px solid #eda934;
+
+  background: #eda934;
+  color: #ffffff;
+
+  box-shadow:
+    0 4px 10px rgba(237, 169, 52, 0.18);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+
+    background: #d99424;
+
+    box-shadow:
+      0 7px 16px rgba(237, 169, 52, 0.24);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+.fockis-id-pricing-form__actions button[type='button'] {
+  border: 1px solid #d9dde4;
+
+  background: #ffffff;
+  color: #3d4f5e;
+
+  &:hover:not(:disabled) {
+    border-color: #c5cad3;
+    background: #f7f4ec;
+  }
+}
+
+.fockis-id-pricing-form__actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   SAVING STATE
+   ========================================================= */
+
+.fockis-id-pricing-form.is-saving {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* =========================================================
+   SUCCESS / ERROR STATUS
+   ========================================================= */
+
+.fockis-id-pricing-status {
+  margin-top: 12px;
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.fockis-id-pricing-status--success {
+  color: #15803d;
+}
+
+.fockis-id-pricing-status--error {
+  color: #b42318;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 520px) {
+  .fockis-id-pricing-form__title {
+    font-size: 18px;
+  }
+
+  .fockis-id-pricing-card {
+    padding: 16px;
+  }
+
+  .fockis-id-pricing-card__icon {
+    width: 42px;
+    height: 42px;
+
+    font-size: 20px;
+  }
+
+  .fockis-id-pricing-summary__value {
+    font-size: 17px;
+  }
+}
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
+@keyframes fockisPricingSpinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fockisPricingAlertIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .message-admin-alert,
+  .fockis-id-pricing-card,
+  .fockis-id-pricing-form__actions button {
+    animation: none;
+    transition: none;
+  }
+
+  .fockis-id-pricing-card:hover,
+  .fockis-id-pricing-form__actions button:hover {
+    transform: none;
+  }
+}

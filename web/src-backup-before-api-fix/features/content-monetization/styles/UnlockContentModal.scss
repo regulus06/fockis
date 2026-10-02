@@ -1,0 +1,144 @@
+.unlock-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.unlock-modal {
+  position: relative;
+  width: min(450px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow:
+    0 25px 80px
+      rgba(0, 0, 0, 0.3);
+}
+
+.unlock-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f1f1;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.unlock-modal-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 15px;
+  border-radius: 16px;
+  background: #f5f5f5;
+  font-size: 28px;
+}
+
+.unlock-modal h2 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+
+.unlock-modal > p {
+  margin: 0 0 20px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.unlock-modal-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f7f7f7;
+}
+
+.unlock-modal-content img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.unlock-modal-content div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.unlock-modal-content span {
+  color: #777;
+  font-size: 13px;
+}
+
+.unlock-modal-price {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #f7f7f7;
+  font-weight: 700;
+}
+
+.unlock-download-included {
+  margin-bottom: 15px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  background: #eaf8ee;
+  color: #21733b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.unlock-error {
+  margin-bottom: 15px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  background: #fff0f0;
+  color: #c62828;
+  font-size: 13px;
+}
+
+.unlock-primary-button,
+.unlock-secondary-button {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.unlock-primary-button {
+  border: 0;
+  background: #111;
+  color: #fff;
+}
+
+.unlock-primary-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.unlock-secondary-button {
+  margin-top: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #222;
+}

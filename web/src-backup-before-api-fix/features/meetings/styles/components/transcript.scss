@@ -1,0 +1,52 @@
+@use '../tokens' as t;
+@use '../mixins' as m;
+
+.fm-transcript {
+  background: t.$paper-0;
+  border: 1px solid t.$paper-200;
+  border-radius: t.$radius-lg;
+  overflow: hidden;
+
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid t.$paper-200;
+  }
+  &__search {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: t.$paper-50;
+    border-radius: t.$radius-sm;
+    padding: 8px 12px;
+    color: t.$ink-300;
+    input { border: none; background: none; flex: 1; font-size: t.$fs-sm; &:focus { outline: none; } }
+  }
+  &__download {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: none; border: 1px solid t.$paper-200; border-radius: t.$radius-sm;
+    padding: 7px 12px; font-size: t.$fs-xs; font-weight: 600; color: t.$ink-700;
+    &:hover:not(:disabled) { background: t.$paper-50; }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+
+  &__list {
+    max-height: 520px;
+    overflow-y: auto;
+    padding: 8px 18px 18px;
+    @include m.scrollbar-thin(transparent, t.$paper-200);
+  }
+  &__time {
+    font-size: t.$fs-2xs;
+    color: t.$ink-300;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 16px 0 8px 44px;
+  }
+  &__entry { display: flex; gap: 10px; padding: 4px 0; }
+  &__speaker { font-size: t.$fs-sm; font-weight: 700; color: t.$ink-900; margin-bottom: 2px; }
+  &__text { font-size: t.$fs-sm; color: t.$ink-700; line-height: 1.5; }
+}

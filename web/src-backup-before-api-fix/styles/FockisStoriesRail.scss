@@ -1,0 +1,650 @@
+/* ============================================================================
+   FockisStoriesRail
+   Relies on the shared Fockis design tokens (see FockisTopBar.scss / global
+   base stylesheet):
+     --fk-font-display, --fk-fjord, --fk-fjord-bright, --fk-amber,
+     --fk-amber-soft, --fk-surface, --fk-sunken, --fk-border,
+     --fk-border-strong, --fk-text, --fk-text-2, --fk-text-3,
+     --fk-r-sm, --fk-r-md, --fk-r-pill, --fk-arch,
+     --fk-shadow-sm, --fk-shadow-md, --fk-fast, --fk-ease
+============================================================================ */
+
+.fk-stories-rail {
+  position: relative;
+}
+
+.fk-stories-rail__close {
+  position: absolute;
+  top: -6px;
+  right: 0;
+  z-index: 2;
+}
+
+/* ---------------------------------------------------------------------------
+   VIEWPORT + ARROWS
+--------------------------------------------------------------------------- */
+
+.fk-stories-rail__viewport {
+  position: relative;
+}
+
+.fk-stories-rail__arrow {
+  display: none;
+  position: absolute;
+  top: 38px;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  border-radius: var(--fk-r-pill);
+  align-items: center;
+  justify-content: center;
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-border);
+  box-shadow: var(--fk-shadow-sm);
+  color: var(--fk-text-2);
+  z-index: 5;
+  cursor: pointer;
+  transition:
+    box-shadow var(--fk-fast) var(--fk-ease),
+    color var(--fk-fast) var(--fk-ease);
+
+  &:hover {
+    box-shadow: var(--fk-shadow-md);
+    color: var(--fk-text);
+  }
+
+  &--left {
+    left: -14px;
+  }
+
+  &--right {
+    right: -14px;
+  }
+
+  @media (min-width: 1024px) {
+    display: flex;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   TRACK
+--------------------------------------------------------------------------- */
+
+.fk-stories-rail__list {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  padding: 6px 2px;
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+  scroll-snap-type: x proximity;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   STORY CARD (chip)
+--------------------------------------------------------------------------- */
+
+.fk-story-card {
+  position: relative;
+  flex: 0 0 auto;
+  width: 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 2px 2px;
+  cursor: pointer;
+  border-radius: var(--fk-r-md);
+  background: none;
+  border: none;
+  scroll-snap-align: start;
+  transition: background var(--fk-fast) var(--fk-ease);
+
+  &:hover {
+    background: var(--fk-sunken);
+  }
+}
+
+.fk-story-card__visual-wrap {
+  position: relative;
+  width: 56px;
+  height: 56px;
+}
+
+.fk-story-card__avatar,
+.fk-story-card__create-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--fk-arch);
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fk-sunken);
+  border: 2px solid var(--fk-surface);
+  box-shadow: 0 0 0 1.5px var(--fk-border);
+  overflow: hidden;
+
+  img,
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.fk-story-card__avatar-placeholder {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--fk-text-2);
+}
+
+.fk-story-card.is-unseen .fk-story-card__avatar {
+  box-shadow: 0 0 0 1.5px var(--fk-fjord-bright);
+}
+
+.fk-story-card.is-unseen.is-seller .fk-story-card__avatar {
+  box-shadow: 0 0 0 1.5px var(--fk-amber);
+}
+
+/* Unseen "ping" indicator */
+.fk-story-card__ping {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--fk-fjord-bright);
+  border: 2px solid var(--fk-surface);
+}
+
+.fk-story-card.is-seller .fk-story-card__ping {
+  background: var(--fk-amber);
+}
+
+.fk-story-card.is-unseen .fk-story-card__ping {
+  animation: fk-story-ping 1.8s ease-out infinite;
+}
+
+.fk-story-card.is-seller.is-unseen .fk-story-card__ping {
+  animation-name: fk-story-ping-amber;
+}
+
+@keyframes fk-story-ping {
+  0% {
+    box-shadow: 0 0 0 0 rgba(23, 179, 163, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(23, 179, 163, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(23, 179, 163, 0);
+  }
+}
+
+@keyframes fk-story-ping-amber {
+  0% {
+    box-shadow: 0 0 0 0 rgba(232, 163, 61, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(232, 163, 61, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(232, 163, 61, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-story-card__ping {
+    animation: none !important;
+  }
+}
+
+/* Store badge for seller/business chips */
+.fk-story-card__store-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px 6px 6px 2px;
+  background: var(--fk-amber);
+  color: #201200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--fk-surface);
+}
+
+/* Story count badge - shown when a user has more than one active story */
+.fk-story-card__count {
+  position: absolute;
+  bottom: -2px;
+  left: -2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--fk-r-pill);
+  background: var(--fk-surface);
+  border: 1.5px solid var(--fk-border-strong);
+  color: var(--fk-text);
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--fk-shadow-sm);
+}
+
+.fk-story-card.is-unseen .fk-story-card__count {
+  border-color: var(--fk-fjord-bright);
+  color: var(--fk-fjord-bright);
+}
+
+.fk-story-card.is-seller.is-unseen .fk-story-card__count {
+  border-color: var(--fk-amber);
+  color: var(--fk-amber);
+}
+
+/* Waveform glyph */
+.fk-story-card__wave {
+  width: 44px;
+  height: 12px;
+  color: var(--fk-border-strong);
+}
+
+.fk-story-card.is-unseen .fk-story-card__wave {
+  color: var(--fk-fjord-bright);
+}
+
+.fk-story-card.is-seller.is-unseen .fk-story-card__wave {
+  color: var(--fk-amber);
+}
+
+/* Label + price */
+.fk-story-card__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fk-text-2);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.fk-story-card.is-unseen .fk-story-card__label {
+  color: var(--fk-text);
+}
+
+.fk-story-card__price {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--fk-amber);
+  margin-top: -4px;
+}
+
+/* Create-story chip */
+.fk-story-card--create .fk-story-card__create-avatar {
+  border-radius: var(--fk-arch);
+  border: 1.5px dashed var(--fk-border-strong);
+  color: var(--fk-fjord);
+  background: var(--fk-fjord-soft, rgba(23, 179, 163, 0.14));
+  box-shadow: none;
+}
+
+/* ---------------------------------------------------------------------------
+   RESPONSIVE SIZING
+--------------------------------------------------------------------------- */
+
+@media (max-width: 480px) {
+  .fk-stories-rail__list {
+    gap: 2px;
+    padding: 6px 0;
+  }
+
+  .fk-story-card {
+    width: 62px;
+    gap: 4px;
+    padding: 4px 1px 2px;
+  }
+
+  .fk-story-card__visual-wrap {
+    width: 46px;
+    height: 46px;
+  }
+
+  .fk-story-card__avatar,
+  .fk-story-card__create-avatar {
+    width: 46px;
+    height: 46px;
+  }
+
+  .fk-story-card__ping {
+    width: 12px;
+    height: 12px;
+  }
+
+  .fk-story-card__store-badge {
+    width: 16px;
+    height: 16px;
+  }
+
+  .fk-story-card__count {
+    min-width: 14px;
+    height: 14px;
+    font-size: 8px;
+  }
+
+  .fk-story-card__wave {
+    width: 36px;
+    height: 10px;
+  }
+
+  .fk-story-card__label {
+    font-size: 10px;
+  }
+
+  .fk-story-card__price {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 360px) {
+  .fk-story-card {
+    width: 56px;
+  }
+
+  .fk-story-card__visual-wrap {
+    width: 42px;
+    height: 42px;
+  }
+
+  .fk-story-card__avatar,
+  .fk-story-card__create-avatar {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+/* ============================================================================
+   STORY VIEWER
+   Full-screen, auto-advancing playback for a user's grouped stories.
+============================================================================ */
+
+.fk-story-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.96);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.fk-story-viewer__stage {
+  position: relative;
+  width: min(420px, 100%);
+  height: min(90vh, 900px);
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-md);
+  overflow: hidden;
+  box-shadow: var(--fk-shadow-md);
+}
+
+/* ---------------------------------------------------------------------------
+   PROGRESS BARS
+--------------------------------------------------------------------------- */
+
+.fk-story-viewer__progress-row {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  gap: 4px;
+  z-index: 3;
+}
+
+.fk-story-viewer__progress-track {
+  flex: 1;
+  height: 3px;
+  background: var(--fk-border-strong);
+  border-radius: var(--fk-r-pill);
+  overflow: hidden;
+}
+
+.fk-story-viewer__progress-fill {
+  height: 100%;
+  background: var(--fk-fjord);
+  transition: width 0.05s linear;
+}
+
+/* ---------------------------------------------------------------------------
+   HEADER
+--------------------------------------------------------------------------- */
+
+.fk-story-viewer__header {
+  position: absolute;
+  top: 22px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 3;
+}
+
+.fk-story-viewer__user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fk-story-viewer__avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--fk-arch);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fk-sunken);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.fk-story-viewer__avatar-placeholder {
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--fk-text-2);
+}
+
+.fk-story-viewer__username {
+  color: var(--fk-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fk-story-viewer__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--fk-sunken);
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-pill);
+  color: var(--fk-text-2);
+  cursor: pointer;
+  transition:
+    background var(--fk-fast) var(--fk-ease),
+    color var(--fk-fast) var(--fk-ease);
+
+  &:hover {
+    background: var(--fk-border);
+    color: var(--fk-text);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   MEDIA + TAP ZONES
+--------------------------------------------------------------------------- */
+
+.fk-story-viewer__media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.fk-story-viewer__image,
+.fk-story-viewer__video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--fk-sunken);
+}
+
+.fk-story-viewer__tap-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 30%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.fk-story-viewer__tap-zone--left {
+  left: 0;
+}
+
+.fk-story-viewer__tap-zone--right {
+  right: 0;
+}
+
+.fk-story-viewer__mute {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--fk-r-pill);
+  background: rgba(0, 0, 0, 0.45);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  transition: background var(--fk-fast) var(--fk-ease);
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.65);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   GROUP NAV (jump to previous / next person)
+--------------------------------------------------------------------------- */
+
+.fk-story-viewer__nav {
+  display: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--fk-r-pill);
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-border);
+  box-shadow: var(--fk-shadow-sm);
+  color: var(--fk-text-2);
+  cursor: pointer;
+  z-index: 4;
+  transition:
+    box-shadow var(--fk-fast) var(--fk-ease),
+    color var(--fk-fast) var(--fk-ease);
+
+  &:hover {
+    box-shadow: var(--fk-shadow-md);
+    color: var(--fk-text);
+  }
+
+  &--left {
+    left: -48px;
+  }
+
+  &--right {
+    right: -48px;
+  }
+
+  @media (min-width: 1024px) {
+    display: flex;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   PRODUCT / SELLER TAG
+--------------------------------------------------------------------------- */
+
+.fk-story-viewer__product {
+  position: absolute;
+  bottom: 16px;
+  left: 12px;
+  right: 12px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--fk-r-md);
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 13px;
+
+  strong {
+    margin-left: auto;
+    color: var(--fk-amber);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   MOBILE FULL-BLEED
+--------------------------------------------------------------------------- */
+
+@media (max-width: 480px) {
+  .fk-story-viewer {
+    padding: 0;
+  }
+
+  .fk-story-viewer__stage {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+}

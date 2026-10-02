@@ -1,0 +1,218 @@
+@use "./_fockis-tokens" as fockis;
+
+.destination-card {
+  position: relative;
+  display: block;
+  min-height: 220px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: fockis.$radius-lg;
+  isolation: isolate;
+  text-decoration: none;
+  background: fockis.$navy-800;
+  box-shadow: fockis.$shadow-card;
+  transform: translateZ(0);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: fockis.$shadow-card-hover;
+  }
+
+  &:focus-visible {
+    outline: 3px solid fockis.$gold-500;
+    outline-offset: 3px;
+  }
+
+  &:active {
+    transform: translateY(-1px);
+  }
+
+  &--wide {
+    min-height: 260px;
+  }
+
+  &__image {
+    position: absolute;
+    inset: 0;
+    z-index: -3;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    transform: scale(1);
+    transition: transform 500ms ease;
+  }
+
+  &__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(10, 24, 48, 0.08) 0%,
+        rgba(10, 24, 48, 0.18) 35%,
+        rgba(10, 24, 48, 0.72) 75%,
+        rgba(10, 24, 48, 0.94) 100%
+      );
+    transition: background 250ms ease;
+  }
+
+  &:hover &__image {
+    transform: scale(1.06);
+  }
+
+  &:hover &__overlay {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(10, 24, 48, 0.05) 0%,
+        rgba(10, 24, 48, 0.14) 35%,
+        rgba(10, 24, 48, 0.76) 75%,
+        rgba(10, 24, 48, 0.96) 100%
+      );
+  }
+
+  &__content {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    padding: 28px 22px 20px;
+    color: fockis.$text-on-dark;
+  }
+
+  &__flag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    font-size: 30px;
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.28));
+  }
+
+  &__name {
+    margin: 0;
+    color: fockis.$text-on-dark;
+    font-family: fockis.$font-display;
+    font-size: 25px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 7px;
+    color: rgba(255, 255, 255, 0.82);
+    font-family: fockis.$font-body;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+
+    &::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      margin-right: 8px;
+      border-radius: 50%;
+      background: fockis.$gold-500;
+      box-shadow: 0 0 0 3px rgba(240, 169, 62, 0.18);
+    }
+  }
+
+  @include fockis.bp-down(fockis.$bp-lg) {
+    min-height: 210px;
+
+    &--wide {
+      min-height: 240px;
+    }
+
+    &__content {
+      padding: 24px 20px 18px;
+    }
+
+    &__name {
+      font-size: 23px;
+    }
+  }
+
+  @include fockis.bp-down(fockis.$bp-md) {
+    min-height: 200px;
+
+    &--wide {
+      min-height: 220px;
+    }
+
+    &__content {
+      padding: 22px 18px 17px;
+    }
+
+    &__flag {
+      margin-bottom: 7px;
+      font-size: 27px;
+    }
+
+    &__name {
+      font-size: 21px;
+    }
+
+    &__count {
+      margin-top: 6px;
+      font-size: 13px;
+    }
+  }
+
+  @include fockis.bp-down(fockis.$bp-sm) {
+    min-height: 185px;
+    border-radius: fockis.$radius-md;
+
+    &--wide {
+      min-height: 205px;
+    }
+
+    &__content {
+      padding: 20px 16px 16px;
+    }
+
+    &__flag {
+      font-size: 25px;
+    }
+
+    &__name {
+      font-size: 20px;
+    }
+
+    &__count {
+      font-size: 12px;
+
+      &::before {
+        width: 5px;
+        height: 5px;
+        margin-right: 7px;
+      }
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .destination-card,
+  .destination-card__image,
+  .destination-card__overlay {
+    transition: none;
+  }
+
+  .destination-card:hover {
+    transform: none;
+  }
+
+  .destination-card:hover .destination-card__image {
+    transform: none;
+  }
+}

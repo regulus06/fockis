@@ -1,0 +1,803 @@
+// ============================================================================
+// FOCKIS MUSIC — RESPONSIVE
+// ============================================================================
+
+// ============================================================================
+// TABLET — 1200px
+// ============================================================================
+
+@media (max-width: 1200px) {
+  .music-home-hero {
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(300px, 0.7fr);
+
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  .music-card-grid {
+    grid-template-columns:
+      repeat(4, minmax(0, 1fr));
+  }
+
+  .music-card-grid-featured {
+    grid-template-columns:
+      repeat(4, minmax(0, 1fr));
+  }
+
+  .music-loading-grid {
+    grid-template-columns:
+      repeat(4, minmax(0, 1fr));
+  }
+
+  .music-content-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+  .music-chart-row {
+    grid-template-columns:
+      45px
+      64px
+      minmax(0, 1fr)
+      auto
+      38px;
+  }
+
+  .music-chart-art-button {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+// ============================================================================
+// TABLET — 900px
+// ============================================================================
+
+@media (max-width: 900px) {
+  .music-home-hero {
+    display: block;
+
+    min-height: auto;
+
+    padding:
+      55px 24px 45px;
+  }
+
+  .music-hero-content {
+    max-width: 700px;
+
+    margin:
+      0 auto;
+
+    text-align: center;
+  }
+
+  .music-home-hero h1 {
+    font-size:
+      clamp(46px, 9vw, 70px);
+  }
+
+  .music-hero-content > p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .music-search {
+    margin-left: auto;
+    margin-right: auto;
+
+    text-align: left;
+  }
+
+  .music-hero-actions {
+    justify-content: center;
+  }
+
+  .music-hero-visual {
+    min-height: 390px;
+
+    margin-top: 20px;
+  }
+
+  .music-hero-disc {
+    width: 290px;
+  }
+
+  .music-floating-card-one {
+    left: 8%;
+  }
+
+  .music-floating-card-two {
+    right: 8%;
+  }
+
+  .music-card-grid,
+  .music-card-grid-featured {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+  .music-loading-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+  .music-content-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .music-producer-banner,
+  .music-chart-creator-banner {
+    margin-left: 24px;
+    margin-right: 24px;
+  }
+
+  .music-charts-toolbar,
+  .music-charts-top,
+  .music-charts-list-section {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .music-charts-podium {
+    gap: 10px;
+  }
+
+  .music-chart-podium-card {
+    padding: 14px;
+  }
+}
+
+// ============================================================================
+// PHONE — 600px
+// ============================================================================
+
+@media (max-width: 600px) {
+  .music-home,
+  .music-charts-page {
+    padding-bottom: 45px;
+  }
+
+  .music-home-hero {
+    padding:
+      42px 16px 35px;
+  }
+
+  .music-hero-kicker {
+    margin-bottom: 17px;
+
+    font-size: 9px;
+  }
+
+  .music-home-hero h1 {
+    font-size: 43px;
+
+    letter-spacing:
+      -0.045em;
+  }
+
+  .music-hero-content > p {
+    margin-top: 20px;
+
+    font-size: 14px;
+
+    line-height: 1.6;
+  }
+
+  .music-search {
+    margin-top: 22px;
+  }
+
+  .music-search input {
+    font-size: 12px;
+  }
+
+  .music-search button {
+    padding:
+      0 14px;
+
+    font-size: 11px;
+  }
+
+  .music-search-icon {
+    width: 38px;
+
+    font-size: 20px;
+  }
+
+  .music-hero-actions {
+    flex-direction: column;
+
+    width: 100%;
+  }
+
+  .music-primary-button,
+  .music-secondary-button {
+    width: 100%;
+  }
+
+  .music-hero-visual {
+    min-height: 320px;
+
+    margin-top: 5px;
+  }
+
+  .music-hero-disc {
+    width: 230px;
+  }
+
+  .music-disc-center {
+    width: 52px;
+    height: 52px;
+
+    font-size: 20px;
+  }
+
+  .music-hero-glow {
+    width: 300px;
+    height: 300px;
+  }
+
+  .music-floating-card {
+    min-width: 145px;
+
+    padding:
+      9px 11px;
+  }
+
+  .music-floating-card span {
+    width: 31px;
+    height: 31px;
+
+    font-size: 14px;
+  }
+
+  .music-floating-card strong {
+    font-size: 10px;
+  }
+
+  .music-floating-card small {
+    font-size: 8px;
+  }
+
+  .music-floating-card-one {
+    left: 0;
+    top: 10%;
+  }
+
+  .music-floating-card-two {
+    right: 0;
+    bottom: 10%;
+  }
+
+  // --------------------------------------------------------------------------
+  // NAVIGATION
+  // --------------------------------------------------------------------------
+
+  .music-home-nav,
+  .music-charts-nav {
+    padding:
+      8px 12px;
+  }
+
+  .music-home-nav a,
+  .music-charts-nav a {
+    min-height: 35px;
+
+    padding:
+      0 13px;
+
+    font-size: 11px;
+  }
+
+  // --------------------------------------------------------------------------
+  // STATS
+  // --------------------------------------------------------------------------
+
+  .music-stats {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    padding:
+      0 16px;
+
+    margin-top: 20px;
+  }
+
+  .music-stats > div {
+    padding: 14px;
+
+    border-right: none;
+
+    border-bottom:
+      1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .music-stats > div:first-child {
+    padding-left: 14px;
+  }
+
+  .music-stats strong {
+    font-size: 20px;
+  }
+
+  .music-stats span {
+    font-size: 9px;
+  }
+
+  // --------------------------------------------------------------------------
+  // SECTIONS
+  // --------------------------------------------------------------------------
+
+  .music-home-section {
+    margin-top: 42px;
+
+    padding:
+      0 16px;
+  }
+
+  .music-section-heading {
+    align-items: center;
+  }
+
+  .music-section-heading h2 {
+    font-size: 18px;
+  }
+
+  .music-section-heading p {
+    font-size: 10px;
+  }
+
+  .music-section-view-all {
+    font-size: 10px;
+  }
+
+  // --------------------------------------------------------------------------
+  // CARDS
+  // --------------------------------------------------------------------------
+
+  .music-card-grid,
+  .music-card-grid-featured {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+  }
+
+  .music-home-card {
+    border-radius: 11px;
+  }
+
+  .music-home-card-body {
+    padding: 10px;
+  }
+
+  .music-home-card-body h3 {
+    font-size: 11px;
+  }
+
+  .music-card-producer {
+    font-size: 9px;
+  }
+
+  .music-card-meta {
+    margin-top: 7px;
+
+    font-size: 8px;
+  }
+
+  .music-card-bottom {
+    margin-top: 9px;
+
+    padding-top: 8px;
+  }
+
+  .music-card-price {
+    font-size: 9px;
+  }
+
+  .music-exclusive-label {
+    font-size: 7px;
+  }
+
+  .music-card-type,
+  .music-card-access {
+    padding:
+      4px 6px;
+
+    font-size: 7px;
+  }
+
+  .music-card-play {
+    width: 34px;
+    height: 34px;
+
+    font-size: 9px;
+
+    opacity: 1;
+
+    transform: none;
+  }
+
+  // --------------------------------------------------------------------------
+  // PRODUCER BANNER
+  // --------------------------------------------------------------------------
+
+  .music-producer-banner {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    margin:
+      50px 16px 0;
+
+    padding:
+      25px 20px;
+  }
+
+  .music-producer-banner h2 {
+    font-size: 24px;
+  }
+
+  .music-producer-banner p {
+    font-size: 11px;
+  }
+
+  .music-producer-banner .music-primary-button {
+    width: 100%;
+  }
+
+  // --------------------------------------------------------------------------
+  // ERROR
+  // --------------------------------------------------------------------------
+
+  .music-error {
+    flex-direction: column;
+
+    align-items: stretch;
+
+    margin:
+      20px 16px 0;
+  }
+
+  .music-error button {
+    width: 100%;
+  }
+
+  // --------------------------------------------------------------------------
+  // LOADING
+  // --------------------------------------------------------------------------
+
+  .music-home-loading {
+    padding:
+      45px 16px;
+  }
+
+  .music-loading-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+  }
+
+  // --------------------------------------------------------------------------
+  // GENERIC PAGE
+  // --------------------------------------------------------------------------
+
+  .music-page-container {
+    padding:
+      30px 16px 60px;
+  }
+
+  .music-page-header {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    margin-bottom: 22px;
+  }
+
+  .music-page-header h1 {
+    font-size: 36px;
+  }
+
+  .music-content-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+  }
+
+  // --------------------------------------------------------------------------
+  // CHARTS
+  // --------------------------------------------------------------------------
+
+  .music-charts-hero {
+    min-height: auto;
+
+    padding:
+      45px 16px 35px;
+  }
+
+  .music-charts-hero h1 {
+    font-size: 43px;
+
+    letter-spacing:
+      -0.045em;
+  }
+
+  .music-charts-hero p {
+    font-size: 13px;
+  }
+
+  .music-charts-hero-actions {
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .music-charts-hero-actions
+  .music-primary-button,
+  .music-charts-hero-actions
+  .music-secondary-button {
+    width: 100%;
+  }
+
+  .music-charts-toolbar {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 12px;
+
+    margin-top: 25px;
+
+    padding:
+      0 16px;
+  }
+
+  .music-charts-toolbar h2 {
+    font-size: 20px;
+  }
+
+  .music-chart-tabs {
+    width:
+      calc(100vw - 32px);
+
+    max-width: none;
+
+    margin-top: 18px;
+  }
+
+  .music-charts-top {
+    margin-top: 25px;
+
+    padding:
+      0 16px;
+  }
+
+  .music-charts-podium {
+    grid-template-columns: 1fr;
+
+    gap: 10px;
+
+    align-items: stretch;
+  }
+
+  .music-chart-podium-card,
+  .music-chart-podium-card:first-child {
+    display: grid;
+
+    grid-template-columns:
+      92px
+      minmax(0, 1fr);
+
+    gap: 14px;
+
+    align-items: center;
+
+    padding: 12px;
+  }
+
+  .music-chart-podium-art {
+    width: 92px;
+
+    border-radius: 11px;
+  }
+
+  .music-chart-podium-info {
+    padding-top: 0;
+  }
+
+  .music-chart-podium-info h3 {
+    font-size: 13px;
+  }
+
+  .music-chart-podium-rank {
+    width: 30px;
+    height: 30px;
+
+    top: 6px;
+    left: 6px;
+
+    font-size: 10px;
+  }
+
+  .music-chart-podium-type {
+    top: 6px;
+    right: 6px;
+
+    font-size: 7px;
+  }
+
+  .music-charts-list-section {
+    margin-top: 35px;
+
+    padding:
+      0 16px;
+  }
+
+  .music-chart-row {
+    grid-template-columns:
+      28px
+      58px
+      minmax(0, 1fr)
+      30px;
+
+    gap: 9px;
+
+    min-height: 72px;
+
+    padding: 7px;
+  }
+
+  .music-chart-rank {
+    font-size: 11px;
+  }
+
+  .music-chart-art-button {
+    width: 58px;
+    height: 58px;
+
+    border-radius: 9px;
+  }
+
+  .music-chart-main h3 {
+    font-size: 11px;
+  }
+
+  .music-chart-main p {
+    font-size: 9px;
+  }
+
+  .music-chart-main-meta {
+    gap: 5px;
+
+    margin-top: 5px;
+
+    font-size: 7px;
+  }
+
+  .music-chart-price {
+    display: none;
+  }
+
+  .music-chart-open {
+    width: 30px;
+    height: 30px;
+
+    font-size: 10px;
+  }
+
+  .music-chart-creator-banner {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    margin:
+      45px 16px 0;
+
+    padding:
+      24px 20px;
+  }
+
+  .music-chart-creator-banner h3 {
+    font-size: 18px;
+  }
+
+  .music-chart-creator-banner
+  .music-primary-button {
+    width: 100%;
+  }
+}
+
+// ============================================================================
+// VERY SMALL PHONES
+// ============================================================================
+
+@media (max-width: 390px) {
+  .music-home-hero h1,
+  .music-charts-hero h1 {
+    font-size: 38px;
+  }
+
+  .music-home-card-body {
+    padding: 8px;
+  }
+
+  .music-card-meta {
+    display: none;
+  }
+
+  .music-card-bottom {
+    margin-top: 7px;
+  }
+
+  .music-floating-card {
+    min-width: 130px;
+
+    transform: scale(0.9);
+  }
+
+  .music-floating-card-one {
+    left: -8px;
+  }
+
+  .music-floating-card-two {
+    right: -8px;
+  }
+
+  .music-chart-row {
+    grid-template-columns:
+      24px
+      52px
+      minmax(0, 1fr)
+      28px;
+
+    gap: 7px;
+  }
+
+  .music-chart-art-button {
+    width: 52px;
+    height: 52px;
+  }
+
+  .music-chart-main h3 {
+    font-size: 10px;
+  }
+
+  .music-chart-main p {
+    font-size: 8px;
+  }
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+  .music-hero-disc,
+  .music-hero-glow,
+  .music-floating-card,
+  .music-loading-disc,
+  .music-skeleton-art,
+  .music-skeleton-line,
+  .music-chart-skeleton {
+    animation: none;
+  }
+
+  .music-home-card,
+  .music-primary-button,
+  .music-secondary-button,
+  .music-card-play,
+  .music-home-card-art img,
+  .music-chart-row,
+  .music-chart-podium-card,
+  .music-chart-podium-art img,
+  .music-chart-art {
+    transition: none;
+  }
+}

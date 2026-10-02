@@ -1,0 +1,51 @@
+// ============================= RECENT DOCUMENTS =============================
+.recent-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 56px 24px;
+  background: #fff;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+
+  svg {
+    width: 64px;
+    height: 64px;
+    color: var(--border-strong);
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 19px;
+    margin-bottom: 8px;
+  }
+
+  p {
+    color: var(--muted);
+    font-size: 14px;
+    max-width: 360px;
+    margin: 0 0 22px;
+  }
+}
+
+// ============================= FOOTER =============================
+footer {
+  border-top: 1px solid var(--border);
+  padding: 32px 0;
+  background: #fff;
+}
+
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  p {
+    font-size: 13px;
+    color: var(--muted-2);
+    margin: 0;
+  }
+}

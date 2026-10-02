@@ -1,22 +1,23 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
-} from '@nestjs/common';
+  UnauthorizedException,
+} from "@nestjs/common";
 
-import { Reflector } from '@nestjs/core';
+import { Reflector } from "@nestjs/core";
 
-import { PERMISSIONS_KEY } from './permissions.decorator';
-import { Permission } from './permissions.constants';
+import { PERMISSIONS_KEY } from "./permissions.decorator";
+import { Permission } from "./permissions.enum";
 
-import { ROLES_KEY } from './roles.decorator';
-import { Role } from './roles.enum';
+import { ROLES_KEY } from "./roles.decorator";
+import { Role } from "./roles.enum";
 
-import { IS_PUBLIC_KEY } from './public.decorator';
+import { IS_PUBLIC_KEY } from "./public.decorator";
 
 @Injectable()
 export class RbacGuard implements CanActivate {
-
   constructor(
     private readonly reflector: Reflector,
   ) {}
@@ -24,83 +25,38 @@ export class RbacGuard implements CanActivate {
   canActivate(
     context: ExecutionContext,
   ): boolean {
-
     // ========================================================================
-    // 1. PUBLIC ROUTE CHECK
-    // ========================================================================
-
-    const isPublic =
-      this.reflector.getAllAndOverride<boolean>(
-        IS_PUBLIC_KEY,
-        [
-          context.getHandler(),
-          context.getClass(),
-        ],
-      );
-
-    if (isPublic) {
-      return true;
-    }
-
-    // ========================================================================
-    // 2. REQUEST
+    // 1. REQUEST
     // ========================================================================
 
     const request =
       context.switchToHttp().getRequest();
 
     const path =
-      request?.path ||
-      request?.url ||
-      request?.originalUrl ||
-      '';
+      typeof request?.path === "string"
+        ? request.path
+        : typeof request?.url === "string"
+          ? request.url.split("?")[0]
+          : typeof request?.originalUrl === "string"
+            ? request.originalUrl.split("?")[0]
+            : "";
 
     // ========================================================================
-    // 3. ACADEMY BYPASS
+    // 2. ACADEMY
     // ========================================================================
     //
-    // Academy has its own authentication / authorization system:
-    //
-    //   AcademyJwtAuthGuard
-    //   academy-jwt Passport strategy
-    //   Academy RolesGuard
-    //
-    // The global Fockis RBAC guard must not evaluate Academy routes.
-    //
-    // Public Academy routes:
-    //
-    //   GET /academy/content/admissions-steps
-    //   GET /academy/content/admissions-faq
-    //
-    // Protected Academy routes explicitly use:
-    //
-    //   @UseGuards(AcademyJwtAuthGuard, RolesGuard)
-    //
+    // Academy uses its own authentication and authorization.
     // ========================================================================
 
     if (
-      typeof path === 'string' &&
-      (
-        path === '/academy' ||
-        path.startsWith('/academy/')
-      )
+      path === "/academy" ||
+      path.startsWith("/academy/")
     ) {
       return true;
     }
 
     // ========================================================================
-    // 4. USER MUST EXIST
-    // ========================================================================
-
-    const user =
-      request.user;
-
-    if (!user) {
-      return false;
-    }
-
-    // ========================================================================
-    // 5. ROLE CHECK
+    // 3. ROUTE METADATA
     // ========================================================================
 
     const requiredRoles =
@@ -112,23 +68,6 @@ export class RbacGuard implements CanActivate {
         ],
       );
 
-    if (
-      requiredRoles &&
-      requiredRoles.length > 0
-    ) {
-
-      if (
-        !requiredRoles.includes(user.role)
-      ) {
-        return false;
-      }
-
-    }
-
-    // ========================================================================
-    // 6. PERMISSION CHECK
-    // ========================================================================
-
     const requiredPermissions =
       this.reflector.getAllAndOverride<Permission[]>(
         PERMISSIONS_KEY,
@@ -138,33 +77,193 @@ export class RbacGuard implements CanActivate {
         ],
       );
 
+    const isPublic =
+      this.reflector.getAllAndOverride<boolean>(
+        IS_PUBLIC_KEY,
+        [
+          context.getHandler(),
+          context.getClass(),
+        ],
+      );
+
+    // ========================================================================
+    // 4. PUBLIC ROUTE
+    // ========================================================================
+    //
+    // A normal @Public() endpoint does not require authentication.
+    //
+    // However, if authorization metadata exists, the route must NOT be
+    // silently converted into an unrestricted endpoint.
+    // ========================================================================
+
+    const hasAuthorizationMetadata =
+      Boolean(
+        requiredRoles &&
+        requiredRoles.length > 0,
+      ) ||
+      Boolean(
+        requiredPermissions &&
+        requiredPermissions.length > 0,
+      );
+
     if (
-      requiredPermissions &&
-      requiredPermissions.length > 0
+      isPublic &&
+      !hasAuthorizationMetadata
     ) {
-
-      if (
-        !Array.isArray(user.permissions)
-      ) {
-        return false;
-      }
-
-      const hasPermissions =
-        requiredPermissions.every(
-          (permission) =>
-            user.permissions.includes(permission),
-        );
-
-      if (!hasPermissions) {
-        return false;
-      }
-
+      return true;
     }
 
     // ========================================================================
-    // 7. ALLOW
+    // 5. AUTHENTICATED USER REQUIRED
+    // ========================================================================
+
+    const user =
+      request?.user;
+
+    if (!user) {
+      throw new UnauthorizedException(
+        "Authentication required.",
+      );
+    }
+
+    // ========================================================================
+    // 6. NORMALIZE ROLE
+    // ========================================================================
+
+    const userRole =
+      this.normalizeRole(user.role);
+
+    // ========================================================================
+    // 7. SUPER ADMIN
+    // ========================================================================
+    //
+    // Super Admin is determined from the authenticated user supplied by the
+    // JWT strategy/database.
+    //
+    // The role remains the primary source.
+    // The explicit isSuperAdmin flag is accepted when it is database-derived.
+    // ========================================================================
+
+    const isSuperAdmin =
+      userRole === "super_admin" ||
+      user.isSuperAdmin === true;
+
+    if (isSuperAdmin) {
+      return true;
+    }
+
+    // ========================================================================
+    // 8. ROLE CHECK
+    // ========================================================================
+
+    if (
+      requiredRoles &&
+      requiredRoles.length > 0
+    ) {
+      const normalizedRequiredRoles =
+        requiredRoles.map(
+          (role) =>
+            this.normalizeRole(role),
+        );
+
+      if (
+        !normalizedRequiredRoles.includes(
+          userRole,
+        )
+      ) {
+        throw new ForbiddenException(
+          "You do not have the required role.",
+        );
+      }
+    }
+
+    // ========================================================================
+    // 9. PERMISSION CHECK
+    // ========================================================================
+
+    if (
+      !requiredPermissions ||
+      requiredPermissions.length === 0
+    ) {
+      return true;
+    }
+
+    // ========================================================================
+    // 10. NORMALIZE USER PERMISSIONS
+    // ========================================================================
+
+    const userPermissions =
+      this.normalizePermissions(
+        user.permissions,
+      );
+
+    // ========================================================================
+    // 11. REQUIRE ALL PERMISSIONS
+    // ========================================================================
+
+    const hasAllPermissions =
+      requiredPermissions.every(
+        (permission) =>
+          userPermissions.includes(
+            String(permission)
+              .trim()
+              .toLowerCase(),
+          ),
+      );
+
+    if (!hasAllPermissions) {
+      throw new ForbiddenException(
+        "You do not have the required permission.",
+      );
+    }
+
+    // ========================================================================
+    // 12. ALLOW
     // ========================================================================
 
     return true;
+  }
+
+  // ==========================================================================
+  // ROLE NORMALIZATION
+  // ==========================================================================
+
+  private normalizeRole(
+    role: unknown,
+  ): string {
+    return String(
+      role ?? "",
+    )
+      .trim()
+      .toLowerCase()
+      .replace(
+        /[\s-]+/g,
+        "_",
+      );
+  }
+
+  // ==========================================================================
+  // PERMISSION NORMALIZATION
+  // ==========================================================================
+
+  private normalizePermissions(
+    permissions: unknown,
+  ): string[] {
+    if (!Array.isArray(permissions)) {
+      return [];
+    }
+
+    return Array.from(
+      new Set(
+        permissions
+          .map(
+            (permission) =>
+              String(permission)
+                .trim()
+                .toLowerCase(),
+          )
+          .filter(Boolean),
+      ),
+    );
   }
 }

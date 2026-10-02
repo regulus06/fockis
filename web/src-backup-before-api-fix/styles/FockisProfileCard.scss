@@ -1,0 +1,245 @@
+/* ============================================================================
+   FOCKIS PROFILE CARD
+   src/styles/FockisProfileCard.scss
+
+   This component had NO stylesheet before — .fk-profile-card, __body,
+   __bio, __meta, __actions, __button were all rendering as bare, unstyled
+   <section>/<div>/<p> tags. That absence of any intentional layout is what
+   produced the large, unpredictable gaps: nothing was controlling spacing
+   between the (conditionally-rendered) bio, stats, meta, and actions
+   blocks, so browser default margins and flex/parent behavior filled in
+   arbitrarily.
+
+   This file gives it real, tight, intentional spacing via a flex-column
+   body with a fixed gap — each block controls zero external margin of its
+   own, so total spacing is exactly what --fk-profile-card body gap says,
+   not whatever the browser happens to do by default.
+
+   Matches the Clark State College identity (navy / royal blue / gold)
+   used across the rest of the redesign.
+============================================================================ */
+
+@use "./fockis-theme";
+
+.fk-profile-card {
+  --fk-card-text-2: var(--fk-text-2, #48566e);
+
+  width: 100%;
+
+  background: var(--fk-surface);
+  color: var(--fk-text);
+}
+
+.fk-profile-card__body {
+  width: 100%;
+
+  padding: 16px 20px 18px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 14px;
+}
+
+
+/* ============================================================================
+   BIO
+============================================================================ */
+
+.fk-profile-card__bio {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.fk-profile-card__bio-title {
+  margin: 0;
+
+  color: var(--fk-fjord);
+
+  font-size: 11px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.fk-profile-card__bio-text {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-size: 14.5px;
+  line-height: 1.55;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+
+/* ============================================================================
+   INLINE STATS ROW (Facebook-style)
+============================================================================ */
+
+.fk-profile-card__stats--inline {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+
+  gap: 6px;
+
+  padding: 0;
+
+  background: none;
+  border: none;
+}
+
+.fk-profile-card__stat-inline {
+  display: inline-flex;
+  align-items: baseline;
+
+  gap: 5px;
+
+  white-space: nowrap;
+}
+
+.fk-profile-card__stat-inline .fk-profile-card__stat-number {
+  color: var(--fk-text);
+
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.fk-profile-card__stat-inline .fk-profile-card__stat-label {
+  margin-top: 0;
+
+  color: var(--fk-card-text-2);
+
+  font-size: 13px;
+  font-weight: 600;
+
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.fk-profile-card__stat-dot {
+  color: var(--fk-card-text-2);
+
+  font-size: 13px;
+  line-height: 1;
+
+  user-select: none;
+}
+
+
+/* ============================================================================
+   LOCATION / WEBSITE / JOINED
+============================================================================ */
+
+.fk-profile-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+
+  gap: 4px 14px;
+}
+
+.fk-profile-card__meta-item {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 4px;
+
+  color: var(--fk-card-text-2);
+
+  font-size: 13px;
+  font-weight: 600;
+
+  text-decoration: none;
+}
+
+a.fk-profile-card__meta-item {
+  color: var(--fk-fjord-bright);
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+
+/* ============================================================================
+   EDIT PROFILE — OWNER ONLY
+============================================================================ */
+
+.fk-profile-card__actions {
+  width: 100%;
+}
+
+.fk-profile-card__button {
+  min-height: 42px;
+
+  padding: 0 18px;
+
+  border: 1px solid transparent;
+  border-radius: var(--fk-r-sm, 6px);
+
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+.fk-profile-card__button--primary {
+  width: 100%;
+
+  background: var(--fk-fjord);
+  color: #ffffff;
+
+  &:hover {
+    background: var(--fk-fjord-bright);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fk-amber-bright);
+    outline-offset: 2px;
+  }
+}
+
+
+/* ============================================================================
+   MOBILE
+============================================================================ */
+
+@media (max-width: 480px) {
+  .fk-profile-card__body {
+    padding: 14px 16px 16px;
+
+    gap: 12px;
+  }
+
+  .fk-profile-card__stats--inline {
+    gap: 5px;
+  }
+
+  .fk-profile-card__stat-inline .fk-profile-card__stat-number {
+    font-size: 14px;
+  }
+
+  .fk-profile-card__stat-inline .fk-profile-card__stat-label {
+    font-size: 12px;
+  }
+
+  .fk-profile-card__meta {
+    gap: 4px 10px;
+
+    font-size: 12.5px;
+  }
+}

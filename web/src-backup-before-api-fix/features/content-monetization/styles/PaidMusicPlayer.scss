@@ -1,0 +1,91 @@
+.paid-music-player {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #111;
+  color: #fff;
+}
+
+.paid-music-player.locked {
+  min-height: 150px;
+}
+
+.paid-music-art {
+  flex: 0 0 90px;
+  width: 90px;
+  height: 90px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #272727;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 35px;
+}
+
+.paid-music-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.paid-music-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.paid-music-info strong {
+  font-size: 17px;
+}
+
+.paid-music-info > span {
+  color: #aaa;
+  font-size: 13px;
+}
+
+.paid-music-lock {
+  color: #bbb;
+  font-size: 13px;
+}
+
+.paid-music-controls {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.paid-music-controls > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.paid-music-controls > div:first-child span {
+  color: #999;
+  font-size: 13px;
+}
+
+.paid-music-controls audio {
+  width: 100%;
+}
+
+.paid-music-controls
+  .content-download-button {
+  align-self: flex-start;
+}
+
+@media (max-width: 600px) {
+  .paid-music-player {
+    align-items: flex-start;
+  }
+
+  .paid-music-art {
+    flex-basis: 70px;
+    width: 70px;
+    height: 70px;
+  }
+}

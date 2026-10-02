@@ -1,0 +1,1202 @@
+/* ============================================================================
+   FOCKIS GIFT STORE
+============================================================================ */
+
+.gift-store-page {
+  position: relative;
+
+  width: 100%;
+  min-height: 100vh;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 15% 10%,
+      rgba(255, 153, 0, 0.12),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 85% 25%,
+      rgba(139, 92, 246, 0.10),
+      transparent 28%
+    ),
+    linear-gradient(
+      180deg,
+      #090909 0%,
+      #0d0d0f 50%,
+      #090909 100%
+    );
+
+  color: #fff;
+
+  isolation: isolate;
+}
+
+
+/* ============================================================================
+   BACKGROUND GLOWS
+============================================================================ */
+
+.gift-store-background-glow {
+  position: absolute;
+
+  width: 420px;
+  height: 420px;
+
+  border-radius: 50%;
+
+  pointer-events: none;
+
+  filter: blur(100px);
+
+  opacity: 0.18;
+
+  z-index: -1;
+}
+
+.gift-store-background-glow-one {
+  top: -180px;
+  left: -160px;
+
+  background: #ff9900;
+}
+
+.gift-store-background-glow-two {
+  right: -180px;
+  top: 30%;
+
+  background: #7c3aed;
+}
+
+
+/* ============================================================================
+   CONTAINER
+============================================================================ */
+
+.gift-store-container {
+  position: relative;
+
+  width: min(1180px, calc(100% - 32px));
+
+  margin: 0 auto;
+
+  padding: 32px 0 80px;
+}
+
+
+/* ============================================================================
+   HEADER
+============================================================================ */
+
+.gift-store-header {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  gap: 18px;
+
+  margin-bottom: 24px;
+
+  padding: 24px;
+
+  border: 1px solid rgba(255, 255, 255, 0.09);
+
+  border-radius: 24px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0.025)
+    );
+
+  box-shadow:
+    0 20px 70px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+
+.gift-store-header-icon {
+  flex: 0 0 auto;
+
+  width: 72px;
+  height: 72px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 20px;
+
+  font-size: 38px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 153, 0, 0.25),
+      rgba(255, 92, 180, 0.12)
+    );
+
+  border: 1px solid rgba(255, 153, 0, 0.25);
+
+  box-shadow:
+    0 0 35px rgba(255, 153, 0, 0.16);
+}
+
+
+.gift-store-header-content {
+  min-width: 0;
+}
+
+
+.gift-store-eyebrow {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #ff9900;
+
+  font-size: 11px;
+  font-weight: 900;
+
+  letter-spacing: 2.5px;
+
+  text-transform: uppercase;
+}
+
+
+.gift-store-header h1 {
+  margin: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  color: #fff;
+
+  font-size: clamp(27px, 4vw, 42px);
+
+  line-height: 1;
+
+  font-weight: 950;
+
+  letter-spacing: -1.5px;
+}
+
+
+.gift-store-header h1 span {
+  font-size: 0.75em;
+}
+
+
+.gift-store-header p {
+  margin: 9px 0 0;
+
+  color: rgba(255, 255, 255, 0.58);
+
+  font-size: 14px;
+
+  line-height: 1.5;
+}
+
+
+.gift-store-live-badge {
+  margin-left: auto;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  flex: 0 0 auto;
+
+  padding: 8px 12px;
+
+  border-radius: 999px;
+
+  color: #fff;
+
+  background: rgba(255, 45, 85, 0.10);
+
+  border: 1px solid rgba(255, 45, 85, 0.22);
+
+  font-size: 10px;
+  font-weight: 900;
+
+  letter-spacing: 1.2px;
+}
+
+
+.gift-store-live-badge span {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #ff3158;
+
+  box-shadow:
+    0 0 10px rgba(255, 49, 88, 0.9);
+
+  animation: gift-store-live-pulse 1.3s ease-in-out infinite;
+}
+
+
+@keyframes gift-store-live-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+
+/* ============================================================================
+   PICKER
+============================================================================ */
+
+.gift-store-picker {
+  position: relative;
+
+  padding: 24px;
+
+  border-radius: 26px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background:
+    rgba(15, 15, 18, 0.86);
+
+  box-shadow:
+    0 25px 80px rgba(0, 0, 0, 0.4);
+
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+}
+
+
+/* ============================================================================
+   GIFT PICKER HEADER
+============================================================================ */
+
+.gift-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  margin-bottom: 18px;
+}
+
+
+.gift-picker-eyebrow {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #ff9900;
+
+  font-size: 10px;
+  font-weight: 900;
+
+  letter-spacing: 2px;
+}
+
+
+.gift-picker-header h2 {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin: 0;
+
+  color: #fff;
+
+  font-size: 25px;
+
+  font-weight: 950;
+
+  letter-spacing: -0.7px;
+}
+
+
+.gift-title-emoji {
+  font-size: 21px;
+}
+
+
+.gift-picker-live-dot {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 7px 11px;
+
+  border-radius: 999px;
+
+  background: rgba(255, 45, 85, 0.10);
+
+  border: 1px solid rgba(255, 45, 85, 0.2);
+
+  color: #ff6b86;
+
+  font-size: 10px;
+  font-weight: 900;
+
+  letter-spacing: 1px;
+}
+
+
+.gift-picker-live-dot span {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #ff3158;
+
+  box-shadow: 0 0 9px #ff3158;
+}
+
+
+/* ============================================================================
+   SELECTED GIFT / COST
+============================================================================ */
+
+.gift-coin-balance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  margin-bottom: 18px;
+
+  padding: 14px 16px;
+
+  border-radius: 17px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 153, 0, 0.13),
+      rgba(255, 255, 255, 0.035)
+    );
+
+  border: 1px solid rgba(255, 153, 0, 0.18);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+
+.gift-coin-balance-left {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  min-width: 0;
+}
+
+
+.gift-coin-icon {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  border-radius: 13px;
+
+  background:
+    rgba(255, 202, 40, 0.12);
+
+  border: 1px solid rgba(255, 202, 40, 0.2);
+
+  font-size: 21px;
+}
+
+
+.gift-coin-label {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 10px;
+
+  text-transform: uppercase;
+
+  letter-spacing: 1px;
+
+  font-weight: 800;
+}
+
+
+.gift-coin-balance-left strong {
+  display: block;
+
+  overflow: hidden;
+
+  color: #fff;
+
+  font-size: 14px;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+
+.gift-cost {
+  flex: 0 0 auto;
+
+  text-align: right;
+}
+
+
+.gift-cost span {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color: rgba(255, 255, 255, 0.4);
+
+  font-size: 10px;
+
+  text-transform: uppercase;
+
+  letter-spacing: 1px;
+
+  font-weight: 800;
+}
+
+
+.gift-cost strong {
+  color: #ffca28;
+
+  font-size: 15px;
+
+  text-shadow:
+    0 0 14px rgba(255, 202, 40, 0.25);
+}
+
+
+/* ============================================================================
+   CATEGORY ROW
+============================================================================ */
+
+.gift-category-row {
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  margin-bottom: 20px;
+
+  padding: 5px;
+
+  overflow-x: auto;
+
+  scrollbar-width: none;
+
+  border-radius: 15px;
+
+  background: rgba(255, 255, 255, 0.035);
+}
+
+
+.gift-category-row::-webkit-scrollbar {
+  display: none;
+}
+
+
+.gift-category {
+  flex: 0 0 auto;
+
+  padding: 9px 17px;
+
+  border: 0;
+
+  border-radius: 11px;
+
+  background: transparent;
+
+  color: rgba(255, 255, 255, 0.52);
+
+  font-size: 12px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+
+.gift-category:hover {
+  color: #fff;
+
+  background: rgba(255, 255, 255, 0.06);
+}
+
+
+.gift-category:active {
+  transform: scale(0.96);
+}
+
+
+.gift-category.active {
+  color: #fff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ff9900,
+      #ff6b00
+    );
+
+  box-shadow:
+    0 5px 20px rgba(255, 153, 0, 0.22);
+}
+
+
+/* ============================================================================
+   GIFT GRID
+============================================================================ */
+
+.gift-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      auto-fill,
+      minmax(145px, 1fr)
+    );
+
+  gap: 13px;
+}
+
+
+/* ============================================================================
+   GENERIC GIFT CARD SUPPORT
+
+   These selectors support the common GiftCard class names used by the
+   Fockis gift components.
+============================================================================ */
+
+.gift-card,
+.gift-item {
+  position: relative;
+
+  min-width: 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  padding: 16px 12px 13px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+
+  border-radius: 19px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.065),
+      rgba(255, 255, 255, 0.018)
+    );
+
+  color: #fff;
+
+  cursor: pointer;
+
+  overflow: hidden;
+
+  transition:
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+
+.gift-card::before,
+.gift-item::before {
+  content: "";
+
+  position: absolute;
+
+  left: 10%;
+  right: 10%;
+  top: -35px;
+
+  height: 80px;
+
+  border-radius: 50%;
+
+  background: rgba(255, 153, 0, 0.12);
+
+  filter: blur(25px);
+
+  opacity: 0;
+
+  transition: opacity 0.25s ease;
+}
+
+
+.gift-card:hover,
+.gift-item:hover {
+  transform: translateY(-5px);
+
+  border-color: rgba(255, 153, 0, 0.38);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 153, 0, 0.12),
+      rgba(255, 255, 255, 0.035)
+    );
+
+  box-shadow:
+    0 15px 35px rgba(0, 0, 0, 0.3),
+    0 0 25px rgba(255, 153, 0, 0.08);
+}
+
+
+.gift-card:hover::before,
+.gift-item:hover::before {
+  opacity: 1;
+}
+
+
+/* ============================================================================
+   GIFT EMOJI / IMAGE
+============================================================================ */
+
+.gift-card-emoji,
+.gift-item-emoji,
+.gift-card-icon,
+.gift-item-icon {
+  position: relative;
+
+  z-index: 1;
+
+  width: 82px;
+  height: 82px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 10px;
+
+  border-radius: 22px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.10),
+      rgba(255, 255, 255, 0.025) 65%
+    );
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+
+  font-size: 45px;
+
+  line-height: 1;
+
+  transition:
+    transform 0.25s ease,
+    filter 0.25s ease;
+}
+
+
+.gift-card:hover .gift-card-emoji,
+.gift-card:hover .gift-item-emoji,
+.gift-item:hover .gift-card-emoji,
+.gift-item:hover .gift-item-emoji,
+.gift-card:hover .gift-card-icon,
+.gift-item:hover .gift-item-icon {
+  transform: scale(1.08);
+
+  filter:
+    drop-shadow(
+      0 0 15px
+      rgba(255, 153, 0, 0.32)
+    );
+}
+
+
+/* ============================================================================
+   GIFT NAME
+============================================================================ */
+
+.gift-card-name,
+.gift-item-name {
+  position: relative;
+
+  z-index: 1;
+
+  width: 100%;
+
+  margin-bottom: 4px;
+
+  color: #fff;
+
+  font-size: 13px;
+
+  font-weight: 900;
+
+  line-height: 1.2;
+
+  text-align: center;
+}
+
+
+/* ============================================================================
+   DESCRIPTION
+============================================================================ */
+
+.gift-card-description,
+.gift-item-description {
+  position: relative;
+
+  z-index: 1;
+
+  width: 100%;
+
+  min-height: 34px;
+
+  margin-bottom: 9px;
+
+  color: rgba(255, 255, 255, 0.42);
+
+  font-size: 9px;
+
+  line-height: 1.45;
+
+  text-align: center;
+
+  display: -webkit-box;
+
+  -webkit-line-clamp: 2;
+
+  -webkit-box-orient: vertical;
+
+  overflow: hidden;
+}
+
+
+/* ============================================================================
+   COIN PRICE
+============================================================================ */
+
+.gift-card-price,
+.gift-item-price,
+.gift-price {
+  position: relative;
+
+  z-index: 1;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 4px;
+
+  margin-top: auto;
+
+  padding: 5px 9px;
+
+  border-radius: 999px;
+
+  background: rgba(255, 202, 40, 0.09);
+
+  border: 1px solid rgba(255, 202, 40, 0.13);
+
+  color: #ffca28;
+
+  font-size: 11px;
+
+  font-weight: 900;
+}
+
+
+/* ============================================================================
+   RARITY
+============================================================================ */
+
+.gift-card-rarity,
+.gift-item-rarity,
+.gift-rarity {
+  position: relative;
+
+  z-index: 1;
+
+  margin-top: 8px;
+
+  padding: 3px 8px;
+
+  border-radius: 999px;
+
+  font-size: 8px;
+
+  font-weight: 950;
+
+  letter-spacing: 1px;
+
+  text-transform: uppercase;
+
+  background: rgba(255, 255, 255, 0.05);
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+
+.gift-rarity-basic,
+.gift-card-rarity-basic {
+  color: #fff;
+
+  border-color: rgba(255, 255, 255, 0.13);
+}
+
+
+.gift-rarity-common,
+.gift-card-rarity-common {
+  color: #fff;
+}
+
+
+.gift-rarity-rare,
+.gift-card-rarity-rare {
+  color: #72b7ff;
+
+  background: rgba(114, 183, 255, 0.08);
+
+  border-color: rgba(114, 183, 255, 0.2);
+}
+
+
+.gift-rarity-epic,
+.gift-card-rarity-epic {
+  color: #d18aff;
+
+  background: rgba(209, 138, 255, 0.08);
+
+  border-color: rgba(209, 138, 255, 0.2);
+}
+
+
+.gift-rarity-legendary,
+.gift-card-rarity-legendary {
+  color: #ffe06a;
+
+  background: rgba(255, 224, 106, 0.08);
+
+  border-color: rgba(255, 224, 106, 0.24);
+
+  box-shadow:
+    0 0 15px rgba(255, 193, 35, 0.08);
+}
+
+
+.gift-rarity-diamond,
+.gift-card-rarity-diamond {
+  color: #a8f7ff;
+
+  background: rgba(57, 207, 255, 0.08);
+
+  border-color: rgba(57, 207, 255, 0.24);
+
+  box-shadow:
+    0 0 18px rgba(57, 207, 255, 0.08);
+}
+
+
+/* ============================================================================
+   SELECTED GIFT
+============================================================================ */
+
+.gift-card.selected,
+.gift-card.is-selected,
+.gift-item.selected,
+.gift-item.is-selected {
+  transform: translateY(-4px);
+
+  border-color: #ff9900;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 153, 0, 0.18),
+      rgba(255, 255, 255, 0.035)
+    );
+
+  box-shadow:
+    0 0 0 1px rgba(255, 153, 0, 0.15),
+    0 15px 40px rgba(255, 153, 0, 0.14),
+    0 0 30px rgba(255, 153, 0, 0.10);
+}
+
+
+.gift-card.selected::after,
+.gift-card.is-selected::after,
+.gift-item.selected::after,
+.gift-item.is-selected::after {
+  content: "✓";
+
+  position: absolute;
+
+  top: 9px;
+  right: 9px;
+
+  width: 23px;
+  height: 23px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  color: #fff;
+
+  background: #ff9900;
+
+  box-shadow:
+    0 4px 12px rgba(255, 153, 0, 0.35);
+
+  font-size: 12px;
+  font-weight: 950;
+
+  z-index: 5;
+}
+
+
+/* ============================================================================
+   EMPTY STATE
+============================================================================ */
+
+.gift-empty-state {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-height: 240px;
+
+  padding: 30px;
+
+  border: 1px dashed rgba(255, 255, 255, 0.10);
+
+  border-radius: 20px;
+
+  background: rgba(255, 255, 255, 0.02);
+
+  text-align: center;
+}
+
+
+.gift-empty-state > span {
+  margin-bottom: 12px;
+
+  font-size: 42px;
+
+  opacity: 0.7;
+}
+
+
+.gift-empty-state strong {
+  color: #fff;
+
+  font-size: 15px;
+}
+
+
+.gift-empty-state p {
+  margin: 7px 0 0;
+
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 12px;
+}
+
+
+/* ============================================================================
+   MOBILE
+============================================================================ */
+
+@media (max-width: 700px) {
+
+  .gift-store-container {
+    width: min(100% - 18px, 620px);
+
+    padding-top: 12px;
+    padding-bottom: 40px;
+  }
+
+  .gift-store-header {
+    padding: 18px;
+
+    border-radius: 20px;
+  }
+
+  .gift-store-header-icon {
+    width: 55px;
+    height: 55px;
+
+    border-radius: 16px;
+
+    font-size: 29px;
+  }
+
+  .gift-store-header h1 {
+    font-size: 27px;
+  }
+
+  .gift-store-header p {
+    font-size: 12px;
+  }
+
+  .gift-store-live-badge {
+    display: none;
+  }
+
+  .gift-store-picker {
+    padding: 15px;
+
+    border-radius: 21px;
+  }
+
+  .gift-picker-header h2 {
+    font-size: 21px;
+  }
+
+  .gift-grid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+
+    gap: 10px;
+  }
+
+  .gift-card,
+  .gift-item {
+    padding: 12px 8px 11px;
+
+    border-radius: 16px;
+  }
+
+  .gift-card-emoji,
+  .gift-item-emoji,
+  .gift-card-icon,
+  .gift-item-icon {
+    width: 65px;
+    height: 65px;
+
+    border-radius: 18px;
+
+    font-size: 35px;
+  }
+
+  .gift-card-name,
+  .gift-item-name {
+    font-size: 11px;
+  }
+
+  .gift-card-description,
+  .gift-item-description {
+    font-size: 8px;
+  }
+
+  .gift-coin-balance {
+    padding: 11px 12px;
+  }
+}
+
+
+@media (max-width: 420px) {
+
+  .gift-store-header {
+    gap: 12px;
+  }
+
+  .gift-store-header-icon {
+    width: 48px;
+    height: 48px;
+
+    font-size: 25px;
+  }
+
+  .gift-store-header h1 {
+    font-size: 23px;
+  }
+
+  .gift-picker-header {
+    align-items: flex-start;
+  }
+
+  .gift-picker-live-dot {
+    padding: 6px 8px;
+
+    font-size: 8px;
+  }
+
+  .gift-grid {
+    gap: 8px;
+  }
+
+  .gift-card,
+  .gift-item {
+    padding: 10px 6px;
+  }
+}
+
+
+/* ============================================================================
+   ACCESSIBILITY
+============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .gift-store-page *,
+  .gift-store-page *::before,
+  .gift-store-page *::after {
+    animation: none !important;
+
+    transition: none !important;
+  }
+}

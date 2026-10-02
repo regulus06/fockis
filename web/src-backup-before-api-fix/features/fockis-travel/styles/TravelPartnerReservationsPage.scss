@@ -1,0 +1,980 @@
+@use "./_fockis-tokens" as *;
+
+/* ==========================================================================
+   FOCKIS TRAVEL — PARTNER RESERVATIONS
+   Matches:
+   pages/TravelPartnerReservationsPage.tsx
+   ========================================================================== */
+
+.travel-partner-reservations-page {
+  min-height: 100vh;
+  padding: 32px 0 72px;
+  background: $cream-100;
+  color: $text-on-light;
+  font-family: $font-body;
+  box-sizing: border-box;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  /* ------------------------------------------------------------------------
+     CONTAINER
+     ------------------------------------------------------------------------ */
+
+  .travel-partner-reservations-container {
+    width: 100%;
+    max-width: $max-width;
+    margin: 0 auto;
+    padding-left: $gutter;
+    padding-right: $gutter;
+  }
+
+  /* ------------------------------------------------------------------------
+     HEADER
+     ------------------------------------------------------------------------ */
+
+  .travel-partner-reservations-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 28px;
+    margin-bottom: 28px;
+
+    > div:first-child {
+      min-width: 0;
+    }
+
+    h1 {
+      margin: 8px 0 8px;
+      color: $navy-900;
+      font-family: $font-display;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+    }
+
+    p {
+      max-width: 700px;
+      margin: 0;
+      color: $text-on-light-muted;
+      font-size: 0.95rem;
+      line-height: 1.65;
+    }
+  }
+
+  .travel-partner-reservations-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: $blue-600;
+    font-size: 0.86rem;
+    font-weight: 750;
+    line-height: 1.3;
+    text-decoration: none;
+    transition:
+      color 0.15s ease,
+      transform 0.15s ease;
+
+    &:hover {
+      color: $navy-900;
+      transform: translateX(-2px);
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $gold-500;
+      outline-offset: 4px;
+      border-radius: 3px;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     REFRESH
+     ------------------------------------------------------------------------ */
+
+  .travel-partner-reservations-refresh {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    border: 1px solid $navy-900;
+    border-radius: $radius-pill;
+    background: $navy-900;
+    color: #ffffff;
+    font-family: $font-body;
+    font-size: 0.86rem;
+    font-weight: 800;
+    line-height: 1.2;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(10, 24, 48, 0.12);
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease,
+      transform 0.1s ease,
+      opacity 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: $navy-800;
+      border-color: $navy-800;
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:focus-visible {
+      outline: 2px solid $gold-500;
+      outline-offset: 3px;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.58;
+      box-shadow: none;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     STATS
+     ------------------------------------------------------------------------ */
+
+  .travel-partner-reservation-stats {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+
+    button {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 3px;
+      min-height: 92px;
+      padding: 16px 18px;
+      border: 1px solid rgba(10, 24, 48, 0.09);
+      border-radius: $radius-md;
+      background: $cream-50;
+      color: $navy-900;
+      font-family: $font-body;
+      text-align: left;
+      cursor: pointer;
+      box-shadow: $shadow-card;
+      transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.15s ease;
+
+      &:hover {
+        border-color: rgba(10, 24, 48, 0.2);
+        box-shadow: $shadow-card-hover;
+        transform: translateY(-1px);
+      }
+
+      &:focus-visible {
+        outline: 2px solid $gold-500;
+        outline-offset: 3px;
+      }
+
+      &.active {
+        border-color: $gold-500;
+        background: #fff9ed;
+        box-shadow:
+          0 0 0 2px rgba(240, 169, 62, 0.12),
+          $shadow-card;
+      }
+
+      span {
+        color: $navy-900;
+        font-size: 1.55rem;
+        font-weight: 900;
+        line-height: 1.05;
+      }
+
+      small {
+        color: $text-on-light-muted;
+        font-size: 0.76rem;
+        font-weight: 750;
+        line-height: 1.3;
+      }
+
+      &.active small {
+        color: $gold-600;
+      }
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     TOOLBAR
+     ------------------------------------------------------------------------ */
+
+  .travel-partner-reservations-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+
+  .travel-partner-reservations-search {
+    position: relative;
+    width: 100%;
+    max-width: 680px;
+    display: flex;
+    align-items: center;
+
+    > span {
+      position: absolute;
+      left: 15px;
+      z-index: 1;
+      pointer-events: none;
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    input {
+      width: 100%;
+      min-height: 48px;
+      padding: 11px 15px 11px 44px;
+      border: 1px solid rgba(10, 24, 48, 0.14);
+      border-radius: $radius-pill;
+      background: #ffffff;
+      color: $text-on-light;
+      font-family: $font-body;
+      font-size: 0.88rem;
+      line-height: 1.4;
+      outline: none;
+      box-shadow: 0 3px 12px rgba(10, 24, 48, 0.05);
+      transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+
+      &::placeholder {
+        color: #8290a2;
+      }
+
+      &:hover {
+        border-color: rgba(10, 24, 48, 0.25);
+      }
+
+      &:focus {
+        border-color: $blue-600;
+        box-shadow:
+          0 0 0 3px rgba(28, 79, 114, 0.1),
+          0 3px 12px rgba(10, 24, 48, 0.05);
+      }
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     ERROR
+     ------------------------------------------------------------------------ */
+
+  .travel-partner-reservations-error {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding: 15px 17px;
+    border: 1px solid rgba(209, 85, 74, 0.25);
+    border-radius: $radius-md;
+    background: #fff1ef;
+    color: #8f3028;
+
+    strong {
+      font-size: 0.86rem;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+
+    > span {
+      min-width: 0;
+      color: #9a514a;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    button {
+      min-height: 38px;
+      padding: 8px 14px;
+      border: 1px solid rgba(143, 48, 40, 0.28);
+      border-radius: $radius-pill;
+      background: #ffffff;
+      color: #8f3028;
+      font-family: $font-body;
+      font-size: 0.8rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition:
+        background 0.15s ease,
+        border-color 0.15s ease;
+
+      &:hover {
+        background: #fff8f7;
+        border-color: rgba(143, 48, 40, 0.45);
+      }
+
+      &:focus-visible {
+        outline: 2px solid $danger;
+        outline-offset: 3px;
+      }
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     LOADING
+     ------------------------------------------------------------------------ */
+
+  .travel-partner-reservations-loading {
+    min-height: 390px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 40px 20px;
+    background: $cream-50;
+    border: 1px solid rgba(10, 24, 48, 0.08);
+    border-radius: $radius-lg;
+    box-shadow: $shadow-card;
+    text-align: center;
+
+    h2 {
+      margin: 8px 0 0;
+      color: $navy-900;
+      font-family: $font-display;
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    p {
+      margin: 0;
+      color: $text-on-light-muted;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+  }
+
+  .travel-partner-reservations-spinner {
+    width: 42px;
+    height: 42px;
+    border: 4px solid rgba(22, 58, 95, 0.12);
+    border-top-color: $gold-500;
+    border-radius: 50%;
+    animation: travel-partner-reservations-spin 0.75s linear infinite;
+  }
+
+  /* ------------------------------------------------------------------------
+     EMPTY
+     ------------------------------------------------------------------------ */
+
+  .travel-partner-reservations-empty {
+    min-height: 390px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 42px 24px;
+    background: $cream-50;
+    border: 1px solid rgba(10, 24, 48, 0.08);
+    border-radius: $radius-lg;
+    box-shadow: $shadow-card;
+    text-align: center;
+
+    h2 {
+      margin: 15px 0 8px;
+      color: $navy-900;
+      font-family: $font-display;
+      font-size: 1.55rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    p {
+      max-width: 560px;
+      margin: 0;
+      color: $text-on-light-muted;
+      font-size: 0.88rem;
+      line-height: 1.65;
+    }
+
+    > button {
+      margin-top: 20px;
+      min-height: 42px;
+      padding: 9px 17px;
+      border: 1px solid $navy-900;
+      border-radius: $radius-pill;
+      background: $navy-900;
+      color: #ffffff;
+      font-family: $font-body;
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition:
+        background 0.15s ease,
+        transform 0.1s ease;
+
+      &:hover {
+        background: $navy-800;
+        transform: translateY(-1px);
+      }
+
+      &:focus-visible {
+        outline: 2px solid $gold-500;
+        outline-offset: 3px;
+      }
+    }
+  }
+
+  .travel-partner-reservations-empty-icon {
+    width: 68px;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: $cream-100;
+    font-size: 1.8rem;
+  }
+
+  /* ------------------------------------------------------------------------
+     TABLE CARD
+     ------------------------------------------------------------------------ */
+
+  .travel-partner-reservations-table-card {
+    width: 100%;
+    overflow: hidden;
+    background: $cream-50;
+    border: 1px solid rgba(10, 24, 48, 0.09);
+    border-radius: $radius-lg;
+    box-shadow: $shadow-card;
+  }
+
+  .travel-partner-reservations-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .travel-partner-reservations-table {
+    width: 100%;
+    min-width: 1040px;
+    border-collapse: collapse;
+    border-spacing: 0;
+    font-size: 0.83rem;
+
+    thead {
+      background: $navy-900;
+      color: #ffffff;
+    }
+
+    th {
+      padding: 14px 16px;
+      border: 0;
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      line-height: 1.3;
+      text-align: left;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(10, 24, 48, 0.07);
+      transition: background 0.12s ease;
+
+      &:last-child {
+        border-bottom: 0;
+      }
+
+      &:hover {
+        background: rgba(247, 244, 236, 0.65);
+      }
+    }
+
+    td {
+      padding: 17px 16px;
+      vertical-align: middle;
+      color: $text-on-light;
+      line-height: 1.45;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     RESERVATION CODE
+     ------------------------------------------------------------------------ */
+
+  .travel-partner-reservation-code {
+    min-width: 125px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    strong {
+      color: $navy-900;
+      font-size: 0.83rem;
+      font-weight: 850;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
+    }
+
+    span {
+      color: $text-on-light-muted;
+      font-size: 0.7rem;
+      line-height: 1.3;
+      text-transform: capitalize;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     CUSTOMER
+     ------------------------------------------------------------------------ */
+
+  .travel-partner-reservation-customer {
+    min-width: 190px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    > img,
+    .travel-partner-reservation-avatar {
+      flex: 0 0 auto;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+
+    > img {
+      display: block;
+      object-fit: cover;
+      background: $cream-100;
+    }
+
+    .travel-partner-reservation-avatar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: $navy-900;
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 850;
+    }
+
+    > div:last-child {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    strong {
+      color: $navy-900;
+      font-size: 0.82rem;
+      font-weight: 800;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    span {
+      color: $text-on-light-muted;
+      font-size: 0.7rem;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     LISTING
+     ------------------------------------------------------------------------ */
+
+  .travel-partner-reservation-listing {
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    strong {
+      color: $navy-900;
+      font-size: 0.82rem;
+      font-weight: 800;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    span {
+      color: $text-on-light-muted;
+      font-size: 0.7rem;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     DATES
+     ------------------------------------------------------------------------ */
+
+  .travel-partner-reservation-dates {
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    strong {
+      color: $navy-900;
+      font-size: 0.81rem;
+      font-weight: 800;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+
+    span {
+      color: $text-on-light-muted;
+      font-size: 0.7rem;
+      line-height: 1.4;
+      white-space: nowrap;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     STATUS
+     ------------------------------------------------------------------------ */
+
+  .travel-partner-reservation-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 29px;
+    padding: 5px 10px;
+    border: 1px solid transparent;
+    border-radius: $radius-pill;
+    font-size: 0.7rem;
+    font-weight: 850;
+    line-height: 1;
+    white-space: nowrap;
+
+    &.pending {
+      background: #fff7df;
+      border-color: rgba(214, 144, 31, 0.25);
+      color: #93620e;
+    }
+
+    &.confirmed {
+      background: rgba(63, 166, 106, 0.11);
+      border-color: rgba(63, 166, 106, 0.25);
+      color: #287447;
+    }
+
+    &.completed {
+      background: rgba(28, 79, 114, 0.1);
+      border-color: rgba(28, 79, 114, 0.22);
+      color: $blue-600;
+    }
+
+    &.cancelled {
+      background: rgba(209, 85, 74, 0.1);
+      border-color: rgba(209, 85, 74, 0.22);
+      color: #a23d34;
+    }
+
+    &.refunded {
+      background: rgba(91, 107, 129, 0.1);
+      border-color: rgba(91, 107, 129, 0.2);
+      color: #536174;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     VIEW DETAILS
+     ------------------------------------------------------------------------ */
+
+  .travel-partner-reservation-view {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 35px;
+    padding: 7px 12px;
+    border: 1px solid rgba(28, 79, 114, 0.24);
+    border-radius: $radius-pill;
+    background: transparent;
+    color: $blue-600;
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1.2;
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease,
+      border-color 0.15s ease,
+      transform 0.1s ease;
+
+    &:hover {
+      background: $blue-600;
+      border-color: $blue-600;
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+      outline: 2px solid $gold-500;
+      outline-offset: 3px;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     LARGE TABLET
+     ------------------------------------------------------------------------ */
+
+  @include bp-down($bp-lg) {
+    padding: 26px 0 60px;
+
+    .travel-partner-reservations-container {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    .travel-partner-reservation-stats {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .travel-partner-reservations-table {
+      min-width: 1000px;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     TABLET
+     ------------------------------------------------------------------------ */
+
+  @include bp-down($bp-md) {
+    padding: 22px 0 52px;
+
+    .travel-partner-reservations-container {
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+
+    .travel-partner-reservations-header {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 17px;
+      margin-bottom: 22px;
+
+      > div:last-child {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      p {
+        font-size: 0.9rem;
+      }
+    }
+
+    .travel-partner-reservations-refresh {
+      flex: 0 0 auto;
+    }
+
+    .travel-partner-reservation-stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+
+      button {
+        min-height: 82px;
+        padding: 14px 15px;
+      }
+    }
+
+    .travel-partner-reservations-search {
+      max-width: none;
+    }
+
+    .travel-partner-reservations-error {
+      grid-template-columns: 1fr;
+      gap: 8px;
+
+      button {
+        justify-self: start;
+      }
+    }
+
+    .travel-partner-reservations-table-card {
+      border-radius: $radius-md;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     MOBILE
+     ------------------------------------------------------------------------ */
+
+  @include bp-down($bp-sm) {
+    padding: 16px 0 42px;
+
+    .travel-partner-reservations-container {
+      padding-left: 14px;
+      padding-right: 14px;
+    }
+
+    .travel-partner-reservations-header {
+      gap: 14px;
+      margin-bottom: 18px;
+
+      h1 {
+        margin-top: 7px;
+        margin-bottom: 7px;
+        font-size: 2rem;
+      }
+
+      p {
+        font-size: 0.86rem;
+        line-height: 1.55;
+      }
+
+      > div:last-child {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+      }
+    }
+
+    .travel-partner-reservations-refresh {
+      width: 100%;
+    }
+
+    .travel-partner-reservation-stats {
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+
+      button {
+        min-height: 76px;
+        padding: 13px;
+
+        span {
+          font-size: 1.35rem;
+        }
+
+        small {
+          font-size: 0.7rem;
+        }
+      }
+    }
+
+    .travel-partner-reservations-toolbar {
+      margin-bottom: 14px;
+    }
+
+    .travel-partner-reservations-search {
+      input {
+        min-height: 46px;
+        padding-left: 42px;
+        font-size: 0.82rem;
+      }
+    }
+
+    .travel-partner-reservations-loading,
+    .travel-partner-reservations-empty {
+      min-height: 330px;
+      border-radius: $radius-md;
+    }
+
+    .travel-partner-reservations-loading {
+      padding: 30px 18px;
+
+      h2 {
+        font-size: 1.3rem;
+      }
+    }
+
+    .travel-partner-reservations-empty {
+      padding: 34px 18px;
+
+      h2 {
+        font-size: 1.35rem;
+      }
+
+      p {
+        font-size: 0.82rem;
+      }
+    }
+
+    .travel-partner-reservations-table-card {
+      margin-left: 0;
+      margin-right: 0;
+    }
+
+    .travel-partner-reservations-table {
+      min-width: 980px;
+
+      th {
+        padding: 12px 13px;
+        font-size: 0.68rem;
+      }
+
+      td {
+        padding: 14px 13px;
+      }
+    }
+
+    .travel-partner-reservation-customer {
+      min-width: 175px;
+    }
+
+    .travel-partner-reservation-listing {
+      min-width: 135px;
+    }
+
+    .travel-partner-reservation-dates {
+      min-width: 140px;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     VERY SMALL PHONES
+     ------------------------------------------------------------------------ */
+
+  @media (max-width: 380px) {
+    .travel-partner-reservations-header {
+      h1 {
+        font-size: 1.8rem;
+      }
+    }
+
+    .travel-partner-reservation-stats {
+      grid-template-columns: 1fr;
+
+      button {
+        min-height: 68px;
+      }
+    }
+
+    .travel-partner-reservations-table {
+      min-width: 940px;
+    }
+  }
+}
+
+/* ==========================================================================
+   ANIMATION
+   ========================================================================== */
+
+@keyframes travel-partner-reservations-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

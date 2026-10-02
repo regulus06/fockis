@@ -1,0 +1,455 @@
+/* ============================================================================
+   FOCKIS BUSINESS → SHOP RAIL
+============================================================================ */
+
+.business-shop-rail {
+  width: 100%;
+  padding: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 122, 0, 0.18);
+  border-radius: 20px;
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(255, 153, 0, 0.1),
+      transparent 36%
+    ),
+    #fff;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+}
+
+.business-shop-rail__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.business-shop-rail__eyebrow {
+  display: block;
+  margin-bottom: 4px;
+  color: #c85f00;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.business-shop-rail__header h2 {
+  margin: 0;
+  color: #171717;
+  font-size: 21px;
+  line-height: 1.25;
+}
+
+.business-shop-rail__header p {
+  margin: 5px 0 0;
+  color: #666;
+  font-size: 13px;
+}
+
+.business-shop-rail__view-all {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 13px;
+  border-radius: 999px;
+  color: #fff;
+  background: #ff8a00;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+  transition:
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.business-shop-rail__view-all:hover {
+  transform: translateY(-1px);
+  background: #e97800;
+}
+
+/* ============================================================================
+   STORE CARD
+============================================================================ */
+
+.business-shop-rail__store {
+  display: block;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  color: inherit;
+  background: #fff;
+  text-decoration: none;
+}
+
+.business-shop-rail__banner {
+  width: 100%;
+  height: 135px;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 153, 0, 0.9),
+      rgba(255, 102, 0, 0.9)
+    );
+}
+
+.business-shop-rail__banner img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.business-shop-rail__banner-placeholder {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: #fff;
+  font-size: 42px;
+}
+
+.business-shop-rail__store-info {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px;
+}
+
+.business-shop-rail__logo {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  place-items: center;
+  overflow: hidden;
+  border: 3px solid #fff;
+  border-radius: 14px;
+  background: #fff7ed;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.business-shop-rail__logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.business-shop-rail__logo span {
+  font-size: 26px;
+}
+
+.business-shop-rail__store-copy {
+  min-width: 0;
+}
+
+.business-shop-rail__store-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.business-shop-rail__store-name strong {
+  overflow: hidden;
+  color: #171717;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+}
+
+.business-shop-rail__verified {
+  display: inline-grid;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #1877f2;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.business-shop-rail__location,
+.business-shop-rail__stats {
+  display: block;
+  margin-top: 4px;
+  color: #777;
+  font-size: 11px;
+}
+
+.business-shop-rail__stats {
+  color: #555;
+  font-weight: 700;
+}
+
+/* ============================================================================
+   PRODUCTS
+============================================================================ */
+
+.business-shop-rail__products {
+  display: grid;
+  grid-template-columns: repeat(
+    3,
+    minmax(0, 1fr)
+  );
+  gap: 11px;
+  margin-top: 13px;
+}
+
+.business-shop-rail__product {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 13px;
+  color: inherit;
+  background: #fff;
+  text-decoration: none;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.business-shop-rail__product:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.business-shop-rail__product-image {
+  display: grid;
+  width: 100%;
+  height: 135px;
+  place-items: center;
+  overflow: hidden;
+  background: #f5f5f5;
+}
+
+.business-shop-rail__product-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.business-shop-rail__product-image span {
+  font-size: 32px;
+}
+
+.business-shop-rail__product-body {
+  display: grid;
+  gap: 5px;
+  padding: 10px;
+}
+
+.business-shop-rail__product-body strong {
+  overflow: hidden;
+  color: #222;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.business-shop-rail__product-body span {
+  color: #c85f00;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+/* ============================================================================
+   LOADING
+============================================================================ */
+
+.business-shop-rail__loading {
+  display: grid;
+  gap: 12px;
+}
+
+.business-shop-rail__skeleton {
+  border-radius: 12px;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.055),
+      rgba(0, 0, 0, 0.025),
+      rgba(0, 0, 0, 0.055)
+    );
+  background-size: 200% 100%;
+  animation: business-shop-skeleton 1.4s ease infinite;
+}
+
+.business-shop-rail__skeleton--banner {
+  height: 130px;
+}
+
+.business-shop-rail__skeleton--text {
+  width: 45%;
+  height: 20px;
+}
+
+.business-shop-rail__skeleton--products {
+  height: 120px;
+}
+
+.business-shop-rail__products-loading {
+  display: grid;
+  grid-template-columns: repeat(
+    3,
+    minmax(0, 1fr)
+  );
+  gap: 11px;
+  margin-top: 13px;
+}
+
+.business-shop-rail__product-skeleton {
+  height: 175px;
+  border-radius: 13px;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.055),
+      rgba(0, 0, 0, 0.025),
+      rgba(0, 0, 0, 0.055)
+    );
+  background-size: 200% 100%;
+  animation: business-shop-skeleton 1.4s ease infinite;
+}
+
+@keyframes business-shop-skeleton {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ============================================================================
+   MESSAGES
+============================================================================ */
+
+.business-shop-rail__error,
+.business-shop-rail__products-message {
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.035);
+}
+
+.business-shop-rail__error {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(220, 50, 47, 0.14);
+  background: rgba(220, 50, 47, 0.05);
+}
+
+.business-shop-rail__error strong {
+  font-size: 13px;
+}
+
+.business-shop-rail__error span,
+.business-shop-rail__products-message span {
+  color: #666;
+  font-size: 12px;
+}
+
+/* ============================================================================
+   MOBILE
+============================================================================ */
+
+@media (max-width: 760px) {
+  .business-shop-rail {
+    padding: 15px;
+    border-radius: 17px;
+  }
+
+  .business-shop-rail__header {
+    align-items: flex-start;
+  }
+
+  .business-shop-rail__header h2 {
+    font-size: 18px;
+  }
+
+  .business-shop-rail__header p {
+    font-size: 12px;
+  }
+
+  .business-shop-rail__view-all {
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 11px;
+  }
+
+  .business-shop-rail__products {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding-bottom: 4px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+  }
+
+  .business-shop-rail__product {
+    flex: 0 0 175px;
+    scroll-snap-align: start;
+  }
+
+  .business-shop-rail__product-image {
+    height: 125px;
+  }
+
+  .business-shop-rail__products-loading {
+    display: flex;
+    overflow: hidden;
+  }
+
+  .business-shop-rail__product-skeleton {
+    flex: 0 0 175px;
+  }
+}
+
+@media (max-width: 500px) {
+  .business-shop-rail__header {
+    display: block;
+  }
+
+  .business-shop-rail__view-all {
+    margin-top: 10px;
+  }
+
+  .business-shop-rail__banner {
+    height: 115px;
+  }
+
+  .business-shop-rail__store-info {
+    padding: 11px;
+  }
+
+  .business-shop-rail__logo {
+    width: 52px;
+    height: 52px;
+    flex-basis: 52px;
+  }
+}
+
+/* ============================================================================
+   REDUCED MOTION
+============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .business-shop-rail__view-all,
+  .business-shop-rail__product {
+    transition: none;
+  }
+
+  .business-shop-rail__skeleton,
+  .business-shop-rail__product-skeleton {
+    animation: none;
+  }
+}

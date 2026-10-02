@@ -1,0 +1,141 @@
+/* ============================================================================
+   FOCKIS PROFILE FRIENDS
+   src/styles/FockisProfileFriends.scss
+
+   Already used the theme's CSS variables, so colors already resolve to
+   the Clark State navy/gold palette automatically. Two consistency fixes
+   applied here: the heading now uses the serif display font like every
+   other section heading in the redesign, and the avatar is squared
+   instead of circular to match FockisPost/Sidebar/RightRail avatars.
+============================================================================ */
+
+@use "./fockis-theme";
+
+.fk-profile-friends {
+  h3 {
+    margin: 0 0 14px;
+
+    color: var(--fk-text);
+
+    font-family: var(--fk-font-display);
+    font-size: 17px;
+    font-weight: 700;
+  }
+}
+
+.fk-profile-friends__empty {
+  padding: 32px 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+
+  border: 1px dashed var(--fk-border-strong);
+  border-radius: var(--fk-r-lg);
+
+  background: var(--fk-surface);
+  color: var(--fk-text-2);
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fk-profile-friends__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+
+  gap: 12px;
+}
+
+.fk-profile-friend {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 12px;
+
+  border: 1px solid var(--fk-border);
+  border-top: 3px solid transparent;
+  border-radius: var(--fk-r-md);
+
+  background: var(--fk-surface);
+
+  transition:
+    box-shadow var(--fk-fast) var(--fk-ease),
+    border-top-color var(--fk-fast) var(--fk-ease);
+
+  &:hover {
+    box-shadow: var(--fk-shadow-sm);
+    border-top-color: var(--fk-fjord);
+  }
+}
+
+.fk-profile-friend__avatar {
+  width: 48px;
+  height: 48px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--fk-r-sm);
+
+  overflow: hidden;
+
+  background: var(--fk-fjord);
+  color: var(--fk-amber-bright);
+
+  font-family: var(--fk-font-display);
+  font-size: 17px;
+  font-weight: 700;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.fk-profile-friend__info {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  strong {
+    color: var(--fk-text);
+
+    font-size: 14px;
+    font-weight: 700;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span {
+    color: var(--fk-text-2);
+    font-size: 12.5px;
+  }
+
+  small {
+    margin-top: 2px;
+
+    color: var(--fk-text-3);
+    font-size: 11.5px;
+  }
+}
+
+/* ============================================================================
+   MOBILE
+============================================================================ */
+
+@media (max-width: 767px) {
+  .fk-profile-friends__grid {
+    grid-template-columns: 1fr;
+  }
+}

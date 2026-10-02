@@ -1,0 +1,2498 @@
+// =============================================================
+// Admin Users — Fockis theme
+// Styles the EXISTING class names in the users admin pages.
+// No .tsx changes needed.
+// Used by Users.scss and UserDetails.scss.
+// Fonts (Fraunces + Inter) load from index.html.
+// =============================================================
+
+// ---------- Mixins ----------
+@mixin tokens {
+  --ua-ink: #0a1220;
+  --ua-navy-900: #0d2238;
+  --ua-navy-700: #133a5e;
+  --ua-navy-500: #1d5285;
+  --ua-amber: #f2a93b;
+  --ua-amber-strong: #e39520;
+  --ua-bg: #eef2f7;
+  --ua-surface: #ffffff;
+  --ua-soft: #f8fafc;
+  --ua-border: #e2e8f0;
+  --ua-border-strong: #cbd5e1;
+  --ua-text: #0f172a;
+  --ua-muted: #64748b;
+  --ua-faint: #94a3b8;
+  --ua-success: #15803d;
+  --ua-success-bg: #dcfce7;
+  --ua-warning: #b45309;
+  --ua-warning-bg: #fef3c7;
+  --ua-danger: #b91c1c;
+  --ua-danger-bg: #fee2e2;
+  --ua-info: #1d4ed8;
+  --ua-info-bg: #dbeafe;
+  --ua-serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --ua-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ua-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+  --ua-pill: 999px;
+  --ua-radius: 16px;
+  --ua-radius-lg: 22px;
+  --ua-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+  --ua-shadow-pop: 0 18px 40px rgba(10, 18, 32, 0.22);
+}
+
+@mixin hero {
+  position: relative;
+  overflow: hidden;
+  padding: 40px 44px 36px;
+  border-radius: 24px;
+  border-bottom: 3px solid var(--ua-amber);
+  background:
+    radial-gradient(380px 260px at 82% 38%, rgba(242, 169, 59, 0.18), transparent 70%),
+    linear-gradient(115deg, var(--ua-ink) 0%, var(--ua-navy-900) 55%, #16456e 100%);
+  color: #fff;
+
+  &::after {
+    content: "";
+    position: absolute;
+    right: -70px;
+    bottom: -130px;
+    width: 290px;
+    height: 290px;
+    border: 3px solid rgba(29, 82, 133, 0.55);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (max-width: 640px) {
+    padding: 28px 20px 26px;
+    border-radius: 18px;
+  }
+}
+
+@mixin eyebrow {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--ua-amber);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+@mixin hero-title {
+  margin: 0;
+  color: #fff;
+  font-family: var(--ua-serif);
+  font-size: clamp(30px, 4.2vw, 48px);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+@mixin hero-text {
+  max-width: 64ch;
+  margin: 12px 0 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+@mixin btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 22px;
+  border: 1px solid transparent;
+  border-radius: var(--ua-pill);
+  font: 600 14px/1 var(--ua-sans);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+@mixin btn-primary {
+  @include btn;
+  background: var(--ua-amber);
+  color: var(--ua-ink);
+  box-shadow: 0 8px 22px rgba(242, 169, 59, 0.28);
+
+  &:hover:not(:disabled) {
+    background: var(--ua-amber-strong);
+  }
+}
+
+@mixin btn-ghost {
+  @include btn;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.14);
+  }
+}
+
+@mixin btn-outline {
+  @include btn;
+  height: 38px;
+  padding: 0 16px;
+  background: var(--ua-surface);
+  color: var(--ua-text);
+  border-color: var(--ua-border);
+  font-size: 13px;
+
+  &:hover:not(:disabled) {
+    background: var(--ua-soft);
+    border-color: var(--ua-border-strong);
+  }
+}
+
+@mixin panel {
+  overflow: hidden;
+  border: 1px solid var(--ua-border);
+  border-radius: var(--ua-radius-lg);
+  background: var(--ua-surface);
+  box-shadow: var(--ua-shadow);
+}
+
+@mixin panel-title {
+  margin: 0;
+  color: var(--ua-text);
+  font-family: var(--ua-serif);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+@mixin select {
+  height: 40px;
+  padding: 0 38px 0 16px;
+  border: 1px solid var(--ua-border);
+  border-radius: var(--ua-pill);
+  background: var(--ua-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.8' fill='none'/%3E%3C/svg%3E") no-repeat right 15px center;
+  color: var(--ua-text);
+  font: 500 13px var(--ua-sans);
+  appearance: none;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--ua-border-strong);
+  }
+
+  &:focus {
+    border-color: var(--ua-amber);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(242, 169, 59, 0.18);
+  }
+}
+
+@mixin stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 20px 22px;
+  border: 1px solid var(--ua-border);
+  border-radius: var(--ua-radius);
+  background: var(--ua-surface);
+}
+
+@mixin stat-value {
+  color: var(--ua-text);
+  font-family: var(--ua-serif);
+  font-size: clamp(24px, 2.4vw, 30px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+@mixin stat-feature {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--ua-ink), var(--ua-navy-700));
+  color: #fff;
+}
+
+@mixin error-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  padding: 14px 18px;
+  border: 1px solid #fecaca;
+  border-left: 4px solid var(--ua-danger);
+  border-radius: 10px;
+  background: var(--ua-danger-bg);
+  color: #7f1d1d;
+  font-size: 14px;
+
+  button {
+    @include btn-outline;
+    height: 34px;
+    margin-left: auto;
+    border-color: currentColor;
+    color: inherit;
+  }
+}
+
+@mixin table-base {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+
+  th {
+    padding: 13px 18px;
+    background: var(--ua-soft);
+    border-bottom: 1px solid var(--ua-border);
+    color: var(--ua-muted);
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--ua-border);
+    color: var(--ua-text);
+    vertical-align: middle;
+  }
+
+  tbody tr:hover {
+    background: var(--ua-soft);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+@mixin skeleton {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: ua-shimmer 1.4s ease-in-out infinite;
+}
+
+@mixin link-card {
+  border: 1px solid var(--ua-border);
+  border-radius: 14px;
+  background: var(--ua-soft);
+  color: var(--ua-text);
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    border-color: var(--ua-amber);
+    background: var(--ua-surface);
+    color: var(--ua-text);
+  }
+}
+
+@mixin icon-tile($size: 38px) {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: $size;
+  height: $size;
+  border-radius: 11px;
+  background: linear-gradient(135deg, var(--ua-navy-700), var(--ua-navy-500));
+  color: var(--ua-amber);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+@keyframes ua-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+// =============================================================
+// Page roots
+// =============================================================
+.admin-users-page,
+.admin-user-details-page,
+.admin-user-subpage {
+  @include tokens;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 24px 32px 64px;
+  background: var(--ua-bg);
+  color: var(--ua-text);
+  font-family: var(--ua-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--ua-amber);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 640px) {
+    gap: 18px;
+    padding: 14px 12px 48px;
+  }
+}
+
+// =============================================================
+// USERS LIST PAGE
+// =============================================================
+.admin-users-page__intro {
+  @include hero;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+
+  h2 {
+    @include hero-title;
+  }
+
+  p {
+    @include hero-text;
+  }
+}
+
+.admin-users-page__eyebrow {
+  @include eyebrow;
+}
+
+.admin-users-page__intro-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-users-page__primary-button {
+  @include btn-primary;
+}
+
+.admin-users-page__secondary-button {
+  @include btn-ghost;
+}
+
+// ---------- Section shortcuts (disabled until a user is picked) ----------
+.admin-users-dashboard-navigation {
+  @include panel;
+  padding: 22px 24px 24px;
+
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+
+    .admin-users-page__eyebrow {
+      color: var(--ua-amber-strong);
+    }
+
+    h3 {
+      @include panel-title;
+      font-size: 22px;
+    }
+
+    p {
+      margin: 4px 0 0;
+      color: var(--ua-muted);
+      font-size: 14px;
+    }
+  }
+
+  &__hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: var(--ua-pill);
+    background: var(--ua-warning-bg);
+    color: var(--ua-warning);
+    font-size: 12px;
+    font-weight: 700;
+
+    &::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 10px;
+  }
+
+  &__button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--ua-border);
+    border-radius: 14px;
+    background: var(--ua-soft);
+    color: var(--ua-text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+
+    &:hover:not(:disabled) {
+      border-color: var(--ua-amber);
+      background: var(--ua-surface);
+    }
+
+    &:disabled,
+    &.is-user-dependent {
+      cursor: not-allowed;
+
+      .admin-users-dashboard-navigation__icon {
+        background: #e2e8f0;
+        color: var(--ua-muted);
+      }
+
+      .admin-users-dashboard-navigation__arrow {
+        opacity: 0;
+      }
+    }
+  }
+
+  &__icon {
+    @include icon-tile(34px);
+    font-size: 14px;
+  }
+
+  &__content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+
+    strong {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    small {
+      overflow: hidden;
+      color: var(--ua-muted);
+      font-size: 11px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__arrow {
+    color: var(--ua-faint);
+  }
+}
+
+// ---------- Stat cards (UserStatsCards) ----------
+.admin-user-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.admin-user-stat-card {
+  @include stat-card;
+  position: relative;
+
+  &__icon {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: rgba(19, 58, 94, 0.07);
+    color: var(--ua-navy-700);
+    font-size: 15px;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__label {
+    padding-right: 36px;
+    color: var(--ua-muted);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  &__value {
+    @include stat-value;
+  }
+
+  &__description {
+    color: var(--ua-muted);
+    font-size: 12px;
+  }
+
+  &__skeleton {
+    @include skeleton;
+    width: 60%;
+    height: 30px;
+  }
+
+  &:first-child {
+    @include stat-feature;
+
+    .admin-user-stat-card__label,
+    .admin-user-stat-card__description {
+      color: rgba(255, 255, 255, 0.68);
+    }
+
+    .admin-user-stat-card__value {
+      color: var(--ua-amber);
+    }
+
+    .admin-user-stat-card__icon {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--ua-amber);
+    }
+
+    .admin-user-stat-card__skeleton {
+      background: rgba(255, 255, 255, 0.14);
+    }
+  }
+}
+
+// ---------- Users panel ----------
+.admin-users-panel {
+  @include panel;
+
+  // Wide screens: let the Actions menu overflow the table instead of being clipped
+  @media (min-width: 1280px) {
+    overflow: visible;
+  }
+
+  &__header {
+    padding: 24px 24px 18px;
+
+    h3 {
+      @include panel-title;
+    }
+
+    span {
+      display: block;
+      margin-top: 4px;
+      color: var(--ua-muted);
+      font-size: 14px;
+    }
+  }
+}
+
+.admin-users-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 24px 20px;
+
+  &__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+
+    select {
+      @include select;
+    }
+  }
+
+  &__reset {
+    @include btn-outline;
+  }
+}
+
+// ---------- Search (UserSearch) ----------
+.admin-users-search {
+  display: flex;
+  gap: 8px;
+  max-width: 640px;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--ua-border);
+  border-radius: var(--ua-pill);
+  background: var(--ua-soft);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+
+  &:focus-within {
+    border-color: var(--ua-amber);
+    background: var(--ua-surface);
+    box-shadow: 0 0 0 4px rgba(242, 169, 59, 0.18);
+  }
+
+  &__field {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    min-width: 0;
+    padding-left: 14px;
+
+    input {
+      flex: 1;
+      min-width: 0;
+      height: 38px;
+      border: 0;
+      background: transparent;
+      color: var(--ua-text);
+      font: 400 14px var(--ua-sans);
+      outline: none;
+
+      &::placeholder {
+        color: var(--ua-faint);
+      }
+
+      &::-webkit-search-cancel-button {
+        display: none;
+      }
+    }
+  }
+
+  &__icon {
+    margin-right: 10px;
+    color: var(--ua-faint);
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  &__clear {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    margin-right: 4px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--ua-border);
+    color: var(--ua-muted);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--ua-border-strong);
+      color: var(--ua-text);
+    }
+  }
+
+  &__button {
+    @include btn-primary;
+    height: 38px;
+    box-shadow: none;
+  }
+}
+
+// ---------- Alert ----------
+.admin-users-alert {
+  @include error-box;
+  margin: 0 24px 20px;
+}
+
+// ---------- Users table ----------
+.admin-users-table-wrapper {
+  overflow-x: auto;
+  border-top: 1px solid var(--ua-border);
+
+  @media (min-width: 1280px) {
+    overflow: visible;
+  }
+}
+
+.admin-users-table {
+  @include table-base;
+
+  &__loading-row td div {
+    @include skeleton;
+    height: 36px;
+  }
+
+  &__loading-row:hover {
+    background: none;
+  }
+
+  &__empty {
+    padding: 56px 24px !important;
+    text-align: center;
+
+    div {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    strong {
+      font-family: var(--ua-serif);
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    span {
+      color: var(--ua-muted);
+      font-size: 14px;
+    }
+  }
+}
+
+.admin-users-user-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 220px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &__avatar {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--ua-navy-700), var(--ua-navy-500));
+    color: var(--ua-amber);
+    font-weight: 700;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    strong {
+      font-weight: 600;
+    }
+
+    small {
+      max-width: 240px;
+      overflow: hidden;
+      color: var(--ua-muted);
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &:hover strong {
+    color: var(--ua-navy-500);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+.admin-users-fockis-id {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: var(--ua-navy-700);
+  font-family: var(--ua-mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.admin-users-role {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: var(--ua-pill);
+  background: rgba(19, 58, 94, 0.07);
+  color: var(--ua-navy-700);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.admin-users-account-type {
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.admin-users-muted,
+.admin-users-last-active {
+  color: var(--ua-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.admin-users-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 24px;
+  border-top: 1px solid var(--ua-border);
+  color: var(--ua-muted);
+  font-size: 13px;
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    button {
+      @include btn-outline;
+      height: 34px;
+    }
+
+    span {
+      white-space: nowrap;
+    }
+  }
+}
+
+// =============================================================
+// STATUS BADGE (UserStatusBadge)
+// =============================================================
+.admin-user-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: var(--ua-pill);
+  background: #f1f5f9;
+  color: var(--ua-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+
+  &__icon {
+    font-size: 9px;
+    line-height: 1;
+  }
+
+  &.size-sm {
+    padding: 3px 9px;
+    font-size: 11px;
+  }
+
+  &.is-active,
+  &.is-paid {
+    background: var(--ua-success-bg);
+    color: var(--ua-success);
+  }
+
+  &.is-online {
+    background: var(--ua-success-bg);
+    color: var(--ua-success);
+
+    .admin-user-status-badge__icon {
+      text-shadow: 0 0 6px rgba(34, 197, 94, 0.8);
+    }
+  }
+
+  &.is-verified {
+    background: var(--ua-info-bg);
+    color: var(--ua-info);
+  }
+
+  &.is-pending,
+  &.is-unpaid {
+    background: var(--ua-warning-bg);
+    color: var(--ua-warning);
+  }
+
+  &.is-locked,
+  &.is-suspended,
+  &.is-banned {
+    background: var(--ua-danger-bg);
+    color: var(--ua-danger);
+  }
+
+  &.is-premium {
+    background: #fff4dc;
+    color: #9a5b00;
+  }
+
+  &.is-verified .admin-user-status-badge__icon,
+  &.is-premium .admin-user-status-badge__icon,
+  &.is-paid .admin-user-status-badge__icon,
+  &.is-locked .admin-user-status-badge__icon {
+    font-size: 11px;
+  }
+}
+
+// =============================================================
+// ACTIONS MENU (UserActions)
+// =============================================================
+.admin-user-actions {
+  position: relative;
+  display: inline-flex;
+
+  &__primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 14px;
+    border: 1px solid var(--ua-border);
+    border-radius: var(--ua-pill);
+    background: var(--ua-surface);
+    color: var(--ua-text);
+    font: 600 13px/1 var(--ua-sans);
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: var(--ua-border-strong);
+      background: var(--ua-soft);
+    }
+
+    &[aria-expanded="true"] {
+      border-color: var(--ua-navy-700);
+      background: var(--ua-navy-700);
+      color: #fff;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+  }
+
+  &__backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: default;
+  }
+
+  &__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 901;
+    width: 240px;
+    padding: 6px;
+    border: 1px solid var(--ua-border);
+    border-radius: 14px;
+    background: var(--ua-surface);
+    box-shadow: var(--ua-shadow-pop);
+
+    button {
+      display: block;
+      width: 100%;
+      padding: 10px 12px;
+      border: 0;
+      border-radius: 8px;
+      background: none;
+      color: var(--ua-text);
+      font: 500 14px var(--ua-sans);
+      text-align: left;
+      cursor: pointer;
+
+      &:hover,
+      &:focus-visible {
+        background: var(--ua-soft);
+        outline: none;
+      }
+    }
+  }
+
+  &__divider {
+    height: 1px;
+    margin: 6px 4px;
+    background: var(--ua-border);
+  }
+
+  &__menu &__close {
+    color: var(--ua-muted);
+    text-align: center;
+  }
+}
+
+// =============================================================
+// USER DETAILS PAGE
+// =============================================================
+.admin-user-details-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-user-details-back,
+.admin-user-details-refresh {
+  @include btn-outline;
+}
+
+// ---------- Profile hero ----------
+.admin-user-details-profile {
+  @include hero;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 26px;
+
+  &__avatar {
+    position: relative;
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 112px;
+    height: 112px;
+    border: 3px solid var(--ua-amber);
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--ua-navy-700), var(--ua-navy-500));
+    color: var(--ua-amber);
+    font-family: var(--ua-serif);
+    font-size: 44px;
+    font-weight: 800;
+
+    img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+  }
+
+  &__online {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--ua-navy-900);
+    border-radius: 50%;
+    background: #22c55e;
+  }
+
+  &__identity {
+    flex: 1;
+    min-width: 240px;
+
+    h1 {
+      @include hero-title;
+    }
+
+    > p {
+      margin: 6px 0 0;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 16px;
+      font-weight: 500;
+    }
+  }
+
+  &__eyebrow {
+    @include eyebrow;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+
+    span {
+      padding: 4px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: var(--ua-pill);
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+
+    // badges on the dark hero
+    .admin-user-status-badge {
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+
+      &.is-active,
+      &.is-online,
+      &.is-paid {
+        color: #86efac;
+      }
+
+      &.is-verified {
+        color: #93c5fd;
+      }
+
+      &.is-premium,
+      &.is-pending,
+      &.is-unpaid {
+        color: #fcd34d;
+      }
+
+      &.is-locked,
+      &.is-suspended,
+      &.is-banned {
+        color: #fca5a5;
+      }
+    }
+  }
+
+  &__actions {
+    align-self: flex-end;
+
+    // Actions button in amber on the hero
+    .admin-user-actions__primary {
+      height: 44px;
+      padding: 0 22px;
+      border-color: transparent;
+      background: var(--ua-amber);
+      color: var(--ua-ink);
+      font-size: 14px;
+
+      &:hover:not(:disabled),
+      &[aria-expanded="true"] {
+        background: var(--ua-amber-strong);
+        color: var(--ua-ink);
+      }
+    }
+  }
+
+  @media (max-width: 640px) {
+    align-items: flex-start;
+    flex-direction: column;
+
+    &__avatar {
+      width: 84px;
+      height: 84px;
+      font-size: 34px;
+    }
+
+    &__actions {
+      align-self: flex-start;
+    }
+  }
+}
+
+// The profile hero must not clip the Actions dropdown,
+// so it skips the decorative ring (the glow is a background and stays).
+.admin-user-details-profile {
+  overflow: visible;
+
+  &::after {
+    display: none;
+  }
+}
+
+// ---------- Section tabs ----------
+.admin-user-details-navigation {
+  display: flex;
+  gap: 8px;
+  padding: 2px 2px 6px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+
+  a {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 7px;
+    height: 38px;
+    padding: 0 16px;
+    border: 1px solid var(--ua-border);
+    border-radius: var(--ua-pill);
+    background: var(--ua-surface);
+    color: var(--ua-text);
+    font-size: 13px;
+    text-decoration: none;
+
+    &:hover {
+      border-color: var(--ua-border-strong);
+      background: var(--ua-soft);
+    }
+
+    &.is-active {
+      border-color: var(--ua-navy-700);
+      background: var(--ua-navy-700);
+      color: #fff;
+
+      .admin-user-details-navigation__icon {
+        color: var(--ua-amber);
+      }
+    }
+  }
+
+  &__icon {
+    color: var(--ua-amber-strong);
+    font-size: 13px;
+  }
+
+  &__text {
+    strong {
+      font-weight: 600;
+    }
+
+    // descriptions are too long for a tab row
+    small {
+      display: none;
+    }
+  }
+}
+
+// ---------- Section heading ----------
+.admin-user-details-section-heading {
+  span {
+    @include eyebrow;
+    color: var(--ua-amber-strong);
+  }
+
+  h2 {
+    @include panel-title;
+    font-size: 28px;
+  }
+
+  p {
+    margin: 6px 0 0;
+    color: var(--ua-muted);
+    font-size: 15px;
+  }
+}
+
+// ---------- At a glance ----------
+.admin-user-details-overview-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--ua-border);
+  border-radius: var(--ua-radius);
+  background: var(--ua-surface);
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 18px 20px;
+    border-right: 1px solid var(--ua-border);
+
+    &:last-child {
+      border-right: 0;
+    }
+
+    &:first-child {
+      @include stat-feature;
+
+      span {
+        color: rgba(255, 255, 255, 0.66);
+      }
+
+      strong {
+        color: var(--ua-amber);
+      }
+    }
+  }
+
+  span {
+    color: var(--ua-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  strong {
+    font-size: 17px;
+    font-weight: 700;
+    text-transform: capitalize;
+  }
+}
+
+// ---------- Cards ----------
+.admin-user-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+
+  @media (max-width: 980px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-user-details-card {
+  @include panel;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  &--full {
+    grid-column: 1 / -1;
+  }
+
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px 22px;
+    border-bottom: 1px solid var(--ua-border);
+
+    > div > span {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--ua-amber-strong);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+    }
+
+    h2 {
+      @include panel-title;
+      font-size: 20px;
+    }
+
+    > a {
+      display: inline-flex;
+      align-items: center;
+      height: 32px;
+      padding: 0 14px;
+      border-radius: var(--ua-pill);
+      background: rgba(19, 58, 94, 0.07);
+      color: var(--ua-navy-700);
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+
+      &:hover {
+        background: var(--ua-navy-700);
+        color: #fff;
+      }
+    }
+  }
+
+  &__header-note {
+    color: var(--ua-muted);
+    font-size: 13px;
+  }
+}
+
+// Label / value pairs
+.admin-user-details-fields,
+.admin-user-security-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 24px;
+  padding: 20px 22px 22px;
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
+
+    &.is-wide {
+      grid-column: 1 / -1;
+    }
+  }
+
+  label,
+  > div > span {
+    color: var(--ua-muted);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  strong {
+    color: var(--ua-text);
+    font-size: 14px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+
+    &.is-good {
+      color: var(--ua-success);
+    }
+
+    &.is-danger {
+      color: var(--ua-danger);
+    }
+  }
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Fockis ID card
+.admin-user-details-fockis {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 22px 22px;
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+
+    > span {
+      color: var(--ua-muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    > strong {
+      font-size: 14px;
+      font-weight: 600;
+    }
+  }
+
+  &__id {
+    align-items: stretch !important;
+    padding: 18px 20px;
+    border-radius: var(--ua-radius);
+    background: linear-gradient(135deg, var(--ua-ink), var(--ua-navy-700));
+
+    > span {
+      color: rgba(255, 255, 255, 0.66) !important;
+    }
+
+    > strong {
+      color: var(--ua-amber);
+      font-family: var(--ua-mono);
+      font-size: 22px !important;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      overflow-wrap: anywhere;
+    }
+  }
+}
+
+// Social numbers
+.admin-user-details-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+  padding: 20px 22px 22px;
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: var(--ua-soft);
+  }
+
+  strong {
+    font-family: var(--ua-serif);
+    font-size: 24px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  span {
+    color: var(--ua-muted);
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
+
+// Service links
+.admin-user-service-grid,
+.admin-user-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+  padding: 20px 22px 22px;
+}
+
+.admin-user-service-card {
+  @include link-card;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+
+  &__icon {
+    @include icon-tile;
+  }
+
+  &__content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+
+    strong {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    small {
+      color: var(--ua-muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    em {
+      margin-top: 4px;
+      color: var(--ua-navy-500);
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 600;
+    }
+  }
+
+  &__arrow {
+    align-self: center;
+    color: var(--ua-faint);
+    transition: transform 0.15s ease, color 0.15s ease;
+  }
+
+  &:hover &__arrow {
+    color: var(--ua-amber-strong);
+    transform: translateX(3px);
+  }
+}
+
+// Quick admin links: <span>icon</span><strong/><small/><b>→</b>
+.admin-user-quick-action {
+  @include link-card;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 14px;
+  row-gap: 2px;
+  align-items: center;
+  padding: 16px;
+
+  > span {
+    @include icon-tile;
+    grid-row: 1 / 3;
+  }
+
+  > strong {
+    align-self: end;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  > small {
+    grid-column: 2;
+    align-self: start;
+    color: var(--ua-muted);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  > b {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    color: var(--ua-faint);
+    font-weight: 400;
+    transition: transform 0.15s ease, color 0.15s ease;
+  }
+
+  &:hover > b {
+    color: var(--ua-amber-strong);
+    transform: translateX(3px);
+  }
+}
+
+// ---------- Loading & error ----------
+.admin-user-details-loading {
+  @include hero;
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  min-height: 220px;
+
+  &__avatar {
+    @include skeleton;
+    flex: none;
+    width: 112px;
+    height: 112px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  &__content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 320px;
+
+    span {
+      @include skeleton;
+      height: 14px;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.16) 50%, rgba(255, 255, 255, 0.08) 100%);
+      background-size: 200% 100%;
+
+      &:nth-child(1) {
+        width: 40%;
+      }
+
+      &:nth-child(2) {
+        height: 40px;
+      }
+
+      &:nth-child(3) {
+        width: 60%;
+      }
+    }
+  }
+}
+
+.admin-user-details-error {
+  @include panel;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 56px 24px;
+  text-align: center;
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--ua-danger-bg);
+    color: var(--ua-danger);
+    font-size: 24px;
+    font-weight: 800;
+  }
+
+  h2 {
+    @include panel-title;
+    font-size: 22px;
+  }
+
+  p {
+    max-width: 46ch;
+    margin: 0;
+    color: var(--ua-muted);
+  }
+
+  button {
+    @include btn-primary;
+    margin-top: 8px;
+  }
+}
+
+// =============================================================
+// SUB-PAGES (Activity, Bookings, Messages, Reports, Payments)
+// =============================================================
+.admin-user-subpage__toolbar {
+  @include hero;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+
+  h1 {
+    @include hero-title;
+  }
+
+  p {
+    @include hero-text;
+  }
+}
+
+.admin-user-subpage__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    color: #fff;
+  }
+}
+
+// the back link sits on its own line above the eyebrow
+.admin-user-subpage__toolbar > div > .admin-user-subpage__back {
+  display: flex;
+  width: fit-content;
+}
+
+.admin-user-subpage__eyebrow {
+  @include eyebrow;
+}
+
+.admin-user-subpage__refresh {
+  @include btn-primary;
+}
+
+.admin-user-subpage__notice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 14px 18px;
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid var(--ua-navy-500);
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 14px;
+}
+
+.admin-user-subpage__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+
+  > div {
+    @include stat-card;
+
+    &:first-child {
+      @include stat-feature;
+
+      span {
+        color: rgba(255, 255, 255, 0.68);
+      }
+
+      strong {
+        color: var(--ua-amber);
+      }
+    }
+  }
+
+  span {
+    color: var(--ua-muted);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  strong {
+    @include stat-value;
+  }
+}
+
+.admin-user-subpage__panel {
+  @include panel;
+}
+
+.admin-user-subpage__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 20px 24px;
+
+  select {
+    @include select;
+  }
+}
+
+.admin-user-subpage__error {
+  @include error-box;
+  margin: 20px 24px;
+}
+
+.admin-user-table-wrapper {
+  overflow-x: auto;
+}
+
+// no gap above the table when there's no filter bar
+.admin-user-subpage__filters + .admin-user-table-wrapper,
+.admin-user-subpage__error + .admin-user-table-wrapper {
+  border-top: 1px solid var(--ua-border);
+}
+
+.admin-user-table {
+  @include table-base;
+
+  &__skeleton {
+    @include skeleton;
+    height: 36px;
+  }
+
+  &__empty {
+    padding: 56px 24px !important;
+    text-align: center;
+
+    strong {
+      display: block;
+      margin-bottom: 6px;
+      font-family: var(--ua-serif);
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    span {
+      display: block;
+      color: var(--ua-muted);
+      font-size: 14px;
+    }
+  }
+
+  &__primary {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    max-width: 380px;
+
+    strong {
+      font-weight: 600;
+    }
+
+    small {
+      overflow: hidden;
+      color: var(--ua-muted);
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__type {
+    display: inline-flex;
+    padding: 3px 10px;
+    border-radius: var(--ua-pill);
+    background: rgba(19, 58, 94, 0.07);
+    color: var(--ua-navy-700);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  code {
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: var(--ua-navy-700);
+    font-family: var(--ua-mono);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-users-page *,
+  .admin-user-details-page *,
+  .admin-user-subpage * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+// =============================================================
+// LAYOUT (AdminUsersLayout): sidebar + top bar
+// =============================================================
+.admin-users-shell {
+  @include tokens;
+  display: grid;
+  grid-template-columns: 272px minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--ua-bg);
+  color: var(--ua-text);
+  font-family: var(--ua-sans);
+  -webkit-font-smoothing: antialiased;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--ua-amber);
+    outline-offset: 2px;
+  }
+}
+
+// ---------- Sidebar ----------
+.admin-users-sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  height: 100vh;
+  padding: 22px 16px 18px;
+  overflow-y: auto;
+  background: linear-gradient(180deg, var(--ua-ink) 0%, var(--ua-navy-900) 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  color: #fff;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 8px 6px;
+  }
+
+  &__logo {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--ua-amber);
+    color: var(--ua-ink);
+    font-family: var(--ua-serif);
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  &__brand-copy {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+
+    strong {
+      font-family: var(--ua-serif);
+      font-size: 19px;
+      font-weight: 800;
+    }
+
+    span {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 12px;
+    }
+  }
+
+  // ---------- Selected user card ----------
+  &__selected-user {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &__selected-user-label {
+    color: var(--ua-amber);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+  }
+
+  &__selected-user-button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 6px;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    color: #fff;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    > span:last-child {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    strong {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    small {
+      overflow: hidden;
+      color: rgba(255, 255, 255, 0.55);
+      font-family: var(--ua-mono);
+      font-size: 11px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__selected-user-icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--ua-amber);
+    border-radius: 50%;
+    background: var(--ua-navy-700);
+    font-size: 16px;
+  }
+
+  &__change-user {
+    align-self: flex-start;
+    padding: 4px 6px;
+    border: 0;
+    background: none;
+    color: rgba(255, 255, 255, 0.65);
+    font: 600 12px var(--ua-sans);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--ua-amber);
+    }
+  }
+
+  // ---------- Navigation ----------
+  &__navigation {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__section-title {
+    padding: 0 12px 4px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+  }
+
+  &__section-items {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    height: 38px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    color: rgba(255, 255, 255, 0.74);
+    font: 500 14px var(--ua-sans);
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.07);
+      color: #fff;
+    }
+
+    &.is-active {
+      background: rgba(242, 169, 59, 0.14);
+      color: var(--ua-amber);
+      font-weight: 600;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: -16px;
+        top: 8px;
+        bottom: 8px;
+        width: 3px;
+        border-radius: 0 3px 3px 0;
+        background: var(--ua-amber);
+      }
+
+      .admin-users-sidebar__link-icon {
+        color: var(--ua-amber);
+      }
+    }
+
+    &.is-disabled,
+    &:disabled {
+      opacity: 0.38;
+      cursor: not-allowed;
+    }
+  }
+
+  &__link-icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 20px;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 14px;
+  }
+
+  &__link-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // ---------- Footer ----------
+  &__footer {
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  &__back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--ua-pill);
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.85);
+    font: 600 13px var(--ua-sans);
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+  }
+}
+
+// ---------- Main column ----------
+.admin-users-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+// Slim top bar (the pages below have their own big hero)
+.admin-users-header {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--ua-border);
+  background: var(--ua-surface);
+
+  &__title {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 14px;
+    min-width: 0;
+
+    h1 {
+      margin: 0;
+      color: var(--ua-text);
+      font-family: var(--ua-serif);
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+  }
+
+  &__eyebrow {
+    width: 100%;
+    color: var(--ua-amber-strong);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+  }
+
+  &__subtitle {
+    margin: 0;
+    color: var(--ua-muted);
+    font-size: 13px;
+  }
+
+  &__user-context {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 4px 3px 10px;
+    border-radius: var(--ua-pill);
+    background: var(--ua-soft);
+    border: 1px solid var(--ua-border);
+    color: var(--ua-muted);
+    font-size: 12px;
+
+    strong {
+      max-width: 220px;
+      overflow: hidden;
+      padding: 2px 8px;
+      border-radius: var(--ua-pill);
+      background: rgba(19, 58, 94, 0.07);
+      color: var(--ua-navy-700);
+      font-family: var(--ua-mono);
+      font-size: 11px;
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__back-users {
+    @include btn-outline;
+  }
+
+  &__refresh {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid var(--ua-border);
+    border-radius: 50%;
+    background: var(--ua-surface);
+    color: var(--ua-text);
+    font-size: 17px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.3s ease;
+
+    &:hover {
+      background: var(--ua-soft);
+      transform: rotate(90deg);
+    }
+  }
+}
+
+.admin-users-content {
+  flex: 1;
+  min-width: 0;
+
+  // pages already pad themselves; drop their own background so it's seamless
+  > .admin-users-page,
+  > .admin-user-details-page,
+  > .admin-user-subpage {
+    background: transparent;
+  }
+}
+
+// ---------- Tablet & phone: sidebar becomes a top bar ----------
+@media (max-width: 960px) {
+  .admin-users-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-users-sidebar {
+    position: static;
+    min-width: 0;
+    height: auto;
+    gap: 12px;
+    padding: 14px 12px;
+    overflow: visible;
+
+    &__brand {
+      padding: 0 4px;
+    }
+
+    // all sections in one horizontally scrolling row
+    &__navigation {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 14px;
+      margin: 0 -12px;
+      padding: 0 12px 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+
+    &__section {
+      flex: none;
+    }
+
+    &__section-title {
+      padding: 0 4px 4px;
+    }
+
+    &__section-items {
+      flex-direction: row;
+      gap: 6px;
+    }
+
+    &__link {
+      width: auto;
+      height: 36px;
+      padding: 0 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--ua-pill);
+      font-size: 13px;
+
+      &.is-active::before {
+        display: none;
+      }
+
+      &.is-active {
+        border-color: var(--ua-amber);
+      }
+    }
+
+    &__footer {
+      padding-top: 10px;
+    }
+
+    &__back {
+      width: auto;
+      padding: 0 18px;
+    }
+  }
+
+  .admin-users-header {
+    flex-wrap: wrap;
+    padding: 14px 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-users-shell * {
+    transition: none !important;
+  }
+}
+
+// =============================================================
+// GUARD against global app styles (Vite starter CSS etc.)
+// Global rules for section, headings, links and #root were
+// adding big gaps, centring text and recolouring links.
+// =============================================================
+.admin-users-shell,
+.admin-users-page,
+.admin-user-details-page,
+.admin-user-subpage {
+  text-align: left;
+}
+
+// headings & paragraphs follow their container, not global rules
+.admin-users-shell :is(h1, h2, h3, h4, p),
+.admin-users-page :is(h1, h2, h3, h4, p),
+.admin-user-details-page :is(h1, h2, h3, h4, p),
+.admin-user-subpage :is(h1, h2, h3, h4, p) {
+  text-align: inherit;
+}
+
+// every <section> we use: no global margins or min-heights
+.admin-users-sidebar__section,
+.admin-users-page__intro,
+.admin-users-dashboard-navigation,
+.admin-user-stats-grid,
+.admin-users-panel,
+.admin-user-details-profile,
+.admin-user-details-error,
+.admin-user-details-section-heading,
+.admin-user-details-overview-stats,
+.admin-user-details-card,
+.admin-user-subpage__summary,
+.admin-user-subpage__panel {
+  margin: 0;
+  min-height: 0;
+}
+
+// sections that should have no padding of their own
+.admin-users-sidebar__section,
+.admin-user-stats-grid,
+.admin-users-panel,
+.admin-user-details-section-heading,
+.admin-user-details-overview-stats,
+.admin-user-details-card,
+.admin-user-subpage__summary,
+.admin-user-subpage__panel {
+  padding: 0;
+}
+
+.admin-users-sidebar__navigation {
+  justify-content: flex-start;
+}
+
+// links keep their colour on hover
+.admin-user-details-navigation a:hover {
+  color: var(--ua-text);
+}
+
+.admin-user-details-navigation a.is-active:hover {
+  color: #fff;
+}

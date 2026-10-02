@@ -1,0 +1,746 @@
+/* =========================================================
+   Fockis Meetings — Invitations
+   ========================================================= */
+
+.fm-invitations-page {
+  --fm-blue: #2563eb;
+  --fm-blue-dark: #1d4ed8;
+  --fm-blue-soft: #eff6ff;
+  --fm-ink: #0f172a;
+  --fm-muted: #64748b;
+  --fm-border: #e2e8f0;
+  --fm-surface: #ffffff;
+  --fm-page: #f8fafc;
+  --fm-success: #16a34a;
+  --fm-danger: #dc2626;
+  --fm-radius: 18px;
+
+  min-height: calc(100vh - 64px);
+  padding: 40px 32px 64px;
+  background:
+    radial-gradient(
+      circle at 80% 0%,
+      rgba(37, 99, 235, 0.08),
+      transparent 34%
+    ),
+    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  color: var(--fm-ink);
+}
+
+/* ---------------------------------------------------------
+   Main container
+   --------------------------------------------------------- */
+
+.fm-invitations-page__inner {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+
+/* ---------------------------------------------------------
+   Back link
+   --------------------------------------------------------- */
+
+.fm-invitations-page .fm-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-bottom: 26px;
+
+  color: #475569;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+
+  transition:
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.fm-invitations-page .fm-back-link:hover {
+  color: var(--fm-blue);
+  transform: translateX(-2px);
+}
+
+/* ---------------------------------------------------------
+   Header
+   --------------------------------------------------------- */
+
+.fm-invitations-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+
+  margin-bottom: 28px;
+}
+
+.fm-invitations-header__content {
+  min-width: 0;
+}
+
+.fm-invitations-header__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  margin-bottom: 9px;
+
+  color: var(--fm-blue);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fm-invitations-header__eyebrow::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fm-blue);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.fm-invitations-header h1 {
+  margin: 0;
+
+  color: var(--fm-ink);
+  font-size: clamp(30px, 4vw, 42px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.fm-invitations-header p {
+  max-width: 650px;
+  margin: 10px 0 0;
+
+  color: var(--fm-muted);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* ---------------------------------------------------------
+   Refresh button
+   --------------------------------------------------------- */
+
+.fm-invitations-refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  min-height: 42px;
+  padding: 0 16px;
+
+  border: 1px solid var(--fm-border);
+  border-radius: 11px;
+
+  background: rgba(255, 255, 255, 0.92);
+  color: #334155;
+
+  font-size: 14px;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 4px 14px rgba(15, 23, 42, 0.04);
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.fm-invitations-refresh:hover {
+  border-color: #bfdbfe;
+  background: #ffffff;
+  color: var(--fm-blue);
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.07),
+    0 10px 25px rgba(37, 99, 235, 0.08);
+}
+
+.fm-invitations-refresh:active {
+  transform: translateY(0);
+}
+
+.fm-invitations-refresh:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.fm-invitations-refresh svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* ---------------------------------------------------------
+   Stats
+   --------------------------------------------------------- */
+
+.fm-invitations-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.fm-invitations-stat {
+  min-height: 108px;
+  padding: 20px;
+
+  border: 1px solid var(--fm-border);
+  border-radius: 16px;
+
+  background: rgba(255, 255, 255, 0.9);
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.03),
+    0 8px 24px rgba(15, 23, 42, 0.035);
+}
+
+.fm-invitations-stat__label {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.fm-invitations-stat__value {
+  margin-top: 7px;
+
+  color: var(--fm-ink);
+  font-size: 29px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.fm-invitations-stat--pending {
+  border-color: #bfdbfe;
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #eff6ff 100%
+    );
+}
+
+.fm-invitations-stat--pending .fm-invitations-stat__value {
+  color: var(--fm-blue);
+}
+
+/* ---------------------------------------------------------
+   Main card
+   --------------------------------------------------------- */
+
+.fm-invitations-card {
+  overflow: hidden;
+
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius);
+
+  background: var(--fm-surface);
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 12px 40px rgba(15, 23, 42, 0.06);
+}
+
+.fm-invitations-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  padding: 21px 24px;
+
+  border-bottom: 1px solid #edf2f7;
+}
+
+.fm-invitations-card__title {
+  margin: 0;
+
+  color: var(--fm-ink);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.fm-invitations-card__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 29px;
+  height: 26px;
+  padding: 0 8px;
+
+  border-radius: 999px;
+
+  background: var(--fm-blue-soft);
+  color: var(--fm-blue);
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* ---------------------------------------------------------
+   Invitation list
+   --------------------------------------------------------- */
+
+.fm-invitations-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.fm-invitation-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+
+  padding: 22px 24px;
+
+  border-bottom: 1px solid #edf2f7;
+
+  transition:
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.fm-invitation-item:last-child {
+  border-bottom: 0;
+}
+
+.fm-invitation-item:hover {
+  background: #fafcff;
+}
+
+.fm-invitation-item__main {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+
+  min-width: 0;
+  flex: 1;
+}
+
+.fm-invitation-item__avatar {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 50px;
+  height: 50px;
+  flex: 0 0 50px;
+
+  overflow: hidden;
+
+  border-radius: 15px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #dbeafe,
+      #eff6ff
+    );
+
+  color: var(--fm-blue);
+
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.fm-invitation-item__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fm-invitation-item__content {
+  min-width: 0;
+}
+
+.fm-invitation-item__title {
+  margin: 0;
+
+  color: var(--fm-ink);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.fm-invitation-item__description {
+  margin: 4px 0 0;
+
+  color: var(--fm-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.fm-invitation-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 14px;
+
+  margin-top: 8px;
+
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fm-invitation-item__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.fm-invitation-item__meta svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---------------------------------------------------------
+   Invitation actions
+   --------------------------------------------------------- */
+
+.fm-invitation-item__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+
+  flex-shrink: 0;
+}
+
+.fm-invitation-item__actions button,
+.fm-invitation-item__actions a {
+  min-height: 38px;
+  padding: 0 14px;
+
+  border-radius: 10px;
+
+  font-size: 13px;
+  font-weight: 750;
+
+  cursor: pointer;
+  text-decoration: none;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.fm-invitation-item__actions button:hover,
+.fm-invitation-item__actions a:hover {
+  transform: translateY(-1px);
+}
+
+.fm-invitation-item__accept {
+  border: 1px solid var(--fm-blue);
+  background: var(--fm-blue);
+  color: #ffffff;
+}
+
+.fm-invitation-item__accept:hover {
+  border-color: var(--fm-blue-dark);
+  background: var(--fm-blue-dark);
+}
+
+.fm-invitation-item__decline {
+  border: 1px solid var(--fm-border);
+  background: #ffffff;
+  color: #475569;
+}
+
+.fm-invitation-item__decline:hover {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: var(--fm-danger);
+}
+
+/* ---------------------------------------------------------
+   Status badge
+   --------------------------------------------------------- */
+
+.fm-invitation-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  width: fit-content;
+  padding: 5px 9px;
+
+  border-radius: 999px;
+
+  background: #eff6ff;
+  color: var(--fm-blue);
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.fm-invitation-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ---------------------------------------------------------
+   Empty state
+   --------------------------------------------------------- */
+
+.fm-invitations-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 360px;
+  padding: 56px 24px;
+
+  text-align: center;
+}
+
+.fm-invitations-empty__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 74px;
+  height: 74px;
+  margin-bottom: 20px;
+
+  border: 1px solid #dbeafe;
+  border-radius: 22px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #eff6ff,
+      #f8fafc
+    );
+
+  color: var(--fm-blue);
+
+  box-shadow:
+    0 8px 25px rgba(37, 99, 235, 0.08);
+}
+
+.fm-invitations-empty__icon svg {
+  width: 31px;
+  height: 31px;
+}
+
+.fm-invitations-empty h2 {
+  margin: 0;
+
+  color: var(--fm-ink);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.fm-invitations-empty p {
+  max-width: 440px;
+  margin: 9px auto 0;
+
+  color: var(--fm-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+/* ---------------------------------------------------------
+   Loading
+   --------------------------------------------------------- */
+
+.fm-invitations-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 330px;
+  padding: 40px;
+}
+
+.fm-invitations-spinner {
+  width: 34px;
+  height: 34px;
+
+  border: 3px solid #dbeafe;
+  border-top-color: var(--fm-blue);
+  border-radius: 50%;
+
+  animation: fm-invitations-spin 0.8s linear infinite;
+}
+
+.fm-invitations-loading p {
+  margin: 14px 0 0;
+
+  color: var(--fm-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@keyframes fm-invitations-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------------------------------------------------------
+   Error
+   --------------------------------------------------------- */
+
+.fm-invitations-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+
+  margin-bottom: 20px;
+  padding: 15px 17px;
+
+  border: 1px solid #fecaca;
+  border-radius: 13px;
+
+  background: #fef2f2;
+  color: #991b1b;
+
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.fm-invitations-error svg {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+/* ---------------------------------------------------------
+   Generic fallback selectors for existing components
+   --------------------------------------------------------- */
+
+.fm-invitations-page .invitation-item {
+  border-bottom: 1px solid #edf2f7;
+  background: #ffffff;
+}
+
+.fm-invitations-page .invitation-item:hover {
+  background: #fafcff;
+}
+
+.fm-invitations-page .invitation-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.fm-invitations-page .invitation-actions button {
+  border-radius: 10px;
+  font-weight: 750;
+}
+
+.fm-invitations-page .invitation-empty {
+  padding: 64px 24px;
+  text-align: center;
+}
+
+/* ---------------------------------------------------------
+   Responsive
+   --------------------------------------------------------- */
+
+@media (max-width: 800px) {
+  .fm-invitations-page {
+    padding: 30px 20px 48px;
+  }
+
+  .fm-invitations-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .fm-invitations-refresh {
+    align-self: flex-start;
+  }
+
+  .fm-invitations-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .fm-invitation-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .fm-invitation-item__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .fm-invitations-page {
+    padding: 22px 14px 40px;
+  }
+
+  .fm-invitations-header h1 {
+    font-size: 30px;
+  }
+
+  .fm-invitations-header p {
+    font-size: 14px;
+  }
+
+  .fm-invitations-card__header {
+    padding: 18px;
+  }
+
+  .fm-invitation-item {
+    padding: 18px;
+  }
+
+  .fm-invitation-item__main {
+    align-items: flex-start;
+  }
+
+  .fm-invitation-item__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .fm-invitation-item__actions button,
+  .fm-invitation-item__actions a {
+    width: 100%;
+  }
+
+  .fm-invitations-empty {
+    min-height: 300px;
+    padding: 40px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fm-invitations-page *,
+  .fm-invitations-page *::before,
+  .fm-invitations-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,1907 @@
+/* ==========================================================================
+   FOCKIS SHOP — EXTENSION STYLESHEET
+   Full marketplace extension styles.
+
+   Rules:
+   - Never redefine anything from shop-original.css — only add.
+   - Reuse the existing Fockis Shop design tokens.
+   - Custom controls are included for shipping/payment selections.
+   ========================================================================== */
+
+
+/* ==========================================================================
+   MOBILE NAV PANEL
+   ========================================================================== */
+
+.mobile-nav {
+  display: none;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+  background: #fff;
+}
+
+.mobile-nav a {
+  padding: 14px 20px;
+  font-size: 14.5px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--line);
+}
+
+@media (max-width: 760px) {
+  .mobile-nav {
+    display: flex;
+  }
+}
+
+.hero-search-compact {
+  box-shadow: none;
+  border: 1px solid var(--line);
+}
+
+
+/* ==========================================================================
+   LOADING / ERROR / EMPTY STATES
+   ========================================================================== */
+
+.shop-loading {
+  padding: 32px 0;
+}
+
+.shop-loading-label {
+  font-size: 11.5px;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 14px;
+}
+
+.shop-loading-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shop-loading-row {
+  height: 64px;
+  border-radius: var(--radius);
+  background: linear-gradient(
+    90deg,
+    var(--paper-2) 25%,
+    var(--paper-3) 37%,
+    var(--paper-2) 63%
+  );
+  background-size: 400% 100%;
+  animation: shop-loading-shimmer 1.4s ease infinite;
+}
+
+@keyframes shop-loading-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-loading-row {
+    animation: none;
+  }
+}
+
+.shop-state-panel {
+  text-align: center;
+  padding: 56px 24px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--slate);
+}
+
+.shop-state-panel h4 {
+  font-size: 16px;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.shop-state-panel p {
+  font-size: 13.5px;
+  line-height: 1.6;
+  max-width: 360px;
+  margin: 0 auto 16px;
+}
+
+.shop-state-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+
+/* ==========================================================================
+   BREADCRUMBS
+   ========================================================================== */
+
+.shop-breadcrumbs {
+  font-size: 12px;
+  color: var(--slate);
+}
+
+.shop-breadcrumbs a {
+  color: var(--slate);
+}
+
+.shop-breadcrumbs a:hover {
+  color: var(--navy);
+}
+
+.shop-breadcrumbs .sep {
+  margin: 0 4px;
+  color: var(--line);
+}
+
+.shop-breadcrumbs [aria-current="page"] {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+
+/* ==========================================================================
+   PAGINATION
+   ========================================================================== */
+
+.shop-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 36px;
+}
+
+.shop-pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.shop-pagination-pages button {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: none;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.shop-pagination-pages button.active {
+  background: var(--navy);
+  color: #fff;
+  font-weight: 700;
+}
+
+.shop-pagination-pages button:hover:not(.active) {
+  border-color: var(--line);
+}
+
+.shop-pagination-pages .ellipsis {
+  color: var(--slate);
+  padding: 0 2px;
+}
+
+
+/* ==========================================================================
+   GENERAL FORM CONTROLS
+   ========================================================================== */
+
+.shop-select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 9px 12px;
+  font-size: 13px;
+  background: #fff;
+  color: var(--ink);
+  font-family: "Inter", sans-serif;
+  cursor: pointer;
+}
+
+.shop-select:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 1px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.form-grid .span-2 {
+  grid-column: span 2;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--slate);
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 11px 13px;
+  font-size: 14px;
+  color: var(--ink);
+  background: #fff;
+  font-family: "Inter", sans-serif;
+  font-weight: 400;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.form-field textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+  color: #969b9a;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  outline: none;
+  border-color: var(--navy);
+  box-shadow: 0 0 0 2px rgba(29, 122, 62, 0.1);
+}
+
+.form-field input:focus-visible,
+.form-field select:focus-visible,
+.form-field textarea:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 1px;
+}
+
+.form-field input[aria-invalid="true"],
+.form-field select[aria-invalid="true"],
+.form-field textarea[aria-invalid="true"] {
+  border-color: var(--red);
+}
+
+.form-field-error {
+  color: var(--red);
+  font-size: 11.5px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.form-field-hint {
+  color: var(--slate);
+  font-size: 11.5px;
+  line-height: 1.45;
+  font-weight: 400;
+}
+
+.form-required {
+  color: var(--red);
+  margin-left: 2px;
+}
+
+@media (max-width: 640px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid .span-2 {
+    grid-column: span 1;
+  }
+}
+
+
+/* ==========================================================================
+   SHIPPING ADDRESS FORM
+   ========================================================================== */
+
+.shipping-address-section {
+  width: 100%;
+}
+
+.shipping-address-section .checkout-form-section {
+  margin-bottom: 20px;
+}
+
+.shipping-address-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.shipping-address-header-copy {
+  min-width: 0;
+}
+
+.shipping-address-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.shipping-address-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.shipping-address-description {
+  margin: 7px 0 0 38px;
+  color: var(--slate);
+  font-size: 12.5px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+
+
+/* ---------- SHIPPING FORM GROUP ---------- */
+
+.shipping-address-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.shipping-address-form .form-grid {
+  gap: 16px;
+}
+
+.shipping-address-form .form-field label {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  line-height: 1.3;
+}
+
+
+/* ---------- COUNTRY / CURRENCY ROW ---------- */
+
+.shipping-country-row {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr;
+  gap: 14px;
+}
+
+.shipping-country-field,
+.shipping-currency-field {
+  min-width: 0;
+}
+
+
+/* ---------- COUNTRY SELECT ---------- */
+
+.shipping-country-select {
+  position: relative;
+}
+
+.shipping-country-select select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 38px;
+}
+
+.shipping-country-select::after {
+  content: "⌄";
+  position: absolute;
+  right: 13px;
+  bottom: 11px;
+  color: var(--slate);
+  font-size: 15px;
+  pointer-events: none;
+}
+
+
+/* ---------- CURRENCY SELECT ---------- */
+
+.shipping-currency-field select {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.shipping-currency-value {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0 13px;
+  background: var(--paper-2);
+  color: var(--ink);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+
+/* ---------- PHONE FIELD ---------- */
+
+.shipping-phone-field {
+  position: relative;
+}
+
+.shipping-phone-input-wrap {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.shipping-phone-prefix {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 76px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+  background: var(--paper-2);
+  color: var(--ink);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.shipping-phone-input-wrap input {
+  border-radius: 0 4px 4px 0;
+}
+
+.shipping-phone-flag {
+  margin-right: 5px;
+  font-family: inherit;
+  font-size: 15px;
+}
+
+
+/* ==========================================================================
+   HAITI DELIVERY NOTICE
+   ========================================================================== */
+
+.haiti-delivery-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 2px;
+  padding: 14px 16px;
+  border: 1px solid rgba(29, 122, 62, 0.18);
+  border-left: 3px solid var(--navy);
+  border-radius: 4px;
+  background: var(--green-bg);
+}
+
+.haiti-delivery-notice-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.haiti-delivery-notice-content {
+  min-width: 0;
+}
+
+.haiti-delivery-notice-title {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+  margin-bottom: 4px;
+}
+
+.haiti-delivery-notice-text {
+  color: var(--slate);
+  font-size: 12px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+
+.haiti-delivery-notice-text strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+
+/* ==========================================================================
+   CURRENCY INFORMATION
+   ========================================================================== */
+
+.shipping-currency-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 7px;
+  color: var(--slate);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.shipping-currency-note .currency-code {
+  color: var(--navy);
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 700;
+}
+
+
+/* ==========================================================================
+   INTERNATIONAL SHIPPING NOTICE
+   ========================================================================== */
+
+.international-delivery-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper-2);
+  color: var(--slate);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.international-delivery-notice strong {
+  color: var(--ink);
+}
+
+
+/* ==========================================================================
+   SHIPPING FORM ACTIONS
+   ========================================================================== */
+
+.shipping-address-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.shipping-address-actions .btn {
+  min-height: 42px;
+}
+
+
+/* ==========================================================================
+   CATEGORY / SEARCH LAYOUT
+   ========================================================================== */
+
+.category-page-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.category-page-layout-with-sidebar {
+  grid-template-columns: 1fr;
+}
+
+.category-filters {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+}
+
+.category-filters-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-filters-row input[type="number"] {
+  width: 80px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.category-filters-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--slate);
+  cursor: pointer;
+}
+
+
+/* ==========================================================================
+   CUSTOM CHECKBOXES
+   ========================================================================== */
+
+.category-filters-checkbox input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 17px;
+  height: 17px;
+  min-width: 17px;
+  border: 1.5px solid #aeb5b2;
+  border-radius: 4px;
+  background: #fff;
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+  margin: 0;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.category-filters-checkbox input[type="checkbox"]::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  transform: scale(0);
+  transition: transform 0.12s ease;
+  background: #fff;
+  clip-path: polygon(
+    14% 44%,
+    0 59%,
+    39% 100%,
+    100% 21%,
+    85% 8%,
+    38% 72%
+  );
+}
+
+.category-filters-checkbox input[type="checkbox"]:checked {
+  background: var(--navy);
+  border-color: var(--navy);
+}
+
+.category-filters-checkbox input[type="checkbox"]:checked::before {
+  transform: scale(1);
+}
+
+.category-filters-checkbox input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  .category-page-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.category-sidebar {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 24px;
+}
+
+.category-sidebar h4 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--slate);
+  margin-bottom: 12px;
+}
+
+.category-sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.category-sidebar nav a {
+  padding: 8px 10px;
+  border-radius: 4px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.category-sidebar nav a.active {
+  background: var(--paper-2);
+  color: var(--navy);
+}
+
+.category-page-header-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 18px 0 8px;
+}
+
+.category-page-header-title .ic {
+  font-size: 34px;
+}
+
+.category-page-header-title h1 {
+  font-size: 28px;
+}
+
+.category-page-header-title p {
+  color: var(--slate);
+  font-size: 13.5px;
+  margin-top: 2px;
+}
+
+
+/* ==========================================================================
+   PRODUCT DETAIL PAGE
+   ========================================================================== */
+
+.pdp-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .pdp-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pdp-gallery-main {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  height: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper-2);
+}
+
+.pdp-gallery-main img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pdp-gallery-emoji {
+  font-size: 96px;
+}
+
+.pdp-gallery-thumbs {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.pdp-gallery-thumbs button {
+  width: 64px;
+  height: 64px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  padding: 0;
+  background: var(--paper-2);
+}
+
+.pdp-gallery-thumbs button.active {
+  border-color: var(--navy);
+}
+
+.pdp-gallery-thumbs img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pdp-title {
+  font-size: 26px;
+  margin-top: 6px;
+}
+
+.pdp-store-line {
+  font-size: 13.5px;
+  color: var(--slate);
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pdp-store-line a {
+  color: var(--navy);
+  font-weight: 600;
+}
+
+.pdp-price-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.pdp-short-desc {
+  color: var(--slate);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 12px;
+}
+
+.pdp-inventory {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.pdp-inventory-note {
+  color: var(--red);
+  font-size: 12px;
+}
+
+.pdp-sku {
+  color: var(--slate);
+  font-size: 11.5px;
+}
+
+.pdp-actions {
+  margin-top: 22px;
+  border-top: 1px solid var(--line);
+  padding-top: 22px;
+}
+
+.pdp-variant-group {
+  margin-bottom: 16px;
+}
+
+.pdp-variant-label {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--slate);
+  margin-bottom: 8px;
+}
+
+.pdp-variant-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pdp-variant-options button {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  background: #fff;
+  color: var(--ink);
+}
+
+.pdp-variant-options button.active {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: #fff;
+}
+
+.pdp-variant-hint {
+  font-size: 12px;
+  color: var(--red);
+  margin-bottom: 12px;
+}
+
+.pdp-qty-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.pdp-qty-stepper {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.pdp-qty-stepper button {
+  width: 34px;
+  height: 38px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.pdp-qty-stepper button:disabled {
+  color: var(--line);
+  cursor: not-allowed;
+}
+
+.pdp-qty-stepper span {
+  min-width: 28px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.pdp-shipping {
+  margin-top: 26px;
+  border-top: 1px solid var(--line);
+  padding-top: 22px;
+}
+
+.pdp-eta {
+  font-size: 12.5px;
+  color: var(--slate);
+  margin-top: 10px;
+}
+
+.pdp-free-delivery {
+  font-size: 12.5px;
+  color: var(--green);
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.pdp-description p {
+  color: var(--slate);
+  line-height: 1.7;
+  font-size: 14.5px;
+  max-width: 760px;
+}
+
+
+/* ==========================================================================
+   REVIEWS
+   ========================================================================== */
+
+.review-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 20px 0 34px;
+  max-width: 420px;
+}
+
+.review-breakdown-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--slate);
+}
+
+.review-breakdown-track {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--paper-3);
+  overflow: hidden;
+}
+
+.review-breakdown-fill {
+  height: 100%;
+  background: var(--brass);
+}
+
+.review-breakdown-row .count {
+  width: 28px;
+  text-align: right;
+}
+
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin-top: 24px;
+}
+
+.review-item {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 22px;
+}
+
+.review-item-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.review-author {
+  color: var(--slate);
+}
+
+.review-verified {
+  font-size: 11px;
+  color: var(--green);
+  font-weight: 600;
+}
+
+.review-item h5 {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.review-item p {
+  font-size: 13.5px;
+  color: var(--ink);
+  line-height: 1.6;
+}
+
+.review-seller-reply {
+  margin-top: 10px;
+  background: var(--paper-2);
+  border-radius: 4px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+
+/* ==========================================================================
+   STORE PAGE
+   ========================================================================== */
+
+.store-page-banner {
+  height: 220px;
+  background: linear-gradient(
+    135deg,
+    var(--paper-2),
+    var(--paper-3)
+  );
+  background-size: cover;
+  background-position: center;
+}
+
+.store-page-header-body {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  margin-top: -56px;
+  position: relative;
+}
+
+.store-page-logo {
+  width: 112px;
+  height: 112px;
+  border-radius: 12px;
+  border: 4px solid #fff;
+  background: var(--paper-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.store-page-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.store-page-header-info {
+  padding-bottom: 8px;
+  flex: 1;
+}
+
+.store-page-header-info h1 {
+  font-size: 26px;
+}
+
+.store-page-header-info .loc {
+  font-size: 13px;
+  color: var(--slate);
+  margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .store-page-header-body {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: -40px;
+  }
+}
+
+.store-page-layout {
+  max-width: 760px;
+}
+
+.store-page-info,
+.store-page-shipping,
+.store-page-policies {
+  margin-bottom: 32px;
+}
+
+.store-page-info h3,
+.store-page-shipping h3,
+.store-page-policies h3,
+.store-page-reviews h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.store-page-info p {
+  color: var(--slate);
+  line-height: 1.7;
+  font-size: 14.5px;
+}
+
+
+/* ==========================================================================
+   CART PAGE
+   ========================================================================== */
+
+.cart-page-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 36px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .cart-page-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cart-list {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.cart-seller-group {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.cart-seller-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.cart-seller-group-head a {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.cart-seller-group-hint {
+  font-size: 11.5px;
+  color: var(--slate);
+}
+
+.cart-seller-group-hint.free {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.cart-seller-group-subtotal {
+  text-align: right;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-weight: 700;
+}
+
+.cart-item {
+  display: grid;
+  grid-template-columns: 64px 1fr auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--paper-2);
+}
+
+.cart-item:last-of-type {
+  border-bottom: none;
+}
+
+.cart-item-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 4px;
+  background: var(--paper-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+
+.cart-item-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cart-item-variant {
+  font-size: 11.5px;
+  color: var(--slate);
+  margin-top: 2px;
+}
+
+.cart-item-price {
+  font-size: 12.5px;
+  color: var(--slate);
+  margin-top: 4px;
+}
+
+.cart-item-qty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.cart-item-remove {
+  background: none;
+  border: none;
+  font-size: 11.5px;
+  color: var(--red);
+}
+
+.cart-item-line-total {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+@media (max-width: 560px) {
+  .cart-item {
+    grid-template-columns: 48px 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .cart-item-qty,
+  .cart-item-line-total {
+    grid-column: 2;
+  }
+}
+
+.cart-summary-panel {
+  position: sticky;
+  top: 100px;
+}
+
+.cart-summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13.5px;
+  padding: 8px 0;
+  color: var(--slate);
+}
+
+.cart-summary-total {
+  border-top: 1px solid var(--line);
+  margin-top: 6px;
+  padding-top: 14px;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.cart-delivery-progress {
+  margin-top: 12px;
+}
+
+
+/* ==========================================================================
+   CHECKOUT
+   ========================================================================== */
+
+.checkout-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 36px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .checkout-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.checkout-form-section {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-bottom: 20px;
+}
+
+.checkout-form-section h3 {
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+.checkout-sidebar .cart-summary-panel {
+  position: sticky;
+  top: 100px;
+}
+
+.checkout-payment-note {
+  font-size: 11.5px;
+  color: var(--slate);
+}
+
+
+/* ==========================================================================
+   SHIPPING METHODS
+   ========================================================================== */
+
+.shipping-method-group {
+  margin-bottom: 20px;
+}
+
+.shipping-method-group:last-child {
+  margin-bottom: 0;
+}
+
+.shipping-method-group-store {
+  font-size: 12.5px;
+  color: var(--ink);
+  font-weight: 800;
+  margin-bottom: 9px;
+}
+
+.shipping-estimate {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+
+/* ---------- SHIPPING METHOD CARD ---------- */
+
+.shipping-estimate-option {
+  position: relative;
+  display: grid;
+  grid-template-columns: 20px 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 52px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.shipping-estimate-option:hover {
+  border-color: rgba(29, 122, 62, 0.45);
+  background: var(--paper-2);
+}
+
+.shipping-estimate-option:focus-within {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 2px rgba(29, 122, 62, 0.1);
+}
+
+
+/* ---------- SHIPPING RADIO ---------- */
+
+.shipping-estimate-option input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1.5px solid #aeb5b2;
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-content: center;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.shipping-estimate-option input[type="radio"]::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  transform: scale(0);
+  transition: transform 0.12s ease;
+}
+
+.shipping-estimate-option input[type="radio"]:checked {
+  background: var(--navy);
+  border-color: var(--navy);
+}
+
+.shipping-estimate-option input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+
+.shipping-estimate-option input[type="radio"]:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 2px;
+}
+
+
+/* ---------- SELECTED SHIPPING CARD ---------- */
+
+.shipping-estimate-option:has(input[type="radio"]:checked) {
+  border-color: var(--navy);
+  background: var(--green-bg);
+  box-shadow: 0 0 0 1px rgba(29, 122, 62, 0.08);
+}
+
+.shipping-estimate-option:has(input[type="radio"]:checked) .shipping-estimate-price {
+  color: var(--navy);
+}
+
+
+/* ---------- SHIPPING TEXT ---------- */
+
+.shipping-estimate-label {
+  min-width: 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.shipping-estimate-eta {
+  color: var(--slate);
+  font-size: 12px;
+}
+
+.shipping-estimate-price {
+  font-weight: 800;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.shipping-estimate-price.free {
+  color: var(--green);
+}
+
+
+/* ==========================================================================
+   PAYMENT METHODS
+   ========================================================================== */
+
+.payment-method-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.payment-method-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 13px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.payment-method-option:hover {
+  border-color: rgba(29, 122, 62, 0.45);
+  background: var(--paper-2);
+}
+
+.payment-method-option:focus-within {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 2px rgba(29, 122, 62, 0.1);
+}
+
+
+/* ---------- PAYMENT RADIO ---------- */
+
+.payment-method-option input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  margin: 0;
+  border: 1.5px solid #aeb5b2;
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-content: center;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.payment-method-option input[type="radio"]::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  transform: scale(0);
+  transition: transform 0.12s ease;
+}
+
+.payment-method-option input[type="radio"]:checked {
+  background: var(--navy);
+  border-color: var(--navy);
+}
+
+.payment-method-option input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+
+.payment-method-option input[type="radio"]:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 2px;
+}
+
+
+/* ---------- SELECTED PAYMENT CARD ---------- */
+
+.payment-method-option:has(input[type="radio"]:checked) {
+  border-color: var(--navy);
+  background: var(--green-bg);
+  box-shadow: 0 0 0 1px rgba(29, 122, 62, 0.08);
+}
+
+.payment-method-option:has(input[type="radio"]:checked) span {
+  color: var(--navy);
+}
+
+
+/* ---------- PAYMENT ICON ---------- */
+
+.payment-method-option .payment-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  min-width: 25px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+@media (max-width: 640px) {
+  .payment-method-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ==========================================================================
+   ORDER REVIEW
+   ========================================================================== */
+
+.order-review-group {
+  margin-bottom: 16px;
+}
+
+.order-review-group-store {
+  font-size: 11.5px;
+  color: var(--slate);
+  margin-bottom: 8px;
+}
+
+.order-review-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13.5px;
+  padding: 6px 0;
+}
+
+.order-confirmation {
+  text-align: center;
+  padding: 60px 0;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.order-confirmation-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--green-bg);
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin: 0 auto 18px;
+}
+
+.order-confirmation h1 {
+  font-size: 26px;
+  margin-bottom: 12px;
+}
+
+.order-confirmation p {
+  color: var(--slate);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+
+/* ==========================================================================
+   ORDERS
+   ========================================================================== */
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.order-list-item {
+  display: grid;
+  grid-template-columns: 140px 1fr auto auto;
+  gap: 16px;
+  align-items: center;
+  background: #fff;
+  padding: 16px 18px;
+  font-size: 13.5px;
+}
+
+.order-list-item-date {
+  font-size: 11.5px;
+  color: var(--slate);
+  margin-top: 2px;
+}
+
+.order-list-item-sellers {
+  color: var(--slate);
+}
+
+.order-list-item-status {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 700px) {
+  .order-list-item {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
+.order-details-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 36px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .order-details-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ==========================================================================
+   CHECKOUT PAYMENT / CURRENCY PRESENTATION
+   ========================================================================== */
+
+.checkout-payment-note {
+  margin-top: 8px;
+}
+
+.payment-currency-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--paper-2);
+  font-size: 12.5px;
+  color: var(--slate);
+}
+
+.payment-currency-display strong {
+  color: var(--ink);
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.payment-currency-display .currency-symbol {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+
+/* ==========================================================================
+   SHIPPING PRICE / HTG PRESENTATION
+   ========================================================================== */
+
+.shipping-estimate-option .htg-price {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.shipping-estimate-option .free-price {
+  color: var(--green);
+  font-weight: 800;
+}
+
+
+/* ==========================================================================
+   SHIPPING ADDRESS RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 760px) {
+  .shipping-address-header {
+    gap: 12px;
+  }
+
+  .shipping-address-title {
+    font-size: 16px;
+  }
+
+  .shipping-address-description {
+    margin-left: 0;
+  }
+
+  .shipping-country-row {
+    grid-template-columns: 1fr;
+  }
+
+  .shipping-phone-prefix {
+    min-width: 70px;
+  }
+
+  .shipping-address-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .shipping-address-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .haiti-delivery-notice {
+    padding: 13px;
+  }
+
+  .shipping-estimate-option {
+    grid-template-columns: 20px 1fr auto;
+  }
+
+  .shipping-estimate-eta {
+    grid-column: 2;
+    margin-top: -4px;
+  }
+
+  .shipping-estimate-price {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+}
+
+@media (max-width: 480px) {
+  .checkout-form-section {
+    padding: 17px;
+  }
+
+  .shipping-address-number {
+    width: 25px;
+    height: 25px;
+    font-size: 10px;
+  }
+
+  .shipping-address-title {
+    gap: 8px;
+  }
+
+  .shipping-phone-prefix {
+    min-width: 64px;
+    padding: 0 7px;
+    font-size: 11px;
+  }
+
+  .shipping-phone-input-wrap input {
+    min-width: 0;
+  }
+
+  .shipping-estimate-option {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .payment-method-option {
+    padding: 10px 11px;
+  }
+}
+
+
+/* ==========================================================================
+   ACCESSIBILITY / TOUCH TARGETS
+   ========================================================================== */
+
+.shipping-estimate-option,
+.payment-method-option,
+.category-filters-checkbox {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.shipping-estimate-option input,
+.payment-method-option input,
+.category-filters-checkbox input {
+  flex-shrink: 0;
+}
+
+@media (pointer: coarse) {
+  .shipping-estimate-option,
+  .payment-method-option {
+    min-height: 54px;
+  }
+}

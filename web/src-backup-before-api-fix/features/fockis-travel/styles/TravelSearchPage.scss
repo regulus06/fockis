@@ -1,0 +1,492 @@
+@use "./_fockis-tokens" as fockis;
+
+.travel-search-page {
+  min-height: 100%;
+  background: fockis.$cream-50;
+  color: fockis.$text-on-light;
+
+  .wrap {
+    width: min(100% - (fockis.$gutter * 2), fockis.$max-width);
+    margin-inline: auto;
+  }
+
+  .tight {
+    padding-block: 28px 44px;
+  }
+
+  .search-page-head {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(
+        circle at 82% 20%,
+        rgba(fockis.$gold-500, 0.18),
+        transparent 34%
+      ),
+      linear-gradient(
+        135deg,
+        fockis.$navy-900 0%,
+        fockis.$navy-800 55%,
+        fockis.$navy-700 100%
+      );
+    color: fockis.$text-on-dark;
+  }
+
+  .search-page-head::before {
+    content: "";
+    position: absolute;
+    width: 260px;
+    height: 260px;
+    right: -90px;
+    top: -130px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+  }
+
+  .search-page-head::after {
+    content: "";
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    left: -90px;
+    bottom: -110px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    pointer-events: none;
+  }
+
+  .eyebrow {
+    position: relative;
+    z-index: 1;
+    margin: 0 0 8px;
+    color: fockis.$gold-500;
+    font-family: fockis.$font-body;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .search-page-title {
+    position: relative;
+    z-index: 1;
+    max-width: 820px;
+    margin: 0;
+    color: fockis.$text-on-dark;
+    font-family: fockis.$font-display;
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    font-weight: 700;
+    line-height: 1.04;
+    letter-spacing: -0.025em;
+  }
+
+  .search-page-body {
+    display: grid;
+    grid-template-columns: minmax(210px, 230px) minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+  }
+
+  .filters-panel {
+    position: sticky;
+    top: 20px;
+    padding: 20px;
+    border: 1px solid rgba(14, 26, 43, 0.1);
+    border-radius: fockis.$radius-lg;
+    background: #ffffff;
+    box-shadow: fockis.$shadow-card;
+  }
+
+  .filters-panel__group {
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(14, 26, 43, 0.09);
+  }
+
+  .filters-panel__group--last {
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom: 0;
+  }
+
+  .filters-panel h3 {
+    margin: 0 0 14px;
+    color: fockis.$text-on-light;
+    font-family: fockis.$font-body;
+    font-size: 0.88rem;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+
+  .price-range {
+    width: 100%;
+    margin: 6px 0 10px;
+    accent-color: fockis.$gold-600;
+    cursor: pointer;
+  }
+
+  .price-range-values {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .filters-panel__option {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 34px;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.84rem;
+    font-weight: 600;
+    line-height: 1.35;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .filters-panel__option + .filters-panel__option {
+    margin-top: 5px;
+  }
+
+  .filters-panel__option input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: fockis.$gold-600;
+    cursor: pointer;
+    flex: 0 0 auto;
+  }
+
+  .results-column {
+    min-width: 0;
+  }
+
+  .results-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 46px;
+    margin-bottom: 20px;
+  }
+
+  .results-count {
+    margin: 0;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.88rem;
+    font-weight: 700;
+  }
+
+  .results-view-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .results-view-controls button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 8px 12px;
+    border: 1px solid rgba(14, 26, 43, 0.12);
+    border-radius: fockis.$radius-pill;
+    background: #ffffff;
+    color: fockis.$text-on-light-muted;
+    font-family: fockis.$font-body;
+    font-size: 0.8rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition:
+      background 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease,
+      transform 160ms ease;
+  }
+
+  .results-view-controls button:hover {
+    border-color: rgba(fockis.$gold-600, 0.55);
+    color: fockis.$text-on-light;
+    transform: translateY(-1px);
+  }
+
+  .results-view-controls button.active {
+    border-color: fockis.$navy-700;
+    background: fockis.$navy-800;
+    color: #ffffff;
+  }
+
+  .results-view-controls svg {
+    width: 15px;
+    height: 15px;
+    flex: 0 0 auto;
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    align-items: start;
+  }
+
+  .results-grid > * {
+    min-width: 0;
+  }
+
+  .search-error {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(fockis.$danger, 0.22);
+    border-radius: fockis.$radius-md;
+    background: rgba(fockis.$danger, 0.07);
+    color: fockis.$danger;
+    font-size: 0.86rem;
+    font-weight: 700;
+  }
+
+  .search-error p {
+    margin: 0;
+  }
+
+  .search-error button {
+    flex: 0 0 auto;
+    min-height: 38px;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: fockis.$radius-pill;
+    background: fockis.$danger;
+    color: #ffffff;
+    font-family: fockis.$font-body;
+    font-size: 0.78rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .search-error button:hover {
+    filter: brightness(0.94);
+  }
+
+  .search-loading-card {
+    min-height: 320px;
+    border: 1px solid rgba(14, 26, 43, 0.08);
+    border-radius: fockis.$radius-lg;
+    background:
+      linear-gradient(
+        110deg,
+        rgba(14, 26, 43, 0.04) 8%,
+        rgba(255, 255, 255, 0.82) 18%,
+        rgba(14, 26, 43, 0.04) 33%
+      );
+    background-size: 200% 100%;
+    animation: travel-search-loading 1.4s linear infinite;
+  }
+
+  .search-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 360px;
+    padding: 36px 24px;
+    border: 1px dashed rgba(14, 26, 43, 0.16);
+    border-radius: fockis.$radius-lg;
+    background: rgba(255, 255, 255, 0.75);
+    text-align: center;
+  }
+
+  .search-empty-state__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    margin-bottom: 16px;
+    border-radius: 50%;
+    background: fockis.$gold-100;
+    color: fockis.$gold-600;
+  }
+
+  .search-empty-state__icon svg {
+    width: 25px;
+    height: 25px;
+  }
+
+  .search-empty-state h2 {
+    margin: 0 0 8px;
+    color: fockis.$text-on-light;
+    font-family: fockis.$font-display;
+    font-size: 1.55rem;
+    line-height: 1.15;
+  }
+
+  .search-empty-state p {
+    max-width: 520px;
+    margin: 0;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.9rem;
+    line-height: 1.65;
+  }
+
+  .search-empty-state a,
+  .search-empty-state button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 9px 18px;
+    margin-top: 20px;
+    border: 1px solid fockis.$navy-700;
+    border-radius: fockis.$radius-pill;
+    background: fockis.$navy-800;
+    color: #ffffff;
+    font-family: fockis.$font-body;
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      transform 160ms ease,
+      box-shadow 160ms ease,
+      background 160ms ease;
+  }
+
+  .search-empty-state a:hover,
+  .search-empty-state button:hover {
+    background: fockis.$navy-700;
+    box-shadow: fockis.$shadow-cta;
+    transform: translateY(-1px);
+  }
+
+  .map-discovery {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid rgba(14, 26, 43, 0.1);
+    border-radius: fockis.$radius-lg;
+    background: #ffffff;
+    box-shadow: fockis.$shadow-card;
+  }
+
+  @include fockis.bp-down(fockis.$bp-lg) {
+    .search-page-body {
+      grid-template-columns: 200px minmax(0, 1fr);
+      gap: 20px;
+    }
+
+    .results-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @include fockis.bp-down(fockis.$bp-md) {
+    .tight {
+      padding-block: 24px 34px;
+    }
+
+    .search-page-title {
+      font-size: clamp(1.9rem, 7vw, 2.7rem);
+    }
+
+    .search-page-body {
+      grid-template-columns: 1fr;
+    }
+
+    .filters-panel {
+      position: static;
+    }
+
+    .results-toolbar {
+      margin-top: 2px;
+    }
+
+    .results-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @include fockis.bp-down(fockis.$bp-sm) {
+    .wrap {
+      width: min(100% - 30px, fockis.$max-width);
+    }
+
+    .tight {
+      padding-block: 22px 30px;
+    }
+
+    .search-page-title {
+      font-size: 2rem;
+      line-height: 1.08;
+    }
+
+    .filters-panel {
+      padding: 16px;
+      border-radius: fockis.$radius-md;
+    }
+
+    .results-toolbar {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .results-view-controls {
+      width: 100%;
+    }
+
+    .results-view-controls button {
+      flex: 1;
+    }
+
+    .results-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .search-error {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .search-error button {
+      width: 100%;
+    }
+
+    .search-empty-state {
+      min-height: 300px;
+      padding: 28px 18px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .search-loading-card {
+      animation: none;
+    }
+
+    .results-view-controls button,
+    .search-empty-state a,
+    .search-empty-state button {
+      transition: none;
+    }
+  }
+}
+
+@keyframes travel-search-loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}

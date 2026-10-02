@@ -1,0 +1,3281 @@
+/* ==========================================================================
+   FOCKIS MUSIC — CREATOR APPLICATIONS ADMIN
+
+   Large desktop-first admin workspace
+   Fully responsive — optimized for desktop, tablet, and mobile
+
+   ========================================================================== */
+
+.music-producer-admin {
+  --mpa-primary: #005a8d;
+  --mpa-primary-dark: #003f63;
+  --mpa-primary-light: #eaf6fb;
+
+  --mpa-gold: #f6b62c;
+
+  --mpa-green: #15803d;
+  --mpa-green-dark: #166534;
+  --mpa-green-soft: #ecfdf3;
+
+  --mpa-red: #dc2626;
+  --mpa-red-soft: #fef2f2;
+
+  --mpa-orange: #ea580c;
+  --mpa-orange-soft: #fff7ed;
+
+  --mpa-purple: #7c3aed;
+  --mpa-purple-soft: #f5f3ff;
+
+  --mpa-bg: #f4f7fa;
+  --mpa-card: #ffffff;
+  --mpa-border: #dbe3ea;
+
+  --mpa-text: #17212b;
+  --mpa-text-soft: #52616d;
+  --mpa-muted: #7a8994;
+
+  width: 100%;
+  min-height: calc(100vh - 64px);
+
+  background:
+    linear-gradient(
+      180deg,
+      #f8fafc 0%,
+      #f3f6f9 100%
+    );
+
+  color: var(--mpa-text);
+
+  box-sizing: border-box;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
+
+/* ==========================================================================
+   MAIN SHELL
+   ========================================================================== */
+
+.music-producer-admin__shell {
+  width: 100%;
+  max-width: 1900px;
+
+  margin: 0 auto;
+
+  padding:
+    36px
+    42px
+    70px;
+}
+
+/* ==========================================================================
+   HEADER
+   ========================================================================== */
+
+.music-producer-admin__header {
+  width: 100%;
+  min-height: 150px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 30px;
+
+  padding:
+    34px
+    38px;
+
+  margin-bottom: 26px;
+
+  border:
+    1px solid
+    var(--mpa-border);
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #f7fbfd 100%
+    );
+
+  box-shadow:
+    0 8px 30px
+    rgba(15, 23, 42, 0.06);
+}
+
+.music-producer-admin__eyebrow {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin-bottom: 10px;
+
+  color: var(--mpa-primary);
+
+  font-size: 12px;
+  font-weight: 800;
+
+  letter-spacing: 0.16em;
+}
+
+.music-producer-admin__eyebrow::before {
+  content: "";
+
+  width: 8px;
+  height: 8px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: var(--mpa-gold);
+}
+
+.music-producer-admin__header h1 {
+  margin: 0;
+
+  color: #14202a;
+
+  font-size:
+    clamp(
+      30px,
+      3vw,
+      44px
+    );
+
+  line-height: 1.08;
+
+  font-weight: 800;
+
+  letter-spacing: -0.035em;
+}
+
+.music-producer-admin__header p {
+  max-width: 800px;
+
+  margin:
+    12px
+    0
+    0;
+
+  color: var(--mpa-text-soft);
+
+  font-size: 16px;
+
+  line-height: 1.65;
+}
+
+.music-producer-admin__refresh {
+  flex-shrink: 0;
+
+  min-width: 140px;
+  min-height: 50px;
+
+  padding:
+    0
+    20px;
+
+  border:
+    1px solid
+    var(--mpa-border);
+
+  border-radius: 11px;
+
+  background: #ffffff;
+
+  color: var(--mpa-primary);
+
+  font-weight: 750;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.music-producer-admin__refresh:hover:not(:disabled) {
+  border-color: var(--mpa-primary);
+
+  background:
+    var(--mpa-primary-light);
+
+  transform:
+    translateY(-1px);
+}
+
+.music-producer-admin__refresh:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   ALERTS
+   ========================================================================== */
+
+.music-producer-admin__alert {
+  width: 100%;
+
+  display: flex;
+  align-items: flex-start;
+
+  gap: 12px;
+
+  padding:
+    17px
+    20px;
+
+  margin-bottom: 22px;
+
+  border-radius: 12px;
+
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.music-producer-admin__alert strong {
+  flex-shrink: 0;
+}
+
+.music-producer-admin__alert--error {
+  border:
+    1px solid
+    #fecaca;
+
+  background:
+    var(--mpa-red-soft);
+
+  color:
+    #991b1b;
+}
+
+.music-producer-admin__alert--success {
+  border:
+    1px solid
+    #bbf7d0;
+
+  background:
+    var(--mpa-green-soft);
+
+  color:
+    #166534;
+}
+
+/* ==========================================================================
+   AUTO APPROVAL SETTINGS
+   ========================================================================== */
+
+.music-producer-admin__auto-approval {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 28px;
+
+  padding:
+    24px
+    26px;
+
+  margin-bottom: 26px;
+
+  border:
+    1px solid
+    var(--mpa-border);
+
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #fbfdff 100%
+    );
+
+  box-shadow:
+    0 7px 26px
+    rgba(15, 23, 42, 0.055);
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.music-producer-admin__auto-approval:hover {
+  border-color:
+    #c6d6e0;
+
+  box-shadow:
+    0 10px 30px
+    rgba(15, 23, 42, 0.075);
+}
+
+.music-producer-admin__auto-approval--enabled {
+  border-color:
+    #b7dfc5;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #f5fff8 100%
+    );
+
+  box-shadow:
+    0 8px 28px
+    rgba(21, 128, 61, 0.08);
+}
+
+.music-producer-admin__auto-approval-info {
+  min-width: 0;
+
+  display: flex;
+  align-items: flex-start;
+
+  gap: 17px;
+}
+
+.music-producer-admin__auto-approval-icon {
+  width: 50px;
+  height: 50px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+
+  background:
+    var(--mpa-purple-soft);
+
+  color:
+    var(--mpa-purple);
+
+  font-size: 24px;
+
+  box-shadow:
+    inset 0 0 0 1px
+    rgba(124, 58, 237, 0.08);
+}
+
+.music-producer-admin__auto-approval--enabled
+.music-producer-admin__auto-approval-icon {
+  background:
+    var(--mpa-green-soft);
+
+  color:
+    var(--mpa-green);
+}
+
+.music-producer-admin__auto-approval-copy {
+  min-width: 0;
+}
+
+.music-producer-admin__auto-approval-label {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin-bottom: 5px;
+
+  color:
+    var(--mpa-primary);
+
+  font-size: 10px;
+
+  font-weight: 850;
+
+  letter-spacing: 0.14em;
+
+  text-transform: uppercase;
+}
+
+.music-producer-admin__auto-approval-copy h2 {
+  margin:
+    0
+    0
+    6px;
+
+  color:
+    #17212b;
+
+  font-size: 20px;
+
+  line-height: 1.2;
+
+  font-weight: 800;
+
+  letter-spacing: -0.02em;
+}
+
+.music-producer-admin__auto-approval-copy p {
+  max-width: 720px;
+
+  margin: 0;
+
+  color:
+    var(--mpa-text-soft);
+
+  font-size: 13px;
+
+  line-height: 1.6;
+}
+
+.music-producer-admin__auto-approval-copy strong {
+  color:
+    #25313b;
+
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   AUTO APPROVAL CONTROL
+   ========================================================================== */
+
+.music-producer-admin__auto-approval-control {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+}
+
+/* ==========================================================================
+   AUTO APPROVAL STATUS
+   ========================================================================== */
+
+.music-producer-admin__auto-approval-status {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 70px;
+  min-height: 34px;
+
+  padding:
+    7px
+    13px;
+
+  border-radius: 999px;
+
+  background:
+    #f1f5f9;
+
+  color:
+    #475569;
+
+  border:
+    1px solid
+    #cbd5e1;
+
+  font-size: 11px;
+
+  font-weight: 900;
+
+  letter-spacing: 0.06em;
+
+  text-transform: uppercase;
+
+  white-space: nowrap;
+}
+
+.music-producer-admin__auto-approval--enabled
+.music-producer-admin__auto-approval-status {
+  background:
+    var(--mpa-green-soft);
+
+  color:
+    var(--mpa-green);
+
+  border-color:
+    #bbf7d0;
+}
+
+/* ==========================================================================
+   CLEAR ENABLE / DISABLE BUTTON
+   ========================================================================== */
+
+/*
+   IMPORTANT:
+   This button intentionally uses text instead of hiding the state
+   inside a small switch.
+
+   The user will clearly see:
+
+   ENABLED
+
+   or
+
+   DISABLED
+*/
+
+.music-producer-admin__auto-approval-toggle {
+  position: relative;
+
+  width: 132px;
+  min-width: 132px;
+
+  height: 46px;
+
+  flex-shrink: 0;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding:
+    0
+    18px;
+
+  border:
+    2px solid
+    #94a3b8;
+
+  border-radius: 10px;
+
+  background:
+    #ffffff;
+
+  color:
+    #334155;
+
+  font-size: 14px;
+
+  font-weight: 900;
+
+  line-height: 1;
+
+  letter-spacing: 0.03em;
+
+  text-align: center;
+
+  white-space: nowrap;
+
+  box-shadow:
+    0 2px 6px
+    rgba(15, 23, 42, 0.06);
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease,
+    opacity 0.2s ease;
+}
+
+/* Remove the old fake switch knob */
+
+.music-producer-admin__auto-approval-toggle::after {
+  display: none;
+  content: none;
+}
+
+/* Disabled state */
+
+.music-producer-admin__auto-approval-toggle:not(
+  .music-producer-admin__auto-approval-toggle--on
+) {
+  background:
+    #ffffff;
+
+  color:
+    #334155;
+
+  border-color:
+    #94a3b8;
+}
+
+.music-producer-admin__auto-approval-toggle:not(
+  .music-producer-admin__auto-approval-toggle--on
+):hover:not(:disabled) {
+  background:
+    #f8fafc;
+
+  color:
+    #0f172a;
+
+  border-color:
+    #64748b;
+
+  box-shadow:
+    0 5px 14px
+    rgba(15, 23, 42, 0.1);
+
+  transform:
+    translateY(-1px);
+}
+
+/* Enabled state */
+
+.music-producer-admin__auto-approval-toggle--on {
+  background:
+    var(--mpa-green);
+
+  color:
+    #ffffff;
+
+  border-color:
+    var(--mpa-green);
+
+  box-shadow:
+    0 5px 14px
+    rgba(21, 128, 61, 0.2);
+}
+
+.music-producer-admin__auto-approval-toggle--on:hover:not(:disabled) {
+  background:
+    var(--mpa-green-dark);
+
+  color:
+    #ffffff;
+
+  border-color:
+    var(--mpa-green-dark);
+
+  box-shadow:
+    0 7px 17px
+    rgba(21, 128, 61, 0.25);
+
+  transform:
+    translateY(-1px);
+}
+
+/* Make any text inside the button impossible to visually hide */
+
+.music-producer-admin__auto-approval-toggle span,
+.music-producer-admin__auto-approval-toggle strong {
+  display: inline-block;
+
+  color: inherit;
+
+  font-size: 14px;
+
+  font-weight: 900;
+
+  line-height: 1;
+
+  opacity: 1;
+
+  visibility: visible;
+
+  white-space: nowrap;
+}
+
+.music-producer-admin__auto-approval-toggle:focus-visible {
+  outline: none;
+
+  box-shadow:
+    0 0 0 4px
+    rgba(0, 90, 141, 0.16);
+}
+
+.music-producer-admin__auto-approval-toggle:disabled {
+  opacity: 0.55;
+
+  cursor:
+    not-allowed;
+
+  transform: none;
+}
+
+/* ==========================================================================
+   SAVING INDICATOR
+   ========================================================================== */
+
+.music-producer-admin__auto-approval-saving {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+  color:
+    var(--mpa-muted);
+
+  font-size: 11px;
+
+  font-weight: 650;
+
+  white-space: nowrap;
+}
+
+.music-producer-admin__auto-approval-saving::before {
+  content: "";
+
+  width: 13px;
+  height: 13px;
+
+  border:
+    2px solid
+    #d5e0e7;
+
+  border-top-color:
+    var(--mpa-primary);
+
+  border-radius: 50%;
+
+  animation:
+    musicProducerAutoApprovalSpin
+    0.7s
+    linear
+    infinite;
+}
+
+@keyframes musicProducerAutoApprovalSpin {
+  to {
+    transform:
+      rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   OPTIONAL ALIAS CLASSES
+   Supports alternate JSX naming if used by the page
+   ========================================================================== */
+
+.music-producer-admin__settings {
+  width: 100%;
+}
+
+.music-producer-admin__setting {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  padding:
+    22px
+    24px;
+
+  border:
+    1px solid
+    var(--mpa-border);
+
+  border-radius: 14px;
+
+  background:
+    #ffffff;
+}
+
+.music-producer-admin__setting-header {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  min-width: 0;
+}
+
+.music-producer-admin__setting-icon {
+  width: 44px;
+  height: 44px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  background:
+    var(--mpa-primary-light);
+
+  font-size: 22px;
+}
+
+.music-producer-admin__setting-copy {
+  min-width: 0;
+}
+
+.music-producer-admin__setting-copy h3 {
+  margin:
+    0
+    0
+    5px;
+
+  color:
+    var(--mpa-text);
+
+  font-size: 16px;
+
+  font-weight: 800;
+}
+
+.music-producer-admin__setting-description {
+  margin: 0;
+
+  color:
+    var(--mpa-text-soft);
+
+  font-size: 13px;
+
+  line-height: 1.55;
+}
+
+.music-producer-admin__setting-actions {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+}
+
+/* ==========================================================================
+   STAT CARDS
+   ========================================================================== */
+
+.music-producer-admin__stats {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 18px;
+
+  margin-bottom: 26px;
+}
+
+.music-producer-admin__stat {
+  position: relative;
+
+  min-height: 125px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-start;
+
+  justify-content: center;
+
+  gap: 9px;
+
+  padding:
+    23px
+    25px;
+
+  border:
+    1px solid
+    var(--mpa-border);
+
+  border-radius: 16px;
+
+  background:
+    #ffffff;
+
+  color:
+    var(--mpa-text);
+
+  text-align: left;
+
+  box-shadow:
+    0 5px 18px
+    rgba(15, 23, 42, 0.045);
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.music-producer-admin__stat:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    #b8c9d5;
+
+  box-shadow:
+    0 10px 26px
+    rgba(15, 23, 42, 0.08);
+}
+
+.music-producer-admin__stat::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 18px;
+  bottom: 18px;
+
+  width: 4px;
+
+  border-radius:
+    0
+    5px
+    5px
+    0;
+
+  background:
+    var(--mpa-primary);
+}
+
+.music-producer-admin__stat:nth-child(2)::before {
+  background:
+    var(--mpa-green);
+}
+
+.music-producer-admin__stat:nth-child(3)::before {
+  background:
+    var(--mpa-red);
+}
+
+.music-producer-admin__stat:nth-child(4)::before {
+  background:
+    var(--mpa-orange);
+}
+
+.music-producer-admin__stat span {
+  color:
+    var(--mpa-text-soft);
+
+  font-size: 14px;
+
+  font-weight: 650;
+}
+
+.music-producer-admin__stat strong {
+  color:
+    #111827;
+
+  font-size: 34px;
+
+  line-height: 1;
+
+  font-weight: 800;
+
+  letter-spacing: -0.03em;
+}
+
+.music-producer-admin__stat--active {
+  border-color:
+    var(--mpa-primary);
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff,
+      #f3faff
+    );
+
+  box-shadow:
+    0 8px 25px
+    rgba(0, 90, 141, 0.11);
+}
+
+/* ==========================================================================
+   CONTENT WORKSPACE
+   ========================================================================== */
+
+.music-producer-admin__content {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr);
+
+  gap: 24px;
+
+  align-items: start;
+}
+
+.music-producer-admin__content--split {
+  grid-template-columns:
+    minmax(0, 1.55fr)
+    minmax(440px, 0.85fr);
+}
+
+/* ==========================================================================
+   APPLICATION LIST / QUEUE
+   ========================================================================== */
+
+.music-producer-admin__list {
+  width: 100%;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    var(--mpa-border);
+
+  border-radius: 18px;
+
+  background:
+    var(--mpa-card);
+
+  box-shadow:
+    0 8px 30px
+    rgba(15, 23, 42, 0.055);
+}
+
+.music-producer-admin__list-header {
+  min-height: 105px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding:
+    24px
+    28px;
+
+  border-bottom:
+    1px solid
+    var(--mpa-border);
+
+  background:
+    #ffffff;
+}
+
+.music-producer-admin__list-header > div {
+  min-width: 0;
+}
+
+.music-producer-admin__list-header span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color:
+    var(--mpa-primary);
+
+  font-size: 11px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.14em;
+}
+
+.music-producer-admin__list-header h2 {
+  margin: 0;
+
+  overflow: hidden;
+
+  color:
+    #17212b;
+
+  font-size: 24px;
+
+  line-height: 1.2;
+
+  font-weight: 800;
+
+  letter-spacing: -0.02em;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.music-producer-admin__list-header small {
+  display: block;
+
+  margin-top: 6px;
+
+  color:
+    var(--mpa-muted);
+
+  font-size: 13px;
+}
+
+.music-producer-admin__list-header select {
+  flex-shrink: 0;
+
+  min-width: 175px;
+
+  height: 46px;
+
+  padding:
+    0
+    38px
+    0
+    14px;
+
+  border:
+    1px solid
+    var(--mpa-border);
+
+  border-radius: 9px;
+
+  background:
+    #ffffff;
+
+  color:
+    #25313b;
+
+  font-size: 14px;
+
+  font-weight: 650;
+
+  outline: none;
+
+  cursor: pointer;
+}
+
+.music-producer-admin__list-header select:focus {
+  border-color:
+    var(--mpa-primary);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(0, 90, 141, 0.1);
+}
+
+/* ==========================================================================
+   TABLE WRAPPER
+   ========================================================================== */
+
+.music-producer-admin__table-wrap {
+  width: 100%;
+
+  overflow-x: auto;
+  overflow-y: visible;
+
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-width: thin;
+}
+
+.music-producer-admin__table {
+  width: 100%;
+
+  min-width: 820px;
+
+  border-collapse: collapse;
+
+  font-size: 14px;
+}
+
+.music-producer-admin__table thead {
+  background:
+    #f8fafc;
+}
+
+.music-producer-admin__table th {
+  padding:
+    15px
+    20px;
+
+  border-bottom:
+    1px solid
+    var(--mpa-border);
+
+  color:
+    #64748b;
+
+  font-size: 11px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.09em;
+
+  text-align: left;
+
+  text-transform: uppercase;
+
+  white-space: nowrap;
+}
+
+.music-producer-admin__table td {
+  padding:
+    18px
+    20px;
+
+  border-bottom:
+    1px solid
+    #edf1f4;
+
+  vertical-align: middle;
+}
+
+.music-producer-admin__table tbody tr {
+  transition:
+    background 0.15s ease;
+}
+
+.music-producer-admin__table tbody tr:hover {
+  background:
+    #f8fbfd;
+}
+
+.music-producer-admin__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ==========================================================================
+   CREATOR CELL
+   ========================================================================== */
+
+.music-producer-admin__creator {
+  display: flex;
+
+  align-items: center;
+
+  gap: 13px;
+
+  width: 100%;
+
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  color: inherit;
+
+  text-align: left;
+}
+
+.music-producer-admin__creator > img,
+.music-producer-admin__avatar {
+  width: 50px;
+  height: 50px;
+
+  flex-shrink: 0;
+
+  border-radius: 12px;
+
+  object-fit: cover;
+}
+
+.music-producer-admin__avatar {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--mpa-primary),
+      #008ac7
+    );
+
+  color:
+    #ffffff;
+
+  font-size: 19px;
+
+  font-weight: 800;
+}
+
+.music-producer-admin__creator > span:last-child {
+  min-width: 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.music-producer-admin__creator strong {
+  overflow: hidden;
+
+  color:
+    #17212b;
+
+  font-size: 14px;
+
+  font-weight: 750;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.music-producer-admin__creator small {
+  overflow: hidden;
+
+  max-width: 180px;
+
+  color:
+    #84919c;
+
+  font-size: 11px;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   GENRES
+   ========================================================================== */
+
+.music-producer-admin__genres {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 5px;
+
+  max-width: 210px;
+}
+
+.music-producer-admin__genres span {
+  padding:
+    5px
+    8px;
+
+  border-radius: 6px;
+
+  background:
+    #eef5f8;
+
+  color:
+    var(--mpa-primary-dark);
+
+  font-size: 11px;
+
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   STATUS
+   ========================================================================== */
+
+.music-producer-admin__status {
+  display: inline-flex;
+
+  align-items: center;
+
+  min-height: 29px;
+
+  padding:
+    5px
+    10px;
+
+  border-radius: 999px;
+
+  font-size: 11px;
+
+  font-weight: 800;
+
+  white-space: nowrap;
+}
+
+.music-producer-admin__status::before {
+  content: "";
+
+  width: 6px;
+  height: 6px;
+
+  margin-right: 6px;
+
+  border-radius: 50%;
+
+  background:
+    currentColor;
+}
+
+.music-producer-admin__status--pending {
+  background:
+    #fff7df;
+
+  color:
+    #a16207;
+}
+
+.music-producer-admin__status--approved {
+  background:
+    var(--mpa-green-soft);
+
+  color:
+    #15803d;
+}
+
+.music-producer-admin__status--rejected {
+  background:
+    var(--mpa-red-soft);
+
+  color:
+    #b91c1c;
+}
+
+.music-producer-admin__status--suspended {
+  background:
+    var(--mpa-orange-soft);
+
+  color:
+    #c2410c;
+}
+
+/* ==========================================================================
+   REVIEW BUTTON
+   ========================================================================== */
+
+.music-producer-admin__review-button {
+  min-width: 82px;
+
+  height: 38px;
+
+  padding:
+    0
+    13px;
+
+  border:
+    1px solid
+    #cbd8e1;
+
+  border-radius: 8px;
+
+  background:
+    #ffffff;
+
+  color:
+    var(--mpa-primary);
+
+  font-size: 13px;
+
+  font-weight: 750;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.music-producer-admin__review-button:hover:not(:disabled) {
+  border-color:
+    var(--mpa-primary);
+
+  background:
+    var(--mpa-primary-light);
+
+  transform:
+    translateY(-1px);
+}
+
+.music-producer-admin__review-button:disabled {
+  opacity: 0.5;
+
+  cursor:
+    not-allowed;
+}
+
+/* ==========================================================================
+   EMPTY STATE
+   ========================================================================== */
+
+.music-producer-admin__empty {
+  min-height: 430px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding:
+    50px
+    25px;
+
+  text-align: center;
+}
+
+.music-producer-admin__empty-icon {
+  width: 76px;
+  height: 76px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 20px;
+
+  border-radius: 20px;
+
+  background:
+    var(--mpa-primary-light);
+
+  font-size: 34px;
+}
+
+.music-producer-admin__empty h3 {
+  margin:
+    0
+    0
+    8px;
+
+  font-size: 21px;
+
+  font-weight: 800;
+}
+
+.music-producer-admin__empty p {
+  max-width: 430px;
+
+  margin: 0;
+
+  color:
+    var(--mpa-muted);
+
+  font-size: 14px;
+
+  line-height: 1.6;
+}
+
+/* ==========================================================================
+   SPINNER
+   ========================================================================== */
+
+.music-producer-admin__spinner {
+  width: 42px;
+  height: 42px;
+
+  margin-bottom: 18px;
+
+  border:
+    4px solid
+    #dbe7ee;
+
+  border-top-color:
+    var(--mpa-primary);
+
+  border-radius: 50%;
+
+  animation:
+    musicProducerSpin
+    0.8s
+    linear
+    infinite;
+}
+
+@keyframes musicProducerSpin {
+  to {
+    transform:
+      rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   DETAILS PANEL
+   ========================================================================== */
+
+.music-producer-admin__details {
+  position: sticky;
+
+  top: 20px;
+
+  min-width: 0;
+
+  max-height:
+    calc(100vh - 40px);
+
+  overflow-y: auto;
+
+  border:
+    1px solid
+    var(--mpa-border);
+
+  border-radius: 18px;
+
+  background:
+    #ffffff;
+
+  box-shadow:
+    0 10px 35px
+    rgba(15, 23, 42, 0.08);
+
+  scrollbar-width: thin;
+
+  scrollbar-color:
+    #cbd5e1
+    transparent;
+}
+
+/* ==========================================================================
+   DETAILS HEADER
+   ========================================================================== */
+
+.music-producer-admin__details-header {
+  position: sticky;
+
+  top: 0;
+
+  z-index: 10;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 15px;
+
+  min-height: 82px;
+
+  padding:
+    18px
+    25px;
+
+  border-bottom:
+    1px solid
+    var(--mpa-border);
+
+  background:
+    rgba(255, 255, 255, 0.96);
+
+  backdrop-filter:
+    blur(10px);
+}
+
+.music-producer-admin__details-header span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color:
+    var(--mpa-primary);
+
+  font-size: 10px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.14em;
+}
+
+.music-producer-admin__details-header h2 {
+  margin: 0;
+
+  color:
+    #17212b;
+
+  font-size: 23px;
+
+  font-weight: 800;
+
+  letter-spacing: -0.02em;
+}
+
+.music-producer-admin__details-header > button {
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  border: 0;
+
+  border-radius: 9px;
+
+  background:
+    #f1f5f9;
+
+  color:
+    #475569;
+
+  font-size: 25px;
+
+  line-height: 1;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.music-producer-admin__details-header > button:hover:not(:disabled) {
+  background:
+    #e2e8f0;
+
+  color:
+    #111827;
+}
+
+/* ==========================================================================
+   PROFILE COVER
+   ========================================================================== */
+
+.music-producer-admin__profile {
+  position: relative;
+
+  overflow: hidden;
+
+  border-bottom:
+    1px solid
+    var(--mpa-border);
+
+  background:
+    #eef4f7;
+}
+
+.music-producer-admin__cover {
+  width: 100%;
+
+  height: 190px;
+
+  background-position:
+    center;
+
+  background-size:
+    cover;
+
+  background-repeat:
+    no-repeat;
+}
+
+.music-producer-admin__cover::after {
+  content: "";
+
+  position: absolute;
+
+  inset:
+    0
+    0
+    auto;
+
+  height: 190px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.06),
+      rgba(0, 0, 0, 0.16)
+    );
+
+  pointer-events: none;
+}
+
+.music-producer-admin__cover--empty {
+  background:
+    linear-gradient(
+      135deg,
+      #d9e9f0,
+      #eef5f8
+    );
+}
+
+/* ==========================================================================
+   PROFILE MAIN
+   ========================================================================== */
+
+.music-producer-admin__profile-main {
+  position: relative;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 17px;
+
+  padding:
+    0
+    26px
+    25px;
+
+  margin-top:
+    -48px;
+
+  z-index: 2;
+}
+
+.music-producer-admin__profile-image {
+  width: 96px;
+  height: 96px;
+
+  flex-shrink: 0;
+
+  object-fit: cover;
+
+  border:
+    5px solid
+    #ffffff;
+
+  border-radius: 22px;
+
+  background:
+    #ffffff;
+
+  box-shadow:
+    0 5px 20px
+    rgba(15, 23, 42, 0.14);
+}
+
+.music-producer-admin__profile-image--placeholder {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--mpa-primary),
+      #008ac7
+    );
+
+  color:
+    #ffffff;
+
+  font-size: 34px;
+
+  font-weight: 800;
+}
+
+.music-producer-admin__profile-main h3 {
+  margin:
+    0
+    0
+    9px;
+
+  color:
+    #17212b;
+
+  font-size: 22px;
+
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   DETAIL SECTIONS
+   ========================================================================== */
+
+.music-producer-admin__detail-section {
+  padding:
+    22px
+    26px;
+
+  border-bottom:
+    1px solid
+    #edf1f4;
+}
+
+.music-producer-admin__detail-section > span {
+  display: block;
+
+  margin-bottom: 10px;
+
+  color:
+    #7b8994;
+
+  font-size: 10px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.14em;
+}
+
+.music-producer-admin__detail-section > p {
+  margin: 0;
+
+  color:
+    #4b5a66;
+
+  font-size: 14px;
+
+  line-height: 1.7;
+
+  white-space: pre-wrap;
+}
+
+/* ==========================================================================
+   DETAIL TAGS
+   ========================================================================== */
+
+.music-producer-admin__detail-tags {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 7px;
+}
+
+.music-producer-admin__detail-tags span {
+  padding:
+    7px
+    10px;
+
+  border-radius: 7px;
+
+  background:
+    var(--mpa-primary-light);
+
+  color:
+    var(--mpa-primary-dark);
+
+  font-size: 12px;
+
+  font-weight: 700;
+}
+
+.music-producer-admin__detail-tags p {
+  margin: 0;
+
+  color:
+    var(--mpa-muted);
+
+  font-size: 13px;
+}
+
+/* ==========================================================================
+   SOCIAL LINKS
+   ========================================================================== */
+
+.music-producer-admin__links {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 8px;
+}
+
+.music-producer-admin__links a {
+  display: inline-flex;
+
+  align-items: center;
+
+  min-height: 38px;
+
+  padding:
+    0
+    12px;
+
+  border:
+    1px solid
+    var(--mpa-border);
+
+  border-radius: 8px;
+
+  background:
+    #ffffff;
+
+  color:
+    var(--mpa-primary);
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  text-decoration: none;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.music-producer-admin__links a:hover {
+  border-color:
+    var(--mpa-primary);
+
+  background:
+    var(--mpa-primary-light);
+}
+
+.music-producer-admin__links p {
+  margin: 0;
+
+  color:
+    var(--mpa-muted);
+
+  font-size: 13px;
+}
+
+/* ==========================================================================
+   ACCOUNT FACTS
+   ========================================================================== */
+
+.music-producer-admin__facts {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 1px;
+
+  overflow: hidden;
+
+  margin: 0;
+
+  border:
+    1px solid
+    #e5ebef;
+
+  border-radius: 10px;
+
+  background:
+    #e5ebef;
+}
+
+.music-producer-admin__facts > div {
+  min-width: 0;
+
+  padding:
+    13px
+    14px;
+
+  background:
+    #ffffff;
+}
+
+.music-producer-admin__facts dt {
+  margin-bottom: 5px;
+
+  color:
+    #84919c;
+
+  font-size: 10px;
+
+  font-weight: 800;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    0.06em;
+}
+
+.music-producer-admin__facts dd {
+  overflow: hidden;
+
+  margin: 0;
+
+  color:
+    #273541;
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  line-height: 1.4;
+
+  text-overflow:
+    ellipsis;
+}
+
+/* ==========================================================================
+   ADMIN NOTE
+   ========================================================================== */
+
+.music-producer-admin__note {
+  margin:
+    20px
+    26px;
+
+  padding:
+    16px
+    18px;
+
+  border-left:
+    4px solid
+    var(--mpa-gold);
+
+  border-radius:
+    0
+    9px
+    9px
+    0;
+
+  background:
+    #fffaf0;
+}
+
+.music-producer-admin__note strong {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color:
+    #7c5a00;
+
+  font-size: 12px;
+
+  font-weight: 800;
+}
+
+.music-producer-admin__note p {
+  margin: 0;
+
+  color:
+    #66552d;
+
+  font-size: 13px;
+
+  line-height: 1.6;
+
+  white-space: pre-wrap;
+
+  overflow-wrap:
+    anywhere;
+}
+
+/* ==========================================================================
+   ACTION AREA
+   ========================================================================== */
+
+.music-producer-admin__actions {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 11px;
+
+  padding:
+    24px
+    26px
+    28px;
+
+  background:
+    #fafcfd;
+}
+
+.music-producer-admin__action-heading {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+
+  margin-bottom: 3px;
+}
+
+.music-producer-admin__action-heading strong {
+  color:
+    #25313b;
+
+  font-size: 14px;
+
+  font-weight: 800;
+}
+
+.music-producer-admin__action-heading span {
+  color:
+    var(--mpa-muted);
+
+  font-size: 12px;
+
+  line-height: 1.5;
+}
+
+.music-producer-admin__actions textarea {
+  width: 100%;
+
+  min-height: 95px;
+
+  resize: vertical;
+
+  padding:
+    13px
+    14px;
+
+  border:
+    1px solid
+    var(--mpa-border);
+
+  border-radius: 9px;
+
+  background:
+    #ffffff;
+
+  color:
+    #25313b;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+
+  outline: none;
+}
+
+.music-producer-admin__actions textarea::placeholder {
+  color:
+    #9aa7b1;
+}
+
+.music-producer-admin__actions textarea:focus {
+  border-color:
+    var(--mpa-primary);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(0, 90, 141, 0.1);
+}
+
+.music-producer-admin__actions textarea:disabled {
+  background:
+    #f1f5f9;
+
+  cursor:
+    not-allowed;
+}
+
+.music-producer-admin__action {
+  width: 100%;
+
+  min-height: 49px;
+
+  padding:
+    0
+    18px;
+
+  border: 0;
+
+  border-radius: 9px;
+
+  font-size: 14px;
+
+  font-weight: 800;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    filter 0.2s ease;
+}
+
+.music-producer-admin__action:hover:not(:disabled) {
+  transform:
+    translateY(-1px);
+
+  filter:
+    brightness(0.97);
+}
+
+.music-producer-admin__action:active:not(:disabled) {
+  transform:
+    translateY(0);
+}
+
+.music-producer-admin__action:disabled {
+  opacity: 0.55;
+
+  cursor:
+    not-allowed;
+}
+
+.music-producer-admin__action--approve {
+  background:
+    var(--mpa-green);
+
+  color:
+    #ffffff;
+
+  box-shadow:
+    0 5px 14px
+    rgba(21, 128, 61, 0.18);
+}
+
+.music-producer-admin__action--reject {
+  background:
+    var(--mpa-red);
+
+  color:
+    #ffffff;
+
+  box-shadow:
+    0 5px 14px
+    rgba(220, 38, 38, 0.15);
+}
+
+.music-producer-admin__action--suspend {
+  background:
+    var(--mpa-orange);
+
+  color:
+    #ffffff;
+
+  box-shadow:
+    0 5px 14px
+    rgba(234, 88, 12, 0.16);
+}
+
+/* ==========================================================================
+   LARGE TABLET
+   ========================================================================== */
+
+@media (max-width: 1250px) {
+  .music-producer-admin__shell {
+    padding:
+      28px
+      28px
+      60px;
+  }
+
+  .music-producer-admin__content--split {
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(380px, 0.8fr);
+  }
+
+  .music-producer-admin__auto-approval {
+    gap: 20px;
+  }
+}
+
+/* ==========================================================================
+   TABLET
+   ========================================================================== */
+
+@media (max-width: 1000px) {
+  .music-producer-admin__content {
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    width: 100%;
+
+    gap: 18px;
+  }
+
+  .music-producer-admin__list {
+    order: 1;
+
+    display: block !important;
+
+    width: 100%;
+
+    min-width: 0;
+
+    max-width: none;
+
+    visibility: visible !important;
+
+    opacity: 1 !important;
+  }
+
+  .music-producer-admin__details {
+    order: 2;
+
+    position: relative;
+
+    top: auto;
+
+    width: 100%;
+
+    min-width: 0;
+
+    max-width: none;
+
+    max-height: none;
+
+    overflow: visible;
+  }
+
+  .music-producer-admin__details-header {
+    position: relative;
+  }
+
+  .music-producer-admin__auto-approval {
+    align-items: flex-start;
+  }
+
+  .music-producer-admin__auto-approval-control {
+    flex-direction: column;
+
+    align-items: flex-end;
+  }
+}
+
+/* ==========================================================================
+   TABLET HEADER
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .music-producer-admin__shell {
+    padding:
+      20px
+      16px
+      45px;
+  }
+
+  .music-producer-admin__header {
+    min-height: auto;
+
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    padding:
+      25px
+      22px;
+  }
+
+  .music-producer-admin__refresh {
+    width: 100%;
+  }
+
+  .music-producer-admin__stats {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .music-producer-admin__auto-approval {
+    padding:
+      21px
+      20px;
+  }
+
+  .music-producer-admin__auto-approval-info {
+    gap: 13px;
+  }
+
+  .music-producer-admin__auto-approval-copy h2 {
+    font-size: 18px;
+  }
+}
+
+/* ==========================================================================
+   MOBILE
+   ========================================================================== */
+
+@media (max-width: 600px) {
+  .music-producer-admin {
+    width: 100%;
+
+    min-width: 0;
+
+    overflow-x: hidden;
+  }
+
+  .music-producer-admin__shell {
+    width: 100%;
+
+    min-width: 0;
+
+    padding:
+      14px
+      12px
+      35px;
+  }
+
+  /* ------------------------------------------------------------------------
+     HEADER
+     ------------------------------------------------------------------------ */
+
+  .music-producer-admin__header {
+    width: 100%;
+
+    margin-bottom: 15px;
+
+    padding:
+      22px
+      18px;
+
+    border-radius:
+      14px;
+  }
+
+  .music-producer-admin__eyebrow {
+    font-size: 10px;
+
+    letter-spacing:
+      0.12em;
+  }
+
+  .music-producer-admin__header h1 {
+    font-size: 30px;
+  }
+
+  .music-producer-admin__header p {
+    font-size: 14px;
+
+    line-height: 1.55;
+  }
+
+  .music-producer-admin__refresh {
+    width: 100%;
+
+    min-height: 46px;
+  }
+
+  /* ------------------------------------------------------------------------
+     AUTO APPROVAL
+     ------------------------------------------------------------------------ */
+
+  .music-producer-admin__auto-approval {
+    width: 100%;
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 18px;
+
+    padding:
+      18px
+      16px;
+
+    margin-bottom: 15px;
+
+    border-radius:
+      14px;
+  }
+
+  .music-producer-admin__auto-approval-info {
+    width: 100%;
+
+    gap: 11px;
+  }
+
+  .music-producer-admin__auto-approval-icon {
+    width: 44px;
+    height: 44px;
+
+    border-radius:
+      12px;
+
+    font-size: 21px;
+  }
+
+  .music-producer-admin__auto-approval-label {
+    margin-bottom: 4px;
+
+    font-size: 9px;
+
+    letter-spacing:
+      0.11em;
+  }
+
+  .music-producer-admin__auto-approval-copy h2 {
+    margin-bottom: 5px;
+
+    font-size: 17px;
+  }
+
+  .music-producer-admin__auto-approval-copy p {
+    font-size: 12px;
+
+    line-height: 1.55;
+  }
+
+  .music-producer-admin__auto-approval-control {
+    width: 100%;
+
+    flex-direction: row;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding-top:
+      13px;
+
+    border-top:
+      1px solid
+      #edf1f4;
+  }
+
+  .music-producer-admin__auto-approval-status {
+    min-width: 70px;
+
+    min-height: 34px;
+
+    padding:
+      7px
+      11px;
+
+    font-size: 10px;
+  }
+
+  /*
+     MOBILE BUTTON:
+     Keep the word ENABLED / DISABLED large and readable.
+  */
+
+  .music-producer-admin__auto-approval-toggle {
+    width: 124px;
+
+    min-width: 124px;
+
+    height: 44px;
+
+    padding:
+      0
+      12px;
+
+    font-size: 13px;
+
+    letter-spacing: 0.02em;
+  }
+
+  .music-producer-admin__auto-approval-toggle span,
+  .music-producer-admin__auto-approval-toggle strong {
+    font-size: 13px;
+  }
+
+  .music-producer-admin__auto-approval-saving {
+    font-size: 10px;
+  }
+
+  /* ------------------------------------------------------------------------
+     ALIAS SETTING
+     ------------------------------------------------------------------------ */
+
+  .music-producer-admin__setting {
+    align-items: stretch;
+
+    flex-direction: column;
+
+    gap: 18px;
+
+    padding:
+      18px;
+  }
+
+  .music-producer-admin__setting-actions {
+    width: 100%;
+
+    justify-content: space-between;
+  }
+
+  /* ------------------------------------------------------------------------
+     STATS
+     ------------------------------------------------------------------------ */
+
+  .music-producer-admin__stats {
+    width: 100%;
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+
+    margin-bottom: 15px;
+  }
+
+  .music-producer-admin__stat {
+    min-height: 88px;
+
+    padding:
+      14px
+      14px;
+
+    border-radius:
+      12px;
+
+    gap: 6px;
+  }
+
+  .music-producer-admin__stat::before {
+    top: 12px;
+
+    bottom: 12px;
+
+    width: 3px;
+  }
+
+  .music-producer-admin__stat span {
+    font-size: 11px;
+  }
+
+  .music-producer-admin__stat strong {
+    font-size: 26px;
+  }
+
+  /* ------------------------------------------------------------------------
+     CONTENT — QUEUE MUST BE FIRST AND VISIBLE
+     ------------------------------------------------------------------------ */
+
+  .music-producer-admin__content {
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    width: 100%;
+
+    min-width: 0;
+
+    gap: 15px;
+
+    visibility: visible !important;
+
+    opacity: 1 !important;
+  }
+
+  .music-producer-admin__list {
+    order: 1;
+
+    display: block !important;
+
+    width: 100%;
+
+    min-width: 0;
+
+    max-width: none;
+
+    overflow: hidden;
+
+    visibility: visible !important;
+
+    opacity: 1 !important;
+
+    border-radius:
+      14px;
+  }
+
+  .music-producer-admin__details {
+    order: 2;
+
+    display: block;
+
+    width: 100%;
+
+    min-width: 0;
+
+    max-width: none;
+
+    position: relative;
+
+    top: auto;
+
+    max-height: none;
+
+    overflow: visible;
+
+    border-radius:
+      14px;
+  }
+
+  /* ------------------------------------------------------------------------
+     APPLICATION QUEUE HEADER
+     ------------------------------------------------------------------------ */
+
+  .music-producer-admin__list-header {
+    width: 100%;
+
+    min-height: auto;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+    justify-content: flex-start;
+
+    gap: 13px;
+
+    padding:
+      18px
+      16px;
+  }
+
+  .music-producer-admin__list-header > div {
+    width: 100%;
+
+    min-width: 0;
+  }
+
+  .music-producer-admin__list-header span {
+    margin-bottom: 4px;
+
+    font-size: 9px;
+
+    letter-spacing:
+      0.12em;
+  }
+
+  .music-producer-admin__list-header h2 {
+    font-size: 21px;
+
+    line-height: 1.25;
+  }
+
+  .music-producer-admin__list-header small {
+    margin-top: 5px;
+
+    font-size: 12px;
+  }
+
+  .music-producer-admin__list-header select {
+    width: 100%;
+
+    min-width: 0;
+
+    height: 44px;
+
+    font-size: 13px;
+  }
+
+  /* ------------------------------------------------------------------------
+     TABLE
+     ------------------------------------------------------------------------ */
+
+  .music-producer-admin__table-wrap {
+    display: block;
+
+    width: 100%;
+
+    max-width: 100%;
+
+    overflow-x: auto;
+
+    overflow-y: visible;
+
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .music-producer-admin__table {
+    width: 100%;
+
+    min-width: 720px;
+  }
+
+  .music-producer-admin__table th {
+    padding:
+      12px
+      14px;
+
+    font-size: 10px;
+  }
+
+  .music-producer-admin__table td {
+    padding:
+      14px
+      14px;
+
+    font-size: 13px;
+  }
+
+  /* ------------------------------------------------------------------------
+     EMPTY APPLICATION QUEUE
+     ------------------------------------------------------------------------ */
+
+  .music-producer-admin__empty {
+    width: 100%;
+
+    min-height: 260px;
+
+    padding:
+      34px
+      18px;
+
+    display: flex !important;
+
+    visibility: visible !important;
+
+    opacity: 1 !important;
+  }
+
+  .music-producer-admin__empty-icon {
+    width: 64px;
+    height: 64px;
+
+    margin-bottom: 15px;
+
+    border-radius:
+      16px;
+
+    font-size: 28px;
+  }
+
+  .music-producer-admin__empty h3 {
+    margin-bottom: 7px;
+
+    font-size: 18px;
+  }
+
+  .music-producer-admin__empty p {
+    max-width: 300px;
+
+    font-size: 13px;
+
+    line-height: 1.55;
+  }
+
+  /* ------------------------------------------------------------------------
+     CREATOR CELL
+     ------------------------------------------------------------------------ */
+
+  .music-producer-admin__creator {
+    gap: 10px;
+  }
+
+  .music-producer-admin__creator > img,
+  .music-producer-admin__avatar {
+    width: 44px;
+    height: 44px;
+
+    border-radius:
+      10px;
+  }
+
+  .music-producer-admin__avatar {
+    font-size: 16px;
+  }
+
+  .music-producer-admin__creator strong {
+    font-size: 13px;
+  }
+
+  .music-producer-admin__creator small {
+    max-width: 160px;
+
+    font-size: 10px;
+  }
+
+  /* ------------------------------------------------------------------------
+     GENRES
+     ------------------------------------------------------------------------ */
+
+  .music-producer-admin__genres {
+    max-width: 180px;
+  }
+
+  /* ------------------------------------------------------------------------
+     DETAILS
+     ------------------------------------------------------------------------ */
+
+  .music-producer-admin__details-header {
+    min-height: 70px;
+
+    padding:
+      15px
+      16px;
+  }
+
+  .music-producer-admin__details-header h2 {
+    font-size: 19px;
+  }
+
+  .music-producer-admin__details-header > button {
+    width: 36px;
+    height: 36px;
+
+    font-size: 22px;
+  }
+
+  .music-producer-admin__cover {
+    height: 145px;
+  }
+
+  .music-producer-admin__cover::after {
+    height: 145px;
+  }
+
+  .music-producer-admin__profile-main {
+    align-items: flex-end;
+
+    gap: 12px;
+
+    padding:
+      0
+      16px
+      18px;
+
+    margin-top:
+      -40px;
+  }
+
+  .music-producer-admin__profile-image {
+    width: 80px;
+    height: 80px;
+
+    border-width:
+      4px;
+
+    border-radius:
+      18px;
+  }
+
+  .music-producer-admin__profile-main h3 {
+    margin-bottom: 5px;
+
+    font-size: 18px;
+  }
+
+  /* ------------------------------------------------------------------------
+     DETAIL SECTIONS
+     ------------------------------------------------------------------------ */
+
+  .music-producer-admin__detail-section {
+    padding:
+      18px
+      16px;
+  }
+
+  .music-producer-admin__detail-section > span {
+    margin-bottom: 8px;
+
+    font-size: 9px;
+  }
+
+  .music-producer-admin__detail-section > p {
+    font-size: 13px;
+
+    line-height: 1.6;
+  }
+
+  /* ------------------------------------------------------------------------
+     FACTS
+     ------------------------------------------------------------------------ */
+
+  .music-producer-admin__facts {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .music-producer-admin__facts > div {
+    padding:
+      11px
+      10px;
+  }
+
+  .music-producer-admin__facts dt {
+    font-size: 9px;
+  }
+
+  .music-producer-admin__facts dd {
+    font-size: 12px;
+  }
+
+  /* ------------------------------------------------------------------------
+     ADMIN NOTE
+     ------------------------------------------------------------------------ */
+
+  .music-producer-admin__note {
+    margin:
+      16px;
+
+    padding:
+      14px
+      15px;
+  }
+
+  .music-producer-admin__note strong {
+    font-size: 11px;
+  }
+
+  .music-producer-admin__note p {
+    font-size: 12px;
+  }
+
+  /* ------------------------------------------------------------------------
+     SOCIAL LINKS
+     ------------------------------------------------------------------------ */
+
+  .music-producer-admin__links {
+    gap: 6px;
+  }
+
+  .music-producer-admin__links a {
+    min-height: 35px;
+
+    padding:
+      0
+      10px;
+
+    font-size: 11px;
+  }
+
+  /* ------------------------------------------------------------------------
+     ACTION AREA
+     ------------------------------------------------------------------------ */
+
+  .music-producer-admin__actions {
+    padding:
+      18px
+      16px
+      21px;
+
+    gap: 9px;
+  }
+
+  .music-producer-admin__action-heading strong {
+    font-size: 13px;
+  }
+
+  .music-producer-admin__action-heading span {
+    font-size: 11px;
+  }
+
+  .music-producer-admin__actions textarea {
+    min-height: 90px;
+
+    font-size: 12px;
+  }
+
+  .music-producer-admin__action {
+    min-height: 46px;
+
+    font-size: 13px;
+  }
+}
+
+/* ==========================================================================
+   EXTRA SMALL PHONES
+   ========================================================================== */
+
+@media (max-width: 380px) {
+  .music-producer-admin__shell {
+    padding:
+      10px
+      9px
+      28px;
+  }
+
+  .music-producer-admin__header {
+    padding:
+      18px
+      15px;
+  }
+
+  .music-producer-admin__header h1 {
+    font-size: 26px;
+  }
+
+  .music-producer-admin__header p {
+    font-size: 13px;
+  }
+
+  .music-producer-admin__auto-approval {
+    padding:
+      16px
+      14px;
+  }
+
+  .music-producer-admin__auto-approval-info {
+    gap: 9px;
+  }
+
+  .music-producer-admin__auto-approval-icon {
+    width: 40px;
+    height: 40px;
+
+    font-size: 19px;
+  }
+
+  .music-producer-admin__auto-approval-copy h2 {
+    font-size: 16px;
+  }
+
+  .music-producer-admin__auto-approval-copy p {
+    font-size: 11px;
+  }
+
+  /* Keep ENABLED / DISABLED readable on very small phones */
+
+  .music-producer-admin__auto-approval-toggle {
+    width: 116px;
+
+    min-width: 116px;
+
+    height: 42px;
+
+    padding:
+      0
+      8px;
+
+    font-size: 12px;
+  }
+
+  .music-producer-admin__auto-approval-toggle span,
+  .music-producer-admin__auto-approval-toggle strong {
+    font-size: 12px;
+  }
+
+  .music-producer-admin__auto-approval-status {
+    min-width: 64px;
+
+    font-size: 9px;
+  }
+
+  .music-producer-admin__stats {
+    gap: 7px;
+  }
+
+  .music-producer-admin__stat {
+    min-height: 82px;
+
+    padding:
+      12px
+      12px;
+  }
+
+  .music-producer-admin__stat span {
+    font-size: 10px;
+  }
+
+  .music-producer-admin__stat strong {
+    font-size: 23px;
+  }
+
+  .music-producer-admin__list-header {
+    padding:
+      16px
+      14px;
+  }
+
+  .music-producer-admin__list-header h2 {
+    font-size: 19px;
+  }
+
+  .music-producer-admin__empty {
+    min-height: 230px;
+
+    padding:
+      28px
+      14px;
+  }
+
+  .music-producer-admin__empty-icon {
+    width: 58px;
+    height: 58px;
+
+    font-size: 25px;
+  }
+
+  .music-producer-admin__empty h3 {
+    font-size: 17px;
+  }
+
+  .music-producer-admin__empty p {
+    font-size: 12px;
+  }
+
+  .music-producer-admin__facts {
+    grid-template-columns: 1fr;
+  }
+
+  .music-producer-admin__profile-image {
+    width: 70px;
+    height: 70px;
+  }
+
+  .music-producer-admin__profile-main h3 {
+    font-size: 16px;
+  }
+}

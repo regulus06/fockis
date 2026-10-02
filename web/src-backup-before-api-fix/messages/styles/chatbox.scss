@@ -1,0 +1,224 @@
+.chat-box {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--fk-canvas);
+}
+
+/* ============================================================================
+   MESSAGE AREA
+============================================================================ */
+
+.chat-box__messages {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.chat-box__message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ============================================================================
+   LOADING
+============================================================================ */
+
+.chat-box__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 100%;
+  color: var(--fk-muted);
+  font-size: 13px;
+}
+
+.chat-box__loading-spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--fk-border);
+  border-top-color: var(--fk-gold-500);
+  animation: fk-spin 0.7s linear infinite;
+}
+
+@keyframes fk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================================
+   EMPTY STATE (no messages yet in this conversation)
+============================================================================ */
+
+.chat-box__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 6px;
+  height: 100%;
+  padding: 24px;
+  color: var(--fk-muted);
+
+  h2 {
+    margin: 4px 0 0;
+    font-family: var(--fk-font-display);
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--fk-ink);
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+.chat-box__empty-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--fk-navy-900);
+  color: var(--fk-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--fk-font-display);
+  font-size: 24px;
+  font-weight: 600;
+  overflow: hidden;
+  margin-bottom: 4px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.chat-box__fockis-id {
+  font-size: 13px;
+  color: var(--fk-navy-700);
+
+  strong {
+    color: var(--fk-navy-900);
+  }
+}
+
+.chat-box__empty-hint {
+  font-size: 12px;
+  color: var(--fk-muted);
+  opacity: 0.85;
+}
+
+/* ============================================================================
+   MESSAGE ROWS
+============================================================================ */
+
+.chat-box__message {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: 72%;
+}
+
+.chat-box__message--incoming {
+  align-self: flex-start;
+}
+
+.chat-box__message--outgoing {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.chat-box__message-avatar {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--fk-navy-900);
+  color: var(--fk-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.chat-box__message-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.chat-box__bubble {
+  padding: 9px 13px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.chat-box__message--incoming .chat-box__bubble {
+  background: var(--fk-white);
+  border: 1px solid var(--fk-border);
+  color: var(--fk-ink);
+  border-bottom-left-radius: 4px;
+}
+
+.chat-box__message--outgoing .chat-box__bubble {
+  background: var(--fk-navy-900);
+  color: var(--fk-white);
+  border-bottom-right-radius: 4px;
+}
+
+.chat-box__message-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--fk-muted);
+}
+
+.chat-box__message--outgoing .chat-box__message-meta {
+  justify-content: flex-end;
+}
+
+.chat-box__message-status {
+  color: var(--fk-gold-600);
+  font-weight: 600;
+}
+
+/* ============================================================================
+   SCROLLBAR (webkit) — subtle, matches the pale canvas
+============================================================================ */
+
+.chat-box__messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-box__messages::-webkit-scrollbar-thumb {
+  background: var(--fk-border);
+  border-radius: 999px;
+}
+
+.chat-box__messages::-webkit-scrollbar-track {
+  background: transparent;
+}

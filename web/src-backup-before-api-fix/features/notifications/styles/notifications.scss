@@ -1,0 +1,1059 @@
+/* ==========================================================================
+   FOCKIS NOTIFICATIONS
+   ========================================================================== */
+
+.fockis-notifications {
+  position: relative;
+  z-index: 1000;
+
+  display: inline-flex;
+  align-items: center;
+}
+
+
+/* ==========================================================================
+   NOTIFICATION BELL
+   ========================================================================== */
+
+.fockis-notification-bell {
+  position: relative;
+
+  width: 42px;
+  height: 42px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
+  border-radius: 12px;
+
+  background: transparent;
+
+  /*
+   * IMPORTANT:
+   * Keep the bell dark and fully visible on the light Fockis top bar.
+   */
+  color: #172033;
+
+  opacity: 1;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.fockis-notification-bell svg {
+  width: 21px;
+  height: 21px;
+
+  color: #172033;
+
+  opacity: 1;
+
+  stroke-width: 2;
+}
+
+.fockis-notification-bell:hover {
+  background: rgba(23, 32, 51, 0.08);
+
+  color: #0f172a;
+}
+
+.fockis-notification-bell:hover svg {
+  color: #0f172a;
+}
+
+.fockis-notification-bell:active {
+  transform: scale(0.96);
+}
+
+.fockis-notification-bell:focus-visible {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
+}
+
+
+/* ==========================================================================
+   NOTIFICATION BADGE
+   ========================================================================== */
+
+.fockis-notification-badge {
+  position: absolute;
+
+  top: 1px;
+  right: 0;
+
+  min-width: 18px;
+  height: 18px;
+
+  padding: 0 5px;
+
+  display: grid;
+  place-items: center;
+
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+
+  background: #e53935;
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+
+  opacity: 1;
+
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+
+/* ==========================================================================
+   BACKDROP
+   ========================================================================== */
+
+.fockis-notification-backdrop {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: -1;
+
+  border: 0;
+
+  background: transparent;
+}
+
+
+/* ==========================================================================
+   DROPDOWN
+   ========================================================================== */
+
+.fockis-notification-dropdown {
+  position: absolute;
+
+  top: calc(100% + 10px);
+  right: 0;
+
+  width: min(430px, calc(100vw - 24px));
+  max-height: min(680px, calc(100vh - 90px));
+
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+
+  border: 1px solid rgba(127, 127, 127, 0.2);
+  border-radius: 18px;
+
+  background: var(--fs-surface, #ffffff);
+  color: var(--fs-ink-950, #111827);
+
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.2);
+}
+
+
+/* ==========================================================================
+   DROPDOWN HEADER
+   ========================================================================== */
+
+.fockis-notification-dropdown__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  padding: 18px;
+
+  border-bottom: 1px solid rgba(127, 127, 127, 0.14);
+}
+
+.fockis-notification-dropdown__header h3 {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.fockis-notification-dropdown__header span {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #737373;
+
+  font-size: 12px;
+}
+
+.fockis-notification-dropdown__header button,
+.fockis-notification-dropdown__footer {
+  color: #4f46e5;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  text-decoration: none;
+}
+
+.fockis-notification-dropdown__header button {
+  border: 0;
+
+  background: transparent;
+
+  cursor: pointer;
+}
+
+.fockis-notification-dropdown__header button:hover {
+  color: #3730a3;
+}
+
+.fockis-notification-dropdown__footer {
+  display: block;
+
+  padding: 15px 18px;
+
+  border-top: 1px solid rgba(127, 127, 127, 0.14);
+
+  text-align: center;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.fockis-notification-dropdown__footer:hover {
+  background: rgba(79, 70, 229, 0.05);
+}
+
+
+/* ==========================================================================
+   NOTIFICATION LIST
+   ========================================================================== */
+
+.fockis-notification-list {
+  display: flex;
+  flex-direction: column;
+
+  overflow-y: auto;
+
+  scrollbar-width: thin;
+}
+
+
+/* ==========================================================================
+   NORMAL NOTIFICATION ITEM
+   ========================================================================== */
+
+.fockis-notification-item {
+  position: relative;
+
+  display: flex;
+  align-items: flex-start;
+
+  gap: 12px;
+
+  padding: 16px 18px;
+
+  border-bottom: 1px solid rgba(127, 127, 127, 0.1);
+
+  background: transparent;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.fockis-notification-item:hover {
+  background: rgba(127, 127, 127, 0.07);
+}
+
+.fockis-notification-item.is-unread {
+  background: rgba(79, 70, 229, 0.055);
+}
+
+.fockis-notification-item.is-compact {
+  padding: 13px 16px;
+}
+
+
+/* ==========================================================================
+   NORMAL NOTIFICATION ICON
+   ========================================================================== */
+
+.fockis-notification-item__icon {
+  flex: 0 0 38px;
+
+  width: 38px;
+  height: 38px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 12px;
+
+  background: rgba(79, 70, 229, 0.1);
+  color: #4f46e5;
+}
+
+.fockis-notification-item__body {
+  min-width: 0;
+
+  flex: 1;
+}
+
+.fockis-notification-item__top {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+}
+
+.fockis-notification-item__top strong {
+  color: #111827;
+
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.fockis-notification-item__body p {
+  margin: 4px 0;
+
+  color: #666666;
+
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.fockis-notification-item__body time {
+  color: #929292;
+
+  font-size: 11px;
+}
+
+.fockis-notification-dot {
+  width: 7px;
+  height: 7px;
+
+  flex: 0 0 7px;
+
+  border-radius: 50%;
+
+  background: #4f46e5;
+}
+
+
+/* ==========================================================================
+   NOTIFICATION ACTION BUTTONS
+   ========================================================================== */
+
+.fockis-notification-read,
+.fockis-notification-delete {
+  flex: 0 0 28px;
+
+  width: 28px;
+  height: 28px;
+
+  display: grid;
+  place-items: center;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: transparent;
+  color: #888888;
+
+  cursor: pointer;
+
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.fockis-notification-read:hover {
+  color: #4f46e5;
+
+  background: rgba(79, 70, 229, 0.1);
+}
+
+.fockis-notification-delete:hover {
+  color: #e53935;
+
+  background: rgba(229, 57, 53, 0.1);
+}
+
+
+/* ==========================================================================
+   EMPTY STATE
+   ========================================================================== */
+
+.fockis-notification-empty {
+  padding: 50px 20px;
+
+  text-align: center;
+}
+
+.fockis-notification-empty__icon {
+  display: block;
+
+  margin-bottom: 10px;
+
+  font-size: 32px;
+}
+
+.fockis-notification-empty h3 {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 17px;
+}
+
+.fockis-notification-empty p {
+  margin: 6px 0 0;
+
+  color: #777777;
+
+  font-size: 13px;
+}
+
+
+/* ==========================================================================
+   LOADING SKELETON
+   ========================================================================== */
+
+.fockis-notification-skeleton {
+  display: flex;
+
+  gap: 12px;
+
+  padding: 16px 18px;
+}
+
+.fockis-notification-skeleton > span {
+  width: 38px;
+  height: 38px;
+
+  border-radius: 12px;
+
+  background: #ececec;
+}
+
+.fockis-notification-skeleton > div {
+  flex: 1;
+}
+
+.fockis-notification-skeleton b,
+.fockis-notification-skeleton i {
+  display: block;
+
+  height: 10px;
+
+  margin: 6px 0;
+
+  border-radius: 6px;
+
+  background: #ececec;
+}
+
+.fockis-notification-skeleton i {
+  width: 75%;
+}
+
+
+/* ==========================================================================
+   LIVE GUEST INVITATION
+   ========================================================================== */
+
+.fockis-notification-item:has(.fockis-live-invitation) {
+  padding: 10px;
+
+  background: transparent;
+
+  cursor: default;
+}
+
+.fockis-notification-item:has(.fockis-live-invitation):hover {
+  background: transparent;
+}
+
+.fockis-notification-item.is-unread:has(
+  .fockis-live-invitation
+) {
+  background: rgba(225, 29, 72, 0.045);
+}
+
+
+/* ==========================================================================
+   LIVE INVITATION CARD
+   ========================================================================== */
+
+.fockis-live-invitation {
+  display: flex;
+  align-items: flex-start;
+
+  width: 100%;
+
+  gap: 13px;
+
+  padding: 15px;
+
+  border: 1px solid #fecdd3;
+  border-radius: 15px;
+
+  background: #ffffff;
+
+  color: #172033;
+
+  opacity: 1;
+  filter: none;
+
+  box-shadow:
+    0 3px 12px rgba(225, 29, 72, 0.09);
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.fockis-live-invitation:hover {
+  background: #fffafa;
+
+  border-color: #fda4af;
+
+  box-shadow:
+    0 6px 18px rgba(225, 29, 72, 0.13);
+
+  transform: translateY(-1px);
+}
+
+
+/* ==========================================================================
+   LIVE ICON
+   ========================================================================== */
+
+.fockis-live-invitation__icon {
+  flex: 0 0 42px;
+
+  width: 42px;
+  height: 42px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 13px;
+
+  background: #fff0f2;
+
+  color: #e11d48;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(225, 29, 72, 0.08);
+}
+
+.fockis-live-invitation__icon svg {
+  width: 21px;
+  height: 21px;
+
+  opacity: 1;
+}
+
+
+/* ==========================================================================
+   LIVE CONTENT
+   ========================================================================== */
+
+.fockis-live-invitation__content {
+  min-width: 0;
+
+  flex: 1;
+}
+
+.fockis-live-invitation__content strong {
+  display: block;
+
+  margin: 0 0 5px;
+
+  color: #111827;
+
+  font-size: 14px;
+  font-weight: 800;
+
+  line-height: 1.35;
+}
+
+.fockis-live-invitation__content p {
+  margin: 0 0 12px;
+
+  color: #4b5563;
+
+  font-size: 13px;
+
+  line-height: 1.45;
+
+  opacity: 1;
+}
+
+
+/* ==========================================================================
+   LIVE ACTIONS
+   ========================================================================== */
+
+.fockis-live-invitation__actions {
+  display: flex;
+
+  gap: 8px;
+
+  flex-wrap: wrap;
+}
+
+.fockis-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  min-height: 32px;
+
+  padding: 6px 12px;
+
+  border: 1px solid transparent;
+
+  border-radius: 8px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  opacity: 1;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.fockis-btn:active {
+  transform: scale(0.97);
+}
+
+.fockis-btn--primary {
+  background: #e11d48;
+
+  border-color: #e11d48;
+
+  color: #ffffff;
+}
+
+.fockis-btn--primary:hover {
+  background: #be123c;
+
+  border-color: #be123c;
+}
+
+.fockis-btn--secondary {
+  background: #f3f4f6;
+
+  border-color: #d1d5db;
+
+  color: #374151;
+}
+
+.fockis-btn--secondary:hover {
+  background: #e5e7eb;
+
+  border-color: #9ca3af;
+}
+
+
+/* ==========================================================================
+   NOTIFICATIONS PAGE
+   ========================================================================== */
+
+.fockis-notifications-page {
+  min-height: 100%;
+
+  padding: 32px 20px 70px;
+
+  background: var(--fs-page, #f6f7fb);
+
+  color: var(--fs-ink-950, #111827);
+}
+
+.fockis-notifications-page__container {
+  width: min(920px, 100%);
+
+  margin: 0 auto;
+}
+
+.fockis-notifications-page__container--narrow {
+  max-width: 760px;
+}
+
+.fockis-notifications-page__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  margin-bottom: 24px;
+}
+
+.fockis-eyebrow {
+  color: #4f46e5;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  letter-spacing: 0.14em;
+}
+
+.fockis-notifications-page__header h1 {
+  margin: 5px 0 7px;
+
+  color: #111827;
+
+  font-size: clamp(28px, 5vw, 40px);
+}
+
+.fockis-notifications-page__header p {
+  max-width: 650px;
+
+  margin: 0;
+
+  color: #737373;
+
+  line-height: 1.55;
+}
+
+.fockis-notifications-page__actions {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 8px;
+}
+
+.fockis-notifications-page__actions button {
+  min-height: 38px;
+
+  padding: 8px 13px;
+
+  border: 1px solid rgba(127, 127, 127, 0.2);
+
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: inherit;
+
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.fockis-notifications-page__actions button:hover {
+  background: #f8fafc;
+}
+
+.fockis-notifications-page__actions button:disabled {
+  opacity: 0.45;
+
+  cursor: not-allowed;
+}
+
+.fockis-notifications-page__summary {
+  display: flex;
+
+  align-items: baseline;
+
+  gap: 8px;
+
+  margin-bottom: 12px;
+
+  color: #737373;
+}
+
+.fockis-notifications-page__summary strong {
+  color: #4f46e5;
+
+  font-size: 22px;
+}
+
+.fockis-notifications-card,
+.fockis-settings-card {
+  overflow: hidden;
+
+  border: 1px solid rgba(127, 127, 127, 0.16);
+
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 12px 35px rgba(0, 0, 0, 0.05);
+}
+
+
+/* ==========================================================================
+   SETTINGS
+   ========================================================================== */
+
+.fockis-settings-row {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  padding: 19px 20px;
+
+  border-bottom: 1px solid rgba(127, 127, 127, 0.12);
+
+  cursor: pointer;
+}
+
+.fockis-settings-row:last-child {
+  border-bottom: 0;
+}
+
+.fockis-settings-row strong,
+.fockis-settings-row small {
+  display: block;
+}
+
+.fockis-settings-row strong {
+  color: #111827;
+
+  font-size: 14px;
+}
+
+.fockis-settings-row small {
+  margin-top: 4px;
+
+  color: #777777;
+
+  font-size: 12px;
+
+  line-height: 1.4;
+}
+
+
+/* ==========================================================================
+   SWITCH
+   ========================================================================== */
+
+.fockis-switch {
+  position: relative;
+
+  flex: 0 0 46px;
+
+  width: 46px;
+  height: 26px;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 999px;
+
+  background: #d3d3d3;
+
+  cursor: pointer;
+
+  transition: background 0.2s ease;
+}
+
+.fockis-switch span {
+  position: absolute;
+
+  top: 3px;
+  left: 3px;
+
+  width: 20px;
+  height: 20px;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.18);
+
+  transition: transform 0.2s ease;
+}
+
+.fockis-switch.is-on {
+  background: #4f46e5;
+}
+
+.fockis-switch.is-on span {
+  transform: translateX(20px);
+}
+
+
+/* ==========================================================================
+   DARK MODE
+   ========================================================================== */
+
+[data-theme="dark"] .fockis-notification-bell,
+.dark .fockis-notification-bell {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .fockis-notification-bell svg,
+.dark .fockis-notification-bell svg {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .fockis-notification-bell:hover,
+.dark .fockis-notification-bell:hover {
+  background: rgba(255, 255, 255, 0.1);
+
+  color: #ffffff;
+}
+
+[data-theme="dark"] .fockis-notification-bell:hover svg,
+.dark .fockis-notification-bell:hover svg {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .fockis-live-invitation,
+.dark .fockis-live-invitation {
+  background: #18202d;
+
+  border-color: #4b2630;
+
+  color: #f3f4f6;
+
+  box-shadow:
+    0 4px 18px rgba(0, 0, 0, 0.22);
+}
+
+[data-theme="dark"]
+  .fockis-live-invitation:hover,
+.dark
+  .fockis-live-invitation:hover {
+  background: #1d2635;
+
+  border-color: #71313d;
+}
+
+[data-theme="dark"]
+  .fockis-live-invitation__icon,
+.dark
+  .fockis-live-invitation__icon {
+  background: rgba(225, 29, 72, 0.14);
+
+  color: #fb7185;
+}
+
+[data-theme="dark"]
+  .fockis-live-invitation__content
+  strong,
+.dark
+  .fockis-live-invitation__content
+  strong {
+  color: #f9fafb;
+}
+
+[data-theme="dark"]
+  .fockis-live-invitation__content
+  p,
+.dark
+  .fockis-live-invitation__content
+  p {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"]
+  .fockis-btn--secondary,
+.dark
+  .fockis-btn--secondary {
+  background: #252f3f;
+
+  border-color: #3b4658;
+
+  color: #e5e7eb;
+}
+
+[data-theme="dark"]
+  .fockis-btn--secondary:hover,
+.dark
+  .fockis-btn--secondary:hover {
+  background: #303b4d;
+
+  border-color: #536174;
+}
+
+
+/* ==========================================================================
+   MOBILE
+   ========================================================================== */
+
+@media (max-width: 700px) {
+  .fockis-notifications {
+    display: inline-flex;
+  }
+
+  .fockis-notification-bell {
+    width: 40px;
+    height: 40px;
+  }
+
+  .fockis-notification-bell svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .fockis-notification-badge {
+    top: 0;
+    right: -1px;
+  }
+
+  .fockis-notifications-page {
+    padding: 20px 12px 50px;
+  }
+
+  .fockis-notifications-page__header {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .fockis-notification-dropdown {
+    position: fixed;
+
+    top: 64px;
+
+    right: 12px;
+    left: 12px;
+
+    width: auto;
+  }
+
+  .fockis-live-invitation {
+    padding: 13px;
+  }
+
+  .fockis-live-invitation__icon {
+    flex-basis: 38px;
+
+    width: 38px;
+    height: 38px;
+  }
+}

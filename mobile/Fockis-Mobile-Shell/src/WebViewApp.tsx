@@ -6,41 +6,26 @@ import {
   Platform,
 } from "react-native";
 
-import {
-  useState,
-} from "react";
+import { useState } from "react";
 
-import {
-  WebView,
-} from "react-native-webview";
+import { WebView } from "react-native-webview";
 
-
-const WEBSITE_URL =
-  "http://192.168.1.112:5174";
-
+// Production Fockis website
+const WEBSITE_URL = "https://YOUR-Fockis-WEB-URL.onrender.com";
 
 export default function WebViewApp() {
-
-  const [error, setError] =
-    useState(false);
-
+  const [error, setError] = useState(false);
 
   if (error) {
-
     return (
       <View style={styles.error}>
-        <Text>
-          Unable to load Fockis.
-        </Text>
+        <Text>Unable to load Fockis.</Text>
       </View>
     );
-
   }
-
 
   // Browser version
   if (Platform.OS === "web") {
-
     return (
       <iframe
         src={WEBSITE_URL}
@@ -54,62 +39,37 @@ export default function WebViewApp() {
         }}
       />
     );
-
   }
-
 
   // Android / iOS version
   return (
-
     <WebView
-
       source={{
         uri: WEBSITE_URL,
       }}
-
       style={styles.webview}
-
       javaScriptEnabled
-
       domStorageEnabled
-
       sharedCookiesEnabled
-
       thirdPartyCookiesEnabled
-
       allowsBackForwardNavigationGestures
-
       startInLoadingState
-
       onError={() => {
         setError(true);
       }}
-
       renderLoading={() => (
-
         <View style={styles.loading}>
-
-          <ActivityIndicator
-            size="large"
-          />
-
+          <ActivityIndicator size="large" />
         </View>
-
       )}
-
     />
-
   );
-
 }
 
-
 const styles = StyleSheet.create({
-
   webview: {
     flex: 1,
   },
-
 
   loading: {
     flex: 1,
@@ -117,11 +77,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-
   error: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-
 });

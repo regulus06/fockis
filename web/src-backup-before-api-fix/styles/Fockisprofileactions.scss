@@ -1,0 +1,87 @@
+/* ============================================================================
+FOCKIS PROFILE ACTIONS
+src/styles/FockisProfileActions.scss
+
+Own profile:
+Edit Profile / Message
+
+Other profile:
+Follow / Add Friend / Message
+============================================================================ */
+
+@use "./fockis-theme";
+
+.fk-profile-actions {
+display: flex;
+align-items: center;
+gap: 10px;
+width: 100%;
+}
+
+.fk-profile-actions__primary,
+.fk-profile-actions__secondary {
+flex: 1;
+
+min-height: 42px;
+
+padding: 9px 16px;
+
+border: none;
+border-radius: var(--fk-r-pill);
+
+font-family: inherit;
+font-size: 13.5px;
+font-weight: 700;
+
+cursor: pointer;
+
+transition:
+filter var(--fk-fast) var(--fk-ease),
+background var(--fk-fast) var(--fk-ease),
+opacity var(--fk-fast) var(--fk-ease),
+transform var(--fk-fast) var(--fk-ease);
+}
+
+.fk-profile-actions__primary {
+color: #ffffff;
+background: var(--fk-fjord);
+}
+
+.fk-profile-actions__primary:hover:not(:disabled) {
+filter: brightness(1.08);
+transform: translateY(-1px);
+}
+
+.fk-profile-actions__secondary {
+color: var(--fk-text);
+background: var(--fk-sunken);
+}
+
+.fk-profile-actions__secondary:hover:not(:disabled) {
+background: var(--fk-border);
+transform: translateY(-1px);
+}
+
+.fk-profile-actions__primary:disabled,
+.fk-profile-actions__secondary:disabled {
+opacity: 0.55;
+cursor: not-allowed;
+transform: none;
+}
+
+/* ============================================================================
+MOBILE
+============================================================================ */
+
+@media (max-width: 767px) {
+.fk-profile-actions {
+flex-direction: column;
+align-items: stretch;
+}
+
+.fk-profile-actions__primary,
+.fk-profile-actions__secondary {
+width: 100%;
+flex: none;
+}
+}

@@ -1,0 +1,26 @@
+@use 'variables' as v;
+
+.msg-status {
+  vertical-align: middle;
+}
+
+.msg-status--sending {
+  opacity: 0.6;
+}
+
+.msg-status--sent {
+  opacity: 0.85;
+}
+
+.msg-status--delivered {
+  opacity: 0.85;
+}
+
+.msg-status--read {
+  color: #7cd4ff;
+  opacity: 1;
+}
+
+.msg-status--failed {
+  color: v.$color-danger;
+}

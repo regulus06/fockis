@@ -3,56 +3,80 @@ import {
   ExecutionContext,
   ForbiddenException,
   Injectable,
-} from '@nestjs/common';
+  UnauthorizedException,
+} from "@nestjs/common";
 
-import { Reflector } from '@nestjs/core';
+import { Reflector } from "@nestjs/core";
 
-import { IS_PUBLIC_KEY } from '../../auth/public.decorator';
-
+import { IS_PUBLIC_KEY } from "../../auth/public.decorator";
 
 export const REQUIRES_SUPER_ADMIN_KEY =
-  'requires_super_admin';
+  "requires_super_admin";
 
+interface DestructiveUser {
+  isSuperAdmin?: boolean;
+  role?: string;
+  roles?: string[];
+}
 
+function normalizeRole(
+  value: unknown,
+): string {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(
+      /[\s-]+/g,
+      "_",
+    );
+}
+
+function isSuperAdmin(
+  user: DestructiveUser,
+): boolean {
+  // Explicit database-derived flag.
+  if (
+    user.isSuperAdmin === true
+  ) {
+    return true;
+  }
+
+  // Primary role.
+  if (
+    normalizeRole(user.role) ===
+    "super_admin"
+  ) {
+    return true;
+  }
+
+  // Multiple roles, if supported.
+  if (
+    Array.isArray(user.roles)
+  ) {
+    return user.roles.some(
+      (role) =>
+        normalizeRole(role) ===
+        "super_admin",
+    );
+  }
+
+  return false;
+}
 
 @Injectable()
-export class DestructiveGuard implements CanActivate {
-
-
+export class DestructiveGuard
+  implements CanActivate
+{
   constructor(
     private readonly reflector: Reflector,
   ) {}
 
-
-
   canActivate(
     context: ExecutionContext,
   ): boolean {
-
-
-    // =========================
-    // 0. PUBLIC ROUTE CHECK
-    // =========================
-
-    const isPublic =
-      this.reflector.getAllAndOverride<boolean>(
-        IS_PUBLIC_KEY,
-        [
-          context.getHandler(),
-          context.getClass(),
-        ],
-      );
-
-
-    if (isPublic) {
-      return true;
-    }
-
-
-
-    // =========================
-    // 1. SUPER ADMIN REQUIREMENT CHECK
-    // =========================
+    // ========================================================================
+    // 1. CHECK SUPER-ADMIN REQUIREMENT FIRST
+    // ========================================================================
 
     const requiresSuperAdmin =
       this.reflector.getAllAndOverride<boolean>(
@@ -63,51 +87,64 @@ export class DestructiveGuard implements CanActivate {
         ],
       );
 
-
+    // Normal route; no destructive-action restriction.
     if (!requiresSuperAdmin) {
       return true;
     }
 
+    // ========================================================================
+    // 2. PUBLIC ROUTES CANNOT BYPASS SUPER-ADMIN REQUIREMENT
+    // ========================================================================
 
+    const isPublic =
+      this.reflector.getAllAndOverride<boolean>(
+        IS_PUBLIC_KEY,
+        [
+          context.getHandler(),
+          context.getClass(),
+        ],
+      );
 
-    // =========================
-    // 2. USER CHECK
-    // =========================
+    if (isPublic) {
+      throw new ForbiddenException(
+        "A destructive super-admin action cannot be public.",
+      );
+    }
+
+    // ========================================================================
+    // 3. REQUEST USER
+    // ========================================================================
 
     const request =
-      context.switchToHttp().getRequest();
+      context
+        .switchToHttp()
+        .getRequest();
 
-
-    const user = request.user;
-
-
+    const user =
+      request?.user as
+        | DestructiveUser
+        | undefined;
 
     if (!user) {
-
-      throw new ForbiddenException(
-        'Authentication required',
+      throw new UnauthorizedException(
+        "Authentication required.",
       );
-
     }
 
+    // ========================================================================
+    // 4. SUPER ADMIN REQUIRED
+    // ========================================================================
 
-
-    // =========================
-    // 3. SUPER ADMIN CHECK
-    // =========================
-
-    if (!user.isSuperAdmin) {
-
+    if (!isSuperAdmin(user)) {
       throw new ForbiddenException(
-        'Destructive action requires super admin privileges',
+        "Destructive action requires super admin privileges.",
       );
-
     }
 
-
+    // ========================================================================
+    // 5. ALLOW
+    // ========================================================================
 
     return true;
-
   }
-
 }

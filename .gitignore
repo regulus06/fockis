@@ -46,3 +46,5 @@ Thumbs.db
 
 # Local certificates / secrets
 fockis-secrets/
+.vercel
+.env*

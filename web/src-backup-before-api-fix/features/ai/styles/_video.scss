@@ -1,0 +1,436 @@
+/* ============================================================
+   FOCKIS AI VIDEO — STORYBOARD + TIMELINE + IMAGE UPLOAD
+   ============================================================ */
+
+/* ============================================================
+   STORYBOARD
+   ============================================================ */
+
+.fockis-video-storyboard {
+  width: 100%;
+}
+
+.fockis-video-storyboard__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+/* ============================================================
+   VIDEO SCENE
+   ============================================================ */
+
+.fockis-video-scene {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #e8e8e8;
+  border-radius: 16px;
+  background: #ffffff;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.fockis-video-scene:hover {
+  border-color: #d8d8d8;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.fockis-video-scene img,
+.fockis-video-scene__placeholder {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #f3f3f3;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  color: #777;
+  overflow: hidden;
+}
+
+.fockis-video-scene__number {
+  grid-column: 1 / -1;
+  font-size: 14px;
+  font-weight: 900;
+  color: #111111;
+}
+
+.fockis-video-scene p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #666666;
+}
+
+/* ============================================================
+   VIDEO TIMELINE
+   ============================================================ */
+
+.fockis-video-timeline {
+  margin-top: 28px;
+  width: 100%;
+}
+
+.fockis-video-timeline__track {
+  display: flex;
+  gap: 4px;
+  min-height: 70px;
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.fockis-video-timeline__track > div {
+  min-width: 50px;
+  padding: 12px;
+  background: #fff3e3;
+  border: 1px solid #ffd7a1;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.fockis-video-timeline__track span,
+.fockis-video-timeline__track small {
+  display: block;
+}
+
+.fockis-video-timeline__track span {
+  font-size: 12px;
+  font-weight: 800;
+  color: #222222;
+}
+
+.fockis-video-timeline__track small {
+  margin-top: 4px;
+  font-size: 10px;
+  color: #777777;
+}
+
+/* ============================================================
+   AI VIDEO IMAGE UPLOAD
+   ============================================================ */
+
+.fockis-ai-image-upload {
+  width: 100%;
+  margin: 20px 0;
+  padding: 20px;
+  border: 2px dashed #dcdcdc;
+  border-radius: 20px;
+  background: #fafafa;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.fockis-ai-image-upload:hover {
+  border-color: #bdbdbd;
+  background: #fdfdfd;
+}
+
+/* ============================================================
+   UPLOAD HEADER
+   ============================================================ */
+
+.fockis-ai-image-upload__header {
+  margin-bottom: 16px;
+}
+
+.fockis-ai-image-upload__title {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 900;
+  color: #111111;
+}
+
+.fockis-ai-image-upload__description {
+  margin: 7px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #666666;
+}
+
+/* ============================================================
+   UPLOAD BUTTON
+   ============================================================ */
+
+.fockis-ai-image-upload__button {
+  width: 100%;
+  min-height: 110px;
+  padding: 20px;
+  border: 1px solid #dddddd;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #111111;
+  cursor: pointer;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  font-size: 15px;
+  font-weight: 800;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.fockis-ai-image-upload__button:hover {
+  border-color: #111111;
+  background: #ffffff;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.07);
+  transform: translateY(-1px);
+}
+
+.fockis-ai-image-upload__button:active {
+  transform: translateY(0);
+}
+
+.fockis-ai-image-upload__button:focus-visible {
+  outline: 3px solid rgba(17, 17, 17, 0.15);
+  outline-offset: 2px;
+}
+
+.fockis-ai-image-upload__icon {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.fockis-ai-image-upload__button-text {
+  font-size: 15px;
+  font-weight: 900;
+  color: #111111;
+}
+
+.fockis-ai-image-upload__button-hint {
+  font-size: 12px;
+  font-weight: 500;
+  color: #777777;
+}
+
+/* ============================================================
+   HIDDEN FILE INPUT
+   ============================================================ */
+
+.fockis-ai-image-upload input[type="file"] {
+  display: none;
+}
+
+/* ============================================================
+   IMAGE PREVIEW
+   ============================================================ */
+
+.fockis-ai-image-upload__preview-wrapper {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #eeeeee;
+}
+
+.fockis-ai-image-upload__preview {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+/* ============================================================
+   UPLOADED STATUS
+   ============================================================ */
+
+.fockis-ai-image-upload__status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.fockis-ai-image-upload__status-text {
+  font-size: 13px;
+  font-weight: 800;
+  color: #166534;
+}
+
+/* ============================================================
+   IMAGE ACTIONS
+   ============================================================ */
+
+.fockis-ai-image-upload__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.fockis-ai-image-upload__change,
+.fockis-ai-image-upload__remove {
+  min-height: 38px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.fockis-ai-image-upload__change {
+  border: 1px solid #dddddd;
+  background: #ffffff;
+  color: #111111;
+}
+
+.fockis-ai-image-upload__change:hover {
+  background: #f5f5f5;
+  border-color: #cfcfcf;
+}
+
+.fockis-ai-image-upload__remove {
+  border: 1px solid #fecaca;
+  background: #fff5f5;
+  color: #b91c1c;
+}
+
+.fockis-ai-image-upload__remove:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+/* ============================================================
+   UPLOAD ERROR
+   ============================================================ */
+
+.fockis-ai-image-upload__error {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fff1f2;
+  color: #b91c1c;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* ============================================================
+   UPLOAD HELP TEXT
+   ============================================================ */
+
+.fockis-ai-image-upload__help {
+  margin: 10px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #888888;
+}
+
+/* ============================================================
+   AI VIDEO RESULT
+   ============================================================ */
+
+.fockis-ai-video-result {
+  width: 100%;
+  margin-top: 24px;
+}
+
+.fockis-ai-video-result video {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  border-radius: 18px;
+  background: #000000;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .fockis-video-storyboard__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fockis-video-scene {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+
+  .fockis-video-scene img,
+  .fockis-video-scene__placeholder {
+    width: 64px;
+    height: 64px;
+  }
+
+  .fockis-ai-image-upload {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .fockis-ai-image-upload__button {
+    min-height: 100px;
+  }
+
+  .fockis-ai-image-upload__preview {
+    max-height: 280px;
+  }
+
+  .fockis-ai-image-upload__actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .fockis-video-scene {
+    grid-template-columns: 56px minmax(0, 1fr);
+    padding: 12px;
+  }
+
+  .fockis-video-scene img,
+  .fockis-video-scene__placeholder {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+  }
+
+  .fockis-ai-image-upload {
+    margin: 16px 0;
+    padding: 14px;
+  }
+
+  .fockis-ai-image-upload__title {
+    font-size: 16px;
+  }
+
+  .fockis-ai-image-upload__button {
+    min-height: 90px;
+    padding: 16px;
+  }
+
+  .fockis-ai-image-upload__icon {
+    font-size: 26px;
+  }
+
+  .fockis-ai-image-upload__status {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

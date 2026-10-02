@@ -1,0 +1,115 @@
+.admin-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--admin-card-bg, #ffffff);
+  border-radius: 12px;
+  border: 1px solid var(--admin-border, #e5e7eb);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+
+  thead {
+    background: var(--admin-header-bg, #f8fafc);
+
+    th {
+      padding: 14px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid #e5e7eb;
+      white-space: nowrap;
+    }
+  }
+
+  tbody {
+
+    tr {
+      transition: background 0.2s ease;
+
+      &:hover {
+        background: #f8fafc;
+      }
+
+      &:not(:last-child) {
+        border-bottom: 1px solid #e5e7eb;
+      }
+    }
+
+    td {
+      padding: 14px 16px;
+      font-size: 14px;
+      color: #334155;
+      vertical-align: middle;
+    }
+  }
+}
+
+
+.left {
+  text-align: left;
+}
+
+.center {
+  text-align: center;
+}
+
+.right {
+  text-align: right;
+}
+
+
+.admin-table-loading {
+  width: 100%;
+  padding: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: #ffffff;
+  border-radius: 12px;
+
+  color: #64748b;
+  font-size: 15px;
+}
+
+
+.admin-table-empty {
+  width: 100%;
+  padding: 50px 20px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: #ffffff;
+  border-radius: 12px;
+
+  color: #94a3b8;
+  font-size: 15px;
+}
+
+
+@media (max-width: 768px) {
+
+  .admin-table-wrapper {
+    border-radius: 8px;
+  }
+
+  .admin-table {
+
+    thead th {
+      padding: 12px;
+      font-size: 12px;
+    }
+
+    tbody td {
+      padding: 12px;
+      font-size: 13px;
+    }
+  }
+}

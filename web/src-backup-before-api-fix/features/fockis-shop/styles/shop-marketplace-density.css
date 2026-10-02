@@ -1,0 +1,293 @@
+/* ============================================================
+   FOCKIS SHOP
+   MARKETPLACE DENSITY SYSTEM
+   ============================================================ */
+
+/*
+ * This stylesheet is intentionally additive.
+ *
+ * It does not replace the existing shop-original.css or
+ * shop-extensions.css styles.
+ *
+ * Its purpose is to make Fockis Shop feel like a dense,
+ * production marketplace rather than a landing page.
+ */
+
+
+/* ============================================================
+   MARKETPLACE SHELL
+   ============================================================ */
+
+.mp-shell {
+  width: 100%;
+}
+
+.mp-shell > * {
+  box-sizing: border-box;
+}
+
+
+/* ============================================================
+   SECTION DIVIDERS
+   ============================================================ */
+
+.mp-divider {
+  width: 100%;
+  height: 1px;
+  margin: 18px 0;
+  border: 0;
+  background: var(--shop-border, rgba(0, 0, 0, 0.1));
+}
+
+
+/* ============================================================
+   GENERIC MARKETPLACE GRIDS
+   ============================================================ */
+
+.mp-shell .product-grid,
+.mp-shell .products-grid,
+.mp-shell .shop-product-grid,
+.mp-shell .marketplace-product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+
+/* ============================================================
+   STORE GRIDS
+   ============================================================ */
+
+.mp-shell .store-grid,
+.mp-shell .stores-grid,
+.mp-shell .shop-store-grid,
+.mp-shell .marketplace-store-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+
+/* ============================================================
+   CATEGORY GRIDS
+   ============================================================ */
+
+.mp-shell .category-grid,
+.mp-shell .categories-grid,
+.mp-shell .shop-category-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+
+/* ============================================================
+   DENSE SECTION SPACING
+   ============================================================ */
+
+.mp-shell section {
+  margin-bottom: 20px;
+}
+
+.mp-shell section:last-child {
+  margin-bottom: 0;
+}
+
+
+/* ============================================================
+   SECTION HEADERS
+   ============================================================ */
+
+.mp-shell .section-header,
+.mp-shell .sec-head,
+.mp-shell .marketplace-section-header {
+  margin-bottom: 12px;
+}
+
+
+/* ============================================================
+   PRODUCT CARD DENSITY
+   ============================================================ */
+
+.mp-shell .product-card,
+.mp-shell .shop-product-card,
+.mp-shell .marketplace-product-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+
+/* ============================================================
+   STORE CARD DENSITY
+   ============================================================ */
+
+.mp-shell .store-card,
+.mp-shell .shop-store-card,
+.mp-shell .marketplace-store-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+
+/* ============================================================
+   HORIZONTAL MARKETPLACE SHELVES
+   ============================================================ */
+
+.mp-shell .horizontal-products,
+.mp-shell .product-shelf,
+.mp-shell .horizontal-shelf {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+
+.mp-shell .horizontal-products > *,
+.mp-shell .product-shelf > *,
+.mp-shell .horizontal-shelf > * {
+  flex: 0 0 auto;
+}
+
+
+/* ============================================================
+   COMPACT BUTTON AREAS
+   ============================================================ */
+
+.mp-shell .actions,
+.mp-shell .card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+
+/* ============================================================
+   RESPONSIVE — LARGE DESKTOP
+   ============================================================ */
+
+@media (max-width: 1200px) {
+  .mp-shell .product-grid,
+  .mp-shell .products-grid,
+  .mp-shell .shop-product-grid,
+  .mp-shell .marketplace-product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mp-shell .store-grid,
+  .mp-shell .stores-grid,
+  .mp-shell .shop-store-grid,
+  .mp-shell .marketplace-store-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mp-shell .category-grid,
+  .mp-shell .categories-grid,
+  .mp-shell .shop-category-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+
+/* ============================================================
+   RESPONSIVE — TABLET
+   ============================================================ */
+
+@media (max-width: 900px) {
+  .mp-shell .product-grid,
+  .mp-shell .products-grid,
+  .mp-shell .shop-product-grid,
+  .mp-shell .marketplace-product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .mp-shell .store-grid,
+  .mp-shell .stores-grid,
+  .mp-shell .shop-store-grid,
+  .mp-shell .marketplace-store-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .mp-shell .category-grid,
+  .mp-shell .categories-grid,
+  .mp-shell .shop-category-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .mp-divider {
+    margin: 16px 0;
+  }
+}
+
+
+/* ============================================================
+   RESPONSIVE — MOBILE
+   ============================================================ */
+
+@media (max-width: 650px) {
+  .mp-shell .product-grid,
+  .mp-shell .products-grid,
+  .mp-shell .shop-product-grid,
+  .mp-shell .marketplace-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .mp-shell .store-grid,
+  .mp-shell .stores-grid,
+  .mp-shell .shop-store-grid,
+  .mp-shell .marketplace-store-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .mp-shell .category-grid,
+  .mp-shell .categories-grid,
+  .mp-shell .shop-category-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .mp-shell section {
+    margin-bottom: 16px;
+  }
+
+  .mp-divider {
+    margin: 14px 0;
+  }
+}
+
+
+/* ============================================================
+   RESPONSIVE — SMALL PHONES
+   ============================================================ */
+
+@media (max-width: 420px) {
+  .mp-shell .product-grid,
+  .mp-shell .products-grid,
+  .mp-shell .shop-product-grid,
+  .mp-shell .marketplace-product-grid {
+    gap: 8px;
+  }
+
+  .mp-shell .store-grid,
+  .mp-shell .stores-grid,
+  .mp-shell .shop-store-grid,
+  .mp-shell .marketplace-store-grid {
+    gap: 8px;
+  }
+
+  .mp-shell .category-grid,
+  .mp-shell .categories-grid,
+  .mp-shell .shop-category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

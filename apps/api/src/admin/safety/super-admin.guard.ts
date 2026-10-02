@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   ForbiddenException,
   Injectable,
+  UnauthorizedException,
 } from "@nestjs/common";
 
 interface AuthenticatedAdminUser {
@@ -11,7 +12,9 @@ interface AuthenticatedAdminUser {
   roles?: string[];
 }
 
-function normalizeRole(value: unknown): string {
+function normalizeRole(
+  value: unknown,
+): string {
   return String(value ?? "")
     .trim()
     .toLowerCase()
@@ -21,38 +24,50 @@ function normalizeRole(value: unknown): string {
 function isSuperAdminUser(
   user: AuthenticatedAdminUser,
 ): boolean {
-  // Explicit database flag
-  if (user.isSuperAdmin === true) {
-    return true;
-  }
-
-  // Single role
-  const role = normalizeRole(user.role);
+  // ========================================================================
+  // EXPLICIT SUPER ADMIN FLAG
+  // ========================================================================
 
   if (
-    role === "super_admin" ||
-    role === "superadmin"
+    user.isSuperAdmin === true
   ) {
     return true;
   }
 
-  // Multiple roles
-  if (Array.isArray(user.roles)) {
-    return user.roles.some((value) => {
-      const normalized = normalizeRole(value);
+  // ========================================================================
+  // PRIMARY ROLE
+  // ========================================================================
 
-      return (
-        normalized === "super_admin" ||
-        normalized === "superadmin"
-      );
-    });
+  const role =
+    normalizeRole(user.role);
+
+  if (
+    role === "super_admin"
+  ) {
+    return true;
+  }
+
+  // ========================================================================
+  // MULTIPLE ROLES
+  // ========================================================================
+
+  if (
+    Array.isArray(user.roles)
+  ) {
+    return user.roles.some(
+      (value) =>
+        normalizeRole(value) ===
+        "super_admin",
+    );
   }
 
   return false;
 }
 
 @Injectable()
-export class SuperAdminGuard implements CanActivate {
+export class SuperAdminGuard
+  implements CanActivate
+{
   canActivate(
     context: ExecutionContext,
   ): boolean {
@@ -62,17 +77,29 @@ export class SuperAdminGuard implements CanActivate {
         .getRequest();
 
     const user =
-      request.user as AuthenticatedAdminUser | undefined;
+      request?.user as
+        | AuthenticatedAdminUser
+        | undefined;
+
+    // ========================================================================
+    // AUTHENTICATION
+    // ========================================================================
 
     if (!user) {
-      throw new ForbiddenException(
-        "Authentication required",
+      throw new UnauthorizedException(
+        "Authentication required.",
       );
     }
 
-    if (!isSuperAdminUser(user)) {
+    // ========================================================================
+    // SUPER ADMIN AUTHORIZATION
+    // ========================================================================
+
+    if (
+      !isSuperAdminUser(user)
+    ) {
       throw new ForbiddenException(
-        "Super admin privileges required",
+        "Super admin privileges required.",
       );
     }
 

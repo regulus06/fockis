@@ -1,0 +1,1020 @@
+/* ==========================================================================
+   FOCKIS CHURCH — GROUPS PAGE
+   ========================================================================== */
+
+.church-groups-page {
+  --groups-primary: #005a8d;
+  --groups-primary-light: #0879b5;
+  --groups-primary-dark: #003f63;
+
+  --groups-gold: #f6b62c;
+  --groups-gold-dark: #a86f00;
+  --groups-gold-light: #ffd76a;
+
+  --groups-ink: #172b4d;
+  --groups-muted: #66788a;
+
+  --groups-border: #dce4ea;
+  --groups-border-strong: #ccd8e0;
+
+  --groups-background: #f3f6f9;
+  --groups-white: #ffffff;
+
+  background: var(--groups-background);
+}
+
+.church-groups-content {
+  min-width: 0;
+  padding-bottom: 4rem;
+}
+
+/* ==========================================================================
+   HERO
+   ========================================================================== */
+
+.church-groups-hero {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+
+  min-height: 230px;
+
+  margin-bottom: 1.5rem;
+  padding: 2rem 2.25rem;
+
+  overflow: hidden;
+
+  border: 1px solid
+    rgba(0, 63, 99, 0.12);
+
+  border-radius: 18px;
+
+  background:
+    radial-gradient(
+      circle at 88% 12%,
+      rgba(246, 182, 44, 0.18),
+      transparent 32%
+    ),
+    linear-gradient(
+      135deg,
+      #003f63 0%,
+      #005a8d 58%,
+      #0879b5 100%
+    );
+
+  box-shadow:
+    0 18px 45px
+      rgba(0, 63, 99, 0.16);
+
+  color: #ffffff;
+}
+
+.church-groups-hero::before {
+  content: "";
+
+  position: absolute;
+
+  width: 300px;
+  height: 300px;
+
+  right: -115px;
+  bottom: -165px;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.12);
+
+  border-radius: 50%;
+
+  box-shadow:
+    0 0 0 38px
+      rgba(255, 255, 255, 0.025),
+    0 0 0 76px
+      rgba(255, 255, 255, 0.018);
+
+  pointer-events: none;
+}
+
+.church-groups-hero__icon {
+  position: relative;
+  z-index: 1;
+
+  flex: 0 0 76px;
+
+  width: 76px;
+  height: 76px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.2);
+
+  border-radius: 20px;
+
+  background: rgba(
+    255,
+    255,
+    255,
+    0.12
+  );
+
+  box-shadow:
+    inset 0 1px 0
+      rgba(255, 255, 255, 0.18);
+
+  backdrop-filter: blur(8px);
+
+  color: var(--groups-gold-light);
+
+  font-size: 2.25rem;
+}
+
+.church-groups-hero__content {
+  position: relative;
+  z-index: 1;
+
+  flex: 1;
+
+  min-width: 0;
+}
+
+.church-groups-hero__eyebrow {
+  margin-bottom: 0.35rem;
+
+  color: var(--groups-gold-light);
+
+  font-size: 0.72rem;
+  font-weight: 800;
+
+  letter-spacing: 0.16em;
+}
+
+.church-groups-hero h1 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: clamp(
+    1.75rem,
+    3vw,
+    2.5rem
+  );
+
+  line-height: 1.1;
+
+  letter-spacing: -0.025em;
+}
+
+.church-groups-hero p {
+  max-width: 700px;
+
+  margin: 0.7rem 0 0;
+
+  color: rgba(
+    255,
+    255,
+    255,
+    0.8
+  );
+
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+.church-groups-hero__stats {
+  display: flex;
+  align-items: center;
+
+  gap: 1.25rem;
+
+  margin-top: 1.25rem;
+}
+
+.church-groups-stat {
+  display: flex;
+  flex-direction: column;
+
+  gap: 0.15rem;
+}
+
+.church-groups-stat strong {
+  color: #ffffff;
+
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.church-groups-stat span {
+  color: rgba(
+    255,
+    255,
+    255,
+    0.62
+  );
+
+  font-size: 0.72rem;
+  font-weight: 700;
+
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.church-groups-stat__divider {
+  width: 1px;
+  height: 32px;
+
+  background: rgba(
+    255,
+    255,
+    255,
+    0.18
+  );
+}
+
+.church-groups-hero__action {
+  position: relative;
+  z-index: 2;
+
+  align-self: flex-start;
+
+  flex: 0 0 auto;
+}
+
+.church-groups-create-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 0.55rem;
+
+  min-height: 46px;
+
+  padding: 0.75rem 1.1rem;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.18);
+
+  box-shadow:
+    0 8px 22px
+      rgba(0, 0, 0, 0.16);
+
+  white-space: nowrap;
+}
+
+.church-groups-create-button span {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+/* ==========================================================================
+   FILTER TOOLBAR
+   ========================================================================== */
+
+.church-groups-toolbar {
+  margin-bottom: 1.5rem;
+  padding: 1.35rem 1.5rem;
+
+  border: 1px solid
+    var(--groups-border);
+
+  border-radius: 14px;
+
+  background: var(--groups-white);
+
+  box-shadow:
+    0 6px 22px
+      rgba(23, 43, 77, 0.055);
+}
+
+.church-groups-toolbar__heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 1rem;
+
+  margin-bottom: 1.1rem;
+}
+
+.church-groups-toolbar__label {
+  display: block;
+
+  margin-bottom: 0.25rem;
+
+  color: var(--groups-primary);
+
+  font-size: 0.68rem;
+  font-weight: 800;
+
+  letter-spacing: 0.13em;
+}
+
+.church-groups-toolbar h2 {
+  margin: 0;
+
+  color: var(--groups-ink);
+
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.church-groups-clear-button {
+  border: 0;
+
+  padding: 0.3rem 0;
+
+  background: transparent;
+
+  color: var(--groups-primary);
+
+  font-size: 0.82rem;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.church-groups-clear-button:hover {
+  text-decoration: underline;
+}
+
+.church-groups-filters {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 2fr)
+    minmax(220px, 1fr);
+
+  gap: 1rem;
+}
+
+.church-groups-filter {
+  display: flex;
+  flex-direction: column;
+
+  gap: 0.45rem;
+}
+
+.church-groups-filter > span {
+  color: var(--groups-muted);
+
+  font-size: 0.72rem;
+  font-weight: 800;
+
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.church-groups-search {
+  position: relative;
+}
+
+.church-groups-search .church-input {
+  width: 100%;
+
+  padding-left: 2.6rem;
+}
+
+.church-groups-search__icon {
+  position: absolute;
+
+  left: 0.9rem;
+  top: 50%;
+
+  z-index: 1;
+
+  transform: translateY(-50%);
+
+  color: var(--groups-muted);
+
+  font-size: 1.25rem;
+
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   ERROR
+   ========================================================================== */
+
+.church-groups-alert {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 0.9rem;
+
+  margin-bottom: 1.5rem;
+
+  padding: 1rem 1.1rem;
+
+  border-radius: 12px;
+}
+
+.church-groups-alert__icon {
+  flex: 0 0 32px;
+
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: rgba(
+    180,
+    38,
+    38,
+    0.1
+  );
+
+  color: #b3261e;
+
+  font-weight: 900;
+}
+
+.church-groups-alert__content {
+  min-width: 0;
+  flex: 1;
+}
+
+.church-groups-alert__content strong {
+  display: block;
+
+  margin-bottom: 0.2rem;
+
+  color: #8d211b;
+}
+
+.church-groups-alert__content p {
+  margin: 0;
+
+  color: #70413e;
+
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   LIST HEADING
+   ========================================================================== */
+
+.church-groups-list-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 1rem;
+
+  margin-bottom: 1rem;
+}
+
+.church-groups-list-heading > div:first-child > span {
+  display: block;
+
+  margin-bottom: 0.25rem;
+
+  color: var(--groups-primary);
+
+  font-size: 0.68rem;
+  font-weight: 800;
+
+  letter-spacing: 0.12em;
+}
+
+.church-groups-list-heading h2 {
+  margin: 0;
+
+  color: var(--groups-ink);
+
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.church-groups-count {
+  padding: 0.35rem 0.7rem;
+
+  border: 1px solid
+    rgba(0, 90, 141, 0.14);
+
+  border-radius: 999px;
+
+  background: rgba(
+    0,
+    90,
+    141,
+    0.055
+  );
+
+  color: var(--groups-primary);
+
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   GROUP GRID
+   ========================================================================== */
+
+.church-groups-grid {
+  grid-template-columns: repeat(
+    3,
+    minmax(0, 1fr)
+  );
+
+  align-items: stretch;
+
+  gap: 1.1rem;
+}
+
+.church-groups-grid > * {
+  min-width: 0;
+}
+
+/* ==========================================================================
+   LOADING
+   ========================================================================== */
+
+.church-groups-loading {
+  padding-top: 0.25rem;
+}
+
+.church-groups-loading__header {
+  display: flex;
+  flex-direction: column;
+
+  gap: 0.6rem;
+
+  margin-bottom: 1.2rem;
+}
+
+.church-groups-skeleton-grid {
+  display: grid;
+
+  grid-template-columns: repeat(
+    3,
+    minmax(0, 1fr)
+  );
+
+  gap: 1.1rem;
+}
+
+.church-group-skeleton-card {
+  min-height: 230px;
+
+  display: flex;
+
+  gap: 1rem;
+
+  padding: 1.25rem;
+
+  border: 1px solid
+    var(--groups-border);
+
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 5px 18px
+      rgba(23, 43, 77, 0.045);
+}
+
+.church-group-skeleton-card__body {
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 0.7rem;
+}
+
+.church-skeleton {
+  position: relative;
+
+  overflow: hidden;
+
+  border-radius: 7px;
+
+  background: #e6edf2;
+}
+
+.church-skeleton::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  transform: translateX(-100%);
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.62),
+    transparent
+  );
+
+  animation:
+    church-groups-skeleton-shimmer
+    1.4s infinite;
+}
+
+.church-skeleton--title {
+  width: 240px;
+  height: 25px;
+}
+
+.church-skeleton--text {
+  width: 340px;
+  max-width: 80%;
+  height: 14px;
+}
+
+.church-skeleton--avatar {
+  flex: 0 0 54px;
+
+  width: 54px;
+  height: 54px;
+
+  border-radius: 14px;
+}
+
+.church-skeleton--line {
+  width: 85%;
+  height: 14px;
+}
+
+.church-skeleton--short {
+  width: 58%;
+}
+
+.church-skeleton--tiny {
+  width: 42%;
+}
+
+.church-skeleton--button {
+  width: 120px;
+  height: 38px;
+
+  margin-top: auto;
+
+  border-radius: 8px;
+}
+
+@keyframes church-groups-skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ==========================================================================
+   EMPTY STATE
+   ========================================================================== */
+
+.church-groups-empty {
+  min-height: 330px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 3rem 1.5rem;
+
+  border: 1px dashed
+    var(--groups-border-strong);
+
+  border-radius: 16px;
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(0, 90, 141, 0.055),
+      transparent 38%
+    ),
+    #ffffff;
+
+  text-align: center;
+}
+
+.church-groups-empty__icon {
+  width: 68px;
+  height: 68px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 1rem;
+
+  border-radius: 18px;
+
+  background: rgba(
+    0,
+    90,
+    141,
+    0.07
+  );
+
+  color: var(--groups-primary);
+
+  font-size: 1.8rem;
+}
+
+.church-groups-empty h2 {
+  margin: 0;
+
+  color: var(--groups-ink);
+
+  font-size: 1.3rem;
+}
+
+.church-groups-empty p {
+  max-width: 480px;
+
+  margin: 0.6rem 0 0;
+
+  color: var(--groups-muted);
+
+  line-height: 1.6;
+}
+
+.church-groups-empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+
+  gap: 0.7rem;
+
+  margin-top: 1.3rem;
+}
+
+/* ==========================================================================
+   INPUTS / BUTTONS
+   ========================================================================== */
+
+.church-groups-page
+  .church-input,
+.church-groups-page
+  .church-select {
+  min-height: 44px;
+
+  border-color:
+    var(--groups-border-strong);
+
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: var(--groups-ink);
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.church-groups-page
+  .church-input:hover,
+.church-groups-page
+  .church-select:hover {
+  border-color: #aebdca;
+}
+
+.church-groups-page
+  .church-input:focus,
+.church-groups-page
+  .church-select:focus {
+  border-color:
+    var(--groups-primary);
+
+  box-shadow:
+    0 0 0 3px
+      rgba(0, 90, 141, 0.1);
+
+  outline: none;
+}
+
+.church-groups-page
+  .church-button {
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.church-groups-page
+  .church-button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.church-groups-page
+  .church-button:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.church-groups-page
+  .church-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* ==========================================================================
+   TABLET
+   ========================================================================== */
+
+@media (max-width: 1100px) {
+  .church-groups-grid,
+  .church-groups-skeleton-grid {
+    grid-template-columns: repeat(
+      2,
+      minmax(0, 1fr)
+    );
+  }
+
+  .church-groups-hero {
+    align-items: flex-start;
+  }
+
+  .church-groups-hero__action {
+    margin-left: auto;
+  }
+}
+
+/* ==========================================================================
+   SMALL TABLET
+   ========================================================================== */
+
+@media (max-width: 900px) {
+  .church-groups-hero {
+    padding: 1.6rem;
+
+    gap: 1.1rem;
+  }
+
+  .church-groups-hero__icon {
+    flex-basis: 62px;
+
+    width: 62px;
+    height: 62px;
+
+    border-radius: 16px;
+
+    font-size: 1.8rem;
+  }
+
+  .church-groups-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   MOBILE
+   ========================================================================== */
+
+@media (max-width: 700px) {
+  .church-groups-content {
+    padding-bottom: 2.5rem;
+  }
+
+  .church-groups-hero {
+    flex-direction: column;
+
+    min-height: 0;
+
+    padding: 1.4rem;
+
+    border-radius: 14px;
+  }
+
+  .church-groups-hero__icon {
+    width: 56px;
+    height: 56px;
+
+    flex-basis: 56px;
+  }
+
+  .church-groups-hero__action {
+    width: 100%;
+
+    margin-left: 0;
+  }
+
+  .church-groups-create-button {
+    width: 100%;
+  }
+
+  .church-groups-toolbar {
+    padding: 1rem;
+
+    border-radius: 12px;
+  }
+
+  .church-groups-list-heading {
+    align-items: flex-start;
+  }
+
+  .church-groups-grid,
+  .church-groups-skeleton-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   SMALL MOBILE
+   ========================================================================== */
+
+@media (max-width: 430px) {
+  .church-groups-hero h1 {
+    font-size: 1.65rem;
+  }
+
+  .church-groups-hero p {
+    font-size: 0.9rem;
+  }
+
+  .church-groups-hero__stats {
+    gap: 0.9rem;
+  }
+
+  .church-groups-stat strong {
+    font-size: 1.05rem;
+  }
+
+  .church-groups-stat span {
+    font-size: 0.65rem;
+  }
+
+  .church-groups-toolbar__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .church-groups-list-heading {
+    flex-direction: column;
+  }
+
+  .church-groups-empty {
+    min-height: 280px;
+
+    padding: 2rem 1rem;
+  }
+
+  .church-groups-empty__actions {
+    width: 100%;
+
+    flex-direction: column;
+  }
+
+  .church-groups-empty__actions
+    .church-button {
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+   REDUCED MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .church-groups-page
+    .church-button {
+    transition: none;
+  }
+
+  .church-skeleton::after {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   PRINT
+   ========================================================================== */
+
+@media print {
+  .church-groups-page
+    .church-groups-hero {
+    color: #000;
+
+    background: #fff;
+
+    border: 1px solid #ccc;
+
+    box-shadow: none;
+  }
+
+  .church-groups-hero h1,
+  .church-groups-hero p,
+  .church-groups-stat strong,
+  .church-groups-stat span {
+    color: #000;
+  }
+
+  .church-groups-toolbar,
+  .church-groups-hero__action,
+  .church-groups-clear-button {
+    display: none;
+  }
+}

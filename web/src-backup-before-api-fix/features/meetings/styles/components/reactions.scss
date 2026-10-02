@@ -1,0 +1,40 @@
+@use '../tokens' as t;
+
+.fm-reactions-tray {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  background: t.$void-800;
+  border: 1px solid t.$void-600;
+  border-radius: t.$radius-pill;
+  padding: 6px;
+  box-shadow: t.$shadow-lg;
+  z-index: t.$z-overlay;
+
+  &__item {
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    background: none;
+    border: none;
+    border-radius: 50%;
+    transition: background t.$dur-fast t.$ease-out, transform t.$dur-fast t.$ease-out;
+    &:hover { background: t.$void-700; transform: scale(1.15); }
+  }
+}
+
+.fm-floating-reaction {
+  position: absolute;
+  font-size: 28px;
+  animation: fm-float-up 2.2s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes fm-float-up {
+  0% { opacity: 0; transform: translateY(0) scale(0.6); }
+  15% { opacity: 1; transform: translateY(-20px) scale(1); }
+  100% { opacity: 0; transform: translateY(-140px) scale(1); }
+}

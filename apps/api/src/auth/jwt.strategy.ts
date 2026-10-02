@@ -1,5 +1,6 @@
 // ============================================================================
 // FOCKIS JWT STRATEGY
+// Database-authoritative authentication + route-aware session security
 // ============================================================================
 
 import {
@@ -30,6 +31,11 @@ import {
   UserDocument,
 } from "../users/user.schema";
 
+import {
+  AdminRole,
+  AdminRoleDocument,
+} from "../admin/roles/admin-role.schema";
+
 // ============================================================================
 // JWT PAYLOAD
 // ============================================================================
@@ -54,6 +60,22 @@ interface JwtPayload {
 }
 
 // ============================================================================
+// SESSION POLICY
+// ============================================================================
+
+type SessionPolicyName =
+  | "standard"
+  | "protected"
+  | "admin"
+  | "super_admin";
+
+interface SessionPolicy {
+  name: SessionPolicyName;
+  inactivityMinutes: number;
+  maximumSessionHours: number;
+}
+
+// ============================================================================
 // JWT STRATEGY
 // ============================================================================
 
@@ -62,24 +84,110 @@ export class JwtStrategy extends PassportStrategy(
   Strategy,
   "jwt",
 ) {
-  private readonly DEFAULT_INACTIVITY_TIMEOUT_MINUTES = 15;
+  // ==========================================================================
+  // STANDARD FOCKIS
+  // ==========================================================================
 
-  private readonly DEFAULT_MAXIMUM_SESSION_HOURS = 12;
+  /**
+   * Normal social/platform areas should not force users to re-authenticate
+   * after only a few minutes of inactivity.
+   *
+   * Applies to:
+   * - Feed
+   * - Social
+   * - Shop
+   * - Marketplace
+   * - Real Estate
+   * - Travel
+   * - Music
+   * - Playlists
+   * - Messages
+   * - Other normal Fockis features
+   */
+  private readonly STANDARD_SESSION: SessionPolicy = {
+    name: "standard",
+    inactivityMinutes: 120,
+    maximumSessionHours: 24,
+  };
 
+  // ==========================================================================
+  // PROTECTED FOCKIS AREAS
+  // ==========================================================================
+
+  /**
+   * More sensitive application areas.
+   *
+   * Applies to:
+   * - Organizations
+   * - Academy
+   * - Careers
+   */
+  private readonly PROTECTED_SESSION: SessionPolicy = {
+    name: "protected",
+    inactivityMinutes: 15,
+    maximumSessionHours: 12,
+  };
+
+  // ==========================================================================
+  // ADMIN
+  // ==========================================================================
+
+  private readonly ADMIN_SESSION: SessionPolicy = {
+    name: "admin",
+    inactivityMinutes: 10,
+    maximumSessionHours: 8,
+  };
+
+  // ==========================================================================
+  // SUPER ADMIN
+  // ==========================================================================
+
+  private readonly SUPER_ADMIN_SESSION: SessionPolicy = {
+    name: "super_admin",
+    inactivityMinutes: 5,
+    maximumSessionHours: 4,
+  };
+
+  // ==========================================================================
+  // ACTIVITY WRITE THROTTLE
+  // ==========================================================================
+
+  /**
+   * Avoid writing to MongoDB on every API request.
+   */
   private readonly ACTIVITY_UPDATE_INTERVAL_MS =
     60 * 1000;
 
   constructor(
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
+
+    @InjectModel(AdminRole.name)
+    private readonly adminRoleModel: Model<AdminRoleDocument>,
   ) {
+    const jwtSecret = process.env.JWT_SECRET?.trim();
+
+    // ------------------------------------------------------------------------
+    // JWT SECRET
+    // ------------------------------------------------------------------------
+
+    if (!jwtSecret) {
+      throw new Error(
+        "JWT_SECRET environment variable is required.",
+      );
+    }
+
+    if (jwtSecret.length < 32) {
+      throw new Error(
+        "JWT_SECRET must be at least 32 characters.",
+      );
+    }
+
     super({
       jwtFromRequest:
         ExtractJwt.fromAuthHeaderAsBearerToken(),
 
-      secretOrKey:
-        process.env.JWT_SECRET ||
-        "secretKey123",
+      secretOrKey: jwtSecret,
 
       ignoreExpiration: false,
 
@@ -95,10 +203,6 @@ export class JwtStrategy extends PassportStrategy(
     request: any,
     payload: JwtPayload,
   ) {
-    console.log(
-      "🔐 JWT STRATEGY: validate() reached",
-    );
-
     // ========================================================================
     // RESOLVE USER ID
     // ========================================================================
@@ -109,145 +213,49 @@ export class JwtStrategy extends PassportStrategy(
       payload?.id;
 
     if (!userId) {
-      console.error(
-        "❌ JWT AUTH: token has no user ID",
-      );
-
       throw new UnauthorizedException(
-        "Invalid authentication token: user ID is missing.",
+        "Invalid authentication token.",
       );
     }
 
-    if (
-      !Types.ObjectId.isValid(userId)
-    ) {
-      console.error(
-        "❌ JWT AUTH: invalid user ID",
-      );
-
+    if (!Types.ObjectId.isValid(userId)) {
       throw new UnauthorizedException(
-        "Invalid authentication token: invalid user ID.",
+        "Invalid authentication token.",
       );
     }
-
-    console.log(
-      "🔐 JWT AUTH: user ID resolved",
-      userId,
-    );
 
     // ========================================================================
     // LOAD CURRENT USER
     // ========================================================================
 
-    const user =
-      await this.userModel
-        .findById(userId)
-        .lean()
-        .exec();
+    /**
+     * Authorization is always based on the current database record.
+     *
+     * The JWT does NOT get to decide:
+     *
+     * - role
+     * - permissions
+     * - super-admin status
+     * - account status
+     * - custom admin role
+     */
+
+    const user = await this.userModel
+      .findById(userId)
+      .lean()
+      .exec();
 
     if (!user) {
-      console.error(
-        "❌ JWT AUTH: user not found",
-      );
-
       throw new UnauthorizedException(
         "User not found.",
       );
     }
 
     // ========================================================================
-    // RESOLVE ROLE
-    // ========================================================================
-
-    const userRole =
-      String(
-        (user as any).role ??
-        payload?.role ??
-        "user",
-      )
-        .trim()
-        .toLowerCase();
-
-    // ========================================================================
-    // RESOLVE SUPER ADMIN
-    // ========================================================================
-
-    const databaseIsSuperAdmin =
-      Boolean(
-        (user as any)
-          .isSuperAdmin,
-      );
-
-    const roleIsSuperAdmin =
-      userRole ===
-        "super_admin" ||
-      userRole ===
-        "superadmin";
-
-    const isSuperAdmin =
-      databaseIsSuperAdmin ||
-      roleIsSuperAdmin;
-
-    console.log(
-      "🔐 JWT AUTHORIZATION",
-      {
-        userId:
-          String(user._id),
-
-        role:
-          userRole,
-
-        databaseIsSuperAdmin,
-
-        roleIsSuperAdmin,
-
-        isSuperAdmin,
-      },
-    );
-
-    // ========================================================================
-    // USER FOUND
-    // ========================================================================
-
-    console.log(
-      "🔐 JWT AUTH: user found",
-      {
-        id:
-          String(user._id),
-
-        fockisId:
-          String(
-            (user as any)
-              .fockisId || "",
-          ),
-
-        email:
-          user.email,
-
-        role:
-          userRole,
-
-        isActive:
-          user.isActive,
-
-        isSuperAdmin,
-
-        mustChangePassword:
-          Boolean(
-            user.mustChangePassword,
-          ),
-      },
-    );
-
-    // ========================================================================
     // ACCOUNT STATUS
     // ========================================================================
 
     if (!Boolean(user.isActive)) {
-      console.error(
-        "❌ JWT AUTH: account disabled",
-      );
-
       throw new UnauthorizedException(
         "This account has been disabled.",
       );
@@ -258,28 +266,20 @@ export class JwtStrategy extends PassportStrategy(
     // ========================================================================
 
     const lockedUntil =
-      this.toDate(
-        user.lockedUntil,
-      );
+      this.toDate(user.lockedUntil);
 
     if (
       lockedUntil &&
-      lockedUntil.getTime() >
-        Date.now()
+      lockedUntil.getTime() > Date.now()
     ) {
-      const remainingSeconds =
-        Math.max(
-          1,
-          Math.ceil(
-            (
-              lockedUntil.getTime() -
-              Date.now()
-            ) / 1000,
-          ),
-        );
-
-      console.error(
-        "❌ JWT AUTH: account locked",
+      const remainingSeconds = Math.max(
+        1,
+        Math.ceil(
+          (
+            lockedUntil.getTime() -
+            Date.now()
+          ) / 1000,
+        ),
       );
 
       throw new UnauthorizedException(
@@ -288,18 +288,132 @@ export class JwtStrategy extends PassportStrategy(
     }
 
     // ========================================================================
+    // SYSTEM ROLE
+    // ========================================================================
+
+    /**
+     * Database is authoritative.
+     *
+     * Never fall back to payload.role.
+     */
+    const userRole =
+      this.normalizeRole(
+        String(
+          (user as any).role ?? "user",
+        ),
+      );
+
+    // ========================================================================
+    // SUPER ADMIN
+    // ========================================================================
+
+    /**
+     * JWT claims cannot elevate a user.
+     */
+    const databaseIsSuperAdmin =
+      Boolean(
+        (user as any).isSuperAdmin,
+      );
+
+    const roleIsSuperAdmin =
+      userRole === "super_admin";
+
+    const isSuperAdmin =
+      databaseIsSuperAdmin ||
+      roleIsSuperAdmin;
+
+    // ========================================================================
+    // CUSTOM ADMIN ROLE
+    // ========================================================================
+
+    let customRole:
+      | AdminRoleDocument
+      | null = null;
+
+    let customRolePermissions: string[] = [];
+
+    const adminRoleId =
+      (user as any).adminRoleId;
+
+    if (
+      adminRoleId &&
+      Types.ObjectId.isValid(
+        String(adminRoleId),
+      )
+    ) {
+      customRole =
+        await this.adminRoleModel
+          .findOne({
+            _id: adminRoleId,
+            isActive: true,
+          })
+          .lean()
+          .exec() as AdminRoleDocument | null;
+
+      /**
+       * If a referenced custom role no longer exists
+       * or is inactive, do not grant its permissions.
+       */
+      if (customRole) {
+        customRolePermissions =
+          this.normalizePermissions(
+            Array.isArray(
+              (customRole as any).permissions,
+            )
+              ? (customRole as any).permissions
+              : [],
+          );
+      }
+    }
+
+    // ========================================================================
+    // DIRECT USER PERMISSIONS
+    // ========================================================================
+
+    const directPermissions =
+      this.normalizePermissions(
+        Array.isArray(
+          (user as any).permissions,
+        )
+          ? (user as any).permissions
+          : [],
+      );
+
+    // ========================================================================
+    // MERGE PERMISSIONS
+    // ========================================================================
+
+    const permissions =
+      Array.from(
+        new Set([
+          ...directPermissions,
+          ...customRolePermissions,
+        ]),
+      );
+
+    // ========================================================================
+    // DETERMINE SESSION POLICY
+    // ========================================================================
+
+    const sessionPolicy =
+      this.getSessionPolicy(
+        request,
+        userRole,
+        isSuperAdmin,
+      );
+
+    // ========================================================================
     // JWT MAXIMUM SESSION AGE
     // ========================================================================
 
     if (
-      typeof payload?.iat ===
-      "number"
+      typeof payload?.iat === "number"
     ) {
       const issuedAtMs =
         payload.iat * 1000;
 
       const maximumSessionMs =
-        this.DEFAULT_MAXIMUM_SESSION_HOURS *
+        sessionPolicy.maximumSessionHours *
         60 *
         60 *
         1000;
@@ -312,10 +426,6 @@ export class JwtStrategy extends PassportStrategy(
         sessionAgeMs >
         maximumSessionMs
       ) {
-        console.error(
-          "❌ JWT AUTH: maximum session age exceeded",
-        );
-
         throw new UnauthorizedException(
           "Your session has expired. Please sign in again.",
         );
@@ -323,7 +433,7 @@ export class JwtStrategy extends PassportStrategy(
     }
 
     // ========================================================================
-    // INACTIVITY SECURITY
+    // ROUTE-AWARE INACTIVITY SECURITY
     // ========================================================================
 
     const lastActiveAt =
@@ -333,7 +443,7 @@ export class JwtStrategy extends PassportStrategy(
 
     if (lastActiveAt) {
       const inactivityLimitMs =
-        this.DEFAULT_INACTIVITY_TIMEOUT_MINUTES *
+        sessionPolicy.inactivityMinutes *
         60 *
         1000;
 
@@ -352,18 +462,13 @@ export class JwtStrategy extends PassportStrategy(
           {
             $set: {
               online: false,
-              lastSeen:
-                new Date(),
+              lastSeen: new Date(),
             },
           },
         );
 
-        console.error(
-          "❌ JWT AUTH: inactivity timeout",
-        );
-
         throw new UnauthorizedException(
-          "Your session expired because of inactivity. Please sign in again.",
+          `Your ${sessionPolicy.name} session expired because of inactivity. Please sign in again.`,
         );
       }
     }
@@ -372,15 +477,12 @@ export class JwtStrategy extends PassportStrategy(
     // REFRESH ACTIVITY
     // ========================================================================
 
-    const now =
-      Date.now();
+    const now = Date.now();
 
-    let shouldUpdateActivity =
-      false;
+    let shouldUpdateActivity = false;
 
     if (!lastActiveAt) {
-      shouldUpdateActivity =
-        true;
+      shouldUpdateActivity = true;
     } else {
       const elapsedSinceActivity =
         now -
@@ -419,36 +521,47 @@ export class JwtStrategy extends PassportStrategy(
 
     const fockisId =
       String(
-        (user as any)
-          .fockisId || "",
+        (user as any).fockisId || "",
       )
         .trim()
         .toUpperCase();
 
     // ========================================================================
-    // SUCCESS
+    // CUSTOM ROLE INFORMATION
     // ========================================================================
 
-    console.log(
-      "✅ JWT AUTH SUCCESS",
-      {
-        userId:
-          String(user._id),
+    const customRoleId =
+      customRole
+        ? String(
+            (customRole as any)._id,
+          )
+        : null;
 
-        fockisId,
+    const customRoleSlug =
+      customRole
+        ? String(
+            (customRole as any).slug || "",
+          )
+            .trim()
+            .toLowerCase()
+        : null;
 
-        role:
-          userRole,
-
-        isSuperAdmin,
-      },
-    );
+    const customRoleName =
+      customRole
+        ? String(
+            (customRole as any).name || "",
+          ).trim()
+        : null;
 
     // ========================================================================
     // REQUEST.USER
     // ========================================================================
 
     return {
+      // ======================================================================
+      // IDENTIFIERS
+      // ======================================================================
+
       id:
         user._id.toString(),
 
@@ -458,8 +571,11 @@ export class JwtStrategy extends PassportStrategy(
       sub:
         user._id.toString(),
 
-      // PUBLIC FOCKIS ID
       fockisId,
+
+      // ======================================================================
+      // ACCOUNT
+      // ======================================================================
 
       email:
         user.email,
@@ -467,14 +583,54 @@ export class JwtStrategy extends PassportStrategy(
       username:
         user.username,
 
+      // ======================================================================
+      // SYSTEM ROLE
+      // ======================================================================
+
       role:
         userRole,
 
-      permissions:
-        user.permissions ||
-        [],
+      // ======================================================================
+      // CUSTOM ADMIN ROLE
+      // ======================================================================
+
+      adminRoleId:
+        customRoleId,
+
+      adminRoleSlug:
+        customRoleSlug,
+
+      adminRoleName:
+        customRoleName,
+
+      // ======================================================================
+      // PERMISSIONS
+      // ======================================================================
+
+      permissions,
+
+      // ======================================================================
+      // SUPER ADMIN
+      // ======================================================================
 
       isSuperAdmin,
+
+      // ======================================================================
+      // SESSION POLICY
+      // ======================================================================
+
+      sessionPolicy:
+        sessionPolicy.name,
+
+      inactivityTimeoutMinutes:
+        sessionPolicy.inactivityMinutes,
+
+      maximumSessionHours:
+        sessionPolicy.maximumSessionHours,
+
+      // ======================================================================
+      // ACCOUNT SECURITY
+      // ======================================================================
 
       isActive:
         Boolean(
@@ -502,8 +658,7 @@ export class JwtStrategy extends PassportStrategy(
 
       failedLoginAttempts:
         Number(
-          user.failedLoginAttempts ||
-          0,
+          user.failedLoginAttempts || 0,
         ),
 
       lockedUntil:
@@ -512,9 +667,12 @@ export class JwtStrategy extends PassportStrategy(
 
       lockoutCount:
         Number(
-          user.lockoutCount ||
-          0,
+          user.lockoutCount || 0,
         ),
+
+      // ======================================================================
+      // ACTIVITY
+      // ======================================================================
 
       lastLoginAt:
         user.lastLoginAt ||
@@ -532,6 +690,10 @@ export class JwtStrategy extends PassportStrategy(
         Boolean(
           user.online,
         ),
+
+      // ======================================================================
+      // PROFILE / OPTIONAL FIELDS
+      // ======================================================================
 
       age:
         (user as any).age,
@@ -561,9 +723,182 @@ export class JwtStrategy extends PassportStrategy(
         (user as any).device,
 
       operatingSystem:
-        (user as any)
-          .operatingSystem,
+        (user as any).operatingSystem,
     };
+  }
+
+  // ==========================================================================
+  // SESSION POLICY ROUTER
+  // ==========================================================================
+
+  /**
+   * Determines the security policy based on the current API route.
+   *
+   * IMPORTANT:
+   *
+   * This does NOT change authorization.
+   *
+   * It only determines how long the current authentication session
+   * may remain valid and how long it may remain inactive.
+   */
+  private getSessionPolicy(
+    request: any,
+    userRole: string,
+    isSuperAdmin: boolean,
+  ): SessionPolicy {
+    // ========================================================================
+    // SUPER ADMIN
+    // ========================================================================
+
+    if (
+      isSuperAdmin ||
+      userRole === "super_admin"
+    ) {
+      return this.SUPER_ADMIN_SESSION;
+    }
+
+    // ========================================================================
+    // ADMIN
+    // ========================================================================
+
+    if (
+      userRole === "admin" ||
+      userRole === "moderator"
+    ) {
+      const path =
+        this.getRequestPath(request);
+
+      if (
+        this.isAdminPath(path)
+      ) {
+        return this.ADMIN_SESSION;
+      }
+    }
+
+    // ========================================================================
+    // PROTECTED APPLICATION AREAS
+    // ========================================================================
+
+    const path =
+      this.getRequestPath(request);
+
+    if (
+      this.isProtectedApplicationPath(path)
+    ) {
+      return this.PROTECTED_SESSION;
+    }
+
+    // ========================================================================
+    // NORMAL FOCKIS
+    // ========================================================================
+
+    return this.STANDARD_SESSION;
+  }
+
+  // ==========================================================================
+  // REQUEST PATH
+  // ==========================================================================
+
+  private getRequestPath(
+    request: any,
+  ): string {
+    const rawPath =
+      String(
+        request?.originalUrl ??
+        request?.url ??
+        request?.path ??
+        "",
+      );
+
+    /**
+     * Remove query string.
+     */
+    const path =
+      rawPath.split("?")[0];
+
+    return path
+      .trim()
+      .toLowerCase()
+      .replace(/\/+/g, "/");
+  }
+
+  // ==========================================================================
+  // ADMIN ROUTES
+  // ==========================================================================
+
+  private isAdminPath(
+    path: string,
+  ): boolean {
+    return (
+      path === "/admin" ||
+      path.startsWith("/admin/")
+    );
+  }
+
+  // ==========================================================================
+  // PROTECTED APPLICATION ROUTES
+  // ==========================================================================
+
+  private isProtectedApplicationPath(
+    path: string,
+  ): boolean {
+    return (
+      // Organizations
+      path === "/organizations" ||
+      path.startsWith("/organizations/") ||
+
+      // Academy
+      path === "/academy" ||
+      path.startsWith("/academy/") ||
+
+      // Careers
+      path === "/careers" ||
+      path.startsWith("/careers/") ||
+
+      // Singular route variants if used by older Fockis modules
+      path === "/organization" ||
+      path.startsWith("/organization/") ||
+
+      path === "/career" ||
+      path.startsWith("/career/")
+    );
+  }
+
+  // ==========================================================================
+  // ROLE NORMALIZATION
+  // ==========================================================================
+
+  private normalizeRole(
+    role: unknown,
+  ): string {
+    return String(role ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/[\s-]+/g, "_");
+  }
+
+  // ==========================================================================
+  // PERMISSION NORMALIZATION
+  // ==========================================================================
+
+  private normalizePermissions(
+    permissions: unknown,
+  ): string[] {
+    if (!Array.isArray(permissions)) {
+      return [];
+    }
+
+    return Array.from(
+      new Set(
+        permissions
+          .map((permission) =>
+            String(permission)
+              .trim()
+              .toLowerCase(),
+          )
+          .filter(Boolean),
+      ),
+    );
   }
 
   // ==========================================================================
@@ -577,9 +912,7 @@ export class JwtStrategy extends PassportStrategy(
       return null;
     }
 
-    if (
-      value instanceof Date
-    ) {
+    if (value instanceof Date) {
       return Number.isNaN(
         value.getTime(),
       )

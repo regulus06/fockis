@@ -1,0 +1,44 @@
+.panel {
+  background: var(--careers-card);
+  border: 1px solid var(--careers-line);
+  border-radius: var(--careers-radius);
+  box-shadow: var(--careers-shadow-lg);
+  padding: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.field {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--careers-radius-sm);
+
+  &:not(:last-child) { border-right: 1px solid var(--careers-line); }
+
+  input, select {
+    border: none;
+    background: none;
+    font-size: 14px;
+    width: 100%;
+    font-family: inherit;
+    color: var(--careers-ink);
+    &:focus { outline: none; }
+  }
+}
+.icon { color: var(--careers-ink-faint); flex-shrink: 0; }
+.searchBtn {
+  border: none;
+  background: var(--careers-indigo);
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px 24px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  cursor: pointer;
+  &:hover { background: var(--careers-indigo-deep); }
+}

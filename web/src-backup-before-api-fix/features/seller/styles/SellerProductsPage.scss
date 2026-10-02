@@ -1,0 +1,141 @@
+@use "./seller-console-shared";
+
+.seller-products {
+  min-height: 100vh;
+  background: var(--fk-bg);
+  padding-bottom: 70px;
+}
+
+.products-body {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+
+  @media (max-width: 768px) { padding: 16px; }
+}
+
+.products-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+
+  h1 {
+    margin: 4px 0 4px;
+    color: var(--fk-text);
+    font-family: var(--fk-font-display);
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  p {
+    margin: 0;
+    color: var(--fk-text-2);
+    font-size: 13px;
+  }
+}
+
+.products-summary {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.summary-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px 16px;
+
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-pill);
+
+  span:last-child { color: var(--fk-text-2); font-size: 12px; }
+}
+
+.summary-count {
+  color: var(--fk-text);
+  font-family: var(--fk-font-display);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.summary-warning .summary-count { color: var(--fk-warning); }
+.summary-danger .summary-count { color: var(--fk-danger); }
+
+.search-bar {
+  margin-bottom: 16px;
+}
+
+.product-search {
+  width: 100%;
+  max-width: 360px;
+  height: 40px;
+  padding: 0 14px;
+
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-md);
+
+  background: var(--fk-surface);
+  color: var(--fk-text);
+
+  font-size: 13px;
+
+  &::placeholder { color: var(--fk-text-3); }
+
+  &:focus {
+    outline: none;
+    border-color: var(--fk-fjord-bright);
+    box-shadow: 0 0 0 3px var(--fk-fjord-soft);
+  }
+}
+
+.product-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  h3 {
+    margin: 0;
+    color: var(--fk-text);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 2px 0 0;
+    color: var(--fk-text-3);
+    font-size: 12px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 260px;
+  }
+}
+
+.product-thumb {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+
+  object-fit: cover;
+  border-radius: var(--fk-r-sm);
+
+  background: var(--fk-sunken);
+}
+
+.price-cell { font-weight: 700; }
+
+.stock-value { font-weight: 700; }
+.stock-low { color: var(--fk-danger); }
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+}

@@ -1,0 +1,311 @@
+.page {
+max-width: 1280px;
+margin: 0 auto;
+padding: 32px 20px 64px;
+}
+
+.heading {
+font-family: Arial, sans-serif;
+font-weight: 600;
+font-size: clamp(24px, 3vw, 32px);
+color: #171717;
+margin: 0 0 24px;
+}
+
+.itemsHeader {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 20px;
+font-size: 14px;
+color: #666666;
+gap: 16px;
+}
+
+.continueLink {
+appearance: none;
+border: 0;
+background: transparent;
+padding: 0;
+margin: 0;
+cursor: pointer;
+
+font-weight: 700;
+color: #171717;
+border-bottom: 1.5px solid #171717;
+padding-bottom: 2px;
+
+transition:
+color 0.2s ease,
+border-color 0.2s ease;
+
+&:hover {
+color: #ff9900;
+border-color: #ff9900;
+}
+}
+
+/* ---------------------------------------------------------------------------
+GRID / CARDS
+--------------------------------------------------------------------------- */
+
+.grid {
+display: grid;
+grid-template-columns: repeat(4, minmax(0, 1fr));
+gap: 20px;
+}
+
+.card {
+display: flex;
+flex-direction: column;
+overflow: hidden;
+
+background: #ffffff;
+border: 1px solid #e5e5e5;
+border-radius: 14px;
+
+transition:
+box-shadow 0.2s ease,
+transform 0.2s ease,
+border-color 0.2s ease;
+
+&:hover {
+box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+transform: translateY(-4px);
+border-color: #cccccc;
+}
+}
+
+.imageWrap {
+position: relative;
+aspect-ratio: 1 / 1;
+background: #f7f7f7;
+overflow: hidden;
+
+img {
+display: block;
+width: 100%;
+height: 100%;
+object-fit: cover;
+}
+}
+
+.removeBtn {
+appearance: none;
+border: 0;
+padding: 0;
+margin: 0;
+
+position: absolute;
+top: 9px;
+right: 9px;
+
+width: 30px;
+height: 30px;
+
+border-radius: 50%;
+background: rgba(255, 255, 255, 0.92);
+border: 1px solid #e5e5e5;
+
+color: #171717;
+font-size: 13px;
+
+display: flex;
+align-items: center;
+justify-content: center;
+
+cursor: pointer;
+
+transition:
+background 0.15s ease,
+color 0.15s ease,
+transform 0.15s ease;
+
+&:hover {
+background: #c2185b;
+color: #ffffff;
+transform: scale(1.08);
+}
+}
+
+.body {
+display: flex;
+flex-direction: column;
+gap: 8px;
+padding: 12px 16px 16px;
+}
+
+.name {
+font-size: 14px;
+font-weight: 600;
+color: #171717;
+line-height: 1.35;
+
+display: -webkit-box;
+-webkit-line-clamp: 2;
+line-clamp: 2;
+-webkit-box-orient: vertical;
+overflow: hidden;
+
+min-height: 36px;
+}
+
+.price {
+font-family: monospace;
+font-weight: 700;
+font-size: 16px;
+color: #171717;
+}
+
+.moveBtn {
+appearance: none;
+border: 0;
+margin-top: 4px;
+
+width: 100%;
+text-align: center;
+
+padding: 12px;
+border-radius: 999px;
+
+background: #171717;
+color: #ffffff;
+
+font-weight: 700;
+font-size: 14px;
+
+cursor: pointer;
+
+transition: background 0.15s ease;
+
+&:hover {
+background: #ff9900;
+}
+}
+
+/* ---------------------------------------------------------------------------
+EMPTY STATE
+--------------------------------------------------------------------------- */
+
+.emptyState {
+display: flex;
+flex-direction: column;
+align-items: center;
+text-align: center;
+gap: 12px;
+
+padding: 64px 20px;
+
+background: #ffffff;
+border: 1px solid #e5e5e5;
+border-radius: 14px;
+
+h2 {
+font-family: Arial, sans-serif;
+font-weight: 600;
+font-size: 24px;
+margin: 0;
+color: #171717;
+}
+
+p {
+margin: 0;
+color: #666666;
+font-size: 14px;
+max-width: 340px;
+line-height: 1.5;
+}
+}
+
+.emptyIcon {
+width: 74px;
+height: 74px;
+
+border-radius: 50%;
+background: #f7f7f7;
+color: #c2185b;
+
+font-size: 30px;
+
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.shopBtn {
+appearance: none;
+border: 0;
+
+margin-top: 8px;
+padding: 12px 24px;
+
+border-radius: 999px;
+
+background: #ff9900;
+color: #ffffff;
+
+font-weight: 700;
+font-size: 14px;
+
+cursor: pointer;
+
+transition: background 0.15s ease;
+
+&:hover {
+background: #e68a00;
+}
+}
+
+/* ---------------------------------------------------------------------------
+RESPONSIVE
+--------------------------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+.grid {
+grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+}
+
+@media (max-width: 768px) {
+.page {
+padding: 24px 16px 48px;
+}
+
+.grid {
+grid-template-columns: repeat(2, minmax(0, 1fr));
+gap: 12px;
+}
+
+.itemsHeader {
+align-items: flex-start;
+flex-direction: column;
+}
+}
+
+@media (max-width: 480px) {
+.page {
+padding: 20px 12px 40px;
+}
+
+.grid {
+grid-template-columns: repeat(2, minmax(0, 1fr));
+gap: 10px;
+}
+
+.body {
+padding: 10px;
+}
+
+.name {
+font-size: 13px;
+}
+
+.price {
+font-size: 14px;
+}
+
+.moveBtn {
+padding: 10px 8px;
+font-size: 12px;
+}
+}

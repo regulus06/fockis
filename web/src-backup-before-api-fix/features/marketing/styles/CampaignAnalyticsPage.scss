@@ -1,0 +1,8 @@
+/* ============================================================================
+   FOCKIS CAMPAIGN ANALYTICS PAGE
+   Page-specific stylesheet for CampaignAnalyticsPage.tsx
+   All visual rules (header, panel, metrics, states, buttons) now live in
+   the shared partial — this page needs no page-specific overrides.
+============================================================================ */
+
+@use "./fockis-marketing-shared";

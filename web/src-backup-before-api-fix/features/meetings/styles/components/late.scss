@@ -1,0 +1,63 @@
+@use '../tokens' as t;
+
+.fm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 11, 16, 0.6);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: t.$z-modal;
+  padding: 20px;
+}
+
+.fm-modal {
+  position: relative;
+  background: t.$paper-0;
+  color: t.$ink-900;
+  border-radius: t.$radius-lg;
+  padding: 28px 26px 24px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: t.$shadow-lg;
+
+  h2 { font-size: t.$fs-lg; margin-bottom: 6px; }
+
+  &__close {
+    position: absolute; top: 14px; right: 14px;
+    background: none; border: none; color: t.$ink-300;
+    &:hover { color: t.$ink-700; }
+  }
+  &__icon {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: t.$amber-100;
+    color: t.$amber-600;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+  }
+  &__desc { color: t.$ink-500; font-size: t.$fs-sm; margin-bottom: 18px; }
+  &__quote {
+    background: t.$paper-50;
+    border-left: 3px solid t.$signal-500;
+    padding: 10px 14px;
+    margin: 0 0 20px;
+    font-size: t.$fs-sm;
+    color: t.$ink-700;
+    font-style: italic;
+  }
+  &--alert h2 { font-size: t.$fs-md; }
+}
+
+.fm-late-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: t.$amber-100;
+  color: t.$amber-600;
+  font-size: t.$fs-sm;
+  font-weight: 500;
+  padding: 9px 18px;
+  border-bottom: 1px solid rgba(185,127,36,0.2);
+}

@@ -1,0 +1,78 @@
+// Fockis Messaging — design tokens
+
+// Brand
+$fockis-primary: #5b5bf6;
+$fockis-primary-dark: #4747d6;
+$fockis-primary-light: #eceaff;
+$fockis-accent: #ff6b6b;
+
+// Surfaces
+$color-bg-app: #f7f7fb;
+$color-bg-panel: #ffffff;
+$color-bg-sunken: #f2f2f8;
+$color-bg-hover: #f0f0f9;
+$color-border: #e7e7ef;
+$color-border-strong: #d9d9e6;
+
+// Text
+$color-text-primary: #14141f;
+$color-text-secondary: #6b6b80;
+$color-text-tertiary: #9c9cae;
+$color-text-inverse: #ffffff;
+
+// Bubbles
+$bubble-own-bg: linear-gradient(135deg, #5b5bf6, #7c6bf6);
+$bubble-own-text: #ffffff;
+$bubble-other-bg: #ffffff;
+$bubble-other-text: #14141f;
+
+// Status
+$color-success: #22c55e;
+$color-danger: #ef4444;
+$color-warning: #f59e0b;
+
+// Radii
+$radius-xs: 6px;
+$radius-sm: 10px;
+$radius-md: 14px;
+$radius-lg: 20px;
+$radius-pill: 999px;
+
+// Shadows
+$shadow-sm: 0 1px 3px rgba(20, 20, 31, 0.06);
+$shadow-md: 0 6px 20px rgba(20, 20, 31, 0.10);
+$shadow-lg: 0 16px 40px rgba(20, 20, 31, 0.16);
+
+// Spacing scale
+$space-1: 4px;
+$space-2: 8px;
+$space-3: 12px;
+$space-4: 16px;
+$space-5: 20px;
+$space-6: 24px;
+$space-8: 32px;
+
+// Layout
+$panel-conversations-width: 340px;
+$panel-info-width: 320px;
+$chat-header-height: 68px;
+$composer-min-height: 64px;
+
+// Typography
+$font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+$font-size-xs: 12px;
+$font-size-sm: 13px;
+$font-size-md: 14.5px;
+$font-size-lg: 16px;
+$font-size-xl: 20px;
+
+// Z-index scale
+$z-floating-launcher: 900;
+$z-floating-popup: 850;
+$z-modal: 1000;
+$z-viewer: 1100;
+$z-context-menu: 950;
+
+// Breakpoints
+$bp-mobile: 640px;
+$bp-tablet: 1024px;

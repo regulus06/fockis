@@ -1,0 +1,12 @@
+/* ============================================================================
+   FOCKIS SUBSCRIPTIONS
+   Shared stylesheet imported by every subscriptions page:
+   SubscriptionPage, SubscriptionBillingPage, SubscriptionPlansPage,
+   SubscriptionPlanManagementPage, SubscriptionSuccessPage,
+   SubscriptionCancelPage.
+
+   All visual rules live in the shared partial.
+   NOTE: replaces whatever this file previously contained.
+============================================================================ */
+
+@use "./fockis-subscription-shared";

@@ -1,0 +1,282 @@
+/* ============================================================================
+   BUSINESS FEED RAIL
+   REDESIGN: navy/gold retint, squared card radii, matches the redesigned
+   .fk-event-rail / .fk-event-card treatment in FockisFeedPage.scss.
+============================================================================ */
+
+.fk-business-feed-rail {
+  position: relative;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  margin: 0 0 20px;
+  padding: 0;
+
+  background: transparent;
+
+  overflow: visible;
+}
+
+
+/* ============================================================================
+   HEADER
+============================================================================ */
+
+.fk-business-feed-rail__header {
+  width: 100%;
+  min-width: 0;
+
+  margin-bottom: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.fk-business-feed-rail__title {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-family: var(--fk-font-display);
+  font-size: 18px;
+  font-weight: 700;
+
+  line-height: 1.2;
+}
+
+.fk-business-feed-rail__status {
+  margin: 0;
+  padding: 4px 2px 14px;
+
+  color: var(--fk-text-2);
+
+  font-size: 13px;
+}
+
+.fk-business-feed-rail__status--error {
+  color: var(--fk-danger);
+}
+
+
+/* ============================================================================
+   SCROLLER
+============================================================================ */
+
+.fk-business-feed-rail__scroller {
+  position: relative;
+
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+
+  align-items: stretch;
+  justify-content: flex-start;
+
+  gap: 12px;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  margin: 0;
+
+  padding: 2px 2px 14px;
+
+  box-sizing: border-box;
+
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+
+  overscroll-behavior-x: contain;
+  touch-action: pan-x !important;
+
+  -webkit-overflow-scrolling: touch;
+
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+
+  scrollbar-width: auto;
+
+  scrollbar-color:
+    var(--fk-border-strong)
+    var(--fk-sunken);
+}
+
+.fk-business-feed-rail__scroller::-webkit-scrollbar {
+  width: 0;
+  height: 12px;
+}
+
+.fk-business-feed-rail__scroller::-webkit-scrollbar-track {
+  background: var(--fk-sunken);
+  border-radius: 999px;
+}
+
+.fk-business-feed-rail__scroller::-webkit-scrollbar-thumb {
+  background: var(--fk-border-strong);
+  border-radius: 999px;
+  border: 3px solid var(--fk-bg);
+  min-width: 70px;
+}
+
+.fk-business-feed-rail__scroller::-webkit-scrollbar-thumb:hover {
+  background: var(--fk-fjord-bright);
+}
+
+.fk-business-feed-rail__scroller::-webkit-scrollbar-thumb:active {
+  background: var(--fk-fjord);
+}
+
+
+/* ============================================================================
+   CARD
+============================================================================ */
+
+.fk-business-card {
+  position: relative;
+
+  flex: 0 0 240px !important;
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+
+  width: 240px !important;
+  min-width: 240px !important;
+  max-width: 240px !important;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  scroll-snap-align: start;
+
+  background: var(--fk-surface);
+
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-lg);
+
+  box-shadow: var(--fk-shadow-sm);
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+.fk-business-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--fk-shadow-md);
+}
+
+
+/* ============================================================================
+   CARD LOGO
+============================================================================ */
+
+.fk-business-card__logo {
+  width: 100%;
+  height: 120px;
+
+  flex: 0 0 120px;
+
+  display: block;
+  object-fit: cover;
+
+  background: var(--fk-sunken);
+}
+
+.fk-business-card__logo-placeholder {
+  width: 100%;
+  height: 120px;
+
+  flex: 0 0 120px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--fk-fjord),
+      var(--fk-fjord-dark)
+    );
+
+  font-size: 32px;
+}
+
+
+/* ============================================================================
+   CARD CONTENT
+============================================================================ */
+
+.fk-business-card__content {
+  min-width: 0;
+
+  padding: 12px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fk-business-card__name {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-size: 14px;
+  font-weight: 700;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fk-business-card__description {
+  margin: 0;
+
+  color: var(--fk-text-2);
+
+  font-size: 12px;
+  line-height: 1.4;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+
+  overflow: hidden;
+}
+
+.fk-business-card__button {
+  margin-top: 4px;
+  align-self: flex-start;
+
+  padding: 6px 12px;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+
+  background: var(--fk-amber-soft);
+  color: var(--fk-amber-dark);
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+
+  &:hover {
+    background: var(--fk-fjord);
+    color: #fff;
+  }
+}

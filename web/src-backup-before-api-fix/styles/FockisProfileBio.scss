@@ -1,0 +1,36 @@
+/* ============================================================================
+   FOCKIS PROFILE BIO
+   src/styles/FockisProfileBio.scss
+============================================================================ */
+
+@use "./fockis-theme";
+
+.fk-profile-bio {
+  p {
+    margin: 0;
+
+    color: var(--fk-text);
+
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+.fk-profile-bio__empty {
+  color: var(--fk-text-3) !important;
+  font-style: italic;
+}
+
+.fk-profile-bio__details {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 14px;
+
+  margin-top: 8px;
+
+  span {
+    color: var(--fk-text-2);
+    font-size: 13px;
+  }
+}

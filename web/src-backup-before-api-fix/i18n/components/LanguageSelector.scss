@@ -1,0 +1,57 @@
+.fockis-language-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: inherit;
+    white-space: nowrap;
+  }
+
+  select {
+    min-height: 38px;
+    padding: 7px 34px 7px 10px;
+    border: 1px solid rgba(22, 58, 95, 0.2);
+    border-radius: 9px;
+    background: #fff;
+    color: #163a5f;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+
+    &:hover {
+      border-color: #163a5f;
+    }
+
+    &:focus {
+      border-color: #163a5f;
+      box-shadow: 0 0 0 3px rgba(22, 58, 95, 0.12);
+    }
+  }
+
+  &__current {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  @media (max-width: 640px) {
+    &__label {
+      display: none;
+    }
+
+    select {
+      min-height: 36px;
+      font-size: 13px;
+    }
+  }
+}

@@ -1,0 +1,11 @@
+@use 'variables' as v;
+
+// Shared base rules that other attachment-* partials build on.
+.attachment-base {
+  border-radius: v.$radius-sm;
+  overflow: hidden;
+}
+
+a[download] {
+  cursor: pointer;
+}

@@ -1,0 +1,37 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+.message-reactions {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.message-reactions__pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: v.$color-bg-panel;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-pill;
+  padding: 2px 8px;
+  font-size: 12px;
+  box-shadow: v.$shadow-sm;
+  transition: transform 0.12s ease, background 0.12s ease;
+  animation: fockis-heart-burst 0.25s ease;
+
+  &:hover {
+    transform: scale(1.06);
+  }
+
+  &.is-active {
+    background: v.$fockis-primary-light;
+    border-color: v.$fockis-primary;
+  }
+}
+
+.message-reactions__count {
+  color: v.$color-text-secondary;
+  font-weight: 600;
+}

@@ -1,0 +1,334 @@
+@use "./_fockis-tokens" as fockis;
+
+.travel-wishlist-page {
+  min-height: 100%;
+  background: fockis.$cream-50;
+  color: fockis.$text-on-light;
+
+  .wrap {
+    width: min(100% - (fockis.$gutter * 2), fockis.$max-width);
+    margin-inline: auto;
+  }
+
+  .tight {
+    padding-block: 34px 28px;
+  }
+
+  .eyebrow {
+    margin: 0 0 8px;
+    color: fockis.$gold-600;
+    font-family: fockis.$font-body;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    max-width: 800px;
+    margin: 0;
+    color: fockis.$text-on-light;
+    font-family: fockis.$font-display;
+    font-size: clamp(2rem, 4vw, 2.65rem);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+  }
+
+  .wrap > p {
+    max-width: 560px;
+    margin: 10px 0 0;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+
+  .wishlist-tabs {
+    margin-bottom: 24px;
+    min-width: 0;
+  }
+
+  .wishlist-tabs > * {
+    min-width: 0;
+  }
+
+  .ft-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 260px;
+    padding: 34px 24px;
+    border: 1px dashed rgba(14, 26, 43, 0.16);
+    border-radius: fockis.$radius-lg;
+    background: rgba(255, 255, 255, 0.8);
+    text-align: center;
+  }
+
+  .ft-empty-state .ic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    margin-bottom: 14px;
+    border-radius: 50%;
+    background: fockis.$gold-100;
+    color: fockis.$gold-600;
+    font-size: 1.55rem;
+    line-height: 1;
+  }
+
+  .ft-empty-state h4 {
+    margin: 0;
+    color: fockis.$text-on-light;
+    font-family: fockis.$font-display;
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .ft-empty-state p {
+    max-width: 520px;
+    margin: 8px 0 0;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+
+  .ft-empty-state .btn {
+    margin-top: 20px;
+  }
+
+  .ft-empty-state > svg {
+    color: fockis.$gold-600;
+  }
+
+  .travel-wishlist-page .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 42px;
+    padding: 9px 17px;
+    border-radius: fockis.$radius-pill;
+    font-family: fockis.$font-body;
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease,
+      box-shadow 160ms ease,
+      transform 160ms ease;
+  }
+
+  .travel-wishlist-page .btn svg {
+    width: 15px;
+    height: 15px;
+    flex: 0 0 auto;
+  }
+
+  .travel-wishlist-page .btn-outline {
+    border: 1px solid rgba(14, 35, 66, 0.22);
+    background: #ffffff;
+    color: fockis.$navy-800;
+  }
+
+  .travel-wishlist-page .btn-outline:hover:not(:disabled) {
+    border-color: fockis.$gold-600;
+    color: fockis.$gold-600;
+    box-shadow: fockis.$shadow-card;
+    transform: translateY(-1px);
+  }
+
+  .travel-wishlist-page .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  [role="alert"] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(fockis.$danger, 0.2);
+    border-radius: fockis.$radius-md;
+    background: rgba(fockis.$danger, 0.06);
+    color: fockis.$danger;
+    font-size: 0.84rem;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  [role="alert"] .btn {
+    flex: 0 0 auto;
+  }
+
+  [aria-live="polite"]:not(.ft-empty-state) {
+    margin-top: 12px;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  /*
+   * WishlistPanel
+   *
+   * These styles intentionally support the common WishlistPanel structure
+   * while keeping the page-level scope isolated from other Travel pages.
+   */
+
+  .wishlist-panel {
+    width: 100%;
+  }
+
+  .wishlist-panel__grid,
+  .wishlist-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .wishlist-panel__item,
+  .wishlist-item {
+    min-width: 0;
+  }
+
+  .wishlist-panel__card,
+  .wishlist-card {
+    overflow: hidden;
+    border: 1px solid rgba(14, 26, 43, 0.1);
+    border-radius: fockis.$radius-lg;
+    background: #ffffff;
+    box-shadow: fockis.$shadow-card;
+    transition:
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      transform 180ms ease;
+  }
+
+  .wishlist-panel__card:hover,
+  .wishlist-card:hover {
+    border-color: rgba(fockis.$gold-600, 0.3);
+    box-shadow: fockis.$shadow-card-hover;
+    transform: translateY(-2px);
+  }
+
+  /*
+   * Loading icon
+   */
+
+  .ft-empty-state .lucide-loader-2 {
+    animation: travel-wishlist-spin 1s linear infinite;
+  }
+
+  @include fockis.bp-down(fockis.$bp-lg) {
+    .wishlist-panel__grid,
+    .wishlist-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @include fockis.bp-down(fockis.$bp-md) {
+    .tight {
+      padding-block: 28px 24px;
+    }
+
+    .wishlist-tabs {
+      margin-bottom: 20px;
+    }
+
+    [role="alert"] {
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .wishlist-panel__grid,
+    .wishlist-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+  }
+
+  @include fockis.bp-down(fockis.$bp-sm) {
+    .wrap {
+      width: min(100% - 30px, fockis.$max-width);
+    }
+
+    .tight {
+      padding-block: 24px 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+    }
+
+    .wrap > p {
+      font-size: 0.88rem;
+    }
+
+    .wishlist-tabs {
+      margin-bottom: 18px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .ft-empty-state {
+      min-height: 260px;
+      padding: 30px 18px;
+      border-radius: fockis.$radius-md;
+    }
+
+    .ft-empty-state h4 {
+      font-size: 1.3rem;
+    }
+
+    [role="alert"] {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    [role="alert"] .btn {
+      width: 100%;
+    }
+
+    .wishlist-panel__grid,
+    .wishlist-grid {
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .travel-wishlist-page .btn {
+      min-height: 40px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ft-empty-state .lucide-loader-2 {
+      animation: none;
+    }
+
+    .wishlist-panel__card,
+    .wishlist-card,
+    .travel-wishlist-page .btn {
+      transition: none;
+    }
+  }
+}
+
+@keyframes travel-wishlist-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

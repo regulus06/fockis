@@ -1,0 +1,667 @@
+/* ============================================================================
+   FOCKIS SELLER CENTER — SHARED CONSOLE CHROME
+   Header, search, account menu, tab nav, buttons, status pills, skeletons.
+   Reused across every Seller Center page.
+
+   NOTE: SellerAnalyticsPage.tsx uses "az-*" classnames for the exact same
+   header/nav pattern every other seller page calls "console-*". Both are
+   supported here rather than renamed, to avoid touching page logic.
+============================================================================ */
+
+@use "../../../styles/fockis-theme";
+
+/* ============================================================================
+   HEADER
+============================================================================ */
+
+.console-header,
+.az-header,
+.ali-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+  padding: 12px 24px;
+
+  background: var(--fk-surface);
+  border-bottom: 1px solid var(--fk-border);
+
+  @media (max-width: 768px) {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 14px;
+  }
+}
+
+.console-logo,
+.az-logo,
+.ali-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  color: var(--fk-text);
+
+  font-family: var(--fk-font-display);
+  font-weight: 800;
+  font-size: 15px;
+
+  cursor: pointer;
+
+  span {
+    white-space: nowrap;
+  }
+}
+
+.az-header-left {
+  display: flex;
+  align-items: center;
+}
+
+.az-logo-mark {
+  text-transform: capitalize;
+}
+
+.az-logo-sub {
+  color: var(--fk-text-3);
+  font-weight: 600;
+}
+
+.console-search,
+.az-search,
+.ali-search {
+  flex: 1;
+  max-width: 480px;
+
+  display: flex;
+  align-items: center;
+
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-pill);
+
+  background: var(--fk-sunken);
+
+  overflow: hidden;
+
+  input {
+    flex: 1;
+
+    height: 38px;
+    padding: 0 16px;
+
+    border: 0;
+    background: transparent;
+    color: var(--fk-text);
+
+    font-family: var(--fk-font-body);
+    font-size: 13px;
+
+    &::placeholder {
+      color: var(--fk-text-3);
+    }
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  button {
+    flex-shrink: 0;
+
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+    background: transparent;
+    color: var(--fk-text-2);
+
+    cursor: pointer;
+
+    &:hover {
+      color: var(--fk-fjord);
+    }
+  }
+}
+
+.az-header-right {
+  margin-left: auto;
+
+  display: flex;
+  align-items: center;
+}
+
+.console-account,
+.az-account {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  color: var(--fk-text-2);
+
+  cursor: default;
+}
+
+.console-account-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  border: 0;
+  background: transparent;
+  color: var(--fk-text-2);
+
+  cursor: pointer;
+
+  padding: 6px 8px;
+  border-radius: var(--fk-r-md);
+
+  transition: background-color 150ms ease;
+
+  &:hover {
+    background: var(--fk-sunken);
+  }
+}
+
+.console-account-text,
+.az-account-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  gap: 1px;
+}
+
+.console-account-label,
+.az-account-label {
+  font-size: 11px;
+  color: var(--fk-text-3);
+}
+
+.console-account-sub,
+.az-account-sub {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--fk-text);
+}
+
+.account-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 40;
+
+  min-width: 210px;
+  padding: 6px;
+
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-md);
+  box-shadow: var(--fk-shadow-lg);
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    width: 100%;
+    padding: 10px 12px;
+
+    border: 0;
+    border-radius: var(--fk-r-sm);
+    background: transparent;
+    color: var(--fk-text);
+
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+
+    cursor: pointer;
+
+    transition: background-color 150ms ease;
+
+    &:hover {
+      background: var(--fk-sunken);
+    }
+  }
+}
+
+.account-dropdown-divider {
+  height: 1px;
+  margin: 4px 4px;
+
+  background: var(--fk-border);
+}
+
+.account-dropdown-danger {
+  color: var(--fk-danger) !important;
+}
+
+/* ============================================================================
+   TAB / CHIP NAVIGATION
+============================================================================ */
+
+.console-tabbar,
+.az-tabbar,
+.ali-chipnav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 0 24px;
+  overflow-x: auto;
+
+  background: var(--fk-surface);
+  border-bottom: 1px solid var(--fk-border);
+
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0 14px;
+  }
+
+  > button {
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    padding: 12px 14px;
+
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--fk-text-2);
+
+    font-family: var(--fk-font-body);
+    font-size: 13px;
+    font-weight: 700;
+
+    white-space: nowrap;
+    cursor: pointer;
+
+    transition: color 150ms ease, border-color 150ms ease;
+
+    &:hover {
+      color: var(--fk-text);
+    }
+
+    &.is-active {
+      color: var(--fk-fjord);
+      border-bottom-color: var(--fk-fjord);
+    }
+  }
+}
+
+.seller-mobile-bottom-nav {
+  display: none;
+
+  @media (max-width: 768px) {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 900;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+
+    height: 60px;
+    padding-bottom: env(safe-area-inset-bottom);
+
+    background: var(--fk-surface);
+    border-top: 1px solid var(--fk-border);
+  }
+
+  button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+
+    border: 0;
+    background: transparent;
+    color: var(--fk-text-3);
+
+    font-size: 10px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    &.active {
+      color: var(--fk-fjord);
+    }
+  }
+}
+
+/* ============================================================================
+   BUTTONS
+============================================================================ */
+
+.btn,
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  height: 38px;
+  padding: 0 16px;
+
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-md);
+
+  background: var(--fk-surface);
+  color: var(--fk-text);
+
+  font-family: var(--fk-font-body);
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: background-color 150ms ease, border-color 150ms ease, opacity 150ms ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--fk-border-strong);
+    background: var(--fk-surface-hover);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  border-color: transparent;
+  background: var(--fk-fjord);
+  color: var(--fk-text-inverse);
+
+  &:hover:not(:disabled) {
+    background: var(--fk-fjord-dark);
+    border-color: transparent;
+  }
+}
+
+.btn-success,
+.icon-btn-success {
+  border-color: transparent;
+  background: var(--fk-success);
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+    border-color: transparent;
+  }
+}
+
+.btn-ghost {
+  border-color: var(--fk-border);
+  background: transparent;
+  color: var(--fk-text-2);
+}
+
+.icon-btn-danger {
+  color: var(--fk-danger);
+
+  &:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--fk-danger) 40%, transparent);
+    background: color-mix(in srgb, var(--fk-danger) 8%, transparent);
+  }
+}
+
+/* ============================================================================
+   EYEBROW / PAGE HEAD
+============================================================================ */
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  margin-bottom: 4px;
+
+  color: var(--fk-fjord);
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ============================================================================
+   CARD
+============================================================================ */
+
+.card {
+  padding: 16px 18px;
+  margin-bottom: 12px;
+
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-lg);
+  box-shadow: var(--fk-shadow-sm);
+}
+
+/* ============================================================================
+   EMPTY STATE
+============================================================================ */
+
+.empty-state {
+  padding: 48px 20px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 8px;
+
+  text-align: center;
+
+  background: var(--fk-bg);
+  border: 1px dashed var(--fk-border);
+  border-radius: var(--fk-r-lg);
+
+  p {
+    margin: 0;
+
+    color: var(--fk-text);
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  span {
+    color: var(--fk-text-2);
+    font-size: 13px;
+    max-width: 340px;
+  }
+}
+
+.empty-icon {
+  width: 52px;
+  height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--fk-r-pill);
+
+  background: var(--fk-sunken);
+  color: var(--fk-text-3);
+
+  font-size: 22px;
+
+  margin-bottom: 4px;
+}
+
+/* ============================================================================
+   STATUS PILL
+============================================================================ */
+
+.status-pill,
+.payment-pill {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 4px 10px;
+
+  border-radius: var(--fk-r-pill);
+
+  background: var(--fk-sunken);
+  color: var(--fk-text-2);
+
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: capitalize;
+}
+
+@each $key in (active, paid, delivered, confirmed) {
+  .status-#{$key},
+  .payment-#{$key} {
+    background: color-mix(in srgb, var(--fk-success) 12%, transparent);
+    color: var(--fk-success);
+  }
+}
+
+@each $key in (processing, ready_to_ship, pending, shipped) {
+  .status-#{$key},
+  .payment-#{$key} {
+    background: color-mix(in srgb, var(--fk-warning) 14%, transparent);
+    color: var(--fk-warning);
+  }
+}
+
+@each $key in (out, cancelled, failed, returned) {
+  .status-#{$key},
+  .payment-#{$key} {
+    background: color-mix(in srgb, var(--fk-danger) 10%, transparent);
+    color: var(--fk-danger);
+  }
+}
+
+/* ============================================================================
+   SKELETON LOADING
+============================================================================ */
+
+.skeleton {
+  background: linear-gradient(
+    100deg,
+    var(--fk-sunken) 30%,
+    var(--fk-surface-hover) 45%,
+    var(--fk-sunken) 60%
+  );
+
+  background-size: 250% 100%;
+
+  border-radius: var(--fk-r-md);
+
+  animation: seller-skeleton-shimmer 1.6s infinite;
+}
+
+@keyframes seller-skeleton-shimmer {
+  0% { background-position: 120% 0; }
+  100% { background-position: -20% 0; }
+}
+
+.skeleton-title,
+.skeleton-header {
+  height: 26px;
+  width: 220px;
+  margin-bottom: 16px;
+}
+
+.skeleton-row,
+.skeleton-kpi-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.skeleton-card,
+.skeleton-kpi,
+.skeleton-tile {
+  flex: 1;
+  height: 90px;
+}
+
+.skeleton-block,
+.skeleton-hero,
+.skeleton-table,
+.skeleton-search {
+  height: 120px;
+  margin-bottom: 12px;
+}
+
+/* ============================================================================
+   TABLE WRAPPER (generic)
+============================================================================ */
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-lg);
+}
+
+table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+
+  thead th {
+    padding: 12px 14px;
+
+    text-align: left;
+
+    color: var(--fk-text-3);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+
+    border-bottom: 1px solid var(--fk-border);
+  }
+
+  tbody td {
+    padding: 12px 14px;
+    vertical-align: top;
+
+    color: var(--fk-text);
+    font-size: 13px;
+
+    border-bottom: 1px solid var(--fk-border);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tbody tr:hover {
+    background: var(--fk-surface-hover);
+  }
+}

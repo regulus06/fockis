@@ -1,0 +1,238 @@
+@use '../tokens' as t;
+@use '../mixins' as m;
+
+// ---- Button -----------------------------------------------------------
+.fm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: t.$radius-md;
+  font-weight: 600;
+  transition: background t.$dur-fast t.$ease-out, transform t.$dur-fast t.$ease-out, box-shadow t.$dur-fast t.$ease-out;
+  white-space: nowrap;
+
+  &--md { padding: 10px 18px; font-size: t.$fs-md; }
+  &--sm { padding: 7px 12px; font-size: t.$fs-sm; }
+  &--full { width: 100%; }
+
+  &:active { transform: scale(0.98); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  &--primary {
+    background: t.$signal-500;
+    color: white;
+    &:hover:not(:disabled) { background: t.$signal-600; }
+  }
+  &--secondary {
+    background: t.$paper-0;
+    color: t.$ink-900;
+    border: 1px solid t.$paper-200;
+    &:hover:not(:disabled) { background: t.$paper-50; }
+  }
+  &--ghost {
+    background: transparent;
+    color: t.$ink-700;
+    &:hover:not(:disabled) { background: t.$paper-100; }
+  }
+  &--danger {
+    background: t.$red-500;
+    color: white;
+    &:hover:not(:disabled) { background: t.$red-600; }
+  }
+}
+
+// ---- IconButton ---------------------------------------------------------
+.fm-tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+  &:hover .fm-tooltip, &:focus-within .fm-tooltip { opacity: 1; transform: translate(-50%, -4px); }
+}
+.fm-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translate(-50%, 0);
+  background: t.$ink-900;
+  color: white;
+  font-size: t.$fs-2xs;
+  padding: 5px 9px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity t.$dur-fast t.$ease-out, transform t.$dur-fast t.$ease-out;
+  z-index: t.$z-toast;
+}
+
+.fm-icon-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 46px;
+  height: 46px;
+  border: none;
+  border-radius: t.$radius-md;
+  background: transparent;
+  color: t.$fog-100;
+  transition: background t.$dur-fast t.$ease-out, color t.$dur-fast t.$ease-out;
+
+  svg { width: 20px; height: 20px; }
+
+  &--light { color: t.$ink-700; }
+  &--light:hover { background: t.$paper-100; }
+  &--dark:hover { background: t.$void-700; }
+
+  &--active.fm-icon-btn--dark { background: t.$signal-500; color: white; }
+  &--active.fm-icon-btn--light { background: t.$signal-50; color: t.$signal-600; }
+
+  &--danger { background: t.$red-500; color: white; }
+  &--danger:hover { background: t.$red-600; }
+
+  &--disabled { opacity: 0.4; cursor: not-allowed; }
+
+  &__label {
+    font-size: 10px;
+    font-weight: 500;
+  }
+}
+
+// ---- Avatar ---------------------------------------------------------------
+.fm-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: t.$font-display;
+  font-weight: 600;
+  flex-shrink: 0;
+
+  &--sm { width: 26px; height: 26px; font-size: 11px; }
+  &--md { width: 36px; height: 36px; font-size: 13px; }
+  &--lg { width: 56px; height: 56px; font-size: 18px; }
+  &--xl { width: 88px; height: 88px; font-size: 28px; }
+}
+
+// ---- Badge ------------------------------------------------------------
+.fm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: t.$radius-pill;
+  font-size: t.$fs-2xs;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+
+  &__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  &--neutral { background: t.$paper-100; color: t.$ink-500; }
+  &--live { background: rgba(229, 72, 77, 0.12); color: t.$red-500; }
+  &--live .fm-badge__dot { animation: fm-pulse 1.6s infinite; }
+  &--warning { background: t.$amber-100; color: t.$amber-600; }
+  &--danger { background: rgba(229, 72, 77, 0.12); color: t.$red-600; }
+  &--success { background: rgba(31, 192, 166, 0.12); color: #147b69; }
+  &--ai { background: t.$amber-100; color: t.$amber-600; }
+}
+
+@keyframes fm-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+// ---- Panel shell (participants / chat / secretary) ------------------------
+.fm-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: t.$void-850;
+}
+
+.fm-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid t.$void-700;
+  flex-shrink: 0;
+
+  h3 { font-size: t.$fs-md; color: t.$fog-0; }
+  &__right { display: flex; align-items: center; gap: 8px; }
+  &__close {
+    background: none; border: none; color: t.$fog-300;
+    display: flex; align-items: center;
+    &:hover { color: t.$fog-0; }
+  }
+}
+
+.fm-panel__scroll {
+  flex: 1;
+  overflow-y: auto;
+  @include m.scrollbar-thin(transparent, t.$void-600);
+}
+
+.fm-panel__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 14px;
+  padding: 8px 10px;
+  background: t.$void-800;
+  border-radius: t.$radius-sm;
+  color: t.$fog-300;
+
+  input {
+    background: none; border: none; color: t.$fog-0;
+    font-size: t.$fs-sm; width: 100%;
+    &::placeholder { color: t.$fog-300; }
+    &:focus { outline: none; }
+  }
+}
+
+.fm-panel__footer {
+  padding: 12px 14px;
+  border-top: 1px solid t.$void-700;
+  flex-shrink: 0;
+}
+.fm-panel__footer-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+  background: t.$void-700;
+  border: none;
+  color: t.$fog-0;
+  padding: 9px;
+  border-radius: t.$radius-sm;
+  font-size: t.$fs-sm;
+  font-weight: 500;
+  &:hover { background: t.$void-600; }
+}
+
+// ---- Empty state ---------------------------------------------------------
+.fm-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 40px 20px;
+  color: t.$ink-500;
+
+  &__icon { color: t.$ink-300; margin-bottom: 6px; }
+  &__title { font-weight: 600; color: t.$ink-700; font-size: t.$fs-md; }
+  &__desc { font-size: t.$fs-sm; max-width: 320px; }
+  &__action { margin-top: 10px; }
+}

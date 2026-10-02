@@ -1,0 +1,34 @@
+@use 'variables' as v;
+
+.voice-waveform {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 26px;
+  flex: 1;
+}
+
+.voice-waveform__bar {
+  width: 3px;
+  min-height: 3px;
+  border-radius: v.$radius-pill;
+  background: v.$color-border-strong;
+  transition: height 0.1s ease, background 0.15s ease;
+}
+
+.voice-waveform__bar.is-played {
+  background: v.$fockis-primary;
+}
+
+.is-own .voice-waveform__bar {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.is-own .voice-waveform__bar.is-played {
+  background: #fff;
+}
+
+.voice-waveform--animated .voice-waveform__bar {
+  background: v.$color-danger;
+  opacity: 0.85;
+}

@@ -1,0 +1,402 @@
+.chat-info-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--fk-white);
+}
+
+/* ============================================================================
+   HEADER
+============================================================================ */
+
+.chat-info-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--fk-border);
+  flex: 0 0 auto;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: transparent;
+    color: var(--fk-navy-900);
+    border-radius: var(--fk-radius-md);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--fk-canvas);
+    }
+  }
+}
+
+.chat-info-panel__header-title span {
+  font-family: var(--fk-font-display);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--fk-navy-900);
+}
+
+/* ============================================================================
+   PROFILE
+============================================================================ */
+
+.chat-info-panel__profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 20px;
+  border-bottom: 8px solid var(--fk-canvas);
+
+  h2 {
+    margin: 12px 0 2px;
+    font-family: var(--fk-font-display);
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--fk-ink);
+  }
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--fk-muted);
+  }
+}
+
+.chat-info-panel__profile-avatar {
+  position: relative;
+  width: 88px;
+  height: 88px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+}
+
+.chat-info-panel__profile-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--fk-canvas);
+  color: var(--fk-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--fk-border);
+}
+
+.chat-info-panel__profile-online {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #2fb673;
+  border: 3px solid var(--fk-white);
+}
+
+.chat-info-panel__username {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--fk-navy-700);
+}
+
+.chat-info-panel__messages-bio {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--fk-ink);
+  line-height: 1.4;
+}
+
+/* ============================================================================
+   FOCKIS ID
+============================================================================ */
+
+.chat-info-panel__fockis-id {
+  margin-top: 16px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--fk-radius-md);
+  background: rgba(242, 169, 59, 0.1);
+  border: 1px solid rgba(242, 169, 59, 0.35);
+}
+
+.chat-info-panel__fockis-id-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+
+  strong {
+    font-family: var(--fk-font-display);
+    font-size: 14px;
+    color: var(--fk-navy-900);
+    letter-spacing: 0.5px;
+  }
+}
+
+.chat-info-panel__fockis-id-label {
+  font-size: 11px;
+  color: var(--fk-muted);
+}
+
+.chat-info-panel__copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: var(--fk-radius-md);
+  background: var(--fk-white);
+  color: var(--fk-gold-600);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--fk-gold-500);
+    color: var(--fk-white);
+  }
+}
+
+.chat-info-panel__fockis-id-missing {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--fk-muted);
+  font-style: italic;
+}
+
+/* ============================================================================
+   SECTIONS (stories, media, settings, danger zone)
+============================================================================ */
+
+.chat-info-panel__section {
+  padding: 8px 12px;
+  border-bottom: 8px solid var(--fk-canvas);
+}
+
+.chat-info-panel__section-heading-button {
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 10px 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chat-info-panel__section-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--fk-navy-900);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.chat-info-panel__row-count {
+  font-size: 12px;
+  color: var(--fk-muted);
+  font-weight: 500;
+}
+
+.chat-info-panel__chevron {
+  color: var(--fk-muted);
+  transition: transform 0.15s ease;
+
+  &.is-open {
+    transform: rotate(90deg);
+  }
+}
+
+/* Rows: mute, starred, block, report */
+
+.chat-info-panel__row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 4px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 14px;
+  color: var(--fk-ink);
+  cursor: pointer;
+  border-radius: var(--fk-radius-md);
+
+  &:hover {
+    background: var(--fk-canvas);
+  }
+
+  span:first-of-type {
+    flex: 1 1 auto;
+  }
+}
+
+.chat-info-panel__danger .chat-info-panel__row {
+  color: #c0392b;
+}
+
+/* ============================================================================
+   STORIES
+============================================================================ */
+
+.chat-info-panel__stories {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 4px 10px;
+}
+
+.chat-info-panel__story {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--fk-border);
+  padding: 2px;
+  background: none;
+  cursor: pointer;
+
+  &.is-unseen {
+    border-color: var(--fk-gold-500);
+  }
+}
+
+.chat-info-panel__story-media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--fk-navy-900);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img,
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.chat-info-panel__story-play {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--fk-gold-500);
+  color: var(--fk-navy-900);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-info-panel__story-text {
+  font-size: 9px;
+  color: var(--fk-white);
+  text-align: center;
+  padding: 4px;
+}
+
+/* ============================================================================
+   PROFILE MEDIA GRID
+============================================================================ */
+
+.chat-info-panel__profile-media {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.chat-info-panel__profile-media-item {
+  aspect-ratio: 1;
+  border: none;
+  padding: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--fk-canvas);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fk-muted);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.chat-info-panel__profile-media-video {
+  position: relative;
+  width: 100%;
+  height: 100%;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  span {
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgba(11, 46, 79, 0.75);
+    color: var(--fk-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* ============================================================================
+   STARRED MESSAGES
+============================================================================ */
+
+.chat-info-panel__starred-list {
+  padding: 4px 4px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  p {
+    font-size: 13px;
+    color: var(--fk-muted);
+    margin: 6px 0;
+  }
+}
+
+.chat-info-panel__starred-item {
+  padding: 8px 10px;
+  border-radius: var(--fk-radius-md);
+  background: var(--fk-canvas);
+  font-size: 13px;
+  color: var(--fk-ink);
+}

@@ -9,6 +9,7 @@ import {
   ValidationPipe,
 } from "@nestjs/common";
 
+import helmet from "helmet";
 import { join } from "path";
 
 import {
@@ -26,6 +27,17 @@ async function bootstrap() {
     );
 
   /* ==========================================================================
+     SECURITY HEADERS
+  ========================================================================== */
+
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
+
+  /* ==========================================================================
      TRUST PROXY
   ========================================================================== */
 
@@ -33,10 +45,153 @@ async function bootstrap() {
 
   /* ==========================================================================
      CORS
+
+     Production origins are controlled through:
+
+       FRONTEND_URL
+       FRONTEND_URLS
+
+     Example:
+
+       FRONTEND_URL=https://fockis.vercel.app
+
+     Multiple URLs:
+
+       FRONTEND_URLS=https://fockis.vercel.app,https://fockis.com,https://www.fockis.com
+
+     Localhost is allowed during development.
   ========================================================================== */
 
+  const isProduction =
+    process.env.NODE_ENV === "production";
+
+  /*
+   * Build the configured frontend origins explicitly as strings.
+   *
+   * This avoids TypeScript treating environment variables as
+   * `string | undefined` after filtering.
+   */
+
+  const configuredFrontendOrigins: string[] = [];
+
+  if (
+    typeof process.env.FRONTEND_URL === "string" &&
+    process.env.FRONTEND_URL.trim().length > 0
+  ) {
+    configuredFrontendOrigins.push(
+      process.env.FRONTEND_URL
+        .trim()
+        .replace(/\/+$/, ""),
+    );
+  }
+
+  const additionalFrontendOrigins =
+    process.env.FRONTEND_URLS;
+
+  if (
+    typeof additionalFrontendOrigins === "string"
+  ) {
+    for (
+      const origin of additionalFrontendOrigins.split(
+        ",",
+      )
+    ) {
+      const trimmedOrigin =
+        origin.trim();
+
+      if (trimmedOrigin.length > 0) {
+        configuredFrontendOrigins.push(
+          trimmedOrigin.replace(
+            /\/+$/,
+            "",
+          ),
+        );
+      }
+    }
+  }
+
+  const developmentOrigins: string[] = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+  ];
+
+  const allowedOrigins = new Set<string>();
+
+  if (!isProduction) {
+    for (
+      const origin of developmentOrigins
+    ) {
+      allowedOrigins.add(origin);
+    }
+  }
+
+  for (
+    const origin of configuredFrontendOrigins
+  ) {
+    allowedOrigins.add(origin);
+  }
+
+  /* ==========================================================================
+     PRODUCTION CORS SAFETY CHECK
+  ========================================================================== */
+
+  if (
+    isProduction &&
+    configuredFrontendOrigins.length === 0
+  ) {
+    throw new Error(
+      "FRONTEND_URL or FRONTEND_URLS must be configured in production.",
+    );
+  }
+
   app.enableCors({
-    origin: true,
+    origin: (
+      origin: string | undefined,
+      callback: (
+        error: Error | null,
+        allow?: boolean,
+      ) => void,
+    ) => {
+      /*
+       * Requests without an Origin header can be legitimate:
+       *
+       * - server-to-server requests
+       * - health checks
+       * - command-line tools
+       * - internal services
+       */
+
+      if (typeof origin !== "string") {
+        callback(null, true);
+        return;
+      }
+
+      const normalizedOrigin =
+        origin.replace(
+          /\/+$/,
+          "",
+        );
+
+      if (
+        allowedOrigins.has(
+          normalizedOrigin,
+        )
+      ) {
+        callback(null, true);
+        return;
+      }
+
+      console.warn(
+        `[SECURITY] Blocked CORS origin: ${origin}`,
+      );
+
+      callback(
+        new Error(
+          "CORS origin not allowed",
+        ),
+        false,
+      );
+    },
 
     credentials: true,
 
@@ -57,6 +212,14 @@ async function bootstrap() {
       "Origin",
       "X-Requested-With",
     ],
+
+    exposedHeaders: [
+      "Content-Length",
+      "Content-Range",
+      "Accept-Ranges",
+    ],
+
+    maxAge: 86400,
   });
 
   /* ==========================================================================
@@ -73,23 +236,16 @@ async function bootstrap() {
 
   /* ==========================================================================
      STATIC UPLOADS
-     
-     IMPORTANT SECURITY RULE:
-     
-     /uploads/music/*
-     
-     MUST NEVER be publicly served.
-     
+
+     /uploads/music/* MUST NEVER be publicly served.
+
      Music playback must go through:
-     
-     /music/entitlements/:contentId/playback-url
-     
+
+       /music/entitlements/:contentId/playback-url
+
      and then:
-     
-     /music/entitlements/playback/:token
-     
-     The public static upload handler remains available for other
-     application assets such as images, ads, PDFs, etc.
+
+       /music/entitlements/playback/:token
   ========================================================================== */
 
   const uploadsPath = join(
@@ -97,26 +253,18 @@ async function bootstrap() {
     "uploads",
   );
 
-  /*
-   * SECURITY BARRIER
-   *
-   * This middleware runs BEFORE Nest's static file middleware.
-   *
-   * Therefore:
-   *
-   * /uploads/music/song.mp3
-   *
-   * will NOT be served directly.
-   *
-   * This prevents users from bypassing checkout by opening the
-   * storage URL directly.
-   */
+  /* ==========================================================================
+     MUSIC MEDIA SECURITY BARRIER
+  ========================================================================== */
 
   app.use(
     (req, res, next) => {
       const requestPath =
         String(req.path || "")
-          .replace(/\\/g, "/")
+          .replace(
+            /\\/g,
+            "/",
+          )
           .toLowerCase();
 
       if (
@@ -146,21 +294,9 @@ async function bootstrap() {
     },
   );
 
-  /*
-   * Public uploads remain available for non-music assets.
-   *
-   * Examples:
-   *
-   * /uploads/images/...
-   * /uploads/ads/...
-   * /uploads/documents/...
-   *
-   * But:
-   *
-   * /uploads/music/...
-   *
-   * is blocked by the security middleware above.
-   */
+  /* ==========================================================================
+     PUBLIC UPLOADS
+  ========================================================================== */
 
   app.useStaticAssets(
     uploadsPath,
@@ -244,12 +380,6 @@ async function bootstrap() {
 
         /* ====================================================================
            VIDEO
-           
-           NOTE:
-           
-           Music media is blocked before reaching this static handler.
-           
-           These headers remain useful for other public video assets.
         ==================================================================== */
 
         if (
@@ -330,12 +460,6 @@ async function bootstrap() {
 
         /* ====================================================================
            AUDIO
-           
-           IMPORTANT:
-           
-           Any audio under /uploads/music/ has already been blocked above.
-           
-           These remain available for non-music application assets.
         ==================================================================== */
 
         if (
@@ -648,36 +772,40 @@ async function bootstrap() {
     `🌐 Local API: http://localhost:${port}`,
   );
 
-  console.log(
-    `📡 LAN API: http://192.168.1.112:${port}`,
-  );
+  if (!isProduction) {
+    console.log(
+      `📡 LAN API: http://192.168.1.112:${port}`,
+    );
+  }
 
   console.log(
     `📡 Server listening on: 0.0.0.0:${port}`,
   );
 
+  if (!isProduction) {
+    console.log(
+      `🎵 MUSIC: http://192.168.1.112:${port}/music`,
+    );
+
+    console.log(
+      `🎬 LIVE: http://192.168.1.112:${port}/live`,
+    );
+
+    console.log(
+      `📁 Public Uploads: http://192.168.1.112:${port}/uploads/`,
+    );
+
+    console.log(
+      `📄 Scanner: http://192.168.1.112:${port}/document-scanner`,
+    );
+  }
+
   console.log(
-    `🎵 MUSIC: http://192.168.1.112:${port}/music`,
+    "🔒 Protected Music: /uploads/music/* BLOCKED",
   );
 
   console.log(
-    `🎬 LIVE: http://192.168.1.112:${port}/live`,
-  );
-
-  console.log(
-    `📁 Public Uploads: http://192.168.1.112:${port}/uploads/`,
-  );
-
-  console.log(
-    `🔒 Protected Music: /uploads/music/* BLOCKED`,
-  );
-
-  console.log(
-    `🎧 Authorized Music Playback: /music/entitlements/...`,
-  );
-
-  console.log(
-    `📄 Scanner: http://192.168.1.112:${port}/document-scanner`,
+    "🎧 Authorized Music Playback: /music/entitlements/...",
   );
 
   console.log(
@@ -686,19 +814,21 @@ async function bootstrap() {
 
   console.log("");
 
-  console.log(
-    "📱 LAN access is enabled.",
-  );
+  if (!isProduction) {
+    console.log(
+      "📱 LAN access is enabled.",
+    );
 
-  console.log(
-    "   Use http://192.168.1.112:3000 from phones",
-  );
+    console.log(
+      "   Use http://192.168.1.112:3000 from phones",
+    );
 
-  console.log(
-    "   and other devices on the same network.",
-  );
+    console.log(
+      "   and other devices on the same network.",
+    );
 
-  console.log("");
+    console.log("");
+  }
 
   console.log(
     "🔐 Music media protection is enabled.",

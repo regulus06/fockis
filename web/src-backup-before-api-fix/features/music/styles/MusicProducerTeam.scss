@@ -1,0 +1,1989 @@
+/* ============================================================================
+   FOCKIS MUSIC — CREATOR TEAM
+   Organization-based creator team management
+   Institutional / Clark State–inspired design
+   ============================================================================ */
+
+.music-producer-team {
+  --music-primary: #005a8d;
+  --music-primary-light: #0879b5;
+  --music-primary-dark: #003f63;
+
+  --music-gold: #f6b62c;
+  --music-gold-light: #ffd76a;
+  --music-gold-soft: #fff5d6;
+
+  --music-ink: #172033;
+  --music-muted: #667085;
+  --music-light-text: #7a8698;
+
+  --music-background: #f3f6f9;
+  --music-white: #ffffff;
+
+  --music-border: #d9e2ea;
+  --music-border-light: #e8edf2;
+
+  --music-success: #18794e;
+  --music-success-bg: #eaf8f0;
+
+  --music-warning: #9a6700;
+  --music-warning-bg: #fff8df;
+
+  --music-danger: #b42318;
+  --music-danger-bg: #fff0ee;
+
+  min-height: 100vh;
+  width: 100%;
+
+  background:
+    linear-gradient(
+      180deg,
+      #eef4f8 0,
+      var(--music-background) 360px,
+      var(--music-background) 100%
+    );
+
+  color: var(--music-ink);
+
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  box-sizing: border-box;
+}
+
+.music-producer-team *,
+.music-producer-team *::before,
+.music-producer-team *::after {
+  box-sizing: border-box;
+}
+
+/* ============================================================================
+   CONTAINER
+   ============================================================================ */
+
+.music-producer-team__container {
+  width: min(1440px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 0 0 70px;
+}
+
+/* ============================================================================
+   HEADER
+   ============================================================================ */
+
+.music-producer-team__header {
+  position: relative;
+
+  margin: 0 calc((1440px - min(100vw - 48px, 1440px)) / -2) 0;
+
+  padding: 44px max(24px, calc((100vw - min(1440px, 100vw - 48px)) / 2 + 24px));
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 40px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--music-primary-dark) 0%,
+      var(--music-primary) 55%,
+      var(--music-primary-light) 100%
+    );
+
+  color: var(--music-white);
+
+  border-bottom: 5px solid var(--music-gold);
+
+  box-shadow:
+    0 8px 24px rgba(0, 63, 99, 0.15);
+}
+
+.music-producer-team__header::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at 90% 20%,
+      rgba(255, 255, 255, 0.13),
+      transparent 32%
+    ),
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.035)
+    );
+}
+
+.music-producer-team__header > div {
+  position: relative;
+  z-index: 1;
+}
+
+.music-producer-team__eyebrow {
+  margin-bottom: 9px;
+
+  color: rgba(255, 255, 255, 0.76);
+
+  font-size: 11px;
+  font-weight: 850;
+
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.music-producer-team__header h1 {
+  margin: 0;
+
+  color: var(--music-white);
+
+  font-size: clamp(32px, 4vw, 50px);
+  line-height: 1.05;
+
+  font-weight: 850;
+  letter-spacing: -0.04em;
+}
+
+.music-producer-team__header p {
+  max-width: 720px;
+
+  margin: 14px 0 0;
+
+  color: rgba(255, 255, 255, 0.86);
+
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.music-producer-team__organization {
+  width: fit-content;
+
+  margin-top: 18px;
+  padding: 9px 13px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 7px;
+
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.music-producer-team__organization span {
+  color: rgba(255, 255, 255, 0.68);
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.music-producer-team__organization strong {
+  color: var(--music-white);
+
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.music-producer-team__header-actions {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  flex-wrap: wrap;
+
+  gap: 9px;
+}
+
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
+
+.music-producer-team__primary-button,
+.music-producer-team__secondary-button {
+  min-height: 43px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 16px;
+
+  border-radius: 7px;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.music-producer-team__primary-button:hover,
+.music-producer-team__secondary-button:hover {
+  transform: translateY(-1px);
+}
+
+.music-producer-team__primary-button:focus-visible,
+.music-producer-team__secondary-button:focus-visible,
+.music-producer-team__refresh-button:focus-visible,
+.music-producer-team__domain-link:focus-visible,
+.music-producer-team__modal-close:focus-visible,
+.music-producer-team__actions button:focus-visible {
+  outline: 3px solid rgba(246, 182, 44, 0.4);
+  outline-offset: 2px;
+}
+
+.music-producer-team__primary-button {
+  border: 1px solid var(--music-gold);
+
+  background: var(--music-gold);
+  color: #1b2733;
+
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.music-producer-team__primary-button:hover {
+  background: var(--music-gold-light);
+  border-color: var(--music-gold-light);
+}
+
+.music-producer-team__primary-button:disabled {
+  opacity: 0.52;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+  box-shadow: none;
+}
+
+.music-producer-team__secondary-button {
+  border: 1px solid rgba(255, 255, 255, 0.34);
+
+  background: rgba(255, 255, 255, 0.1);
+
+  color: var(--music-white);
+}
+
+.music-producer-team__secondary-button:hover {
+  background: rgba(255, 255, 255, 0.17);
+}
+
+/* ============================================================================
+   DOMAIN CARD
+   ============================================================================ */
+
+.music-producer-team__domain-card {
+  position: relative;
+
+  margin-top: 25px;
+  padding: 22px 24px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 17px;
+
+  background: var(--music-white);
+
+  border: 1px solid var(--music-border);
+  border-left: 5px solid var(--music-primary);
+
+  border-radius: 10px;
+
+  box-shadow:
+    0 3px 12px rgba(23, 32, 51, 0.05);
+}
+
+.music-producer-team__domain-icon {
+  width: 48px;
+  height: 48px;
+
+  flex: 0 0 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 9px;
+
+  background: #eaf3f8;
+  color: var(--music-primary);
+
+  font-size: 22px;
+  font-weight: 850;
+}
+
+.music-producer-team__domain-content {
+  min-width: 0;
+
+  flex: 1;
+}
+
+.music-producer-team__domain-label {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: var(--music-muted);
+
+  font-size: 10px;
+  font-weight: 850;
+
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.music-producer-team__domain-content strong {
+  display: block;
+
+  color: var(--music-ink);
+
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.music-producer-team__domain-content small {
+  display: block;
+
+  margin-top: 4px;
+
+  color: var(--music-muted);
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.music-producer-team__domain-link {
+  flex: 0 0 auto;
+
+  padding: 9px 13px;
+
+  border: 1px solid var(--music-border);
+
+  border-radius: 7px;
+
+  background: var(--music-white);
+  color: var(--music-primary);
+
+  font-size: 12px;
+  font-weight: 800;
+
+  text-decoration: none;
+}
+
+.music-producer-team__domain-link:hover {
+  background: #f3f8fb;
+  border-color: #bdd2df;
+}
+
+/* ============================================================================
+   ALERTS
+   ============================================================================ */
+
+.music-producer-team__alert {
+  margin-top: 18px;
+  padding: 14px 16px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  border: 1px solid;
+  border-radius: 8px;
+
+  font-size: 13px;
+}
+
+.music-producer-team__alert > span {
+  flex: 1;
+
+  line-height: 1.5;
+}
+
+.music-producer-team__alert strong {
+  font-weight: 850;
+}
+
+.music-producer-team__alert button {
+  flex: 0 0 auto;
+
+  min-height: 32px;
+
+  padding: 0 10px;
+
+  border: 1px solid currentColor;
+  border-radius: 6px;
+
+  background: transparent;
+
+  color: inherit;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.music-producer-team__alert--error {
+  background: var(--music-danger-bg);
+  border-color: #efc3bf;
+
+  color: var(--music-danger);
+}
+
+.music-producer-team__alert--success {
+  background: var(--music-success-bg);
+  border-color: #bce1cc;
+
+  color: var(--music-success);
+}
+
+/* ============================================================================
+   STATS
+   ============================================================================ */
+
+.music-producer-team__stats {
+  margin-top: 25px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(5, minmax(0, 1fr));
+
+  gap: 13px;
+}
+
+.music-producer-team__stat-card {
+  position: relative;
+
+  min-height: 120px;
+
+  padding: 20px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  background: var(--music-white);
+
+  border: 1px solid var(--music-border);
+
+  border-radius: 10px;
+
+  box-shadow:
+    0 2px 8px rgba(23, 32, 51, 0.035);
+
+  overflow: hidden;
+}
+
+.music-producer-team__stat-card::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 3px;
+
+  background: var(--music-primary);
+}
+
+.music-producer-team__stat-card:nth-child(3)::before {
+  background: var(--music-gold);
+}
+
+.music-producer-team__stat-card:nth-child(4)::before {
+  background: var(--music-danger);
+}
+
+.music-producer-team__stat-card:nth-child(5)::before {
+  background: var(--music-primary-light);
+}
+
+.music-producer-team__stat-card span {
+  color: var(--music-muted);
+
+  font-size: 11px;
+  font-weight: 750;
+
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.music-producer-team__stat-card strong {
+  margin-top: 5px;
+
+  color: var(--music-ink);
+
+  font-size: 31px;
+  line-height: 1;
+
+  font-weight: 850;
+  letter-spacing: -0.03em;
+}
+
+/* ============================================================================
+   PANELS
+   ============================================================================ */
+
+.music-producer-team__panel,
+.music-producer-team__role-guide {
+  margin-top: 25px;
+
+  background: var(--music-white);
+
+  border: 1px solid var(--music-border);
+
+  border-radius: 11px;
+
+  box-shadow:
+    0 3px 12px rgba(23, 32, 51, 0.045);
+
+  overflow: hidden;
+}
+
+.music-producer-team__panel-header {
+  padding: 23px 25px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  border-bottom: 1px solid var(--music-border);
+
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff,
+      #fbfcfd
+    );
+}
+
+.music-producer-team__panel-header h2 {
+  margin: 0;
+
+  color: var(--music-ink);
+
+  font-size: 20px;
+  line-height: 1.25;
+
+  font-weight: 850;
+  letter-spacing: -0.02em;
+}
+
+.music-producer-team__panel-header p {
+  margin: 6px 0 0;
+
+  color: var(--music-muted);
+
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.music-producer-team__refresh-button {
+  min-height: 37px;
+
+  padding: 0 13px;
+
+  border: 1px solid var(--music-border);
+
+  border-radius: 6px;
+
+  background: var(--music-white);
+  color: var(--music-primary);
+
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.music-producer-team__refresh-button:hover {
+  background: #f2f7fa;
+  border-color: #bfd2de;
+}
+
+.music-producer-team__refresh-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+   TABLE
+   ============================================================================ */
+
+.music-producer-team__table-wrapper {
+  width: 100%;
+
+  overflow-x: auto;
+}
+
+.music-producer-team__table {
+  width: 100%;
+  min-width: 950px;
+
+  border-collapse: collapse;
+}
+
+.music-producer-team__table th {
+  padding: 12px 18px;
+
+  background: #f7f9fb;
+
+  color: #596579;
+
+  border-bottom: 1px solid var(--music-border);
+
+  font-size: 10px;
+  font-weight: 850;
+
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  text-align: left;
+
+  white-space: nowrap;
+}
+
+.music-producer-team__table td {
+  padding: 16px 18px;
+
+  border-bottom: 1px solid var(--music-border-light);
+
+  vertical-align: middle;
+}
+
+.music-producer-team__table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.music-producer-team__table tbody tr:hover {
+  background: #fbfcfd;
+}
+
+.music-producer-team__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* ============================================================================
+   MEMBER
+   ============================================================================ */
+
+.music-producer-team__member {
+  min-width: 240px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+}
+
+.music-producer-team__avatar {
+  width: 43px;
+  height: 43px;
+
+  flex: 0 0 43px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--music-primary),
+      var(--music-primary-light)
+    );
+
+  color: var(--music-white);
+
+  font-size: 12px;
+  font-weight: 850;
+
+  box-shadow:
+    0 3px 8px rgba(0, 90, 141, 0.18);
+}
+
+.music-producer-team__member > div:last-child {
+  min-width: 0;
+}
+
+.music-producer-team__member strong {
+  display: block;
+
+  max-width: 260px;
+
+  overflow: hidden;
+
+  color: var(--music-ink);
+
+  font-size: 13px;
+  font-weight: 800;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.music-producer-team__member span {
+  display: block;
+
+  max-width: 270px;
+
+  margin-top: 3px;
+
+  overflow: hidden;
+
+  color: var(--music-muted);
+
+  font-size: 11px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   ROLE
+   ============================================================================ */
+
+.music-producer-team__role {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 28px;
+
+  padding: 0 10px;
+
+  border: 1px solid;
+
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 850;
+
+  white-space: nowrap;
+}
+
+.music-producer-team__role.role-owner {
+  background: var(--music-gold-soft);
+  color: #785900;
+  border-color: #ead89b;
+}
+
+.music-producer-team__role.role-admin {
+  background: #eaf3f8;
+  color: var(--music-primary-dark);
+  border-color: #c5dce8;
+}
+
+.music-producer-team__role.role-manager {
+  background: #eef3ff;
+  color: #3454a3;
+  border-color: #cbd6f4;
+}
+
+.music-producer-team__role.role-editor {
+  background: #f1f3f5;
+  color: #475467;
+  border-color: #d9dee5;
+}
+
+.music-producer-team__role.role-marketing {
+  background: #fff0f6;
+  color: #a62c5e;
+  border-color: #efcad9;
+}
+
+.music-producer-team__role.role-analyst {
+  background: #eaf8f5;
+  color: #176c5a;
+  border-color: #c5e7dd;
+}
+
+.music-producer-team__role.role-moderator {
+  background: #f6f0ff;
+  color: #6840a5;
+  border-color: #dfd0f2;
+}
+
+/* ============================================================================
+   STATUS
+   ============================================================================ */
+
+.music-producer-team__status {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+
+  font-size: 11px;
+  font-weight: 750;
+
+  white-space: nowrap;
+}
+
+.music-producer-team__status::before {
+  content: "";
+
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: currentColor;
+}
+
+.music-producer-team__status.status-active {
+  color: var(--music-success);
+}
+
+.music-producer-team__status.status-invited {
+  color: var(--music-warning);
+}
+
+.music-producer-team__status.status-suspended {
+  color: var(--music-danger);
+}
+
+/* ============================================================================
+   PERMISSIONS
+   ============================================================================ */
+
+.music-producer-team__permissions {
+  max-width: 285px;
+
+  display: flex;
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: 5px;
+}
+
+.music-producer-team__permissions span {
+  padding: 4px 7px;
+
+  border: 1px solid #dce4ea;
+  border-radius: 5px;
+
+  background: #f7f9fa;
+
+  color: #536273;
+
+  font-size: 9px;
+  font-weight: 750;
+
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   ACTIONS
+   ============================================================================ */
+
+.music-producer-team__actions {
+  min-width: 190px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  flex-wrap: wrap;
+
+  gap: 5px;
+}
+
+.music-producer-team__actions button {
+  min-height: 30px;
+
+  padding: 0 8px;
+
+  border: 1px solid var(--music-border);
+
+  border-radius: 5px;
+
+  background: var(--music-white);
+  color: var(--music-primary);
+
+  font-size: 10px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.music-producer-team__actions button:hover {
+  background: #edf5f9;
+
+  border-color: #bdd4e0;
+}
+
+.music-producer-team__actions .music-producer-team__danger-action {
+  color: var(--music-danger);
+
+  border-color: #efc9c5;
+}
+
+.music-producer-team__actions
+  .music-producer-team__danger-action:hover {
+  background: var(--music-danger-bg);
+
+  border-color: #e6aaa5;
+}
+
+/* ============================================================================
+   EMPTY TABLE
+   ============================================================================ */
+
+.music-producer-team__empty-table {
+  padding: 64px 25px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+}
+
+.music-producer-team__empty-icon {
+  width: 68px;
+  height: 68px;
+
+  margin-bottom: 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 15px;
+
+  background: #eaf3f8;
+
+  color: var(--music-primary);
+
+  font-size: 29px;
+}
+
+.music-producer-team__empty-table h3 {
+  margin: 0;
+
+  color: var(--music-ink);
+
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.music-producer-team__empty-table p {
+  max-width: 500px;
+
+  margin: 8px auto 20px;
+
+  color: var(--music-muted);
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ============================================================================
+   ROLE GUIDE
+   ============================================================================ */
+
+.music-producer-team__role-grid {
+  padding: 22px 25px 27px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 13px;
+}
+
+.music-producer-team__role-card {
+  min-height: 150px;
+
+  padding: 17px;
+
+  border: 1px solid var(--music-border);
+
+  border-radius: 9px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff,
+      #fafcfd
+    );
+
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.music-producer-team__role-card:hover {
+  border-color: #bdd1dd;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 7px 18px rgba(23, 32, 51, 0.07);
+}
+
+.music-producer-team__role-card-header {
+  margin-bottom: 16px;
+}
+
+.music-producer-team__role-card-permissions {
+  padding-top: 13px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 7px;
+
+  border-top: 1px solid var(--music-border-light);
+}
+
+.music-producer-team__role-card-permissions span {
+  color: var(--music-muted);
+
+  font-size: 10px;
+  font-weight: 650;
+
+  line-height: 1.35;
+}
+
+/* ============================================================================
+   SECURITY
+   ============================================================================ */
+
+.music-producer-team__security {
+  margin-top: 25px;
+
+  padding: 21px 23px;
+
+  display: flex;
+  align-items: flex-start;
+
+  gap: 15px;
+
+  border: 1px solid #cbdde7;
+
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #eef7fb,
+      #f8fbfc
+    );
+}
+
+.music-producer-team__security-icon {
+  width: 44px;
+  height: 44px;
+
+  flex: 0 0 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 9px;
+
+  background: var(--music-white);
+
+  font-size: 19px;
+
+  box-shadow:
+    0 2px 7px rgba(23, 32, 51, 0.05);
+}
+
+.music-producer-team__security h3 {
+  margin: 0;
+
+  color: var(--music-primary-dark);
+
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.music-producer-team__security p {
+  max-width: 900px;
+
+  margin: 5px 0 0;
+
+  color: var(--music-muted);
+
+  font-size: 12px;
+
+  line-height: 1.6;
+}
+
+/* ============================================================================
+   LOADING
+   ============================================================================ */
+
+.music-producer-team__loading {
+  min-height: 300px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 13px;
+
+  color: var(--music-muted);
+
+  font-size: 13px;
+}
+
+.music-producer-team__spinner {
+  width: 40px;
+  height: 40px;
+
+  border: 4px solid #dce8ee;
+
+  border-top-color: var(--music-primary);
+
+  border-radius: 50%;
+
+  animation:
+    music-producer-team-spin 0.8s linear infinite;
+}
+
+@keyframes music-producer-team-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================================
+   PRODUCER ACCESS EMPTY STATE
+   ============================================================================ */
+
+.music-producer-team__empty {
+  width: min(650px, calc(100% - 32px));
+
+  min-height: 70vh;
+
+  margin: 0 auto;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 50px 25px;
+
+  text-align: center;
+}
+
+.music-producer-team__empty-icon {
+  width: 82px;
+  height: 82px;
+
+  margin-bottom: 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #eaf3f8,
+      #f5f9fb
+    );
+
+  font-size: 35px;
+}
+
+.music-producer-team__empty h1 {
+  margin: 0;
+
+  color: var(--music-ink);
+
+  font-size: 30px;
+  font-weight: 850;
+}
+
+.music-producer-team__empty p {
+  max-width: 500px;
+
+  margin: 10px 0 22px;
+
+  color: var(--music-muted);
+
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.music-producer-team__empty
+  .music-producer-team__primary-button {
+  color: #172033;
+}
+
+/* ============================================================================
+   MODAL BACKDROP
+   ============================================================================ */
+
+.music-producer-team__modal-backdrop {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 3000;
+
+  padding: 25px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(12, 25, 38, 0.62);
+
+  backdrop-filter: blur(3px);
+
+  overflow-y: auto;
+}
+
+/* ============================================================================
+   MODAL
+   ============================================================================ */
+
+.music-producer-team__modal {
+  width: min(720px, 100%);
+
+  max-height: calc(100vh - 50px);
+
+  overflow-y: auto;
+
+  background: var(--music-white);
+
+  border: 1px solid var(--music-border);
+
+  border-radius: 13px;
+
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.25);
+}
+
+.music-producer-team__modal-header {
+  padding: 23px 25px;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f8fbfd,
+      #ffffff
+    );
+
+  border-bottom: 1px solid var(--music-border);
+}
+
+.music-producer-team__modal-header
+  > div {
+  min-width: 0;
+}
+
+.music-producer-team__modal-header
+  .music-producer-team__eyebrow {
+  margin-bottom: 5px;
+
+  color: var(--music-primary);
+
+  font-size: 10px;
+}
+
+.music-producer-team__modal-header h2 {
+  margin: 0;
+
+  color: var(--music-ink);
+
+  font-size: 23px;
+
+  font-weight: 850;
+  letter-spacing: -0.025em;
+}
+
+.music-producer-team__modal-header p {
+  margin: 7px 0 0;
+
+  color: var(--music-muted);
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.music-producer-team__modal-header p strong {
+  color: var(--music-primary-dark);
+}
+
+.music-producer-team__modal-close {
+  width: 36px;
+  height: 36px;
+
+  flex: 0 0 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid var(--music-border);
+
+  border-radius: 7px;
+
+  background: var(--music-white);
+
+  color: var(--music-muted);
+
+  font-size: 23px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.music-producer-team__modal-close:hover {
+  background: #f3f6f8;
+
+  color: var(--music-ink);
+}
+
+/* ============================================================================
+   FORM
+   ============================================================================ */
+
+.music-producer-team__modal form {
+  padding: 25px;
+}
+
+.music-producer-team__form-group {
+  margin-bottom: 21px;
+}
+
+.music-producer-team__form-group > label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: var(--music-ink);
+
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.music-producer-team__form-group
+  select {
+  width: 100%;
+  height: 45px;
+
+  padding: 0 12px;
+
+  border: 1px solid #c9d4de;
+
+  border-radius: 7px;
+
+  background: var(--music-white);
+  color: var(--music-ink);
+
+  font-family: inherit;
+  font-size: 13px;
+
+  outline: none;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.music-producer-team__form-group
+  select:focus {
+  border-color: var(--music-primary-light);
+
+  box-shadow:
+    0 0 0 3px rgba(8, 121, 181, 0.12);
+}
+
+.music-producer-team__form-group
+  select:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+   SELECT LOADING / NO MEMBERS
+   ============================================================================ */
+
+.music-producer-team__select-loading {
+  min-height: 45px;
+
+  padding: 12px;
+
+  display: flex;
+  align-items: center;
+
+  border: 1px solid var(--music-border);
+
+  border-radius: 7px;
+
+  background: #f8fafc;
+
+  color: var(--music-muted);
+
+  font-size: 12px;
+}
+
+.music-producer-team__no-members {
+  padding: 17px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+
+  border: 1px solid #e4dcbf;
+
+  border-radius: 8px;
+
+  background: var(--music-gold-soft);
+}
+
+.music-producer-team__no-members strong {
+  color: var(--music-ink);
+
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.music-producer-team__no-members span {
+  color: var(--music-muted);
+
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+.music-producer-team__no-members a {
+  width: fit-content;
+
+  margin-top: 4px;
+
+  color: var(--music-primary);
+
+  font-size: 11px;
+  font-weight: 850;
+
+  text-decoration: none;
+}
+
+.music-producer-team__no-members a:hover {
+  text-decoration: underline;
+}
+
+/* ============================================================================
+   SELECTED MEMBER
+   ============================================================================ */
+
+.music-producer-team__selected-member,
+.music-producer-team__editing-member {
+  margin-top: 12px;
+
+  padding: 13px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  border: 1px solid #c9dce7;
+
+  border-radius: 8px;
+
+  background: #f2f8fb;
+}
+
+.music-producer-team__selected-member
+  > div:last-child,
+.music-producer-team__editing-member
+  > div:last-child {
+  min-width: 0;
+}
+
+.music-producer-team__selected-member
+  strong,
+.music-producer-team__editing-member
+  strong {
+  display: block;
+
+  color: var(--music-ink);
+
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.music-producer-team__selected-member
+  span,
+.music-producer-team__editing-member
+  span {
+  display: block;
+
+  margin-top: 2px;
+
+  color: var(--music-muted);
+
+  font-size: 11px;
+}
+
+.music-producer-team__selected-member
+  small {
+  display: block;
+
+  margin-top: 2px;
+
+  color: var(--music-light-text);
+
+  font-size: 10px;
+}
+
+/* ============================================================================
+   PERMISSION HEADING
+   ============================================================================ */
+
+.music-producer-team__permission-heading {
+  margin-bottom: 8px;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 15px;
+}
+
+.music-producer-team__permission-heading
+  label {
+  display: block;
+
+  margin: 0;
+
+  color: var(--music-ink);
+
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.music-producer-team__permission-heading
+  small {
+  display: block;
+
+  margin-top: 4px;
+
+  color: var(--music-muted);
+
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+/* ============================================================================
+   PERMISSIONS GRID
+   ============================================================================ */
+
+.music-producer-team__permission-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 8px;
+}
+
+.music-producer-team__permission {
+  min-height: 56px;
+
+  position: relative;
+
+  padding: 12px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  border: 1px solid var(--music-border);
+
+  border-radius: 7px;
+
+  background: #fbfcfd;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.music-producer-team__permission:hover {
+  background: #f4f9fb;
+
+  border-color: #bfd4df;
+}
+
+.music-producer-team__permission input {
+  width: 17px;
+  height: 17px;
+
+  margin: 0;
+
+  accent-color: var(--music-primary);
+
+  cursor: pointer;
+}
+
+.music-producer-team__permission
+  input:disabled {
+  cursor: not-allowed;
+}
+
+.music-producer-team__permission span {
+  color: var(--music-ink);
+
+  font-size: 11px;
+  font-weight: 750;
+}
+
+/* ============================================================================
+   MODAL FOOTER
+   ============================================================================ */
+
+.music-producer-team__modal-footer {
+  margin-top: 25px;
+
+  padding-top: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 9px;
+
+  border-top: 1px solid var(--music-border);
+}
+
+.music-producer-team__modal-footer
+  .music-producer-team__secondary-button {
+  border-color: var(--music-border);
+
+  background: var(--music-white);
+
+  color: var(--music-ink);
+}
+
+.music-producer-team__modal-footer
+  .music-producer-team__secondary-button:hover {
+  background: #f4f6f8;
+}
+
+.music-producer-team__modal-footer
+  .music-producer-team__primary-button {
+  color: #172033;
+}
+
+/* ============================================================================
+   RESPONSIVE — 1200px
+   ============================================================================ */
+
+@media (max-width: 1200px) {
+  .music-producer-team__stats {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+  .music-producer-team__role-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE — 950px
+   ============================================================================ */
+
+@media (max-width: 950px) {
+  .music-producer-team__header {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    padding-top: 36px;
+    padding-bottom: 36px;
+  }
+
+  .music-producer-team__header-actions {
+    width: 100%;
+
+    justify-content: flex-start;
+  }
+
+  .music-producer-team__domain-card {
+    align-items: flex-start;
+
+    flex-wrap: wrap;
+  }
+
+  .music-producer-team__domain-link {
+    margin-left: 65px;
+  }
+
+  .music-producer-team__role-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE — 700px
+   ============================================================================ */
+
+@media (max-width: 700px) {
+  .music-producer-team__container {
+    width: min(100% - 24px, 1440px);
+  }
+
+  .music-producer-team__header {
+    margin-left: calc((100vw - min(100vw - 24px, 1440px)) / -2);
+    margin-right: calc((100vw - min(100vw - 24px, 1440px)) / -2);
+
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .music-producer-team__header h1 {
+    font-size: 34px;
+  }
+
+  .music-producer-team__header-actions {
+    display: grid;
+
+    grid-template-columns:
+      1fr 1fr;
+  }
+
+  .music-producer-team__header-actions
+    .music-producer-team__primary-button {
+    grid-column: 1 / -1;
+  }
+
+  .music-producer-team__primary-button,
+  .music-producer-team__secondary-button {
+    width: 100%;
+  }
+
+  .music-producer-team__stats {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+  }
+
+  .music-producer-team__stat-card {
+    min-height: 100px;
+
+    padding: 15px;
+  }
+
+  .music-producer-team__stat-card strong {
+    font-size: 26px;
+  }
+
+  .music-producer-team__domain-card {
+    padding: 18px;
+  }
+
+  .music-producer-team__domain-link {
+    width: 100%;
+
+    margin-left: 0;
+
+    text-align: center;
+  }
+
+  .music-producer-team__panel-header {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    padding: 19px;
+  }
+
+  .music-producer-team__refresh-button {
+    width: 100%;
+  }
+
+  .music-producer-team__role-grid {
+    padding: 18px;
+  }
+
+  .music-producer-team__security {
+    padding: 18px;
+  }
+
+  .music-producer-team__modal-backdrop {
+    padding: 10px;
+
+    align-items: flex-start;
+  }
+
+  .music-producer-team__modal {
+    max-height: calc(100vh - 20px);
+
+    border-radius: 10px;
+  }
+
+  .music-producer-team__modal-header {
+    padding: 19px;
+  }
+
+  .music-producer-team__modal form {
+    padding: 19px;
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE — 520px
+   ============================================================================ */
+
+@media (max-width: 520px) {
+  .music-producer-team__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .music-producer-team__header-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .music-producer-team__header-actions
+    .music-producer-team__primary-button {
+    grid-column: auto;
+  }
+
+  .music-producer-team__permission-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .music-producer-team__modal-footer {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .music-producer-team__modal-footer
+    .music-producer-team__primary-button,
+  .music-producer-team__modal-footer
+    .music-producer-team__secondary-button {
+    width: 100%;
+  }
+
+  .music-producer-team__security {
+    align-items: flex-start;
+  }
+
+  .music-producer-team__security-icon {
+    width: 38px;
+    height: 38px;
+
+    flex-basis: 38px;
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE — 400px
+   ============================================================================ */
+
+@media (max-width: 400px) {
+  .music-producer-team__container {
+    width: calc(100% - 18px);
+  }
+
+  .music-producer-team__header {
+    margin-left: -9px;
+    margin-right: -9px;
+  }
+
+  .music-producer-team__header h1 {
+    font-size: 30px;
+  }
+
+  .music-producer-team__stat-card strong {
+    font-size: 24px;
+  }
+
+  .music-producer-team__modal-footer {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================================
+   REDUCED MOTION
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .music-producer-team *,
+  .music-producer-team *::before,
+  .music-producer-team *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

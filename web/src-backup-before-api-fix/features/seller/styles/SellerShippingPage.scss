@@ -1,0 +1,172 @@
+@use "./seller-console-shared";
+
+.seller-shipping {
+  min-height: 100vh;
+  background: var(--fk-bg);
+}
+
+.shipping-body {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px;
+
+  @media (max-width: 768px) { padding: 16px; }
+}
+
+.shipping-page-head {
+  margin-bottom: 20px;
+
+  h1 {
+    margin: 4px 0 4px;
+    color: var(--fk-text);
+    font-family: var(--fk-font-display);
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  p {
+    margin: 0;
+    color: var(--fk-text-2);
+    font-size: 13px;
+  }
+}
+
+.shipment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.shipment-card {
+  padding: 18px;
+
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-lg);
+  box-shadow: var(--fk-shadow-sm);
+}
+
+.shipment-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  h3 {
+    margin: 0;
+    color: var(--fk-text);
+    font-size: 14px;
+    font-weight: 700;
+  }
+}
+
+.shipment-total {
+  margin: 2px 0 0;
+  color: var(--fk-text-2);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.progress-tracker {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.progress-step {
+  position: relative;
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+}
+
+.progress-dot {
+  width: 24px;
+  height: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  border: 2px solid var(--fk-border-strong);
+
+  background: var(--fk-surface);
+  color: var(--fk-text-3);
+
+  font-size: 11px;
+  font-weight: 800;
+
+  z-index: 1;
+}
+
+.progress-label {
+  margin-top: 6px;
+  color: var(--fk-text-3);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.progress-line {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+
+  background: var(--fk-border-strong);
+
+  z-index: 0;
+}
+
+.progress-step.is-done {
+  .progress-dot {
+    border-color: var(--fk-success);
+    background: var(--fk-success);
+    color: #fff;
+  }
+
+  .progress-label { color: var(--fk-success); }
+  .progress-line { background: var(--fk-success); }
+}
+
+.progress-step.is-current {
+  .progress-dot {
+    border-color: var(--fk-fjord);
+    color: var(--fk-fjord);
+  }
+
+  .progress-label { color: var(--fk-fjord); font-weight: 800; }
+}
+
+.tracking-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  input {
+    flex: 1;
+    min-width: 200px;
+    height: 38px;
+    padding: 0 12px;
+
+    border: 1px solid var(--fk-border);
+    border-radius: var(--fk-r-sm);
+
+    background: var(--fk-sunken);
+    color: var(--fk-text);
+
+    font-size: 13px;
+
+    &:focus {
+      outline: none;
+      border-color: var(--fk-fjord-bright);
+      box-shadow: 0 0 0 3px var(--fk-fjord-soft);
+    }
+  }
+}

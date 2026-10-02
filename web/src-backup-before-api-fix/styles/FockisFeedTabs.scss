@@ -1,0 +1,80 @@
+/* ============================================================================
+   FockisFeedTab
+   REDESIGN: squared tab strip (was pill), navy surface, gold underline
+   marks the active tab — the classic collegiate "underline nav" pattern
+   instead of a filled pill background.
+============================================================================ */
+
+.fk-feed-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-md);
+  padding: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  box-shadow: var(--fk-shadow-sm);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.fk-feed-tabs__item {
+  position: relative;
+
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 16px;
+  border-radius: var(--fk-r-sm);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--fk-text-2);
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--fk-fast) var(--fk-ease),
+    color var(--fk-fast) var(--fk-ease);
+
+  &::after {
+    content: "";
+
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 2px;
+
+    height: 3px;
+
+    border-radius: 999px;
+
+    background: var(--fk-amber-bright);
+
+    opacity: 0;
+
+    transition: opacity var(--fk-fast) var(--fk-ease);
+  }
+
+  &:hover:not(&--active) {
+    background: var(--fk-sunken);
+    color: var(--fk-text);
+  }
+
+  &--active {
+    color: var(--fk-fjord);
+    background: transparent;
+    font-weight: 800;
+
+    &::after {
+      opacity: 1;
+    }
+  }
+
+  &--active:hover {
+    background: var(--fk-fjord-soft);
+  }
+}

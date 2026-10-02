@@ -1,0 +1,38 @@
+@use './tokens' as *;
+
+.cat-tabs {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 30px;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.cat-tab {
+  flex-shrink: 0;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+  transition: all 0.15s $ease;
+
+  &:hover {
+    border-color: var(--navy-800);
+    color: var(--navy-900);
+  }
+
+  &[aria-pressed='true'] {
+    background: var(--navy-900);
+    border-color: var(--navy-900);
+    color: #fff;
+    box-shadow: var(--shadow-sm);
+  }
+}

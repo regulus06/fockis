@@ -13,6 +13,7 @@ import {
   AuditLogSchema,
 } from "./audit/audit-log.schema";
 
+import { DbAdminController } from "./tools/db-admin.controller";
 import { DbAdminService } from "./tools/db-admin.service";
 import { MediaCleanupService } from "./tools/media.cleanup.service";
 
@@ -37,6 +38,12 @@ import { DomainAdminModule } from "./domains/domain-admin.module";
 
 import { AdminRoleModule } from "./roles/admin-role.module";
 import { UsersAdminModule } from "./users/users-admin.module";
+
+// ============================================================================
+// SECURITY / SESSION POLICIES
+// ============================================================================
+
+import { SessionPolicyModule } from "./security/session-policies/session-policy.module";
 
 // ============================================================================
 // USER / POST / COMMENT
@@ -82,18 +89,7 @@ import {
     // ========================================================================
     // ADMIN RBAC / DYNAMIC ROLES
     // ========================================================================
-    //
-    // Provides:
-    //
-    //   GET    /admin/roles
-    //   GET    /admin/roles/permissions
-    //   GET    /admin/roles/:id
-    //   POST   /admin/roles
-    //   PATCH  /admin/roles/:id
-    //   DELETE /admin/roles/:id
-    //
-    // Roles are stored in MongoDB instead of being hard-coded.
-    //
+
     AdminRoleModule,
 
     // ========================================================================
@@ -105,34 +101,20 @@ import {
     // ========================================================================
     // DOMAIN ADMINISTRATION
     // ========================================================================
-    //
-    // Handles:
-    //
-    //   GET    /admin/domains
-    //   GET    /admin/domains/overview
-    //   GET    /admin/domains/stats
-    //   GET    /admin/domains/policy
-    //   PATCH  /admin/domains/policy
-    //
-    //   GET    /admin/domains/campaigns
-    //   POST   /admin/domains/campaigns
-    //   PATCH  /admin/domains/campaigns/:id
-    //   POST   /admin/domains/campaigns/:id/pause
-    //   POST   /admin/domains/campaigns/:id/activate
-    //   DELETE /admin/domains/campaigns/:id
-    //
-    //   GET    /admin/domains/authorizations
-    //   POST   /admin/domains/authorizations
-    //   DELETE /admin/domains/authorizations/:id
-    //
-    //   POST   /admin/domains/:id/assign-free
-    //   POST   /admin/domains/:id/suspend
-    //   POST   /admin/domains/:id/activate
-    //
+
     DomainAdminModule,
 
-    // Complete Users Admin module. All /admin/users routes live here.
+    // ========================================================================
+    // USER ADMINISTRATION
+    // ========================================================================
+
     UsersAdminModule,
+
+    // ========================================================================
+    // SECURITY / SESSION POLICIES
+    // ========================================================================
+
+    SessionPolicyModule,
   ],
 
   // ========================================================================
@@ -142,6 +124,9 @@ import {
   controllers: [
     AdminController,
     AdminDashboardController,
+
+    // Database administration
+    DbAdminController,
   ],
 
   // ========================================================================
@@ -158,7 +143,6 @@ import {
     DbAdminService,
 
     MediaCleanupService,
-
 
     DestructiveGuard,
 

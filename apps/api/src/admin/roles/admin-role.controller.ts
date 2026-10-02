@@ -8,37 +8,51 @@ import {
   Post,
   Req,
   UseGuards,
-} from '@nestjs/common';
+} from "@nestjs/common";
 
-import { AdminRoleService } from './admin-role.service';
+import { AdminRoleService } from "./admin-role.service";
+import { SuperAdminGuard } from "../safety/super-admin.guard";
 
-import { SuperAdminGuard } from '../safety/super-admin.guard';
+import { CreateAdminRoleDto } from "./dto/create-admin-role.dto";
+import { UpdateAdminRoleDto } from "./dto/update-admin-role.dto";
 
-import { CreateAdminRoleDto } from './dto/create-admin-role.dto';
-import { UpdateAdminRoleDto } from './dto/update-admin-role.dto';
-
-@Controller('admin/roles')
+@Controller("admin/roles")
 @UseGuards(SuperAdminGuard)
 export class AdminRoleController {
   constructor(
     private readonly roleService: AdminRoleService,
   ) {}
 
+  /**
+   * Only SUPER_ADMIN can view administrator roles.
+   */
   @Get()
   list() {
     return this.roleService.list();
   }
 
-  @Get('permissions')
+  /**
+   * Returns the permissions that can be used
+   * when creating/editing a custom administrator role.
+   */
+  @Get("permissions")
   permissions() {
     return this.roleService.getPermissions();
   }
 
-  @Get(':id')
-  get(@Param('id') id: string) {
+  /**
+   * Get one administrator role.
+   */
+  @Get(":id")
+  get(@Param("id") id: string) {
     return this.roleService.getById(id);
   }
 
+  /**
+   * Create a CUSTOM administrator role.
+   *
+   * SUPER_ADMIN only.
+   */
   @Post()
   create(
     @Body() dto: CreateAdminRoleDto,
@@ -51,9 +65,14 @@ export class AdminRoleController {
     );
   }
 
-  @Patch(':id')
+  /**
+   * Update a CUSTOM administrator role.
+   *
+   * System roles cannot be modified.
+   */
+  @Patch(":id")
   update(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @Body() dto: UpdateAdminRoleDto,
     @Req() req: any,
   ) {
@@ -65,9 +84,14 @@ export class AdminRoleController {
     );
   }
 
-  @Delete(':id')
+  /**
+   * Delete a CUSTOM administrator role.
+   *
+   * System roles cannot be deleted.
+   */
+  @Delete(":id")
   remove(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @Req() req: any,
   ) {
     return this.roleService.remove(

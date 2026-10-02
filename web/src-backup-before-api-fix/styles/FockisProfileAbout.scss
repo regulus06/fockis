@@ -1,0 +1,53 @@
+/* ============================================================================
+   FOCKIS PROFILE ABOUT
+   src/styles/FockisProfileAbout.scss
+============================================================================ */
+
+@use "./fockis-theme";
+
+.fk-profile-about {
+  padding: 18px 20px;
+
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-lg);
+
+  background: var(--fk-surface);
+
+  h3 {
+    margin: 0 0 12px;
+
+    color: var(--fk-text);
+
+    font-size: 16px;
+    font-weight: 800;
+  }
+}
+
+.fk-profile-about__list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+}
+
+.fk-profile-about__item {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+
+  strong {
+    color: var(--fk-text-2);
+
+    font-size: 12px;
+    font-weight: 700;
+
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  span {
+    color: var(--fk-text);
+    font-size: 14px;
+  }
+}

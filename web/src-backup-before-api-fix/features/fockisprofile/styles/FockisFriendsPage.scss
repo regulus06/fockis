@@ -1,0 +1,597 @@
+/* ============================================================================
+   FOCKIS FRIENDS PAGE
+   src/styles/FockisFriendsPage.scss
+
+   Styles FockisFriendsPage.tsx (features/fockisprofile/pages). Matches the
+   Clark State College identity used across the redesigned feed: navy /
+   royal blue / gold, collegiate serif headings, squared institutional
+   radii.
+
+   NOTE: FockisFriendSearch and FockisProfileFriends render their own
+   markup that isn't covered here — only classes rendered directly by
+   FockisFriendsPage.tsx are styled below.
+============================================================================ */
+
+@use "./fockis-theme";
+
+
+/* ============================================================================
+   PAGE SHELL
+============================================================================ */
+
+.fk-friends-page {
+  width: 100%;
+  max-width: var(--fk-content-max-width, 760px);
+
+  margin: 0 auto;
+
+  padding: 24px 20px 80px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 20px;
+
+  background: var(--fk-bg);
+  color: var(--fk-text);
+  font-family: var(--fk-font-body);
+}
+
+
+/* ============================================================================
+   HEADER
+   Navy banner with gold rule, matching .fk-feed-topbar.
+============================================================================ */
+
+.fk-friends-page__header {
+  width: 100%;
+
+  padding: 18px 20px;
+
+  background: var(--fk-fjord);
+  border-radius: var(--fk-r-lg);
+
+  box-shadow:
+    inset 0 -3px 0 0 var(--fk-amber-bright),
+    var(--fk-shadow-sm);
+}
+
+.fk-friends-page__title-area {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+}
+
+.fk-friends-page__icon {
+  width: 46px;
+  height: 46px;
+
+  flex: 0 0 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--fk-r-md);
+
+  background: var(--fk-amber-bright);
+  color: var(--fk-fjord-dark);
+}
+
+.fk-friends-page__title-area h1 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-family: var(--fk-font-display);
+  font-size: 24px;
+  font-weight: 700;
+
+  line-height: 1.2;
+}
+
+.fk-friends-page__title-area p {
+  margin: 4px 0 0;
+
+  color: rgba(255, 255, 255, 0.78);
+
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+
+/* ============================================================================
+   TABS
+   Squared strip with a gold underline on the active tab, matching
+   .fk-feed-tabs.
+============================================================================ */
+
+.fk-friend-tabs {
+  display: flex;
+  gap: 4px;
+
+  padding: 4px;
+
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-md);
+
+  box-shadow: var(--fk-shadow-sm);
+
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.fk-friend-tabs__tab {
+  position: relative;
+
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 10px 16px;
+
+  border: 0;
+  border-radius: var(--fk-r-sm);
+
+  background: transparent;
+  color: var(--fk-text-2);
+
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    background-color var(--fk-fast) var(--fk-ease),
+    color var(--fk-fast) var(--fk-ease);
+
+  &::after {
+    content: "";
+
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 2px;
+
+    height: 3px;
+
+    border-radius: 999px;
+
+    background: var(--fk-amber-bright);
+
+    opacity: 0;
+
+    transition: opacity var(--fk-fast) var(--fk-ease);
+  }
+
+  &:hover:not(&--active) {
+    background: var(--fk-sunken);
+    color: var(--fk-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fk-amber-bright);
+    outline-offset: 2px;
+  }
+}
+
+.fk-friend-tabs__tab--active {
+  color: var(--fk-fjord);
+  font-weight: 800;
+
+  &::after {
+    opacity: 1;
+  }
+}
+
+.fk-friend-tabs__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 20px;
+  height: 20px;
+
+  padding: 0 6px;
+
+  border-radius: 999px;
+
+  background: var(--fk-fjord);
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.fk-friend-tabs__tab--active .fk-friend-tabs__count {
+  background: var(--fk-amber-bright);
+  color: var(--fk-fjord-dark);
+}
+
+
+/* ============================================================================
+   SECTION
+============================================================================ */
+
+.fk-friends-section {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 16px;
+}
+
+.fk-friends-section__header {
+  width: 100%;
+}
+
+.fk-friends-section__heading {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+}
+
+.fk-friends-section__heading-icon {
+  width: 40px;
+  height: 40px;
+
+  flex: 0 0 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--fk-r-md);
+
+  background: var(--fk-fjord-soft);
+  color: var(--fk-fjord);
+}
+
+.fk-friends-section__heading h2 {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-family: var(--fk-font-display);
+  font-size: 18px;
+  font-weight: 700;
+
+  line-height: 1.25;
+}
+
+.fk-friends-section__heading p {
+  margin: 3px 0 0;
+
+  color: var(--fk-text-2);
+
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+
+/* ============================================================================
+   EMPTY STATE
+============================================================================ */
+
+.fk-friends-empty {
+  width: 100%;
+
+  padding: 40px 20px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 6px;
+
+  text-align: center;
+
+  background: var(--fk-surface);
+  border: 1px dashed var(--fk-border-strong);
+  border-radius: var(--fk-r-lg);
+}
+
+.fk-friends-empty h3 {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-family: var(--fk-font-display);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.fk-friends-empty p {
+  margin: 0;
+
+  color: var(--fk-text-2);
+
+  font-size: 13px;
+  line-height: 1.5;
+
+  max-width: 320px;
+}
+
+
+/* ============================================================================
+   REQUEST / SUGGESTION GRID
+============================================================================ */
+
+.fk-friend-requests-grid {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+
+  gap: 14px;
+}
+
+
+/* ============================================================================
+   RAIL CARD
+   Shared card used for both friend requests and suggestions.
+============================================================================ */
+
+.fk-rail-card {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background: var(--fk-surface);
+
+  border: 1px solid var(--fk-border);
+  border-top: 3px solid var(--fk-fjord);
+  border-radius: var(--fk-r-md);
+
+  box-shadow: var(--fk-shadow-sm);
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--fk-shadow-md);
+  }
+}
+
+.fk-rail-card--suggestion {
+  border-top-color: var(--fk-fjord-bright);
+}
+
+
+/* ============================================================================
+   PHOTO
+============================================================================ */
+
+.fk-rail-card__photo {
+  width: 100%;
+  height: 140px;
+
+  flex: 0 0 140px;
+
+  overflow: hidden;
+
+  background: var(--fk-sunken);
+
+  img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+  }
+}
+
+.fk-rail-card__initial {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--fk-fjord),
+      var(--fk-fjord-dark)
+    );
+
+  color: var(--fk-amber-bright);
+
+  font-family: var(--fk-font-display);
+  font-size: 32px;
+  font-weight: 700;
+}
+
+
+/* ============================================================================
+   BODY
+============================================================================ */
+
+.fk-rail-card__body {
+  padding: 12px 12px 4px;
+}
+
+.fk-rail-card__body h3 {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-size: 14px;
+  font-weight: 700;
+
+  line-height: 1.3;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================================
+   ACTIONS
+============================================================================ */
+
+.fk-rail-card__actions {
+  padding: 10px 12px 12px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+.fk-rail-card__btn {
+  flex: 1;
+
+  min-height: 36px;
+
+  padding: 0 12px;
+
+  border: 1px solid transparent;
+  border-radius: var(--fk-r-sm);
+
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background-color var(--fk-fast) var(--fk-ease),
+    color var(--fk-fast) var(--fk-ease),
+    border-color var(--fk-fast) var(--fk-ease),
+    opacity var(--fk-fast) var(--fk-ease);
+}
+
+.fk-rail-card__btn--primary {
+  background: var(--fk-fjord);
+  color: #ffffff;
+
+  &:hover:not(:disabled) {
+    background: var(--fk-fjord-bright);
+  }
+}
+
+.fk-rail-card__btn--ghost {
+  background: transparent;
+  color: var(--fk-text-2);
+
+  border-color: var(--fk-border);
+
+  &:hover {
+    background: var(--fk-sunken);
+    color: var(--fk-text);
+  }
+}
+
+.fk-rail-card__btn--sent {
+  background: var(--fk-sunken);
+  color: var(--fk-text-3);
+
+  cursor: default;
+  opacity: 0.85;
+
+  &:hover {
+    background: var(--fk-sunken);
+  }
+}
+
+.fk-rail-card__btn:disabled {
+  cursor: default;
+}
+
+.fk-rail-card__btn:focus-visible {
+  outline: 2px solid var(--fk-amber-bright);
+  outline-offset: 2px;
+}
+
+
+/* ============================================================================
+   RESPONSIVE
+============================================================================ */
+
+@media (max-width: 640px) {
+
+  .fk-friends-page {
+    padding: 16px 14px 100px;
+
+    gap: 16px;
+  }
+
+  .fk-friends-page__header {
+    padding: 16px;
+
+    border-radius: var(--fk-r-md);
+  }
+
+  .fk-friends-page__title-area {
+    gap: 10px;
+  }
+
+  .fk-friends-page__icon {
+    width: 40px;
+    height: 40px;
+
+    flex: 0 0 40px;
+  }
+
+  .fk-friends-page__title-area h1 {
+    font-size: 20px;
+  }
+
+  .fk-friend-requests-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+
+    gap: 10px;
+  }
+
+  .fk-rail-card__photo {
+    height: 110px;
+
+    flex: 0 0 110px;
+  }
+
+  .fk-rail-card__actions {
+    flex-direction: column;
+  }
+
+  .fk-rail-card__btn {
+    width: 100%;
+  }
+}
+
+
+/* ============================================================================
+   REDUCED MOTION
+============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-rail-card,
+  .fk-friend-tabs__tab,
+  .fk-rail-card__btn {
+    transition: none;
+  }
+}

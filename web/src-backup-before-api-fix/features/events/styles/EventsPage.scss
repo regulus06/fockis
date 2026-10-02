@@ -1,0 +1,973 @@
+.fk-events-page {
+  min-height: 100vh;
+  padding: 32px 20px 80px;
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(255, 153, 0, 0.08),
+      transparent 35%
+    ),
+    #f5f6f8;
+
+  color: #151515;
+}
+
+.fk-events-container {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+}
+
+/* ============================================================================
+   EVENTS HEADER
+============================================================================ */
+
+.fk-events-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.fk-events-eyebrow {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #ff9900;
+
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.fk-events-header h1 {
+  margin: 0;
+
+  font-size: clamp(32px, 5vw, 48px);
+  line-height: 1.05;
+}
+
+.fk-events-header p {
+  margin: 10px 0 0;
+
+  color: #68707c;
+}
+
+/* ============================================================================
+   CREATE EVENT BUTTON
+============================================================================ */
+
+.fk-event-create-button,
+.fk-event-button.primary {
+  border: 0;
+  border-radius: 12px;
+
+  padding: 13px 20px;
+
+  background: #ff9900;
+  color: #111;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.fk-event-create-button:hover,
+.fk-event-button.primary:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 6px 18px rgba(255, 153, 0, 0.22);
+}
+
+.fk-event-create-button:disabled,
+.fk-event-button.primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ============================================================================
+   BACK BUTTON
+============================================================================ */
+
+.fk-event-back {
+  margin-bottom: 12px;
+
+  padding: 0;
+
+  border: 0;
+  background: transparent;
+
+  color: #68707c;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.fk-event-back:hover {
+  color: #151515;
+  transform: translateX(-2px);
+}
+
+/* ============================================================================
+   FILTERS
+============================================================================ */
+
+.fk-event-filters {
+  display: grid;
+
+  grid-template-columns:
+    minmax(200px, 1fr)
+    180px
+    180px;
+
+  gap: 12px;
+
+  margin-bottom: 24px;
+}
+
+.fk-event-filters input,
+.fk-event-filters select,
+.fk-event-field input,
+.fk-event-field textarea,
+.fk-event-field select {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  border: 1px solid #dfe3e8;
+  border-radius: 12px;
+
+  padding: 13px 14px;
+
+  background: #fff;
+
+  color: #151515;
+
+  outline: none;
+
+  font: inherit;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.fk-event-filters input:focus,
+.fk-event-filters select:focus,
+.fk-event-field input:focus,
+.fk-event-field textarea:focus,
+.fk-event-field select:focus {
+  border-color: #ff9900;
+
+  box-shadow:
+    0 0 0 3px rgba(255, 153, 0, 0.12);
+}
+
+/* ============================================================================
+   EVENTS GRID
+============================================================================ */
+
+.fk-events-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 20px;
+}
+
+/* ============================================================================
+   EVENT CARD
+============================================================================ */
+
+.fk-event-card {
+  overflow: hidden;
+
+  border: 1px solid #e2e5e9;
+  border-radius: 18px;
+
+  background: #fff;
+
+  box-shadow:
+    0 8px 30px rgba(20, 25, 30, 0.06);
+
+  cursor: pointer;
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.fk-event-card:hover {
+  transform: translateY(-3px);
+
+  box-shadow:
+    0 14px 40px rgba(20, 25, 30, 0.1);
+}
+
+.fk-event-card-image {
+  position: relative;
+
+  height: 210px;
+
+  background: #e9edf1;
+}
+
+.fk-event-card-image img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.fk-event-card-placeholder {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ff9900,
+      #ffbf5c
+    );
+
+  font-size: 52px;
+}
+
+/* ============================================================================
+   EVENT STATUS
+============================================================================ */
+
+.fk-event-status {
+  display: inline-flex;
+
+  width: fit-content;
+
+  border-radius: 999px;
+
+  padding: 6px 10px;
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.fk-event-card-image .fk-event-status {
+  position: absolute;
+
+  top: 12px;
+  left: 12px;
+
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.fk-event-status.upcoming {
+  color: #166534;
+}
+
+.fk-event-status.live {
+  color: #b91c1c;
+}
+
+.fk-event-status.ended {
+  color: #59616d;
+}
+
+.fk-event-status.cancelled {
+  color: #991b1b;
+}
+
+/* ============================================================================
+   EVENT CARD BODY
+============================================================================ */
+
+.fk-event-card-body {
+  padding: 18px;
+}
+
+.fk-event-category {
+  margin-bottom: 7px;
+
+  color: #ff9900;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+}
+
+.fk-event-card h3 {
+  margin: 0 0 12px;
+
+  font-size: 21px;
+}
+
+.fk-event-date,
+.fk-event-end,
+.fk-event-location {
+  margin-top: 8px;
+
+  color: #59616d;
+
+  font-size: 14px;
+}
+
+.fk-event-card-footer {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-top: 18px;
+
+  padding-top: 14px;
+
+  border-top: 1px solid #edf0f2;
+
+  color: #68707c;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ============================================================================
+   RSVP / ONLINE BUTTONS
+============================================================================ */
+
+.fk-event-going-button,
+.fk-event-rsvp,
+.fk-event-online-button {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
+  border-radius: 10px;
+
+  padding: 10px 14px;
+
+  background: #ff9900;
+  color: #111;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  text-decoration: none;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.fk-event-going-button:hover,
+.fk-event-rsvp:hover,
+.fk-event-online-button:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 5px 14px rgba(255, 153, 0, 0.2);
+}
+
+.fk-event-rsvp.going {
+  background: #e7f7ed;
+  color: #176b3a;
+}
+
+/* ============================================================================
+   EVENT STATES
+============================================================================ */
+
+.fk-events-state {
+  padding: 60px 20px;
+
+  border: 1px dashed #ccd2d9;
+  border-radius: 18px;
+
+  background: #fff;
+
+  text-align: center;
+
+  color: #68707c;
+}
+
+.fk-events-state.error,
+.fk-event-form-error {
+  border-radius: 12px;
+
+  background: #fff1f1;
+  color: #b42318;
+}
+
+/* ============================================================================
+   EVENT FORM
+============================================================================ */
+
+.fk-event-form-card {
+  max-width: 820px;
+
+  margin: 0 auto;
+
+  padding: 28px;
+
+  border: 1px solid #e2e5e9;
+  border-radius: 20px;
+
+  background: #fff;
+
+  box-shadow:
+    0 10px 40px rgba(20, 25, 30, 0.07);
+}
+
+.fk-event-form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 20px;
+}
+
+.fk-event-form-error {
+  padding: 14px;
+}
+
+.fk-event-field {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.fk-event-field label {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.fk-event-field label span {
+  margin-left: 3px;
+
+  color: #d92d20;
+}
+
+.fk-event-two-columns,
+.fk-event-date-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 16px;
+}
+
+.fk-event-online-toggle {
+  padding: 14px;
+
+  border: 1px solid #e2e5e9;
+  border-radius: 12px;
+
+  background: #fafbfc;
+}
+
+.fk-event-online-toggle label {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  font-weight: 700;
+}
+
+.fk-event-online-toggle input {
+  width: 18px;
+  height: 18px;
+}
+
+.fk-event-form-actions {
+  display: flex;
+
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 8px;
+}
+
+.fk-event-button.secondary {
+  border: 1px solid #dfe3e8;
+  border-radius: 12px;
+
+  padding: 13px 20px;
+
+  background: #fff;
+
+  color: #151515;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.fk-event-button.secondary:hover {
+  background: #f7f8fa;
+  transform: translateY(-1px);
+}
+
+/* ============================================================================
+   EVENT DETAILS
+============================================================================ */
+
+.fk-event-details {
+  overflow: hidden;
+
+  margin-top: 20px;
+
+  border: 1px solid #e2e5e9;
+  border-radius: 20px;
+
+  background: #fff;
+
+  box-shadow:
+    0 10px 40px rgba(20, 25, 30, 0.07);
+}
+
+.fk-event-details-cover {
+  height: 390px;
+
+  background: #e9edf1;
+}
+
+.fk-event-details-cover img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+/* ============================================================================
+   EVENT VIDEO
+============================================================================ */
+
+.fk-event-details-video {
+  width: 100%;
+
+  background: #000;
+}
+
+.fk-event-details-cover-video {
+  display: block;
+
+  width: 100%;
+  max-height: 600px;
+
+  object-fit: contain;
+
+  background: #000;
+}
+
+/* ============================================================================
+   EVENT DETAILS CONTENT
+============================================================================ */
+
+.fk-event-details-content {
+  padding: 32px;
+}
+
+.fk-event-details-content h1 {
+  margin: 10px 0 14px;
+
+  font-size: clamp(32px, 5vw, 52px);
+
+  line-height: 1.08;
+}
+
+.fk-event-description {
+  max-width: 760px;
+
+  color: #59616d;
+
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+/* ============================================================================
+   EVENT DETAIL INFORMATION
+============================================================================ */
+
+.fk-event-detail-list {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 14px;
+
+  margin: 28px 0;
+}
+
+.fk-event-detail-list > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  padding: 16px;
+
+  border-radius: 14px;
+
+  background: #f7f8fa;
+}
+
+.fk-event-detail-list strong {
+  font-size: 12px;
+
+  color: #68707c;
+
+  text-transform: uppercase;
+}
+
+.fk-event-detail-list span {
+  font-weight: 700;
+}
+
+/* ============================================================================
+   ONLINE EVENT
+============================================================================ */
+
+.fk-event-online-button {
+  margin-right: 10px;
+}
+
+/* ============================================================================
+   CANCELLED EVENT NOTICE
+============================================================================ */
+
+.fk-event-cancelled-notice {
+  margin-bottom: 24px;
+
+  padding: 18px;
+
+  border: 1px solid #fecaca;
+  border-radius: 14px;
+
+  background: #fff1f2;
+
+  color: #991b1b;
+}
+
+.fk-event-cancelled-title {
+  margin-bottom: 6px;
+
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.fk-event-cancelled-notice p {
+  margin: 6px 0;
+
+  line-height: 1.5;
+}
+
+.fk-event-cancelled-details {
+  margin-top: 20px;
+  padding: 16px;
+
+  border-radius: 14px;
+
+  background: #f7f8fa;
+
+  color: #59616d;
+}
+
+.fk-event-cancelled-details strong {
+  color: #991b1b;
+}
+
+.fk-event-cancelled-details p {
+  margin: 6px 0 0;
+}
+
+/* ============================================================================
+   OWNER ACTIONS
+   ============================================================================
+
+   These buttons are rendered by EventDetailsPage.tsx ONLY when:
+
+       isEventOwner === true
+
+   This styling does not provide authorization.
+   The NestJS backend remains responsible for enforcing ownership.
+============================================================================ */
+
+.fk-event-owner-actions {
+  display: flex;
+
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 12px;
+
+  margin-top: 30px;
+  padding-top: 24px;
+
+  border-top: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+/* ============================================================================
+   OWNER ACTION BASE BUTTON
+============================================================================ */
+
+.fk-event-owner-actions .fk-event-button {
+  appearance: none;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-height: 44px;
+
+  padding: 11px 18px;
+
+  border: 0;
+  border-radius: 10px;
+
+  font-family: inherit;
+
+  font-size: 14px;
+  font-weight: 800;
+
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease,
+    opacity 0.18s ease;
+}
+
+/* ============================================================================
+   OWNER EDIT BUTTON
+============================================================================ */
+
+.fk-event-owner-actions .fk-event-button.primary {
+  background: #1877f2;
+  color: #fff;
+
+  box-shadow:
+    0 4px 12px rgba(24, 119, 242, 0.22);
+}
+
+.fk-event-owner-actions .fk-event-button.primary:hover {
+  background: #166fe5;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 7px 18px rgba(24, 119, 242, 0.3);
+}
+
+.fk-event-owner-actions .fk-event-button.primary:active {
+  transform: translateY(0);
+}
+
+/* ============================================================================
+   OWNER CANCEL BUTTON
+============================================================================ */
+
+.fk-event-owner-actions .fk-event-button.danger {
+  background: #dc2626;
+  color: #fff;
+
+  box-shadow:
+    0 4px 12px rgba(220, 38, 38, 0.2);
+}
+
+.fk-event-owner-actions .fk-event-button.danger:hover {
+  background: #b91c1c;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 7px 18px rgba(220, 38, 38, 0.28);
+}
+
+.fk-event-owner-actions .fk-event-button.danger:active {
+  transform: translateY(0);
+}
+
+/* ============================================================================
+   OWNER BUTTON DISABLED
+============================================================================ */
+
+.fk-event-owner-actions .fk-event-button:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+  box-shadow: none;
+}
+
+/* ============================================================================
+   OWNER BUTTON KEYBOARD FOCUS
+============================================================================ */
+
+.fk-event-owner-actions .fk-event-button:focus-visible {
+  outline: 3px solid rgba(24, 119, 242, 0.3);
+  outline-offset: 3px;
+}
+
+/* ============================================================================
+   RESPONSIVE — TABLET
+============================================================================ */
+
+@media (max-width: 900px) {
+  .fk-events-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE — MOBILE
+============================================================================ */
+
+@media (max-width: 700px) {
+  .fk-events-page {
+    padding: 20px 14px 60px;
+  }
+
+  .fk-events-header {
+    align-items: stretch;
+
+    flex-direction: column;
+  }
+
+  .fk-event-create-button {
+    width: 100%;
+  }
+
+  .fk-event-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .fk-events-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fk-event-two-columns,
+  .fk-event-date-grid,
+  .fk-event-detail-list {
+    grid-template-columns: 1fr;
+  }
+
+  .fk-event-form-card {
+    padding: 20px;
+  }
+
+  .fk-event-details-cover {
+    height: 240px;
+  }
+
+  .fk-event-details-cover-video {
+    max-height: 300px;
+  }
+
+  .fk-event-details-content {
+    padding: 22px;
+  }
+
+  .fk-event-form-actions {
+    flex-direction: column;
+  }
+
+  .fk-event-form-actions button {
+    width: 100%;
+  }
+
+  /* --------------------------------------------------------------------------
+     OWNER ACTIONS MOBILE
+  -------------------------------------------------------------------------- */
+
+  .fk-event-owner-actions {
+    flex-direction: column;
+    align-items: stretch;
+
+    gap: 10px;
+
+    margin-top: 24px;
+    padding-top: 20px;
+  }
+
+  .fk-event-owner-actions .fk-event-button {
+    width: 100%;
+  }
+
+  .fk-event-online-button {
+    width: 100%;
+    margin: 0 0 12px;
+  }
+}
+
+/* ============================================================================
+   SMALL MOBILE
+============================================================================ */
+
+@media (max-width: 420px) {
+  .fk-events-page {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .fk-event-details-content {
+    padding: 18px;
+  }
+
+  .fk-event-details-content h1 {
+    font-size: 32px;
+  }
+
+  .fk-event-description {
+    font-size: 15px;
+  }
+
+  .fk-event-detail-list > div {
+    padding: 14px;
+  }
+}

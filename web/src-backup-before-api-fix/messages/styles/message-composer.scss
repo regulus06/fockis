@@ -1,0 +1,204 @@
+.message-composer {
+  flex: 0 0 auto;
+  border-top: 1px solid var(--fk-border);
+  background: var(--fk-white);
+  padding: 8px 12px 10px;
+}
+
+/* ============================================================================
+   BANNERS (editing / error)
+============================================================================ */
+
+.message-composer__editing-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  border-radius: var(--fk-radius-md);
+  background: rgba(242, 169, 59, 0.12);
+  color: var(--fk-navy-900);
+  font-size: 12px;
+  font-weight: 600;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: transparent;
+    color: var(--fk-navy-700);
+    cursor: pointer;
+    border-radius: 50%;
+
+    &:hover {
+      background: rgba(11, 46, 79, 0.08);
+    }
+  }
+}
+
+.message-composer__error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-radius: var(--fk-radius-md);
+  background: rgba(192, 57, 43, 0.08);
+  border: 1px solid rgba(192, 57, 43, 0.25);
+  color: #c0392b;
+  font-size: 12px;
+
+  button {
+    flex: 0 0 auto;
+    border: none;
+    background: none;
+    color: #c0392b;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+}
+
+/* ============================================================================
+   COMPOSER ROW
+============================================================================ */
+
+.message-composer__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.message-composer__attach-wrapper,
+.message-composer__emoji-wrapper {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.message-composer__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: none;
+  background: transparent;
+  color: var(--fk-navy-700);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--fk-canvas);
+    color: var(--fk-gold-600);
+  }
+
+  &:disabled {
+    color: var(--fk-border);
+    cursor: not-allowed;
+  }
+}
+
+.message-composer__voice-btn {
+  color: var(--fk-navy-900);
+}
+
+/* ============================================================================
+   TEXTAREA
+============================================================================ */
+
+.message-composer__input-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.message-composer__textarea {
+  width: 100%;
+  max-height: 120px;
+  resize: none;
+  border: 1px solid var(--fk-border);
+  border-radius: 20px;
+  padding: 9px 36px 9px 16px;
+  font-size: 14px;
+  font-family: var(--fk-font-body);
+  line-height: 1.4;
+  color: var(--fk-ink);
+  background: var(--fk-canvas);
+  outline: none;
+  transition: border-color 0.15s ease;
+
+  &:focus {
+    border-color: var(--fk-gold-500);
+    background: var(--fk-white);
+  }
+
+  &::placeholder {
+    color: var(--fk-muted);
+  }
+}
+
+.message-composer__clear-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--fk-muted);
+  border-radius: 50%;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(11, 46, 79, 0.08);
+    color: var(--fk-navy-900);
+  }
+}
+
+/* ============================================================================
+   SEND BUTTON
+============================================================================ */
+
+.message-composer__send-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 50%;
+  background: var(--fk-gold-500);
+  color: var(--fk-navy-900);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--fk-gold-600);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.94);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* ============================================================================
+   RECORDING STATE
+============================================================================ */
+
+.message-composer--recording {
+  padding: 10px 12px;
+}

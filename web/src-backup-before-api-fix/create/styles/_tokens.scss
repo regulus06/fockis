@@ -1,0 +1,42 @@
+:root {
+  --bg: #F5F7FA;
+  --surface: #FFFFFF;
+  --surface-alt: #EFF2F6;
+
+  --navy-900: #0D2740;
+  --navy-800: #133552;
+  --blue-600: #2B5D8C;
+  --blue-500: #3E75AB;
+
+  --gold-500: #C79A3E;
+  --gold-600: #AD8330;
+  --gold-100: #F7EFDA;
+
+  --ink: #16212C;
+  --muted: #5B6B7C;
+  --muted-2: #7C8B9B;
+
+  --border: #E1E6EC;
+  --border-strong: #CBD5E0;
+
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+
+  --shadow-sm: 0 1px 2px rgba(13, 39, 64, 0.06);
+  --shadow-md: 0 6px 20px rgba(13, 39, 64, 0.08);
+  --shadow-lg: 0 18px 44px rgba(13, 39, 64, 0.14);
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+// SCSS-level convenience variables (mirrors of the CSS custom properties,
+// handy for use inside SCSS functions / media query authoring)
+$ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+$bp-desktop: 1080px;
+$bp-tablet: 980px;
+$bp-tablet-sm: 720px;
+$bp-mobile: 640px;
+$bp-mobile-sm: 560px;
+$bp-mobile-xs: 420px;

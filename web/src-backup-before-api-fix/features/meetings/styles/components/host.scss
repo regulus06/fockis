@@ -1,0 +1,41 @@
+@use '../tokens' as t;
+
+.fm-host-menu {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  min-width: 240px;
+  background: t.$void-800;
+  border: 1px solid t.$void-600;
+  border-radius: t.$radius-md;
+  box-shadow: t.$shadow-lg;
+  padding: 6px;
+  z-index: t.$z-overlay;
+
+  &__header {
+    padding: 8px 10px 6px;
+    font-size: t.$fs-xs;
+    color: t.$fog-300;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    padding: 9px 10px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    color: t.$fog-0;
+    font-size: t.$fs-sm;
+    &:hover { background: t.$void-700; }
+    &--danger { color: #ff8a8d; }
+    &--danger:hover { background: rgba(229,72,77,0.14); }
+  }
+  &__divider { height: 1px; background: t.$void-700; margin: 6px 4px; }
+
+  &--participant { position: static; box-shadow: none; }
+}

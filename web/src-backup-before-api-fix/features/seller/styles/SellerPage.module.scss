@@ -1,0 +1,39 @@
+@use "../../marketplace/styles/variables" as *;
+@use "../../marketplace/styles/mixins" as *;
+
+.page {
+  @include container;
+
+  display: flex;
+  flex-direction: column;
+  gap: $space-6;
+}
+
+.header {
+  @include card;
+}
+
+.title {
+  font-family: $font-display;
+  font-size: $fs-xl;
+  font-weight: 700;
+  color: $color-text-primary;
+}
+
+.profile {
+  color: $color-text-secondary;
+}
+
+.products {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $space-4;
+
+  @media (max-width: $bp-tablet) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: $bp-mobile) {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,918 @@
+/* ============================================================================
+   FOCKIS MARKETING — SHARED PAGE CHROME
+   Reused by every fk-marketing-* page. Import with @use in each page's
+   stylesheet:   @use "./fockis-marketing-shared";
+
+   Fockis look: navy hero, amber accent, serif headings, pill buttons.
+   Every class name from the previous version is kept, so no .tsx changes
+   are needed. Fonts (Fraunces + Inter) load from index.html.
+============================================================================ */
+
+// Keeps the app-wide --fk-* variables available to page stylesheets.
+@use "../../../styles/fockis-theme";
+
+/* ============================================================================
+   TOKENS
+   Prefixed with --mk- so they never clash with the app theme.
+============================================================================ */
+
+:root {
+  --mk-ink: #0a1220;
+  --mk-navy-900: #0d2238;
+  --mk-navy-700: #133a5e;
+  --mk-navy-500: #1d5285;
+  --mk-amber: #f2a93b;
+  --mk-amber-strong: #e39520;
+  --mk-bg: #eef2f7;
+  --mk-surface: #ffffff;
+  --mk-soft: #f8fafc;
+  --mk-border: #e2e8f0;
+  --mk-border-strong: #cbd5e1;
+  --mk-text: #0f172a;
+  --mk-muted: #64748b;
+  --mk-faint: #94a3b8;
+  --mk-success: #15803d;
+  --mk-success-bg: #dcfce7;
+  --mk-warning: #b45309;
+  --mk-warning-bg: #fef3c7;
+  --mk-danger: #b91c1c;
+  --mk-danger-bg: #fee2e2;
+  --mk-info: #1d4ed8;
+  --mk-info-bg: #dbeafe;
+  --mk-serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --mk-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mk-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+  --mk-radius: 16px;
+  --mk-radius-lg: 22px;
+}
+
+/* ============================================================================
+   MIXINS
+============================================================================ */
+
+@mixin btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 22px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font: 600 14px/1 var(--mk-sans);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--mk-amber);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+@mixin btn-secondary {
+  @include btn;
+  height: 40px;
+  padding: 0 18px;
+  border-color: var(--mk-border);
+  background: var(--mk-surface);
+  color: var(--mk-text);
+  font-size: 13px;
+
+  &:hover:not(:disabled) {
+    border-color: var(--mk-border-strong);
+    background: var(--mk-soft);
+    color: var(--mk-text);
+  }
+}
+
+@mixin card {
+  min-width: 0;
+  margin: 0;
+  padding: 24px;
+  border: 1px solid var(--mk-border);
+  border-radius: var(--mk-radius-lg);
+  background: var(--mk-surface);
+  box-shadow: var(--mk-shadow);
+
+  @media (max-width: 767px) {
+    padding: 18px 16px;
+    border-radius: 18px;
+  }
+}
+
+@mixin heading($size: 24px) {
+  margin: 0;
+  color: var(--mk-text);
+  font-family: var(--mk-serif);
+  font-size: $size;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+@mixin tone($fg, $bg) {
+  border-color: transparent;
+  background: $bg;
+  color: $fg;
+}
+
+/* ============================================================================
+   PAGE SHELL
+============================================================================ */
+
+.fk-marketing-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  min-height: 100vh;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 24px 32px 80px;
+  background: var(--mk-bg);
+  color: var(--mk-text);
+  font-family: var(--mk-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  // headings follow their container, not global rules
+  :is(h1, h2, h3, p) {
+    text-align: inherit;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--mk-amber);
+    outline-offset: 2px;
+  }
+}
+
+/* Wider variant for pages that need a multi-column card grid */
+.fk-marketing-page--wide {
+  max-width: 1320px;
+}
+
+/* ============================================================================
+   HEADER (navy hero)
+============================================================================ */
+
+.fk-marketing-header {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  margin: 0;
+  padding: 44px 44px 40px;
+  border-radius: 24px;
+  border-bottom: 3px solid var(--mk-amber);
+  background:
+    radial-gradient(400px 280px at 80% 35%, rgba(242, 169, 59, 0.2), transparent 70%),
+    linear-gradient(115deg, var(--mk-ink) 0%, var(--mk-navy-900) 55%, #16456e 100%);
+  color: #fff;
+
+  // ring, echoing the homepage hero
+  &::after {
+    content: "";
+    position: absolute;
+    right: -70px;
+    bottom: -130px;
+    width: 290px;
+    height: 290px;
+    border: 3px solid rgba(29, 82, 133, 0.55);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  > div:first-child {
+    max-width: 60ch;
+  }
+
+  h1 {
+    margin: 0;
+    color: #fff;
+    font-family: var(--mk-serif);
+    font-size: clamp(30px, 4.4vw, 50px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    margin: 12px 0 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  // Buttons and links on the dark hero
+  .fk-marketing-secondary-button,
+  .fk-marketing-danger-button,
+  .fk-marketing-warning-button {
+    border-color: rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      border-color: rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.14);
+      color: #fff;
+    }
+  }
+
+  .fk-marketing-link {
+    color: rgba(255, 255, 255, 0.78);
+
+    &:hover {
+      color: #fff;
+    }
+  }
+
+  @media (max-width: 767px) {
+    padding: 30px 20px 28px;
+    border-radius: 18px;
+  }
+}
+
+.fk-marketing-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.fk-marketing-eyebrow {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--mk-amber);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+}
+
+/* ============================================================================
+   TEXT LINK
+   Used for "← Campaigns", "View Full Analytics →", "View all", etc.
+============================================================================ */
+
+.fk-marketing-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--mk-navy-500);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--mk-navy-700);
+  }
+
+  &:focus-visible {
+    border-radius: 4px;
+    outline: 3px solid var(--mk-amber);
+    outline-offset: 2px;
+  }
+}
+
+/* ============================================================================
+   SECTION
+============================================================================ */
+
+.fk-marketing-section {
+  @include card;
+  width: 100%;
+}
+
+.fk-marketing-section-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 16px;
+  margin-bottom: 20px;
+
+  p {
+    margin: 4px 0 0;
+    color: var(--mk-muted);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+.fk-marketing-section > h2,
+.fk-marketing-panel > h2,
+.fk-marketing-section-header h2 {
+  @include heading(24px);
+}
+
+.fk-marketing-section > h2,
+.fk-marketing-panel > h2 {
+  margin-bottom: 20px;
+}
+
+/* ============================================================================
+   PANEL (single card)
+============================================================================ */
+
+.fk-marketing-panel {
+  @include card;
+  width: 100%;
+
+  > .fk-marketing-primary-button {
+    margin-top: 4px;
+  }
+}
+
+/* ============================================================================
+   MULTI-CARD GRID (campaign details, dashboards, etc.)
+============================================================================ */
+
+.fk-marketing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.fk-marketing-card {
+  @include card;
+}
+
+.fk-marketing-card-full {
+  grid-column: 1 / -1;
+}
+
+.fk-marketing-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+
+  h2,
+  h3 {
+    @include heading(20px);
+  }
+}
+
+.fk-marketing-card > h2,
+.fk-marketing-card > h3 {
+  @include heading(20px);
+  margin-bottom: 16px;
+}
+
+/* ============================================================================
+   STATUS BADGE
+============================================================================ */
+
+.fk-marketing-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: var(--mk-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  &::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+}
+
+.fk-marketing-status-active {
+  @include tone(var(--mk-success), var(--mk-success-bg));
+}
+
+.fk-marketing-status-paused,
+.fk-marketing-status-pending {
+  @include tone(var(--mk-warning), var(--mk-warning-bg));
+}
+
+.fk-marketing-status-draft,
+.fk-marketing-status-archived {
+  @include tone(var(--mk-muted), #f1f5f9);
+}
+
+.fk-marketing-status-completed,
+.fk-marketing-status-scheduled {
+  @include tone(var(--mk-info), var(--mk-info-bg));
+}
+
+.fk-marketing-status-cancelled,
+.fk-marketing-status-rejected,
+.fk-marketing-status-blocked {
+  @include tone(var(--mk-danger), var(--mk-danger-bg));
+}
+
+/* ============================================================================
+   DETAIL LIST (label / value rows)
+============================================================================ */
+
+.fk-marketing-detail-list {
+  display: flex;
+  flex-direction: column;
+
+  > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--mk-border);
+
+    &:first-child {
+      padding-top: 0;
+    }
+
+    &:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    span {
+      color: var(--mk-muted);
+      font-size: 14px;
+    }
+
+    strong {
+      color: var(--mk-text);
+      font-size: 14px;
+      font-weight: 600;
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+  }
+}
+
+/* ============================================================================
+   ACTION LIST (stacked buttons)
+============================================================================ */
+
+.fk-marketing-action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  button,
+  a {
+    width: 100%;
+  }
+}
+
+/* ============================================================================
+   DESCRIPTION TEXT
+============================================================================ */
+
+.fk-marketing-description {
+  margin: 0;
+  color: var(--mk-muted);
+  font-size: 15px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+/* ============================================================================
+   METRICS GRID
+============================================================================ */
+
+.fk-marketing-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+}
+
+.fk-marketing-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 20px 22px;
+  border: 1px solid var(--mk-border);
+  border-radius: var(--mk-radius);
+  background: var(--mk-surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: var(--mk-border-strong);
+    box-shadow: var(--mk-shadow);
+  }
+
+  span {
+    color: var(--mk-muted);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  strong {
+    color: var(--mk-text);
+    font-family: var(--mk-serif);
+    font-size: clamp(24px, 2.4vw, 30px);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  // the first metric leads in navy
+  &:first-child {
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--mk-ink), var(--mk-navy-700));
+
+    span {
+      color: rgba(255, 255, 255, 0.68);
+    }
+
+    strong {
+      color: var(--mk-amber);
+    }
+  }
+}
+
+/* ============================================================================
+   CAMPAIGN GRID (CampaignCard layout)
+============================================================================ */
+
+.fk-campaign-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* ============================================================================
+   AD GRID (Ads Manager)
+============================================================================ */
+
+.fk-ad-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.fk-ad-manager-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--mk-border);
+  border-radius: 18px;
+  background: var(--mk-surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: var(--mk-border-strong);
+    box-shadow: var(--mk-shadow);
+  }
+
+  // preview fills the card; actions sit underneath
+  > :first-child {
+    flex: 1;
+  }
+
+  img {
+    max-width: 100%;
+  }
+}
+
+.fk-ad-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--mk-border);
+  background: var(--mk-soft);
+
+  button {
+    @include btn-secondary;
+    flex: 1;
+    height: 36px;
+    padding: 0 14px;
+
+    // first: Pause / Activate
+    &:first-child {
+      border-color: var(--mk-navy-700);
+      background: var(--mk-navy-700);
+      color: #fff;
+
+      &:hover:not(:disabled) {
+        background: var(--mk-navy-900);
+        color: #fff;
+      }
+    }
+
+    // last: Delete
+    &:last-child:not(:first-child) {
+      border-color: #fecaca;
+      color: var(--mk-danger);
+
+      &:hover:not(:disabled) {
+        background: var(--mk-danger-bg);
+        color: var(--mk-danger);
+      }
+    }
+  }
+}
+
+/* ============================================================================
+   FORM GRID
+============================================================================ */
+
+.fk-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px 20px;
+  margin-bottom: 22px;
+
+  // labels & fields placed straight in the grid (e.g. AdPlacementSelector)
+  > label,
+  > div > label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--mk-muted);
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+.fk-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+
+  label {
+    color: var(--mk-muted);
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+.fk-form-field,
+.fk-form-grid {
+  input,
+  select,
+  textarea {
+    width: 100%;
+    min-height: 46px;
+    padding: 0 16px;
+    border: 1px solid var(--mk-border);
+    border-radius: 12px;
+    background-color: var(--mk-soft);
+    color: var(--mk-text);
+    font: 400 14px var(--mk-sans);
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+
+    &::placeholder {
+      color: var(--mk-faint);
+    }
+
+    &:hover {
+      border-color: var(--mk-border-strong);
+    }
+
+    &:focus {
+      border-color: var(--mk-amber);
+      outline: none;
+      background-color: var(--mk-surface);
+      box-shadow: 0 0 0 4px rgba(242, 169, 59, 0.18);
+    }
+  }
+
+  textarea {
+    min-height: 110px;
+    padding: 12px 16px;
+    resize: vertical;
+  }
+
+  select {
+    padding-right: 40px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.8' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    appearance: none;
+    cursor: pointer;
+  }
+}
+
+/* ============================================================================
+   BUTTONS
+============================================================================ */
+
+.fk-marketing-primary-button {
+  @include btn;
+  background: var(--mk-amber);
+  color: var(--mk-ink);
+  box-shadow: 0 8px 22px rgba(242, 169, 59, 0.3);
+
+  &:hover:not(:disabled) {
+    background: var(--mk-amber-strong);
+    color: var(--mk-ink);
+  }
+
+  &:disabled {
+    box-shadow: none;
+  }
+}
+
+.fk-marketing-secondary-button {
+  @include btn-secondary;
+}
+
+.fk-marketing-danger-button {
+  @include btn-secondary;
+  border-color: #fecaca;
+  color: var(--mk-danger);
+
+  &:hover:not(:disabled) {
+    border-color: #fca5a5;
+    background: var(--mk-danger-bg);
+    color: var(--mk-danger);
+  }
+}
+
+.fk-marketing-warning-button {
+  @include btn-secondary;
+  border-color: #fde68a;
+  color: var(--mk-warning);
+
+  &:hover:not(:disabled) {
+    border-color: #fcd34d;
+    background: var(--mk-warning-bg);
+    color: var(--mk-warning);
+  }
+}
+
+/* ============================================================================
+   STATES
+============================================================================ */
+
+.fk-marketing-error {
+  width: 100%;
+  margin: 0;
+  padding: 16px 20px;
+  border: 1px solid #fecaca;
+  border-left: 4px solid var(--mk-danger);
+  border-radius: 12px;
+  background: var(--mk-danger-bg);
+  color: #7f1d1d;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.fk-marketing-loading {
+  position: relative;
+  width: 100%;
+  min-height: 160px;
+  padding: 96px 20px 48px;
+  border: 1px solid var(--mk-border);
+  border-radius: var(--mk-radius-lg);
+  background: var(--mk-surface);
+  color: var(--mk-muted);
+  font-size: 14px;
+  text-align: center;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    width: 32px;
+    height: 32px;
+    margin-left: -16px;
+    border: 3px solid var(--mk-border);
+    border-top-color: var(--mk-amber);
+    border-radius: 50%;
+    animation: mk-spin 0.8s linear infinite;
+  }
+}
+
+// loading inside a section: no second box
+.fk-marketing-section .fk-marketing-loading,
+.fk-marketing-panel .fk-marketing-loading {
+  border: 0;
+}
+
+@keyframes mk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fk-marketing-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 160px;
+  padding: 48px 24px;
+  border: 1px dashed var(--mk-border-strong);
+  border-radius: 18px;
+  background:
+    radial-gradient(260px 140px at 50% 0%, rgba(242, 169, 59, 0.1), transparent 70%),
+    var(--mk-soft);
+  color: var(--mk-muted);
+  font-size: 15px;
+  text-align: center;
+
+  h2 {
+    @include heading(22px);
+  }
+
+  p {
+    margin: 0;
+    color: var(--mk-text);
+    font-family: var(--mk-serif);
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+
+  // a second paragraph reads as body text
+  p + p {
+    color: var(--mk-muted);
+    font-family: var(--mk-sans);
+    font-size: 14px;
+    font-weight: 400;
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE
+============================================================================ */
+
+@media (max-width: 900px) {
+  .fk-marketing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fk-marketing-card-full {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .fk-marketing-page {
+    gap: 18px;
+    padding: 14px 12px 100px;
+  }
+
+  .fk-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-marketing-page *,
+  .fk-marketing-page *::before,
+  .fk-marketing-page *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

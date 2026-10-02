@@ -1,0 +1,214 @@
+/* ============================================================================
+   FOCKIS ADMIN — BASE STYLES
+============================================================================ */
+
+@use "./tokens" as *;
+
+
+/* ============================================================================
+   GLOBAL BOX SIZING
+============================================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+
+/* ============================================================================
+   DOCUMENT
+============================================================================ */
+
+html,
+body,
+#root {
+  height: 100%;
+  min-height: 100%;
+}
+
+
+html {
+  width: 100%;
+}
+
+
+body {
+  width: 100%;
+
+  margin: 0;
+  padding: 0;
+
+  background: var(--fk-bg);
+  color: var(--fk-text-primary);
+
+  font-family: var(--fk-font-body);
+  font-size: 14px;
+  line-height: 1.5;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  overflow-x: hidden;
+}
+
+
+/* ============================================================================
+   HEADINGS
+============================================================================ */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+
+  font-family: var(--fk-font-display);
+  font-weight: 600;
+
+  letter-spacing: -0.01em;
+}
+
+
+/* ============================================================================
+   LINKS
+============================================================================ */
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+
+/* ============================================================================
+   BUTTONS / FORM ELEMENTS
+============================================================================ */
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+button {
+  border: 0;
+}
+
+
+/* ============================================================================
+   MEDIA
+============================================================================ */
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+img,
+video {
+  display: block;
+}
+
+
+/* ============================================================================
+   TEXT SELECTION
+============================================================================ */
+
+::selection {
+  background: var(--fk-accent-dim);
+  color: var(--fk-accent);
+}
+
+
+/* ============================================================================
+   FOCUS
+============================================================================ */
+
+:focus-visible {
+  outline: 2px solid var(--fk-accent);
+  outline-offset: 2px;
+}
+
+
+/* ============================================================================
+   UTILITY — MONOSPACE
+============================================================================ */
+
+.mono {
+  font-family: var(--fk-font-mono);
+}
+
+
+/* ============================================================================
+   CUSTOM SCROLLBAR
+============================================================================ */
+
+.fk-scrollbar {
+  scrollbar-width: thin;
+
+  scrollbar-color:
+    var(--fk-border-strong)
+    transparent;
+}
+
+.fk-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.fk-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.fk-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--fk-border-strong);
+  border-radius: 4px;
+}
+
+.fk-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--fk-text-tertiary);
+}
+
+
+/* ============================================================================
+   ADMIN ROOT SAFETY
+============================================================================ */
+
+.fk-admin,
+.fk-admin *,
+.fk-admin *::before,
+.fk-admin *::after {
+  box-sizing: border-box;
+}
+
+.fk-admin {
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+
+  background: var(--fk-bg);
+  color: var(--fk-text-primary);
+}
+
+
+/* ============================================================================
+   REDUCED MOTION
+============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.001ms !important;
+
+    scroll-behavior: auto !important;
+  }
+}

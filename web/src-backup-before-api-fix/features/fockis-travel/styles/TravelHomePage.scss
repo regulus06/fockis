@@ -1,0 +1,1751 @@
+@use "./_fockis-tokens" as fockis;
+
+.fockis-travel-root {
+  --ink: #{fockis.$navy-900};
+  --ink-2: #{fockis.$navy-800};
+  --petrol: #{fockis.$blue-600};
+  --teal: #{fockis.$teal-500};
+  --amber: #{fockis.$gold-500};
+  --amber-dark: #{fockis.$gold-600};
+  --paper: #{fockis.$cream-50};
+  --paper-2: #{fockis.$cream-100};
+  --muted: #{fockis.$text-on-light-muted};
+  --line: rgba(10, 24, 48, 0.1);
+
+  width: 100%;
+  min-height: 100vh;
+  background: var(--paper);
+  color: #{fockis.$text-on-light};
+  font-family: fockis.$font-body;
+  overflow-x: hidden;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button {
+    border: 0;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: fockis.$max-width;
+    margin: 0 auto;
+    padding-left: fockis.$gutter;
+    padding-right: fockis.$gutter;
+  }
+
+  /* ==========================================================
+     LANGUAGE BAR
+     ========================================================== */
+
+  .fockis-travel-language-row {
+    width: 100%;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .fockis-travel-language-row__inner {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  /* ==========================================================
+     HERO
+     ========================================================== */
+
+  .hero {
+    position: relative;
+    width: 100%;
+    color: fockis.$text-on-dark;
+    background: fockis.gradient-hero();
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        circle at 80% 20%,
+        rgba(240, 169, 62, 0.13),
+        transparent 30%
+      ),
+      radial-gradient(
+        circle at 20% 90%,
+        rgba(47, 127, 166, 0.2),
+        transparent 35%
+      );
+  }
+
+  .hero-grid {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: fockis.$max-width;
+    min-height: 560px;
+    margin: 0 auto;
+    padding: 76px fockis.$gutter 72px;
+    display: grid;
+    grid-template-columns:
+      minmax(0, 1.05fr)
+      minmax(360px, 0.95fr);
+    gap: 52px;
+    align-items: center;
+  }
+
+  .hero-copy {
+    position: relative;
+    z-index: 2;
+  }
+
+  .eyebrow {
+    margin: 0 0 16px;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: fockis.$gold-500;
+  }
+
+  .hero h1 {
+    max-width: 700px;
+    margin: 0;
+    font-family: fockis.$font-display;
+    font-size: clamp(3rem, 6vw, 5.4rem);
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+    font-weight: 700;
+    color: fockis.$text-on-dark;
+  }
+
+  .accent {
+    color: fockis.$gold-500;
+  }
+
+  .lede {
+    max-width: 610px;
+    margin: 24px 0 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: clamp(1rem, 1.8vw, 1.18rem);
+    line-height: 1.7;
+  }
+
+  .hero-cta-row {
+    margin-top: 32px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* ==========================================================
+     BUTTONS
+     ========================================================== */
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 0.78rem 1.45rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-family: fockis.$font-body;
+    font-size: 0.9rem;
+    line-height: 1;
+    font-weight: 750;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      color 0.18s ease,
+      box-shadow 0.18s ease,
+      transform 0.18s ease;
+  }
+
+  .btn:active {
+    transform: translateY(1px);
+  }
+
+  .btn:focus-visible {
+    outline: 3px solid rgba(240, 169, 62, 0.45);
+    outline-offset: 3px;
+  }
+
+  .btn svg {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 17px;
+    stroke-width: 2.3;
+  }
+
+  .btn-amber {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 0.78rem 1.45rem;
+    background: #f0a93e !important;
+    border: 1px solid #f0a93e !important;
+    border-radius: 999px;
+    color: #0a1830 !important;
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow:
+      0 6px 18px rgba(240, 169, 62, 0.28),
+      0 2px 5px rgba(10, 24, 48, 0.1);
+    cursor: pointer;
+    transition:
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      color 0.18s ease,
+      box-shadow 0.18s ease,
+      transform 0.18s ease;
+  }
+
+  .btn-amber:hover {
+    background: #d6901f !important;
+    border-color: #d6901f !important;
+    color: #0a1830 !important;
+    transform: translateY(-2px);
+    box-shadow:
+      0 9px 24px rgba(240, 169, 62, 0.34),
+      0 3px 8px rgba(10, 24, 48, 0.12);
+  }
+
+  .btn-amber:active {
+    transform: translateY(1px);
+  }
+
+  .btn-amber:focus-visible {
+    outline: 3px solid rgba(240, 169, 62, 0.45);
+    outline-offset: 3px;
+  }
+
+  .btn-ghost-dark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 0.78rem 1.45rem;
+    background: rgba(255, 255, 255, 0.07) !important;
+    border: 1px solid rgba(255, 255, 255, 0.48) !important;
+    border-radius: 999px;
+    color: #ffffff !important;
+    font-weight: 750;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      color 0.18s ease,
+      transform 0.18s ease;
+  }
+
+  .btn-ghost-dark:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: #ffffff !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+  }
+
+  .btn-ghost-dark:active {
+    transform: translateY(1px);
+  }
+
+  .btn-ghost-dark:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.35);
+    outline-offset: 3px;
+  }
+
+  /* ==========================================================
+     HERO STATS
+     ========================================================== */
+
+  .hero-stats {
+    margin-top: 42px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+  }
+
+  .stat {
+    min-width: 110px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .stat strong {
+    color: fockis.$text-on-dark;
+    font-size: 1.65rem;
+    line-height: 1;
+    font-weight: 750;
+  }
+
+  .stat span {
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+
+  /* ==========================================================
+     GLOBE / ROUTE VISUAL
+     ========================================================== */
+
+  .globe-panel {
+    position: relative;
+    min-height: 390px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .globe-panel::before {
+    content: "";
+    position: absolute;
+    width: min(430px, 90%);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow:
+      0 0 0 22px rgba(255, 255, 255, 0.025),
+      0 0 0 48px rgba(255, 255, 255, 0.02);
+  }
+
+  .globe-panel svg {
+    position: relative;
+    width: min(470px, 100%);
+    height: auto;
+    overflow: visible;
+  }
+
+  .route-path {
+    fill: none;
+    stroke: fockis.$gold-500;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: 6 8;
+    opacity: 0.85;
+  }
+
+  .node-ring {
+    fill: none;
+    stroke: rgba(240, 169, 62, 0.4);
+    stroke-width: 1.5;
+  }
+
+  .node {
+    fill: fockis.$gold-500;
+    stroke: fockis.$navy-900;
+    stroke-width: 4;
+  }
+
+  .node-label {
+    fill: rgba(255, 255, 255, 0.85);
+    font-family: fockis.$font-body;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* ==========================================================
+     SEARCH PANEL
+     ========================================================== */
+
+  .hero-search-panel {
+    position: relative;
+    z-index: 4;
+    width: min(1120px, calc(100% - 48px));
+    margin: -44px auto 0;
+    padding: 22px;
+    border-radius: fockis.$radius-lg;
+    background: fockis.$cream-50;
+    border: 1px solid rgba(10, 24, 48, 0.08);
+    box-shadow:
+      0 18px 48px rgba(10, 24, 48, 0.18),
+      0 3px 10px rgba(10, 24, 48, 0.08);
+  }
+
+  .hero-search-panel h2 {
+    margin: 0 0 16px;
+    color: fockis.$navy-900;
+    font-family: fockis.$font-display;
+    font-size: 1.45rem;
+    line-height: 1.15;
+  }
+
+  .cat-tabs-wrap {
+    position: relative;
+    width: 100%;
+  }
+
+  .cat-tabs {
+    width: 100%;
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 2px 0 8px;
+    scrollbar-width: thin;
+    scrollbar-color:
+      rgba(10, 24, 48, 0.25)
+      transparent;
+  }
+
+  .cat-tabs::-webkit-scrollbar {
+    height: 5px;
+  }
+
+  .cat-tabs::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .cat-tabs::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(10, 24, 48, 0.2);
+  }
+
+  .cat-tab {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 8px 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border-radius: fockis.$radius-pill;
+    border: 1px solid rgba(10, 24, 48, 0.1);
+    background: #ffffff;
+    color: fockis.$navy-900;
+    cursor: pointer;
+    white-space: nowrap;
+    font-size: 0.83rem;
+    font-weight: 650;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease,
+      border-color 0.15s ease,
+      transform 0.15s ease;
+  }
+
+  .cat-tab:hover {
+    border-color: fockis.$gold-500;
+    transform: translateY(-1px);
+  }
+
+  .cat-tab:focus-visible {
+    outline: 2px solid fockis.$gold-500;
+    outline-offset: 2px;
+  }
+
+  .cat-tab.active {
+    background: fockis.$navy-900;
+    color: #ffffff;
+    border-color: fockis.$navy-900;
+  }
+
+  .category-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 21px;
+    height: 21px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: rgba(10, 24, 48, 0.07);
+    font-size: 0.7rem;
+    line-height: 1;
+  }
+
+  .cat-tab.active .category-count {
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+  }
+
+  .cat-tabs-arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid rgba(10, 24, 48, 0.12);
+    box-shadow: 0 4px 14px rgba(10, 24, 48, 0.12);
+    color: fockis.$navy-900;
+    cursor: pointer;
+    transform: translateY(-50%);
+  }
+
+  .cat-tabs-arrow:hover {
+    background: fockis.$cream-100;
+  }
+
+  .cat-tabs-arrow:focus-visible {
+    outline: 2px solid fockis.$gold-500;
+    outline-offset: 2px;
+  }
+
+  .cat-tabs-arrow-left {
+    left: -10px;
+  }
+
+  .cat-tabs-arrow-right {
+    right: -10px;
+  }
+
+  .is-hidden {
+    display: none !important;
+  }
+
+  .search-fields {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns:
+      minmax(220px, 1.8fr)
+      minmax(150px, 1fr)
+      minmax(150px, 1fr)
+      minmax(150px, 1fr)
+      auto;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .field {
+    position: relative;
+    min-width: 0;
+    min-height: 66px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    border: 1px solid rgba(10, 24, 48, 0.11);
+    border-radius: fockis.$radius-md;
+    background: #ffffff;
+  }
+
+  .field label {
+    color: fockis.$text-on-light-muted;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .travel-search-input {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: fockis.$navy-900;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .travel-search-input::placeholder {
+    color: rgba(91, 107, 129, 0.8);
+    opacity: 1;
+  }
+
+  .travel-search-input:focus {
+    outline: none;
+  }
+
+  .search-submit {
+    min-width: 130px;
+    min-height: 66px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0.8rem 1.4rem;
+    border: 1px solid #f0a93e !important;
+    border-radius: fockis.$radius-md;
+    background: #f0a93e !important;
+    color: #0a1830 !important;
+    font-size: 0.9rem;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow:
+      0 5px 16px rgba(240, 169, 62, 0.25),
+      0 2px 5px rgba(10, 24, 48, 0.08);
+    transition:
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .search-submit:hover {
+    background: #d6901f !important;
+    border-color: #d6901f !important;
+    color: #0a1830 !important;
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 22px rgba(240, 169, 62, 0.32),
+      0 3px 8px rgba(10, 24, 48, 0.1);
+  }
+
+  .search-submit:active {
+    transform: translateY(1px);
+  }
+
+  .search-submit:focus-visible {
+    outline: 3px solid rgba(240, 169, 62, 0.45);
+    outline-offset: 3px;
+  }
+
+  .search-submit:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .search-submit svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2.5;
+  }
+
+  /* ==========================================================
+     SECTIONS
+     ========================================================== */
+
+  .tight {
+    padding-top: 72px;
+    padding-bottom: 72px;
+  }
+
+  .section-head {
+    margin-bottom: 28px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .section-head h2 {
+    margin: 0;
+    color: fockis.$navy-900;
+    font-family: fockis.$font-display;
+    font-size: clamp(1.9rem, 3.4vw, 2.8rem);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+  }
+
+  .section-head p {
+    margin: 8px 0 0;
+    color: fockis.$text-on-light-muted;
+    line-height: 1.6;
+  }
+
+  .listing-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .refreshing {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.84rem;
+  }
+
+  /* ==========================================================
+     SECTION ACTIONS
+     ========================================================== */
+
+  .section-link,
+  .section-button {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 0.68rem 1.15rem;
+    border: 1px solid #163a5f !important;
+    border-radius: 999px;
+    background: #163a5f !important;
+    color: #ffffff !important;
+    font-size: 0.82rem;
+    font-weight: 750;
+    line-height: 1;
+    text-decoration: none !important;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(22, 58, 95, 0.18);
+    transition:
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      color 0.18s ease,
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .section-link:visited,
+  .section-button:visited {
+    color: #ffffff !important;
+    background: #163a5f !important;
+  }
+
+  .section-link:hover,
+  .section-button:hover {
+    background: #0e2342 !important;
+    border-color: #0e2342 !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 7px 17px rgba(22, 58, 95, 0.24);
+  }
+
+  .section-link:active,
+  .section-button:active {
+    background: #0a1830 !important;
+    border-color: #0a1830 !important;
+    color: #ffffff !important;
+    transform: translateY(1px);
+  }
+
+  .section-link:focus-visible,
+  .section-button:focus-visible {
+    outline: 3px solid rgba(240, 169, 62, 0.45);
+    outline-offset: 3px;
+  }
+
+  .section-head > a,
+  .listing-actions > a {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 0.68rem 1.15rem;
+    border: 1px solid #163a5f !important;
+    border-radius: 999px;
+    background: #163a5f !important;
+    color: #ffffff !important;
+    font-size: 0.82rem;
+    font-weight: 750;
+    line-height: 1;
+    text-decoration: none !important;
+    box-shadow: 0 4px 12px rgba(22, 58, 95, 0.18);
+    transition:
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      color 0.18s ease,
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .section-head > a:hover,
+  .listing-actions > a:hover {
+    background: #0e2342 !important;
+    border-color: #0e2342 !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 7px 17px rgba(22, 58, 95, 0.24);
+  }
+
+  .section-head > a:active,
+  .listing-actions > a:active {
+    background: #0a1830 !important;
+    border-color: #0a1830 !important;
+    color: #ffffff !important;
+    transform: translateY(1px);
+  }
+
+  .section-head > a:focus-visible,
+  .listing-actions > a:focus-visible {
+    outline: 3px solid rgba(240, 169, 62, 0.45);
+    outline-offset: 3px;
+  }
+
+  /* ==========================================================
+     CATEGORY TILES
+     ========================================================== */
+
+  .category-tile-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .category-tile {
+    min-height: 0;
+    height: 118px;
+    padding: 15px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    border: 1px solid rgba(10, 24, 48, 0.08);
+    border-radius: fockis.$radius-md;
+    background: #ffffff;
+    color: fockis.$navy-900;
+    box-shadow: 0 3px 12px rgba(10, 24, 48, 0.055);
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      border-color 0.18s ease;
+  }
+
+  .category-tile:hover {
+    transform: translateY(-2px);
+    border-color: rgba(240, 169, 62, 0.55);
+    box-shadow: fockis.$shadow-card-hover;
+  }
+
+  .category-tile-icon {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: fockis.$gold-100;
+    color: fockis.$navy-900;
+  }
+
+  .category-tile-icon svg {
+    width: 19px;
+    height: 19px;
+    display: block;
+  }
+
+  .category-tile-name {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.2;
+    font-weight: 700;
+  }
+
+  .category-tile-count {
+    margin: 0;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    font-weight: 600;
+  }
+
+  /* ==========================================================
+     LISTING CARDS
+     ========================================================== */
+
+  .grid-cards {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .stay-card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid rgba(10, 24, 48, 0.08);
+    border-radius: fockis.$radius-md;
+    background: #ffffff;
+    box-shadow: 0 5px 18px rgba(10, 24, 48, 0.07);
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .stay-card:hover {
+    transform: translateY(-3px);
+    box-shadow: fockis.$shadow-card-hover;
+  }
+
+  .thumb {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background:
+      linear-gradient(
+        135deg,
+        rgba(22, 58, 95, 0.95),
+        rgba(47, 127, 166, 0.65)
+      );
+  }
+
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+
+  .fav {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.94);
+    color: fockis.$navy-900;
+    box-shadow: 0 4px 12px rgba(10, 24, 48, 0.18);
+    cursor: pointer;
+    transition:
+      transform 0.15s ease,
+      background 0.15s ease;
+  }
+
+  .fav:hover {
+    transform: scale(1.05);
+    background: #ffffff;
+  }
+
+  .fav:focus-visible {
+    outline: 2px solid fockis.$gold-500;
+    outline-offset: 2px;
+  }
+
+  .fav svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .featured-badge {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    padding: 6px 9px;
+    border-radius: fockis.$radius-pill;
+    background: fockis.$gold-500;
+    color: fockis.$navy-900;
+    font-size: 0.68rem;
+    line-height: 1;
+    font-weight: 800;
+  }
+
+  .body {
+    padding: 17px;
+  }
+
+  .row1 {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .row1 h3 {
+    margin: 0;
+    color: fockis.$navy-900;
+    font-size: 1rem;
+    line-height: 1.35;
+    font-weight: 750;
+  }
+
+  .rating {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: fockis.$navy-900;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .star {
+    color: fockis.$gold-600;
+  }
+
+  .review-count {
+    color: fockis.$text-on-light-muted;
+    font-weight: 500;
+  }
+
+  .loc {
+    margin-top: 8px;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .amenities {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .amenities span {
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: fockis.$cream-100;
+    color: fockis.$navy-700;
+    font-size: 0.68rem;
+    font-weight: 600;
+  }
+
+  .price-row {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(10, 24, 48, 0.08);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .price {
+    color: fockis.$navy-900;
+    font-size: 1.05rem;
+    line-height: 1.2;
+    font-weight: 800;
+  }
+
+  .price small {
+    color: fockis.$text-on-light-muted;
+    font-size: 0.7rem;
+    font-weight: 500;
+  }
+
+  .view-link {
+    color: fockis.$blue-600;
+    font-size: 0.8rem;
+    font-weight: 750;
+  }
+
+  .view-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* ==========================================================
+     LOADING / ERROR / EMPTY
+     ========================================================== */
+
+  .travel-error,
+  .travel-loading,
+  .empty-listings {
+    width: 100%;
+    padding: 34px 24px;
+    border-radius: fockis.$radius-md;
+    border: 1px solid rgba(10, 24, 48, 0.08);
+    background: #ffffff;
+    text-align: center;
+  }
+
+  .travel-error {
+    color: fockis.$danger;
+    background: rgba(209, 85, 74, 0.05);
+    border-color: rgba(209, 85, 74, 0.18);
+  }
+
+  .travel-loading {
+    color: fockis.$text-on-light-muted;
+  }
+
+  .empty-listings {
+    color: fockis.$text-on-light-muted;
+  }
+
+  /* ==========================================================
+     DESTINATIONS
+     ========================================================== */
+
+  .world-strip {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .world-card {
+    position: relative;
+    min-height: 180px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+    border-radius: fockis.$radius-md;
+    background:
+      linear-gradient(
+        160deg,
+        fockis.$navy-800,
+        fockis.$blue-600
+      );
+    color: #ffffff;
+    box-shadow: 0 7px 20px rgba(10, 24, 48, 0.12);
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .world-card:hover {
+    transform: translateY(-3px);
+    box-shadow: fockis.$shadow-card-hover;
+  }
+
+  .world-card::before {
+    content: "";
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    right: -50px;
+    top: -50px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+  }
+
+  .world-card .flag {
+    position: relative;
+    z-index: 1;
+    margin-bottom: auto;
+    font-size: 2rem;
+  }
+
+  .world-card .name {
+    position: relative;
+    z-index: 1;
+    font-size: 1rem;
+    font-weight: 750;
+  }
+
+  .world-card .count {
+    position: relative;
+    z-index: 1;
+    margin-top: 5px;
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 0.76rem;
+  }
+
+  .destination-empty {
+    padding: 28px;
+    border: 1px dashed rgba(10, 24, 48, 0.16);
+    border-radius: fockis.$radius-md;
+    color: fockis.$text-on-light-muted;
+    text-align: center;
+  }
+
+  /* ==========================================================
+     BUSINESS / TRAVEL BAND
+     ========================================================== */
+
+  .dark-band {
+    position: relative;
+    overflow: hidden;
+    padding: 76px 0;
+    color: #ffffff;
+    background: fockis.gradient-panel();
+  }
+
+  .dark-band::before {
+    content: "";
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    right: -180px;
+    top: -220px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+  }
+
+  .biz-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(330px, 0.85fr);
+    gap: 52px;
+    align-items: center;
+  }
+
+  .dark-band h2 {
+    margin: 0;
+    font-family: fockis.$font-display;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    line-height: 1.03;
+    letter-spacing: -0.03em;
+  }
+
+  .dark-band p {
+    max-width: 620px;
+    margin: 18px 0 0;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.7;
+  }
+
+  .dark-band .btn-amber {
+    background: #f0a93e !important;
+    border-color: #f0a93e !important;
+    color: #0a1830 !important;
+  }
+
+  .dark-band .btn-ghost-dark {
+    background: transparent !important;
+    border-color: rgba(255, 255, 255, 0.48) !important;
+    color: #ffffff !important;
+  }
+
+  /* ==========================================================
+     BOARDING PASS
+     ========================================================== */
+
+  .boarding-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: fockis.$radius-lg;
+    background: #ffffff;
+    color: fockis.$navy-900;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  }
+
+  .boarding-top {
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    background: fockis.$navy-900;
+    color: #ffffff;
+  }
+
+  .boarding-top .k {
+    display: block;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .boarding-top .v {
+    display: block;
+    margin-top: 3px;
+    font-size: 0.9rem;
+    font-weight: 750;
+  }
+
+  .mono {
+    font-family:
+      ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      Monaco,
+      Consolas,
+      monospace;
+    letter-spacing: 0.08em;
+  }
+
+  .perforation {
+    position: relative;
+    height: 1px;
+    border-top: 1px dashed rgba(10, 24, 48, 0.2);
+  }
+
+  .perforation::before,
+  .perforation::after {
+    content: "";
+    position: absolute;
+    top: -10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: fockis.$teal-500;
+  }
+
+  .perforation::before {
+    left: -10px;
+  }
+
+  .perforation::after {
+    right: -10px;
+  }
+
+  .boarding-body {
+    padding: 24px;
+  }
+
+  .stub-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .stub-row + .stub-row {
+    margin-top: 18px;
+  }
+
+  .stub-row .lbl {
+    display: block;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .stub-row .val {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.94rem;
+    font-weight: 750;
+  }
+
+  .stub-total {
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(10, 24, 48, 0.09);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+  }
+
+  .stub-total .amt {
+    color: fockis.$blue-600;
+    font-size: 1.35rem;
+    font-weight: 850;
+  }
+
+  /* ==========================================================
+     PLANNING
+     ========================================================== */
+
+  .globe-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .globe-tile {
+    min-height: 190px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid rgba(10, 24, 48, 0.08);
+    border-radius: fockis.$radius-md;
+    background: #ffffff;
+    box-shadow: 0 5px 18px rgba(10, 24, 48, 0.06);
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .globe-tile:hover {
+    transform: translateY(-3px);
+    box-shadow: fockis.$shadow-card-hover;
+  }
+
+  .globe-tile .ic {
+    width: 46px;
+    height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    background: fockis.$gold-100;
+    color: fockis.$navy-900;
+  }
+
+  .globe-tile .ic svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .globe-tile .t {
+    margin-top: 20px;
+    color: fockis.$navy-900;
+    font-size: 1rem;
+    font-weight: 750;
+  }
+
+  .center-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 28px;
+  }
+
+  .center-action .btn,
+  .center-action .section-link,
+  .center-action .section-button {
+    min-width: 160px;
+  }
+
+  /* ==========================================================
+     PARTNER BAND
+     ========================================================== */
+
+  .partner-band {
+    padding: 72px 0;
+    background: fockis.$cream-100;
+    border-top: 1px solid rgba(10, 24, 48, 0.06);
+    border-bottom: 1px solid rgba(10, 24, 48, 0.06);
+  }
+
+  .partner-band .section-head {
+    margin-bottom: 22px;
+  }
+
+  .partner-band .btn-amber,
+  .partner-band .btn-primary {
+    background: #163a5f !important;
+    border-color: #163a5f !important;
+    color: #ffffff !important;
+  }
+
+  .partner-band .btn-amber:hover,
+  .partner-band .btn-primary:hover {
+    background: #0e2342 !important;
+    border-color: #0e2342 !important;
+    color: #ffffff !important;
+  }
+
+  .partner-icons {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .partner-icons > * {
+    flex: 1 1 160px;
+  }
+
+  /* ==========================================================
+     TRUST
+     ========================================================== */
+
+  .trust-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .trust-item {
+    padding: 24px;
+    border-radius: fockis.$radius-md;
+    border: 1px solid rgba(10, 24, 48, 0.08);
+    background: #ffffff;
+  }
+
+  .trust-item .check {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(63, 166, 106, 0.12);
+    color: fockis.$success;
+  }
+
+  .trust-item .check svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .trust-item strong {
+    display: block;
+    margin-top: 15px;
+    color: fockis.$navy-900;
+    font-size: 0.95rem;
+  }
+
+  .trust-item p {
+    margin: 7px 0 0;
+    color: fockis.$text-on-light-muted;
+    font-size: 0.8rem;
+    line-height: 1.55;
+  }
+
+  /* ==========================================================
+     SPINNER
+     ========================================================== */
+
+  .travel-booking-spinner {
+    animation: fockis-travel-spin 0.9s linear infinite;
+  }
+
+  /* ==========================================================
+     TABLET
+     ========================================================== */
+
+  @include fockis.bp-down(fockis.$bp-lg) {
+    .hero-grid {
+      grid-template-columns:
+        minmax(0, 1fr)
+        minmax(300px, 0.8fr);
+      gap: 28px;
+    }
+
+    .search-fields {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .search-submit {
+      width: 100%;
+    }
+
+    .category-tile-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .grid-cards {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .world-strip {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .trust-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* ==========================================================
+     MOBILE
+     ========================================================== */
+
+  @include fockis.bp-down(fockis.$bp-md) {
+    .wrap {
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+
+    .hero-grid {
+      min-height: auto;
+      padding: 54px 18px 90px;
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.65rem, 12vw, 4rem);
+    }
+
+    .hero-stats {
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .globe-panel {
+      min-height: 300px;
+      order: 2;
+    }
+
+    .globe-panel svg {
+      width: min(390px, 100%);
+    }
+
+    .hero-search-panel {
+      width: calc(100% - 28px);
+      margin-top: -34px;
+      padding: 16px;
+      border-radius: 16px;
+    }
+
+    .cat-tabs-arrow {
+      display: none;
+    }
+
+    .search-fields {
+      grid-template-columns: 1fr;
+    }
+
+    .tight {
+      padding-top: 52px;
+      padding-bottom: 52px;
+    }
+
+    .section-head {
+      align-items: flex-start;
+      flex-direction: column;
+      margin-bottom: 20px;
+    }
+
+    .listing-actions {
+      width: 100%;
+    }
+
+    .category-tile-grid,
+    .grid-cards,
+    .world-strip {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .category-tile {
+      height: 112px;
+      padding: 13px;
+    }
+
+    .biz-grid {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+
+    .dark-band {
+      padding: 56px 0;
+    }
+
+    .globe-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .partner-band {
+      padding: 52px 0;
+    }
+  }
+
+  /* ==========================================================
+     SMALL PHONES
+     ========================================================== */
+
+  @include fockis.bp-down(fockis.$bp-sm) {
+    .wrap {
+      padding-left: 14px;
+      padding-right: 14px;
+    }
+
+    .fockis-travel-language-row__inner {
+      min-height: 44px;
+    }
+
+    .hero-grid {
+      padding: 42px 14px 76px;
+    }
+
+    .hero h1 {
+      font-size: 2.55rem;
+    }
+
+    .hero-cta-row {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .hero-cta-row .btn {
+      width: 100%;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .globe-panel {
+      min-height: 245px;
+    }
+
+    .hero-search-panel {
+      width: calc(100% - 20px);
+      margin-top: -28px;
+      padding: 13px;
+    }
+
+    .category-tile-grid,
+    .grid-cards,
+    .world-strip,
+    .trust-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .category-tile {
+      height: 104px;
+      min-height: 0;
+      padding: 12px;
+    }
+
+    .category-tile-icon {
+      width: 34px;
+      height: 34px;
+      flex-basis: 34px;
+    }
+
+    .category-tile-name {
+      font-size: 0.84rem;
+    }
+
+    .category-tile-count {
+      font-size: 0.67rem;
+    }
+
+    .world-card {
+      min-height: 155px;
+    }
+
+    .stub-row {
+      grid-template-columns: 1fr;
+      gap: 13px;
+    }
+
+    .stub-row + .stub-row {
+      margin-top: 13px;
+    }
+
+    .boarding-body {
+      padding: 19px;
+    }
+
+    .section-head h2 {
+      font-size: 2rem;
+    }
+
+    .section-link,
+    .section-button,
+    .section-head > a,
+    .listing-actions > a {
+      width: 100%;
+    }
+
+    .listing-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+}
+
+@keyframes fockis-travel-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

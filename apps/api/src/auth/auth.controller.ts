@@ -1,81 +1,36 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Req,
-} from "@nestjs/common";
-
-import type {
-  Request,
-} from "express";
-
-import {
-  AuthService,
-} from "./auth.service";
-
-import {
-  CreateUserDto,
-} from "../dto/create-user.dto";
-
-import {
-  LoginDto,
-} from "../dto/login.dto";
-
-import {
-  Public,
-} from "./public.decorator";
+import { Body, Controller, Get, Patch, Post, Req, UnauthorizedException } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
+import type { Request } from "express";
+import { AuthService } from "../auth/auth.service";
+import { CreateUserDto } from "../dto/create-user.dto";
+import { LoginDto } from "../dto/login.dto";
+import { Public } from "./public.decorator";
 
 @Controller("auth")
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
-  // ============================================================
-  // REGISTER
-  // POST /auth/register
-  // ============================================================
+  @Public() @Throttle({ default: { limit: 5, ttl: 60_000 } }) @Post("register")
+  register(@Body() body: CreateUserDto) { return this.authService.register(body.username, body.email, body.password, body.firstName, body.lastName, body.countryCode); }
 
-  @Public()
-  @Post("register")
-  register(
-    @Body() body: CreateUserDto,
-  ) {
-    return this.authService.register(
-      body.username,
-      body.email,
-      body.password,
-      body.firstName,
-      body.lastName,
-      body.countryCode,
-    );
-  }
+  @Public() @Throttle({ default: { limit: 10, ttl: 60_000 } }) @Post("login")
+  login(@Body() body: LoginDto, @Req() request: Request) { return this.authService.login(body.email, body.password, request); }
 
-  // ============================================================
-  // LOGIN
-  // POST /auth/login
-  // ============================================================
+  @Public() @Throttle({ default: { limit: 5, ttl: 60_000 } }) @Post("mfa/setup")
+  beginMfaSetup(@Body("setupToken") setupToken: string) { return this.authService.beginMfaSetup(setupToken); }
 
-  @Public()
-  @Post("login")
-  login(
-    @Body() body: LoginDto,
-    @Req() request: Request,
-  ) {
-    console.log(
-      "🔥 LOGIN CONTROLLER HIT",
-    );
+  @Public() @Throttle({ default: { limit: 10, ttl: 60_000 } }) @Post("mfa/confirm")
+  confirmMfaSetup(@Body("setupToken") setupToken: string, @Body("code") code: string) { return this.authService.confirmMfaSetup(setupToken, code); }
 
-    // Never log passwords.
-    console.log(
-      "Login email:",
-      body.email,
-    );
+  @Public() @Throttle({ default: { limit: 10, ttl: 60_000 } }) @Post("mfa/verify")
+  verifyMfaLogin(@Body("challengeToken") challengeToken: string, @Body("code") code: string, @Req() request: Request) { return this.authService.verifyMfaLogin(challengeToken, code, request); }
 
-    return this.authService.login(
-      body.email,
-      body.password,
-      request,
-    );
-  }
+  @Public() @Throttle({ default: { limit: 5, ttl: 60_000 } }) @Post("mfa/recovery")
+  verifyMfaRecoveryCode(@Body("challengeToken") challengeToken: string, @Body("recoveryCode") recoveryCode: string, @Req() request: Request) { return this.authService.verifyMfaRecoveryCode(challengeToken, recoveryCode, request); }
+
+  @Get("mfa/status")
+  getMfaStatus(@Req() request: Request) { const user = request.user as any; const userId = user?.userId ?? user?.id ?? user?.sub; if (!userId) throw new UnauthorizedException("Authenticated user ID is missing."); return this.authService.getMfaStatus(String(userId)); }
+
+  @Patch("mfa/disable")
+  disableMfa(@Body("currentPassword") currentPassword: string, @Body("mfaCode") mfaCode: string, @Req() request: Request) { const user = request.user as any; const userId = user?.userId ?? user?.id ?? user?.sub; if (!userId) throw new UnauthorizedException("Authenticated user ID is missing."); return this.authService.disableMfa(String(userId), currentPassword, mfaCode); }
 }

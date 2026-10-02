@@ -1,0 +1,298 @@
+/* ============================================================================
+   FOCKIS PROFILE HEADER
+   src/styles/FockisProfileHeader.scss
+   Cover photo band with an avatar overlapping its bottom edge, plus
+   name / verified badge / username / location. On the person's own
+   profile, the avatar becomes a clickable upload target (see the
+   --editable modifier below).
+
+   REDESIGN: already read colors through the global theme tokens, so the
+   cover gradient and verified badge already resolved to navy/gold
+   automatically — no hardcoded colors to fix. Two consistency changes:
+   the avatar is now squared to match every other avatar in the app
+   (post cards, sidebar, right rail, friends grid) instead of being the
+   lone circle, with a thin gold trim ring added as a college-portrait
+   touch, and the name now uses the serif display font.
+============================================================================ */
+
+@use "./fockis-theme";
+
+.fk-profile-header {
+  position: relative;
+
+  /* Loading state - just the "Loading profile..." <p>, no cover/avatar yet */
+  > p {
+    margin: 0;
+    padding: 40px 20px;
+
+    text-align: center;
+
+    color: var(--fk-text-2);
+    font-size: 14px;
+    font-weight: 600;
+  }
+}
+
+.fk-profile-header__cover {
+  width: 100%;
+  height: 200px;
+
+  overflow: hidden;
+
+  background: linear-gradient(135deg, var(--fk-fjord-soft), var(--fk-amber-soft));
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.fk-profile-header__content {
+  position: relative;
+
+  padding: 0 20px;
+
+  display: flex;
+  align-items: flex-end;
+
+  gap: 16px;
+
+  /* Pulls the avatar up so it overlaps the bottom of the cover photo */
+  margin-top: -56px;
+}
+
+.fk-profile-header__avatar {
+  position: relative;
+
+  width: 112px;
+  height: 112px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--fk-r-md, 10px);
+  border: 4px solid var(--fk-surface);
+
+  overflow: hidden;
+
+  background: var(--fk-fjord);
+  color: var(--fk-amber-bright);
+
+  font-family: var(--fk-font-display);
+  font-size: 40px;
+  font-weight: 700;
+
+  box-shadow: 0 0 0 2px var(--fk-amber-bright) inset;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+/* Own-profile avatar is a real <button>, so reset its default styling
+   and give it a hover cue that it's clickable.
+
+   IMPORTANT: unlike the plain (non-editable) avatar above, this variant
+   does NOT clip its own overflow - the camera badge is an absolutely
+   positioned sibling that needs to sit outside the circle's edge. The
+   photo clipping instead lives on .fk-profile-header__avatar-clip
+   below, so the badge isn't cut off by it. */
+.fk-profile-header__avatar--editable {
+  padding: 0;
+  border: none;
+
+  overflow: visible;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  transition: filter var(--fk-fast) var(--fk-ease);
+
+  &:hover .fk-profile-header__avatar-clip {
+    filter: brightness(0.92);
+  }
+
+  &:hover .fk-profile-header__avatar-edit {
+    transform: scale(1.06);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fk-amber-bright);
+    outline-offset: 2px;
+  }
+}
+
+.fk-profile-header__avatar-clip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: hidden;
+
+  border-radius: var(--fk-r-md, 10px);
+  border: 4px solid var(--fk-surface);
+
+  background: var(--fk-fjord);
+  color: var(--fk-amber-bright);
+
+  font-family: var(--fk-font-display);
+  font-size: 40px;
+  font-weight: 700;
+
+  box-shadow: 0 0 0 2px var(--fk-amber-bright) inset;
+
+  transition: filter var(--fk-fast) var(--fk-ease);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.fk-profile-header__avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+}
+
+.fk-profile-header__avatar-edit {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 30px;
+  height: 30px;
+
+  border-radius: 50%;
+  border: 2px solid var(--fk-surface);
+
+  background: var(--fk-fjord);
+  color: #ffffff;
+
+  transition: transform var(--fk-fast) var(--fk-ease);
+}
+
+.fk-profile-header__avatar-uploading {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--fk-r-md, 10px);
+
+  background: rgba(10, 34, 64, 0.65);
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+
+  padding: 0 6px;
+}
+
+.fk-profile-header__info {
+  padding-bottom: 10px;
+
+  min-width: 0;
+
+  h1 {
+    margin: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    color: var(--fk-text);
+
+    font-family: var(--fk-font-display);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  p {
+    margin: 2px 0 0;
+
+    color: var(--fk-text-2);
+
+    font-size: 14px;
+  }
+
+  > span {
+    display: inline-block;
+
+    margin-top: 4px;
+
+    color: var(--fk-text-2);
+
+    font-size: 13px;
+  }
+}
+
+.fk-profile-header__verified {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 18px;
+  height: 18px;
+
+  border-radius: 50%;
+
+  background: var(--fk-fjord);
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ============================================================================
+   MOBILE
+============================================================================ */
+
+@media (max-width: 767px) {
+  .fk-profile-header__cover {
+    height: 140px;
+  }
+
+  .fk-profile-header__avatar {
+    width: 84px;
+    height: 84px;
+
+    font-size: 30px;
+  }
+
+  .fk-profile-header__avatar-edit {
+    width: 26px;
+    height: 26px;
+  }
+
+  .fk-profile-header__content {
+    margin-top: -42px;
+
+    padding: 0 14px;
+
+    gap: 12px;
+  }
+}

@@ -1,0 +1,11 @@
+@use 'variables' as v;
+
+.image-message__caption {
+  padding: v.$space-2 v.$space-2 0;
+  font-size: v.$font-size-sm;
+  color: v.$color-text-primary;
+
+  .message-bubble.is-own & {
+    color: #fff;
+  }
+}

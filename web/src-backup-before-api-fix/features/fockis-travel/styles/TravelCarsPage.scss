@@ -1,0 +1,537 @@
+@use "./_fockis-tokens" as fockis;
+
+/* ==========================================================================
+   Fockis Travel — Cars Page
+   ========================================================================== */
+
+.travel-cars-page {
+  width: 100%;
+  min-height: 100%;
+  background: #ffffff;
+  color: fockis.$text-on-light;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  /* ------------------------------------------------------------------------
+     Layout
+     ------------------------------------------------------------------------ */
+
+  .wrap {
+    @include fockis.wrap;
+  }
+
+  .tight {
+    padding-top: 42px;
+    padding-bottom: 34px;
+  }
+
+  .eyebrow {
+    @include fockis.eyebrow;
+
+    margin: 0 0 8px;
+  }
+
+  .cars-title {
+    margin: 0;
+
+    color: fockis.$navy-900;
+    font-family: fockis.$font-display;
+    font-size: clamp(30px, 4vw, 42px);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+  }
+
+  .cars-description {
+    max-width: 520px;
+    margin: 10px 0 0;
+
+    color: fockis.$text-on-light-muted;
+    font-family: fockis.$font-body;
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  /* ------------------------------------------------------------------------
+     Search
+     ------------------------------------------------------------------------ */
+
+  .travel-search {
+    width: 100%;
+  }
+
+  .travel-search--inline {
+    margin-top: 24px;
+  }
+
+  .search-fields {
+    display: grid;
+    grid-template-columns:
+      minmax(190px, 1.35fr)
+      minmax(150px, 1fr)
+      minmax(150px, 1fr)
+      auto;
+
+    gap: 10px;
+    width: 100%;
+    padding: 10px;
+
+    border: 1px solid rgba(10, 24, 48, 0.1);
+    border-radius: fockis.$radius-lg;
+
+    background: #ffffff;
+    box-shadow: 0 6px 22px rgba(10, 24, 48, 0.08);
+  }
+
+  .field {
+    min-width: 0;
+    min-height: 62px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+
+    padding: 8px 13px;
+
+    border: 1px solid rgba(10, 24, 48, 0.08);
+    border-radius: fockis.$radius-md;
+
+    background: fockis.$cream-50;
+
+    span {
+      color: fockis.$text-on-light-muted;
+
+      font-family: fockis.$font-body;
+      font-size: 0.7rem;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: 0.045em;
+      text-transform: uppercase;
+    }
+
+    .value {
+      width: 100%;
+      min-width: 0;
+
+      margin: 0;
+      padding: 0;
+
+      border: 0;
+      outline: 0;
+
+      background: transparent;
+
+      color: fockis.$navy-900;
+
+      font-family: fockis.$font-body;
+      font-size: 0.9rem;
+      font-weight: 600;
+      line-height: 1.3;
+
+      &::placeholder {
+        color: #7a8795;
+        font-weight: 500;
+      }
+
+      &:focus {
+        outline: none;
+      }
+    }
+
+    &:focus-within {
+      border-color: rgba(240, 169, 62, 0.7);
+      box-shadow: 0 0 0 3px rgba(240, 169, 62, 0.12);
+    }
+  }
+
+  .search-submit {
+    align-self: stretch;
+
+    min-width: 130px;
+    min-height: 62px;
+
+    padding: 0 20px;
+
+    border: 0;
+    border-radius: fockis.$radius-md;
+
+    background: fockis.$gold-500;
+    color: fockis.$navy-900;
+
+    font-family: fockis.$font-body;
+    font-size: 0.9rem;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+      background 0.15s ease,
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: fockis.$gold-600;
+      box-shadow: 0 5px 14px rgba(240, 169, 62, 0.25);
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    &:focus-visible {
+      outline: 2px solid fockis.$navy-900;
+      outline-offset: 2px;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Category tabs
+     ------------------------------------------------------------------------ */
+
+  .category-tabs {
+    width: 100%;
+    margin: 0;
+  }
+
+  /* ------------------------------------------------------------------------
+     Filters
+     ------------------------------------------------------------------------ */
+
+  .filters-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    width: 100%;
+    margin: 18px 0 14px;
+    padding: 0;
+  }
+
+  .ft-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    min-height: 34px;
+    padding: 0 11px;
+
+    border: 1px solid rgba(10, 24, 48, 0.1);
+    border-radius: fockis.$radius-pill;
+
+    background: fockis.$cream-50;
+    color: fockis.$navy-900;
+
+    font-family: fockis.$font-body;
+    font-size: 0.78rem;
+    font-weight: 750;
+    white-space: nowrap;
+
+    svg {
+      width: 13px;
+      height: 13px;
+      flex: 0 0 auto;
+      display: block;
+    }
+  }
+
+  .ft-field {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    margin: 0;
+
+    span {
+      color: fockis.$text-on-light-muted;
+
+      font-family: fockis.$font-body;
+      font-size: 0.75rem;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    select {
+      min-height: 34px;
+
+      padding: 6px 30px 6px 10px;
+
+      border: 1px solid rgba(10, 24, 48, 0.12);
+      border-radius: 8px;
+
+      background: #ffffff;
+      color: fockis.$navy-900;
+
+      font-family: fockis.$font-body;
+      font-size: 0.78rem;
+      font-weight: 650;
+
+      cursor: pointer;
+
+      &:focus {
+        outline: 2px solid rgba(240, 169, 62, 0.55);
+        outline-offset: 1px;
+      }
+    }
+  }
+
+  .sort-select {
+    margin-left: auto;
+  }
+
+  /* ------------------------------------------------------------------------
+     Results
+     ------------------------------------------------------------------------ */
+
+  .results-count {
+    margin: 0 0 12px;
+
+    color: fockis.$text-on-light-muted;
+
+    font-family: fockis.$font-body;
+    font-size: 0.78rem;
+    font-weight: 650;
+    line-height: 1.3;
+  }
+
+  .ft-four-col {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+
+    width: 100%;
+    padding-bottom: 36px;
+  }
+
+  /* ------------------------------------------------------------------------
+     Empty / loading / error state
+     ------------------------------------------------------------------------ */
+
+  .ft-empty-state {
+    width: 100%;
+
+    margin: 18px 0 36px;
+    padding: 38px 24px;
+
+    border: 1px solid rgba(10, 24, 48, 0.08);
+    border-radius: fockis.$radius-lg;
+
+    background: fockis.$cream-50;
+
+    text-align: center;
+
+    .ic {
+      width: 46px;
+      height: 46px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      margin: 0 auto 12px;
+
+      border-radius: 50%;
+
+      background: fockis.$gold-100;
+
+      font-size: 1.35rem;
+      line-height: 1;
+    }
+
+    h4 {
+      margin: 0;
+
+      color: fockis.$navy-900;
+
+      font-family: fockis.$font-display;
+      font-size: 1.15rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    p {
+      max-width: 500px;
+
+      margin: 7px auto 0;
+
+      color: fockis.$text-on-light-muted;
+
+      font-family: fockis.$font-body;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .btn {
+      margin-top: 16px;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Buttons
+     ------------------------------------------------------------------------ */
+
+  .btn {
+    @include fockis.btn-base;
+  }
+
+  .btn-outline {
+    @include fockis.btn-outline;
+  }
+
+  /* ------------------------------------------------------------------------
+     Large tablet
+     ------------------------------------------------------------------------ */
+
+  @include fockis.bp-down(fockis.$bp-lg) {
+    .ft-four-col {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .search-fields {
+      grid-template-columns:
+        minmax(175px, 1.25fr)
+        minmax(135px, 1fr)
+        minmax(135px, 1fr)
+        auto;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Tablet
+     ------------------------------------------------------------------------ */
+
+  @include fockis.bp-down(fockis.$bp-md) {
+    .tight {
+      padding-top: 34px;
+      padding-bottom: 28px;
+    }
+
+    .search-fields {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .field {
+      min-height: 58px;
+    }
+
+    .search-submit {
+      min-height: 52px;
+    }
+
+    .filters-bar {
+      flex-wrap: wrap;
+    }
+
+    .sort-select {
+      margin-left: auto;
+    }
+
+    .ft-four-col {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Mobile
+     ------------------------------------------------------------------------ */
+
+  @include fockis.bp-down(fockis.$bp-sm) {
+    .tight {
+      padding-top: 28px;
+      padding-bottom: 24px;
+    }
+
+    .eyebrow {
+      margin-bottom: 6px;
+      font-size: 0.72rem;
+    }
+
+    .cars-title {
+      font-size: clamp(28px, 8vw, 34px);
+    }
+
+    .cars-description {
+      margin-top: 8px;
+
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .travel-search--inline {
+      margin-top: 18px;
+    }
+
+    .search-fields {
+      grid-template-columns: 1fr;
+
+      gap: 7px;
+      padding: 8px;
+
+      border-radius: fockis.$radius-md;
+    }
+
+    .field {
+      min-height: 54px;
+      padding: 7px 11px;
+    }
+
+    .search-submit {
+      width: 100%;
+      min-height: 48px;
+    }
+
+    .filters-bar {
+      gap: 7px;
+      margin-top: 14px;
+      margin-bottom: 11px;
+    }
+
+    .ft-pill {
+      min-height: 32px;
+      padding: 0 9px;
+    }
+
+    .ft-field {
+      select {
+        min-height: 32px;
+        font-size: 0.74rem;
+      }
+    }
+
+    .ft-hide-mobile {
+      display: none;
+    }
+
+    .sort-select {
+      margin-left: auto;
+    }
+
+    .results-count {
+      margin-bottom: 10px;
+      font-size: 0.74rem;
+    }
+
+    .ft-four-col {
+      grid-template-columns: 1fr;
+      gap: 12px;
+      padding-bottom: 26px;
+    }
+
+    .ft-empty-state {
+      margin-top: 14px;
+      padding: 30px 18px;
+    }
+  }
+}

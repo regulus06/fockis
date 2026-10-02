@@ -1,0 +1,1037 @@
+// ============================================================================
+// FOCKIS MUSIC — HOME
+// Design system matched to the Fockis Creator Studio (Creator Manager) page:
+// deep navy chrome with a gold accent line, a serif display face for
+// headings, and white cards with a navy top rule.
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// TOKENS
+// ----------------------------------------------------------------------------
+
+$navy-900: #0a2c43;
+$navy-800: #0d3a57;
+$navy-700: #123f5e;
+$navy-600: #17527a;
+$navy-500: #1c6191;
+
+$gold-500: #f0a92e;
+$gold-600: #e2951a;
+$gold-050: #fff4de;
+
+$ink: #0c2438;
+$ink-soft: #405265;
+$muted: #64748b;
+$muted-light: #94a3b8;
+
+$page-bg: #eef2f7;
+$card-bg: #ffffff;
+$border: #dde5ee;
+$border-soft: #e8edf3;
+
+$success: #1c8a5a;
+
+$font-display: "Playfair Display", "Georgia", "Iowan Old Style", serif;
+$font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+$radius-sm: 10px;
+$radius-md: 14px;
+$radius-lg: 20px;
+
+$shadow-card: 0 1px 2px rgba(10, 30, 50, 0.04), 0 8px 24px rgba(10, 30, 50, 0.06);
+$shadow-card-hover: 0 4px 10px rgba(10, 30, 50, 0.08), 0 16px 32px rgba(10, 30, 50, 0.1);
+
+// ----------------------------------------------------------------------------
+// BASE
+// ----------------------------------------------------------------------------
+
+@keyframes music-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.music-home {
+  background: $page-bg !important;
+  color: $ink !important;
+  font-family: $font-body;
+  min-height: 100vh;
+  padding-bottom: 64px;
+
+  h1,
+  h2,
+  h3 {
+    font-family: $font-display;
+    color: $ink !important;
+    margin: 0;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+// ----------------------------------------------------------------------------
+// HERO
+// ----------------------------------------------------------------------------
+
+.music-home-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  align-items: center;
+  gap: 40px;
+  padding: 56px 64px 64px;
+  background: linear-gradient(135deg, $navy-800 0%, $navy-700 55%, $navy-600 100%) !important;
+  border-bottom: 4px solid $gold-500 !important;
+  overflow: hidden;
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
+    padding: 40px 24px 48px;
+  }
+}
+
+.music-hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 620px;
+}
+
+.music-hero-kicker {
+  display: inline-block;
+  font-family: $font-body;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: $gold-500 !important;
+  margin-bottom: 14px;
+}
+
+.music-hero-content h1 {
+  font-size: 44px;
+  line-height: 1.14;
+  font-weight: 700;
+  color: #ffffff !important;
+
+  @media (max-width: 640px) {
+    font-size: 32px;
+  }
+}
+
+.music-hero-content > p {
+  margin-top: 18px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.78) !important;
+  max-width: 520px;
+}
+
+.music-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 28px;
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-radius: 999px;
+  padding: 6px 6px 6px 18px;
+  max-width: 560px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+
+  .music-search-icon {
+    color: $muted !important;
+    font-size: 15px;
+  }
+
+  input {
+    flex: 1;
+    border: none !important;
+    background: transparent !important;
+    outline: none;
+    font-family: $font-body;
+    font-size: 14px;
+    color: $ink !important;
+    padding: 10px 4px;
+
+    &::placeholder {
+      color: $muted-light !important;
+    }
+  }
+}
+
+.music-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+// Buttons -------------------------------------------------------------------
+
+.music-primary-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: $gold-500 !important;
+  color: $navy-900 !important;
+  font-family: $font-body;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px 22px;
+  border: none !important;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    background: $gold-600 !important;
+    transform: translateY(-1px);
+  }
+}
+
+.music-secondary-button,
+.music-studio-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  font-family: $font-body;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.16) !important;
+    border-color: rgba(255, 255, 255, 0.55) !important;
+  }
+}
+
+// Hero visual -----------------------------------------------------------------
+
+.music-hero-visual {
+  position: relative;
+  height: 320px;
+
+  @media (max-width: 960px) {
+    display: none;
+  }
+}
+
+.music-hero-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 60% 40%, rgba(240, 169, 46, 0.35), transparent 60%) !important;
+  filter: blur(10px);
+}
+
+.music-hero-disc {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 220px;
+  height: 220px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, $navy-500 0%, $navy-800 70%) !important;
+  border: 8px solid rgba(255, 255, 255, 0.12) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.music-disc-center {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: $gold-500 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+
+.music-floating-card {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff !important;
+  border-radius: $radius-md;
+  padding: 12px 16px;
+  box-shadow: $shadow-card-hover;
+
+  span {
+    font-size: 20px;
+  }
+
+  strong {
+    display: block;
+    font-family: $font-body;
+    font-size: 13px;
+    color: $ink !important;
+  }
+
+  small {
+    display: block;
+    font-size: 11px;
+    color: $muted !important;
+  }
+
+  &.music-floating-card-one {
+    top: 10px;
+    left: -10px;
+  }
+
+  &.music-floating-card-two {
+    bottom: 10px;
+    right: 0;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// NAV
+// ----------------------------------------------------------------------------
+
+.music-home-nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  background: $card-bg !important;
+  border-bottom: 1px solid $border !important;
+  padding: 0 64px;
+  overflow-x: auto;
+
+  @media (max-width: 960px) {
+    padding: 0 20px;
+    gap: 20px;
+  }
+
+  a {
+    font-family: $font-body;
+    font-size: 14px;
+    font-weight: 600;
+    color: $muted !important;
+    padding: 16px 0;
+    border-bottom: 2px solid transparent !important;
+    white-space: nowrap;
+    transition: color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      color: $navy-700 !important;
+    }
+  }
+
+  .music-home-nav-active {
+    color: $navy-800 !important;
+    border-bottom-color: $gold-500 !important;
+  }
+
+  .music-home-nav-studio {
+    margin-left: auto;
+    background: $navy-800 !important;
+    color: #ffffff !important;
+    padding: 8px 16px !important;
+    border-radius: 999px;
+    border-bottom: none !important;
+
+    &:hover {
+      background: $navy-700 !important;
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// SECTION HEADINGS
+// ----------------------------------------------------------------------------
+
+.music-home-section {
+  padding: 40px 64px 0;
+
+  @media (max-width: 960px) {
+    padding: 32px 20px 0;
+  }
+}
+
+.music-section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+
+  h2 {
+    font-size: 24px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  p {
+    margin: 6px 0 0;
+    font-size: 14px;
+    color: $muted !important;
+    max-width: 560px;
+  }
+}
+
+.music-section-view-all {
+  flex-shrink: 0;
+  font-family: $font-body;
+  font-size: 13px;
+  font-weight: 700;
+  color: $navy-700 !important;
+  padding-bottom: 4px;
+  border-bottom: 2px solid $gold-500 !important;
+
+  &:hover {
+    color: $navy-800 !important;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// DISCOVERY / CATEGORY FILTERS
+// ----------------------------------------------------------------------------
+
+.music-home-discovery {
+  padding-top: 44px;
+}
+
+.music-home-category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.music-home-category-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: $font-body;
+  font-size: 13px;
+  font-weight: 600;
+  color: $ink-soft !important;
+  background: $card-bg !important;
+  border: 1px solid $border !important;
+  border-radius: 999px;
+  padding: 10px 18px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    border-color: $navy-500 !important;
+    color: $navy-700 !important;
+  }
+
+  &.active {
+    background: $navy-800 !important;
+    border-color: $navy-800 !important;
+    color: #ffffff !important;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// ERROR
+// ----------------------------------------------------------------------------
+
+.music-error {
+  margin: 32px 64px 0;
+  background: #fdf1f1 !important;
+  border: 1px solid #f3c9c9 !important;
+  border-radius: $radius-md;
+  padding: 20px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+
+  @media (max-width: 960px) {
+    margin: 24px 20px 0;
+  }
+
+  strong {
+    color: #9c2c2c !important;
+    font-size: 14px;
+  }
+
+  span {
+    color: #7a3a3a !important;
+    font-size: 13px;
+    flex: 1;
+  }
+
+  button {
+    font-family: $font-body;
+    font-weight: 700;
+    font-size: 13px;
+    color: #ffffff !important;
+    background: #c2453f !important;
+    border: none !important;
+    border-radius: 999px;
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// STAT CARDS
+// ----------------------------------------------------------------------------
+
+.music-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 36px 64px 0;
+
+  @media (max-width: 960px) {
+    margin: 28px 20px 0;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.music-stat-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: $card-bg !important;
+  border: 1px solid $border-soft !important;
+  border-top: 3px solid $navy-700 !important;
+  border-radius: $radius-md;
+  padding: 18px 18px 20px;
+  box-shadow: $shadow-card;
+}
+
+.music-stat-icon {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: $radius-sm;
+  background: $gold-050 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+}
+
+.music-stat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.music-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: $muted !important;
+}
+
+.music-stat-value {
+  font-family: $font-display;
+  font-size: 26px;
+  font-weight: 700;
+  color: $navy-900 !important;
+  line-height: 1.2;
+}
+
+.music-stat-description {
+  font-size: 12px;
+  color: $muted-light !important;
+}
+
+// ----------------------------------------------------------------------------
+// CARD GRID (content cards)
+// ----------------------------------------------------------------------------
+
+.music-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 860px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.music-home-card {
+  background: $card-bg !important;
+  border: 1px solid $border-soft !important;
+  border-radius: $radius-md;
+  overflow: hidden;
+  box-shadow: $shadow-card;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    box-shadow: $shadow-card-hover;
+    transform: translateY(-2px);
+  }
+}
+
+.music-home-card-art-button {
+  display: block;
+  width: 100%;
+  border: none !important;
+  padding: 0;
+  background: none !important;
+  cursor: pointer;
+}
+
+.music-home-card-art {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(135deg, $navy-700, $navy-500) !important;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.music-home-card-art-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+}
+
+.music-home-card-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff !important;
+  font-size: 28px;
+  background: rgba(10, 44, 67, 0) !important;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.music-home-card-art-button:hover .music-home-card-play {
+  opacity: 1;
+  background: rgba(10, 44, 67, 0.35) !important;
+}
+
+.music-home-card-type {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(10, 44, 67, 0.72) !important;
+  color: #ffffff !important;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+
+.music-home-card-access {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: $gold-500 !important;
+  color: $navy-900 !important;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+
+.music-home-card-body {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.music-home-card-title-button {
+  border: none !important;
+  background: none !important;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+
+  h3 {
+    font-family: $font-body;
+    font-size: 15px;
+    font-weight: 700;
+    color: $ink !important;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+.music-home-card-producer-button {
+  align-self: flex-start;
+  border: none !important;
+  background: none !important;
+  padding: 0;
+  font-size: 13px;
+  color: $muted !important;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: $navy-700 !important;
+    text-decoration: underline;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.music-home-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: $muted-light !important;
+
+  span:last-child {
+    margin-left: auto;
+    font-weight: 700;
+    color: $navy-700 !important;
+  }
+}
+
+.music-home-card-exclusive {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: $navy-700 !important;
+  text-transform: lowercase;
+}
+
+// ----------------------------------------------------------------------------
+// RANKING LIST (trending)
+// ----------------------------------------------------------------------------
+
+.music-ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.music-ranking-card {
+  display: grid;
+  grid-template-columns: 40px 64px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  background: $card-bg !important;
+  border: 1px solid $border-soft !important;
+  border-left: 3px solid $navy-700 !important;
+  border-radius: $radius-sm;
+  padding: 12px 18px;
+  box-shadow: $shadow-card;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 32px 52px 1fr;
+
+    .music-ranking-action {
+      display: none;
+    }
+  }
+}
+
+.music-ranking-position {
+  font-family: $font-display;
+  font-size: 18px;
+  font-weight: 700;
+  color: $navy-800 !important;
+  text-align: center;
+}
+
+.music-ranking-art-button {
+  border: none !important;
+  background: none !important;
+  padding: 0;
+  cursor: pointer;
+}
+
+.music-ranking-art {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  background: linear-gradient(135deg, $navy-700, $navy-500) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.music-ranking-placeholder {
+  color: #ffffff !important;
+}
+
+.music-ranking-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff !important;
+  opacity: 0;
+  background: rgba(10, 44, 67, 0.35) !important;
+  transition: opacity 0.15s ease;
+}
+
+.music-ranking-art-button:hover .music-ranking-play {
+  opacity: 1;
+}
+
+.music-ranking-info {
+  min-width: 0;
+}
+
+.music-ranking-topline {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: $muted !important;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.music-ranking-title-button {
+  display: block;
+  border: none !important;
+  background: none !important;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  margin-top: 2px;
+
+  h3 {
+    font-family: $font-body;
+    font-size: 15px;
+    font-weight: 700;
+    color: $ink !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.music-ranking-info > p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: $muted !important;
+}
+
+.music-ranking-stats {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 12px;
+
+  strong {
+    color: $navy-800 !important;
+  }
+
+  span {
+    color: $muted-light !important;
+  }
+}
+
+.music-ranking-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+
+  button {
+    font-family: $font-body;
+    font-weight: 700;
+    font-size: 13px;
+    color: $navy-900 !important;
+    background: $gold-500 !important;
+    border: none !important;
+    border-radius: 999px;
+    padding: 8px 16px;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover {
+      background: $gold-600 !important;
+    }
+  }
+
+  span {
+    font-size: 11px;
+    color: $muted !important;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// EMPTY STATE
+// ----------------------------------------------------------------------------
+
+.music-empty-state {
+  background: $card-bg !important;
+  border: 1px dashed $border !important;
+  border-radius: $radius-md;
+  padding: 48px 24px;
+  text-align: center;
+
+  span {
+    font-size: 28px;
+  }
+
+  h3 {
+    margin-top: 12px;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 6px auto 0;
+    font-size: 13px;
+    color: $muted !important;
+    max-width: 360px;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// PRODUCER / CREATOR CTA BANNER
+// ----------------------------------------------------------------------------
+
+.music-producer-banner {
+  margin: 56px 64px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  background: linear-gradient(135deg, $navy-800, $navy-600) !important;
+  border-radius: $radius-lg;
+  padding: 40px 44px;
+  border-bottom: 4px solid $gold-500 !important;
+
+  @media (max-width: 960px) {
+    margin: 40px 20px 0;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 32px 24px;
+  }
+
+  span {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: $gold-500 !important;
+    margin-bottom: 10px;
+  }
+
+  h2 {
+    font-size: 26px;
+    color: #ffffff !important;
+  }
+
+  p {
+    margin: 12px 0 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.78) !important;
+    max-width: 560px;
+  }
+
+  .music-primary-button {
+    flex-shrink: 0;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// DATA NOTE
+// ----------------------------------------------------------------------------
+
+.music-home-data-note {
+  margin: 32px 64px 0;
+  text-align: center;
+  font-size: 13px;
+  color: $muted !important;
+
+  @media (max-width: 960px) {
+    margin: 24px 20px 0;
+  }
+
+  strong {
+    color: $navy-800 !important;
+  }
+
+  a {
+    color: $navy-700 !important;
+    font-weight: 700;
+    margin-left: 4px;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.music-skeleton-card {
+  .music-skeleton-art {
+    aspect-ratio: 1 / 1;
+    background: $border-soft !important;
+    animation: music-skeleton-pulse 1.4s ease-in-out infinite;
+  }
+
+  .music-skeleton-body {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .music-skeleton-line {
+    height: 10px;
+    border-radius: 6px;
+    background: $border-soft !important;
+    animation: music-skeleton-pulse 1.4s ease-in-out infinite;
+
+    &.short {
+      width: 60%;
+    }
+
+    &.tiny {
+      width: 40%;
+    }
+  }
+}
+}

@@ -1,0 +1,36 @@
+@use '../tokens' as t;
+
+.fm-waiting-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+  background: t.$void-950;
+  color: t.$fog-0;
+  padding: 24px;
+
+  &__icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: t.$void-800;
+    color: t.$signal-500;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 10px;
+  }
+  h2 { font-size: t.$fs-xl; margin-bottom: 4px; }
+  &__topic { color: t.$fog-300; font-size: t.$fs-md; margin-bottom: 10px; }
+  &__hint { color: t.$fog-300; font-size: t.$fs-sm; max-width: 320px; }
+}
+
+.fm-waiting-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+
+  &__name { flex: 1; color: t.$fog-0; font-size: t.$fs-sm; font-weight: 500; }
+  &__actions { display: flex; gap: 6px; }
+}

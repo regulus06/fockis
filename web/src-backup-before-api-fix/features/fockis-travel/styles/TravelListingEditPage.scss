@@ -1,0 +1,427 @@
+@use "./_fockis-tokens" as fockis;
+
+/* ==========================================================================
+   Fockis Travel — Listing Edit Page
+   ========================================================================== */
+
+.travel-management-page {
+  width: 100%;
+  min-height: 100vh;
+  background: fockis.$cream-100;
+  color: fockis.$text-on-light;
+  font-family: fockis.$font-body;
+  box-sizing: border-box;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .tight {
+    padding-top: 28px;
+    padding-bottom: 40px;
+  }
+
+  .eyebrow {
+    margin: 0 0 5px;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: fockis.$gold-600;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: fockis.$navy-900;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: fockis.$font-display;
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+  }
+
+  h2 {
+    margin: 0 0 18px;
+    font-size: 1.25rem;
+    line-height: 1.25;
+    font-weight: 800;
+  }
+
+  h3 {
+    color: fockis.$navy-900;
+  }
+
+  p {
+    line-height: 1.55;
+  }
+
+  /* ------------------------------------------------------------------------
+     Buttons
+  ------------------------------------------------------------------------ */
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 40px;
+    padding: 9px 15px;
+    border: 1px solid rgba(10, 24, 48, 0.14);
+    border-radius: fockis.$radius-pill;
+    background: #ffffff;
+    color: fockis.$navy-900;
+    font-family: fockis.$font-body;
+    font-size: 0.88rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      color 0.16s ease,
+      border-color 0.16s ease,
+      box-shadow 0.16s ease,
+      transform 0.12s ease;
+
+    &:hover {
+      border-color: rgba(10, 24, 48, 0.25);
+      background: #f8f9fb;
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      transform: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid fockis.$gold-500;
+      outline-offset: 2px;
+    }
+  }
+
+  .btn-primary {
+    border-color: fockis.$navy-900;
+    background: fockis.$navy-900;
+    color: #ffffff;
+
+    &:hover {
+      border-color: fockis.$navy-800;
+      background: fockis.$navy-800;
+      color: #ffffff;
+    }
+  }
+
+  .btn-amber {
+    border-color: fockis.$gold-500;
+    background: fockis.$gold-500;
+    color: fockis.$navy-900;
+
+    &:hover {
+      border-color: fockis.$gold-600;
+      background: fockis.$gold-600;
+      color: fockis.$navy-900;
+    }
+  }
+
+  .btn-outline {
+    border-color: fockis.$navy-900;
+    background: transparent;
+    color: fockis.$navy-900;
+
+    &:hover {
+      background: fockis.$navy-900;
+      color: #ffffff;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Form fields
+  ------------------------------------------------------------------------ */
+
+  .ft-field {
+    display: grid;
+    gap: 7px;
+    margin-bottom: 15px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      color: fockis.$navy-900;
+      font-size: 0.82rem;
+      font-weight: 750;
+      line-height: 1.25;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid rgba(10, 24, 48, 0.15);
+      border-radius: 10px;
+      background: #ffffff;
+      color: fockis.$text-on-light;
+      font-family: fockis.$font-body;
+      font-size: 0.92rem;
+      line-height: 1.4;
+      outline: none;
+      transition:
+        border-color 0.16s ease,
+        box-shadow 0.16s ease,
+        background 0.16s ease;
+    }
+
+    input,
+    select {
+      min-height: 44px;
+      padding: 10px 12px;
+    }
+
+    textarea {
+      min-height: 150px;
+      padding: 11px 12px;
+      resize: vertical;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #8a96a5;
+    }
+
+    input:hover,
+    select:hover,
+    textarea:hover {
+      border-color: rgba(10, 24, 48, 0.25);
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: fockis.$gold-500;
+      box-shadow: 0 0 0 3px rgba(240, 169, 62, 0.15);
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Loading
+  ------------------------------------------------------------------------ */
+
+  .spin {
+    animation: fockis-travel-spin 0.9s linear infinite;
+  }
+
+  @keyframes fockis-travel-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Main edit layout
+  ------------------------------------------------------------------------ */
+
+  form {
+    width: 100%;
+  }
+
+  form > div {
+    min-width: 0;
+  }
+
+  form > aside {
+    min-width: 0;
+  }
+
+  /* ------------------------------------------------------------------------
+     Card normalization
+  ------------------------------------------------------------------------ */
+
+  form > div > div,
+  form > div > section,
+  aside > div {
+    box-shadow: 0 4px 18px rgba(10, 24, 48, 0.055);
+    transition:
+      box-shadow 0.18s ease,
+      border-color 0.18s ease;
+  }
+
+  form > div > div:hover,
+  form > div > section:hover,
+  aside > div:hover {
+    border-color: rgba(10, 24, 48, 0.16) !important;
+  }
+
+  /* ------------------------------------------------------------------------
+     Inventory
+  ------------------------------------------------------------------------ */
+
+  [aria-label="Inventory management"] {
+    h3 {
+      color: fockis.$navy-900;
+    }
+
+    button {
+      font-family: fockis.$font-body;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Images
+  ------------------------------------------------------------------------ */
+
+  img {
+    max-width: 100%;
+  }
+
+  /* ------------------------------------------------------------------------
+     Sidebar
+  ------------------------------------------------------------------------ */
+
+  aside {
+    .btn {
+      width: 100%;
+    }
+
+    img {
+      object-fit: cover;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Mobile
+  ------------------------------------------------------------------------ */
+
+  @include fockis.bp-down(fockis.$bp-lg) {
+    .wrap {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+  }
+
+  @include fockis.bp-down(fockis.$bp-md) {
+    .tight {
+      padding-top: 22px;
+      padding-bottom: 30px;
+    }
+
+    .wrap {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    h1 {
+      font-size: 2rem;
+    }
+
+    form {
+      grid-template-columns: minmax(0, 1fr) !important;
+      gap: 16px !important;
+    }
+
+    form > div {
+      gap: 14px !important;
+    }
+
+    aside {
+      position: static !important;
+      top: auto !important;
+    }
+
+    .ft-field {
+      margin-bottom: 13px;
+    }
+
+    [style*="grid-template-columns: repeat(3"] {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+
+  @include fockis.bp-down(fockis.$bp-sm) {
+    .tight {
+      padding-top: 18px;
+      padding-bottom: 24px;
+    }
+
+    .wrap {
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+    }
+
+    h2 {
+      margin-bottom: 14px;
+      font-size: 1.1rem;
+    }
+
+    form > div > div,
+    form > div > section {
+      padding: 16px !important;
+      border-radius: 12px !important;
+    }
+
+    aside > div {
+      padding: 15px !important;
+      border-radius: 12px !important;
+    }
+
+    [style*="grid-template-columns: repeat(2"] {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    [style*="grid-template-columns: repeat(3"] {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    [style*="display: flex"][style*="gap: 8px"] {
+      flex-direction: column;
+    }
+
+    [style*="display: flex"][style*="gap: 8px"] input {
+      width: 100%;
+    }
+
+    [style*="display: flex"][style*="gap: 8px"] .btn {
+      width: 100%;
+    }
+
+    [style*="grid-template-columns: repeat(3, 1fr)"] {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .ft-field input,
+    .ft-field select {
+      min-height: 42px;
+    }
+
+    .ft-field textarea {
+      min-height: 125px;
+    }
+  }
+}

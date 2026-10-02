@@ -1,0 +1,65 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+.emoji-picker {
+  position: absolute;
+  bottom: 52px;
+  right: 0;
+  width: 280px;
+  max-height: 320px;
+  background: v.$color-bg-panel;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-md;
+  box-shadow: v.$shadow-lg;
+  display: flex;
+  flex-direction: column;
+  animation: fockis-scale-in 0.15s ease;
+  z-index: 20;
+}
+
+.emoji-picker__search {
+  display: flex;
+  align-items: center;
+  gap: v.$space-2;
+  padding: v.$space-3;
+  border-bottom: 1px solid v.$color-border;
+  color: v.$color-text-tertiary;
+
+  input {
+    flex: 1;
+    font-size: v.$font-size-sm;
+  }
+}
+
+.emoji-picker__scroll {
+  overflow-y: auto;
+  padding: v.$space-2 v.$space-3;
+  @include m.scrollbar-thin;
+}
+
+.emoji-picker__category h4 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: v.$color-text-tertiary;
+  margin: v.$space-2 0 4px;
+}
+
+.emoji-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 2px;
+
+  button {
+    aspect-ratio: 1;
+    font-size: 18px;
+    border-radius: v.$radius-xs;
+    @include m.flex-center;
+    transition: background 0.1s ease, transform 0.1s ease;
+
+    &:hover {
+      background: v.$color-bg-hover;
+      transform: scale(1.15);
+    }
+  }
+}

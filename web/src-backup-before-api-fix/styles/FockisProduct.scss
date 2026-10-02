@@ -1,0 +1,103 @@
+/* ============================================================================
+FOCKIS PRODUCT POST
+REDESIGN: gold badge/CTA (was generic orange), navy price accent.
+============================================================================ */
+
+.fockis-product {
+margin: 0 16px 16px;
+border: 1px solid var(--fk-border, #d6dde8);
+border-radius: 12px;
+overflow: hidden;
+background: var(--fk-surface-soft, #f6f8fb);
+}
+
+.fockis-product__image-wrap {
+position: relative;
+aspect-ratio: 1.4 / 1;
+overflow: hidden;
+background: #e8ecf3;
+}
+
+.fockis-product__image {
+width: 100%;
+height: 100%;
+object-fit: cover;
+display: block;
+transition: transform 0.3s ease;
+}
+
+.fockis-product:hover .fockis-product__image {
+transform: scale(1.025);
+}
+
+.fockis-product__badge {
+position: absolute;
+top: 12px;
+left: 12px;
+padding: 5px 9px;
+border-radius: 6px;
+background: var(--fk-amber-bright, #ffc72c);
+color: var(--fk-fjord-dark, #061530);
+font-size: 11px;
+font-weight: 800;
+}
+
+.fockis-product__body {
+padding: 16px;
+}
+
+.fockis-product__seller {
+color: var(--fk-text-muted, #7c879b);
+font-size: 12px;
+}
+
+.fockis-product__name {
+margin: 5px 0;
+font-family: var(--fk-font-display, Georgia, serif);
+font-size: 17px;
+font-weight: 700;
+}
+
+.fockis-product__description {
+margin: 0 0 12px;
+color: var(--fk-text-soft, #48566e);
+font-size: 13px;
+line-height: 1.5;
+}
+
+.fockis-product__bottom {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 12px;
+}
+
+.fockis-product__price {
+color: var(--fk-fjord, #0a2240);
+font-size: 20px;
+font-weight: 800;
+}
+
+.fockis-product__old-price {
+margin-left: 6px;
+color: var(--fk-text-muted, #7c879b);
+font-size: 13px;
+text-decoration: line-through;
+}
+
+.fockis-product__button {
+min-height: 40px;
+padding: 0 16px;
+border: 0;
+border-radius: 8px;
+background: var(--fk-fjord, #0a2240);
+color: #fff;
+font-weight: 750;
+cursor: pointer;
+transition: 0.2s ease;
+}
+
+.fockis-product__button:hover {
+background: var(--fk-fjord-bright, #1d4fa3);
+transform: translateY(-1px);
+}

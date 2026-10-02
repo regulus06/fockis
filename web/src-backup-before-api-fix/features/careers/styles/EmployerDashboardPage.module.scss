@@ -1,0 +1,28 @@
+.page { max-width: 1240px; margin: 0 auto; padding: 32px 28px 80px; }
+.header {
+  display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px; margin-bottom: 24px;
+  h1 { font-family: var(--careers-font-display); font-weight: 700; font-size: 26px; }
+  p { font-size: 13.5px; color: var(--careers-ink-soft); margin-top: 5px; }
+}
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+@media (max-width: 760px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+.sectionHead h2 { font-family: var(--careers-font-display); font-size: 18px; }
+.loading { padding: 20px; color: var(--careers-ink-soft); font-size: 14px; }
+
+.formCard { max-width: 640px; background: var(--careers-card); border: 1px solid var(--careers-line); border-radius: var(--careers-radius); padding: 24px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
+.field {
+  margin-bottom: 18px;
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 7px; }
+  input, textarea, select {
+    width: 100%; border: 1px solid var(--careers-line); border-radius: 9px; padding: 11px 13px;
+    font-size: 14px; font-family: inherit; background: #fff;
+    &:focus { outline: none; border-color: var(--careers-indigo); }
+  }
+}
+.status { font-size: 13px; color: var(--careers-teal); margin-bottom: 12px; }
+.footer { display: flex; justify-content: space-between; }
+.primaryBtn, .ghostBtn { border-radius: 9px; font-weight: 600; font-size: 14px; padding: 9px 16px; cursor: pointer; }
+.primaryBtn { background: var(--careers-indigo); color: #fff; border: none; &:hover { background: var(--careers-indigo-deep); } }
+.ghostBtn { background: none; border: 1px solid var(--careers-line); color: var(--careers-ink-soft); }

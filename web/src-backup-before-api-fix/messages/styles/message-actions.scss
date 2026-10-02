@@ -1,0 +1,54 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+.message-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  padding: 2px 4px;
+  background: v.$color-bg-panel;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-pill;
+  box-shadow: v.$shadow-sm;
+  margin-bottom: 2px;
+  align-self: flex-end;
+
+  .message-bubble-row:hover & {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @include m.mobile {
+    display: none;
+  }
+}
+
+.message-actions--own {
+  align-self: flex-end;
+}
+
+.message-actions__quick-reactions {
+  display: flex;
+  gap: 2px;
+
+  button {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-size: 15px;
+    @include m.flex-center;
+    transition: transform 0.12s ease, background 0.12s ease;
+
+    &:hover {
+      background: v.$color-bg-hover;
+      transform: scale(1.2);
+    }
+  }
+}
+
+.message-actions__icon-btn {
+  @include m.icon-button(26px);
+}

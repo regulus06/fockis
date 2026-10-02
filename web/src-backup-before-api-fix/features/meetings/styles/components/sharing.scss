@@ -1,0 +1,15 @@
+@use '../tokens' as t;
+
+.fm-share-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: t.$signal-500;
+  color: white;
+  padding: 8px 18px;
+  font-size: t.$fs-sm;
+  font-weight: 500;
+
+  &__text { display: flex; align-items: center; gap: 8px; }
+}

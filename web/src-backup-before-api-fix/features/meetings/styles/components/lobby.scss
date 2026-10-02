@@ -1,0 +1,292 @@
+@use '../tokens' as t;
+
+/* ============================================================================
+ * CAMERA PREVIEW (unchanged)
+ * ========================================================================== */
+
+.fm-camera-preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: t.$void-900;
+  border-radius: t.$radius-lg;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &__video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+  &__off { display: flex; flex-direction: column; align-items: center; gap: 10px; color: t.$fog-300; }
+  &__error { font-size: t.$fs-xs; }
+  &__controls {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+  }
+}
+
+.fm-lobby-toggle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.14);
+  color: white;
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background t.$dur-fast t.$ease-out;
+
+  &:hover { background: rgba(255,255,255,0.22); }
+  &--off { background: t.$red-500; }
+  &--off:hover { background: t.$red-600; }
+}
+
+/* ============================================================================
+ * DEVICE SELECT (unchanged)
+ * ========================================================================== */
+
+.fm-device-select {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  &__label { font-size: t.$fs-xs; color: t.$ink-500; font-weight: 600; }
+}
+
+/* ============================================================================
+ * LOBBY LAYOUT (unchanged base rules)
+ * ========================================================================== */
+
+.fm-lobby {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: t.$paper-50;
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 36px;
+    max-width: 900px;
+    width: 100%;
+    align-items: center;
+
+    @media (max-width: 760px) { grid-template-columns: 1fr; }
+  }
+
+  &__meta { text-align: left; margin-bottom: 14px; }
+  &__meta h1 { font-size: t.$fs-2xl; }
+  &__panel { display: flex; flex-direction: column; gap: 10px; }
+  &__conn { display: flex; align-items: center; gap: 6px; font-size: t.$fs-xs; color: t.$ink-500; margin-top: 6px; }
+
+  /* --------------------------------------------------------------------------
+   * NEW: connection status offline variant
+   * ------------------------------------------------------------------------ */
+  &__conn--offline { color: t.$red-500; }
+
+  /* --------------------------------------------------------------------------
+   * NEW: title row + status badge
+   * ------------------------------------------------------------------------ */
+  &__title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: t.$fs-xs;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    color: #374151;
+    white-space: nowrap;
+
+    &--scheduled { background: #e5e7eb; color: #374151; }
+    &--starting_soon { background: #fef3c7; color: #92400e; }
+    &--late { background: #fee2e2; color: #991b1b; }
+    &--live { background: #dcfce7; color: #166534; }
+    &--ended { background: #e5e7eb; color: #6b7280; }
+    &--cancelled { background: #fee2e2; color: #7f1d1d; }
+  }
+
+  &__live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #16a34a;
+    display: inline-block;
+    animation: fm-live-pulse 1.6s ease-in-out infinite;
+  }
+
+  /* --------------------------------------------------------------------------
+   * NEW: status message banner
+   * ------------------------------------------------------------------------ */
+  &__status {
+    font-size: t.$fs-xs;
+    color: t.$ink-500;
+    background: #f3f4f6;
+    border-radius: t.$radius-lg;
+    padding: 10px 14px;
+    line-height: 1.4;
+
+    &--live { background: #f0fdf4; color: #166534; }
+    &--late { background: #fef2f2; color: #991b1b; }
+    &--ended,
+    &--cancelled { background: #f3f4f6; color: #6b7280; }
+  }
+
+  &__status-note {
+    display: block;
+    margin-top: 4px;
+  }
+
+  /* --------------------------------------------------------------------------
+   * NEW: meeting info list
+   * ------------------------------------------------------------------------ */
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+  }
+
+  &__info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: t.$fs-xs;
+
+    dt {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: t.$ink-500;
+      font-weight: 500;
+    }
+
+    dd {
+      margin: 0;
+      color: t.$ink-500;
+      font-weight: 600;
+      text-align: right;
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+   * NEW: waiting-for-host state
+   * ------------------------------------------------------------------------ */
+  &__waiting {
+    font-size: t.$fs-xs;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-radius: t.$radius-lg;
+    padding: 10px 14px;
+    line-height: 1.4;
+  }
+
+  /* --------------------------------------------------------------------------
+   * NEW: join button area — sticky on small screens for reachability
+   * ------------------------------------------------------------------------ */
+  &__join-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    @media (max-width: 760px) {
+      position: sticky;
+      bottom: 0;
+      background: t.$paper-50;
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+   * NEW: loading / error pages
+   * ------------------------------------------------------------------------ */
+  &__loading {
+    font-size: t.$fs-xs;
+    color: t.$ink-500;
+    text-align: center;
+  }
+
+  &__error-page {
+    text-align: center;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+
+    h1 { font-size: t.$fs-2xl; }
+    p { font-size: t.$fs-xs; color: t.$ink-500; }
+  }
+}
+
+@keyframes fm-live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* ============================================================================
+ * NEW: device settings panel
+ * ========================================================================== */
+
+.fm-device-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: t.$radius-lg;
+  background: #f9fafb;
+  margin-bottom: 4px;
+
+  &__hint {
+    font-size: t.$fs-xs;
+    color: t.$ink-500;
+  }
+}
+
+.fm-mic-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &__label {
+    font-size: t.$fs-xs;
+    color: t.$ink-500;
+    font-weight: 600;
+  }
+
+  &__track {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    overflow: hidden;
+  }
+
+  &__fill {
+    height: 100%;
+    background: #16a34a;
+    transition: width 0.08s linear;
+  }
+
+  &__error,
+  &__hint {
+    font-size: t.$fs-xs;
+    color: t.$ink-500;
+  }
+}

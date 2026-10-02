@@ -1,46 +1,48 @@
 import {
+  BadRequestException,
   Injectable,
   UnauthorizedException,
-  BadRequestException,
-  HttpException,
-  HttpStatus,
 } from "@nestjs/common";
 
-import { UsersService } from "../users/users.service";
+import { JwtService } from "@nestjs/jwt";
+import { InjectModel } from "@nestjs/mongoose";
+import { Model } from "mongoose";
 
 import * as bcrypt from "bcryptjs";
 
-import { JwtService } from "@nestjs/jwt";
-
+import { UsersService } from "../users/users.service";
 import {
-  formatPublicFockisId,
-} from "../users/constants/fockis-country.constants";
+  User,
+  UserDocument,
+} from "../users/user.schema";
+
+import { formatPublicFockisId } from "../users/constants/fockis-country.constants";
+
+import { AuthRegistrationService } from "./auth-registration.service";
+import { AuthLoginService } from "./auth-login.service";
+import { AuthTokenService } from "./auth-token.service";
+import { AuthSecurityService } from "./auth-security.service";
+import { MfaService } from "./mfa.service";
 
 @Injectable()
 export class AuthService {
-  // ============================================================
-  // SECURITY DEFAULTS
-  // ============================================================
-
-  private readonly MAX_FAILED_LOGIN_ATTEMPTS = 5;
-
-  private readonly LOGIN_RETRY_DELAY_SECONDS = 30;
-
-  private readonly ACCOUNT_LOCKOUT_MINUTES = 15;
-
-  private readonly FAILED_LOGIN_RESET_MINUTES = 30;
-
-  private readonly PASSWORD_MINIMUM_LENGTH = 12;
-
-  private readonly PASSWORD_BCRYPT_ROUNDS = 12;
-
   constructor(
+    private readonly registrationService: AuthRegistrationService,
+    private readonly loginService: AuthLoginService,
+
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly mfaService: MfaService,
+
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
+
+    private readonly tokenService: AuthTokenService,
+    private readonly securityService: AuthSecurityService,
   ) {}
 
   // ============================================================
-  // REGISTER
+  // REGISTRATION
   // ============================================================
 
   async register(
@@ -51,245 +53,14 @@ export class AuthService {
     lastName?: string,
     countryCode?: string,
   ) {
-    // ==========================================================
-    // NORMALIZE
-    // ==========================================================
-
-    const normalizedEmail = String(email || "")
-      .toLowerCase()
-      .trim();
-
-    const normalizedUsername = String(username || "")
-      .trim()
-      .toLowerCase();
-
-    const normalizedFirstName = String(firstName || "")
-      .trim();
-
-    const normalizedLastName = String(lastName || "")
-      .trim();
-
-    const normalizedCountryCode = String(countryCode || "")
-      .trim()
-      .toUpperCase();
-
-    // ==========================================================
-    // BASIC VALIDATION
-    // ==========================================================
-
-    if (!normalizedUsername) {
-      throw new BadRequestException(
-        "Username is required.",
-      );
-    }
-
-    if (!normalizedEmail) {
-      throw new BadRequestException(
-        "Email is required.",
-      );
-    }
-
-    if (!password) {
-      throw new BadRequestException(
-        "Password is required.",
-      );
-    }
-
-    // ==========================================================
-    // COUNTRY IS REQUIRED
-    // ==========================================================
-
-    if (!normalizedCountryCode) {
-      throw new BadRequestException(
-        "Country is required.",
-      );
-    }
-
-    if (!/^[A-Z]{2}$/.test(normalizedCountryCode)) {
-      throw new BadRequestException(
-        "Invalid country code.",
-      );
-    }
-
-    // ==========================================================
-    // CHECK EMAIL
-    // ==========================================================
-
-    const existing =
-      await this.usersService.findByEmail(
-        normalizedEmail,
-      );
-
-    if (existing) {
-      throw new BadRequestException(
-        "Email already exists.",
-      );
-    }
-
-    // ==========================================================
-    // PASSWORD SECURITY
-    // ==========================================================
-
-    this.validatePassword(password);
-
-    // ==========================================================
-    // HASH PASSWORD
-    // ==========================================================
-
-    const hash =
-      await bcrypt.hash(
-        password,
-        this.PASSWORD_BCRYPT_ROUNDS,
-      );
-
-    // ==========================================================
-    // CREATE USER
-    // ==========================================================
-    //
-    // We send countryCode.
-    //
-    // We DO NOT send callingCode.
-    //
-    // UsersService determines the calling code from countryCode.
-    //
-    // Examples:
-    //
-    // HT -> +509
-    // US -> +1
-    // FR -> +33
-    //
-    // ==========================================================
-
-    const user =
-      await this.usersService.create({
-        username:
-          normalizedUsername,
-
-        email:
-          normalizedEmail,
-
-        password:
-          hash,
-
-        firstName:
-          normalizedFirstName,
-
-        lastName:
-          normalizedLastName,
-
-        countryCode:
-          normalizedCountryCode,
-
-        mustChangePassword:
-          false,
-
-        passwordHistory:
-          [],
-
-        passwordChangedAt:
-          new Date(),
-
-        passwordResetByAdmin:
-          false,
-
-        failedLoginAttempts:
-          0,
-
-        lastFailedLoginAt:
-          null,
-
-        lockedUntil:
-          null,
-
-        lockoutCount:
-          0,
-
-        lastLoginAt:
-          null,
-
-        lastLoginIp:
-          null,
-
-        lastLoginUserAgent:
-          null,
-
-        lastActiveAt:
-          null,
-
-        online:
-          false,
-
-        lastSeen:
-          null,
-      });
-
-    // ==========================================================
-    // PUBLIC FOCKIS ID
-    // ==========================================================
-
-    const publicFockisId =
-      user.fockisId &&
-      user.callingCode
-        ? formatPublicFockisId(
-            user.fockisId,
-            user.callingCode,
-          )
-        : null;
-
-    // ==========================================================
-    // RESPONSE
-    // ==========================================================
-
-    return {
-      message:
-        "User created successfully.",
-
-      user: {
-        _id:
-          user._id,
-
-        id:
-          user._id,
-
-        username:
-          user.username,
-
-        email:
-          user.email,
-
-        firstName:
-          user.firstName || "",
-
-        lastName:
-          user.lastName || "",
-
-        // Internal identity.
-        fockisId:
-          user.fockisId,
-
-        // Country selected by user.
-        countryCode:
-          user.countryCode,
-
-        // Generated by backend.
-        callingCode:
-          user.callingCode,
-
-        // Public Fockis identity.
-        publicFockisId,
-
-        role:
-          user.role || "user",
-
-        isActive:
-          user.isActive,
-
-        mustChangePassword:
-          Boolean(
-            user.mustChangePassword,
-          ),
-      },
-    };
+    return this.registrationService.register(
+      username,
+      email,
+      password,
+      firstName,
+      lastName,
+      countryCode,
+    );
   }
 
   // ============================================================
@@ -301,164 +72,229 @@ export class AuthService {
     password: string,
     request?: any,
   ) {
-    const normalizedEmail =
-      String(email || "")
-        .toLowerCase()
-        .trim();
+    return this.loginService.login(
+      email,
+      password,
+      request,
+    );
+  }
 
-    if (
-      !normalizedEmail ||
-      !password
-    ) {
-      throw new UnauthorizedException(
-        "Invalid credentials",
+  // ============================================================
+  // BEGIN MFA SETUP
+  // ============================================================
+
+  async beginMfaSetup(
+    setupToken: string,
+  ) {
+    const payload =
+      await this.verifyMfaToken(
+        setupToken,
+        "mfa_setup",
       );
-    }
+
+    const userId = String(
+      payload.sub,
+    );
 
     const user =
-      await this.usersService.findByEmail(
-        normalizedEmail,
-      );
+      await this.userModel
+        .findById(userId)
+        .select(
+          "+mfaSecret +mfaRecoveryCodes",
+        )
+        .exec();
 
     if (!user) {
       throw new UnauthorizedException(
-        "Invalid credentials",
+        "User not found.",
       );
     }
 
-    if (user.isActive === false) {
+    if (user.mfaEnabled) {
+      throw new BadRequestException(
+        "MFA is already enabled.",
+      );
+    }
+
+    const secret =
+      this.mfaService.generateSecret();
+
+    const otpAuthUrl =
+      this.mfaService.generateOtpAuthUrl(
+        user.email,
+        secret,
+      );
+
+    const qrCodeDataUrl =
+      await this.mfaService.generateQrCodeDataUrl(
+        otpAuthUrl,
+      );
+
+    await this.userModel.updateOne(
+      {
+        _id: userId,
+      },
+      {
+        $set: {
+          mfaSecret: secret,
+        },
+      },
+    );
+
+    return {
+      setup_token: setupToken,
+      secret,
+      otpAuthUrl,
+      qrCodeDataUrl,
+      expiresIn: 300,
+    };
+  }
+
+  // ============================================================
+  // CONFIRM MFA SETUP
+  // ============================================================
+
+  async confirmMfaSetup(
+    setupToken: string,
+    code: string,
+  ) {
+    const payload =
+      await this.verifyMfaToken(
+        setupToken,
+        "mfa_setup",
+      );
+
+    const userId = String(
+      payload.sub,
+    );
+
+    const user =
+      await this.userModel
+        .findById(userId)
+        .select(
+          "+mfaSecret +mfaRecoveryCodes",
+        )
+        .exec();
+
+    if (
+      !user ||
+      !user.mfaSecret
+    ) {
+      throw new BadRequestException(
+        "MFA setup has expired or is invalid.",
+      );
+    }
+
+    const valid =
+      await this.mfaService.verifyTotp(
+        code,
+        user.mfaSecret,
+      );
+
+    if (!valid) {
       throw new UnauthorizedException(
-        "This account has been disabled.",
+        "Invalid MFA code.",
       );
     }
 
-    const now =
-      Date.now();
+    const recoveryCodeResult =
+      await this.mfaService.generateRecoveryCodes();
 
-    // ==========================================================
-    // ACCOUNT LOCKOUT
-    // ==========================================================
+    const recoveryCodes =
+      recoveryCodeResult.codes;
 
-    if (user.lockedUntil) {
-      const lockedUntil =
-        new Date(
-          user.lockedUntil,
-        ).getTime();
+    const hashedRecoveryCodes =
+      recoveryCodeResult.hashes;
 
-      if (lockedUntil > now) {
-        const remainingSeconds =
-          Math.max(
-            1,
-            Math.ceil(
-              (lockedUntil - now) /
-                1000,
-            ),
-          );
-
-        throw this.tooManyRequests(
-          `Account locked. Try again in ${remainingSeconds} seconds.`,
-        );
-      }
-
-      await this.usersService.clearLoginLockout(
-        String(user._id),
+    if (
+      !Array.isArray(recoveryCodes) ||
+      !Array.isArray(
+        hashedRecoveryCodes,
+      ) ||
+      recoveryCodes.length === 0 ||
+      recoveryCodes.length !==
+        hashedRecoveryCodes.length
+    ) {
+      throw new BadRequestException(
+        "Unable to generate MFA recovery codes.",
       );
     }
 
-    // ==========================================================
-    // RETRY DELAY
-    // ==========================================================
+    await this.userModel.updateOne(
+      {
+        _id: userId,
+      },
+      {
+        $set: {
+          mfaEnabled: true,
+          mfaVerifiedAt: new Date(),
+          mfaRecoveryCodes:
+            hashedRecoveryCodes,
+          mfaRecoveryCodesGeneratedAt:
+            new Date(),
+        },
+      },
+    );
 
-    if (user.lastFailedLoginAt) {
-      const lastFailedAt =
-        new Date(
-          user.lastFailedLoginAt,
-        ).getTime();
+    return {
+      message:
+        "MFA enabled successfully.",
+      mfaEnabled: true,
+      recoveryCodes,
+    };
+  }
 
-      const retryDelayMilliseconds =
-        this.LOGIN_RETRY_DELAY_SECONDS *
-        1000;
+  // ============================================================
+  // VERIFY MFA LOGIN
+  // ============================================================
 
-      const elapsed =
-        now -
-        lastFailedAt;
+  async verifyMfaLogin(
+    challengeToken: string,
+    code: string,
+    request?: any,
+  ) {
+    const payload =
+      await this.verifyMfaToken(
+        challengeToken,
+        "mfa_challenge",
+      );
 
-      if (
-        elapsed <
-        retryDelayMilliseconds
-      ) {
-        const remainingSeconds =
-          Math.max(
-            1,
-            Math.ceil(
-              (
-                retryDelayMilliseconds -
-                elapsed
-              ) / 1000,
-            ),
-          );
+    const userId = String(
+      payload.sub,
+    );
 
-        throw this.tooManyRequests(
-          `Please wait ${remainingSeconds} seconds before trying again.`,
-        );
-      }
-    }
+    const user =
+      await this.userModel
+        .findById(userId)
+        .select(
+          "+mfaSecret +mfaRecoveryCodes",
+        )
+        .exec();
 
-    // ==========================================================
-    // PASSWORD
-    // ==========================================================
-
-    if (!user.password) {
+    if (
+      !user ||
+      !user.mfaEnabled ||
+      !user.mfaSecret
+    ) {
       throw new UnauthorizedException(
-        "Invalid credentials",
+        "MFA is not configured.",
       );
     }
 
-    const passwordMatches =
-      await bcrypt.compare(
-        password,
-        user.password,
+    const valid =
+      await this.mfaService.verifyTotp(
+        code,
+        user.mfaSecret,
       );
 
-    if (!passwordMatches) {
-      const securityResult =
-        await this.usersService.recordFailedLogin(
-          String(user._id),
-          {
-            maxFailedAttempts:
-              this.MAX_FAILED_LOGIN_ATTEMPTS,
-
-            retryDelaySeconds:
-              this.LOGIN_RETRY_DELAY_SECONDS,
-
-            lockoutMinutes:
-              this.ACCOUNT_LOCKOUT_MINUTES,
-
-            failedResetMinutes:
-              this.FAILED_LOGIN_RESET_MINUTES,
-          },
-        );
-
-      if (securityResult?.locked) {
-        throw this.tooManyRequests(
-          "Too many failed login attempts. Your account has been locked for 15 minutes.",
-        );
-      }
-
+    if (!valid) {
       throw new UnauthorizedException(
-        "Invalid credentials",
+        "Invalid MFA code.",
       );
     }
-
-    // ==========================================================
-    // SUCCESSFUL LOGIN
-    // ==========================================================
-
-    const userId =
-      user._id.toString();
 
     const ip =
-      this.getRequestIp(
+      this.securityService.getRequestIp(
         request,
       );
 
@@ -466,9 +302,7 @@ export class AuthService {
       typeof request?.headers?.[
         "user-agent"
       ] === "string"
-        ? request.headers[
-            "user-agent"
-          ]
+        ? request.headers["user-agent"]
         : undefined;
 
     const updatedUser =
@@ -478,250 +312,397 @@ export class AuthService {
         userAgent || undefined,
       );
 
-    const currentUser =
-      updatedUser ||
-      user;
-
-    // ==========================================================
-    // FOCKIS ID
-    // ==========================================================
-
-    let finalFockisId =
-      String(
-        (currentUser as any)
-          .fockisId || "",
-      )
-        .trim()
-        .toUpperCase();
-
-    if (!finalFockisId) {
-      finalFockisId =
-        await this.usersService.getOrCreateFockisId(
-          userId,
-        );
-    }
-
-    // ==========================================================
-    // COUNTRY
-    // ==========================================================
-
-    const countryCode =
-      String(
-        (currentUser as any)
-          .countryCode || "",
-      )
-        .trim()
-        .toUpperCase();
-
-    const callingCode =
-      String(
-        (currentUser as any)
-          .callingCode || "",
-      ).trim();
-
-    const publicFockisId =
-      callingCode
-        ? formatPublicFockisId(
-            finalFockisId,
-            callingCode,
-          )
-        : finalFockisId;
-
-    // ==========================================================
-    // JWT
-    // ==========================================================
-
-    const payload = {
-      sub:
-        userId,
-
-      email:
-        currentUser.email,
-
-      username:
-        currentUser.username,
-
-      role:
-        currentUser.role ||
-        "user",
-
-      permissions:
-        currentUser.permissions ||
-        [],
-
-      mustChangePassword:
-        Boolean(
-          (currentUser as any)
-            .mustChangePassword,
-        ),
-    };
+    const loginUser =
+      updatedUser || user;
 
     const token =
-      this.jwtService.sign(
-        payload,
+      this.tokenService.createAccessToken(
+        loginUser,
+        userId,
+        true,
       );
 
-    // ==========================================================
-    // RESPONSE
-    // ==========================================================
-
     return {
-      access_token:
-        token,
+      access_token: token,
+      requiresMfa: false,
+      mfaVerified: true,
 
       mustChangePassword:
         Boolean(
-          (currentUser as any)
+          (loginUser as any)
             .mustChangePassword,
         ),
 
-      user: {
-        _id:
+      user:
+        await this.tokenService.buildUserForTokenResponse(
+          loginUser,
           userId,
-
-        id:
-          userId,
-
-        fockisId:
-          finalFockisId,
-
-        publicFockisId,
-
-        countryCode,
-
-        callingCode,
-
-        username:
-          currentUser.username,
-
-        email:
-          currentUser.email,
-
-        firstName:
-          currentUser.firstName ||
-          "",
-
-        lastName:
-          currentUser.lastName ||
-          "",
-
-        role:
-          currentUser.role ||
-          "user",
-
-        permissions:
-          currentUser.permissions ||
-          [],
-
-        mustChangePassword:
-          Boolean(
-            (currentUser as any)
-              .mustChangePassword,
-          ),
-      },
+        ),
     };
   }
 
   // ============================================================
-  // PASSWORD VALIDATION
+  // VERIFY MFA RECOVERY CODE
   // ============================================================
 
-  private validatePassword(
-    password: string,
-  ): void {
-    const value =
-      String(password || "");
+  async verifyMfaRecoveryCode(
+    challengeToken: string,
+    recoveryCode: string,
+    request?: any,
+  ) {
+    const payload =
+      await this.verifyMfaToken(
+        challengeToken,
+        "mfa_challenge",
+      );
+
+    const userId = String(
+      payload.sub,
+    );
+
+    const user =
+      await this.userModel
+        .findById(userId)
+        .select(
+          "+mfaSecret +mfaRecoveryCodes",
+        )
+        .exec();
 
     if (
-      value.length <
-      this.PASSWORD_MINIMUM_LENGTH
+      !user ||
+      !user.mfaEnabled
     ) {
-      throw new BadRequestException(
-        `Password must be at least ${this.PASSWORD_MINIMUM_LENGTH} characters long.`,
+      throw new UnauthorizedException(
+        "MFA is not configured.",
       );
     }
 
-    if (!/[A-Z]/.test(value)) {
-      throw new BadRequestException(
-        "Password must contain at least one uppercase letter.",
+    const normalizedCode =
+      String(
+        recoveryCode || "",
+      )
+        .trim()
+        .toUpperCase();
+
+    if (!normalizedCode) {
+      throw new UnauthorizedException(
+        "Recovery code is required.",
       );
     }
 
-    if (!/[a-z]/.test(value)) {
-      throw new BadRequestException(
-        "Password must contain at least one lowercase letter.",
+    const recoveryCodes =
+      Array.isArray(
+        user.mfaRecoveryCodes,
+      )
+        ? user.mfaRecoveryCodes
+        : [];
+
+    let matchingIndex = -1;
+
+    for (
+      let index = 0;
+      index < recoveryCodes.length;
+      index += 1
+    ) {
+      const hash =
+        recoveryCodes[index];
+
+      if (
+        !hash ||
+        typeof hash !== "string"
+      ) {
+        continue;
+      }
+
+      const matches =
+        await bcrypt.compare(
+          normalizedCode,
+          hash,
+        );
+
+      if (matches) {
+        matchingIndex = index;
+        break;
+      }
+    }
+
+    if (matchingIndex === -1) {
+      throw new UnauthorizedException(
+        "Invalid or already used recovery code.",
       );
     }
 
-    if (!/[0-9]/.test(value)) {
-      throw new BadRequestException(
-        "Password must contain at least one number.",
+    recoveryCodes.splice(
+      matchingIndex,
+      1,
+    );
+
+    await this.userModel.updateOne(
+      {
+        _id: userId,
+      },
+      {
+        $set: {
+          mfaRecoveryCodes:
+            recoveryCodes,
+        },
+      },
+    );
+
+    const ip =
+      this.securityService.getRequestIp(
+        request,
+      );
+
+    const userAgent =
+      typeof request?.headers?.[
+        "user-agent"
+      ] === "string"
+        ? request.headers["user-agent"]
+        : undefined;
+
+    const updatedUser =
+      await this.usersService.recordSuccessfulLogin(
+        userId,
+        ip || undefined,
+        userAgent || undefined,
+      );
+
+    const loginUser =
+      updatedUser || user;
+
+    const token =
+      this.tokenService.createAccessToken(
+        loginUser,
+        userId,
+        true,
+      );
+
+    return {
+      access_token: token,
+      requiresMfa: false,
+      mfaVerified: true,
+      recoveryCodeUsed: true,
+      remainingRecoveryCodes:
+        recoveryCodes.length,
+
+      mustChangePassword:
+        Boolean(
+          (loginUser as any)
+            .mustChangePassword,
+        ),
+
+      user:
+        await this.tokenService.buildUserForTokenResponse(
+          loginUser,
+          userId,
+        ),
+    };
+  }
+
+  // ============================================================
+  // DISABLE MFA
+  // ============================================================
+
+  async disableMfa(
+    userId: string,
+    currentPassword: string,
+    mfaCode: string,
+  ) {
+    const user =
+      await this.userModel
+        .findById(userId)
+        .select(
+          "+password +mfaSecret +mfaRecoveryCodes",
+        )
+        .exec();
+
+    if (!user) {
+      throw new UnauthorizedException(
+        "User not found.",
       );
     }
 
     if (
-      !/[^A-Za-z0-9]/.test(
-        value,
+      this.isMandatoryMfaRole(
+        user.role,
       )
     ) {
       throw new BadRequestException(
-        "Password must contain at least one special character.",
+        "MFA is mandatory for this account and cannot be disabled.",
+      );
+    }
+
+    if (
+      !currentPassword ||
+      !user.password
+    ) {
+      throw new UnauthorizedException(
+        "Current password is required.",
+      );
+    }
+
+    const passwordMatches =
+      await bcrypt.compare(
+        currentPassword,
+        user.password,
+      );
+
+    if (!passwordMatches) {
+      throw new UnauthorizedException(
+        "Invalid current password.",
+      );
+    }
+
+    if (user.mfaEnabled) {
+      if (!user.mfaSecret) {
+        throw new BadRequestException(
+          "MFA configuration is invalid.",
+        );
+      }
+
+      const valid =
+        await this.mfaService.verifyTotp(
+          mfaCode,
+          user.mfaSecret,
+        );
+
+      if (!valid) {
+        throw new UnauthorizedException(
+          "Invalid MFA code.",
+        );
+      }
+    }
+
+    await this.userModel.updateOne(
+      {
+        _id: userId,
+      },
+      {
+        $set: {
+          mfaEnabled: false,
+          mfaSecret: null,
+          mfaRecoveryCodes: [],
+          mfaVerifiedAt: null,
+          mfaRecoveryCodesGeneratedAt:
+            null,
+        },
+      },
+    );
+
+    return {
+      message:
+        "MFA disabled successfully.",
+      mfaEnabled: false,
+    };
+  }
+
+  // ============================================================
+  // MFA STATUS
+  // ============================================================
+
+  async getMfaStatus(
+    userId: string,
+  ) {
+    const user =
+      await this.userModel
+        .findById(userId)
+        .exec();
+
+    if (!user) {
+      throw new UnauthorizedException(
+        "User not found.",
+      );
+    }
+
+    return {
+      mfaEnabled: Boolean(
+        user.mfaEnabled,
+      ),
+
+      mfaRequired:
+        this.isMfaRequired(user),
+
+      role:
+        user.role || "user",
+    };
+  }
+
+  // ============================================================
+  // VERIFY MFA TOKEN
+  // ============================================================
+
+  private async verifyMfaToken(
+    token: string,
+    purpose: string,
+  ): Promise<any> {
+    if (!token) {
+      throw new UnauthorizedException(
+        "MFA token is required.",
+      );
+    }
+
+    try {
+      const payload =
+        await this.jwtService.verifyAsync(
+          token,
+        );
+
+      if (
+        payload?.purpose !== purpose ||
+        payload?.tokenType !== purpose ||
+        !payload?.sub
+      ) {
+        throw new UnauthorizedException(
+          "Invalid MFA token.",
+        );
+      }
+
+      return payload;
+    } catch {
+      throw new UnauthorizedException(
+        "Invalid or expired MFA token.",
       );
     }
   }
 
   // ============================================================
-  // HTTP 429
+  // MANDATORY MFA ROLE
   // ============================================================
 
-  private tooManyRequests(
-    message: string,
-  ): HttpException {
-    return new HttpException(
-      {
-        statusCode:
-          HttpStatus.TOO_MANY_REQUESTS,
+  private isMandatoryMfaRole(
+    role?: string,
+  ): boolean {
+    const normalized =
+      String(role || "")
+        .trim()
+        .toLowerCase()
+        .replace(
+          /[\s-]+/g,
+          "_",
+        );
 
-        message,
-
-        error:
-          "Too Many Requests",
-      },
-
-      HttpStatus.TOO_MANY_REQUESTS,
+    return (
+      normalized === "admin" ||
+      normalized === "super_admin" ||
+      normalized === "superadmin"
     );
   }
 
   // ============================================================
-  // CLIENT IP
+  // MFA REQUIRED
   // ============================================================
 
-  private getRequestIp(
-    request?: any,
-  ): string | null {
-    if (!request) {
-      return null;
-    }
-
-    const forwardedFor =
-      request.headers?.[
-        "x-forwarded-for"
-      ];
-
-    if (
-      typeof forwardedFor ===
-        "string" &&
-      forwardedFor.length > 0
-    ) {
-      return forwardedFor
-        .split(",")[0]
-        .trim();
-    }
-
+  private isMfaRequired(
+    user: any,
+  ): boolean {
     return (
-      request.ip ||
-      request.socket?.remoteAddress ||
-      null
+      this.isMandatoryMfaRole(
+        user?.role,
+      ) ||
+      Boolean(
+        user?.mfaRequired,
+      )
     );
   }
 }

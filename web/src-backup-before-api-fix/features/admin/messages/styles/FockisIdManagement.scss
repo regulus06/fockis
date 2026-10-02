@@ -1,0 +1,764 @@
+/* =========================================================
+   FOCKIS ID MANAGEMENT
+   FockisIdManagement.scss
+   ========================================================= */
+
+.message-admin-page {
+  width: 100%;
+  min-height: 100%;
+  padding: 28px;
+  box-sizing: border-box;
+
+  background: #faf7f0;
+  color: #142331;
+
+  @media (max-width: 768px) {
+    padding: 20px;
+  }
+
+  @media (max-width: 520px) {
+    padding: 14px;
+  }
+}
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.message-admin-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 180px;
+  margin-top: 24px;
+  padding: 30px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #e3e6eb;
+  border-radius: 18px;
+
+  background: #ffffff;
+  color: #5c6b78;
+
+  font-size: 15px;
+  font-weight: 500;
+
+  box-shadow:
+    0 2px 5px rgba(15, 23, 42, 0.04),
+    0 12px 30px rgba(15, 23, 42, 0.04);
+
+  &::before {
+    content: '';
+
+    width: 18px;
+    height: 18px;
+
+    margin-right: 12px;
+
+    border: 2px solid #e5e7eb;
+    border-top-color: #eda934;
+    border-radius: 50%;
+
+    animation: fockisIdSpinner 700ms linear infinite;
+  }
+}
+
+/* =========================================================
+   ALERT
+   ========================================================= */
+
+.message-admin-alert {
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  margin: 20px 0;
+
+  padding: 14px 16px;
+
+  box-sizing: border-box;
+
+  border-radius: 12px;
+
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 500;
+
+  animation: fockisIdAlertIn 180ms ease-out;
+}
+
+.message-admin-alert--error {
+  border: 1px solid #fecaca;
+  background: #fff1f2;
+  color: #b42318;
+}
+
+/* =========================================================
+   SUB NAVIGATION
+   ========================================================= */
+
+.message-admin-subnav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  width: fit-content;
+  max-width: 100%;
+
+  margin-top: 24px;
+  padding: 5px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #e2e5ea;
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 2px 6px rgba(15, 23, 42, 0.04);
+
+  overflow-x: auto;
+
+  scrollbar-width: thin;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 38px;
+
+    padding: 8px 16px;
+
+    box-sizing: border-box;
+
+    border-radius: 8px;
+
+    color: #5c6b78;
+
+    font-size: 13px;
+    line-height: 1;
+    font-weight: 600;
+
+    text-decoration: none;
+    white-space: nowrap;
+
+    transition:
+      color 150ms ease,
+      background 150ms ease,
+      box-shadow 150ms ease;
+
+    &:hover {
+      background: #fdf3e2;
+      color: #b3792a;
+    }
+
+    &:focus-visible {
+      outline: 3px solid rgba(237, 169, 52, 0.22);
+      outline-offset: 2px;
+    }
+  }
+
+  .message-admin-subnav__active {
+    background: #eda934;
+    color: #ffffff;
+
+    box-shadow:
+      0 3px 8px rgba(237, 169, 52, 0.2);
+
+    &:hover {
+      background: #d99424;
+      color: #ffffff;
+    }
+  }
+
+  @media (max-width: 520px) {
+    width: 100%;
+
+    a {
+      flex: 1;
+      min-width: 120px;
+      padding-inline: 12px;
+    }
+  }
+}
+
+/* =========================================================
+   FOCKIS ID MANAGER
+   ========================================================= */
+
+.fockis-id-manager {
+  width: 100%;
+  max-width: 1100px;
+
+  margin-top: 24px;
+}
+
+/* =========================================================
+   MANAGER CARD
+   ========================================================= */
+
+.fockis-id-manager__card {
+  position: relative;
+
+  width: 100%;
+
+  padding: 26px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #e3e6eb;
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 2px 5px rgba(15, 23, 42, 0.04),
+    0 12px 32px rgba(15, 23, 42, 0.05);
+
+  overflow: hidden;
+
+  &::before {
+    content: '';
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 4px;
+
+    background: #eda934;
+  }
+
+  @media (max-width: 650px) {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 16px;
+  }
+}
+
+/* =========================================================
+   MANAGER HEADER
+   ========================================================= */
+
+.fockis-id-manager__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+
+  padding-bottom: 22px;
+
+  border-bottom: 1px solid #edf0f3;
+
+  @media (max-width: 650px) {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+.fockis-id-manager__title {
+  font-family: Georgia, 'Times New Roman', serif;
+  margin: 0;
+
+  color: #142331;
+
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.fockis-id-manager__description {
+  max-width: 650px;
+
+  margin: 7px 0 0;
+
+  color: #5c6b78;
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* =========================================================
+   FOCKIS ID BRAND BADGE
+   ========================================================= */
+
+.fockis-id-manager__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  min-height: 38px;
+
+  padding: 8px 13px;
+
+  border: 1px solid #eecb8e;
+  border-radius: 10px;
+
+  background: #fdf3e2;
+  color: #a8671f;
+
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+/* =========================================================
+   SETTINGS GRID
+   ========================================================= */
+
+.fockis-id-manager__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+
+  margin-top: 24px;
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   SETTINGS SECTION
+   ========================================================= */
+
+.fockis-id-manager__section {
+  min-width: 0;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #e7e9ed;
+  border-radius: 16px;
+
+  background: #f9f6ef;
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+
+  &:hover {
+    border-color: #eecb8e;
+
+    box-shadow:
+      0 5px 16px rgba(15, 23, 42, 0.04);
+  }
+}
+
+.fockis-id-manager__section-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  margin: 0 0 6px;
+
+  color: #1c2e3d;
+
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.fockis-id-manager__section-description {
+  margin: 0 0 18px;
+
+  color: #5c6b78;
+
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+/* =========================================================
+   FIELD GRID
+   ========================================================= */
+
+.fockis-id-manager__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fockis-id-manager__field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+
+  min-width: 0;
+}
+
+.fockis-id-manager__field--full {
+  grid-column: 1 / -1;
+}
+
+.fockis-id-manager__field label {
+  color: #223142;
+
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.fockis-id-manager__field small {
+  color: #5c6b78;
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+.fockis-id-manager input,
+.fockis-id-manager select,
+.fockis-id-manager textarea {
+  width: 100%;
+  min-height: 44px;
+
+  padding: 10px 12px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d9dde4;
+  border-radius: 10px;
+
+  outline: none;
+
+  background: #ffffff;
+  color: #142331;
+
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.fockis-id-manager input:hover,
+.fockis-id-manager select:hover,
+.fockis-id-manager textarea:hover {
+  border-color: #c5cad3;
+}
+
+.fockis-id-manager input:focus,
+.fockis-id-manager select:focus,
+.fockis-id-manager textarea:focus {
+  border-color: #eda934;
+
+  box-shadow:
+    0 0 0 3px rgba(237, 169, 52, 0.13);
+}
+
+.fockis-id-manager textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* =========================================================
+   CHECKBOX / SWITCH SETTINGS
+   ========================================================= */
+
+.fockis-id-manager__toggles {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+
+  margin-top: 16px;
+}
+
+.fockis-id-manager__toggle {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  min-height: 52px;
+
+  padding: 11px 13px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #e3e6eb;
+  border-radius: 11px;
+
+  background: #ffffff;
+
+  cursor: pointer;
+
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
+
+  &:hover {
+    border-color: #eecb8e;
+    background: #fdf6ea;
+  }
+
+  &:has(input:checked) {
+    border-color: #e9c079;
+    background: #fdf3e2;
+  }
+}
+
+.fockis-id-manager__toggle input {
+  width: 18px;
+  height: 18px;
+
+  min-height: 18px;
+
+  margin: 0;
+
+  accent-color: #eda934;
+
+  cursor: pointer;
+}
+
+.fockis-id-manager__toggle-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fockis-id-manager__toggle-title {
+  color: #1c2e3d;
+
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.fockis-id-manager__toggle-description {
+  color: #5c6b78;
+
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+/* =========================================================
+   PRICING
+   ========================================================= */
+
+.fockis-id-manager__pricing {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fockis-id-manager__price {
+  padding: 16px;
+
+  border: 1px solid #e3e6eb;
+  border-radius: 13px;
+
+  background: #ffffff;
+}
+
+.fockis-id-manager__price-label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #5c6b78;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fockis-id-manager__price-value {
+  color: #142331;
+
+  font-size: 22px;
+  line-height: 1.2;
+  font-weight: 750;
+}
+
+/* =========================================================
+   SAVE ACTIONS
+   ========================================================= */
+
+.fockis-id-manager__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+
+  margin-top: 24px;
+  padding-top: 20px;
+
+  border-top: 1px solid #edf0f3;
+
+  @media (max-width: 520px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.fockis-id-manager__actions button {
+  min-height: 44px;
+
+  padding: 10px 20px;
+
+  border-radius: 999px;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 650;
+
+  cursor: pointer;
+
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    background 150ms ease,
+    border-color 150ms ease;
+
+  &:focus-visible {
+    outline: 3px solid rgba(237, 169, 52, 0.22);
+    outline-offset: 2px;
+  }
+}
+
+.fockis-id-manager__actions button[type='submit'] {
+  border: 1px solid #eda934;
+
+  background: #eda934;
+  color: #ffffff;
+
+  box-shadow:
+    0 4px 10px rgba(237, 169, 52, 0.18);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+
+    background: #d99424;
+
+    box-shadow:
+      0 7px 16px rgba(237, 169, 52, 0.24);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+.fockis-id-manager__actions button[type='button'] {
+  border: 1px solid #d9dde4;
+
+  background: #ffffff;
+  color: #3d4f5e;
+
+  &:hover:not(:disabled) {
+    border-color: #c5cad3;
+    background: #f7f4ec;
+  }
+}
+
+.fockis-id-manager__actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   SAVE STATUS
+   ========================================================= */
+
+.fockis-id-manager__status {
+  margin-top: 12px;
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.fockis-id-manager__status--success {
+  color: #15803d;
+}
+
+.fockis-id-manager__status--error {
+  color: #b42318;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 520px) {
+  .fockis-id-manager__section {
+    padding: 16px;
+  }
+
+  .fockis-id-manager__title {
+    font-size: 18px;
+  }
+
+  .fockis-id-manager__section-title {
+    font-size: 15px;
+  }
+
+  .fockis-id-manager__price-value {
+    font-size: 20px;
+  }
+}
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
+@keyframes fockisIdSpinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fockisIdAlertIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .message-admin-alert,
+  .fockis-id-manager__section,
+  .fockis-id-manager__actions button,
+  .message-admin-subnav a {
+    animation: none;
+    transition: none;
+  }
+
+  .fockis-id-manager__section:hover,
+  .fockis-id-manager__actions button:hover {
+    transform: none;
+  }
+}

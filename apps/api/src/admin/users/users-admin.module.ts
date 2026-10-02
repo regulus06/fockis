@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { UsersAdminController } from './users-admin.controller';
 import { UsersAdminService } from './users-admin.service';
+
 import { UserAdminDashboardService } from './dashboard/users-stats.service';
 import { UserDirectoryService } from './directory/users-list.service';
 import { UserProfileService } from './profile/user-profile.service';
@@ -30,35 +31,64 @@ import { UserBulkService } from './bulk/user-bulk.service';
 import { UsersExportService } from './export/users-export.service';
 
 import { User, UserSchema } from '../../users/user.schema';
-import { AuditLog, AuditLogSchema } from '../audit/audit-log.schema';
+
+import {
+  AdminRole,
+  AdminRoleSchema,
+} from '../roles/admin-role.schema';
+
+import {
+  AuditLog,
+  AuditLogSchema,
+} from '../audit/audit-log.schema';
+
 import { AuditService } from '../audit/audit.service';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: User.name, schema: UserSchema },
-      { name: AuditLog.name, schema: AuditLogSchema },
+      {
+        name: User.name,
+        schema: UserSchema,
+      },
+      {
+        name: AdminRole.name,
+        schema: AdminRoleSchema,
+      },
+      {
+        name: AuditLog.name,
+        schema: AuditLogSchema,
+      },
     ]),
   ],
-  controllers: [UsersAdminController],
+
+  controllers: [
+    UsersAdminController,
+  ],
+
   providers: [
     UsersAdminService,
+
     UserAdminDashboardService,
     UserDirectoryService,
     UserProfileService,
     UserAccountService,
     UserSecurityService,
+
     UserRoleService,
     UserPermissionService,
+
     UserVerificationService,
     UserPremiumService,
     FockisIdAccessService,
+
     UserActivityService,
     UserMessagesService,
     UserBookingsService,
     UserPaymentsService,
     UserReportsService,
     UserDomainActivityService,
+
     // Domain-specific user views
     UserShopService,
     UserLiveService,
@@ -67,10 +97,15 @@ import { AuditService } from '../audit/audit.service';
     UserRealEstateService,
     UserAiService,
     UserFinanceService,
+
     UserBulkService,
     UsersExportService,
+
     AuditService,
   ],
-  exports: [UsersAdminService],
+
+  exports: [
+    UsersAdminService,
+  ],
 })
 export class UsersAdminModule {}

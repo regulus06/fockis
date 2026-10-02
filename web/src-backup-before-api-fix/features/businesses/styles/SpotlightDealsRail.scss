@@ -1,0 +1,492 @@
+/* ============================================================================
+   FOCKIS BUSINESS SPOTLIGHT
+============================================================================ */
+
+.spotlight-deals-rail {
+  width: 100%;
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid rgba(255, 122, 0, 0.22);
+  border-radius: 20px;
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(255, 136, 0, 0.11),
+      transparent 35%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.98),
+      rgba(255, 247, 237, 0.96)
+    );
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.07);
+  box-sizing: border-box;
+}
+
+/* ============================================================================
+   HEADER
+============================================================================ */
+
+.spotlight-deals-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.spotlight-deals-kicker {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  opacity: 0.58;
+}
+
+.spotlight-deals-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 21px;
+  line-height: 1.2;
+}
+
+.spotlight-deals-header h3 svg {
+  flex: 0 0 auto;
+}
+
+.spotlight-deals-header p {
+  margin: 5px 0 0;
+  font-size: 13px;
+  opacity: 0.68;
+}
+
+.spotlight-deals-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.spotlight-deals-count {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.58;
+}
+
+.spotlight-deals-view-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 34px;
+  padding: 0 11px;
+  border-radius: 999px;
+  color: inherit;
+  background: rgba(255, 122, 0, 0.1);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+  transition:
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.spotlight-deals-view-all:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 122, 0, 0.18);
+}
+
+/* ============================================================================
+   DEAL LIST
+============================================================================ */
+
+.spotlight-deals-list {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(280px, 1fr)
+  );
+  gap: 13px;
+}
+
+/* ============================================================================
+   DEAL CARD
+============================================================================ */
+
+.spotlight-deal-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow:
+    0 5px 18px rgba(0, 0, 0, 0.055);
+  transition:
+    transform 170ms ease,
+    box-shadow 170ms ease,
+    border-color 170ms ease;
+}
+
+.spotlight-deal-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 122, 0, 0.25);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.09);
+}
+
+.spotlight-deal-business-link {
+  display: block;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ============================================================================
+   IMAGE
+============================================================================ */
+
+.spotlight-deal-image-wrap {
+  position: relative;
+  width: 100%;
+  height: 118px;
+  overflow: hidden;
+  background: rgba(255, 122, 0, 0.08);
+}
+
+.spotlight-deal-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.spotlight-deal-placeholder {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  font-size: 36px;
+}
+
+/* ============================================================================
+   BADGE
+============================================================================ */
+
+.spotlight-deal-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.66);
+  backdrop-filter: blur(8px);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+/* ============================================================================
+   CONTENT
+============================================================================ */
+
+.spotlight-deal-content {
+  padding: 13px;
+}
+
+.spotlight-deal-business {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.spotlight-deal-business strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.spotlight-verified {
+  display: inline-grid;
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #1877f2;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+/* ============================================================================
+   LOCATION
+============================================================================ */
+
+.spotlight-deal-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.58;
+}
+
+/* ============================================================================
+   OFFERS
+============================================================================ */
+
+.spotlight-deal-offers {
+  display: grid;
+  gap: 8px;
+  margin-top: 11px;
+}
+
+.spotlight-offer {
+  padding: 10px;
+  border: 1px solid rgba(255, 122, 0, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 122, 0, 0.055);
+}
+
+.spotlight-offer-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.spotlight-offer-tag,
+.spotlight-offer-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.spotlight-offer-tag {
+  color: #c85f00;
+}
+
+.spotlight-offer-time {
+  opacity: 0.56;
+}
+
+.spotlight-offer h4 {
+  margin: 7px 0 4px;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.spotlight-offer-discount {
+  display: inline-block;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.spotlight-offer p {
+  display: -webkit-box;
+  margin: 2px 0 7px;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  font-size: 11px;
+  line-height: 1.45;
+  opacity: 0.66;
+}
+
+.spotlight-offer-coupon {
+  display: inline-block;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.055);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* ============================================================================
+   NO DEAL STATE
+============================================================================ */
+
+.spotlight-no-deal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 13px;
+  padding: 10px;
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.035);
+  font-size: 11px;
+}
+
+.spotlight-no-deal > span:last-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 800;
+}
+
+/* ============================================================================
+   EMPTY STATE
+============================================================================ */
+
+.spotlight-deals-empty {
+  display: grid;
+  place-items: center;
+  min-height: 145px;
+  padding: 25px;
+  text-align: center;
+}
+
+.spotlight-deals-empty-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 9px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 122, 0, 0.1);
+  font-size: 25px;
+}
+
+.spotlight-deals-empty strong {
+  font-size: 14px;
+}
+
+.spotlight-deals-empty span {
+  max-width: 420px;
+  margin-top: 5px;
+  font-size: 12px;
+  line-height: 1.5;
+  opacity: 0.62;
+}
+
+/* ============================================================================
+   ERROR STATE
+============================================================================ */
+
+.spotlight-deals-error {
+  display: grid;
+  gap: 5px;
+  padding: 18px;
+  border: 1px solid rgba(220, 50, 47, 0.15);
+  border-radius: 12px;
+  background: rgba(220, 50, 47, 0.055);
+}
+
+.spotlight-deals-error strong {
+  font-size: 13px;
+}
+
+.spotlight-deals-error span {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* ============================================================================
+   LOADING STATE
+============================================================================ */
+
+.spotlight-deals-loading {
+  display: grid;
+  grid-template-columns: repeat(
+    3,
+    minmax(0, 1fr)
+  );
+  gap: 13px;
+}
+
+.spotlight-skeleton {
+  height: 210px;
+  border-radius: 16px;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.055),
+      rgba(0, 0, 0, 0.025),
+      rgba(0, 0, 0, 0.055)
+    );
+  background-size: 200% 100%;
+  animation: spotlight-skeleton-pulse 1.4s ease infinite;
+}
+
+@keyframes spotlight-skeleton-pulse {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ============================================================================
+   MOBILE
+============================================================================ */
+
+@media (max-width: 760px) {
+  .spotlight-deals-rail {
+    margin: 12px 0;
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .spotlight-deals-header {
+    align-items: flex-start;
+  }
+
+  .spotlight-deals-header-actions {
+    display: none;
+  }
+
+  .spotlight-deals-list {
+    display: flex;
+    overflow-x: auto;
+    gap: 11px;
+    padding-bottom: 5px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+  }
+
+  .spotlight-deal-card {
+    flex: 0 0 285px;
+    scroll-snap-align: start;
+  }
+
+  .spotlight-deals-loading {
+    display: flex;
+    overflow: hidden;
+  }
+
+  .spotlight-skeleton {
+    flex: 0 0 285px;
+  }
+}
+
+/* ============================================================================
+   REDUCED MOTION
+============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .spotlight-deal-card,
+  .spotlight-deals-view-all {
+    transition: none;
+  }
+
+  .spotlight-skeleton {
+    animation: none;
+  }
+}

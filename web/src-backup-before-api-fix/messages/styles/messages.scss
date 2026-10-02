@@ -1,0 +1,660 @@
+/* ============================================================================
+   FOCKIS MESSAGES — BRAND TOKENS
+============================================================================ */
+
+:root {
+  --fk-navy-900: #0b2e4f;
+  --fk-navy-700: #114a7a;
+  --fk-navy-600: #155a8a;
+
+  --fk-gold-500: #f2a93b;
+  --fk-gold-600: #e0961f;
+
+  --fk-ink: #16232f;
+  --fk-muted: #6b7c8c;
+  --fk-border: #e2e8ef;
+  --fk-canvas: #f5f8fb;
+  --fk-white: #ffffff;
+
+  --fk-radius-lg: 16px;
+  --fk-radius-md: 10px;
+
+  --fk-shadow-card:
+    0 1px 2px rgba(11, 46, 79, 0.06),
+    0 8px 24px rgba(11, 46, 79, 0.06);
+
+  --fk-font-display:
+    "Fraunces",
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  --fk-font-body:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+/* ============================================================================
+   MESSAGES PAGE
+============================================================================ */
+
+.messages-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  min-height: 0;
+
+  background: var(--fk-canvas);
+  color: var(--fk-ink);
+  font-family: var(--fk-font-body);
+}
+
+/* ============================================================================
+   TOP BAR
+============================================================================ */
+
+.messages-page__topbar {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  flex: 0 0 auto;
+
+  gap: 16px;
+  padding: 18px 24px;
+
+  overflow: hidden;
+
+  background: linear-gradient(
+    135deg,
+    var(--fk-navy-900) 0%,
+    var(--fk-navy-600) 100%
+  );
+
+  border-bottom: 3px solid var(--fk-gold-500);
+}
+
+/* ============================================================================
+   TOP BAR TITLE
+============================================================================ */
+
+.messages-page__topbar-title {
+  position: relative;
+  z-index: 2;
+
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+}
+
+.messages-page__topbar h1 {
+  position: relative;
+  z-index: 2;
+
+  margin: 0;
+
+  color: var(--fk-white);
+
+  font-family: var(--fk-font-display);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+
+  letter-spacing: 0.2px;
+}
+
+/* ============================================================================
+   FOCKIS ID BUTTON
+============================================================================ */
+
+.messages-page__fockis-id-button {
+  position: relative;
+  z-index: 5;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  gap: 9px;
+
+  min-height: 42px;
+  padding: 0 16px;
+
+  border: 1px solid rgba(242, 169, 59, 0.55);
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.1);
+
+  color: var(--fk-white);
+
+  font-family: var(--fk-font-body);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+
+  letter-spacing: 0.2px;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.messages-page__fockis-id-button:hover {
+  background: var(--fk-gold-500);
+  border-color: var(--fk-gold-500);
+  color: var(--fk-navy-900);
+
+  box-shadow:
+    0 6px 18px rgba(242, 169, 59, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+  transform: translateY(-1px);
+}
+
+.messages-page__fockis-id-button:active {
+  transform: translateY(0);
+
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.14);
+}
+
+.messages-page__fockis-id-button:focus {
+  outline: none;
+}
+
+.messages-page__fockis-id-button:focus-visible {
+  outline: none;
+
+  border-color: var(--fk-gold-500);
+
+  box-shadow:
+    0 0 0 3px rgba(242, 169, 59, 0.25),
+    0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+/* ============================================================================
+   FOCKIS ID ICON
+============================================================================ */
+
+.messages-page__fockis-id-button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 25px;
+  height: 25px;
+  flex: 0 0 25px;
+
+  border: 1px solid rgba(242, 169, 59, 0.7);
+  border-radius: 50%;
+
+  background: rgba(242, 169, 59, 0.14);
+
+  color: var(--fk-gold-500);
+
+  font-family: var(--fk-font-body);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.messages-page__fockis-id-button:hover
+  .messages-page__fockis-id-button-icon {
+  background: rgba(255, 255, 255, 0.2);
+
+  border-color: rgba(11, 46, 79, 0.25);
+
+  color: var(--fk-navy-900);
+
+  transform: rotate(8deg);
+}
+
+/* ============================================================================
+   FOCKIS ID ARROW
+============================================================================ */
+
+.messages-page__fockis-id-button::after {
+  content: "›";
+
+  margin-left: 1px;
+
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1;
+
+  opacity: 0.75;
+
+  transition:
+    transform 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.messages-page__fockis-id-button:hover::after {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+/* ============================================================================
+   TOP BAR DECORATION
+============================================================================ */
+
+.messages-page__topbar::after {
+  content: "";
+
+  position: absolute;
+
+  top: -60px;
+  right: -40px;
+
+  width: 160px;
+  height: 160px;
+
+  border: 24px solid var(--fk-gold-500);
+  border-radius: 50%;
+
+  opacity: 0.18;
+
+  pointer-events: none;
+}
+
+/* ============================================================================
+   MAIN LAYOUT
+============================================================================ */
+
+.messages-page__layout {
+  display: grid;
+
+  flex: 1 1 auto;
+
+  min-height: 0;
+
+  grid-template-columns: 320px minmax(0, 1fr);
+
+  gap: 16px;
+
+  padding: 16px;
+}
+
+.messages-page__layout.info-open {
+  grid-template-columns: 320px minmax(0, 1fr) 300px;
+}
+
+/* ============================================================================
+   SHARED CARDS
+============================================================================ */
+
+.messages-page__conversations,
+.messages-page__chat,
+.messages-page__info {
+  display: flex;
+  flex-direction: column;
+
+  min-height: 0;
+
+  overflow: hidden;
+
+  background: var(--fk-white);
+
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-radius-lg);
+
+  box-shadow: var(--fk-shadow-card);
+}
+
+/* ============================================================================
+   CONVERSATIONS
+============================================================================ */
+
+.messages-page__conversations {
+  padding: 8px;
+}
+
+/* ============================================================================
+   CHAT
+============================================================================ */
+
+.messages-page__chat {
+  min-width: 0;
+}
+
+/* ============================================================================
+   INFO
+============================================================================ */
+
+.messages-page__info {
+  min-width: 0;
+  padding: 0;
+}
+
+/* ============================================================================
+   CONVERSATION ITEMS
+============================================================================ */
+
+.messages-page__conversations .conversation-item {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 10px 12px;
+
+  border-left: 3px solid transparent;
+  border-radius: var(--fk-radius-md);
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.messages-page__conversations .conversation-item:hover {
+  background: var(--fk-canvas);
+}
+
+.messages-page__conversations .conversation-item.active {
+  background: rgba(242, 169, 59, 0.1);
+
+  border-left-color: var(--fk-gold-500);
+}
+
+/* ============================================================================
+   CONVERSATION TITLE
+============================================================================ */
+
+.messages-page__conversations .conversation-item__title {
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: var(--fk-ink);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   CONVERSATION PREVIEW
+============================================================================ */
+
+.messages-page__conversations .conversation-item__preview {
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: var(--fk-muted);
+
+  font-size: 13px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   UNREAD COUNT
+============================================================================ */
+
+.messages-page__conversations .conversation-item__unread {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 18px;
+  height: 18px;
+
+  margin-left: auto;
+  padding: 0 5px;
+
+  border-radius: 999px;
+
+  background: var(--fk-gold-500);
+
+  color: var(--fk-navy-900);
+
+  font-size: 11px;
+  font-weight: 700;
+
+  flex: 0 0 auto;
+}
+
+/* ============================================================================
+   EMPTY STATE
+============================================================================ */
+
+.empty-conversation {
+  color: var(--fk-muted);
+
+  font-family: var(--fk-font-body);
+}
+
+.empty-conversation strong {
+  color: var(--fk-ink);
+
+  font-family: var(--fk-font-display);
+
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   TABLET
+============================================================================ */
+
+@media (max-width: 860px) {
+  .messages-page__layout {
+    grid-template-columns: minmax(0, 1fr);
+
+    gap: 8px;
+
+    padding: 8px;
+  }
+
+  .messages-page__layout.info-open {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .messages-page__conversations {
+    display: none;
+  }
+
+  .messages-page__chat {
+    display: none;
+  }
+
+  .messages-page__info {
+    display: none;
+  }
+
+  .messages-page__layout.mobile-show-list
+    .messages-page__conversations {
+    display: flex;
+  }
+
+  .messages-page__layout.mobile-show-chat
+    .messages-page__chat {
+    display: flex;
+  }
+
+  .messages-page__layout.mobile-show-chat.info-open
+    .messages-page__info {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 20;
+
+    display: flex;
+
+    border-radius: 0;
+  }
+
+  .messages-page__topbar {
+    padding: 14px 16px;
+  }
+
+  .messages-page__fockis-id-button {
+    min-height: 40px;
+
+    padding: 0 14px;
+
+    font-size: 12px;
+  }
+}
+
+/* ============================================================================
+   PHONE
+============================================================================ */
+
+@media (max-width: 480px) {
+  .messages-page {
+    height: 100dvh;
+  }
+
+  .messages-page__topbar {
+    gap: 10px;
+
+    padding: 12px 14px;
+  }
+
+  .messages-page__topbar h1 {
+    font-size: 18px;
+  }
+
+  .messages-page__fockis-id-button {
+    width: 40px;
+    min-width: 40px;
+
+    height: 40px;
+    min-height: 40px;
+
+    padding: 0;
+
+    border-radius: 50%;
+
+    gap: 0;
+  }
+
+  .messages-page__fockis-id-button > span:not(
+    .messages-page__fockis-id-button-icon
+  ) {
+    display: none;
+  }
+
+  .messages-page__fockis-id-button::after {
+    display: none;
+  }
+
+  .messages-page__fockis-id-button-icon {
+    width: 26px;
+    height: 26px;
+
+    flex-basis: 26px;
+
+    font-size: 14px;
+  }
+
+  .messages-page__topbar::after {
+    top: -55px;
+    right: -50px;
+
+    width: 130px;
+    height: 130px;
+
+    border-width: 20px;
+  }
+
+  .messages-page__layout {
+    gap: 6px;
+
+    padding: 6px;
+  }
+}
+
+/* ============================================================================
+   VERY SMALL PHONES
+============================================================================ */
+
+@media (max-width: 360px) {
+  .messages-page__topbar {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .messages-page__topbar h1 {
+    font-size: 17px;
+  }
+
+  .messages-page__fockis-id-button {
+    width: 38px;
+    min-width: 38px;
+
+    height: 38px;
+    min-height: 38px;
+  }
+
+  .messages-page__fockis-id-button-icon {
+    width: 24px;
+    height: 24px;
+
+    flex-basis: 24px;
+
+    font-size: 13px;
+  }
+}
+
+/* ============================================================================
+   REDUCED MOTION
+============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .messages-page__conversations .conversation-item,
+  .messages-page__fockis-id-button,
+  .messages-page__fockis-id-button-icon,
+  .messages-page__fockis-id-button::after {
+    transition: none;
+  }
+
+  .messages-page__fockis-id-button:hover {
+    transform: none;
+  }
+
+  .messages-page__fockis-id-button:hover
+    .messages-page__fockis-id-button-icon {
+    transform: none;
+  }
+
+  .messages-page__fockis-id-button:hover::after {
+    transform: none;
+  }
+}

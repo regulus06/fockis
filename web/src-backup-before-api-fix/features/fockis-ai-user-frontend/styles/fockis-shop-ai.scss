@@ -1,0 +1,272 @@
+.fockis-shop-ai {
+  margin: 10px 0 18px;
+  padding: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.07);
+}
+
+.fockis-shop-ai__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.fockis-shop-ai__eyebrow {
+  display: block;
+  margin-bottom: 3px;
+  color: #2563eb;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.fockis-shop-ai h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 17px;
+  line-height: 1.2;
+}
+
+.fockis-shop-ai__all {
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.fockis-shop-ai__section + .fockis-shop-ai__section {
+  margin-top: 18px;
+}
+
+.fockis-shop-ai__section-title {
+  margin-bottom: 9px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.fockis-shop-ai__products {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.fockis-shop-ai__product {
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 15px;
+  background: #fff;
+}
+
+.fockis-shop-ai__image {
+  display: flex;
+  flex: 0 0 104px;
+  width: 104px;
+  min-height: 142px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #eef4ff;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.fockis-shop-ai__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fockis-shop-ai__product-body {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  padding: 11px;
+}
+
+.fockis-shop-ai__product-name {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-decoration: none;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.fockis-shop-ai__muted {
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.fockis-shop-ai__price {
+  margin-top: 7px;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.fockis-shop-ai__meta {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 10px;
+}
+
+.fockis-shop-ai__meta a {
+  overflow: hidden;
+  color: #2563eb;
+  text-overflow: ellipsis;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.fockis-shop-ai__stock,
+.fockis-shop-ai__out {
+  font-weight: 700;
+}
+
+.fockis-shop-ai__stock {
+  color: #15803d;
+}
+
+.fockis-shop-ai__out {
+  color: #b91c1c;
+}
+
+.fockis-shop-ai__button {
+  margin-top: auto;
+  padding-top: 9px;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.fockis-shop-ai__stores {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.fockis-shop-ai__store {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 13px;
+  background: #fff;
+  color: #0f172a;
+  text-decoration: none;
+}
+
+.fockis-shop-ai__store-logo {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 11px;
+  background: #eef4ff;
+  font-size: 18px;
+}
+
+.fockis-shop-ai__store-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fockis-shop-ai__store > span:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+}
+
+.fockis-shop-ai__store strong,
+.fockis-shop-ai__store small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fockis-shop-ai__store strong {
+  font-size: 13px;
+}
+
+.fockis-shop-ai__store small {
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 10px;
+}
+
+.fockis-shop-ai__arrow {
+  color: #2563eb;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.fockis-shop-ai__loading {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+}
+
+.fockis-shop-ai__loading span {
+  height: 92px;
+  border-radius: 14px;
+  background: linear-gradient(
+    90deg,
+    #eef2f7 20%,
+    #f8fafc 45%,
+    #eef2f7 70%
+  );
+  background-size: 220% 100%;
+  animation: fockis-shop-ai-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes fockis-shop-ai-pulse {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .fockis-shop-ai__products,
+  .fockis-shop-ai__stores {
+    grid-template-columns: 1fr;
+  }
+
+  .fockis-shop-ai__product {
+    min-height: 128px;
+  }
+
+  .fockis-shop-ai__image {
+    flex-basis: 92px;
+    width: 92px;
+    min-height: 128px;
+  }
+}

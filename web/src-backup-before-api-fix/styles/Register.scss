@@ -1,0 +1,1035 @@
+@use "sass:color";
+
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap");
+
+$navy-950: #0a1730;
+$navy-900: #0f2247;
+$navy-800: #163262;
+$blue-600: #2f5aa8;
+
+$off-white: #f7f5f0;
+$paper: #fbfaf7;
+
+$gold: #d99a3c;
+$gold-light: #f0c47f;
+
+$gray-500: #7a8394;
+$gray-300: #c7cdd8;
+$gray-100: #e7e9ee;
+
+$ink: #16223f;
+$white: #ffffff;
+
+$radius-sm: 8px;
+$radius-md: 10px;
+
+$font-display: "Fraunces", serif;
+$font-body: "Inter", sans-serif;
+
+.register-page {
+  display: grid;
+  grid-template-columns: 55fr 45fr;
+  min-height: 100vh;
+
+  font-family: $font-body;
+  color: $ink;
+
+  * {
+    box-sizing: border-box;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  // ============================================================
+  // LEFT — BRAND PANEL
+  // ============================================================
+
+  .auth-panel {
+    position: relative;
+
+    background:
+      radial-gradient(
+        circle at 18% 12%,
+        rgba(217, 154, 60, 0.1),
+        transparent 40%
+      ),
+      linear-gradient(
+        165deg,
+        $navy-950 0%,
+        $navy-900 55%,
+        $navy-800 100%
+      );
+
+    color: $off-white;
+
+    padding: 4.2rem 4.5rem 3rem;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    &::before {
+      content: "";
+
+      position: absolute;
+      inset: 0;
+
+      background-image:
+        linear-gradient(
+          rgba(255, 255, 255, 0.035) 1px,
+          transparent 1px
+        ),
+        linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.035) 1px,
+          transparent 1px
+        );
+
+      background-size: 64px 64px;
+
+      mask-image: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.9),
+        rgba(0, 0, 0, 0.15) 75%
+      );
+
+      pointer-events: none;
+    }
+
+    &__top {
+      position: relative;
+      z-index: 2;
+    }
+
+    &__hero {
+      position: relative;
+      z-index: 2;
+
+      margin-top: 3.4rem;
+      max-width: 30rem;
+
+      h1 {
+        font-family: $font-display;
+        font-weight: 600;
+
+        font-size: clamp(
+          2.1rem,
+          3.1vw,
+          2.85rem
+        );
+
+        line-height: 1.12;
+
+        margin: 0 0 1.1rem;
+
+        letter-spacing: -0.01em;
+      }
+    }
+
+    &__eyebrow {
+      font-size: 1.02rem;
+      font-weight: 500;
+
+      color: $gold-light;
+
+      letter-spacing: 0.03em;
+
+      margin: 0 0 1.15rem;
+    }
+
+    &__body {
+      font-size: 0.98rem;
+      line-height: 1.6;
+
+      color: rgba(247, 245, 240, 0.72);
+
+      margin: 0;
+    }
+  }
+
+  // ============================================================
+  // WORDMARK
+  // ============================================================
+
+  .wordmark {
+    font-family: $font-display;
+
+    &__brand {
+      font-size: 1.55rem;
+      font-weight: 600;
+
+      letter-spacing: 0.04em;
+    }
+  }
+
+  // ============================================================
+  // ECOSYSTEM
+  // ============================================================
+
+  .ecosystem {
+    position: relative;
+    z-index: 2;
+
+    margin-top: auto;
+    padding-top: 3.2rem;
+
+    &__label {
+      font-size: 0.72rem;
+      font-weight: 700;
+
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+
+      color: rgba(247, 245, 240, 0.45);
+
+      margin-bottom: 1.3rem;
+    }
+  }
+
+  .constellation {
+    position: relative;
+
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 0.6rem;
+
+    &::before {
+      content: "";
+
+      position: absolute;
+
+      left: 4%;
+      right: 4%;
+      top: 22px;
+
+      height: 1px;
+
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.16) 12%,
+        rgba(255, 255, 255, 0.16) 88%,
+        transparent
+      );
+    }
+  }
+
+  .node {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 0.65rem;
+
+    width: 18%;
+
+    text-align: center;
+
+    &__dot {
+      width: 44px;
+      height: 44px;
+
+      border-radius: 50%;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: rgba(255, 255, 255, 0.045);
+
+      border: 1px solid rgba(255, 255, 255, 0.14);
+
+      color: rgba(247, 245, 240, 0.75);
+
+      transition:
+        border-color 0.2s ease,
+        color 0.2s ease,
+        background 0.2s ease;
+
+      svg {
+        width: 19px;
+        height: 19px;
+      }
+    }
+
+    &__label {
+      font-size: 0.74rem;
+      font-weight: 600;
+
+      letter-spacing: 0.03em;
+
+      color: rgba(247, 245, 240, 0.55);
+    }
+
+    &:hover {
+      .node__dot {
+        border-color: rgba(240, 196, 127, 0.55);
+
+        color: $gold-light;
+
+        background: rgba(255, 255, 255, 0.07);
+      }
+    }
+  }
+
+  // ============================================================
+  // TRUST NOTE
+  // ============================================================
+
+  .trust-note {
+    position: relative;
+    z-index: 2;
+
+    margin-top: 2.6rem;
+    padding-top: 1.6rem;
+
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+    strong {
+      display: block;
+
+      font-size: 0.86rem;
+      font-weight: 700;
+
+      color: $off-white;
+
+      margin-bottom: 0.35rem;
+    }
+
+    span {
+      font-size: 0.82rem;
+      line-height: 1.55;
+
+      color: rgba(247, 245, 240, 0.55);
+    }
+  }
+
+  // ============================================================
+  // RIGHT — FORM PANEL
+  // ============================================================
+
+  .form-panel {
+    background: $paper;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 3rem;
+
+    &__wrap {
+      width: 100%;
+      max-width: 26rem;
+    }
+  }
+
+  // ============================================================
+  // FORM HEADER
+  // ============================================================
+
+  .form-header {
+    margin-bottom: 1.7rem;
+
+    h2 {
+      font-family: $font-display;
+
+      font-size: 1.85rem;
+      font-weight: 600;
+
+      margin: 0 0 0.3rem;
+
+      color: $navy-950;
+    }
+
+    &__sub {
+      font-size: 0.95rem;
+      font-weight: 600;
+
+      color: $blue-600;
+
+      margin: 0 0 0.55rem;
+    }
+
+    &__body {
+      font-size: 0.87rem;
+
+      color: $gray-500;
+
+      line-height: 1.5;
+
+      margin: 0;
+    }
+  }
+
+  // ============================================================
+  // FIELD ROW
+  // ============================================================
+
+  .field-row {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 0.9rem;
+  }
+
+  // ============================================================
+  // FIELD
+  // ============================================================
+
+  .field {
+    margin-bottom: 1.05rem;
+
+    label {
+      display: block;
+
+      font-size: 0.8rem;
+      font-weight: 700;
+
+      color: $ink;
+
+      margin-bottom: 0.4rem;
+
+      letter-spacing: 0.01em;
+    }
+  }
+
+  // ============================================================
+  // STANDARD INPUT SHELL
+  // ============================================================
+
+  .input-shell {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    border: 1.5px solid $gray-300;
+
+    border-radius: $radius-sm;
+
+    background: $white;
+
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+
+    &:focus-within {
+      border-color: $blue-600;
+
+      box-shadow:
+        0 0 0 3.5px rgba(47, 90, 168, 0.13);
+    }
+
+    &__icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      width: 2.6rem;
+
+      color: $gray-500;
+
+      flex-shrink: 0;
+
+      svg {
+        width: 17px;
+        height: 17px;
+      }
+    }
+
+    input {
+      flex: 1;
+
+      min-width: 0;
+
+      border: none;
+      outline: none;
+
+      background: transparent;
+
+      font-family: $font-body;
+
+      font-size: 0.93rem;
+
+      color: $ink;
+
+      padding: 0.78rem 0.7rem;
+
+      &::placeholder {
+        color: $gray-300;
+      }
+
+      &:disabled {
+        opacity: 0.65;
+      }
+    }
+
+    &--plain {
+      input {
+        padding-left: 0.9rem;
+      }
+    }
+  }
+
+  // ============================================================
+  // PASSWORD VISIBILITY BUTTON
+  // ============================================================
+
+  .toggle-visibility {
+    background: none;
+    border: none;
+
+    cursor: pointer;
+
+    width: 2.6rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: $gray-500;
+
+    font-family: inherit;
+
+    flex-shrink: 0;
+
+    padding: 0;
+
+    &:hover {
+      color: $blue-600;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $blue-600;
+
+      outline-offset: -2px;
+
+      border-radius: 6px;
+    }
+
+    svg {
+      width: 17px;
+      height: 17px;
+    }
+  }
+
+  // ============================================================
+  // COUNTRY SEARCH
+  // ============================================================
+
+  .country-search {
+    margin-bottom: 0.55rem;
+
+    position: relative;
+
+    .input-shell {
+      width: 100%;
+    }
+
+    .input-shell__icon {
+      width: 2.7rem;
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    input {
+      padding-right: 2.7rem;
+    }
+
+    &__clear {
+      position: absolute;
+
+      right: 0.45rem;
+      top: 50%;
+
+      transform: translateY(-50%);
+
+      width: 30px;
+      height: 30px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border: none;
+
+      border-radius: 50%;
+
+      background: transparent;
+
+      color: $gray-500;
+
+      cursor: pointer;
+
+      font-size: 1.1rem;
+      line-height: 1;
+
+      transition:
+        background 0.15s ease,
+        color 0.15s ease;
+
+      &:hover {
+        background: $gray-100;
+        color: $ink;
+      }
+
+      &:focus-visible {
+        outline: 2px solid $blue-600;
+        outline-offset: 1px;
+      }
+    }
+  }
+
+  // ============================================================
+  // COUNTRY SEARCH RESULT COUNT
+  // ============================================================
+
+  .country-search-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    min-height: 1.2rem;
+
+    margin: 0.3rem 0 0.4rem;
+
+    font-size: 0.72rem;
+
+    color: $gray-500;
+
+    &__count {
+      font-weight: 600;
+    }
+
+    &__hint {
+      color: $gray-500;
+      opacity: 0.75;
+    }
+  }
+
+  // ============================================================
+  // COUNTRY SELECT
+  // ============================================================
+
+  .country-select-shell {
+    position: relative;
+
+    .country-select {
+      width: 100%;
+
+      appearance: none;
+      -webkit-appearance: none;
+
+      border: 1.5px solid $gray-300;
+
+      border-radius: $radius-sm;
+
+      background-color: $white;
+
+      color: $ink;
+
+      font-family: $font-body;
+
+      font-size: 0.93rem;
+      font-weight: 500;
+
+      padding: 0.78rem 2.8rem 0.78rem 0.9rem;
+
+      outline: none;
+
+      cursor: pointer;
+
+      transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        background 0.15s ease;
+
+      &:hover:not(:disabled) {
+        border-color: color.adjust(
+          $gray-300,
+          $lightness: -8%
+        );
+      }
+
+      &:focus {
+        border-color: $blue-600;
+
+        box-shadow:
+          0 0 0 3.5px rgba(47, 90, 168, 0.13);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+
+        cursor: not-allowed;
+
+        background: $gray-100;
+      }
+
+      option {
+        font-family: $font-body;
+
+        color: $ink;
+
+        background: $white;
+      }
+    }
+
+    &::after {
+      content: "";
+
+      position: absolute;
+
+      right: 1rem;
+      top: 50%;
+
+      width: 7px;
+      height: 7px;
+
+      border-right: 1.5px solid $gray-500;
+      border-bottom: 1.5px solid $gray-500;
+
+      transform:
+        translateY(-65%)
+        rotate(45deg);
+
+      pointer-events: none;
+    }
+  }
+
+  // ============================================================
+  // COUNTRY CALLING CODE PREVIEW
+  // ============================================================
+
+  .country-calling-code {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    min-height: 2.2rem;
+
+    margin-top: 0.5rem;
+
+    padding: 0.45rem 0.7rem;
+
+    border-radius: 6px;
+
+    background: rgba(47, 90, 168, 0.055);
+
+    border: 1px solid rgba(47, 90, 168, 0.1);
+
+    font-size: 0.76rem;
+
+    &__label {
+      color: $gray-500;
+      font-weight: 500;
+    }
+
+    &__value {
+      color: $blue-600;
+      font-weight: 700;
+    }
+  }
+
+  // ============================================================
+  // COUNTRY EMPTY STATE
+  // ============================================================
+
+  .country-empty {
+    padding: 0.7rem 0.8rem;
+
+    margin-top: 0.4rem;
+
+    border-radius: $radius-sm;
+
+    background: $gray-100;
+
+    color: $gray-500;
+
+    font-size: 0.78rem;
+
+    text-align: center;
+  }
+
+  // ============================================================
+  // PRIMARY BUTTON
+  // ============================================================
+
+  .btn-primary {
+    width: 100%;
+
+    background:
+      linear-gradient(
+        135deg,
+        $navy-900,
+        $blue-600
+      );
+
+    color: $white;
+
+    border: none;
+
+    border-radius: $radius-sm;
+
+    padding: 0.92rem 1rem;
+
+    font-family: $font-body;
+
+    font-size: 0.95rem;
+    font-weight: 700;
+
+    letter-spacing: 0.01em;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 0.55rem;
+
+    margin-top: 0.4rem;
+
+    transition:
+      filter 0.15s ease,
+      transform 0.1s ease,
+      box-shadow 0.15s ease;
+
+    box-shadow:
+      0 6px 18px rgba(15, 34, 71, 0.22);
+
+    &:hover:not(:disabled) {
+      filter: brightness(1.08);
+
+      box-shadow:
+        0 8px 22px rgba(15, 34, 71, 0.27);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    &:focus-visible {
+      outline: 3px solid $gold;
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .spinner {
+      display: none;
+    }
+
+    .loading-label {
+      display: none;
+    }
+
+    &.is-loading {
+      .btn-label {
+        display: none;
+      }
+
+      .spinner {
+        display: inline-block;
+
+        width: 15px;
+        height: 15px;
+
+        border-radius: 50%;
+
+        border:
+          2px solid rgba(255, 255, 255, 0.35);
+
+        border-top-color: $white;
+
+        animation:
+          fockis-spin 0.7s linear infinite;
+      }
+
+      .loading-label {
+        display: inline;
+      }
+    }
+  }
+
+  // ============================================================
+  // SPINNER
+  // ============================================================
+
+  @keyframes fockis-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  // ============================================================
+  // LOGIN LINK
+  // ============================================================
+
+  .login-link {
+    text-align: center;
+
+    margin-top: 1.3rem;
+
+    font-size: 0.87rem;
+
+    color: $gray-500;
+
+    a {
+      font-weight: 700;
+
+      color: $blue-600;
+
+      &:hover {
+        text-decoration: underline;
+      }
+
+      &:focus-visible {
+        outline: 2px solid $blue-600;
+
+        outline-offset: 2px;
+
+        border-radius: 3px;
+      }
+    }
+  }
+
+  // ============================================================
+  // RESPONSIVE — TABLET
+  // ============================================================
+
+  @media (max-width: 980px) {
+    grid-template-columns: 1fr;
+
+    .auth-panel {
+      padding: 2.6rem 2rem 2.2rem;
+    }
+
+    .ecosystem {
+      padding-top: 2.2rem;
+    }
+
+    .auth-panel__hero {
+      margin-top: 2rem;
+    }
+
+    .form-panel {
+      padding: 2.6rem 2rem 3rem;
+    }
+
+    .form-panel__wrap {
+      max-width: 32rem;
+    }
+  }
+
+  // ============================================================
+  // RESPONSIVE — MOBILE
+  // ============================================================
+
+  @media (max-width: 620px) {
+    .auth-panel {
+      order: 1;
+
+      padding: 2.2rem 1.4rem 1.8rem;
+    }
+
+    .form-panel {
+      order: 2;
+
+      padding: 2.2rem 1.3rem 2.6rem;
+    }
+
+    .auth-panel__hero {
+      margin-top: 1.7rem;
+
+      h1 {
+        font-size: 1.7rem;
+      }
+    }
+
+    .auth-panel__body {
+      font-size: 0.9rem;
+    }
+
+    .constellation {
+      flex-wrap: wrap;
+
+      row-gap: 1.4rem;
+
+      &::before {
+        display: none;
+      }
+    }
+
+    .node {
+      width: 30%;
+    }
+
+    .field-row {
+      grid-template-columns: 1fr;
+    }
+
+    .form-header {
+      margin-bottom: 1.4rem;
+
+      h2 {
+        font-size: 1.65rem;
+      }
+    }
+
+    .country-search-meta {
+      .country-search-meta__hint {
+        display: none;
+      }
+    }
+  }
+
+  // ============================================================
+  // VERY SMALL PHONES
+  // ============================================================
+
+  @media (max-width: 380px) {
+    .auth-panel {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+
+    .form-panel {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+
+    .node__dot {
+      width: 38px;
+      height: 38px;
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .node__label {
+      font-size: 0.68rem;
+    }
+
+    .country-select {
+      font-size: 0.88rem;
+    }
+  }
+}

@@ -5,7 +5,7 @@ import {
   IsString,
   MaxLength,
   MinLength,
-} from 'class-validator';
+} from "class-validator";
 
 export class CreateAdminRoleDto {
   @IsString()
@@ -13,10 +13,17 @@ export class CreateAdminRoleDto {
   @MaxLength(100)
   name!: string;
 
+  /**
+   * Optional.
+   *
+   * If omitted, the backend generates the slug
+   * from the role name.
+   */
+  @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(100)
-  slug!: string;
+  slug?: string;
 
   @IsOptional()
   @IsString()

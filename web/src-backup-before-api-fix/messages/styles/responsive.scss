@@ -1,0 +1,39 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+@include m.tablet {
+  .messages-page__layout {
+    grid-template-columns: 300px 1fr;
+
+    &.info-open {
+      grid-template-columns: 300px 1fr;
+    }
+  }
+
+  .messages-page__info {
+    position: fixed;
+    inset: 0 0 0 auto;
+    width: v.$panel-info-width;
+    z-index: v.$z-modal;
+    box-shadow: v.$shadow-lg;
+  }
+}
+
+@include m.desktop {
+  .messages-page__layout {
+    grid-template-columns: v.$panel-conversations-width 1fr;
+
+    &.info-open {
+      grid-template-columns: v.$panel-conversations-width 1fr v.$panel-info-width;
+    }
+  }
+}
+
+@include m.reduced-motion {
+  .messages-page *,
+  .floating-chat-root * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

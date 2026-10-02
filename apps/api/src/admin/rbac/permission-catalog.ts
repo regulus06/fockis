@@ -11,57 +11,283 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
   // ============================================================
 
   {
-    key: 'administrators.view',
-    label: 'View Administrators',
-    description: 'View Fockis administrators.',
-    module: 'administration',
+    key: "administrators.view",
+    label: "View Administrators",
+    description: "View Fockis administrators.",
+    module: "administration",
   },
   {
-    key: 'administrators.create',
-    label: 'Create Administrators',
-    description: 'Create new administrators.',
-    module: 'administration',
+    key: "administrators.create",
+    label: "Create Administrators",
+    description: "Create new administrators.",
+    module: "administration",
   },
   {
-    key: 'administrators.update',
-    label: 'Update Administrators',
-    description: 'Update administrator accounts.',
-    module: 'administration',
+    key: "administrators.update",
+    label: "Update Administrators",
+    description: "Update administrator accounts.",
+    module: "administration",
   },
   {
-    key: 'administrators.delete',
-    label: 'Delete Administrators',
-    description: 'Delete administrator accounts.',
-    module: 'administration',
+    key: "administrators.delete",
+    label: "Delete Administrators",
+    description: "Delete administrator accounts.",
+    module: "administration",
   },
   {
-    key: 'administrators.roles.manage',
-    label: 'Manage Administrator Roles',
-    description: 'Assign and change administrator roles.',
-    module: 'administration',
+    key: "administrators.roles.manage",
+    label: "Manage Administrator Roles",
+    description:
+      "Assign and change administrator roles.",
+    module: "administration",
   },
 
   // ============================================================
-  // USERS
+  // USERS — GENERAL
   // ============================================================
 
   {
-    key: 'users.view',
-    label: 'View Users',
-    description: 'View platform users.',
-    module: 'users',
+    key: "users.view",
+    label: "View Users",
+    description:
+      "View the platform user administration list.",
+    module: "users",
   },
   {
-    key: 'users.manage',
-    label: 'Manage Users',
-    description: 'Manage platform user accounts.',
-    module: 'users',
+    key: "users.details.view",
+    label: "View User Details",
+    description:
+      "View detailed administrative information about users.",
+    module: "users",
   },
   {
-    key: 'users.delete',
-    label: 'Delete Users',
-    description: 'Delete platform users.',
-    module: 'users',
+    key: "users.manage",
+    label: "Manage Users",
+    description:
+      "Perform general user administration actions.",
+    module: "users",
+  },
+  {
+    key: "users.delete",
+    label: "Delete Users",
+    description:
+      "Delete platform users.",
+    module: "users",
+  },
+  {
+    key: "users.export",
+    label: "Export Users",
+    description:
+      "Export authorized user administration data.",
+    module: "users",
+  },
+  {
+    key: "users.bulk.manage",
+    label: "Manage Bulk User Actions",
+    description:
+      "Perform bulk administrative actions on users.",
+    module: "users",
+  },
+
+  // ============================================================
+  // USERS — PROFILE
+  // ============================================================
+
+  {
+    key: "users.profile.manage",
+    label: "Manage User Profiles",
+    description:
+      "Update authorized user profile information.",
+    module: "users",
+  },
+
+  // ============================================================
+  // USERS — ACCOUNT STATUS
+  // ============================================================
+
+  {
+    key: "users.status.manage",
+    label: "Manage User Status",
+    description:
+      "Change user account status.",
+    module: "users",
+  },
+  {
+    key: "users.lock",
+    label: "Lock User Accounts",
+    description:
+      "Temporarily lock user accounts.",
+    module: "users",
+  },
+  {
+    key: "users.unlock",
+    label: "Unlock User Accounts",
+    description:
+      "Unlock user accounts.",
+    module: "users",
+  },
+
+  // ============================================================
+  // USERS — ROLES
+  // ============================================================
+
+  {
+    key: "users.roles.manage",
+    label: "Manage User Roles",
+    description:
+      "Assign or change user system and custom administrative roles.",
+    module: "users",
+  },
+
+  // ============================================================
+  // USERS — PERMISSIONS
+  // ============================================================
+
+  {
+    key: "users.permissions.manage",
+    label: "Manage User Permissions",
+    description:
+      "Assign or remove direct permissions from users.",
+    module: "users",
+  },
+
+  // ============================================================
+  // USERS — VERIFICATION
+  // ============================================================
+
+  {
+    key: "users.verification.manage",
+    label: "Manage User Verification",
+    description:
+      "Manage user verification status.",
+    module: "users",
+  },
+
+  // ============================================================
+  // USERS — PREMIUM
+  // ============================================================
+
+  {
+    key: "users.premium.manage",
+    label: "Manage User Premium",
+    description:
+      "Manage user premium and subscription status.",
+    module: "users",
+  },
+
+  // ============================================================
+  // USERS — FOCKIS ID
+  // ============================================================
+
+  {
+    key: "users.fockis_id.manage",
+    label: "Manage Fockis ID Access",
+    description:
+      "Manage Fockis ID access for users.",
+    module: "users",
+  },
+
+  // ============================================================
+  // USERS — PASSWORD SECURITY
+  // ============================================================
+
+  {
+    key: "users.force_password_change",
+    label: "Force Password Change",
+    description:
+      "Force a user to change their password.",
+    module: "users",
+  },
+  {
+    key: "users.reset_password",
+    label: "Reset User Password",
+    description:
+      "Reset a user's password through administration.",
+    module: "users",
+  },
+
+  // ============================================================
+  // USERS — ACTIVITY
+  // ============================================================
+
+  {
+    key: "users.activity.view",
+    label: "View User Activity",
+    description:
+      "View administrative user activity information.",
+    module: "users",
+  },
+
+  // ============================================================
+  // USERS — MESSAGES
+  // ============================================================
+
+  {
+    key: "users.messages.view",
+    label: "View User Messages",
+    description:
+      "View authorized user messaging information.",
+    module: "users",
+  },
+
+  // ============================================================
+  // USERS — BOOKINGS
+  // ============================================================
+
+  {
+    key: "users.bookings.view",
+    label: "View User Bookings",
+    description:
+      "View authorized user booking information.",
+    module: "users",
+  },
+
+  // ============================================================
+  // USERS — PAYMENTS
+  // ============================================================
+
+  {
+    key: "users.payments.view",
+    label: "View User Payments",
+    description:
+      "View authorized user payment information.",
+    module: "users",
+  },
+
+  // ============================================================
+  // USERS — REPORTS
+  // ============================================================
+
+  {
+    key: "users.reports.view",
+    label: "View User Reports",
+    description:
+      "View reports associated with users.",
+    module: "users",
+  },
+
+  // ============================================================
+  // USERS — SECURITY
+  // ============================================================
+
+  {
+    key: "users.security.view",
+    label: "View User Security",
+    description:
+      "View authorized user security information.",
+    module: "users",
+  },
+
+  // ============================================================
+  // USERS — DOMAINS
+  // ============================================================
+
+  {
+    key: "users.domains.view",
+    label: "View User Domains",
+    description:
+      "View authorized domain information associated with users.",
+    module: "users",
   },
 
   // ============================================================
@@ -69,52 +295,60 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
   // ============================================================
 
   {
-    key: 'marketplace.view',
-    label: 'View Marketplace',
-    description: 'View marketplace administration.',
-    module: 'marketplace',
+    key: "marketplace.view",
+    label: "View Marketplace",
+    description:
+      "View marketplace administration.",
+    module: "marketplace",
   },
   {
-    key: 'marketplace.products.view',
-    label: 'View Products',
-    description: 'View marketplace products.',
-    module: 'marketplace',
+    key: "marketplace.products.view",
+    label: "View Products",
+    description:
+      "View marketplace products.",
+    module: "marketplace",
   },
   {
-    key: 'marketplace.products.manage',
-    label: 'Manage Products',
-    description: 'Create, edit, suspend and manage products.',
-    module: 'marketplace',
+    key: "marketplace.products.manage",
+    label: "Manage Products",
+    description:
+      "Create, edit, suspend and manage products.",
+    module: "marketplace",
   },
   {
-    key: 'marketplace.orders.view',
-    label: 'View Orders',
-    description: 'View marketplace orders.',
-    module: 'marketplace',
+    key: "marketplace.orders.view",
+    label: "View Orders",
+    description:
+      "View marketplace orders.",
+    module: "marketplace",
   },
   {
-    key: 'marketplace.orders.manage',
-    label: 'Manage Orders',
-    description: 'Manage marketplace orders.',
-    module: 'marketplace',
+    key: "marketplace.orders.manage",
+    label: "Manage Orders",
+    description:
+      "Manage marketplace orders.",
+    module: "marketplace",
   },
   {
-    key: 'marketplace.sellers.view',
-    label: 'View Sellers',
-    description: 'View marketplace sellers.',
-    module: 'marketplace',
+    key: "marketplace.sellers.view",
+    label: "View Sellers",
+    description:
+      "View marketplace sellers.",
+    module: "marketplace",
   },
   {
-    key: 'marketplace.sellers.manage',
-    label: 'Manage Sellers',
-    description: 'Manage marketplace sellers.',
-    module: 'marketplace',
+    key: "marketplace.sellers.manage",
+    label: "Manage Sellers",
+    description:
+      "Manage marketplace sellers.",
+    module: "marketplace",
   },
   {
-    key: 'marketplace.reviews.manage',
-    label: 'Manage Reviews',
-    description: 'Review and moderate marketplace reviews.',
-    module: 'marketplace',
+    key: "marketplace.reviews.manage",
+    label: "Manage Reviews",
+    description:
+      "Review and moderate marketplace reviews.",
+    module: "marketplace",
   },
 
   // ============================================================
@@ -122,22 +356,25 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
   // ============================================================
 
   {
-    key: 'finance.view',
-    label: 'View Finance',
-    description: 'View financial information.',
-    module: 'finance',
+    key: "finance.view",
+    label: "View Finance",
+    description:
+      "View financial information.",
+    module: "finance",
   },
   {
-    key: 'finance.payouts.manage',
-    label: 'Manage Payouts',
-    description: 'Manage platform payouts.',
-    module: 'finance',
+    key: "finance.payouts.manage",
+    label: "Manage Payouts",
+    description:
+      "Manage platform payouts.",
+    module: "finance",
   },
   {
-    key: 'finance.subscriptions.view',
-    label: 'View Subscriptions',
-    description: 'View subscription revenue and accounts.',
-    module: 'finance',
+    key: "finance.subscriptions.view",
+    label: "View Subscriptions",
+    description:
+      "View subscription revenue and accounts.",
+    module: "finance",
   },
 
   // ============================================================
@@ -145,16 +382,18 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
   // ============================================================
 
   {
-    key: 'marketing.view',
-    label: 'View Marketing',
-    description: 'View marketing administration.',
-    module: 'marketing',
+    key: "marketing.view",
+    label: "View Marketing",
+    description:
+      "View marketing administration.",
+    module: "marketing",
   },
   {
-    key: 'marketing.manage',
-    label: 'Manage Marketing',
-    description: 'Manage campaigns and advertising.',
-    module: 'marketing',
+    key: "marketing.manage",
+    label: "Manage Marketing",
+    description:
+      "Manage campaigns and advertising.",
+    module: "marketing",
   },
 
   // ============================================================
@@ -162,16 +401,18 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
   // ============================================================
 
   {
-    key: 'ai.view',
-    label: 'View AI',
-    description: 'View Fockis AI administration.',
-    module: 'ai',
+    key: "ai.view",
+    label: "View AI",
+    description:
+      "View Fockis AI administration.",
+    module: "ai",
   },
   {
-    key: 'ai.manage',
-    label: 'Manage AI',
-    description: 'Manage AI and Vapi configuration.',
-    module: 'ai',
+    key: "ai.manage",
+    label: "Manage AI",
+    description:
+      "Manage AI and Vapi configuration.",
+    module: "ai",
   },
 
   // ============================================================
@@ -179,22 +420,25 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
   // ============================================================
 
   {
-    key: 'music.view',
-    label: 'View Music',
-    description: 'View music administration.',
-    module: 'music',
+    key: "music.view",
+    label: "View Music",
+    description:
+      "View music administration.",
+    module: "music",
   },
   {
-    key: 'music.rules.manage',
-    label: 'Manage Music Rules',
-    description: 'Manage music platform rules.',
-    module: 'music',
+    key: "music.rules.manage",
+    label: "Manage Music Rules",
+    description:
+      "Manage music platform rules.",
+    module: "music",
   },
   {
-    key: 'music.creators.manage',
-    label: 'Manage Creator Applications',
-    description: 'Review music creator applications.',
-    module: 'music',
+    key: "music.creators.manage",
+    label: "Manage Creator Applications",
+    description:
+      "Review music creator applications.",
+    module: "music",
   },
 
   // ============================================================
@@ -202,16 +446,18 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
   // ============================================================
 
   {
-    key: 'travel.view',
-    label: 'View Travel',
-    description: 'View Fockis Travel administration.',
-    module: 'travel',
+    key: "travel.view",
+    label: "View Travel",
+    description:
+      "View Fockis Travel administration.",
+    module: "travel",
   },
   {
-    key: 'travel.manage',
-    label: 'Manage Travel',
-    description: 'Manage travel operations.',
-    module: 'travel',
+    key: "travel.manage",
+    label: "Manage Travel",
+    description:
+      "Manage travel operations.",
+    module: "travel",
   },
 
   // ============================================================
@@ -219,46 +465,53 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
   // ============================================================
 
   {
-    key: 'messages.manage',
-    label: 'Manage Messages',
-    description: 'Manage platform messaging.',
-    module: 'platform',
+    key: "messages.manage",
+    label: "Manage Messages",
+    description:
+      "Manage platform messaging.",
+    module: "platform",
   },
   {
-    key: 'live.manage',
-    label: 'Manage Live',
-    description: 'Manage live streaming.',
-    module: 'platform',
+    key: "live.manage",
+    label: "Manage Live",
+    description:
+      "Manage live streaming.",
+    module: "platform",
   },
   {
-    key: 'meetings.manage',
-    label: 'Manage Meetings',
-    description: 'Manage Fockis Meetings.',
-    module: 'platform',
+    key: "meetings.manage",
+    label: "Manage Meetings",
+    description:
+      "Manage Fockis Meetings.",
+    module: "platform",
   },
   {
-    key: 'realestate.manage',
-    label: 'Manage Real Estate',
-    description: 'Manage real estate administration.',
-    module: 'platform',
+    key: "realestate.manage",
+    label: "Manage Real Estate",
+    description:
+      "Manage real estate administration.",
+    module: "platform",
   },
   {
-    key: 'documents.manage',
-    label: 'Manage Documents',
-    description: 'Manage document administration.',
-    module: 'platform',
+    key: "documents.manage",
+    label: "Manage Documents",
+    description:
+      "Manage document administration.",
+    module: "platform",
   },
   {
-    key: 'design.manage',
-    label: 'Manage Design Studio',
-    description: 'Manage Design Studio.',
-    module: 'platform',
+    key: "design.manage",
+    label: "Manage Design Studio",
+    description:
+      "Manage Design Studio.",
+    module: "platform",
   },
   {
-    key: 'playlists.manage',
-    label: 'Manage Playlists',
-    description: 'Manage playlists.',
-    module: 'platform',
+    key: "playlists.manage",
+    label: "Manage Playlists",
+    description:
+      "Manage playlists.",
+    module: "platform",
   },
 
   // ============================================================
@@ -266,16 +519,18 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
   // ============================================================
 
   {
-    key: 'moderation.view',
-    label: 'View Moderation',
-    description: 'View moderation queues.',
-    module: 'moderation',
+    key: "moderation.view",
+    label: "View Moderation",
+    description:
+      "View moderation queues.",
+    module: "moderation",
   },
   {
-    key: 'moderation.manage',
-    label: 'Manage Moderation',
-    description: 'Perform moderation actions.',
-    module: 'moderation',
+    key: "moderation.manage",
+    label: "Manage Moderation",
+    description:
+      "Perform moderation actions.",
+    module: "moderation",
   },
 
   // ============================================================
@@ -283,16 +538,18 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
   // ============================================================
 
   {
-    key: 'security.view',
-    label: 'View Security',
-    description: 'View security administration.',
-    module: 'security',
+    key: "security.view",
+    label: "View Security",
+    description:
+      "View security administration.",
+    module: "security",
   },
   {
-    key: 'security.manage',
-    label: 'Manage Security',
-    description: 'Manage platform security controls.',
-    module: 'security',
+    key: "security.manage",
+    label: "Manage Security",
+    description:
+      "Manage platform security controls.",
+    module: "security",
   },
 
   // ============================================================
@@ -300,10 +557,11 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
   // ============================================================
 
   {
-    key: 'audit.view',
-    label: 'View Audit Logs',
-    description: 'View administrative audit logs.',
-    module: 'audit',
+    key: "audit.view",
+    label: "View Audit Logs",
+    description:
+      "View administrative audit logs.",
+    module: "audit",
   },
 
   // ============================================================
@@ -311,16 +569,18 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
   // ============================================================
 
   {
-    key: 'domains.view',
-    label: 'View Domains',
-    description: 'View domain administration.',
-    module: 'domains',
+    key: "domains.view",
+    label: "View Domains",
+    description:
+      "View domain administration.",
+    module: "domains",
   },
   {
-    key: 'domains.manage',
-    label: 'Manage Domains',
-    description: 'Manage Fockis domains.',
-    module: 'domains',
+    key: "domains.manage",
+    label: "Manage Domains",
+    description:
+      "Manage Fockis domains.",
+    module: "domains",
   },
 
   // ============================================================
@@ -328,9 +588,10 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
   // ============================================================
 
   {
-    key: 'system.settings.manage',
-    label: 'Manage System Settings',
-    description: 'Manage platform settings.',
-    module: 'system',
+    key: "system.settings.manage",
+    label: "Manage System Settings",
+    description:
+      "Manage platform settings.",
+    module: "system",
   },
 ];

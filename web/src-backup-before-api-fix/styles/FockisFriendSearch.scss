@@ -1,0 +1,117 @@
+/* ============================================================================
+   FOCKIS FRIEND SEARCH
+   ============================================================================ */
+
+.fockis-friend-search {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.fockis-friend-search__form {
+  position: relative;
+  width: 100%;
+}
+
+.fockis-friend-search__input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.fockis-friend-search__icon {
+  position: absolute;
+  left: 14px;
+  width: 18px;
+  height: 18px;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.fockis-friend-search__input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 16px 0 44px;
+  border: 1px solid rgba(127, 127, 127, 0.22);
+  border-radius: 14px;
+  outline: none;
+  background: rgba(127, 127, 127, 0.06);
+  color: inherit;
+  font: inherit;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.fockis-friend-search__input::placeholder {
+  opacity: 0.55;
+}
+
+.fockis-friend-search__input:focus {
+  border-color: rgba(255, 153, 0, 0.75);
+  background: rgba(127, 127, 127, 0.09);
+  box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.12);
+}
+
+.fockis-friend-search__results {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(127, 127, 127, 0.16);
+  background: var(--fk-surface, #fff);
+}
+
+.fockis-friend-search__result {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  box-sizing: border-box;
+}
+
+.fockis-friend-search__result + .fockis-friend-search__result {
+  border-top: 1px solid rgba(127, 127, 127, 0.12);
+}
+
+.fockis-friend-search__avatar {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.fockis-friend-search__result-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.fockis-friend-search__result-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.fockis-friend-search__result-username {
+  margin: 3px 0 0;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.fockis-friend-search__loading,
+.fockis-friend-search__empty {
+  padding: 16px;
+  text-align: center;
+  font-size: 13px;
+  opacity: 0.65;
+}
+
+@media (max-width: 768px) {
+  .fockis-friend-search__input {
+    min-height: 44px;
+  }
+}

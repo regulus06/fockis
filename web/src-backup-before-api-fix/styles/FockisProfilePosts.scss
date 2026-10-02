@@ -1,0 +1,308 @@
+/* ============================================================================
+   FOCKIS PROFILE POSTS
+   src/styles/FockisProfilePosts.scss
+============================================================================ */
+
+@use "./fockis-theme";
+
+.fk-profile-posts {
+  display: flex;
+  flex-direction: column;
+
+  gap: 14px;
+}
+
+.fk-profile-posts__empty {
+  padding: 32px 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+
+  border: 1px dashed var(--fk-border);
+  border-radius: var(--fk-r-lg);
+
+  background: var(--fk-surface);
+  color: var(--fk-text-2);
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fk-profile-post {
+  padding: 16px;
+
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-lg);
+
+  background: var(--fk-surface);
+  box-shadow: var(--fk-shadow-sm);
+}
+
+.fk-profile-post__content {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-size: 14.5px;
+  line-height: 1.5;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.fk-profile-post__images {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+
+  gap: 4px;
+
+  margin-top: 10px;
+
+  border-radius: var(--fk-r-md);
+  overflow: hidden;
+}
+
+/*
+ * Single-item posts (the common case) get one full-width media
+ * element instead of being squeezed into a grid cell.
+ */
+.fk-profile-post__images--single {
+  grid-template-columns: 1fr;
+}
+
+/*
+ * Each media item is wrapped in a button (so it can open the
+ * full-screen viewer on click) instead of a bare img/video.
+ */
+.fk-profile-post__media-tile {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+
+  display: block;
+  width: 100%;
+
+  &:focus-visible {
+    outline: 2px solid var(--fk-fjord-bright);
+    outline-offset: 2px;
+  }
+}
+
+/*
+ * Shared sizing for BOTH images and videos. Previously this only
+ * targeted `img`, so <video> elements had no width/height/object-fit
+ * at all and rendered full-bleed and oversized.
+ */
+.fk-profile-post__media {
+  width: 100%;
+  max-height: 420px;
+
+  object-fit: cover;
+
+  display: block;
+
+  background: #000;
+}
+
+/*
+ * Single-image/video posts: the tile's aspect-ratio is set inline
+ * (in TSX) to match the media's REAL measured aspect ratio once it
+ * loads, so `cover` below has nothing to crop and nothing to
+ * letterbox. This CSS aspect-ratio is only the fallback shown for
+ * the brief moment before JS measures the real one.
+ */
+.fk-profile-post__images--single .fk-profile-post__media-tile {
+  aspect-ratio: 1 / 1;
+}
+
+.fk-profile-post__images--single .fk-profile-post__media {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+
+  object-fit: cover;
+}
+
+.fk-profile-post__footer {
+  display: flex;
+
+  gap: 16px;
+
+  margin-top: 12px;
+  padding-top: 10px;
+
+  border-top: 1px solid var(--fk-border);
+
+  span {
+    color: var(--fk-text-2);
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+
+/* ============================================================================
+   FULL-SCREEN POST REEL (TikTok / Facebook style)
+============================================================================ */
+
+.fk-profile-reel {
+  position: fixed;
+  inset: 0;
+
+  z-index: 1000;
+
+  background: #000;
+
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+}
+
+.fk-profile-reel__close {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  right: 16px;
+
+  z-index: 1001;
+
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 999px;
+
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+
+  cursor: pointer;
+}
+
+.fk-profile-reel__scroller {
+  width: 100%;
+  height: 100%;
+
+  overflow-y: scroll;
+
+  scroll-snap-type: y mandatory;
+
+  /* Hide scrollbar - snapping makes it a swipe/scroll experience,
+     not a traditional scrollable list. */
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.fk-profile-reel__slide {
+  position: relative;
+
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+}
+
+.fk-profile-reel__media {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fk-profile-reel__image,
+.fk-profile-reel__video {
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+}
+
+.fk-profile-reel__text-only {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 32px;
+
+  background: linear-gradient(
+    160deg,
+    var(--fk-fjord-dark),
+    #000
+  );
+
+  p {
+    margin: 0;
+
+    color: #fff;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.5;
+    text-align: center;
+
+    max-width: 480px;
+  }
+}
+
+.fk-profile-reel__overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.75),
+    rgba(0, 0, 0, 0)
+  );
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fk-profile-reel__caption {
+  margin: 0;
+
+  color: #fff;
+  font-size: 14.5px;
+  line-height: 1.5;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.fk-profile-reel__stats {
+  display: flex;
+  gap: 18px;
+
+  span {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  }
+}

@@ -1,0 +1,50 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+@include m.mobile {
+  .messages-page__topbar {
+    display: none;
+  }
+
+  .messages-page__layout {
+    grid-template-columns: 1fr;
+    position: relative;
+
+    &.info-open {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .messages-page__conversations {
+    display: none;
+    border-right: none;
+  }
+
+  .messages-page__chat {
+    display: none;
+  }
+
+  .messages-page__layout.mobile-show-list .messages-page__conversations {
+    display: flex;
+  }
+
+  .messages-page__layout.mobile-show-chat .messages-page__chat {
+    display: flex;
+  }
+
+  .messages-page__info {
+    position: fixed;
+    inset: 0;
+    z-index: v.$z-modal;
+    width: 100%;
+    border-left: none;
+  }
+
+  .chat-header__back {
+    display: flex;
+  }
+
+  .chat-box__scroll {
+    padding: v.$space-3 v.$space-4;
+  }
+}

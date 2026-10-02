@@ -1,0 +1,30 @@
+@use "./seller-console-shared";
+
+.order-tracking-badge {
+  display: inline-flex;
+  align-items: center;
+
+  width: fit-content;
+
+  padding: 5px 12px;
+
+  border-radius: var(--fk-r-pill);
+
+  color: #fff;
+
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.order-tracking-badge--delivered {
+  background: var(--fk-success);
+}
+
+.order-tracking-badge--shipped {
+  background: var(--fk-info);
+}
+
+.order-tracking-badge--pending {
+  background: var(--fk-warning);
+}

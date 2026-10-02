@@ -1,0 +1,401 @@
+// ============================================================================
+// FOCKIS MUSIC — BASE / DESIGN TOKENS
+// ============================================================================
+
+$music-accent: #6c5ce7;
+$music-accent-light: #8b7cf6;
+$music-accent-bright: #aaa0ff;
+
+$music-bg: #08080c;
+$music-bg-soft: #0b0b11;
+
+$music-surface: #111117;
+$music-surface-2: #18181f;
+$music-surface-3: #202029;
+
+$music-border: rgba(255, 255, 255, 0.08);
+$music-border-strong: rgba(139, 124, 246, 0.28);
+
+$music-text: #ffffff;
+$music-muted: #a0a0ad;
+$music-muted-2: #858590;
+
+$music-success: #2ecc71;
+$music-warning: #f1c40f;
+$music-info: #3498db;
+$music-danger: #e74c3c;
+
+$music-radius-sm: 8px;
+$music-radius-md: 14px;
+$music-radius-lg: 20px;
+$music-radius-xl: 28px;
+
+// ============================================================================
+// GLOBAL ROOT
+// ============================================================================
+
+.music-home,
+.music-charts-page {
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+
+  background:
+    radial-gradient(
+      ellipse 80% 40% at 50% -10%,
+      rgba(108, 92, 231, 0.22),
+      transparent 65%
+    ),
+    linear-gradient(
+      180deg,
+      $music-bg-soft 0%,
+      $music-bg 45%,
+      #07070a 100%
+    );
+
+  color: $music-text;
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  padding-bottom: 80px;
+}
+
+.music-home *,
+.music-home *::before,
+.music-home *::after,
+.music-charts-page *,
+.music-charts-page *::before,
+.music-charts-page *::after {
+  box-sizing: border-box;
+}
+
+// ============================================================================
+// LINKS
+// ============================================================================
+
+.music-home a,
+.music-charts-page a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+// ============================================================================
+// BUTTONS
+// ============================================================================
+
+.music-primary-button,
+.music-secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 46px;
+  padding: 0 21px;
+
+  border-radius: 999px;
+
+  text-decoration: none;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.music-primary-button {
+  border: 1px solid transparent;
+
+  background:
+    linear-gradient(
+      135deg,
+      $music-accent,
+      $music-accent-light
+    );
+
+  color: #fff;
+
+  box-shadow:
+    0 10px 25px rgba(108, 92, 231, 0.28);
+}
+
+.music-primary-button:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 15px 32px rgba(108, 92, 231, 0.4);
+}
+
+.music-secondary-button {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  background: rgba(255, 255, 255, 0.055);
+
+  color: #fff;
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.music-secondary-button:hover {
+  transform: translateY(-2px);
+
+  background: rgba(255, 255, 255, 0.1);
+
+  border-color:
+    rgba(255, 255, 255, 0.18);
+}
+
+// ============================================================================
+// ERROR
+// ============================================================================
+
+.music-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  max-width: 1400px;
+
+  margin: 28px auto 0;
+
+  padding: 18px 22px;
+
+  border: 1px solid rgba(255, 91, 91, 0.2);
+
+  border-radius: 14px;
+
+  background:
+    rgba(255, 75, 75, 0.055);
+
+  color: #fff;
+}
+
+.music-error strong {
+  font-size: 14px;
+}
+
+.music-error p {
+  margin: 5px 0 0;
+
+  color: #a7a7b0;
+
+  font-size: 12px;
+}
+
+.music-error button {
+  flex: 0 0 auto;
+
+  border: none;
+  border-radius: 999px;
+
+  padding: 9px 16px;
+
+  background: #fff;
+  color: #111;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+// ============================================================================
+// GENERAL PAGE SHELL
+// ============================================================================
+
+.music-page-shell {
+  min-height: 100vh;
+
+  background:
+    linear-gradient(
+      180deg,
+      #0b0b11,
+      #08080c
+    );
+
+  color: #fff;
+}
+
+.music-page-container {
+  width: 100%;
+  max-width: 1400px;
+
+  margin: 0 auto;
+
+  padding:
+    42px 32px 80px;
+}
+
+.music-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  margin-bottom: 28px;
+}
+
+.music-page-header h1 {
+  margin: 0;
+
+  color: #fff;
+
+  font-size:
+    clamp(32px, 5vw, 58px);
+
+  line-height: 1;
+  font-weight: 900;
+
+  letter-spacing: -0.05em;
+}
+
+.music-page-header p {
+  max-width: 700px;
+
+  margin: 10px 0 0;
+
+  color: #8d8d99;
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+// ============================================================================
+// GENERIC FILTER BAR
+// ============================================================================
+
+.music-filter-bar {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin-bottom: 26px;
+
+  overflow-x: auto;
+
+  scrollbar-width: none;
+}
+
+.music-filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.music-filter-bar button,
+.music-filter-bar a {
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 36px;
+
+  padding: 0 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  border-radius: 999px;
+
+  background:
+    rgba(255, 255, 255, 0.035);
+
+  color: #858590;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.music-filter-bar button:hover,
+.music-filter-bar a:hover {
+  color: #fff;
+
+  border-color:
+    rgba(139, 124, 246, 0.25);
+
+  background:
+    rgba(108, 92, 231, 0.1);
+}
+
+.music-filter-bar .active {
+  color: #fff;
+
+  border-color: transparent;
+
+  background:
+    linear-gradient(
+      135deg,
+      $music-accent,
+      $music-accent-light
+    );
+}
+
+// ============================================================================
+// GENERIC CONTENT GRID
+// ============================================================================
+
+.music-content-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 18px;
+}
+
+// ============================================================================
+// ACCESSIBILITY
+// ============================================================================
+
+.music-home a:focus-visible,
+.music-home button:focus-visible,
+.music-charts-page a:focus-visible,
+.music-charts-page button:focus-visible,
+.music-search input:focus-visible {
+  outline:
+    2px solid $music-accent-light;
+
+  outline-offset: 3px;
+}
+
+// ============================================================================
+// PRINT
+// ============================================================================
+
+@media print {
+  .music-home,
+  .music-charts-page {
+    background: #fff;
+    color: #000;
+  }
+
+  .music-home-nav,
+  .music-charts-nav,
+  .music-hero-visual,
+  .music-producer-banner,
+  .music-chart-creator-banner {
+    display: none;
+  }
+}

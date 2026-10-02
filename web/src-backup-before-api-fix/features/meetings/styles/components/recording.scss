@@ -1,0 +1,23 @@
+@use '../tokens' as t;
+
+.fm-rec-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: t.$red-500;
+  font-size: t.$fs-2xs;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+
+  &__dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: t.$red-500;
+    animation: fm-rec-pulse 1.4s infinite;
+  }
+}
+
+@keyframes fm-rec-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}

@@ -1,0 +1,78 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+.attachment-preview {
+  display: flex;
+  gap: v.$space-2;
+  padding: v.$space-3 v.$space-4 0;
+  overflow-x: auto;
+  @include m.scrollbar-thin;
+}
+
+.attachment-preview__item {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  flex-shrink: 0;
+  border-radius: v.$radius-sm;
+  overflow: hidden;
+  background: v.$color-bg-sunken;
+  animation: fockis-pop-in 0.15s ease;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.attachment-preview__video,
+.attachment-preview__document {
+  width: 100%;
+  height: 100%;
+  @include m.flex-center;
+  flex-direction: column;
+  gap: 4px;
+  color: v.$color-text-secondary;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.attachment-preview__remove {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  @include m.flex-center;
+  z-index: 2;
+}
+
+.attachment-preview__progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.attachment-preview__progress-fill {
+  height: 100%;
+  background: v.$fockis-primary;
+  transition: width 0.15s ease;
+}
+
+.attachment-preview__size {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  font-size: 9px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  padding: 1px 4px;
+  border-radius: 4px;
+}

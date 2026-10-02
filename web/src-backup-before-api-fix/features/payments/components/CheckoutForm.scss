@@ -1,0 +1,482 @@
+/* ============================================================================
+   FOCKIS — CHECKOUT FORM
+   Professional Stripe payment styling
+   ============================================================================ */
+
+.checkout-form {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+}
+
+/* ============================================================================
+   PAYMENT METHOD SELECTOR
+   ============================================================================ */
+
+.payment-method-selector {
+  width: 100%;
+}
+
+.payment-method-option {
+  width: 100%;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 16px 18px;
+
+  border: 1px solid #d9dee7;
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+
+  input {
+    flex: 0 0 auto;
+
+    width: 18px;
+    height: 18px;
+
+    margin: 0;
+
+    accent-color: #005a8d;
+
+    cursor: pointer;
+  }
+
+  > div {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  strong {
+    display: block;
+
+    color: #172033;
+
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  span {
+    display: block;
+
+    color: #6b7280;
+
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  &:hover {
+    border-color: #9eb8ca;
+    background: #f8fbfd;
+  }
+
+  &.selected {
+    border-color: #005a8d;
+    background: #f3f9fc;
+
+    box-shadow:
+      0 0 0 3px rgba(0, 90, 141, 0.08);
+
+    strong {
+      color: #004b75;
+    }
+  }
+
+  &:has(input:disabled) {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+}
+
+/* ============================================================================
+   STRIPE CARD SECTION
+   ============================================================================ */
+
+.stripe-card-section {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+
+  > label {
+    display: block;
+
+    margin: 0;
+
+    color: #1f2937;
+
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+}
+
+/* ============================================================================
+   STRIPE CARD BOX
+   ============================================================================ */
+
+.card-box {
+  width: 100%;
+  min-height: 54px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+
+  padding: 15px 14px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+
+  /* Stripe CardElement itself */
+  iframe {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  &:hover {
+    border-color: #9ca3af;
+  }
+
+  &.card-ready {
+    border-color: #b7c4d1;
+  }
+
+  &:focus-within {
+    border-color: #005a8d;
+
+    box-shadow:
+      0 0 0 3px rgba(0, 90, 141, 0.10);
+  }
+}
+
+/* ============================================================================
+   CARD ERROR
+   ============================================================================ */
+
+.checkout-error {
+  width: 100%;
+  box-sizing: border-box;
+
+  margin: 0;
+
+  padding: 11px 13px;
+
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+
+  background: #fef2f2;
+
+  color: #b91c1c;
+
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* ============================================================================
+   CARD COMPLETION HINT
+   ============================================================================ */
+
+.payment-card-hint {
+  margin: 0;
+
+  color: #6b7280;
+
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* ============================================================================
+   PAYMENT SECURITY MESSAGE
+   ============================================================================ */
+
+.payment-security {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+
+  margin: 2px 0 0;
+
+  color: #64748b;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ============================================================================
+   PAYMENT TOTAL
+   ============================================================================ */
+
+.payment-total {
+  width: 100%;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  margin-top: 2px;
+  padding: 17px 0;
+
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+
+  span {
+    color: #64748b;
+
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  strong {
+    color: #111827;
+
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* ============================================================================
+   PAYMENT INFORMATION
+   ============================================================================ */
+
+.payment-information {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+
+  margin-top: -4px;
+
+  padding: 14px 16px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+
+  background: #f8fafc;
+
+  > div {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+
+    color: #475569;
+
+    font-size: 12px;
+    line-height: 1.45;
+
+    span:first-child {
+      flex: 0 0 auto;
+
+      min-width: 18px;
+
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    span:last-child {
+      min-width: 0;
+    }
+  }
+
+  > div:first-child {
+    color: #075985;
+    font-weight: 600;
+  }
+}
+
+/* ============================================================================
+   GENERIC CHECKOUT BOX
+   Kept for existing Marketplace checkout usage.
+   ============================================================================ */
+
+.checkout-box {
+  width: 100%;
+  max-width: 450px;
+
+  margin: 20px auto;
+  padding: 25px;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  border-radius: 15px;
+
+  box-shadow:
+    0 5px 20px rgba(0, 0, 0, 0.08);
+
+  h2 {
+    margin: 0 0 20px;
+
+    text-align: center;
+
+    color: #172033;
+
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+
+      padding: 12px;
+
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+
+      outline: none;
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+
+      &:focus {
+        border-color: #005a8d;
+
+        box-shadow:
+          0 0 0 3px rgba(0, 90, 141, 0.08);
+      }
+    }
+
+    button {
+      padding: 12px;
+
+      border: none;
+      border-radius: 8px;
+
+      background: #16a34a;
+
+      color: #ffffff;
+
+      font-weight: 700;
+
+      cursor: pointer;
+
+      transition:
+        background-color 0.2s ease,
+        transform 0.15s ease;
+
+      &:hover:not(:disabled) {
+        background: #15803d;
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(1px);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 600px) {
+  .checkout-form {
+    gap: 16px;
+  }
+
+  .payment-method-option {
+    padding: 14px;
+
+    strong {
+      font-size: 14px;
+    }
+
+    span {
+      font-size: 12px;
+    }
+  }
+
+  .stripe-card-section {
+    gap: 8px;
+  }
+
+  .card-box {
+    min-height: 52px;
+    padding: 14px 12px;
+  }
+
+  .payment-total {
+    padding: 15px 0;
+
+    span {
+      font-size: 13px;
+    }
+
+    strong {
+      font-size: 21px;
+    }
+  }
+
+  .payment-information {
+    padding: 13px;
+  }
+}
+
+@media (max-width: 400px) {
+  .payment-method-option {
+    align-items: flex-start;
+  }
+
+  .payment-total {
+    align-items: flex-start;
+
+    strong {
+      font-size: 19px;
+    }
+  }
+}

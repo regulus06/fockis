@@ -1,0 +1,1210 @@
+/* ============================================================================
+   FOCKIS MEETINGS
+   SCHEDULE MEETING
+   ============================================================================ */
+
+.fockis-meetings-root {
+  --schedule-primary: #3155d9;
+  --schedule-primary-dark: #2443b7;
+  --schedule-primary-soft: #eef2ff;
+
+  --schedule-navy: #102a43;
+  --schedule-text: #26384d;
+  --schedule-muted: #718096;
+
+  --schedule-bg: #f5f7fb;
+  --schedule-card: #ffffff;
+  --schedule-soft: #f8faff;
+
+  --schedule-border: #e2e8f0;
+  --schedule-border-strong: #cbd5e1;
+
+  --schedule-success: #16835f;
+  --schedule-success-soft: #eaf8f2;
+
+  --schedule-danger: #b42318;
+  --schedule-danger-soft: #fff1f0;
+
+  --schedule-shadow:
+    0 12px 35px rgba(15, 35, 60, 0.07);
+
+  --schedule-shadow-sm:
+    0 3px 12px rgba(15, 35, 60, 0.05);
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
+
+
+/* ============================================================================
+   PAGE
+   ============================================================================ */
+
+.fm-subpage {
+  width: min(100%, 980px);
+
+  margin:
+    0
+    auto;
+
+  padding:
+    30px
+    0
+    70px;
+}
+
+
+/* ============================================================================
+   BACK LINK
+   ============================================================================ */
+
+.fm-back-link {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+
+  margin-bottom: 20px;
+
+  color: var(--schedule-muted);
+
+  font-size: 13px;
+  font-weight: 700;
+
+  text-decoration: none;
+
+  transition:
+    color 150ms ease,
+    transform 150ms ease;
+
+  &:hover {
+    color: var(--schedule-primary);
+
+    transform:
+      translateX(-2px);
+  }
+
+  &:focus-visible {
+    outline:
+      3px solid
+      rgba(49, 85, 217, 0.2);
+
+    outline-offset: 4px;
+
+    border-radius: 5px;
+  }
+}
+
+
+/* ============================================================================
+   HEADER
+   ============================================================================ */
+
+.fm-subpage-header {
+  position: relative;
+
+  margin-bottom: 26px;
+
+  padding:
+    32px
+    34px;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.7);
+
+  border-radius: 20px;
+
+  background:
+    radial-gradient(
+      circle at 90% 15%,
+      rgba(104, 130, 255, 0.22),
+      transparent 32%
+    ),
+    linear-gradient(
+      135deg,
+      #102e4d 0%,
+      #173e63 55%,
+      #254e78 100%
+    );
+
+  box-shadow:
+    0 18px 45px
+    rgba(16, 42, 67, 0.15);
+}
+
+
+.fm-subpage-header::after {
+  content: "";
+
+  position: absolute;
+
+  width: 210px;
+  height: 210px;
+
+  right: -80px;
+  bottom: -120px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(255, 255, 255, 0.07);
+
+  pointer-events: none;
+}
+
+
+.fm-subpage-header h1 {
+  position: relative;
+  z-index: 2;
+
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size:
+    clamp(28px, 4vw, 38px);
+
+  line-height: 1.1;
+
+  font-weight: 800;
+
+  letter-spacing: -0.035em;
+}
+
+
+/* ============================================================================
+   FORM SECTIONS
+   ============================================================================ */
+
+.fm-subpage > .fm-field,
+.fm-subpage > .fm-field-row,
+.fm-subpage > .fm-agenda,
+.fm-subpage > .fm-secretary-card,
+.fm-subpage > .fm-secretary,
+.fm-subpage > .fm-form-error,
+.fm-subpage > .fm-form-actions {
+  width: 100%;
+}
+
+
+.fm-field {
+  margin-bottom: 20px;
+}
+
+
+.fm-field-row {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 16px;
+
+  margin-bottom: 20px;
+}
+
+
+/* ============================================================================
+   LABELS
+   ============================================================================ */
+
+.fm-field__label {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  margin-bottom: 8px;
+
+  color:
+    var(--schedule-navy);
+
+  font-size: 12px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.01em;
+}
+
+
+.fm-field__hint,
+.fm-field small {
+  display: block;
+
+  margin-top: 5px;
+
+  color:
+    var(--schedule-muted);
+
+  font-size: 11px;
+
+  line-height: 1.45;
+}
+
+
+/* ============================================================================
+   INPUTS
+   ============================================================================ */
+
+.fm-input,
+.fm-textarea,
+.fm-select {
+  width: 100%;
+
+  border:
+    1px solid
+    var(--schedule-border);
+
+  border-radius: 11px;
+
+  background:
+    var(--schedule-card);
+
+  color:
+    var(--schedule-text);
+
+  outline: none;
+
+  box-shadow:
+    0 1px 2px
+    rgba(15, 35, 60, 0.02);
+
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background 150ms ease;
+}
+
+
+.fm-input,
+.fm-select {
+  min-height: 46px;
+
+  padding:
+    0
+    13px;
+
+  font-size: 13px;
+}
+
+
+.fm-textarea {
+  min-height: 105px;
+
+  padding:
+    12px
+    13px;
+
+  resize: vertical;
+
+  font-size: 13px;
+
+  line-height: 1.55;
+}
+
+
+.fm-input::placeholder,
+.fm-textarea::placeholder {
+  color:
+    #a0acb9;
+}
+
+
+.fm-input:hover,
+.fm-textarea:hover,
+.fm-select:hover {
+  border-color:
+    #c5d0dc;
+}
+
+
+.fm-input:focus,
+.fm-textarea:focus,
+.fm-select:focus {
+  border-color:
+    var(--schedule-primary);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(49, 85, 217, 0.1);
+}
+
+
+.fm-input:disabled {
+  background:
+    #f4f6f9;
+
+  color:
+    #8a96a4;
+
+  cursor:
+    not-allowed;
+}
+
+
+.fm-input.mono {
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+
+  letter-spacing:
+    0.03em;
+}
+
+
+.fm-select {
+  appearance: none;
+
+  padding-right: 38px;
+
+  cursor: pointer;
+
+  background-image:
+    linear-gradient(
+      45deg,
+      transparent 50%,
+      #718096 50%
+    ),
+    linear-gradient(
+      135deg,
+      #718096 50%,
+      transparent 50%
+    );
+
+  background-position:
+    calc(100% - 17px) 20px,
+    calc(100% - 12px) 20px;
+
+  background-size:
+    5px 5px,
+    5px 5px;
+
+  background-repeat:
+    no-repeat;
+}
+
+
+/* ============================================================================
+   INVITATION AREA
+   ============================================================================ */
+
+.fm-field > .fm-input {
+  color:
+    var(--schedule-muted);
+}
+
+
+.fm-field > .fm-input:has(+ *) {
+  min-height: 48px;
+}
+
+
+/* ============================================================================
+   AGENDA
+   ============================================================================ */
+
+.fm-agenda,
+.fm-agenda-editor,
+.agenda-editor {
+  margin:
+    25px
+    0;
+
+  padding:
+    21px;
+
+  border:
+    1px solid
+    var(--schedule-border);
+
+  border-radius: 16px;
+
+  background:
+    var(--schedule-card);
+
+  box-shadow:
+    var(--schedule-shadow-sm);
+}
+
+
+.fm-agenda__header,
+.fm-agenda-editor__header,
+.agenda-editor__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  margin-bottom: 16px;
+}
+
+
+.fm-agenda__title,
+.fm-agenda-editor__title,
+.agenda-editor__title {
+  color:
+    var(--schedule-navy);
+
+  font-size: 15px;
+  font-weight: 800;
+}
+
+
+.fm-agenda__description,
+.fm-agenda-editor__description {
+  margin-top: 4px;
+
+  color:
+    var(--schedule-muted);
+
+  font-size: 11px;
+}
+
+
+.fm-agenda-item,
+.fm-agenda-editor__item,
+.agenda-editor__item {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding:
+    9px;
+
+  margin-bottom: 8px;
+
+  border:
+    1px solid
+    #edf0f4;
+
+  border-radius: 10px;
+
+  background:
+    #fafbfd;
+}
+
+
+.fm-agenda-item input,
+.fm-agenda-editor__item input,
+.agenda-editor__item input {
+  flex: 1;
+
+  min-width: 0;
+
+  border:
+    1px solid
+    var(--schedule-border);
+
+  border-radius: 8px;
+
+  min-height: 38px;
+
+  padding:
+    0
+    10px;
+
+  background:
+    white;
+
+  color:
+    var(--schedule-text);
+
+  outline: none;
+}
+
+
+.fm-agenda-item input:focus,
+.fm-agenda-editor__item input:focus,
+.agenda-editor__item input:focus {
+  border-color:
+    var(--schedule-primary);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(49, 85, 217, 0.08);
+}
+
+
+.fm-agenda button,
+.fm-agenda-editor button,
+.agenda-editor button {
+  border: 0;
+
+  border-radius: 8px;
+
+  background:
+    var(--schedule-primary-soft);
+
+  color:
+    var(--schedule-primary);
+
+  font-size: 12px;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+
+  &:hover {
+    background:
+      #dfe6ff;
+
+    color:
+      var(--schedule-primary-dark);
+  }
+}
+
+
+/* ============================================================================
+   AI SECRETARY
+   ============================================================================ */
+
+.fm-secretary-card,
+.fm-secretary,
+.secretary-card,
+.secretary-consent-card {
+  margin:
+    25px
+    0;
+
+  padding:
+    22px;
+
+  border:
+    1px solid
+    rgba(49, 85, 217, 0.18);
+
+  border-radius: 17px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f5f7ff 0%,
+      #ffffff 100%
+    );
+
+  box-shadow:
+    var(--schedule-shadow-sm);
+}
+
+
+.fm-secretary-card__header,
+.fm-secretary__header,
+.secretary-card__header,
+.secretary-consent-card__header {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 13px;
+
+  margin-bottom: 18px;
+}
+
+
+.fm-secretary-card__icon,
+.fm-secretary__icon,
+.secretary-card__icon,
+.secretary-consent-card__icon {
+  width: 42px;
+  height: 42px;
+
+  display: grid;
+  place-items: center;
+
+  flex-shrink: 0;
+
+  border-radius: 12px;
+
+  background:
+    var(--schedule-primary-soft);
+
+  color:
+    var(--schedule-primary);
+}
+
+
+.fm-secretary-card h3,
+.fm-secretary h3,
+.secretary-card h3,
+.secretary-consent-card h3 {
+  margin: 0;
+
+  color:
+    var(--schedule-navy);
+
+  font-size: 15px;
+  font-weight: 800;
+}
+
+
+.fm-secretary-card p,
+.fm-secretary p,
+.secretary-card p,
+.secretary-consent-card p {
+  margin:
+    5px
+    0
+    0;
+
+  color:
+    var(--schedule-muted);
+
+  font-size: 11.5px;
+
+  line-height: 1.55;
+}
+
+
+.fm-secretary-options,
+.secretary-card__options,
+.secretary-consent-card__options {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 8px;
+
+  margin-top: 16px;
+}
+
+
+.fm-secretary-option,
+.secretary-option,
+.secretary-card__option,
+.secretary-consent-card__option {
+  display: flex;
+  align-items: center;
+
+  min-height: 39px;
+
+  padding:
+    8px
+    10px;
+
+  border:
+    1px solid
+    #e5e9f1;
+
+  border-radius: 9px;
+
+  background:
+    rgba(255, 255, 255, 0.8);
+
+  color:
+    var(--schedule-text);
+
+  font-size: 11px;
+  font-weight: 650;
+}
+
+
+/* ============================================================================
+   TOGGLE ROWS
+   ============================================================================ */
+
+.fm-toggle-row,
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  min-height: 66px;
+
+  padding:
+    14px
+    15px;
+
+  border-bottom:
+    1px solid
+    #edf0f4;
+
+  background:
+    var(--schedule-card);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+
+.fm-toggle-row__content,
+.toggle-row__content {
+  min-width: 0;
+
+  flex: 1;
+}
+
+
+.fm-toggle-row__label,
+.toggle-row__label {
+  display: block;
+
+  color:
+    var(--schedule-navy);
+
+  font-size: 13px;
+  font-weight: 750;
+}
+
+
+.fm-toggle-row__description,
+.toggle-row__description {
+  margin-top: 3px;
+
+  color:
+    var(--schedule-muted);
+
+  font-size: 11px;
+
+  line-height: 1.4;
+}
+
+
+/* Generic toggle support */
+
+.fm-toggle,
+.fm-switch,
+.toggle-row button,
+.fm-toggle-row button {
+  position: relative;
+
+  width: 44px;
+  height: 25px;
+
+  flex-shrink: 0;
+
+  padding: 0;
+
+  border: 0;
+
+  border-radius: 999px;
+
+  background:
+    #cbd5e1;
+
+  cursor: pointer;
+
+  transition:
+    background 150ms ease;
+}
+
+
+.fm-toggle::after,
+.fm-switch::after,
+.toggle-row button::after,
+.fm-toggle-row button::after {
+  content: "";
+
+  position: absolute;
+
+  width: 19px;
+  height: 19px;
+
+  top: 3px;
+  left: 3px;
+
+  border-radius: 50%;
+
+  background: white;
+
+  box-shadow:
+    0 1px 4px
+    rgba(0, 0, 0, 0.18);
+
+  transition:
+    transform 150ms ease;
+}
+
+
+.fm-toggle.is-on,
+.fm-switch.is-on,
+.toggle-row button[aria-checked="true"],
+.fm-toggle-row button[aria-checked="true"] {
+  background:
+    var(--schedule-primary);
+}
+
+
+.fm-toggle.is-on::after,
+.fm-switch.is-on::after,
+.toggle-row button[aria-checked="true"]::after,
+.fm-toggle-row button[aria-checked="true"]::after {
+  transform:
+    translateX(19px);
+}
+
+
+/* ============================================================================
+   MEETING OPTIONS CONTAINER
+   ============================================================================ */
+
+.fm-subpage > .fm-field:has(.fm-toggle-row),
+.fm-subpage > .fm-field:has(.toggle-row) {
+  margin-top: 25px;
+
+  padding:
+    20px;
+
+  border:
+    1px solid
+    var(--schedule-border);
+
+  border-radius: 16px;
+
+  background:
+    var(--schedule-card);
+
+  box-shadow:
+    var(--schedule-shadow-sm);
+}
+
+
+.fm-subpage > .fm-field:has(.fm-toggle-row) > .fm-field__label,
+.fm-subpage > .fm-field:has(.toggle-row) > .fm-field__label {
+  margin-bottom: 5px;
+
+  font-size: 15px;
+}
+
+
+/* ============================================================================
+   ERROR
+   ============================================================================ */
+
+.fm-form-error {
+  display: flex;
+  align-items: center;
+
+  min-height: 48px;
+
+  margin-top: 20px;
+
+  padding:
+    12px
+    14px;
+
+  border:
+    1px solid
+    #f0c4c1;
+
+  border-radius: 11px;
+
+  background:
+    var(--schedule-danger-soft);
+
+  color:
+    var(--schedule-danger);
+
+  font-size: 12px;
+
+  font-weight: 700;
+}
+
+
+/* ============================================================================
+   ACTIONS
+   ============================================================================ */
+
+.fm-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 28px;
+
+  padding-top: 22px;
+
+  border-top:
+    1px solid
+    var(--schedule-border);
+}
+
+
+/* ============================================================================
+   BUTTON OVERRIDES
+   ============================================================================ */
+
+.fm-form-actions button {
+  min-height: 44px;
+
+  padding:
+    0
+    18px;
+
+  border-radius: 9px;
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+
+.fm-form-actions button:last-child {
+  min-width: 145px;
+
+  background:
+    var(--schedule-primary);
+
+  color: white;
+
+  box-shadow:
+    0 7px 18px
+    rgba(49, 85, 217, 0.2);
+
+  &:hover:not(:disabled) {
+    background:
+      var(--schedule-primary-dark);
+  }
+}
+
+
+.fm-form-actions button:disabled {
+  opacity: 0.55;
+
+  cursor:
+    not-allowed;
+}
+
+
+/* ============================================================================
+   INVITE / CATEGORY SUPPORT
+   ============================================================================ */
+
+.fm-invite-categories {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 8px;
+
+  margin:
+    10px
+    0
+    13px;
+}
+
+
+.fm-invite-category {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+
+  min-height: 35px;
+
+  padding:
+    0
+    11px;
+
+  border:
+    1px solid
+    var(--schedule-border);
+
+  border-radius: 9px;
+
+  background:
+    white;
+
+  color:
+    var(--schedule-muted);
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    border-color 150ms ease,
+    color 150ms ease,
+    background 150ms ease;
+
+  &:hover,
+  &.is-active {
+    border-color:
+      rgba(49, 85, 217, 0.25);
+
+    background:
+      var(--schedule-primary-soft);
+
+    color:
+      var(--schedule-primary);
+  }
+}
+
+
+.fm-invite-search {
+  position: relative;
+}
+
+
+.fm-invite-search svg {
+  position: absolute;
+
+  left: 13px;
+  top: 50%;
+
+  transform:
+    translateY(-50%);
+
+  color:
+    #9aa6b5;
+
+  pointer-events: none;
+}
+
+
+.fm-invite-search .fm-input {
+  padding-left: 38px;
+}
+
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 800px) {
+  .fm-subpage {
+    padding:
+      22px
+      18px
+      55px;
+  }
+
+  .fm-field-row {
+    grid-template-columns: 1fr;
+  }
+
+  .fm-subpage-header {
+    padding:
+      27px
+      25px;
+  }
+
+  .fm-secretary-options,
+  .secretary-card__options,
+  .secretary-consent-card__options {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+@media (max-width: 600px) {
+  .fm-subpage {
+    padding:
+      17px
+      11px
+      45px;
+  }
+
+  .fm-back-link {
+    margin-bottom: 14px;
+  }
+
+  .fm-subpage-header {
+    padding:
+      24px
+      20px;
+
+    border-radius: 16px;
+  }
+
+  .fm-subpage-header h1 {
+    font-size: 29px;
+  }
+
+  .fm-field {
+    margin-bottom: 16px;
+  }
+
+  .fm-agenda,
+  .fm-agenda-editor,
+  .agenda-editor,
+  .fm-secretary-card,
+  .fm-secretary,
+  .secretary-card,
+  .secretary-consent-card {
+    padding:
+      17px;
+
+    margin:
+      19px
+      0;
+  }
+
+  .fm-form-actions {
+    display: grid;
+
+    grid-template-columns:
+      1fr
+      1fr;
+
+    position: sticky;
+
+    bottom: 0;
+
+    margin-left: -11px;
+    margin-right: -11px;
+
+    padding:
+      12px 11px;
+
+    background:
+      rgba(245, 247, 251, 0.96);
+
+    backdrop-filter:
+      blur(12px);
+
+    z-index: 10;
+  }
+
+  .fm-form-actions button {
+    width: 100%;
+  }
+}
+
+
+@media (max-width: 420px) {
+  .fm-form-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .fm-subpage-header h1 {
+    font-size: 26px;
+  }
+
+  .fm-input,
+  .fm-select {
+    min-height: 44px;
+  }
+}
+
+
+/* ============================================================================
+   REDUCED MOTION
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .fockis-meetings-root *,
+  .fockis-meetings-root *::before,
+  .fockis-meetings-root *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

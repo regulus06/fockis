@@ -1,0 +1,71 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+.empty-state {
+  height: 100%;
+  @include m.flex-center;
+  flex-direction: column;
+  text-align: center;
+  padding: v.$space-8;
+  color: v.$color-text-secondary;
+  animation: fockis-fade-in 0.25s ease;
+}
+
+.empty-state__icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: v.$fockis-primary-light;
+  color: v.$fockis-primary;
+  @include m.flex-center;
+  margin-bottom: v.$space-4;
+}
+
+.empty-state--conversation h2 {
+  font-size: v.$font-size-xl;
+  font-weight: 800;
+  margin-bottom: v.$space-2;
+  color: v.$color-text-primary;
+}
+
+.empty-state--conversation p {
+  font-size: v.$font-size-sm;
+  max-width: 260px;
+}
+
+.empty-state--messages h3 {
+  font-size: v.$font-size-md;
+  font-weight: 700;
+  margin-bottom: v.$space-1;
+  color: v.$color-text-primary;
+}
+
+.empty-state--messages p {
+  font-size: v.$font-size-sm;
+}
+
+.message-error {
+  @include m.flex-center;
+  flex-direction: column;
+  gap: v.$space-3;
+  padding: v.$space-6;
+  color: v.$color-text-secondary;
+  text-align: center;
+
+  svg {
+    color: v.$color-danger;
+  }
+
+  button {
+    padding: v.$space-2 v.$space-5;
+    background: v.$fockis-primary;
+    color: #fff;
+    border-radius: v.$radius-pill;
+    font-weight: 600;
+    font-size: v.$font-size-sm;
+
+    &:hover {
+      background: v.$fockis-primary-dark;
+    }
+  }
+}

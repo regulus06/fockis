@@ -1,0 +1,239 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+.floating-chat-root {
+  position: fixed;
+  right: v.$space-6;
+  bottom: v.$space-6;
+  z-index: v.$z-floating-launcher;
+  display: flex;
+  align-items: flex-end;
+  gap: v.$space-3;
+  pointer-events: none;
+
+  > * {
+    pointer-events: auto;
+  }
+}
+
+.floating-chat-root__popups,
+.floating-chat-root__minimized {
+  display: flex;
+  align-items: flex-end;
+  gap: v.$space-3;
+}
+
+.floating-chat-launcher {
+  position: relative;
+}
+
+.floating-chat-launcher__btn {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, v.$fockis-primary, #7c6bf6);
+  color: #fff;
+  box-shadow: v.$shadow-lg;
+  @include m.flex-center;
+  position: relative;
+  transition: transform 0.15s ease;
+
+  &:hover {
+    transform: translateY(-2px) scale(1.03);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.floating-chat-launcher__unread-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: v.$color-danger;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  @include m.flex-center;
+  border: 2px solid v.$color-bg-app;
+  animation: fockis-badge-pop 0.2s ease;
+}
+
+.floating-chat-launcher__panel {
+  position: absolute;
+  bottom: 70px;
+  right: 0;
+  width: 300px;
+  max-height: 400px;
+  background: v.$color-bg-panel;
+  border-radius: v.$radius-md;
+  box-shadow: v.$shadow-lg;
+  display: flex;
+  flex-direction: column;
+  animation: fockis-scale-in 0.18s ease;
+}
+
+.floating-chat-launcher__header {
+  @include m.flex-between;
+  padding: v.$space-4;
+  border-bottom: 1px solid v.$color-border;
+
+  h4 {
+    font-size: v.$font-size-md;
+    font-weight: 700;
+  }
+
+  button {
+    font-size: v.$font-size-xs;
+    color: v.$fockis-primary;
+    font-weight: 600;
+  }
+}
+
+.floating-chat-launcher__list {
+  overflow-y: auto;
+  padding: v.$space-2;
+  @include m.scrollbar-thin;
+}
+
+.floating-chat-launcher__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: v.$space-3;
+  padding: v.$space-2 v.$space-3;
+  border-radius: v.$radius-sm;
+
+  img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  span:first-of-type {
+    flex: 1;
+    text-align: left;
+    font-size: v.$font-size-sm;
+  }
+
+  &:hover {
+    background: v.$color-bg-hover;
+  }
+}
+
+.floating-chat-launcher__badge {
+  background: v.$fockis-primary;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  @include m.flex-center;
+}
+
+.chat-popup {
+  width: 300px;
+  height: 400px;
+  background: v.$color-bg-panel;
+  border-radius: v.$radius-md v.$radius-md 0 0;
+  box-shadow: v.$shadow-lg;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: fockis-slide-up 0.2s ease;
+}
+
+.chat-popup--minimized {
+  width: auto;
+  height: 44px;
+  flex-direction: row;
+  align-items: center;
+  gap: v.$space-2;
+  padding: 0 v.$space-3;
+  position: relative;
+
+  img {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  span {
+    font-size: v.$font-size-xs;
+    font-weight: 600;
+  }
+}
+
+.chat-popup__badge {
+  background: v.$color-danger;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  @include m.flex-center;
+}
+
+.chat-popup__header {
+  display: flex;
+  align-items: center;
+  gap: v.$space-2;
+  padding: v.$space-3;
+  background: v.$fockis-primary;
+  color: #fff;
+
+  img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+}
+
+.chat-popup__name {
+  flex: 1;
+  font-size: v.$font-size-sm;
+  font-weight: 600;
+}
+
+.chat-popup__actions {
+  display: flex;
+  gap: 2px;
+
+  button {
+    @include m.icon-button(26px);
+    color: #fff;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+  }
+}
+
+.chat-popup__scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: v.$space-3;
+  @include m.scrollbar-thin;
+}
+
+@include m.mobile {
+  .floating-chat-root {
+    right: v.$space-4;
+    bottom: 76px;
+  }
+
+  .chat-popup,
+  .floating-chat-launcher__panel {
+    display: none;
+  }
+}

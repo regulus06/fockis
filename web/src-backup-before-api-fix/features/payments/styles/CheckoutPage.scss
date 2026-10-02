@@ -1,0 +1,1347 @@
+/* ============================================================================
+   FOCKIS CHECKOUT PAGE
+   Matches:
+   web/src/features/payments/pages/CheckoutPage.tsx
+   ============================================================================ */
+
+@use "../../../styles/fockis-theme";
+
+/* ============================================================================
+   ROOT
+   ============================================================================ */
+
+.fockis-checkout {
+  --checkout-max-width: 1180px;
+  --checkout-gap: 24px;
+
+  width: 100%;
+  min-height: 100vh;
+
+  padding: 0 0 72px;
+
+  background: var(--fk-bg);
+  color: var(--fk-text);
+
+  font-family: var(--fk-font-body);
+
+  box-sizing: border-box;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+}
+
+/* ============================================================================
+   MAIN CONTAINER
+   ============================================================================ */
+
+.fockis-checkout__container {
+  width: min(100%, var(--checkout-max-width));
+
+  margin: 0 auto;
+
+  padding: 28px 24px 0;
+}
+
+/* ============================================================================
+   HEADER
+   ============================================================================ */
+
+.fockis-checkout__header {
+  margin-bottom: 24px;
+
+  text-align: left;
+}
+
+.fockis-checkout__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  margin-bottom: 8px;
+
+  color: var(--fk-fjord);
+
+  font-size: 11px;
+  font-weight: 800;
+
+  line-height: 1.2;
+
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.fockis-checkout__eyebrow::before {
+  content: "";
+
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: var(--fk-fjord);
+
+  box-shadow: 0 0 0 4px var(--fk-fjord-soft);
+}
+
+.fockis-checkout__header h1 {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-family: var(--fk-font-display);
+
+  font-size: clamp(26px, 4vw, 36px);
+  font-weight: 800;
+
+  line-height: 1.15;
+
+  letter-spacing: -0.025em;
+}
+
+.fockis-checkout__header p {
+  max-width: 680px;
+
+  margin: 9px 0 0;
+
+  color: var(--fk-text-2);
+
+  font-size: 14px;
+
+  line-height: 1.6;
+}
+
+/* ============================================================================
+   SECURE BADGE
+   ============================================================================ */
+
+.fockis-checkout__secure {
+  display: inline-flex;
+
+  align-items: center;
+  gap: 8px;
+
+  margin-top: 14px;
+
+  padding: 7px 11px;
+
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--fk-success) 22%,
+      var(--fk-border)
+    );
+
+  border-radius: var(--fk-r-pill);
+
+  background:
+    color-mix(
+      in srgb,
+      var(--fk-success) 7%,
+      var(--fk-surface)
+    );
+
+  color: var(--fk-success);
+
+  font-size: 11px;
+  font-weight: 800;
+
+  line-height: 1;
+}
+
+.fockis-checkout__secure-icon {
+  width: 18px;
+  height: 18px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background:
+    color-mix(
+      in srgb,
+      var(--fk-success) 14%,
+      transparent
+    );
+
+  font-size: 11px;
+}
+
+/* ============================================================================
+   MAIN GRID
+   ============================================================================ */
+
+.fockis-checkout__grid {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    360px;
+
+  gap: var(--checkout-gap);
+
+  align-items: start;
+}
+
+/* ============================================================================
+   PAYMENT CARD
+   ============================================================================ */
+
+.fockis-checkout__payment-card {
+  min-width: 0;
+
+  padding: 24px;
+
+  background: var(--fk-surface);
+
+  border: 1px solid var(--fk-border);
+
+  border-radius: var(--fk-r-lg);
+
+  box-shadow: var(--fk-shadow-sm);
+}
+
+/* ============================================================================
+   SECTION HEADING
+   ============================================================================ */
+
+.fockis-checkout__section-heading {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 13px;
+
+  margin-bottom: 20px;
+}
+
+.fockis-checkout__step {
+  width: 30px;
+  height: 30px;
+
+  flex: 0 0 30px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--fk-r-pill);
+
+  background: var(--fk-fjord-soft);
+
+  color: var(--fk-fjord);
+
+  font-size: 12px;
+  font-weight: 900;
+
+  line-height: 1;
+}
+
+.fockis-checkout__section-heading h2 {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-family: var(--fk-font-display);
+
+  font-size: 18px;
+  font-weight: 800;
+
+  line-height: 1.3;
+}
+
+.fockis-checkout__section-heading p {
+  margin: 4px 0 0;
+
+  color: var(--fk-text-2);
+
+  font-size: 13px;
+
+  line-height: 1.5;
+}
+
+/* ============================================================================
+   FORM
+   ============================================================================ */
+
+.fockis-checkout__form {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 18px;
+}
+
+/* ============================================================================
+   CARD FIELD
+   ============================================================================ */
+
+.fockis-checkout__card-field {
+  width: 100%;
+}
+
+.fockis-checkout__card-field > label {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  margin-bottom: 8px;
+
+  color: var(--fk-text);
+
+  font-size: 13px;
+  font-weight: 800;
+
+  line-height: 1.4;
+}
+
+.fockis-checkout__card-field > label span {
+  color: var(--fk-text-3);
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   STRIPE ELEMENT
+   ============================================================================ */
+
+.fockis-checkout__stripe-element {
+  width: 100%;
+
+  min-height: 54px;
+
+  padding: 16px;
+
+  display: flex;
+
+  align-items: center;
+
+  background: var(--fk-sunken);
+
+  border: 1px solid var(--fk-border);
+
+  border-radius: var(--fk-r-md);
+
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+
+  overflow: hidden;
+}
+
+.fockis-checkout__stripe-element:hover {
+  border-color: var(--fk-border-strong);
+}
+
+.fockis-checkout__stripe-element:focus-within {
+  background: var(--fk-surface);
+
+  border-color: var(--fk-fjord-bright);
+
+  box-shadow:
+    0 0 0 3px var(--fk-fjord-soft);
+}
+
+/*
+   Stripe injects an iframe inside this element.
+*/
+
+.fockis-checkout__stripe-element .StripeElement {
+  width: 100%;
+}
+
+.fockis-checkout__stripe-element iframe {
+  width: 100% !important;
+}
+
+/* ============================================================================
+   CARD STATUS
+   ============================================================================ */
+
+.fockis-checkout__card-status {
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  margin-top: 8px;
+
+  color: var(--fk-text-3);
+
+  font-size: 11px;
+
+  line-height: 1.4;
+}
+
+.fockis-checkout__card-status--ready {
+  color: var(--fk-success);
+}
+
+.fockis-checkout__card-status-icon {
+  width: 17px;
+  height: 17px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 17px;
+
+  border-radius: 50%;
+
+  background:
+    color-mix(
+      in srgb,
+      var(--fk-success) 12%,
+      transparent
+    );
+
+  font-size: 10px;
+  font-weight: 900;
+}
+
+/* ============================================================================
+   FIELD ERROR
+   ============================================================================ */
+
+.fockis-checkout__field-error {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 8px;
+
+  margin-top: 9px;
+
+  padding: 10px 12px;
+
+  color: var(--fk-danger);
+
+  background:
+    color-mix(
+      in srgb,
+      var(--fk-danger) 8%,
+      var(--fk-surface)
+    );
+
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--fk-danger) 24%,
+      var(--fk-border)
+    );
+
+  border-radius: var(--fk-r-md);
+
+  font-size: 12px;
+  font-weight: 600;
+
+  line-height: 1.5;
+}
+
+.fockis-checkout__field-error::before {
+  content: "!";
+
+  width: 17px;
+  height: 17px;
+
+  flex: 0 0 17px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background:
+    color-mix(
+      in srgb,
+      var(--fk-danger) 12%,
+      transparent
+    );
+
+  font-size: 10px;
+  font-weight: 900;
+}
+
+/* ============================================================================
+   SECURITY INFORMATION
+   ============================================================================ */
+
+.fockis-checkout__security {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 12px;
+
+  padding: 14px;
+
+  background:
+    color-mix(
+      in srgb,
+      var(--fk-fjord) 5%,
+      var(--fk-surface)
+    );
+
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--fk-fjord) 14%,
+      var(--fk-border)
+    );
+
+  border-radius: var(--fk-r-md);
+}
+
+.fockis-checkout__security-icon {
+  width: 32px;
+  height: 32px;
+
+  flex: 0 0 32px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--fk-r-md);
+
+  background: var(--fk-fjord-soft);
+
+  font-size: 16px;
+}
+
+.fockis-checkout__security strong {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color: var(--fk-text);
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.fockis-checkout__security p {
+  margin: 0;
+
+  color: var(--fk-text-2);
+
+  font-size: 11px;
+
+  line-height: 1.55;
+}
+
+/* ============================================================================
+   ALERTS
+   ============================================================================ */
+
+.fockis-checkout__alert {
+  width: 100%;
+
+  padding: 13px 15px;
+
+  border-radius: var(--fk-r-md);
+
+  font-size: 13px;
+
+  line-height: 1.55;
+}
+
+.fockis-checkout__alert--error {
+  color: var(--fk-danger);
+
+  background:
+    color-mix(
+      in srgb,
+      var(--fk-danger) 8%,
+      var(--fk-surface)
+    );
+
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--fk-danger) 28%,
+      var(--fk-border)
+    );
+}
+
+.fockis-checkout__alert--success {
+  color: var(--fk-success);
+
+  background:
+    color-mix(
+      in srgb,
+      var(--fk-success) 8%,
+      var(--fk-surface)
+    );
+
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--fk-success) 26%,
+      var(--fk-border)
+    );
+}
+
+/* ============================================================================
+   ACTIONS
+   ============================================================================ */
+
+.fockis-checkout__actions {
+  display: grid;
+
+  grid-template-columns: 150px minmax(0, 1fr);
+
+  gap: 10px;
+
+  margin-top: 2px;
+}
+
+/* ============================================================================
+   CANCEL BUTTON
+   ============================================================================ */
+
+.fockis-checkout__cancel {
+  min-height: 48px;
+
+  padding: 0 18px;
+
+  border: 1px solid var(--fk-border);
+
+  border-radius: var(--fk-r-md);
+
+  background: var(--fk-surface);
+
+  color: var(--fk-text);
+
+  font-size: 13px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.fockis-checkout__cancel:hover:not(:disabled) {
+  background: var(--fk-sunken);
+
+  border-color: var(--fk-border-strong);
+
+  transform: translateY(-1px);
+}
+
+.fockis-checkout__cancel:focus-visible {
+  outline: 3px solid var(--fk-fjord-soft);
+
+  outline-offset: 2px;
+}
+
+.fockis-checkout__cancel:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.55;
+}
+
+/* ============================================================================
+   SUBMIT BUTTON
+   ============================================================================ */
+
+.fockis-checkout__submit {
+  position: relative;
+
+  min-height: 48px;
+
+  padding: 0 20px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+
+  border: 0;
+
+  border-radius: var(--fk-r-md);
+
+  background: var(--fk-fjord);
+
+  color: var(--fk-text-inverse);
+
+  font-size: 14px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  box-shadow: none;
+
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+.fockis-checkout__submit:hover:not(:disabled) {
+  background: var(--fk-fjord-dark);
+
+  transform: translateY(-1px);
+
+  box-shadow: var(--fk-shadow-sm);
+}
+
+.fockis-checkout__submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.fockis-checkout__submit:focus-visible {
+  outline: 3px solid var(--fk-fjord-soft);
+
+  outline-offset: 3px;
+}
+
+.fockis-checkout__submit:disabled {
+  background: var(--fk-border-strong);
+
+  color: var(--fk-text-3);
+
+  cursor: not-allowed;
+
+  opacity: 0.8;
+
+  box-shadow: none;
+}
+
+/* ============================================================================
+   SUBMIT SPINNER
+   ============================================================================ */
+
+.fockis-checkout__spinner {
+  width: 17px;
+  height: 17px;
+
+  flex: 0 0 17px;
+
+  border: 2px solid
+    color-mix(
+      in srgb,
+      currentColor 30%,
+      transparent
+    );
+
+  border-top-color: currentColor;
+
+  border-radius: 50%;
+
+  animation:
+    fockis-checkout-spin
+    700ms
+    linear
+    infinite;
+}
+
+@keyframes fockis-checkout-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================================
+   SUMMARY
+   ============================================================================ */
+
+.fockis-checkout__summary {
+  position: sticky;
+
+  top: 20px;
+
+  min-width: 0;
+
+  padding: 22px;
+
+  background: var(--fk-surface);
+
+  border: 1px solid var(--fk-border);
+
+  border-radius: var(--fk-r-lg);
+
+  box-shadow: var(--fk-shadow-sm);
+}
+
+.fockis-checkout__summary-header {
+  margin-bottom: 14px;
+
+  padding-bottom: 14px;
+
+  border-bottom: 1px solid var(--fk-border);
+}
+
+.fockis-checkout__summary-header h2 {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-family: var(--fk-font-display);
+
+  font-size: 18px;
+  font-weight: 800;
+
+  line-height: 1.3;
+}
+
+.fockis-checkout__summary-header p {
+  margin: 5px 0 0;
+
+  color: var(--fk-text-2);
+
+  font-size: 12px;
+
+  line-height: 1.5;
+}
+
+/* ============================================================================
+   SUMMARY ITEMS
+   ============================================================================ */
+
+.fockis-checkout__summary-item {
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  padding: 10px 0;
+
+  color: var(--fk-text-2);
+
+  font-size: 13px;
+
+  line-height: 1.45;
+}
+
+.fockis-checkout__summary-item > span:first-child {
+  min-width: 0;
+}
+
+.fockis-checkout__summary-item > span:last-child {
+  flex-shrink: 0;
+
+  max-width: 60%;
+
+  color: var(--fk-text);
+
+  font-weight: 700;
+
+  text-align: right;
+
+  overflow-wrap: anywhere;
+}
+
+.fockis-checkout__summary-meta {
+  margin-top: -2px;
+
+  padding: 2px 0 8px;
+
+  color: var(--fk-text-3);
+
+  font-size: 11px;
+
+  line-height: 1.45;
+}
+
+/* ============================================================================
+   TOTAL
+   ============================================================================ */
+
+.fockis-checkout__total {
+  display: flex;
+
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  margin-top: 8px;
+
+  padding-top: 17px;
+
+  border-top: 1px solid var(--fk-border);
+}
+
+.fockis-checkout__total span {
+  color: var(--fk-text);
+
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.fockis-checkout__total strong {
+  color: var(--fk-text);
+
+  font-family: var(--fk-font-display);
+
+  font-size: 25px;
+  font-weight: 900;
+
+  line-height: 1;
+
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   GUARANTEES
+   ============================================================================ */
+
+.fockis-checkout__guarantees {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 9px;
+
+  margin-top: 18px;
+
+  padding-top: 16px;
+
+  border-top: 1px solid var(--fk-border);
+}
+
+.fockis-checkout__guarantees > div {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 8px;
+
+  color: var(--fk-text-2);
+
+  font-size: 11px;
+
+  line-height: 1.45;
+}
+
+.fockis-checkout__guarantees > div::first-letter {
+  color: var(--fk-success);
+}
+
+/* ============================================================================
+   LOADING STATE
+   ============================================================================ */
+
+.fockis-checkout__loading {
+  min-height: 260px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.fockis-checkout__loading-spinner {
+  width: 40px;
+  height: 40px;
+
+  border: 4px solid var(--fk-border);
+
+  border-top-color: var(--fk-fjord);
+
+  border-radius: 50%;
+
+  animation:
+    fockis-checkout-spin
+    800ms
+    linear
+    infinite;
+}
+
+.fockis-checkout__loading h2 {
+  margin: 15px 0 0;
+
+  color: var(--fk-text);
+
+  font-family: var(--fk-font-display);
+
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.fockis-checkout__loading p {
+  margin: 6px 0 0;
+
+  color: var(--fk-text-2);
+
+  font-size: 13px;
+}
+
+/* ============================================================================
+   SUCCESS STATE
+   ============================================================================ */
+
+.fockis-checkout__success {
+  width: min(100%, 620px);
+
+  margin: 60px auto;
+
+  padding: 34px;
+
+  text-align: center;
+
+  background: var(--fk-surface);
+
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--fk-success) 25%,
+      var(--fk-border)
+    );
+
+  border-radius: var(--fk-r-lg);
+
+  box-shadow: var(--fk-shadow-sm);
+}
+
+.fockis-checkout__success-icon {
+  width: 64px;
+  height: 64px;
+
+  margin: 0 auto 17px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background:
+    color-mix(
+      in srgb,
+      var(--fk-success) 12%,
+      transparent
+    );
+
+  color: var(--fk-success);
+
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.fockis-checkout__success h1 {
+  margin: 0;
+
+  color: var(--fk-text);
+
+  font-family: var(--fk-font-display);
+
+  font-size: 27px;
+  font-weight: 900;
+}
+
+.fockis-checkout__success p {
+  max-width: 470px;
+
+  margin: 10px auto 0;
+
+  color: var(--fk-text-2);
+
+  font-size: 14px;
+
+  line-height: 1.6;
+}
+
+/* ============================================================================
+   DISABLED / PROCESSING
+   ============================================================================ */
+
+.fockis-checkout__form.is-processing {
+  pointer-events: none;
+
+  opacity: 0.85;
+}
+
+/* ============================================================================
+   STRIPE ERROR / GENERIC ERROR HELPERS
+   ============================================================================ */
+
+.fockis-checkout [role="alert"] {
+  overflow-wrap: anywhere;
+}
+
+.fockis-checkout [role="status"] {
+  overflow-wrap: anywhere;
+}
+
+/* ============================================================================
+   RESPONSIVE — TABLET
+   ============================================================================ */
+
+@media (max-width: 960px) {
+  .fockis-checkout__container {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .fockis-checkout__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .fockis-checkout__summary {
+    position: static;
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE — SMALL TABLET / LARGE PHONE
+   ============================================================================ */
+
+@media (max-width: 700px) {
+  .fockis-checkout {
+    padding-bottom: 45px;
+  }
+
+  .fockis-checkout__container {
+    padding: 22px 16px 0;
+  }
+
+  .fockis-checkout__header {
+    margin-bottom: 18px;
+  }
+
+  .fockis-checkout__header h1 {
+    font-size: 28px;
+  }
+
+  .fockis-checkout__payment-card {
+    padding: 19px;
+  }
+
+  .fockis-checkout__summary {
+    padding: 19px;
+  }
+
+  .fockis-checkout__actions {
+    grid-template-columns: 1fr;
+  }
+
+  .fockis-checkout__cancel,
+  .fockis-checkout__submit {
+    width: 100%;
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE — PHONE
+   ============================================================================ */
+
+@media (max-width: 520px) {
+  .fockis-checkout__container {
+    padding: 18px 12px 0;
+  }
+
+  .fockis-checkout__header h1 {
+    font-size: 25px;
+  }
+
+  .fockis-checkout__header p {
+    font-size: 12px;
+  }
+
+  .fockis-checkout__secure {
+    font-size: 10px;
+  }
+
+  .fockis-checkout__payment-card {
+    padding: 16px;
+
+    border-radius: var(--fk-r-md);
+  }
+
+  .fockis-checkout__summary {
+    padding: 16px;
+
+    border-radius: var(--fk-r-md);
+  }
+
+  .fockis-checkout__section-heading {
+    gap: 10px;
+
+    margin-bottom: 16px;
+  }
+
+  .fockis-checkout__step {
+    width: 27px;
+    height: 27px;
+
+    flex-basis: 27px;
+  }
+
+  .fockis-checkout__section-heading h2 {
+    font-size: 16px;
+  }
+
+  .fockis-checkout__section-heading p {
+    font-size: 12px;
+  }
+
+  .fockis-checkout__stripe-element {
+    min-height: 56px;
+
+    padding: 14px 12px;
+  }
+
+  .fockis-checkout__security {
+    padding: 12px;
+  }
+
+  .fockis-checkout__security p {
+    font-size: 10px;
+  }
+
+  .fockis-checkout__summary-item {
+    gap: 10px;
+
+    font-size: 12px;
+  }
+
+  .fockis-checkout__summary-item > span:last-child {
+    max-width: 55%;
+  }
+
+  .fockis-checkout__total strong {
+    font-size: 22px;
+  }
+
+  .fockis-checkout__success {
+    margin: 30px auto;
+
+    padding: 25px 18px;
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE — VERY SMALL PHONE
+   ============================================================================ */
+
+@media (max-width: 380px) {
+  .fockis-checkout__container {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .fockis-checkout__header h1 {
+    font-size: 23px;
+  }
+
+  .fockis-checkout__payment-card,
+  .fockis-checkout__summary {
+    padding: 14px;
+  }
+
+  .fockis-checkout__total strong {
+    font-size: 20px;
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY
+   ============================================================================ */
+
+.fockis-checkout button:focus-visible,
+.fockis-checkout input:focus-visible,
+.fockis-checkout select:focus-visible {
+  outline: 3px solid var(--fk-fjord-soft);
+
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fockis-checkout *,
+  .fockis-checkout *::before,
+  .fockis-checkout *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================================
+   DARK MODE SAFETY
+   ============================================================================ */
+
+@media (prefers-color-scheme: dark) {
+  .fockis-checkout__stripe-element {
+    color-scheme: dark;
+  }
+}
+
+/* ============================================================================
+   PRINT
+   ============================================================================ */
+
+@media print {
+  .fockis-checkout {
+    min-height: auto;
+
+    padding: 0;
+
+    background: #fff;
+
+    color: #000;
+  }
+
+  .fockis-checkout__container {
+    width: 100%;
+
+    max-width: none;
+
+    padding: 0;
+  }
+
+  .fockis-checkout__grid {
+    display: block;
+  }
+
+  .fockis-checkout__payment-card,
+  .fockis-checkout__summary {
+    box-shadow: none;
+
+    border-color: #ccc;
+  }
+
+  .fockis-checkout__actions,
+  .fockis-checkout__secure {
+    display: none;
+  }
+}
