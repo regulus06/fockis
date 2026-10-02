@@ -15,28 +15,35 @@ import {
 } from '@nestjs/common';
 
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
+import { Storage } from '@google-cloud/storage';
 
 import { PostsService } from './posts.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('posts')
 export class PostsController {
+  private readonly storage: Storage;
+  private readonly bucketName: string;
+
   constructor(
     private readonly postsService: PostsService,
-  ) {}
+  ) {
+    this.storage = this.createStorage();
 
-  // ==========================================================================
+    this.bucketName =
+      process.env.GOOGLE_CLOUD_STORAGE_BUCKET || '';
+
+    if (!this.bucketName) {
+      console.warn(
+        'GOOGLE_CLOUD_STORAGE_BUCKET is not configured. Post uploads will fail until it is set.',
+      );
+    }
+  }
+
+  // ============================================================
   // GET ALL POSTS
-  // ==========================================================================
-  //
-  // GET /posts
-  //
-  // Optional:
-  //
-  // GET /posts?userId=USER_ID
-  //
-  // ==========================================================================
+  // ============================================================
 
   @Get()
   @UseGuards(JwtAuthGuard)
@@ -56,13 +63,9 @@ export class PostsController {
     return this.normalizePosts(posts);
   }
 
-  // ==========================================================================
+  // ============================================================
   // GET POSTS BY USER
-  // ==========================================================================
-  //
-  // GET /posts/user/:userId
-  //
-  // ==========================================================================
+  // ============================================================
 
   @Get('user/:userId')
   @UseGuards(JwtAuthGuard)
@@ -88,16 +91,9 @@ export class PostsController {
     return this.normalizePosts(posts);
   }
 
-  // ==========================================================================
+  // ============================================================
   // GET ONE POST
-  // ==========================================================================
-  //
-  // GET /posts/:id
-  //
-  // IMPORTANT:
-  // Keep this AFTER /user/:userId.
-  //
-  // ==========================================================================
+  // ============================================================
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
@@ -117,43 +113,40 @@ export class PostsController {
     return this.normalizePost(post);
   }
 
-  // ==========================================================================
+  // ============================================================
   // CREATE POST
-  // ==========================================================================
+  // ============================================================
 
   @HttpPost()
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads',
-
-        filename: (
-          req,
-          file,
-          cb,
-        ) => {
-          const safeName =
-            file.originalname.replace(
-              /[^a-zA-Z0-9.-]/g,
-              '-',
-            );
-
-          cb(
-            null,
-            `${Date.now()}-${safeName}`,
-          );
-        },
-      }),
+      storage: memoryStorage(),
+      limits: {
+        fileSize: 200 * 1024 * 1024,
+      },
     }),
   )
   async create(
-    @UploadedFile() file: any,
+    @UploadedFile()
+    file: Express.Multer.File | undefined,
     @Body() body: any,
   ) {
     if (!body.user) {
       throw new BadRequestException(
         'User ID is required',
       );
+    }
+
+    let media =
+      typeof body.media === 'string'
+        ? body.media
+        : '';
+
+    if (file) {
+      media =
+        await this.uploadPostFileToGoogleCloud(
+          file,
+        );
     }
 
     const post =
@@ -173,29 +166,22 @@ export class PostsController {
           body.type || 'post',
 
         audience:
-          body.audience ||
-          'public',
+          body.audience || 'public',
 
-        media: file
-          ? `/uploads/${file.filename}`
-          : body.media || '',
+        media,
       });
 
-    return this.normalizePost(
-      post,
-    );
+    return this.normalizePost(post);
   }
 
-  // ==========================================================================
+  // ============================================================
   // LIKE / UNLIKE
-  // ==========================================================================
+  // ============================================================
 
   @HttpPost(':id/like')
   like(
     @Param('id') id: string,
-
-    @Body('userId')
-    userId: string,
+    @Body('userId') userId: string,
   ) {
     if (!userId) {
       throw new BadRequestException(
@@ -209,16 +195,14 @@ export class PostsController {
     );
   }
 
-  // ==========================================================================
+  // ============================================================
   // REPOST / UN-REPOST
-  // ==========================================================================
+  // ============================================================
 
   @HttpPost(':id/repost')
   repost(
     @Param('id') id: string,
-
-    @Body('userId')
-    userId: string,
+    @Body('userId') userId: string,
   ) {
     if (!userId) {
       throw new BadRequestException(
@@ -232,16 +216,14 @@ export class PostsController {
     );
   }
 
-  // ==========================================================================
+  // ============================================================
   // VIEW
-  // ==========================================================================
+  // ============================================================
 
   @HttpPost(':id/view')
   view(
     @Param('id') id: string,
-
-    @Body('userId')
-    userId: string,
+    @Body('userId') userId: string,
   ) {
     if (!userId) {
       throw new BadRequestException(
@@ -255,14 +237,13 @@ export class PostsController {
     );
   }
 
-  // ==========================================================================
+  // ============================================================
   // SHARE
-  // ==========================================================================
+  // ============================================================
 
   @HttpPost(':id/share')
   share(
     @Param('id') id: string,
-
     @Body()
     body: {
       userId: string;
@@ -297,30 +278,13 @@ export class PostsController {
     );
   }
 
-  // ==========================================================================
+  // ============================================================
   // COMMENT
-  // ==========================================================================
-  //
-  // POST /posts/:id/comment
-  //
-  // Returns:
-  //
-  // {
-  //   post,
-  //   comment,
-  //   comments,
-  //   commentsCount
-  // }
-  //
-  // This allows the frontend to immediately update the comment list
-  // and comment counter without refreshing the page.
-  //
-  // ==========================================================================
+  // ============================================================
 
   @HttpPost(':id/comment')
   async comment(
     @Param('id') id: string,
-
     @Body()
     body: {
       userId: string;
@@ -352,17 +316,16 @@ export class PostsController {
 
     return {
       ...result,
-
       post:
-        this.normalizePost(
+        await this.normalizePost(
           result.post,
         ),
     };
   }
 
-  // ==========================================================================
+  // ============================================================
   // EDIT POST
-  // ==========================================================================
+  // ============================================================
 
   @Patch(':id')
   async update(
@@ -401,16 +364,14 @@ export class PostsController {
     return this.normalizePost(post);
   }
 
-  // ==========================================================================
+  // ============================================================
   // DELETE
-  // ==========================================================================
+  // ============================================================
 
   @Delete(':id')
   delete(
     @Param('id') id: string,
-
-    @Body('userId')
-    userId: string,
+    @Body('userId') userId: string,
   ) {
     if (!userId) {
       throw new BadRequestException(
@@ -424,9 +385,143 @@ export class PostsController {
     );
   }
 
-  // ==========================================================================
-  // AUTHENTICATED USER ID HELPER
-  // ==========================================================================
+  // ============================================================
+  // GOOGLE CLOUD STORAGE INITIALIZATION
+  // ============================================================
+
+  private createStorage(): Storage {
+    const projectId =
+      process.env.GOOGLE_CLOUD_PROJECT ||
+      undefined;
+
+    const rawCredentials =
+      process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim();
+
+    if (!rawCredentials) {
+      return new Storage({
+        projectId,
+      });
+    }
+
+    try {
+      const parsed =
+        JSON.parse(rawCredentials);
+
+      if (
+        !parsed.client_email ||
+        !parsed.private_key
+      ) {
+        throw new Error(
+          'Missing client_email or private_key',
+        );
+      }
+
+      return new Storage({
+        projectId,
+
+        credentials: {
+          client_email:
+            parsed.client_email,
+
+          private_key:
+            String(
+              parsed.private_key,
+            ).replace(
+              /\\n/g,
+              '\n',
+            ),
+        },
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : String(error);
+
+      throw new Error(
+        `GOOGLE_SERVICE_ACCOUNT_JSON is invalid: ${message}`,
+      );
+    }
+  }
+
+  // ============================================================
+  // UPLOAD POST FILE TO GOOGLE CLOUD STORAGE
+  // ============================================================
+
+  private async uploadPostFileToGoogleCloud(
+    file: Express.Multer.File,
+  ): Promise<string> {
+    if (!this.bucketName) {
+      throw new BadRequestException(
+        'Google Cloud Storage is not configured on the backend.',
+      );
+    }
+
+    if (!file?.buffer) {
+      throw new BadRequestException(
+        'Uploaded file data is missing.',
+      );
+    }
+
+    const safeName =
+      file.originalname
+        .replace(
+          /[^a-zA-Z0-9.-]/g,
+          '-',
+        )
+        .replace(
+          /-+/g,
+          '-',
+        )
+        .replace(
+          /^-|-$/g,
+          '',
+        ) || 'upload';
+
+    const objectName =
+      `posts/${Date.now()}-${safeName}`;
+
+    const storageFile =
+      this.storage
+        .bucket(this.bucketName)
+        .file(objectName);
+
+    await storageFile.save(
+      file.buffer,
+      {
+        resumable: false,
+
+        metadata: {
+          contentType:
+            file.mimetype ||
+            'application/octet-stream',
+
+          cacheControl:
+            'private, max-age=3600',
+        },
+      },
+    );
+
+    /*
+     * Keep the existing MongoDB format.
+     *
+     * Example:
+     *
+     * /uploads/1786522428662-house.jpg
+     *
+     * The actual file is now stored in:
+     *
+     * posts/1786522428662-house.jpg
+     */
+    return `/uploads/${objectName.replace(
+      /^posts\//,
+      '',
+    )}`;
+  }
+
+  // ============================================================
+  // AUTHENTICATED USER ID
+  // ============================================================
 
   private getAuthenticatedUserId(
     req: any,
@@ -446,25 +541,11 @@ export class PostsController {
     return String(userId);
   }
 
-  // ==========================================================================
+  // ============================================================
   // NORMALIZE SINGLE POST
-  // ==========================================================================
-  //
-  // Your database stores uploaded post media as:
-  //
-  // media: "/uploads/example.jpg"
-  //
-  // Your frontend profile API looks for:
-  //
-  // images
-  // image
-  // mediaUrl
-  //
-  // So expose all three.
-  //
-  // ==========================================================================
+  // ============================================================
 
-  private normalizePost(
+  private async normalizePost(
     post: any,
   ) {
     if (!post) {
@@ -476,31 +557,33 @@ export class PostsController {
         ? post.toObject()
         : post;
 
-    const media =
+    const storedMedia =
       typeof raw.media === 'string'
         ? raw.media
         : '';
 
+    const resolvedMedia =
+      await this.resolveMediaUrl(
+        storedMedia,
+      );
+
     const image =
       typeof raw.image === 'string'
         ? raw.image
-        : media;
+        : resolvedMedia;
 
     const mediaUrl =
       typeof raw.mediaUrl === 'string'
         ? raw.mediaUrl
-        : media;
+        : resolvedMedia;
 
     let images: string[] = [];
 
-    if (
-      Array.isArray(raw.images)
-    ) {
+    if (Array.isArray(raw.images)) {
       images =
         raw.images.filter(
           (value: any) =>
-            typeof value ===
-              'string' &&
+            typeof value === 'string' &&
             value.length > 0,
         );
     }
@@ -520,23 +603,17 @@ export class PostsController {
     }
 
     if (
-      media &&
-      !images.includes(media)
+      resolvedMedia &&
+      !images.includes(resolvedMedia)
     ) {
-      images.push(media);
+      images.push(resolvedMedia);
     }
 
     return {
       ...raw,
 
-      /*
-       * Original database field.
-       */
-      media,
+      media: resolvedMedia,
 
-      /*
-       * Fields expected by Fockis frontend.
-       */
       image:
         image || undefined,
 
@@ -545,10 +622,6 @@ export class PostsController {
 
       images,
 
-      /*
-       * Make sure user information is
-       * also available consistently.
-       */
       user:
         raw.user ||
         raw.author ||
@@ -561,20 +634,111 @@ export class PostsController {
     };
   }
 
-  // ==========================================================================
-  // NORMALIZE POST ARRAY
-  // ==========================================================================
+  // ============================================================
+  // NORMALIZE POSTS
+  // ============================================================
 
-  private normalizePosts(
-    posts: any,
+  private async normalizePosts(
+    posts: any[],
   ) {
     if (!Array.isArray(posts)) {
       return [];
     }
 
-    return posts.map(
-      (post) =>
+    return Promise.all(
+      posts.map((post) =>
         this.normalizePost(post),
+      ),
     );
+  }
+
+  // ============================================================
+  // RESOLVE MEDIA URL
+  // ============================================================
+
+  private async resolveMediaUrl(
+    media: string,
+  ): Promise<string> {
+    if (!media) {
+      return '';
+    }
+
+    /*
+     * Don't modify already usable URLs.
+     */
+    if (
+      media.startsWith('http://') ||
+      media.startsWith('https://') ||
+      media.startsWith('blob:') ||
+      media.startsWith('data:')
+    ) {
+      return media;
+    }
+
+    const clean =
+      media
+        .replace(/\\/g, '/')
+        .replace(/^\/+/g, '');
+
+    /*
+     * Only resolve Fockis upload paths.
+     */
+    if (
+      !clean.startsWith('uploads/')
+    ) {
+      return media;
+    }
+
+    const filename =
+      clean
+        .replace(/^uploads\//, '')
+        .replace(/^posts\//, '');
+
+    if (!filename) {
+      return '';
+    }
+
+    if (!this.bucketName) {
+      return media;
+    }
+
+    const objectName =
+      `posts/${filename}`;
+
+    try {
+      const [url] =
+        await this.storage
+          .bucket(this.bucketName)
+          .file(objectName)
+          .getSignedUrl({
+            version: 'v4',
+            action: 'read',
+
+            /*
+             * Signed URL expires after 6 days.
+             */
+            expires:
+              Date.now() +
+              6 *
+                24 *
+                60 *
+                60 *
+                1000,
+          });
+
+      return url;
+    } catch (error) {
+      console.error(
+        `Failed to sign post media ${objectName}:`,
+        error,
+      );
+
+      /*
+       * If an old media file has not yet
+       * been migrated to GCS, don't crash
+       * the entire Feed request.
+       */
+      return media;
+    }
   }
 }
