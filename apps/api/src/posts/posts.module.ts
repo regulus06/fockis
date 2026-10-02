@@ -1,15 +1,16 @@
-import { Module } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 
-import { PostsController } from "./posts.controller";
-import { PostsService } from "./posts.service";
+import { PostsController } from './posts.controller';
+import { PostMediaController } from './post-media.controller';
+import { PostsService } from './posts.service';
 
 import {
   Post,
   PostSchema,
-} from "./post.schema";
+} from './post.schema';
 
-import { FriendsModule } from "../friends/friends.module";
+import { FriendsModule } from '../friends/friends.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { FriendsModule } from "../friends/friends.module";
 
   controllers: [
     PostsController,
+    PostMediaController,
   ],
 
   providers: [
