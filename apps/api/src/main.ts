@@ -45,6 +45,9 @@ async function bootstrap() {
       contentSecurityPolicy: false,
 
       crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: {
+        policy: "cross-origin",
+      },
 
     }),
 
@@ -309,6 +312,9 @@ async function bootstrap() {
       "Origin",
 
       "X-Requested-With",
+      "Cache-Control",
+      "Pragma",
+      "Range",
 
     ],
 
@@ -1140,3 +1146,6 @@ bootstrap().catch((error) => {
   process.exit(1);
 
 });
+
+
+
