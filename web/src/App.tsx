@@ -95,7 +95,7 @@ import Register from "./pages/Register";
 // ============================================================================
 
 import FockisFeedPage from "./pages/FockisFeedPage";
-import FockisProfilePage from "./features/fockisprofile/pages/FockisProfilePage";
+import FockisProfilePage from "./features/gifts/fockisprofile/pages/FockisProfilePage";
 
 // ============================================================================
 // MESSAGES
@@ -121,9 +121,9 @@ import { FockisMap } from "./map/FockisMap";
 // FRIENDS
 // ============================================================================
 
-import FockisFriendsPage from "./features/fockisprofile/pages/FockisFriendsPage";
-import FockisSentRequestsPage from "./features/fockisprofile/pages/FockisSentRequestsPage";
-import FockisBlockedUsersPage from "./features/fockisprofile/pages/FockisBlockedUsersPage";
+import FockisFriendsPage from "./features/gifts/fockisprofile/pages/FockisFriendsPage";
+import FockisSentRequestsPage from "./features/gifts/fockisprofile/pages/FockisSentRequestsPage";
+import FockisBlockedUsersPage from "./features/gifts/fockisprofile/pages/FockisBlockedUsersPage";
 
 // ============================================================================
 // ORDERS
@@ -155,18 +155,12 @@ import GiftHistoryPage from "./features/gifts/pages/GiftHistoryPage";
 
 import EarningsPage from "./features/earnings/pages/EarningsPage";
 
+
 // ============================================================================
 // MARKETING
 // ============================================================================
 
-import MarketingDashboard from "./features/marketing/pages/MarketingDashboard";
-import MarketingCampaignsPage from "./features/marketing/pages/MarketingCampaignsPage";
-import CreateCampaignPage from "./features/marketing/pages/CreateCampaignPage";
-import CampaignDetailsPage from "./features/marketing/pages/CampaignDetailsPage";
-import CampaignAnalyticsPage from "./features/marketing/pages/CampaignAnalyticsPage";
-import MarketingBillingPage from "./features/marketing/pages/MarketingBillingPage";
-import AdsManagerPage from "./features/marketing/pages/AdsManagerPage";
-import MarketingPendingReviewPage from "./features/marketing/pages/MarketingPendingReviewPage";
+import FockisMarketingRoutes from "./features/admin/fockismail/routes/FockisMarketingRoutes";
 
 // ============================================================================
 // SUBSCRIPTIONS
@@ -937,6 +931,75 @@ function App(): React.JSX.Element {
       <Route
         path="/register"
         element={<Register />}
+      />
+
+      {/* ====================================================================
+          GLOBAL ADMIN
+      ==================================================================== */}
+
+      {/* ====================================================================
+          FOCKIS MARKETING ADMIN
+
+          These specific routes must be outside the main Layout route tree.
+          The generic /admin/* route is handled by AdminRoutes, so keeping
+          these routes inside Layout causes the marketing pages to fall into
+          the generic admin router instead of rendering the marketing app.
+      ==================================================================== */}
+
+      <Route
+        path="/admin/fockismail/*"
+        element={
+          <FockisMarketingRoutes
+            section="mailchimp"
+            audienceId={
+              import.meta.env.VITE_MAILCHIMP_AUDIENCE_ID || ""
+            }
+          />
+        }
+      />
+
+      <Route
+        path="/admin/fockismail/agency/*"
+        element={
+          <FockisMarketingRoutes
+            section="agency"
+            audienceId={
+              import.meta.env.VITE_MAILCHIMP_AUDIENCE_ID || ""
+            }
+          />
+        }
+      />
+
+      <Route
+        path="/admin/fockismail/billing/*"
+        element={
+          <FockisMarketingRoutes
+            section="billing"
+            audienceId={
+              import.meta.env.VITE_MAILCHIMP_AUDIENCE_ID || ""
+            }
+          />
+        }
+      />
+
+      {/* ====================================================================
+          FOCKIS MARKETING ALIAS
+
+          Keep the same Fockis Marketing application available from /marketing
+          without introducing duplicate page imports or a second marketing
+          router.
+      ==================================================================== */}
+
+      <Route
+        path="/marketing/*"
+        element={
+          <FockisMarketingRoutes
+            section="mailchimp"
+            audienceId={
+              import.meta.env.VITE_MAILCHIMP_AUDIENCE_ID || ""
+            }
+          />
+        }
       />
 
       {/* ====================================================================
@@ -1805,80 +1868,6 @@ function App(): React.JSX.Element {
         <Route
           path="/create/templates"
           element={<FockisCreatePage />}
-        />
-
-        {/* ==================================================================
-            MARKETING
-        ================================================================== */}
-
-        <Route
-          path="/dashboard"
-          element={<MarketingDashboard />}
-        />
-
-        <Route
-          path="/marketing"
-          element={<MarketingDashboard />}
-        />
-
-        <Route
-          path="/marketing/dashboard"
-          element={<MarketingDashboard />}
-        />
-
-        <Route
-          path="/marketing/campaigns"
-          element={<MarketingCampaignsPage />}
-        />
-
-        <Route
-          path="/marketing/campaigns/create"
-          element={<CreateCampaignPage />}
-        />
-
-        <Route
-          path="/marketing/campaigns/:campaignId"
-          element={<CampaignDetailsPage />}
-        />
-
-        <Route
-          path="/marketing/campaigns/:campaignId/analytics"
-          element={<CampaignAnalyticsPage />}
-        />
-
-        <Route
-          path="/marketing/campaigns/:campaignId/billing"
-          element={<MarketingBillingPage />}
-        />
-
-        <Route
-          path="/marketing/ads"
-          element={<AdsManagerPage />}
-        />
-
-        <Route
-          path="/marketing/ads-manager"
-          element={<AdsManagerPage />}
-        />
-
-        <Route
-          path="/marketing/campaigns/:campaignId/ads"
-          element={<AdsManagerPage />}
-        />
-
-        <Route
-          path="/marketing/review"
-          element={<MarketingPendingReviewPage />}
-        />
-
-        <Route
-          path="/marketing/pending-review"
-          element={<MarketingPendingReviewPage />}
-        />
-
-        <Route
-          path="/marketing/campaigns/:campaignId/review"
-          element={<MarketingPendingReviewPage />}
         />
 
         {/* ==================================================================

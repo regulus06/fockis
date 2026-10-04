@@ -1,4 +1,3 @@
-
 import {
   Injectable,
   Logger,
@@ -6,17 +5,11 @@ import {
   OnModuleInit,
 } from "@nestjs/common";
 
-import {
-  Storage,
-} from "@google-cloud/storage";
+import { Storage } from "@google-cloud/storage";
 
-import {
-  randomUUID,
-} from "crypto";
+import { randomUUID } from "crypto";
 
-import {
-  promises as fs,
-} from "fs";
+import { promises as fs } from "fs";
 
 import * as path from "path";
 
@@ -38,14 +31,10 @@ import {
 
 @Injectable()
 export class AiVideoWorker
-  implements
-    OnModuleInit,
-    OnModuleDestroy
+  implements OnModuleInit, OnModuleDestroy
 {
   private readonly logger =
-    new Logger(
-      AiVideoWorker.name,
-    );
+    new Logger(AiVideoWorker.name);
 
   private readonly queue =
     "fockis:ai:video";
@@ -64,8 +53,7 @@ export class AiVideoWorker
       1,
       Number(
         process.env
-          .AI_WORKER_CONCURRENCY ||
-          1,
+          .AI_WORKER_CONCURRENCY || 1,
       ),
     );
 
@@ -104,16 +92,41 @@ export class AiVideoWorker
     this.running = false;
   }
 
+  /**
+   * Continuously consume AI video jobs from Redis.
+   *
+   * IMPORTANT:
+   * Never call BRPOP while Redis is disconnected.
+   *
+   * This prevents:
+   *
+   * "Stream isn't writable and enableOfflineQueue options is false"
+   *
+   * from repeatedly crashing the worker loop.
+   */
   private async consume() {
     while (this.running) {
       if (
         this.activeJobs >=
         this.maxConcurrent
       ) {
-        await this.sleep(
-          1000,
-        );
+        await this.sleep(1000);
+        continue;
+      }
 
+      /*
+       * Check the actual ioredis connection state before
+       * attempting BRPOP.
+       *
+       * RedisService exposes the ioredis client, so using
+       * client.status here keeps this worker independent of
+       * an additional RedisService helper method.
+       */
+      if (
+        this.redis.client.status !==
+        "ready"
+      ) {
+        await this.sleep(3000);
         continue;
       }
 
@@ -128,19 +141,24 @@ export class AiVideoWorker
           continue;
         }
 
-        const [, jobId] =
-          item;
+        const [, jobId] = item;
+
+        if (!jobId) {
+          continue;
+        }
 
         this.activeJobs++;
 
         try {
-          await this.process(
-            jobId,
-          );
+          await this.process(jobId);
         } finally {
           this.activeJobs--;
         }
       } catch (error) {
+        /*
+         * Redis can disconnect while BRPOP is waiting.
+         * Treat that as temporary infrastructure failure.
+         */
         this.logger.error(
           "AI worker loop error.",
           error instanceof Error
@@ -148,9 +166,7 @@ export class AiVideoWorker
             : String(error),
         );
 
-        await this.sleep(
-          3000,
-        );
+        await this.sleep(3000);
       }
     }
   }
@@ -159,9 +175,7 @@ export class AiVideoWorker
     jobId: string,
   ) {
     const job =
-      await this.jobs.claim(
-        jobId,
-      );
+      await this.jobs.claim(jobId);
 
     if (!job) {
       return;
@@ -170,8 +184,7 @@ export class AiVideoWorker
     const userId =
       String(job.userId);
 
-    const localFiles: string[] =
-      [];
+    const localFiles: string[] = [];
 
     let finalPath:
       | string
@@ -188,18 +201,21 @@ export class AiVideoWorker
       }
 
       const options =
-        job.options ||
-        {};
+        job.options || {};
 
       const imageGcsUri =
-        typeof options.imageGcsUri === "string" &&
-        options.imageGcsUri.trim().length > 0
+        typeof options.imageGcsUri ===
+          "string" &&
+        options.imageGcsUri.trim()
+          .length > 0
           ? options.imageGcsUri.trim()
           : undefined;
 
       const imageMimeType =
-        typeof options.imageMimeType === "string" &&
-        options.imageMimeType.trim().length > 0
+        typeof options.imageMimeType ===
+          "string" &&
+        options.imageMimeType.trim()
+          .length > 0
           ? options.imageMimeType.trim()
           : undefined;
 
@@ -215,8 +231,7 @@ export class AiVideoWorker
           : "16:9";
 
       const model =
-        job.model ===
-        "quality"
+        job.model === "quality"
           ? "quality"
           : job.model ===
               "standard"
@@ -231,30 +246,25 @@ export class AiVideoWorker
       await this.jobs.updateProgress(
         jobId,
         {
-          phase:
-            "generating",
+          phase: "generating",
 
-          completedScenes:
-            0,
+          completedScenes: 0,
 
           totalScenes:
             sceneCount,
 
-          percentage:
-            1,
+          percentage: 1,
 
           message:
             "Starting real Google Veo 3.1 generation.",
         },
       );
 
-      let generatedSeconds =
-        0;
+      let generatedSeconds = 0;
 
       for (
         let sceneIndex = 0;
-        sceneIndex <
-        sceneCount;
+        sceneIndex < sceneCount;
         sceneIndex++
       ) {
         const current =
@@ -325,8 +335,7 @@ export class AiVideoWorker
         await this.jobs.updateProgress(
           jobId,
           {
-            phase:
-              "generating",
+            phase: "generating",
 
             completedScenes:
               sceneIndex + 1,
@@ -367,8 +376,7 @@ export class AiVideoWorker
       await this.jobs.updateProgress(
         jobId,
         {
-          phase:
-            "assembling",
+          phase: "assembling",
 
           completedScenes:
             sceneCount,
@@ -376,8 +384,7 @@ export class AiVideoWorker
           totalScenes:
             sceneCount,
 
-          percentage:
-            92,
+          percentage: 92,
 
           message:
             "Assembling the final video.",
@@ -393,8 +400,7 @@ export class AiVideoWorker
       await this.jobs.updateProgress(
         jobId,
         {
-          phase:
-            "finalizing",
+          phase: "finalizing",
 
           completedScenes:
             sceneCount,
@@ -402,8 +408,7 @@ export class AiVideoWorker
           totalScenes:
             sceneCount,
 
-          percentage:
-            96,
+          percentage: 96,
 
           message:
             "Uploading the final video.",
@@ -541,6 +546,7 @@ export class AiVideoWorker
         ...(imageGcsUri
           ? {
               imageGcsUri,
+
               imageMimeType:
                 imageMimeType ||
                 "image/jpeg",
@@ -852,24 +858,9 @@ export class AiVideoWorker
     );
 
     /*
-     * IMPORTANT:
-     *
-     * Store the REAL Google Cloud Storage URI
+     * Store the real Google Cloud Storage URI
      * in the AI job.
-     *
-     * Do NOT store:
-     *
-     *   /ai/jobs/:jobId/media
-     *
-     * That path is the authenticated Fockis
-     * media endpoint, not the actual storage
-     * location.
-     *
-     * The controller will use this gs:// URI
-     * to locate the private object and generate
-     * a temporary signed URL.
      */
-
     const mediaPath =
       `gs://${this.bucketName}/${objectName}`;
 
@@ -879,7 +870,6 @@ export class AiVideoWorker
 
     return {
       objectName,
-
       mediaPath,
     };
   }
@@ -889,9 +879,7 @@ export class AiVideoWorker
     amount: number,
   ) {
     if (
-      !Number.isFinite(
-        amount,
-      ) ||
+      !Number.isFinite(amount) ||
       amount <= 0
     ) {
       return;

@@ -2,9 +2,15 @@ import { Module } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 
 import { MongooseModule } from "@nestjs/mongoose";
-import { ConfigModule, ConfigService } from "@nestjs/config";
+import {
+  ConfigModule,
+  ConfigService,
+} from "@nestjs/config";
 import { EventEmitterModule } from "@nestjs/event-emitter";
-import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
+import {
+  ThrottlerGuard,
+  ThrottlerModule,
+} from "@nestjs/throttler";
 
 import { join } from "path";
 
@@ -81,13 +87,25 @@ import { AdminModule } from "./admin/admin.module";
 // FINANCE ADMIN
 // ============================================================================
 
-import { FinanceAdminModule } from "./admin/finance/finance.module";
+import {
+  FinanceAdminModule,
+} from "./admin/finance/finance.module";
 
 // ============================================================================
 // MARKETING ADMIN
 // ============================================================================
 
-import { MarketingAdminModule } from "./admin/marketing-admin/marketing-admin.module";
+import {
+  MarketingAdminModule,
+} from "./admin/marketing-admin/marketing-admin.module";
+
+// ============================================================================
+// FOCKIS MAIL
+// ============================================================================
+
+import {
+  FockisMailModule,
+} from "./fockis-mail-backend/fockis-mail.module";
 
 // ============================================================================
 // OTHER SERVICES
@@ -150,10 +168,18 @@ import {
 
 import { ChurchModule } from "./church/church.module";
 import { MusicModule } from "./music/music.module";
+
 import {
   OrganizationIdentityModule,
 } from "./organization-identity/organization-identity.module";
+
 import { TranslationModule } from "./translation/translation.module";
+
+// ============================================================================
+// REDIS
+// ============================================================================
+
+import { RedisModule } from "./redis/redis.module";
 
 // ============================================================================
 // FOCKIS AI
@@ -168,7 +194,9 @@ import { AiAdminModule } from "./fockis-ai-admin/ai-admin.module";
 
 import { JwtAuthGuard } from "./auth/jwt-auth.guard";
 import { RbacGuard } from "./admin/rbac/rbac.guard";
-import { DestructiveGuard } from "./admin/safety/destructive.guard";
+import {
+  DestructiveGuard,
+} from "./admin/safety/destructive.guard";
 
 // ============================================================================
 // APPLICATION MODULE
@@ -187,6 +215,12 @@ import { DestructiveGuard } from "./admin/safety/destructive.guard";
     }),
 
     // ========================================================================
+    // REDIS
+    // ========================================================================
+
+    RedisModule,
+
+    // ========================================================================
     // EVENTS
     // ========================================================================
 
@@ -194,20 +228,6 @@ import { DestructiveGuard } from "./admin/safety/destructive.guard";
 
     // ========================================================================
     // RATE LIMITING
-    //
-    // Global baseline:
-    //
-    //   120 requests / 60 seconds / client
-    //
-    // This protects the API against:
-    //
-    //   - request floods
-    //   - basic brute-force attacks
-    //   - accidental request loops
-    //   - abusive automated clients
-    //
-    // More sensitive endpoints such as login and password reset will receive
-    // stricter route-specific limits later.
     // ========================================================================
 
     ThrottlerModule.forRoot([
@@ -225,9 +245,13 @@ import { DestructiveGuard } from "./admin/safety/destructive.guard";
       imports: [ConfigModule],
       inject: [ConfigService],
 
-      useFactory: (configService: ConfigService) => {
+      useFactory: (
+        configService: ConfigService,
+      ) => {
         const mongoUri =
-          configService.get<string>("MONGO_URI");
+          configService.get<string>(
+            "MONGO_URI",
+          );
 
         const nodeEnv =
           configService
@@ -240,7 +264,10 @@ import { DestructiveGuard } from "./admin/safety/destructive.guard";
         // FAIL CLOSED
         // --------------------------------------------------------
 
-        if (!mongoUri || !mongoUri.trim()) {
+        if (
+          !mongoUri ||
+          !mongoUri.trim()
+        ) {
           throw new Error(
             "SECURITY ERROR: MONGO_URI is missing. Refusing to start the API.",
           );
@@ -253,8 +280,12 @@ import { DestructiveGuard } from "./admin/safety/destructive.guard";
         // --------------------------------------------------------
 
         if (
-          !uri.startsWith("mongodb://") &&
-          !uri.startsWith("mongodb+srv://")
+          !uri.startsWith(
+            "mongodb://",
+          ) &&
+          !uri.startsWith(
+            "mongodb+srv://",
+          )
         ) {
           throw new Error(
             "SECURITY ERROR: MONGO_URI must use mongodb:// or mongodb+srv://.",
@@ -267,7 +298,9 @@ import { DestructiveGuard } from "./admin/safety/destructive.guard";
 
         if (
           nodeEnv === "production" &&
-          /mongodb:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(uri)
+          /mongodb:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(
+            uri,
+          )
         ) {
           throw new Error(
             "SECURITY ERROR: Production cannot use a localhost MongoDB connection.",
@@ -360,6 +393,11 @@ import { DestructiveGuard } from "./admin/safety/destructive.guard";
     PaymentsModule,
     SubscriptionsModule,
     ContentMonetizationModule,
+
+    // ========================================================================
+    // WALLET / EARNINGS
+    // ========================================================================
+
     WalletModule,
     EarningsModule,
 
@@ -381,6 +419,12 @@ import { DestructiveGuard } from "./admin/safety/destructive.guard";
     // ========================================================================
 
     MarketingAdminModule,
+
+    // ========================================================================
+    // FOCKIS MAIL
+    // ========================================================================
+
+    FockisMailModule,
 
     // ========================================================================
     // OTHER SERVICES

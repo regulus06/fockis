@@ -36,15 +36,24 @@ const isLocal =
   hostname === "localhost" ||
   hostname === "127.0.0.1";
 
+/**
+ * When the frontend is running locally, always use the
+ * local NestJS API.
+ *
+ * This prevents a production VITE_API_URL from accidentally
+ * sending local story/feed/media requests to Render.
+ */
 export const FOCKIS_API_URL =
-  configuredUrl ||
-  (isLocal
+  isLocal
     ? "http://localhost:3000"
-    : "https://fockis.onrender.com");
+    : configuredUrl || "https://fockis.onrender.com";
 
 export const FOCKIS_SOCKET_URL =
   FOCKIS_API_URL.replace(/^http/, "ws");
 
+/**
+ * Build a normal Fockis URL.
+ */
 export function buildFockisUrl(
   path: string,
 ): string {
@@ -52,22 +61,44 @@ export function buildFockisUrl(
     return FOCKIS_API_URL;
   }
 
+  const cleanPath = String(path)
+    .trim()
+    .replace(/\\/g, "/");
+
   if (
-    path.startsWith("http://") ||
-    path.startsWith("https://") ||
-    path.startsWith("blob:") ||
-    path.startsWith("data:")
+    cleanPath.startsWith("http://") ||
+    cleanPath.startsWith("https://") ||
+    cleanPath.startsWith("blob:") ||
+    cleanPath.startsWith("data:")
   ) {
-    return path;
+    return cleanPath;
   }
 
-  const cleanPath = path
-    .replace(/\\/g, "/")
-    .replace(/^\/+/, "");
+  const normalizedPath = cleanPath.replace(
+    /^\/+/,
+    "",
+  );
 
-  return `${FOCKIS_API_URL}/${cleanPath}`;
+  if (!normalizedPath) {
+    return FOCKIS_API_URL;
+  }
+
+  return `${FOCKIS_API_URL}/${normalizedPath}`;
 }
 
+/**
+ * Build an upload/media URL.
+ *
+ * Supports:
+ *
+ * /uploads/photo.jpg
+ * uploads/photo.jpg
+ * photo.jpg
+ * http://...
+ * https://...
+ * blob:...
+ * data:...
+ */
 export function buildFockisUploadUrl(
   path: string,
 ): string {
@@ -75,22 +106,36 @@ export function buildFockisUploadUrl(
     return "";
   }
 
+  const cleanPath = String(path)
+    .trim()
+    .replace(/\\/g, "/");
+
   if (
-    path.startsWith("http://") ||
-    path.startsWith("https://") ||
-    path.startsWith("blob:") ||
-    path.startsWith("data:")
+    cleanPath.startsWith("http://") ||
+    cleanPath.startsWith("https://") ||
+    cleanPath.startsWith("blob:") ||
+    cleanPath.startsWith("data:")
   ) {
-    return path;
+    return cleanPath;
   }
 
-  const cleanPath = path
-    .replace(/\\/g, "/")
-    .replace(/^\/+/, "");
+  const normalizedPath = cleanPath.replace(
+    /^\/+/,
+    "",
+  );
 
-  if (cleanPath.startsWith("uploads/")) {
-    return `${FOCKIS_API_URL}/${cleanPath}`;
+  if (!normalizedPath) {
+    return "";
   }
 
-  return `${FOCKIS_API_URL}/uploads/${cleanPath}`;
+  if (
+    normalizedPath.startsWith("uploads/") ||
+    normalizedPath.startsWith("media/") ||
+    normalizedPath.startsWith("public/uploads/") ||
+    normalizedPath.startsWith("upload/")
+  ) {
+    return `${FOCKIS_API_URL}/${normalizedPath}`;
+  }
+
+  return `${FOCKIS_API_URL}/uploads/${normalizedPath}`;
 }

@@ -68,10 +68,6 @@ import {
 } from "./services/live-guest.service";
 
 import {
-  RedisService,
-} from "../redis/redis.service";
-
-import {
   AuthModule,
 } from "../auth/auth.module";
 
@@ -125,7 +121,6 @@ import {
     LiveGuestService,
 
     LiveGateway,
-    RedisService,
   ],
 
   exports: [

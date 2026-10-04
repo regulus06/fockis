@@ -2,7 +2,6 @@
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-
     "target": "ES2023",
 
     "outDir": "./dist",
@@ -31,6 +30,8 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "strictPropertyInitialization": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+
+    "types": ["node", "jest"]
   }
 }

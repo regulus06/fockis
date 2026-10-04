@@ -1,0 +1,15 @@
+1. Add this import near your other admin/marketing imports:
+
+import { FockisMailModule } from "./fockis-mail/fockis-mail.module";
+
+2. Add FockisMailModule to the @Module({ imports: [...] }) array.
+
+Recommended location:
+
+// ============================================================================
+// FOCKIS MAIL
+// ============================================================================
+
+FockisMailModule,
+
+Do NOT create another MongooseModule.forRoot() in Fockis Mail. Your existing AppModule already owns the MongoDB connection.

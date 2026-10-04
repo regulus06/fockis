@@ -26,7 +26,7 @@ savedApi,
 
 import {
 useFockisProfile,
-} from "../../../features/fockisprofile/hooks/useFockisProfile";
+} from "../../../features/gifts/fockisprofile/hooks/useFockisProfile";
 
 import SidebarMainSection from "./sidebar/SidebarMainSection";
 import SidebarAccountSection from "./sidebar/SidebarAccountSection";
@@ -321,3 +321,4 @@ className={[
 
 );
 }
+

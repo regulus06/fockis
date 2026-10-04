@@ -1,4 +1,6 @@
 import {
+  type ChangeEvent,
+  type SyntheticEvent,
   useEffect,
   useMemo,
   useRef,
@@ -21,9 +23,7 @@ import { IconRepost } from "../../components/fockis/FockisIcons";
 interface VideoReelProps {
   posts: FockisPost[];
   startPostId: string;
-  getInteraction: (
-    postId: string,
-  ) => FockisPostInteraction;
+  getInteraction: (postId: string) => FockisPostInteraction;
   onReact: (postId: string) => void;
   onRepost: (postId: string) => void;
   onSave: (postId: string) => void;
@@ -44,77 +44,52 @@ export default function FockisVideoReel({
   const videoPosts = useMemo(
     () =>
       posts.filter((post) =>
-        buildMediaList(post).some(
-          (item) =>
-            item.type === "video",
-        ),
+        buildMediaList(post).some((item) => item.type === "video"),
       ),
     [posts],
   );
 
   const startIndex = Math.max(
     0,
-    videoPosts.findIndex(
-      (post) =>
-        post.id === startPostId,
-    ),
+    videoPosts.findIndex((post) => post.id === startPostId),
   );
 
-  const containerRef =
-    useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const [
-    activeIndex,
-    setActiveIndex,
-  ] = useState(startIndex);
+  const [activeIndex, setActiveIndex] = useState(startIndex);
+  const [muted, setMuted] = useState(true);
+  const [playing, setPlaying] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [showMore, setShowMore] = useState(false);
 
   useEffect(() => {
     setActiveIndex(startIndex);
   }, [startIndex]);
 
   useEffect(() => {
-    const previousOverflow =
-      document.body.style.overflow;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
-    document.body.style.overflow =
-      "hidden";
-
-    const handler = (
-      event: KeyboardEvent,
-    ) => {
+    const handler = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
       }
     };
 
-    window.addEventListener(
-      "keydown",
-      handler,
-    );
+    window.addEventListener("keydown", handler);
 
     return () => {
-      document.body.style.overflow =
-        previousOverflow;
-
-      window.removeEventListener(
-        "keydown",
-        handler,
-      );
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handler);
     };
   }, [onClose]);
 
   useEffect(() => {
-    const container =
-      containerRef.current;
+    const container = containerRef.current;
+    if (!container) return;
 
-    if (!container) {
-      return;
-    }
-
-    const slide =
-      container.children[
-        startIndex
-      ] as HTMLElement | undefined;
+    const slide = container.children[startIndex] as HTMLElement | undefined;
 
     slide?.scrollIntoView({
       behavior: "auto",
@@ -123,90 +98,51 @@ export default function FockisVideoReel({
   }, [startIndex]);
 
   useEffect(() => {
-    const container =
-      containerRef.current;
-
-    if (!container) {
-      return;
-    }
+    const container = containerRef.current;
+    if (!container) return;
 
     const slides = Array.from(
-      container.querySelectorAll(
-        ".fk-video-reel__slide",
-      ),
+      container.querySelectorAll(".fk-video-reel__slide"),
     ) as HTMLElement[];
 
-    if (slides.length === 0) {
-      return;
-    }
+    if (!slides.length) return;
 
-    const observer =
-      new IntersectionObserver(
-        (entries) => {
-          let bestIndex =
-            activeIndex;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let bestIndex = activeIndex;
+        let bestRatio = 0;
 
-          let bestRatio = 0;
-
-          entries.forEach((entry) => {
-            const index =
-              slides.indexOf(
-                entry.target as HTMLElement,
-              );
-
-            if (
-              index !== -1 &&
-              entry.isIntersecting &&
-              entry.intersectionRatio >
-                bestRatio
-            ) {
-              bestIndex = index;
-              bestRatio =
-                entry.intersectionRatio;
-            }
-          });
+        entries.forEach((entry) => {
+          const index = slides.indexOf(entry.target as HTMLElement);
 
           if (
-            bestIndex !== activeIndex
+            index !== -1 &&
+            entry.isIntersecting &&
+            entry.intersectionRatio > bestRatio
           ) {
-            setActiveIndex(
-              bestIndex,
-            );
+            bestIndex = index;
+            bestRatio = entry.intersectionRatio;
           }
-        },
-        {
-          root: container,
-          threshold: [
-            0.25,
-            0.5,
-            0.75,
-            0.9,
-          ],
-        },
-      );
+        });
 
-    slides.forEach((slide) =>
-      observer.observe(slide),
+        if (bestIndex !== activeIndex) {
+          setActiveIndex(bestIndex);
+        }
+      },
+      {
+        root: container,
+        threshold: [0.25, 0.5, 0.75, 0.9],
+      },
     );
 
-    return () => {
-      observer.disconnect();
-    };
+    slides.forEach((slide) => observer.observe(slide));
+
+    return () => observer.disconnect();
   }, [activeIndex]);
 
-  /*
-   * Only the active reel video is allowed
-   * to play.
-   *
-   * Every other video is explicitly paused.
-   */
   useEffect(() => {
-    const container =
-      containerRef.current;
-
-    if (!container) {
-      return;
-    }
+    const container = containerRef.current;
+    if (!container) return;
 
     const videos = Array.from(
       container.querySelectorAll("video"),
@@ -215,10 +151,7 @@ export default function FockisVideoReel({
     videos.forEach((video, index) => {
       if (index === activeIndex) {
         void video.play().catch(() => {
-          /*
-           * Browser autoplay policy may require
-           * the user to press play.
-           */
+          setPlaying(false);
         });
       } else {
         video.pause();
@@ -226,15 +159,145 @@ export default function FockisVideoReel({
     });
   }, [activeIndex]);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const videos = Array.from(
+      container.querySelectorAll("video"),
+    ) as HTMLVideoElement[];
+
+    const video = videos[activeIndex];
+    if (!video) return;
+
+    setPlaying(!video.paused);
+    setProgress(video.currentTime || 0);
+    setDuration(
+      Number.isFinite(video.duration) ? video.duration : 0,
+    );
+  }, [activeIndex]);
+
+  function togglePlayback(index: number) {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const videos = Array.from(
+      container.querySelectorAll("video"),
+    ) as HTMLVideoElement[];
+
+    const video = videos[index];
+    if (!video) return;
+
+    if (video.paused) {
+      void video
+        .play()
+        .then(() => {
+          if (index === activeIndex) setPlaying(true);
+        })
+        .catch(() => {
+          if (index === activeIndex) setPlaying(false);
+        });
+    } else {
+      video.pause();
+
+      if (index === activeIndex) {
+        setPlaying(false);
+      }
+    }
+  }
+
+  function toggleAudio(index: number) {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const videos = Array.from(
+      container.querySelectorAll("video"),
+    ) as HTMLVideoElement[];
+
+    const video = videos[index];
+    if (!video) return;
+
+    const nextMuted = !video.muted;
+
+    video.muted = nextMuted;
+    setMuted(nextMuted);
+
+    if (!nextMuted) {
+      void video.play().catch(() => {
+        // Browser may require the direct tap as a user gesture.
+      });
+    }
+  }
+
+  async function toggleFullscreen(index: number) {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const videos = Array.from(
+      container.querySelectorAll("video"),
+    ) as HTMLVideoElement[];
+
+    const video = videos[index];
+    if (!video) return;
+
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        return;
+      }
+
+      if (video.requestFullscreen) {
+        await video.requestFullscreen();
+        return;
+      }
+
+      const webkitVideo = video as HTMLVideoElement & {
+        webkitEnterFullscreen?: () => void;
+      };
+
+      webkitVideo.webkitEnterFullscreen?.();
+    } catch {
+      // Fullscreen can be blocked by the browser/device.
+    }
+  }
+
+  function seekVideo(
+    index: number,
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const videos = Array.from(
+      container.querySelectorAll("video"),
+    ) as HTMLVideoElement[];
+
+    const video = videos[index];
+    if (!video) return;
+
+    const nextTime = Number(event.target.value);
+
+    video.currentTime = nextTime;
+    setProgress(nextTime);
+  }
+
+  function formatTime(value: number) {
+    if (!Number.isFinite(value) || value < 0) {
+      return "0:00";
+    }
+
+    const totalSeconds = Math.floor(value);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  }
+
   function handleClose() {
-    const container =
-      containerRef.current;
+    const container = containerRef.current;
 
     if (container) {
-      const videos =
-        container.querySelectorAll(
-          "video",
-        );
+      const videos = container.querySelectorAll("video");
 
       videos.forEach((video) => {
         video.pause();
@@ -243,6 +306,33 @@ export default function FockisVideoReel({
     }
 
     onClose();
+  }
+
+  function handleTimeUpdate(
+    index: number,
+    event: SyntheticEvent<HTMLVideoElement>,
+  ) {
+    if (index !== activeIndex) return;
+
+    const video = event.currentTarget;
+
+    setProgress(video.currentTime);
+    setDuration(
+      Number.isFinite(video.duration) ? video.duration : 0,
+    );
+  }
+
+  function handleMetadata(
+    index: number,
+    event: SyntheticEvent<HTMLVideoElement>,
+  ) {
+    if (index !== activeIndex) return;
+
+    const video = event.currentTarget;
+
+    setDuration(
+      Number.isFinite(video.duration) ? video.duration : 0,
+    );
   }
 
   if (videoPosts.length === 0) {
@@ -265,21 +355,14 @@ export default function FockisVideoReel({
         className="fk-video-reel__scroller"
       >
         {videoPosts.map((post, index) => {
-          const media =
-            buildMediaList(post).find(
-              (item) =>
-                item.type === "video",
-            );
+          const media = buildMediaList(post).find(
+            (item) => item.type === "video",
+          );
 
-          if (!media) {
-            return null;
-          }
+          if (!media) return null;
 
-          const interaction =
-            getInteraction(post.id);
-
-          const isActive =
-            index === activeIndex;
+          const interaction = getInteraction(post.id);
+          const isActive = index === activeIndex;
 
           return (
             <div
@@ -289,50 +372,195 @@ export default function FockisVideoReel({
               <div className="fk-video-reel__media">
                 <video
                   src={media.url}
-                  controls
                   autoPlay={isActive}
                   loop
                   playsInline
-                  muted
-                  preload={
-                    isActive
-                      ? "auto"
-                      : "metadata"
-                  }
+                  muted={muted}
+                  preload={isActive ? "auto" : "metadata"}
                   className="fk-video-reel__video"
                   onPlay={(event) => {
-                    const current =
-                      event.currentTarget;
-
-                    const container =
-                      containerRef.current;
-
-                    if (!container) {
-                      return;
+                    if (index === activeIndex) {
+                      setPlaying(true);
                     }
 
-                    const videos =
-                      container.querySelectorAll(
-                        "video",
-                      );
+                    const current = event.currentTarget;
+                    const container = containerRef.current;
 
-                    videos.forEach(
-                      (video) => {
-                        if (
-                          video !== current
-                        ) {
-                          video.pause();
-                        }
-                      },
-                    );
+                    if (!container) return;
+
+                    const videos =
+                      container.querySelectorAll("video");
+
+                    videos.forEach((video) => {
+                      if (video !== current) {
+                        video.pause();
+                      }
+                    });
                   }}
+                  onPause={() => {
+                    if (index === activeIndex) {
+                      setPlaying(false);
+                    }
+                  }}
+                  onTimeUpdate={(event) =>
+                    handleTimeUpdate(index, event)
+                  }
+                  onLoadedMetadata={(event) =>
+                    handleMetadata(index, event)
+                  }
+                  onEnded={() => {
+                    if (index === activeIndex) {
+                      setPlaying(false);
+                    }
+                  }}
+                  onClick={() => togglePlayback(index)}
                 />
+
+                {/* ============================================================
+                    FOCKIS MEDIA CONTROLS
+                    All native browser video controls have been removed.
+                    These are now positioned by FockisVideoReel.scss.
+                ============================================================ */}
+                <div
+                  className="fk-video-reel__media-controls"
+                  onClick={(event) =>
+                    event.stopPropagation()
+                  }
+                >
+                  <button
+                    type="button"
+                    className="fk-video-reel__media-control"
+                    onClick={() => togglePlayback(index)}
+                    aria-label={
+                      playing
+                        ? "Pause video"
+                        : "Play video"
+                    }
+                    title={
+                      playing
+                        ? "Pause"
+                        : "Play"
+                    }
+                  >
+                    {playing ? "⏸" : "▶"}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="fk-video-reel__media-control"
+                    onClick={() => toggleAudio(index)}
+                    aria-label={
+                      muted
+                        ? "Turn sound on"
+                        : "Mute video"
+                    }
+                    title={
+                      muted
+                        ? "Turn sound on"
+                        : "Mute"
+                    }
+                  >
+                    {muted ? "🔇" : "🔊"}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="fk-video-reel__media-control"
+                    onClick={() =>
+                      void toggleFullscreen(index)
+                    }
+                    aria-label="Fullscreen video"
+                    title="Fullscreen"
+                  >
+                    ⛶
+                  </button>
+
+                  <button
+                    type="button"
+                    className="fk-video-reel__media-control"
+                    onClick={() =>
+                      setShowMore((value) => !value)
+                    }
+                    aria-label="More video options"
+                    aria-expanded={showMore}
+                    title="More"
+                  >
+                    ⋮
+                  </button>
+
+                  {showMore && (
+                    <div
+                      className="fk-video-reel__more-menu"
+                      onClick={(event) =>
+                        event.stopPropagation()
+                      }
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowMore(false);
+                          toggleAudio(index);
+                        }}
+                      >
+                        {muted
+                          ? "Turn sound on"
+                          : "Mute sound"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowMore(false);
+                          void toggleFullscreen(index);
+                        }}
+                      >
+                        Fullscreen
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowMore(false);
+                          handleClose();
+                        }}
+                      >
+                        Close reel
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div
+                  className="fk-video-reel__progress"
+                  onClick={(event) =>
+                    event.stopPropagation()
+                  }
+                >
+                  <input
+                    type="range"
+                    min="0"
+                    max={duration || 0}
+                    step="0.1"
+                    value={Math.min(
+                      progress,
+                      duration || 0,
+                    )}
+                    onChange={(event) =>
+                      seekVideo(index, event)
+                    }
+                    aria-label="Video progress"
+                    disabled={!duration}
+                  />
+
+                  <span>
+                    {formatTime(progress)} /{" "}
+                    {formatTime(duration)}
+                  </span>
+                </div>
               </div>
 
               <div className="fk-video-reel__header">
-                <strong>
-                  {post.user}
-                </strong>
+                <strong>{post.user}</strong>
               </div>
 
               <div className="fk-video-reel__overlay">
@@ -357,14 +585,9 @@ export default function FockisVideoReel({
                   aria-label="Like"
                 >
                   <IconHeart
-                    filled={
-                      interaction.reacted
-                    }
+                    filled={interaction.reacted}
                   />
-
-                  <span>
-                    {post.likes}
-                  </span>
+                  <span>{post.likes}</span>
                 </button>
 
                 <button
@@ -373,12 +596,8 @@ export default function FockisVideoReel({
                   aria-label="Comments"
                 >
                   <IconComment />
-
                   <span>
-                    {
-                      post.comments
-                        .length
-                    }
+                    {post.comments.length}
                   </span>
                 </button>
 
@@ -390,10 +609,7 @@ export default function FockisVideoReel({
                   aria-label="Repost"
                 >
                   <IconRepost />
-
-                  <span>
-                    {post.reposts}
-                  </span>
+                  <span>{post.reposts}</span>
                 </button>
 
                 <button
@@ -404,10 +620,7 @@ export default function FockisVideoReel({
                   aria-label="Share"
                 >
                   <IconShare />
-
-                  <span>
-                    {post.shares}
-                  </span>
+                  <span>{post.shares}</span>
                 </button>
 
                 <button
@@ -427,9 +640,7 @@ export default function FockisVideoReel({
                   }
                 >
                   <IconBookmark
-                    filled={
-                      interaction.saved
-                    }
+                    filled={interaction.saved}
                   />
                 </button>
               </div>

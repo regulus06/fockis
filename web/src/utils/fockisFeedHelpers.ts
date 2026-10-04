@@ -14,7 +14,39 @@ import type {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   FockisPost,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -46,6 +78,22 @@ import type {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   FockisPostMediaItem,
 
 
@@ -62,7 +110,39 @@ import type {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 } from "../components/fockis/FockisPostCard";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -102,7 +182,47 @@ import type { FockisStory } from "../components/fockis/FockisStoriesRail";
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -134,7 +254,47 @@ import type { FockisStory } from "../components/fockis/FockisStoriesRail";
 
 
 
-\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -174,7 +334,47 @@ import { FOCKIS_API_URL } from "../config/fockisConfig";
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export const API_URL = FOCKIS_API_URL;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -214,6 +414,22 @@ export const API_URL = FOCKIS_API_URL;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
    TYPES
 
 
@@ -230,7 +446,47 @@ export const API_URL = FOCKIS_API_URL;
 
 
 
-\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -278,7 +534,47 @@ export type MediaType = "image" | "video" | "none";
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export type ShareDestination =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -310,7 +606,39 @@ export type ShareDestination =
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   | "group"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -342,7 +670,39 @@ export type ShareDestination =
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   | "whatsapp"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -374,7 +734,39 @@ export type ShareDestination =
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   | "instagram"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -406,7 +798,39 @@ export type ShareDestination =
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   | "messenger"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -446,7 +870,47 @@ export type ShareDestination =
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -478,7 +942,47 @@ export type ShareDestination =
 
 
 
-\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -518,7 +1022,39 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   _id?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -558,7 +1094,6 @@ export interface BackendPostData {
 
 
 
-  /**
 
 
 
@@ -574,7 +1109,16 @@ export interface BackendPostData {
 
 
 
-   \* Explicit post-owner ID.
+
+
+
+
+
+
+
+
+
+  /*\*
 
 
 
@@ -590,7 +1134,6 @@ export interface BackendPostData {
 
 
 
-   \*
 
 
 
@@ -606,7 +1149,88 @@ export interface BackendPostData {
 
 
 
-   \* This must be preferred over the currently logged-in user.
+
+   \\\* Explicit post-owner ID.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   \\\*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   \\\* This must be preferred over the currently logged-in user.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -623,6 +1247,22 @@ export interface BackendPostData {
 
 
    */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -662,7 +1302,47 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   user?:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -694,7 +1374,39 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     | {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -726,7 +1438,39 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         id?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -758,7 +1502,39 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         username?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -790,7 +1566,39 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         avatar?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -822,6 +1630,22 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         profilePhoto?: string;
 
 
@@ -838,7 +1662,39 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         userPhoto?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -878,7 +1734,47 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   username?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -918,7 +1814,47 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   content?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -950,7 +1886,47 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   text?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -998,6 +1974,30 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   image?: unknown;
 
 
@@ -1014,7 +2014,39 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   imageUrl?: unknown;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1054,6 +2086,30 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   photo?: unknown;
 
 
@@ -1070,7 +2126,39 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   photoUrl?: unknown;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1110,7 +2198,47 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   file?: unknown;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1142,7 +2270,39 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   fileURL?: unknown;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1182,7 +2342,47 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   video?: unknown;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1214,6 +2414,22 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   videoURL?: unknown;
 
 
@@ -1230,7 +2446,39 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   videoPath?: unknown;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1270,7 +2518,47 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   images?: unknown[];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1302,7 +2590,39 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   attachments?: unknown[];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1342,6 +2662,30 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   src?: unknown;
 
 
@@ -1358,7 +2702,47 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   url?: unknown;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1406,7 +2790,47 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   mediaType?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1438,6 +2862,22 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   mime?: string;
 
 
@@ -1454,7 +2894,39 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   fileType?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1494,7 +2966,47 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   createdAt?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1534,7 +3046,47 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   likes?: number;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1566,7 +3118,39 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   shares?: number;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1606,7 +3190,6 @@ export interface BackendPostData {
 
 
 
-  /**
 
 
 
@@ -1622,7 +3205,16 @@ export interface BackendPostData {
 
 
 
-   \* Total number of gifts sent to this post.
+
+
+
+
+
+
+
+
+
+  /*\*
 
 
 
@@ -1638,7 +3230,6 @@ export interface BackendPostData {
 
 
 
-   \*
 
 
 
@@ -1654,7 +3245,8 @@ export interface BackendPostData {
 
 
 
-   \* Persisted on the backend Post document
+
+   \\\* Total number of gifts sent to this post.
 
 
 
@@ -1670,7 +3262,103 @@ export interface BackendPostData {
 
 
 
-   \* (see PostsService.incrementGiftsCount).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   \\\*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   \\\* Persisted on the backend Post document
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   \\\* (see PostsService.incrementGiftsCount).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1687,6 +3375,22 @@ export interface BackendPostData {
 
 
    */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1726,6 +3430,30 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   likedBy?: unknown[];
 
 
@@ -1742,7 +3470,39 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   repostedBy?: unknown[];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1782,6 +3542,30 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   shareEvents?: unknown[];
 
 
@@ -1798,7 +3582,47 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   sharedBy?: unknown[];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1846,7 +3670,47 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   price?: number;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1886,7 +3750,47 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   score?: number;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1926,7 +3830,47 @@ export interface BackendPostData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1958,7 +3902,47 @@ export interface BackendPostData {
 
 
 
-\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1998,7 +3982,39 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   _id?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2038,7 +4054,47 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   user?:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2070,7 +4126,39 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     | {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2102,7 +4190,39 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         id?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2134,7 +4254,39 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         name?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2166,7 +4318,39 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         photo?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2198,6 +4382,22 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         userPhoto?: string;
 
 
@@ -2214,7 +4414,47 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2262,7 +4502,47 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   username?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2302,7 +4582,47 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   userPhoto?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2334,7 +4654,39 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   photo?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2374,7 +4726,47 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   media?: unknown;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2406,7 +4798,39 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   imageUrl?: unknown;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2446,7 +4870,47 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   video?: unknown;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2478,7 +4942,47 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   videoURL?: unknown;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2526,6 +5030,30 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   createdAt?: string;
 
 
@@ -2542,7 +5070,47 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   expiresAt?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2590,7 +5158,47 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   isSeller?: boolean;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2630,7 +5238,47 @@ export interface BackendStoryData {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2662,7 +5310,47 @@ export interface BackendStoryData {
 
 
 
-\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2702,7 +5390,39 @@ export type StoryApiResponse =
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   | BackendStoryData[]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2734,7 +5454,39 @@ export type StoryApiResponse =
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   | null
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2774,7 +5526,47 @@ export type StoryApiResponse =
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2806,7 +5598,47 @@ export type StoryApiResponse =
 
 
 
-\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2846,7 +5678,39 @@ export function extractStoryArray(response: unknown): BackendStoryData[] {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   if (Array.isArray(response)) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2878,7 +5742,47 @@ export function extractStoryArray(response: unknown): BackendStoryData[] {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2918,7 +5822,39 @@ export function extractStoryArray(response: unknown): BackendStoryData[] {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     const data = response as {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2950,7 +5886,39 @@ export function extractStoryArray(response: unknown): BackendStoryData[] {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       data?: unknown;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2990,7 +5958,47 @@ export function extractStoryArray(response: unknown): BackendStoryData[] {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     if (Array.isArray(data.stories)) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3022,7 +6030,47 @@ export function extractStoryArray(response: unknown): BackendStoryData[] {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3062,7 +6110,39 @@ export function extractStoryArray(response: unknown): BackendStoryData[] {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       return data.data as BackendStoryData[];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3094,7 +6174,47 @@ export function extractStoryArray(response: unknown): BackendStoryData[] {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3134,7 +6254,47 @@ export function extractStoryArray(response: unknown): BackendStoryData[] {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3174,6 +6334,22 @@ export function extractStoryArray(response: unknown): BackendStoryData[] {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
    NORMALIZE COMMENTS
 
 
@@ -3190,7 +6366,47 @@ export function extractStoryArray(response: unknown): BackendStoryData[] {
 
 
 
-\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3230,7 +6446,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   value: unknown,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3262,6 +6510,22 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   if (!Array.isArray(value)) {
 
 
@@ -3278,7 +6542,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     return [];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3318,7 +6614,47 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return value
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3350,7 +6686,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       if (!item || typeof item !== "object") {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3382,7 +6750,47 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3430,6 +6838,30 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       /*
 
 
@@ -3446,7 +6878,6 @@ export function normalizeComments(
 
 
 
-       \* Support both comment formats:
 
 
 
@@ -3462,8 +6893,8 @@ export function normalizeComments(
 
 
 
-       \*
 
+       \\\* Support both comment formats:
 
 
 
@@ -3478,7 +6909,6 @@ export function normalizeComments(
 
 
 
-       \* 1. Direct:
 
 
 
@@ -3494,9 +6924,9 @@ export function normalizeComments(
 
 
 
-       \*    { userId, username, userPhoto }
 
 
+       \\\*
 
 
 
@@ -3510,7 +6940,6 @@ export function normalizeComments(
 
 
 
-       \*
 
 
 
@@ -3526,10 +6955,10 @@ export function normalizeComments(
 
 
 
-       \* 2. Populated:
 
 
 
+       \\\* 1. Direct:
 
 
 
@@ -3542,7 +6971,6 @@ export function normalizeComments(
 
 
 
-       \*    {
 
 
 
@@ -3558,11 +6986,11 @@ export function normalizeComments(
 
 
 
-       \*      userId,
 
 
 
 
+       \\\*    { userId, username, userPhoto }
 
 
 
@@ -3574,7 +7002,6 @@ export function normalizeComments(
 
 
 
-       \*      user: {
 
 
 
@@ -3590,12 +7017,12 @@ export function normalizeComments(
 
 
 
-       \*        _id,
 
 
 
 
 
+       \\\*
 
 
 
@@ -3606,7 +7033,6 @@ export function normalizeComments(
 
 
 
-       \*        username,
 
 
 
@@ -3622,13 +7048,13 @@ export function normalizeComments(
 
 
 
-       \*        avatar,
 
 
 
 
 
 
+       \\\* 2. Populated:
 
 
 
@@ -3638,7 +7064,6 @@ export function normalizeComments(
 
 
 
-       \*        profilePicture,
 
 
 
@@ -3654,7 +7079,6 @@ export function normalizeComments(
 
 
 
-       \*        profilePhoto,
 
 
 
@@ -3662,6 +7086,7 @@ export function normalizeComments(
 
 
 
+       \\\*    {
 
 
 
@@ -3670,7 +7095,6 @@ export function normalizeComments(
 
 
 
-       \*        userPhoto
 
 
 
@@ -3686,7 +7110,6 @@ export function normalizeComments(
 
 
 
-       \*      }
 
 
 
@@ -3695,6 +7118,7 @@ export function normalizeComments(
 
 
 
+       \\\*      userId,
 
 
 
@@ -3702,7 +7126,303 @@ export function normalizeComments(
 
 
 
-       \*    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       \\\*      user: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       \\\*        _id,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       \\\*        username,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       \\\*        avatar,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       \\\*        profilePicture,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       \\\*        profilePhoto,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       \\\*        userPhoto
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       \\\*      }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       \\\*    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3734,7 +7454,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       const nestedUser =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3766,6 +7518,22 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         typeof comment.user === "object"
 
 
@@ -3782,7 +7550,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           ? (comment.user as Record<string, unknown>)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3822,7 +7622,47 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       const rawUserId =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3854,7 +7694,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         nestedUser?.userId ??
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3886,7 +7758,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         nestedUser?.id ??
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3918,6 +7822,22 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         comment.id ??
 
 
@@ -3934,7 +7854,47 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         "";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3974,6 +7934,22 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         typeof rawUserId === "string"
 
 
@@ -3990,7 +7966,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           ? rawUserId.trim()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4030,7 +8038,47 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       const content =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4062,7 +8110,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           ? comment.content.trim()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4102,7 +8182,47 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       if (!userId || !content) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4134,7 +8254,47 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4174,7 +8334,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         comment.username ??
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4206,6 +8398,22 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         nestedUser?.name ??
 
 
@@ -4222,7 +8430,47 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         "";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4262,6 +8510,22 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         typeof rawUsername === "string"
 
 
@@ -4278,7 +8542,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           ? rawUsername.trim()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4318,7 +8614,47 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       const rawPhoto =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4350,7 +8686,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         comment.profilePicture ??
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4382,7 +8750,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         comment.avatar ??
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4414,7 +8814,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         nestedUser?.profilePicture ??
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4446,7 +8878,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         nestedUser?.userPhoto ??
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4478,7 +8942,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         nestedUser?.photo ??
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4518,7 +9014,47 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       const userPhoto =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4550,7 +9086,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           ? rawPhoto.trim()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4590,7 +9158,47 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       return {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4622,7 +9230,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         username,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4654,7 +9294,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           ? buildMediaUrl(userPhoto)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4686,7 +9358,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         content,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4718,7 +9422,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           typeof comment.createdAt === "string"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4750,7 +9486,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             : undefined,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4782,7 +9550,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4814,7 +9614,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       (comment): comment is FockisPostComment =>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4846,7 +9678,39 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4886,7 +9750,47 @@ export function normalizeComments(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4918,7 +9822,47 @@ export function normalizeComments(
 
 
 
-\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4958,7 +9902,39 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   if (!value) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4990,7 +9966,47 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5030,7 +10046,47 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     const result = value.trim();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5070,7 +10126,39 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       !result ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5102,7 +10190,39 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       result === "null"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5134,6 +10254,22 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       return "";
 
 
@@ -5150,7 +10286,47 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5190,7 +10366,47 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5230,7 +10446,39 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     typeof value === "object" &&
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5262,6 +10510,22 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   ) {
 
 
@@ -5278,7 +10542,39 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     const mediaObject =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5318,7 +10614,47 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     const possibleValues = [
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5350,7 +10686,39 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       mediaObject.path,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5382,7 +10750,39 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       mediaObject.fileUrl,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5414,7 +10814,39 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       mediaObject.filename,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5446,7 +10878,39 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       mediaObject.location,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5478,6 +10942,22 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       mediaObject.originalUrl,
 
 
@@ -5494,7 +10974,39 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       mediaObject.publicUrl,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5534,7 +11046,47 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     for (const item of possibleValues) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5574,7 +11126,47 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       if (result) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5606,7 +11198,39 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5638,7 +11262,47 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5678,7 +11342,47 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5718,6 +11422,22 @@ export function extractMediaValue(value: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
    BUILD MEDIA URL
 
 
@@ -5734,7 +11454,47 @@ export function extractMediaValue(value: unknown): string {
 
 
 
-\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5773,7 +11533,7 @@ export function buildMediaUrl(media: string): string {
     return "";
   }
 
-  // Allow browser-local preview URLs.
+  // Browser-local preview URLs are already usable.
   if (
     cleanMedia.startsWith("blob:") ||
     cleanMedia.startsWith("data:")
@@ -5781,7 +11541,7 @@ export function buildMediaUrl(media: string): string {
     return cleanMedia;
   }
 
-  // Remove old local backend URLs.
+  // Remove old/local backend origins while preserving the actual path.
   const localBackendPrefixes = [
     "http://localhost:3000",
     "https://localhost:3000",
@@ -5826,66 +11586,66 @@ export function buildMediaUrl(media: string): string {
     return "";
   }
 
-  // /uploads/file.ext -> /post-media/file.ext
-  if (path.startsWith("uploads/")) {
-    const filename = path.replace(/^uploads\//, "");
+  const encodePath = (value: string): string =>
+    value
+      .split("/")
+      .filter(Boolean)
+      .map((part) => encodeURIComponent(part))
+      .join("/");
 
-    if (!filename) {
+  // Backend post media route.
+  if (path.startsWith("post-media/")) {
+    const mediaPath = path.slice("post-media/".length);
+
+    if (!mediaPath) {
       return "";
     }
 
-    return `${API_URL}/post-media/${encodeURIComponent(filename)}`;
+    return `${API_URL}/post-media/${encodePath(mediaPath)}`;
   }
 
-  // /api/uploads/file.ext -> /post-media/file.ext
-  if (path.startsWith("api/uploads/")) {
-    const filename = path.replace(/^api\/uploads\//, "");
+  // Legacy upload routes all resolve through the backend post-media route.
+  const uploadPrefixes = [
+    "uploads/",
+    "api/uploads/",
+    "public/uploads/",
+    "upload/",
+    "media/",
+  ];
 
-    if (!filename) {
-      return "";
+  for (const prefix of uploadPrefixes) {
+    if (path.startsWith(prefix)) {
+      const filename = path.slice(prefix.length);
+
+      if (!filename) {
+        return "";
+      }
+
+      return `${API_URL}/post-media/${encodePath(filename)}`;
     }
-
-    return `${API_URL}/post-media/${encodeURIComponent(filename)}`;
   }
 
-  // /public/uploads/file.ext -> /post-media/file.ext
-  if (path.startsWith("public/uploads/")) {
-    const filename = path.replace(/^public\/uploads\//, "");
-
-    if (!filename) {
-      return "";
-    }
-
-    return `${API_URL}/post-media/${encodeURIComponent(filename)}`;
-  }
-
-  // /upload/file.ext -> /post-media/file.ext
-  if (path.startsWith("upload/")) {
-    const filename = path.replace(/^upload\//, "");
-
-    if (!filename) {
-      return "";
-    }
-
-    return `${API_URL}/post-media/${encodeURIComponent(filename)}`;
-  }
-
-  // /media/file.ext -> /post-media/file.ext
-  if (path.startsWith("media/")) {
-    const filename = path.replace(/^media\//, "");
-
-    if (!filename) {
-      return "";
-    }
-
-    return `${API_URL}/post-media/${encodeURIComponent(filename)}`;
-  }
-
-  // Bare filename/path -> /post-media/<filename>
-  return `${API_URL}/post-media/${encodeURIComponent(path)}`;
+  // Bare filename/path.
+  return `${API_URL}/post-media/${encodePath(path)}`;
 }
 
 export function detectMediaType(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5917,7 +11677,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   rawMedia: string,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5949,7 +11741,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ): MediaType {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5981,6 +11805,22 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     return "none";
 
 
@@ -5997,7 +11837,47 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6037,7 +11917,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     post?.mediaType ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6069,7 +11981,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       post?.mime ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6101,6 +12045,22 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       post?.contentType ||
 
 
@@ -6117,7 +12077,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       "",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6157,7 +12149,47 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   if (backendType.includes("video")) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6189,7 +12221,47 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6229,6 +12301,22 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     return "image";
 
 
@@ -6245,7 +12333,47 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6285,7 +12413,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ".mp4",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6317,7 +12477,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ".mov",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6349,7 +12541,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ".avi",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6381,7 +12605,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ".3gp",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6413,6 +12669,22 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ".mpg",
 
 
@@ -6429,7 +12701,47 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   ];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6469,7 +12781,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ".jpg",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6501,7 +12845,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ".png",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6533,7 +12909,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ".webp",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6565,6 +12973,22 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ".svg",
 
 
@@ -6581,7 +13005,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ".avif",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6621,7 +13077,47 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const cleanMediaUrl =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6661,7 +13157,47 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const cleanRawMedia =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6701,7 +13237,47 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   if (
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6733,7 +13309,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       (extension) =>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6765,7 +13373,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         cleanRawMedia.endsWith(extension),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6797,7 +13437,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   ) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6829,7 +13501,47 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6869,7 +13581,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     imageExtensions.some(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6901,7 +13645,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         cleanMediaUrl.endsWith(extension) ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6933,7 +13709,39 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6965,6 +13773,22 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     return "image";
 
 
@@ -6981,7 +13805,47 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7021,7 +13885,47 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7061,6 +13965,22 @@ export function detectMediaType(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
    GET ALL MEDIA FROM POST
 
 
@@ -7077,7 +13997,47 @@ export function detectMediaType(
 
 
 
-\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7117,7 +14077,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   post: BackendPostData,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7149,7 +14141,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const results: Array<{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7181,7 +14205,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     type?: string;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7221,7 +14277,47 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const addMedia = (
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7253,6 +14349,22 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     forcedType?: string,
 
 
@@ -7269,7 +14381,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   ) => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7309,7 +14453,47 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     if (!raw) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7341,7 +14525,47 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7381,6 +14605,22 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       (item) => item.raw === raw,
 
 
@@ -7397,7 +14637,47 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7437,7 +14717,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       results.push({
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7469,7 +14781,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         type: forcedType,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7501,7 +14845,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7541,7 +14917,47 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   if (Array.isArray(post.media)) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7573,7 +14989,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       addMedia(item),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7605,7 +15053,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   } else {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7637,7 +15117,47 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7677,7 +15197,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     post.images.forEach((item) =>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7709,6 +15261,22 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     );
 
 
@@ -7725,7 +15293,47 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7765,7 +15373,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     post.imageUrls.forEach((item) =>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7797,6 +15437,22 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     );
 
 
@@ -7813,7 +15469,47 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7853,7 +15549,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     post.attachments.forEach((item) =>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7885,6 +15613,22 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     );
 
 
@@ -7901,7 +15645,47 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7941,7 +15725,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     post.files.forEach((item) =>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7973,6 +15789,22 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     );
 
 
@@ -7989,7 +15821,47 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8029,7 +15901,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   addMedia(post.imageUrl, "image");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8061,6 +15965,22 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   addMedia(post.photo, "image");
 
 
@@ -8077,7 +15997,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   addMedia(post.photoUrl, "image");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8117,7 +16069,47 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   addMedia(post.video, "video");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8149,6 +16141,22 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   addMedia(post.videoURL, "video");
 
 
@@ -8165,7 +16173,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   addMedia(post.videoPath, "video");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8205,7 +16245,47 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   addMedia(post.file);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8237,7 +16317,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   addMedia(post.fileURL);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8269,7 +16381,39 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   addMedia(post.src);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8309,7 +16453,47 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return results;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8349,7 +16533,47 @@ export function getAllRawMedia(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8381,7 +16605,47 @@ export function getAllRawMedia(
 
 
 
-\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8421,7 +16685,39 @@ export function normalizeUserIds(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   value: unknown,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8453,6 +16749,22 @@ export function normalizeUserIds(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   if (!Array.isArray(value)) {
 
 
@@ -8469,7 +16781,39 @@ export function normalizeUserIds(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     return [];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8509,7 +16853,47 @@ export function normalizeUserIds(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return value
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8541,6 +16925,22 @@ export function normalizeUserIds(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       if (typeof item === "string") {
 
 
@@ -8557,7 +16957,39 @@ export function normalizeUserIds(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         return item;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8597,7 +17029,47 @@ export function normalizeUserIds(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       if (
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8629,7 +17101,39 @@ export function normalizeUserIds(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         typeof item === "object"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8661,7 +17165,39 @@ export function normalizeUserIds(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         const object =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8701,7 +17237,47 @@ export function normalizeUserIds(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         return String(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8733,7 +17309,39 @@ export function normalizeUserIds(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             object.id ??
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8765,7 +17373,39 @@ export function normalizeUserIds(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             "",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8797,7 +17437,47 @@ export function normalizeUserIds(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8837,6 +17517,22 @@ export function normalizeUserIds(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     })
 
 
@@ -8853,7 +17549,39 @@ export function normalizeUserIds(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     .filter(Boolean);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8893,7 +17621,47 @@ export function normalizeUserIds(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8925,7 +17693,6 @@ export function normalizeUserIds(
 
 
 
-\============================================================================ */
 
 
 
@@ -8942,6 +17709,7 @@ export function normalizeUserIds(
 
 
 
+\\============================================================================ */
 
 
 
@@ -8949,7 +17717,6 @@ export function normalizeUserIds(
 
 
 
-/**
 
 
 
@@ -8965,7 +17732,6 @@ export function normalizeUserIds(
 
 
 
- \* Resolve the ACTUAL author of the post.
 
 
 
@@ -8981,7 +17747,6 @@ export function normalizeUserIds(
 
 
 
- \*
 
 
 
@@ -8992,12 +17757,12 @@ export function normalizeUserIds(
 
 
 
+/*\*
 
 
 
 
 
- \* IMPORTANT:
 
 
 
@@ -9013,7 +17778,6 @@ export function normalizeUserIds(
 
 
 
- \* This function never uses the currently authenticated user.
 
 
 
@@ -9025,11 +17789,151 @@ export function normalizeUserIds(
 
 
 
+ \\\* Resolve the ACTUAL author of the post.
 
 
 
 
- \* It only reads identity information supplied by the backend post.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ \\\*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ \\\* IMPORTANT:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ \\\* This function never uses the currently authenticated user.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ \\\* It only reads identity information supplied by the backend post.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9061,7 +17965,39 @@ export function normalizeUserIds(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function getPostOwnerId(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9093,7 +18029,39 @@ export function getPostOwnerId(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ): string {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9125,7 +18093,39 @@ export function getPostOwnerId(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     post.user &&
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9157,6 +18157,22 @@ export function getPostOwnerId(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       ? post.user
 
 
@@ -9173,7 +18189,47 @@ export function getPostOwnerId(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       : undefined;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9213,7 +18269,39 @@ export function getPostOwnerId(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     post.userId ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9245,7 +18333,39 @@ export function getPostOwnerId(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     nestedUser?._id ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9277,6 +18397,22 @@ export function getPostOwnerId(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     (typeof post.user === "string"
 
 
@@ -9293,7 +18429,39 @@ export function getPostOwnerId(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       ? post.user
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9333,7 +18501,47 @@ export function getPostOwnerId(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return resolved ? String(resolved) : "";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9373,7 +18581,47 @@ export function getPostOwnerId(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9405,7 +18653,47 @@ export function getPostOwnerId(
 
 
 
-\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9445,7 +18733,39 @@ export function getPostUsername(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   post: BackendPostData,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9477,7 +18797,39 @@ export function getPostUsername(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const nestedUser =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9509,6 +18861,22 @@ export function getPostUsername(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     typeof post.user === "object"
 
 
@@ -9525,7 +18893,39 @@ export function getPostUsername(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       ? post.user
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9565,7 +18965,47 @@ export function getPostUsername(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return (
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9597,7 +19037,39 @@ export function getPostUsername(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     nestedUser?.username ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9629,6 +19101,22 @@ export function getPostUsername(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     "Unknown"
 
 
@@ -9645,7 +19133,39 @@ export function getPostUsername(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9685,7 +19205,47 @@ export function getPostUsername(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9717,7 +19277,47 @@ export function getPostUsername(
 
 
 
-\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9757,7 +19357,39 @@ export function getPostUserPhoto(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   post: BackendPostData,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9789,7 +19421,39 @@ export function getPostUserPhoto(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const nestedUser =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9821,6 +19485,22 @@ export function getPostUserPhoto(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     typeof post.user === "object"
 
 
@@ -9837,7 +19517,39 @@ export function getPostUserPhoto(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       ? post.user
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9877,7 +19589,47 @@ export function getPostUserPhoto(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return (
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9909,7 +19661,39 @@ export function getPostUserPhoto(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     nestedUser?.userPhoto ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9941,7 +19725,39 @@ export function getPostUserPhoto(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     nestedUser?.photo ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9973,6 +19789,22 @@ export function getPostUserPhoto(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ""
 
 
@@ -9989,7 +19821,39 @@ export function getPostUserPhoto(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10029,7 +19893,47 @@ export function getPostUserPhoto(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10061,7 +19965,47 @@ export function getPostUserPhoto(
 
 
 
-\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10101,7 +20045,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   feedItems: BackendPostData[],
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10133,7 +20109,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return feedItems
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10165,7 +20173,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       if (!item) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10197,7 +20237,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10237,7 +20317,6 @@ export function mapFeedItemsToPosts(
 
 
 
-       \* Keep marketplace products out of the normal
 
 
 
@@ -10253,7 +20332,56 @@ export function mapFeedItemsToPosts(
 
 
 
-       \* social feed.
+
+       \\\* Keep marketplace products out of the normal
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       \\\* social feed.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10285,7 +20413,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       if (
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10317,7 +20477,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         item.type === "marketplace" ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10349,7 +20541,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       ) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10381,7 +20605,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10421,7 +20685,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         item.price !== undefined &&
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10453,7 +20749,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       ) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10485,7 +20813,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10525,7 +20893,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10557,7 +20957,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       /* ----------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10589,7 +21021,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       ---------------------------------------------------------- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10629,7 +21101,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         getAllRawMedia(p);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10669,7 +21181,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         rawMediaItems
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10701,6 +21245,22 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             const url = buildMediaUrl(
 
 
@@ -10717,7 +21277,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               item.raw,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10757,6 +21349,30 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             if (!url) {
 
 
@@ -10773,7 +21389,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               return null;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10813,7 +21461,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             const type =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10845,7 +21533,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 ? "video"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10877,7 +21597,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                     url,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10909,7 +21661,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                     p,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10949,7 +21733,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             return {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10981,7 +21805,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               type:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11013,7 +21869,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                   ? "video"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11045,7 +21933,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             } as FockisPostMediaItem;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11077,7 +21997,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           .filter(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11109,7 +22061,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               item,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11141,7 +22125,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               item !== null,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11181,7 +22197,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       const firstMedia =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11221,7 +22277,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       const mediaType =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11261,7 +22357,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       /* ----------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11293,7 +22429,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       ---------------------------------------------------------- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11333,7 +22509,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         p._id ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11365,7 +22573,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           `${Date.now()}-${Math.random()}`,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11405,7 +22645,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       /* ----------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11437,7 +22717,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       ---------------------------------------------------------- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11477,7 +22797,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         getPostOwnerId(p);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11517,7 +22877,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         getPostUsername(p);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11557,7 +22957,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         getPostUserPhoto(p);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11597,6 +23037,22 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
          ENGAGEMENT
 
 
@@ -11613,7 +23069,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       ---------------------------------------------------------- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11653,7 +23149,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         normalizeUserIds(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11685,7 +23213,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11725,7 +23293,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         normalizeUserIds(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11757,7 +23357,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11797,7 +23437,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         normalizeUserIds(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11829,7 +23501,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11869,6 +23581,22 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         normalizeComments(
 
 
@@ -11885,7 +23613,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           p.comments,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11925,6 +23685,30 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       /* ----------------------------------------------------------
 
 
@@ -11941,7 +23725,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
          FINAL FOCKIS POST
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11981,7 +23797,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       return {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12021,6 +23877,30 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         /*
 
 
@@ -12037,7 +23917,6 @@ export function mapFeedItemsToPosts(
 
 
 
-         \* CRITICAL:
 
 
 
@@ -12053,8 +23932,8 @@ export function mapFeedItemsToPosts(
 
 
 
-         \*
 
+         \\\* CRITICAL:
 
 
 
@@ -12069,7 +23948,6 @@ export function mapFeedItemsToPosts(
 
 
 
-         \* This is the author ID from the backend.
 
 
 
@@ -12085,9 +23963,9 @@ export function mapFeedItemsToPosts(
 
 
 
-         \*
 
 
+         \\\*
 
 
 
@@ -12101,7 +23979,6 @@ export function mapFeedItemsToPosts(
 
 
 
-         \* FockisPostHeader uses this value to navigate to:
 
 
 
@@ -12117,10 +23994,10 @@ export function mapFeedItemsToPosts(
 
 
 
-         \*
 
 
 
+         \\\* This is the author ID from the backend.
 
 
 
@@ -12133,7 +24010,6 @@ export function mapFeedItemsToPosts(
 
 
 
-         \* /profile/${post.userId}
 
 
 
@@ -12149,11 +24025,11 @@ export function mapFeedItemsToPosts(
 
 
 
-         \*
 
 
 
 
+         \\\*
 
 
 
@@ -12165,7 +24041,171 @@ export function mapFeedItemsToPosts(
 
 
 
-         \* It is NOT the current logged-in user's ID.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+         \\\* FockisPostHeader uses this value to navigate to:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+         \\\*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+         \\\* /profile/${post.userId}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+         \\\*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+         \\\* It is NOT the current logged-in user's ID.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12197,6 +24237,22 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         userId:
 
 
@@ -12213,7 +24269,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           userId || undefined,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12261,7 +24357,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         userPhoto:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12293,7 +24429,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             ? buildMediaUrl(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12325,7 +24493,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12365,7 +24565,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         content:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12397,6 +24637,22 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           p.caption ||
 
 
@@ -12413,7 +24669,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           p.text ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12453,7 +24741,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         media:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12485,7 +24813,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           undefined,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12533,7 +24901,55 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         mediaItems,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12573,6 +24989,22 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           p.createdAt ||
 
 
@@ -12589,7 +25021,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           p.date ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12629,7 +25093,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         likes: Number(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12661,7 +25165,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             likedBy.length ??
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12693,7 +25229,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         ),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12733,7 +25309,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           p.reposts ??
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12765,6 +25373,22 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             0,
 
 
@@ -12781,7 +25405,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         ),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12821,7 +25485,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           p.shares ??
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12853,6 +25549,22 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             0,
 
 
@@ -12869,7 +25581,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         ),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12909,7 +25661,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           p.views ??
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12941,6 +25725,22 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             0,
 
 
@@ -12957,7 +25757,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         ),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12997,7 +25837,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           p.giftsCount ?? 0,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13037,7 +25909,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         likedBy,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13069,7 +25981,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         viewedBy,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13109,7 +26053,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         score:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13141,7 +26125,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             ? p.score
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13173,6 +26189,22 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       };
 
 
@@ -13189,7 +26221,39 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13229,7 +26293,47 @@ export function mapFeedItemsToPosts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13261,7 +26365,47 @@ export function mapFeedItemsToPosts(
 
 
 
-\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13301,7 +26445,39 @@ export function currentStoryViewed(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   viewedBy: string[],
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13333,7 +26509,39 @@ export function currentStoryViewed(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const userId =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13365,7 +26573,39 @@ export function currentStoryViewed(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       "userId",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13405,7 +26645,47 @@ export function currentStoryViewed(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return Boolean(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13437,6 +26717,22 @@ export function currentStoryViewed(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       viewedBy.includes(userId),
 
 
@@ -13453,7 +26749,39 @@ export function currentStoryViewed(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13493,7 +26821,47 @@ export function currentStoryViewed(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13525,7 +26893,47 @@ export function currentStoryViewed(
 
 
 
-\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\\============================================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13565,7 +26973,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   storyItems: BackendStoryData[],
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13597,7 +27037,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return storyItems
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13629,7 +27101,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     .map(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13661,7 +27165,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         story,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13693,7 +27229,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       ): FockisStory => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13725,7 +27293,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           typeof story.user ===
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13757,7 +27357,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             ? story.user
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13797,7 +27429,47 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         const userId =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13829,7 +27501,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           (typeof story.user ===
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13861,6 +27565,22 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             ? story.user
 
 
@@ -13877,7 +27597,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             : storyUser?._id ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13917,7 +27669,47 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         const username =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13949,7 +27741,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           story.name ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -13981,7 +27805,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           storyUser?.name ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14021,7 +27877,47 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         const userPhoto =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14053,7 +27949,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           story.avatar ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14085,7 +28013,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           story.profilePhoto ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14117,6 +28077,22 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           storyUser?.photo ||
 
 
@@ -14133,7 +28109,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           storyUser?.profilePhoto ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14173,6 +28181,30 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         const rawMedia =
 
 
@@ -14189,7 +28221,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           extractMediaValue(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14221,6 +28285,22 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           ) ||
 
 
@@ -14237,7 +28317,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           extractMediaValue(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14269,6 +28381,22 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           ) ||
 
 
@@ -14285,7 +28413,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           extractMediaValue(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14317,6 +28477,22 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           ) ||
 
 
@@ -14333,7 +28509,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           extractMediaValue(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14365,6 +28573,22 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           ) ||
 
 
@@ -14381,7 +28605,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           extractMediaValue(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14413,6 +28669,22 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           ) ||
 
 
@@ -14429,7 +28701,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           extractMediaValue(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14461,7 +28765,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           ) ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14493,6 +28829,22 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             story.videoURL,
 
 
@@ -14509,7 +28861,47 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14549,6 +28941,22 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           normalizeUserIds(
 
 
@@ -14565,7 +28973,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             story.viewedBy,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14605,7 +29045,47 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         const storyType =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14637,7 +29117,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             story.type || "",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14677,7 +29189,47 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         const type =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14709,7 +29261,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             ? "video"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14749,7 +29333,47 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         return {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14781,7 +29405,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             story._id ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14813,7 +29469,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               `story-${index}`,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14853,7 +29541,47 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           userId: userId
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14885,7 +29613,47 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             : undefined,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14933,7 +29701,47 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           avatar: userPhoto
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14965,7 +29773,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 userPhoto,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14997,7 +29837,47 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             : undefined,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -15037,7 +29917,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             ? buildMediaUrl(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -15069,6 +29981,22 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               )
 
 
@@ -15085,7 +30013,47 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             : undefined,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -15133,7 +30101,47 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           hasUnseen:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -15165,7 +30173,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               viewedBy,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -15205,6 +30245,30 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           isSeller: Boolean(
 
 
@@ -15221,7 +30285,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             story.isSeller,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -15261,7 +30357,47 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           createdAt:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -15301,7 +30437,47 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           expiresAt:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -15333,7 +30509,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -15365,7 +30573,39 @@ export function mapStories(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

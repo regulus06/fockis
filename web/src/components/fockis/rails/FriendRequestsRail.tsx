@@ -12,7 +12,7 @@ import {
 
 import {
   fockisFriendsApi,
-} from "../../../features/fockisprofile/service/fockisFriendsApi";
+} from "../../../features/gifts/fockisprofile/service/fockisFriendsApi";
 
 /*
  * ============================================================================

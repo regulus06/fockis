@@ -1,16 +1,24 @@
 import { FormEvent, useEffect, useState } from "react";
+
 import axios from "axios";
+
 import { useNavigate } from "react-router-dom";
+
 import { getLanguage, subscribeToLanguage, t } from "../../i18n";
+
 import type { FockisLanguage } from "../../i18n/language";
+
 import { setToken, setUserId } from "../../utils/auth";
+
 import {
   loginRequest,
   mfaSetupRequest,
   mfaConfirmRequest,
   mfaVerifyRequest,
 } from "./loginApi";
+
 import type { AuthResponse, LoginUser, MfaMode } from "./loginTypes";
+
 import {
   extractToken,
   extractUser,
@@ -90,15 +98,9 @@ export function useLoginController() {
       "[FOCKIS AUTH] Authentication established successfully.",
     );
 
-    const role = String(user.role || "")
-      .trim()
-      .toLowerCase();
-
-    if (role === "admin" || role === "super_admin") {
-      navigate("/admin/dashboard", { replace: true });
-    } else {
-      navigate("/feed", { replace: true });
-    }
+    // Always send the user to the Fockis Feed after successful login.
+    // This also applies after MFA verification/setup.
+    navigate("/feed", { replace: true });
   };
 
   const startMfaSetup = async (token: string) => {
@@ -106,6 +108,7 @@ export function useLoginController() {
     const data = response.data;
 
     const nextSetupToken = extractSetupToken(data) || token;
+
     setSetupToken(nextSetupToken);
     setQrCode(extractQrCode(data) || "");
     setMfaSecret(extractMfaSecret(data) || "");
@@ -116,6 +119,7 @@ export function useLoginController() {
   const authenticateForMfaChallenge = async () => {
     const response = await loginRequest(email, password);
     const data = response.data;
+
     const directToken = extractToken(data);
     const user = extractUser(data);
 

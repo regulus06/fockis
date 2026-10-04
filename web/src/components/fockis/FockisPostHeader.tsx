@@ -17,7 +17,7 @@ import {
 
 import {
   fockisFollowApi,
-} from "../../features/fockisprofile/service/fockisFollowApi";
+} from "../../features/gifts/fockisprofile/service/fockisFollowApi";
 
 
 /* ============================================================================

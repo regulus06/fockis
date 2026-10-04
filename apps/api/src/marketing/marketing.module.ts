@@ -1,10 +1,12 @@
-import {
-  Module,
-} from "@nestjs/common";
+import { Module } from "@nestjs/common";
+import { MongooseModule } from "@nestjs/mongoose";
 
-import {
-  MongooseModule,
-} from "@nestjs/mongoose";
+/* ============================================================
+   CORE FOCKIS MODULES
+============================================================ */
+
+import { BusinessesModule } from "../businesses/businesses.module";
+import { UsersModule } from "../users/users.module";
 
 /* ============================================================
    SCHEMAS
@@ -122,53 +124,53 @@ import {
 
 @Module({
   imports: [
+    /*
+     * Business data used by MarketingController:
+     *
+     * GET /marketing/businesses
+     * GET /marketing/businesses/:id
+     */
+    BusinessesModule,
+
+    /*
+     * User/viewer data used by MarketingController:
+     *
+     * GET /marketing/me
+     */
+    UsersModule,
+
+    /*
+     * Marketing / advertising schemas
+     */
     MongooseModule.forFeature([
       {
-        name:
-          Campaign.name,
-
-        schema:
-          CampaignSchema,
+        name: Campaign.name,
+        schema: CampaignSchema,
       },
 
       {
-        name:
-          Advertisement.name,
-
-        schema:
-          AdvertisementSchema,
+        name: Advertisement.name,
+        schema: AdvertisementSchema,
       },
 
       {
-        name:
-          AdTargeting.name,
-
-        schema:
-          AdTargetingSchema,
+        name: AdTargeting.name,
+        schema: AdTargetingSchema,
       },
 
       {
-        name:
-          AdBudget.name,
-
-        schema:
-          AdBudgetSchema,
+        name: AdBudget.name,
+        schema: AdBudgetSchema,
       },
 
       {
-        name:
-          AdEvent.name,
-
-        schema:
-          AdEventSchema,
+        name: AdEvent.name,
+        schema: AdEventSchema,
       },
 
       {
-        name:
-          AdConversion.name,
-
-        schema:
-          AdConversionSchema,
+        name: AdConversion.name,
+        schema: AdConversionSchema,
       },
     ]),
   ],

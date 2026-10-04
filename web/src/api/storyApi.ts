@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { buildFockisUploadUrl } from "../config/fockisConfig";
 
 /* ============================================================================
    CREATE STORY DATA
@@ -102,6 +103,12 @@ export const storyApi = {
      UPLOAD STORY MEDIA
 
      POST /uploads?context=story
+
+     IMPORTANT:
+     Story uploads use the normal /uploads/ route.
+
+     We convert the returned path to the full Fockis backend URL here so
+     newly-created Stories never get treated as legacy /post-media/ files.
   ========================================================================== */
 
   async uploadStoryMedia(
@@ -130,19 +137,28 @@ export const storyApi = {
         },
       );
 
+    const rawMedia =
+      response.data?.media ||
+      response.data?.url ||
+      response.data?.path ||
+      "";
+
+    const media =
+      buildFockisUploadUrl(
+        rawMedia,
+      );
+
+    const type =
+      response.data?.type ||
+      (
+        file.type.startsWith("video/")
+          ? "video"
+          : "image"
+      );
+
     return {
-      media:
-        response.data?.media ||
-        response.data?.url ||
-        response.data?.path ||
-        "",
-      type:
-        response.data?.type ||
-        (
-          file.type.startsWith("video/")
-            ? "video"
-            : "image"
-        ),
+      media,
+      type,
     };
   },
 
@@ -159,10 +175,28 @@ export const storyApi = {
   async createStory(
     data: CreateStoryData,
   ): Promise<Story> {
+    /*
+     * Normalize the media one more time before saving the Story.
+     *
+     * This protects us if another part of the frontend passes:
+     *
+     *   /uploads/file.jpg
+     *   uploads/file.jpg
+     *   file.jpg
+     *
+     * All new uploads resolve to the backend /uploads/ route.
+     */
+    const normalizedData: CreateStoryData = {
+      ...data,
+      media: buildFockisUploadUrl(
+        data.media,
+      ),
+    };
+
     const response =
       await api.post<Story>(
         "/stories",
-        data,
+        normalizedData,
       );
 
     const story =

@@ -1,0 +1,67 @@
+// ============================================================================
+// FOCKIS MARKETING — SCSS TOKENS
+// ----------------------------------------------------------------------------
+// To use your existing Fockis brand variables, configure this module, e.g.:
+//   @use "../features/marketing/mailchimp/styles/tokens" with ($fm-primary: $fockis-blue);
+// All values are !default so they can be overridden.
+// Runtime colors are exposed as CSS custom properties scoped to .fm-theme only
+// (not :root), so nothing leaks into the rest of Fockis.
+// ============================================================================
+
+$fm-primary: #1f5eff !default;
+$fm-primary-strong: #1747c9 !default;
+$fm-ink: #14213d !default;
+$fm-font: inherit !default;
+$fm-font-fallback: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !default;
+
+$fm-radius: 14px;
+$fm-radius-sm: 9px;
+$fm-sidebar: 248px;
+$fm-rail: 72px;
+$fm-header: 64px;
+
+$bp-xl: 1440px;
+$bp-lg: 1280px;
+$bp-md: 1024px;
+$bp-sm: 768px;
+$bp-xs: 480px;
+
+@mixin below($bp) {
+  @media (max-width: ($bp - 1px)) {
+    @content;
+  }
+}
+
+@mixin above($bp) {
+  @media (min-width: $bp) {
+    @content;
+  }
+}
+
+@mixin focus-ring {
+  outline: 2px solid var(--fm-primary);
+  outline-offset: 2px;
+}
+
+@mixin reset-button {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+@mixin card {
+  background: var(--fm-surface);
+  border: 1px solid var(--fm-line);
+  border-radius: $fm-radius;
+}
+
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
