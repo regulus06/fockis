@@ -1,1208 +1,997 @@
+import React, {
+
+  ChangeEvent,
+
+  useEffect,
+
+  useMemo,
+
+  useRef,
+
+  useState,
+
+} from "react";
+
 import { FOCKIS_API_URL } from "../../config/fockisConfig";
 
-import React, {
-  ChangeEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import {
+
+  IconChevronLeft,
+
+  IconChevronRight,
+
+  IconClose,
+
+  IconMarketplace,
+
+  IconPlus,
+
+  IconWaveGlyph,
+
+} from "./FockisIcons";
 
 import "../../styles/FockisStoriesRail.scss";
 
-import {
-  IconPlus,
-  IconChevronLeft,
-  IconChevronRight,
-  IconWaveGlyph,
-  IconClose,
-  IconMarketplace,
-} from "./FockisIcons";
+const API_URL = (
 
-/* ============================================================================
-   API
-============================================================================ */
+  import.meta.env.VITE_API_URL ||
 
-const API_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  FOCKIS_API_URL;
 
-/* ============================================================================
-   TYPES
-============================================================================ */
+  FOCKIS_API_URL ||
+
+  "http://localhost:3000"
+
+)
+
+  .trim()
+
+  .replace(/\/+$/, "");
 
 export interface FockisStoryProduct {
+
   name: string;
+
   price: string;
+
 }
 
 export interface FockisStory {
+
   id: string;
+
   userId?: string;
+
   username: string;
+
   avatar?: string;
+
   userPhoto?: string;
+
   storyImage?: string;
+
   storyVideo?: string;
+
   hasUnseen?: boolean;
+
   isOwn?: boolean;
+
   isSeller?: boolean;
+
   product?: FockisStoryProduct;
+
   type?: "image" | "video";
+
   media?: string;
+
   createdAt?: string;
+
   expiresAt?: string;
+
 }
 
 export interface FockisStoriesRailProps {
+
   stories?: FockisStory[];
 
   currentUser?: {
+
     id?: string;
+
     username?: string;
+
     avatar?: string;
+
   };
 
-  onCreateStory?: (
-    file: File,
-  ) => void;
+  onCreateStory?: (file: File) => void;
 
   onStoryCreated?: () => void;
 
-  /*
-   * Fired whenever the viewer moves to
-   * a (new) story - e.g. for marking
-   * it as "seen" in your backend.
-   */
-  onStoryClick?: (
-    story: FockisStory,
-    index: number,
-  ) => void;
+  onStoryClick?: (story: FockisStory, index: number) => void;
 
   onClose?: () => void;
+
 }
 
-/* ============================================================================
-   GROUPED STORY (one card per user - Facebook style)
-============================================================================ */
+interface StoryGroup {
 
-interface FockisStoryGroup {
   key: string;
+
   userId?: string;
+
   username: string;
+
   avatar?: string;
+
   isOwn: boolean;
+
   isSeller: boolean;
+
   hasUnseen: boolean;
+
   stories: FockisStory[];
+
 }
 
-/* ============================================================================
-   DEFAULT STORIES
-============================================================================ */
+function mediaUrl(value?: string): string {
 
-const defaultStories: FockisStory[] = [];
+  if (!value) return "";
 
-/* ============================================================================
-   BUILD MEDIA URL
-============================================================================ */
+  let path = String(value).trim();
 
-function buildMediaUrl(
-  media: string,
-): string {
-  if (!media) {
-    return "";
+  if (!path || path === "undefined" || path === "null") return "";
+
+  if (/^(https?:\/\/|blob:|data:)/i.test(path)) {
+
+    return path;
+
   }
 
-  let cleanMedia = media.trim();
+  path = path.replace(/\\/g, "/");
 
-  if (
-    !cleanMedia ||
-    cleanMedia === "undefined" ||
-    cleanMedia === "null"
-  ) {
-    return "";
-  }
+  path = path.replace(/^(\.\/)+/, "");
 
-  if (
-    cleanMedia.startsWith("http://") ||
-    cleanMedia.startsWith("https://") ||
-    cleanMedia.startsWith("blob:") ||
-    cleanMedia.startsWith("data:")
-  ) {
-    return cleanMedia;
-  }
+  path = path.replace(/^\/+/, "");
 
-  cleanMedia = cleanMedia.replace(
-    /\\/g,
-    "/",
-  );
+  if (!path) return "";
 
-  const path =
-    cleanMedia.replace(
-      /^\/+/,
-      "",
-    );
+  if (/^(uploads\/|upload\/|media\/|public\/uploads\/|api\/uploads\/)/i.test(path)) {
 
-  if (!path) {
-    return "";
-  }
-
-  if (
-    path.startsWith("uploads/") ||
-    path.startsWith("api/uploads/") ||
-    path.startsWith("media/") ||
-    path.startsWith("public/uploads/") ||
-    path.startsWith("upload/")
-  ) {
     return `${API_URL}/${path}`;
+
   }
 
   return `${API_URL}/uploads/${path}`;
+
 }
 
-/* ============================================================================
-   GROUP STORIES BY USER
-   (Facebook/Instagram behaviour: every story a user posted
-   lives in ONE card. Clicking it plays them back to back.)
-============================================================================ */
+function groupStories(stories: FockisStory[]): StoryGroup[] {
 
-function groupStoriesByUser(
-  stories: FockisStory[],
-): FockisStoryGroup[] {
-  const order: string[] = [];
-  const map = new Map<string, FockisStoryGroup>();
+  const groups = new Map<string, StoryGroup>();
 
-  stories.forEach((story) => {
-    const key =
-      story.userId ||
-      `name:${story.username}`;
+  for (const story of stories) {
 
-    let group = map.get(key);
+    const key = story.userId || `name:${story.username}`;
 
-    if (!group) {
-      group = {
+    if (!groups.has(key)) {
+
+      groups.set(key, {
+
         key,
-        userId: story.userId,
-        username: story.username,
-        avatar:
-          story.avatar ||
-          story.userPhoto,
-        isOwn: Boolean(story.isOwn),
-        isSeller: false,
-        hasUnseen: false,
-        stories: [],
-      };
 
-      map.set(key, group);
-      order.push(key);
+        userId: story.userId,
+
+        username: story.username,
+
+        avatar: story.avatar || story.userPhoto,
+
+        isOwn: Boolean(story.isOwn),
+
+        isSeller: Boolean(story.isSeller || story.product),
+
+        hasUnseen: Boolean(story.hasUnseen),
+
+        stories: [],
+
+      });
+
     }
+
+    const group = groups.get(key)!;
 
     group.stories.push(story);
 
-    if (story.hasUnseen) {
-      group.hasUnseen = true;
-    }
+    if (!group.avatar) {
 
-    if (story.isSeller || story.product) {
-      group.isSeller = true;
-    }
-
-    // Keep the most recent avatar/photo available.
-    if (!group.avatar && (story.avatar || story.userPhoto)) {
       group.avatar = story.avatar || story.userPhoto;
+
     }
-  });
 
-  // Sort each user's stories chronologically (oldest -> newest)
-  // so playback goes in posting order, like Facebook.
-  order.forEach((key) => {
-    const group = map.get(key)!;
+    group.hasUnseen = group.hasUnseen || Boolean(story.hasUnseen);
 
-    group.stories.sort((a, b) => {
-      const timeA = a.createdAt
-        ? new Date(a.createdAt).getTime()
-        : 0;
+    group.isSeller = group.isSeller || Boolean(story.isSeller || story.product);
 
-      const timeB = b.createdAt
-        ? new Date(b.createdAt).getTime()
-        : 0;
+    group.isOwn = group.isOwn || Boolean(story.isOwn);
 
-      return timeA - timeB;
-    });
-  });
+  }
 
-  return order.map((key) => map.get(key)!);
+  return Array.from(groups.values()).map((group) => ({
+
+    ...group,
+
+    stories: [...group.stories].sort((a, b) => {
+
+      const aTime = a.createdAt ? Date.parse(a.createdAt) : 0;
+
+      const bTime = b.createdAt ? Date.parse(b.createdAt) : 0;
+
+      return aTime - bTime;
+
+    }),
+
+  }));
+
 }
 
-/* ============================================================================
-   STORY DURATION
-   Images play for a fixed duration.
-   Videos use their real length once metadata loads.
-============================================================================ */
+function StoryViewer({
 
-const IMAGE_DURATION_MS = 5000;
-const DEFAULT_VIDEO_DURATION_MS = 15000;
-
-/* ============================================================================
-   STORY VIEWER
-   Full-screen, auto-advancing, Facebook/Instagram style playback.
-============================================================================ */
-
-interface FockisStoryViewerProps {
-  groups: FockisStoryGroup[];
-  initialGroupIndex: number;
-  initialStoryIndex: number;
-  onClose: () => void;
-  onStoryChange?: (
-    story: FockisStory,
-    index: number,
-  ) => void;
-}
-
-function FockisStoryViewer({
   groups,
-  initialGroupIndex,
-  initialStoryIndex,
+
+  startGroup,
+
   onClose,
-  onStoryChange,
-}: FockisStoryViewerProps) {
-  const [groupIndex, setGroupIndex] =
-    useState(initialGroupIndex);
 
-  const [storyIndex, setStoryIndex] =
-    useState(initialStoryIndex);
+  onStoryClick,
 
-  const [progress, setProgress] =
-    useState(0);
+}: {
 
-  const [paused, setPaused] =
-    useState(false);
+  groups: StoryGroup[];
 
-  const [muted, setMuted] =
-    useState(true);
+  startGroup: number;
 
-  const pausedRef = useRef(false);
-  const rafRef = useRef<number | null>(null);
-  const lastTsRef = useRef<number>(0);
-  const elapsedRef = useRef<number>(0);
-  const durationRef = useRef<number>(
-    IMAGE_DURATION_MS,
-  );
+  onClose: () => void;
 
-  const videoRef =
-    useRef<HTMLVideoElement | null>(null);
+  onStoryClick?: (story: FockisStory, index: number) => void;
+
+}) {
+
+  const [groupIndex, setGroupIndex] = useState(startGroup);
+
+  const [storyIndex, setStoryIndex] = useState(0);
+
+  const [paused, setPaused] = useState(false);
+
+  const [muted, setMuted] = useState(true);
+
+  const [progress, setProgress] = useState(0);
+
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  const startTimeRef = useRef(0);
+
+  const durationRef = useRef(5000);
 
   const group = groups[groupIndex];
+
   const story = group?.stories[storyIndex];
 
-  const mediaUrl = useMemo(() => {
+  const src = useMemo(() => {
+
     if (!story) return "";
 
-    const media =
-      story.media ||
-      story.storyImage ||
-      story.storyVideo ||
-      "";
+    return mediaUrl(story.media || story.storyImage || story.storyVideo);
 
-    return buildMediaUrl(media);
   }, [story]);
 
-  /* ==========================================================================
-     NAVIGATION
-  ========================================================================== */
+  const next = () => {
 
-  const goNext = useCallback(() => {
-    setGroupIndex((currentGroupIndex) => {
-      setStoryIndex((currentStoryIndex) => {
-        const currentGroup =
-          groups[currentGroupIndex];
+    if (!group) return;
 
-        if (
-          currentGroup &&
-          currentStoryIndex <
-            currentGroup.stories.length - 1
-        ) {
-          return currentStoryIndex + 1;
-        }
+    if (storyIndex < group.stories.length - 1) {
 
-        return 0;
-      });
+      setStoryIndex((value) => value + 1);
 
-      const currentGroup =
-        groups[currentGroupIndex];
-
-      const isLastStoryInGroup =
-        !currentGroup ||
-        storyIndex >=
-          currentGroup.stories.length - 1;
-
-      if (!isLastStoryInGroup) {
-        return currentGroupIndex;
-      }
-
-      if (
-        currentGroupIndex <
-        groups.length - 1
-      ) {
-        return currentGroupIndex + 1;
-      }
-
-      // Ran out of stories entirely.
-      queueMicrotask(onClose);
-
-      return currentGroupIndex;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groups, storyIndex, onClose]);
-
-  const goPrev = useCallback(() => {
-    if (storyIndex > 0) {
-      setStoryIndex((i) => i - 1);
       return;
+
+    }
+
+    if (groupIndex < groups.length - 1) {
+
+      setGroupIndex((value) => value + 1);
+
+      setStoryIndex(0);
+
+      return;
+
+    }
+
+    onClose();
+
+  };
+
+  const previous = () => {
+
+    if (storyIndex > 0) {
+
+      setStoryIndex((value) => value - 1);
+
+      return;
+
     }
 
     if (groupIndex > 0) {
-      const previousGroup =
-        groups[groupIndex - 1];
 
-      setGroupIndex((g) => g - 1);
-      setStoryIndex(
-        previousGroup.stories.length - 1,
-      );
+      const previousGroup = groups[groupIndex - 1];
+
+      setGroupIndex((value) => value - 1);
+
+      setStoryIndex(Math.max(previousGroup.stories.length - 1, 0));
+
     }
-  }, [storyIndex, groupIndex, groups]);
 
-  const goToGroup = useCallback(
-    (direction: "prev" | "next") => {
-      if (
-        direction === "next" &&
-        groupIndex < groups.length - 1
-      ) {
-        setGroupIndex((g) => g + 1);
-        setStoryIndex(0);
-      } else if (
-        direction === "prev" &&
-        groupIndex > 0
-      ) {
-        setGroupIndex((g) => g - 1);
-        setStoryIndex(0);
-      } else if (direction === "next") {
-        onClose();
-      }
-    },
-    [groupIndex, groups.length, onClose],
-  );
-
-  /* ==========================================================================
-     NOTIFY PARENT (mark as seen, etc.)
-  ========================================================================== */
+  };
 
   useEffect(() => {
-    if (story) {
-      onStoryChange?.(story, storyIndex);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [story]);
 
-  /* ==========================================================================
-     PROGRESS / AUTOPLAY LOOP
-  ========================================================================== */
+    if (!story) return;
+
+    onStoryClick?.(story, storyIndex);
+
+  }, [story, storyIndex, onStoryClick]);
 
   useEffect(() => {
-    elapsedRef.current = 0;
+
     setProgress(0);
 
-    durationRef.current =
-      story?.type === "video"
-        ? DEFAULT_VIDEO_DURATION_MS
-        : IMAGE_DURATION_MS;
+    startTimeRef.current = performance.now();
 
-    lastTsRef.current = performance.now();
+    durationRef.current = story?.type === "video" ? 15000 : 5000;
 
-    const loop = (timestamp: number) => {
-      const delta =
-        timestamp - lastTsRef.current;
+    let frame = 0;
 
-      lastTsRef.current = timestamp;
+    const tick = (now: number) => {
 
-      if (!pausedRef.current) {
-        elapsedRef.current += delta;
+      if (!paused) {
 
-        const percent = Math.min(
-          100,
-          (elapsedRef.current /
-            durationRef.current) *
-            100,
-        );
+        const elapsed = now - startTimeRef.current;
+
+        const percent = Math.min(100, (elapsed / durationRef.current) * 100);
 
         setProgress(percent);
 
         if (percent >= 100) {
-          goNext();
+
+          next();
+
           return;
+
         }
+
+      } else {
+
+        startTimeRef.current = now - (progress / 100) * durationRef.current;
+
       }
 
-      rafRef.current =
-        requestAnimationFrame(loop);
+      frame = requestAnimationFrame(tick);
+
     };
 
-    rafRef.current =
-      requestAnimationFrame(loop);
+    frame = requestAnimationFrame(tick);
 
-    return () => {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupIndex, storyIndex]);
+    return () => cancelAnimationFrame(frame);
 
-  /* ==========================================================================
-     VIDEO SYNC (real duration + play/pause)
-  ========================================================================== */
-
-  const handleVideoLoadedMetadata = () => {
-    const video = videoRef.current;
-
-    if (video && video.duration) {
-      durationRef.current =
-        video.duration * 1000;
-    }
-  };
+  }, [groupIndex, storyIndex, paused]);
 
   useEffect(() => {
+
     const video = videoRef.current;
 
     if (!video) return;
 
     if (paused) {
+
       video.pause();
+
     } else {
-      void video.play().catch(() => {});
+
+      void video.play().catch(() => undefined);
+
     }
+
   }, [paused, groupIndex, storyIndex]);
 
   useEffect(() => {
-    const video = videoRef.current;
 
-    if (!video) return;
+    const onKeyDown = (event: KeyboardEvent) => {
 
-    video.muted = muted;
-  }, [muted, groupIndex, storyIndex]);
+      if (event.key === "Escape") onClose();
 
-  /* ==========================================================================
-     TOGGLE SOUND
-  ========================================================================== */
+      if (event.key === "ArrowLeft") previous();
 
-  const handleToggleMute = (
-    event: React.MouseEvent,
-  ) => {
-    event.stopPropagation();
-    setMuted((current) => !current);
-  };
+      if (event.key === "ArrowRight") next();
 
-  /* ==========================================================================
-     PAUSE ON HOLD
-  ========================================================================== */
-
-  const handlePointerDown = () => {
-    pausedRef.current = true;
-    setPaused(true);
-  };
-
-  const handlePointerUp = () => {
-    pausedRef.current = false;
-    setPaused(false);
-  };
-
-  /* ==========================================================================
-     TAP LEFT / RIGHT TO NAVIGATE
-  ========================================================================== */
-
-  const handleTapZoneClick = (
-    event: React.MouseEvent,
-    zone: "left" | "right",
-  ) => {
-    event.stopPropagation();
-
-    if (zone === "left") {
-      goPrev();
-    } else {
-      goNext();
-    }
-  };
-
-  /* ==========================================================================
-     KEYBOARD CONTROLS
-  ========================================================================== */
-
-  useEffect(() => {
-    const handleKeyDown = (
-      event: KeyboardEvent,
-    ) => {
-      if (event.key === "Escape") {
-        onClose();
-        return;
-      }
-
-      if (event.key === "ArrowLeft") {
-        goPrev();
-        return;
-      }
-
-      if (event.key === "ArrowRight") {
-        goNext();
-      }
     };
 
-    document.addEventListener(
-      "keydown",
-      handleKeyDown,
-    );
+    window.addEventListener("keydown", onKeyDown);
 
-    document.body.style.overflow =
-      "hidden";
+    document.body.style.overflow = "hidden";
 
     return () => {
-      document.removeEventListener(
-        "keydown",
-        handleKeyDown,
-      );
+
+      window.removeEventListener("keydown", onKeyDown);
 
       document.body.style.overflow = "";
-    };
-  }, [goPrev, goNext, onClose]);
 
-  if (!group || !story) {
-    return null;
-  }
+    };
+
+  });
+
+  if (!group || !story) return null;
 
   return (
-    <div
-      className="fk-story-viewer"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Story viewer"
-    >
+
+    <div className="fk-story-viewer" role="dialog" aria-modal="true">
+
+      <div className="fk-story-viewer__backdrop" onClick={onClose} />
+
       <div className="fk-story-viewer__stage">
-        {/* ==================================================================
-            PROGRESS BARS - one segment per story in this user's group
-        =================================================================== */}
 
         <div className="fk-story-viewer__progress-row">
-          {group.stories.map((s, index) => (
-            <div
-              key={s.id}
-              className="fk-story-viewer__progress-track"
-            >
+
+          {group.stories.map((item, index) => (
+
+            <div className="fk-story-viewer__progress-track" key={item.id}>
+
               <div
+
                 className="fk-story-viewer__progress-fill"
+
                 style={{
+
                   width:
+
                     index < storyIndex
+
                       ? "100%"
+
                       : index === storyIndex
-                      ? `${progress}%`
-                      : "0%",
+
+                        ? `${progress}%`
+
+                        : "0%",
+
                 }}
+
               />
+
             </div>
+
           ))}
+
         </div>
 
-        {/* ==================================================================
-            HEADER
-        =================================================================== */}
+        <header className="fk-story-viewer__header">
 
-        <div className="fk-story-viewer__header">
           <div className="fk-story-viewer__user">
+
             <span className="fk-story-viewer__avatar">
+
               {group.avatar ? (
+
                 <img
-                  src={buildMediaUrl(
-                    group.avatar,
-                  )}
-                  alt={group.username}
+
+                  src={mediaUrl(group.avatar)}
+
+                  alt=""
+
+                  onError={(event) => {
+
+                    event.currentTarget.style.display = "none";
+
+                  }}
+
                 />
+
               ) : (
-                <span className="fk-story-viewer__avatar-placeholder">
-                  {group.username
-                    ?.charAt(0)
-                    ?.toUpperCase() || "?"}
-                </span>
+
+                group.username.charAt(0).toUpperCase()
+
               )}
+
             </span>
 
-            <span className="fk-story-viewer__username">
-              {group.isOwn
-                ? "Your Story"
-                : group.username}
-            </span>
+            <strong>{group.isOwn ? "Your Story" : group.username}</strong>
+
           </div>
 
           <button
-            type="button"
-            className="fk-story-viewer__close"
-            onClick={onClose}
-            aria-label="Close story"
-          >
-            <IconClose size={18} />
-          </button>
-        </div>
 
-        {/* ==================================================================
-            MEDIA
-        =================================================================== */}
+            type="button"
+
+            className="fk-story-viewer__close"
+
+            onClick={onClose}
+
+            aria-label="Close story"
+
+          >
+
+            <IconClose size={20} />
+
+          </button>
+
+        </header>
 
         <div
+
           className="fk-story-viewer__media"
-          onPointerDown={handlePointerDown}
-          onPointerUp={handlePointerUp}
-          onPointerLeave={handlePointerUp}
+
+          onPointerDown={() => setPaused(true)}
+
+          onPointerUp={() => setPaused(false)}
+
+          onPointerCancel={() => setPaused(false)}
+
+          onPointerLeave={() => setPaused(false)}
+
         >
+
           {story.type === "video" ? (
+
             <video
+
               ref={videoRef}
+
+              src={src}
+
               className="fk-story-viewer__video"
-              src={mediaUrl}
+
               playsInline
+
               autoPlay
+
               muted={muted}
-              onLoadedMetadata={
-                handleVideoLoadedMetadata
-              }
+
+              onLoadedMetadata={(event) => {
+
+                if (event.currentTarget.duration > 0) {
+
+                  durationRef.current = event.currentTarget.duration * 1000;
+
+                  startTimeRef.current =
+
+                    performance.now() - (progress / 100) * durationRef.current;
+
+                }
+
+              }}
+
             />
+
           ) : (
+
             <img
+
+              src={src}
+
               className="fk-story-viewer__image"
-              src={mediaUrl}
+
               alt={story.username}
+
             />
+
           )}
 
-          {/* Tap zones for prev / next */}
           <button
+
             type="button"
-            className="fk-story-viewer__tap-zone fk-story-viewer__tap-zone--left"
+
+            className="fk-story-viewer__tap fk-story-viewer__tap--left"
+
+            onClick={previous}
+
             aria-label="Previous story"
-            onClick={(event) =>
-              handleTapZoneClick(
-                event,
-                "left",
-              )
-            }
+
           />
 
           <button
+
             type="button"
-            className="fk-story-viewer__tap-zone fk-story-viewer__tap-zone--right"
+
+            className="fk-story-viewer__tap fk-story-viewer__tap--right"
+
+            onClick={next}
+
             aria-label="Next story"
-            onClick={(event) =>
-              handleTapZoneClick(
-                event,
-                "right",
-              )
-            }
+
           />
 
           {story.type === "video" && (
+
             <button
+
               type="button"
+
               className="fk-story-viewer__mute"
-              aria-label={
-                muted
-                  ? "Unmute video"
-                  : "Mute video"
-              }
-              onClick={handleToggleMute}
+
+              onClick={(event) => {
+
+                event.stopPropagation();
+
+                setMuted((value) => !value);
+
+              }}
+
             >
-              {muted ? (
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                  <line x1="23" y1="9" x2="17" y2="15" />
-                  <line x1="17" y1="9" x2="23" y2="15" />
-                </svg>
-              ) : (
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-                </svg>
-              )}
+
+              {muted ? "Unmute" : "Mute"}
+
             </button>
+
           )}
+
         </div>
-
-        {/* ==================================================================
-            GROUP NAV (jump to previous / next user)
-        =================================================================== */}
-
-        {groupIndex > 0 && (
-          <button
-            type="button"
-            className="fk-story-viewer__nav fk-story-viewer__nav--left"
-            aria-label="Previous person's story"
-            onClick={() =>
-              goToGroup("prev")
-            }
-          >
-            <IconChevronLeft size={20} />
-          </button>
-        )}
-
-        <button
-          type="button"
-          className="fk-story-viewer__nav fk-story-viewer__nav--right"
-          aria-label="Next person's story"
-          onClick={() =>
-            goToGroup("next")
-          }
-        >
-          <IconChevronRight size={20} />
-        </button>
-
-        {/* ==================================================================
-            PRODUCT / SELLER TAG
-        =================================================================== */}
 
         {story.product && (
+
           <div className="fk-story-viewer__product">
-            <IconMarketplace size={14} />
+
+            <IconMarketplace size={15} />
+
             <span>{story.product.name}</span>
-            <strong>
-              {story.product.price}
-            </strong>
+
+            <strong>{story.product.price}</strong>
+
           </div>
+
         )}
+
       </div>
+
     </div>
+
   );
+
 }
 
-/* ============================================================================
-   COMPONENT
-============================================================================ */
-
 export default function FockisStoriesRail({
-  stories = defaultStories,
+
+  stories = [],
+
   currentUser,
+
   onCreateStory,
+
+  onStoryCreated,
+
   onStoryClick,
+
   onClose,
+
 }: FockisStoriesRailProps) {
-  const scrollRef =
-    useRef<HTMLDivElement | null>(
-      null,
-    );
 
-  const fileInputRef =
-    useRef<HTMLInputElement | null>(
-      null,
-    );
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const [viewer, setViewer] = useState<{
-    groupIndex: number;
-    storyIndex: number;
-  } | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
 
-  const groups = useMemo(
-    () => groupStoriesByUser(stories),
-    [stories],
-  );
+  const [viewerGroup, setViewerGroup] = useState<number | null>(null);
 
-  /* ==========================================================================
-     FILE SELECTED
-  ========================================================================== */
+  const groups = useMemo(() => groupStories(stories), [stories]);
 
-  const handleStoryFileSelected = (
-    event: ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file =
-      event.target.files?.[0];
+  const selectStoryFile = (event: ChangeEvent<HTMLInputElement>) => {
 
-    /*
-     * Clear the input so selecting
-     * the same file again works.
-     */
+    const file = event.target.files?.[0];
+
     event.target.value = "";
 
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
-    const isImage =
-      file.type.startsWith(
-        "image/",
-      );
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
 
-    const isVideo =
-      file.type.startsWith(
-        "video/",
-      );
-
-    if (
-      !isImage &&
-      !isVideo
-    ) {
-      window.alert(
-        "Please select an image or video.",
-      );
+      window.alert("Please select an image or video.");
 
       return;
+
     }
 
-    console.log(
-      "Story file selected:",
-      file.name,
-      file.type,
-    );
+    onCreateStory?.(file);
 
-    if (onCreateStory) {
-      onCreateStory(file);
-    } else {
-      console.error(
-        "FockisStoriesRail: onCreateStory is missing.",
-      );
-    }
+    onStoryCreated?.();
+
   };
 
-  /* ==========================================================================
-     SCROLL STORIES
-  ========================================================================== */
+  const scroll = (amount: number) => {
 
-  const scrollStories = (
-    direction: "left" | "right",
-  ) => {
-    const element =
-      scrollRef.current;
+    listRef.current?.scrollBy({
 
-    if (!element) {
-      return;
-    }
+      left: amount,
 
-    element.scrollBy({
-      left:
-        direction === "left"
-          ? -320
-          : 320,
       behavior: "smooth",
+
     });
+
   };
-
-  /* ==========================================================================
-     GROUP CARD CLICK -> OPEN VIEWER
-  ========================================================================== */
-
-  const handleGroupClick = (
-    groupIndex: number,
-  ) => {
-    setViewer({
-      groupIndex,
-      storyIndex: 0,
-    });
-  };
-
-  const handleCloseViewer = () => {
-    setViewer(null);
-  };
-
-  const handleViewerStoryChange = (
-    story: FockisStory,
-    index: number,
-  ) => {
-    onStoryClick?.(story, index);
-  };
-
-  /* ==========================================================================
-     RENDER
-  ========================================================================== */
 
   return (
-    <section className="fk-stories-rail">
-      {/* ======================================================================
-          HIDDEN FILE INPUT
-      ======================================================================= */}
 
-      <input
-        ref={fileInputRef}
-        id="fockis-create-story-file"
-        type="file"
-        accept="image/*,video/*"
-        hidden
-        onChange={
-          handleStoryFileSelected
-        }
-      />
+    <>
 
-      {/* ======================================================================
-          CLOSE BUTTON
-      ======================================================================= */}
+      <section className="fk-stories-rail">
 
-      {onClose && (
-        <button
-          type="button"
-          className="fk-icon-btn fk-stories-rail__close"
-          onClick={onClose}
-          aria-label="Close stories"
-          title="Close stories"
-        >
-          <IconClose size={16} />
-        </button>
-      )}
+        <input
 
-      {/* ======================================================================
-          STORIES VIEWPORT
-      ======================================================================= */}
+          ref={inputRef}
 
-      <div className="fk-stories-rail__viewport">
-        {/* LEFT */}
-        <button
-          type="button"
-          className="fk-stories-rail__arrow fk-stories-rail__arrow--left"
-          onClick={() =>
-            scrollStories("left")
-          }
-          aria-label="Previous stories"
-        >
-          <IconChevronLeft size={16} />
-        </button>
+          type="file"
 
-        {/* STORY LIST */}
-        <div
-          ref={scrollRef}
-          className="fk-stories-rail__list"
-        >
-          {/* ==================================================================
-              CREATE STORY
+          accept="image/*,video/*"
 
-              IMPORTANT:
-              This is a LABEL connected directly
-              to the file input.
+          hidden
 
-              Clicking it opens the PC picker.
-          =================================================================== */}
+          onChange={selectStoryFile}
 
-          <label
-            htmlFor="fockis-create-story-file"
-            className="fk-story-card fk-story-card--create"
-            style={{
-              cursor: "pointer",
-            }}
-          >
-            <span className="fk-story-card__visual-wrap">
-              <span className="fk-story-card__create-avatar">
-                {currentUser?.avatar ? (
-                  <img
-                    src={buildMediaUrl(
-                      currentUser.avatar,
-                    )}
-                    alt={
-                      currentUser.username ||
-                      "Your profile"
-                    }
-                    loading="lazy"
-                  />
-                ) : (
-                  <IconPlus size={20} />
-                )}
-              </span>
-            </span>
+        />
 
-            <span className="fk-story-card__label">
-              Create Story
-            </span>
-          </label>
+        <div className="fk-stories-rail__top">
 
-          {/* ==================================================================
-              GROUPED STORIES - one card per user
-              (all of that user's photos/videos live inside it)
-          =================================================================== */}
+          <div>
 
-          {groups.map(
-            (
-              group,
-              groupIndex,
-            ) => {
-              const coverStory =
-                group.stories[
-                  group.stories.length - 1
-                ];
+            <h2>Stories</h2>
 
-              const coverMedia =
-                coverStory?.media ||
-                coverStory?.storyImage ||
-                coverStory?.storyVideo ||
-                "";
+            <span>Share a moment</span>
 
-              const coverUrl =
-                buildMediaUrl(
-                  coverMedia,
-                );
+          </div>
 
-              const avatarUrl =
-                group.avatar || "";
+          {onClose && (
 
-              return (
-                <button
-                  type="button"
-                  key={group.key}
-                  className={[
-                    "fk-story-card",
-                    group.hasUnseen
-                      ? "is-unseen"
-                      : "",
-                    group.isSeller
-                      ? "is-seller"
-                      : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  onClick={() =>
-                    handleGroupClick(
-                      groupIndex,
-                    )
-                  }
-                >
-                  <span className="fk-story-card__visual-wrap">
-                    <span className="fk-story-card__avatar">
-                      {coverUrl ? (
-                        coverStory?.type ===
-                        "video" ? (
-                          <video
-                            src={coverUrl}
-                            muted
-                            playsInline
-                            preload="metadata"
-                          />
-                        ) : (
-                          <img
-                            src={coverUrl}
-                            alt={
-                              group.username
-                            }
-                            loading="lazy"
-                          />
-                        )
-                      ) : avatarUrl ? (
-                        <img
-                          src={buildMediaUrl(
-                            avatarUrl,
-                          )}
-                          alt={
-                            group.username
-                          }
-                          loading="lazy"
-                        />
-                      ) : (
-                        <span className="fk-story-card__avatar-placeholder">
-                          {group.username
-                            ?.charAt(
-                              0,
-                            )
-                            ?.toUpperCase() ||
-                            "?"}
-                        </span>
-                      )}
-                    </span>
+            <button
 
-                    {group.hasUnseen && (
-                      <span
-                        className="fk-story-card__ping"
-                        aria-hidden="true"
-                      />
-                    )}
+              type="button"
 
-                    {group.isSeller && (
-                      <span
-                        className="fk-story-card__store-badge"
-                        aria-hidden="true"
-                      >
-                        <IconMarketplace
-                          size={10}
-                        />
-                      </span>
-                    )}
+              className="fk-stories-rail__close"
 
-                    {/* Story count, when a user has more than one */}
-                    {group.stories.length >
-                      1 && (
-                      <span className="fk-story-card__count">
-                        {
-                          group.stories
-                            .length
-                        }
-                      </span>
-                    )}
-                  </span>
+              onClick={onClose}
 
-                  <IconWaveGlyph
-                    className="fk-story-card__wave"
-                  />
+              aria-label="Close stories"
 
-                  <span className="fk-story-card__label">
-                    {group.isOwn
-                      ? "Your Story"
-                      : group.username}
-                  </span>
-                </button>
-              );
-            },
+            >
+
+              <IconClose size={17} />
+
+            </button>
+
           )}
+
         </div>
 
-        {/* RIGHT */}
-        <button
-          type="button"
-          className="fk-stories-rail__arrow fk-stories-rail__arrow--right"
-          onClick={() =>
-            scrollStories("right")
-          }
-          aria-label="Next stories"
-        >
-          <IconChevronRight size={16} />
-        </button>
-      </div>
+        <div className="fk-stories-rail__viewport">
 
-      {/* ======================================================================
-          FULL-SCREEN VIEWER
-      ======================================================================= */}
+          <button
 
-      {viewer && (
-        <FockisStoryViewer
+            type="button"
+
+            className="fk-stories-rail__arrow"
+
+            onClick={() => scroll(-320)}
+
+            aria-label="Previous stories"
+
+          >
+
+            <IconChevronLeft size={18} />
+
+          </button>
+
+          <div className="fk-stories-rail__list" ref={listRef}>
+
+            <button
+
+              type="button"
+
+              className="fk-story-card fk-story-card--create"
+
+              onClick={() => inputRef.current?.click()}
+
+            >
+
+              <div className="fk-story-card__media">
+
+                {currentUser?.avatar ? (
+
+                  <img
+
+                    src={mediaUrl(currentUser.avatar)}
+
+                    alt={currentUser.username || "Your profile"}
+
+                    onError={(event) => {
+
+                      event.currentTarget.style.display = "none";
+
+                    }}
+
+                  />
+
+                ) : (
+
+                  <div className="fk-story-card__placeholder">
+
+                    <IconPlus size={22} />
+
+                  </div>
+
+                )}
+
+                <span className="fk-story-card__plus">
+
+                  <IconPlus size={14} />
+
+                </span>
+
+              </div>
+
+              <strong>Your Story</strong>
+
+            </button>
+
+            {groups.map((group, index) => {
+
+              const latest = group.stories[group.stories.length - 1];
+
+              const cover = mediaUrl(
+
+                latest?.media || latest?.storyImage || latest?.storyVideo,
+
+              );
+
+              return (
+
+                <button
+
+                  type="button"
+
+                  key={group.key}
+
+                  className={`fk-story-card ${
+
+                    group.hasUnseen ? "is-unseen" : ""
+
+                  }`}
+
+                  onClick={() => setViewerGroup(index)}
+
+                >
+
+                  <div className="fk-story-card__media">
+
+                    {cover ? (
+
+                      latest?.type === "video" ? (
+
+                        <video
+
+                          src={cover}
+
+                          muted
+
+                          playsInline
+
+                          preload="metadata"
+
+                        />
+
+                      ) : (
+
+                        <img src={cover} alt="" />
+
+                      )
+
+                    ) : group.avatar ? (
+
+                      <img src={mediaUrl(group.avatar)} alt="" />
+
+                    ) : (
+
+                      <div className="fk-story-card__placeholder">
+
+                        {group.username.charAt(0).toUpperCase()}
+
+                      </div>
+
+                    )}
+
+                    <span className="fk-story-card__avatar">
+
+                      {group.avatar ? (
+
+                        <img src={mediaUrl(group.avatar)} alt="" />
+
+                      ) : (
+
+                        group.username.charAt(0).toUpperCase()
+
+                      )}
+
+                    </span>
+
+                    {group.isSeller && (
+
+                      <span className="fk-story-card__seller">
+
+                        <IconMarketplace size={11} />
+
+                      </span>
+
+                    )}
+
+                  </div>
+
+                  <strong>
+
+                    {group.isOwn ? "Your Story" : group.username}
+
+                  </strong>
+
+                  {group.stories.length > 1 && (
+
+                    <span className="fk-story-card__count">
+
+                      {group.stories.length}
+
+                    </span>
+
+                  )}
+
+                  <IconWaveGlyph className="fk-story-card__wave" />
+
+                </button>
+
+              );
+
+            })}
+
+          </div>
+
+          <button
+
+            type="button"
+
+            className="fk-stories-rail__arrow"
+
+            onClick={() => scroll(320)}
+
+            aria-label="Next stories"
+
+          >
+
+            <IconChevronRight size={18} />
+
+          </button>
+
+        </div>
+
+      </section>
+
+      {viewerGroup !== null && (
+
+        <StoryViewer
+
           groups={groups}
-          initialGroupIndex={
-            viewer.groupIndex
-          }
-          initialStoryIndex={
-            viewer.storyIndex
-          }
-          onClose={handleCloseViewer}
-          onStoryChange={
-            handleViewerStoryChange
-          }
+
+          startGroup={viewerGroup}
+
+          onClose={() => setViewerGroup(null)}
+
+          onStoryClick={onStoryClick}
+
         />
+
       )}
-    </section>
+
+    </>
+
   );
+
 }
