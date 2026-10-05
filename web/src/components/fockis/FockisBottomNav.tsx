@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { Plus } from "lucide-react";
 
 import {
@@ -125,10 +125,36 @@ const navItems: BottomNavItem[] = [
 ];
 
 // ============================================================================
+// REEL / WAVES ROUTE DETECTION
+// ============================================================================
+
+function isReelRoute(pathname: string): boolean {
+  const normalizedPath = pathname.toLowerCase();
+
+  return (
+    normalizedPath === "/reels" ||
+    normalizedPath.startsWith("/reels/") ||
+    normalizedPath === "/waves" ||
+    normalizedPath.startsWith("/waves/") ||
+    normalizedPath === "/fockis/reels" ||
+    normalizedPath.startsWith("/fockis/reels/") ||
+    normalizedPath === "/fockis/waves" ||
+    normalizedPath.startsWith("/fockis/waves/")
+  );
+}
+
+// ============================================================================
 // COMPONENT
 // ============================================================================
 
 export default function FockisBottomNav() {
+  const location = useLocation();
+
+  // Hide the bottom navigation while viewing Reels / Waves.
+  if (isReelRoute(location.pathname)) {
+    return null;
+  }
+
   return (
     <nav
       className="fk-bottom-nav"
