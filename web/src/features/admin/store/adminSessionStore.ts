@@ -11,62 +11,390 @@ import { getPermissionsForRole } from "../permissions/rolePermissions";
 
 import { findAdministratorByRole } from "../mock/mockAdministrators";
 
+interface StoredFockisUser {
+  _id?: string;
+  id?: string;
+
+  name?: string;
+  email?: string;
+  username?: string;
+
+  role?: string | null;
+  roles?: string[] | null;
+
+  isAdmin?: boolean | null;
+  is_admin?: boolean | null;
+
+  isSuperAdmin?: boolean | null;
+  is_super_admin?: boolean | null;
+
+  permissions?: string[] | null;
+
+  [key: string]: unknown;
+}
+
 interface AdminSessionState {
-  currentAdmin: AdminUser;
+  /*
+   * Keep AdminUser for compatibility with the existing
+   * admin components.
+   *
+   * IMPORTANT:
+   * This is only populated when the authenticated user
+   * is actually an administrator.
+   */
+  currentAdmin: AdminUser | null;
 
   permissions: PermissionValue[];
 
-  /**
-   * Bumps on every role switch so UI can key
-   * a re-mount / transition.
-   */
   switchToken: number;
 
   setRole: (role: AdminRole) => void;
 }
 
-const initialRole: AdminRole = "SUPER_ADMIN";
+function normalizeRole(value: unknown): string {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+}
 
-function buildAdminForRole(
-  role: AdminRole,
-): AdminUser {
+function getStoredUser(): StoredFockisUser | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw =
+      localStorage.getItem("user");
+
+    if (!raw) {
+      return null;
+    }
+
+    const parsed: unknown =
+      JSON.parse(raw);
+
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      Array.isArray(parsed)
+    ) {
+      return null;
+    }
+
+    return parsed as StoredFockisUser;
+  } catch {
+    return null;
+  }
+}
+
+function isSuperAdmin(
+  user: StoredFockisUser | null,
+): boolean {
+  if (!user) {
+    return false;
+  }
+
+  if (
+    user.isSuperAdmin === true ||
+    user.is_super_admin === true
+  ) {
+    return true;
+  }
+
+  const primaryRole =
+    normalizeRole(user.role);
+
+  if (
+    primaryRole === "super_admin" ||
+    primaryRole === "superadmin" ||
+    primaryRole === "super_admin_user"
+  ) {
+    return true;
+  }
+
+  if (
+    Array.isArray(user.roles) &&
+    user.roles.some((value) => {
+      const role =
+        normalizeRole(value);
+
+      return (
+        role === "super_admin" ||
+        role === "superadmin" ||
+        role === "super_admin_user"
+      );
+    })
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function isAdminUser(
+  user: StoredFockisUser | null,
+): boolean {
+  if (!user) {
+    return false;
+  }
+
+  /*
+   * Backend-authenticated admin flags.
+   */
+  if (
+    user.isAdmin === true ||
+    user.is_admin === true
+  ) {
+    return true;
+  }
+
+  /*
+   * Super Admin is automatically an admin.
+   */
+  if (isSuperAdmin(user)) {
+    return true;
+  }
+
+  const primaryRole =
+    normalizeRole(user.role);
+
+  if (
+    primaryRole === "admin" ||
+    primaryRole === "administrator"
+  ) {
+    return true;
+  }
+
+  if (
+    Array.isArray(user.roles) &&
+    user.roles.some((value) => {
+      const role =
+        normalizeRole(value);
+
+      return (
+        role === "admin" ||
+        role === "administrator"
+      );
+    })
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function getRealAdminRole(
+  user: StoredFockisUser,
+): AdminRole | null {
+  const candidates: string[] = [];
+
+  if (user.role) {
+    candidates.push(user.role);
+  }
+
+  if (Array.isArray(user.roles)) {
+    candidates.push(...user.roles);
+  }
+
+  const knownRoles = [
+    "SUPER_ADMIN",
+    "USER_ADMIN",
+    "MODERATION_ADMIN",
+    "SUPPORT_ADMIN",
+    "MARKETPLACE_ADMIN",
+    "SELLER_ADMIN",
+    "SHIPPING_ADMIN",
+    "FINANCE_ADMIN",
+    "PAYMENTS_ADMIN",
+    "SUBSCRIPTION_ADMIN",
+    "CONTENT_ADMIN",
+    "MUSIC_ADMIN",
+    "TRAVEL_ADMIN",
+    "REAL_ESTATE_ADMIN",
+    "AI_ADMIN",
+    "MARKETING_ADMIN",
+    "SECURITY_ADMIN",
+    "SYSTEM_ADMIN",
+    "AUDITOR",
+  ] as const;
+
+  for (const candidate of candidates) {
+    const normalized =
+      normalizeRole(candidate);
+
+    const match =
+      knownRoles.find(
+        (knownRole) =>
+          normalizeRole(knownRole) ===
+          normalized,
+      );
+
+    if (match) {
+      return match as AdminRole;
+    }
+  }
+
+  return null;
+}
+
+function buildCurrentAdmin(): AdminUser | null {
+  const user =
+    getStoredUser();
+
+  /*
+   * No logged-in user.
+   */
+  if (!user) {
+    return null;
+  }
+
+  /*
+   * Normal Fockis users must NOT receive
+   * an administrator session.
+   */
+  if (!isAdminUser(user)) {
+    return null;
+  }
+
+  const role =
+    getRealAdminRole(user);
+
+  /*
+   * Never invent a role.
+   */
+  if (!role) {
+    return null;
+  }
+
   const admin =
     findAdministratorByRole(role);
 
+  if (!admin) {
+    return null;
+  }
+
   /*
-   * Keep the AdminUser object exactly compatible
-   * with the existing AdminUser type.
-   *
-   * Authorization is determined from the role,
-   * while permissions are loaded separately below.
+   * Preserve the complete AdminUser structure
+   * returned by the existing admin data source.
    */
   return {
     ...admin,
+
+    id:
+      user.id ??
+      user._id ??
+      admin.id,
+
+    name:
+      user.name ??
+      admin.name,
+
+    email:
+      user.email ??
+      admin.email,
+
     role,
   };
 }
 
+function getPermissions(
+  admin: AdminUser | null,
+): PermissionValue[] {
+  if (!admin) {
+    return [];
+  }
+
+  return getPermissionsForRole(
+    admin.role,
+  );
+}
+
 export const useAdminSessionStore =
-  create<AdminSessionState>((set) => ({
-    currentAdmin:
-      buildAdminForRole(initialRole),
+  create<AdminSessionState>((set) => {
+    const initialAdmin =
+      buildCurrentAdmin();
 
-    permissions:
-      getPermissionsForRole(initialRole),
+    return {
+      currentAdmin:
+        initialAdmin,
 
-    switchToken: 0,
+      permissions:
+        getPermissions(initialAdmin),
 
-    setRole: (role) =>
-      set((state) => ({
-        currentAdmin:
-          buildAdminForRole(role),
+      switchToken: 0,
 
-        permissions:
-          getPermissionsForRole(role),
+      setRole: (role) => {
+        set((state) => {
+          const user =
+            getStoredUser();
 
-        switchToken:
-          state.switchToken + 1,
-      })),
-  }));
+          /*
+           * A normal user cannot change
+           * their administrator role.
+           */
+          if (!isSuperAdmin(user)) {
+            const actualAdmin =
+              buildCurrentAdmin();
+
+            return {
+              currentAdmin:
+                actualAdmin,
+
+              permissions:
+                getPermissions(
+                  actualAdmin,
+                ),
+
+              switchToken:
+                state.switchToken + 1,
+            };
+          }
+
+          /*
+           * Only a real Super Admin can
+           * switch administrator roles.
+           */
+          const admin =
+            findAdministratorByRole(
+              role,
+            );
+
+          if (!admin) {
+            return state;
+          }
+
+          return {
+            currentAdmin: {
+              ...admin,
+
+              id:
+                user?.id ??
+                user?._id ??
+                admin.id,
+
+              name:
+                user?.name ??
+                admin.name,
+
+              email:
+                user?.email ??
+                admin.email,
+
+              role,
+            },
+
+            permissions:
+              getPermissionsForRole(
+                role,
+              ),
+
+            switchToken:
+              state.switchToken + 1,
+          };
+        });
+      },
+    };
+  });
 
 export default useAdminSessionStore;
