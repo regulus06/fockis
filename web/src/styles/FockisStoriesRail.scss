@@ -7,10 +7,10 @@
   width: 100%;
   box-sizing: border-box;
   padding: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #1d4ed8;
   border-radius: 18px;
-  background: #ffffff;
-  color: #111827;
+  background: #2563eb;
+  color: #ffffff;
 }
 
 .fk-stories-rail__top {
@@ -23,12 +23,13 @@
     margin: 0;
     font-size: 18px;
     font-weight: 800;
+    color: #ffffff;
   }
 
   span {
     display: block;
     margin-top: 2px;
-    color: #6b7280;
+    color: #dbeafe;
     font-size: 12px;
   }
 }
@@ -46,8 +47,8 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #f3f4f6;
-  color: #374151;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
 }
 
 .fk-stories-rail__viewport {
@@ -62,8 +63,8 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #f3f4f6;
-  color: #111827;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
 }
 
 .fk-stories-rail__list {
@@ -86,7 +87,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #111827;
+  color: #ffffff;
   text-align: left;
   cursor: pointer;
 
@@ -97,6 +98,7 @@
     padding: 0 2px;
     font-size: 12px;
     font-weight: 700;
+    color: #ffffff;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -108,7 +110,7 @@
   height: 156px;
   overflow: hidden;
   border-radius: 14px;
-  background: #e5e7eb;
+  background: #dbeafe;
 
   > img,
   > video {
@@ -171,7 +173,7 @@
 }
 
 .fk-story-card.is-unseen .fk-story-card__media {
-  box-shadow: 0 0 0 3px #2563eb;
+  box-shadow: 0 0 0 3px #ffffff;
 }
 
 .fk-story-card__seller {
