@@ -1,28 +1,59 @@
 /* ============================================================================
    FOCKIS MOBILE BOTTOM NAVIGATION
 
-   - Fixed mobile navigation
-   - Hidden by default on desktop
+   Layout:
+   Feed → Marketplace → Cart → Create → Real Estate → Messages → Profile
+
+   Behavior:
+   - Mobile only
+   - Safe-area support
+   - Create button centered after Cart
+   - Scroll hide/show controlled by FockisBottomNav.tsx
    - Hidden automatically while a Reel is open
-   - Returns automatically when the Reel closes
-   - Safe-area support for mobile devices
+============================================================================ */
+
+
+/* ============================================================================
+   MAIN NAVIGATION
 ============================================================================ */
 
 .fk-bottom-nav {
   position: fixed;
+
   left: 0;
   right: 0;
+
+  /*
+   * IMPORTANT:
+   * Keep bottom at 0.
+   *
+   * The safe-area padding below creates the extra space
+   * needed above the Android/iOS system navigation area.
+   */
   bottom: 0;
 
   display: none;
 
   width: 100%;
 
-  padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+
+  /*
+   * Safe-area support.
+   *
+   * This prevents the Fockis navigation from sitting
+   * underneath the phone's system navigation/gesture area.
+   */
+  padding:
+    10px
+    10px
+    calc(
+      10px + env(safe-area-inset-bottom, 0px)
+    );
 
   background: var(--fk-fjord);
 
-  border-top: none;
+  border: 0;
 
   box-shadow:
     inset 0 3px 0 0 var(--fk-amber-bright),
@@ -30,15 +61,34 @@
 
   z-index: 10001;
 
+  /*
+   * Default visible state.
+   *
+   * FockisBottomNav.tsx controls the actual
+   * hide/show animation with inline styles.
+   */
+  transform: translateY(0);
+
+  opacity: 1;
+
+  visibility: visible;
+
+  pointer-events: auto;
+
   transition:
+    transform 220ms ease,
     opacity 180ms ease,
-    visibility 180ms ease,
-    transform 180ms ease;
+    visibility 220ms ease;
+
+  /*
+   * Make sure padding is included inside width.
+   */
+  overflow: visible;
 }
 
 
 /* ============================================================================
-   MOBILE
+   MOBILE ONLY
 ============================================================================ */
 
 @media (max-width: 767px) {
@@ -49,23 +99,57 @@
 
 
 /* ============================================================================
-   HIDE BOTTOM NAVIGATION WHILE REEL IS OPEN
+   DESKTOP
+============================================================================ */
 
-   FockisVideoReel adds:
+@media (min-width: 768px) {
+  .fk-bottom-nav {
+    display: none !important;
+  }
+}
 
-       body.fk-reel-open
 
-   while the Reel is mounted.
+/* ============================================================================
+   HIDDEN STATE
+============================================================================
 
-   This selector comes AFTER the mobile display rule and therefore overrides
-   display: block.
+   This class is still supported as a backup.
+
+   The current FockisBottomNav.tsx also controls the same
+   behavior directly with inline styles.
+============================================================================ */
+
+@media (max-width: 767px) {
+  .fk-bottom-nav.fk-bottom-nav--hidden {
+    transform:
+      translateY(
+        calc(
+          100% + env(safe-area-inset-bottom, 0px)
+        )
+      );
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    pointer-events: none;
+  }
+}
+
+
+/* ============================================================================
+   REEL / WAVES OPEN
 ============================================================================ */
 
 body.fk-reel-open .fk-bottom-nav {
   display: none !important;
+
   visibility: hidden !important;
+
   opacity: 0 !important;
+
   pointer-events: none !important;
+
   transform: translateY(100%) !important;
 }
 
@@ -76,12 +160,15 @@ body.fk-reel-open .fk-bottom-nav {
 
 .fk-bottom-nav__inner {
   display: flex;
-  align-items: center;
-  justify-content: space-around;
 
-  gap: 4px;
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 2px;
 
   width: 100%;
+
   max-width: 560px;
 
   margin: 0 auto;
@@ -89,25 +176,34 @@ body.fk-reel-open .fk-bottom-nav {
 
 
 /* ============================================================================
-   ORDINARY NAVIGATION ITEM
+   NAVIGATION ITEM
 ============================================================================ */
 
 .fk-bottom-nav__item {
   position: relative;
 
   display: flex;
+
   flex-direction: column;
+
   align-items: center;
+
   justify-content: center;
 
   gap: 4px;
 
   flex: 1 1 0;
+
   min-width: 0;
+
+  min-height: 44px;
 
   padding: 4px 2px;
 
+  box-sizing: border-box;
+
   border: 0;
+
   border-radius: var(--fk-r-sm);
 
   background: transparent;
@@ -119,6 +215,55 @@ body.fk-reel-open .fk-bottom-nav {
   transition:
     color 150ms ease,
     transform 150ms ease;
+
+  order: 1;
+
+  /*
+   * Prevent browser tap highlighting from
+   * creating a strange rectangle.
+   */
+  -webkit-tap-highlight-color: transparent;
+}
+
+
+/* ============================================================================
+   NAVIGATION ORDER
+
+   1. Feed
+   2. Marketplace
+   3. Cart
+   4. Create
+   5. Real Estate
+   6. Messages
+   7. Profile
+============================================================================ */
+
+.fk-bottom-nav__item:nth-child(1) {
+  order: 1;
+}
+
+.fk-bottom-nav__item:nth-child(2) {
+  order: 2;
+}
+
+.fk-bottom-nav__item:nth-child(3) {
+  order: 3;
+}
+
+.fk-bottom-nav__item--create {
+  order: 4 !important;
+}
+
+.fk-bottom-nav__item:nth-child(5) {
+  order: 5;
+}
+
+.fk-bottom-nav__item:nth-child(6) {
+  order: 6;
+}
+
+.fk-bottom-nav__item:nth-child(7) {
+  order: 7;
 }
 
 
@@ -143,27 +288,37 @@ body.fk-reel-open .fk-bottom-nav {
 
 
 /* ============================================================================
-   ICON
+   ICON CONTAINER
 ============================================================================ */
 
 .fk-bottom-nav__icon {
   position: relative;
 
   width: 24px;
+
   height: 24px;
 
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
+  flex-shrink: 0;
 
   color: inherit;
 }
 
 
+/* ============================================================================
+   ICON
+============================================================================ */
+
 .fk-bottom-nav__icon svg {
   display: block;
 
   width: 22px;
+
   height: 22px;
 
   color: inherit;
@@ -184,11 +339,13 @@ body.fk-reel-open .fk-bottom-nav {
   color: inherit;
 
   font-size: 10.5px;
+
   font-weight: 600;
 
   line-height: 1.1;
 
   white-space: nowrap;
+
   text-overflow: ellipsis;
 }
 
@@ -201,16 +358,22 @@ body.fk-reel-open .fk-bottom-nav {
   position: absolute;
 
   top: -4px;
+
   right: -8px;
 
   min-width: 16px;
+
   height: 16px;
 
   padding: 0 4px;
 
   display: inline-flex;
+
   align-items: center;
+
   justify-content: center;
+
+  box-sizing: border-box;
 
   border-radius: 999px;
 
@@ -221,6 +384,7 @@ body.fk-reel-open .fk-bottom-nav {
   color: var(--fk-fjord-dark);
 
   font-size: 9px;
+
   font-weight: 800;
 
   line-height: 1;
@@ -233,20 +397,31 @@ body.fk-reel-open .fk-bottom-nav {
 
 .fk-bottom-nav__item--create {
   background: transparent !important;
+
   background-color: transparent !important;
+
   background-image: none !important;
 
   box-shadow: none !important;
 
   border: none !important;
+
   border-radius: 0 !important;
 
   color: var(--fk-fjord-dark) !important;
+
+  flex: 1 1 0;
 }
 
 
-.fk-bottom-nav__item--create .fk-bottom-nav__icon {
+/* ============================================================================
+   CREATE BUTTON SQUARE
+============================================================================ */
+
+.fk-bottom-nav__item--create
+  .fk-bottom-nav__icon {
   width: 40px !important;
+
   height: 40px !important;
 
   border-radius: var(--fk-r-sm) !important;
@@ -262,20 +437,37 @@ body.fk-reel-open .fk-bottom-nav {
 }
 
 
-.fk-bottom-nav__item--create .fk-bottom-nav__icon svg {
+/* ============================================================================
+   CREATE ICON
+============================================================================ */
+
+.fk-bottom-nav__item--create
+  .fk-bottom-nav__icon
+  svg {
   width: 20px;
+
   height: 20px;
 
   stroke-width: 2.2;
 }
 
 
-.fk-bottom-nav__item--create .fk-bottom-nav__label {
+/* ============================================================================
+   HIDE CREATE LABEL
+============================================================================ */
+
+.fk-bottom-nav__item--create
+  .fk-bottom-nav__label {
   display: none;
 }
 
 
-.fk-bottom-nav__item--create:active .fk-bottom-nav__icon {
+/* ============================================================================
+   CREATE PRESS EFFECT
+============================================================================ */
+
+.fk-bottom-nav__item--create:active
+  .fk-bottom-nav__icon {
   transform: scale(0.94);
 }
 
@@ -287,17 +479,86 @@ body.fk-reel-open .fk-bottom-nav {
 @media (prefers-reduced-motion: reduce) {
   .fk-bottom-nav,
   .fk-bottom-nav__item,
-  .fk-bottom-nav__item--create .fk-bottom-nav__icon {
-    transition: none;
+  .fk-bottom-nav__item--create
+    .fk-bottom-nav__icon {
+    transition: none !important;
   }
 }
 
 
 /* ============================================================================
-   EXTRA SAFETY FOR SMALL PHONES
+   SMALL PHONES
+============================================================================ */
 
-   Ensures the navigation never overlays a Reel if another component changes
-   its display property.
+@media (max-width: 390px) {
+  .fk-bottom-nav {
+    padding-left: 6px;
+
+    padding-right: 6px;
+
+    padding-bottom:
+      calc(
+        8px + env(safe-area-inset-bottom, 0px)
+      );
+  }
+
+  .fk-bottom-nav__inner {
+    gap: 0;
+  }
+
+  .fk-bottom-nav__item {
+    min-height: 42px;
+
+    padding-left: 1px;
+
+    padding-right: 1px;
+  }
+
+  .fk-bottom-nav__label {
+    font-size: 9px;
+  }
+
+  .fk-bottom-nav__icon {
+    width: 22px;
+
+    height: 22px;
+  }
+
+  .fk-bottom-nav__icon svg {
+    width: 20px;
+
+    height: 20px;
+  }
+
+  .fk-bottom-nav__item--create
+    .fk-bottom-nav__icon {
+    width: 38px !important;
+
+    height: 38px !important;
+  }
+}
+
+
+/* ============================================================================
+   VERY SMALL PHONES
+============================================================================ */
+
+@media (max-width: 340px) {
+  .fk-bottom-nav__label {
+    font-size: 8px;
+  }
+
+  .fk-bottom-nav__item--create
+    .fk-bottom-nav__icon {
+    width: 36px !important;
+
+    height: 36px !important;
+  }
+}
+
+
+/* ============================================================================
+   REEL SAFETY
 ============================================================================ */
 
 @media (max-width: 767px) {
