@@ -17,8 +17,21 @@ export type UserAdminListQuery = {
   page?: number | string;
   limit?: number | string;
   sortBy?: string;
-  sortDirection?: 'asc' | 'desc' | string;
+  sortDirection?: "asc" | "desc" | string;
 };
 
-export type UserAdminStatus = 'active' | 'inactive' | 'suspended' | 'locked' | 'deleted';
-export type UserAdminBulkAction = 'activate' | 'deactivate' | 'suspend' | 'unlock' | 'verify' | 'unverify' | 'delete';
+export type UserAdminStatus =
+  | "active"
+  | "inactive"
+  | "suspended"
+  | "locked"
+  | "deleted";
+
+export type UserAdminBulkAction =
+  | "activate"
+  | "deactivate"
+  | "suspend"
+  | "unlock"
+  | "verify"
+  | "unverify"
+  | "delete";

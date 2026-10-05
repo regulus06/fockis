@@ -1,6 +1,8 @@
 // ============================================================================
 // FOCKIS JWT STRATEGY
+//
 // Database-authoritative authentication + route-aware session security
+// + effective RBAC permissions
 // ============================================================================
 
 import {
@@ -35,6 +37,14 @@ import {
   AdminRole,
   AdminRoleDocument,
 } from "../admin/roles/admin-role.schema";
+
+import {
+  Role,
+} from "../admin/rbac/roles.enum";
+
+import {
+  RolePermissions,
+} from "../admin/rbac/role-permissions";
 
 // ============================================================================
 // JWT PAYLOAD
@@ -88,22 +98,6 @@ export class JwtStrategy extends PassportStrategy(
   // STANDARD FOCKIS
   // ==========================================================================
 
-  /**
-   * Normal social/platform areas should not force users to re-authenticate
-   * after only a few minutes of inactivity.
-   *
-   * Applies to:
-   * - Feed
-   * - Social
-   * - Shop
-   * - Marketplace
-   * - Real Estate
-   * - Travel
-   * - Music
-   * - Playlists
-   * - Messages
-   * - Other normal Fockis features
-   */
   private readonly STANDARD_SESSION: SessionPolicy = {
     name: "standard",
     inactivityMinutes: 120,
@@ -114,14 +108,6 @@ export class JwtStrategy extends PassportStrategy(
   // PROTECTED FOCKIS AREAS
   // ==========================================================================
 
-  /**
-   * More sensitive application areas.
-   *
-   * Applies to:
-   * - Organizations
-   * - Academy
-   * - Careers
-   */
   private readonly PROTECTED_SESSION: SessionPolicy = {
     name: "protected",
     inactivityMinutes: 15,
@@ -152,9 +138,6 @@ export class JwtStrategy extends PassportStrategy(
   // ACTIVITY WRITE THROTTLE
   // ==========================================================================
 
-  /**
-   * Avoid writing to MongoDB on every API request.
-   */
   private readonly ACTIVITY_UPDATE_INTERVAL_MS =
     60 * 1000;
 
@@ -165,7 +148,8 @@ export class JwtStrategy extends PassportStrategy(
     @InjectModel(AdminRole.name)
     private readonly adminRoleModel: Model<AdminRoleDocument>,
   ) {
-    const jwtSecret = process.env.JWT_SECRET?.trim();
+    const jwtSecret =
+      process.env.JWT_SECRET?.trim();
 
     // ------------------------------------------------------------------------
     // JWT SECRET
@@ -227,18 +211,16 @@ export class JwtStrategy extends PassportStrategy(
     // ========================================================================
     // LOAD CURRENT USER
     // ========================================================================
-
-    /**
-     * Authorization is always based on the current database record.
-     *
-     * The JWT does NOT get to decide:
-     *
-     * - role
-     * - permissions
-     * - super-admin status
-     * - account status
-     * - custom admin role
-     */
+    //
+    // Authorization is always based on the current database record.
+    //
+    // JWT claims do NOT decide:
+    // - role
+    // - permissions
+    // - super-admin status
+    // - account status
+    // - custom admin role
+    // ========================================================================
 
     const user = await this.userModel
       .findById(userId)
@@ -272,15 +254,16 @@ export class JwtStrategy extends PassportStrategy(
       lockedUntil &&
       lockedUntil.getTime() > Date.now()
     ) {
-      const remainingSeconds = Math.max(
-        1,
-        Math.ceil(
-          (
-            lockedUntil.getTime() -
-            Date.now()
-          ) / 1000,
-        ),
-      );
+      const remainingSeconds =
+        Math.max(
+          1,
+          Math.ceil(
+            (
+              lockedUntil.getTime() -
+              Date.now()
+            ) / 1000,
+          ),
+        );
 
       throw new UnauthorizedException(
         `This account is temporarily locked. Try again in ${remainingSeconds} seconds.`,
@@ -291,11 +274,6 @@ export class JwtStrategy extends PassportStrategy(
     // SYSTEM ROLE
     // ========================================================================
 
-    /**
-     * Database is authoritative.
-     *
-     * Never fall back to payload.role.
-     */
     const userRole =
       this.normalizeRole(
         String(
@@ -307,9 +285,6 @@ export class JwtStrategy extends PassportStrategy(
     // SUPER ADMIN
     // ========================================================================
 
-    /**
-     * JWT claims cannot elevate a user.
-     */
     const databaseIsSuperAdmin =
       Boolean(
         (user as any).isSuperAdmin,
@@ -321,6 +296,36 @@ export class JwtStrategy extends PassportStrategy(
     const isSuperAdmin =
       databaseIsSuperAdmin ||
       roleIsSuperAdmin;
+
+    // ========================================================================
+    // SYSTEM ROLE PERMISSIONS
+    // ========================================================================
+    //
+    // IMPORTANT:
+    //
+    // These are the baseline permissions defined by:
+    //
+    // admin/rbac/role-permissions.ts
+    //
+    // USER       -> no admin permissions
+    // MODERATOR  -> moderation/audit permissions
+    // ADMIN      -> normal administrative permissions
+    // SUPER_ADMIN -> complete permission catalog
+    //
+    // These are now merged into request.user.permissions.
+    // ========================================================================
+
+    let systemRolePermissions: string[] = [];
+
+    const roleEnumValue =
+      this.getRoleEnumValue(userRole);
+
+    if (roleEnumValue) {
+      systemRolePermissions =
+        this.normalizePermissions(
+          RolePermissions[roleEnumValue] ?? [],
+        );
+    }
 
     // ========================================================================
     // CUSTOM ADMIN ROLE
@@ -348,12 +353,15 @@ export class JwtStrategy extends PassportStrategy(
             isActive: true,
           })
           .lean()
-          .exec() as AdminRoleDocument | null;
+          .exec() as
+          | AdminRoleDocument
+          | null;
 
-      /**
-       * If a referenced custom role no longer exists
-       * or is inactive, do not grant its permissions.
-       */
+      // ----------------------------------------------------------------------
+      // If the referenced custom role no longer exists
+      // or is inactive, do not grant its permissions.
+      // ----------------------------------------------------------------------
+
       if (customRole) {
         customRolePermissions =
           this.normalizePermissions(
@@ -380,14 +388,28 @@ export class JwtStrategy extends PassportStrategy(
       );
 
     // ========================================================================
-    // MERGE PERMISSIONS
+    // MERGE EFFECTIVE PERMISSIONS
+    // ==========================================================================
+    //
+    // Effective permissions are:
+    //
+    //   SYSTEM ROLE
+    //       +
+    //   CUSTOM ADMIN ROLE
+    //       +
+    //   DIRECT USER PERMISSIONS
+    //
+    // Super Admin also receives all permissions from RolePermissions.
+    //
+    // A Set prevents duplicates.
     // ========================================================================
 
     const permissions =
       Array.from(
         new Set([
-          ...directPermissions,
+          ...systemRolePermissions,
           ...customRolePermissions,
+          ...directPermissions,
         ]),
       );
 
@@ -604,7 +626,18 @@ export class JwtStrategy extends PassportStrategy(
         customRoleName,
 
       // ======================================================================
-      // PERMISSIONS
+      // EFFECTIVE PERMISSIONS
+      // ======================================================================
+      //
+      // This is the important RBAC fix.
+      //
+      // RbacGuard will now receive:
+      //
+      // system role permissions
+      // + custom role permissions
+      // + direct permissions
+      //
+      // through request.user.permissions.
       // ======================================================================
 
       permissions,
@@ -728,19 +761,34 @@ export class JwtStrategy extends PassportStrategy(
   }
 
   // ==========================================================================
+  // SYSTEM ROLE → ROLE ENUM
+  // ==========================================================================
+
+  private getRoleEnumValue(
+    normalizedRole: string,
+  ): Role | null {
+    switch (normalizedRole) {
+      case "user":
+        return Role.USER;
+
+      case "moderator":
+        return Role.MODERATOR;
+
+      case "admin":
+        return Role.ADMIN;
+
+      case "super_admin":
+        return Role.SUPER_ADMIN;
+
+      default:
+        return null;
+    }
+  }
+
+  // ==========================================================================
   // SESSION POLICY ROUTER
   // ==========================================================================
 
-  /**
-   * Determines the security policy based on the current API route.
-   *
-   * IMPORTANT:
-   *
-   * This does NOT change authorization.
-   *
-   * It only determines how long the current authentication session
-   * may remain valid and how long it may remain inactive.
-   */
   private getSessionPolicy(
     request: any,
     userRole: string,
@@ -783,7 +831,9 @@ export class JwtStrategy extends PassportStrategy(
       this.getRequestPath(request);
 
     if (
-      this.isProtectedApplicationPath(path)
+      this.isProtectedApplicationPath(
+        path,
+      )
     ) {
       return this.PROTECTED_SESSION;
     }
@@ -810,9 +860,6 @@ export class JwtStrategy extends PassportStrategy(
         "",
       );
 
-    /**
-     * Remove query string.
-     */
     const path =
       rawPath.split("?")[0];
 
@@ -855,7 +902,7 @@ export class JwtStrategy extends PassportStrategy(
       path === "/careers" ||
       path.startsWith("/careers/") ||
 
-      // Singular route variants if used by older Fockis modules
+      // Singular route variants
       path === "/organization" ||
       path.startsWith("/organization/") ||
 
@@ -871,10 +918,15 @@ export class JwtStrategy extends PassportStrategy(
   private normalizeRole(
     role: unknown,
   ): string {
-    return String(role ?? "")
+    return String(
+      role ?? "",
+    )
       .trim()
       .toLowerCase()
-      .replace(/[\s-]+/g, "_");
+      .replace(
+        /[\s-]+/g,
+        "_",
+      );
   }
 
   // ==========================================================================
@@ -891,10 +943,11 @@ export class JwtStrategy extends PassportStrategy(
     return Array.from(
       new Set(
         permissions
-          .map((permission) =>
-            String(permission)
-              .trim()
-              .toLowerCase(),
+          .map(
+            (permission) =>
+              String(permission)
+                .trim()
+                .toLowerCase(),
           )
           .filter(Boolean),
       ),

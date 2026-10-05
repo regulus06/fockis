@@ -32,8 +32,8 @@ export class UsersAdminController {
 
   @Get("stats")
   @Permissions(Permission.USERS_VIEW)
-  stats() {
-    return this.users.getStats();
+  stats(@Req() req: any) {
+    return this.users.getStats(req.user);
   }
 
   // ========================================================================
@@ -44,8 +44,12 @@ export class UsersAdminController {
   @Permissions(Permission.USERS_VIEW)
   list(
     @Query() query: any,
+    @Req() req: any,
   ) {
-    return this.users.getUsers(query);
+    return this.users.getUsers(
+      query,
+      req.user,
+    );
   }
 
   // ========================================================================
@@ -56,10 +60,13 @@ export class UsersAdminController {
   @Permissions(Permission.USERS_EXPORT)
   async export(
     @Query() query: any,
+    @Req() req: any,
     @Res() res: Response,
   ) {
-    const csv =
-      await this.users.export(query);
+    const csv = await this.users.export(
+      query,
+      req.user,
+    );
 
     res.setHeader(
       "Content-Type",
@@ -99,8 +106,12 @@ export class UsersAdminController {
   @Permissions(Permission.USERS_DETAILS_VIEW)
   get(
     @Param("id") id: string,
+    @Req() req: any,
   ) {
-    return this.users.getUser(id);
+    return this.users.getUser(
+      id,
+      req.user,
+    );
   }
 
   // ========================================================================
@@ -165,7 +176,9 @@ export class UsersAdminController {
   // ========================================================================
 
   @Patch(":id/permissions")
-  @Permissions(Permission.USERS_PERMISSIONS_MANAGE)
+  @Permissions(
+    Permission.USERS_PERMISSIONS_MANAGE,
+  )
   permissions(
     @Param("id") id: string,
     @Body() body: any,
@@ -184,7 +197,9 @@ export class UsersAdminController {
   // ========================================================================
 
   @Patch(":id/verification")
-  @Permissions(Permission.USERS_VERIFICATION_MANAGE)
+  @Permissions(
+    Permission.USERS_VERIFICATION_MANAGE,
+  )
   verification(
     @Param("id") id: string,
     @Body() body: any,
@@ -203,7 +218,9 @@ export class UsersAdminController {
   // ========================================================================
 
   @Patch(":id/premium")
-  @Permissions(Permission.USERS_PREMIUM_MANAGE)
+  @Permissions(
+    Permission.USERS_PREMIUM_MANAGE,
+  )
   premium(
     @Param("id") id: string,
     @Body() body: any,
@@ -222,7 +239,9 @@ export class UsersAdminController {
   // ========================================================================
 
   @Patch(":id/fockis-id-access")
-  @Permissions(Permission.USERS_FOCKIS_ID_MANAGE)
+  @Permissions(
+    Permission.USERS_FOCKIS_ID_MANAGE,
+  )
   fockisId(
     @Param("id") id: string,
     @Body() body: any,
@@ -277,7 +296,9 @@ export class UsersAdminController {
   // ========================================================================
 
   @Post(":id/force-password-change")
-  @Permissions(Permission.USERS_FORCE_PASSWORD_CHANGE)
+  @Permissions(
+    Permission.USERS_FORCE_PASSWORD_CHANGE,
+  )
   forcePasswordChange(
     @Param("id") id: string,
     @Req() req: any,
@@ -294,7 +315,9 @@ export class UsersAdminController {
   // ========================================================================
 
   @Post(":id/reset-password")
-  @Permissions(Permission.USERS_RESET_PASSWORD)
+  @Permissions(
+    Permission.USERS_RESET_PASSWORD,
+  )
   resetPassword(
     @Param("id") id: string,
     @Req() req: any,
@@ -311,14 +334,18 @@ export class UsersAdminController {
   // ========================================================================
 
   @Get(":id/activity")
-  @Permissions(Permission.USERS_ACTIVITY_VIEW)
+  @Permissions(
+    Permission.USERS_ACTIVITY_VIEW,
+  )
   activity(
     @Param("id") id: string,
     @Query() q: any,
+    @Req() req: any,
   ) {
     return this.users.getActivity(
       id,
       q,
+      req.user,
     );
   }
 
@@ -327,14 +354,18 @@ export class UsersAdminController {
   // ========================================================================
 
   @Get(":id/messages")
-  @Permissions(Permission.USERS_MESSAGES_VIEW)
+  @Permissions(
+    Permission.USERS_MESSAGES_VIEW,
+  )
   messages(
     @Param("id") id: string,
     @Query() q: any,
+    @Req() req: any,
   ) {
     return this.users.getMessages(
       id,
       q,
+      req.user,
     );
   }
 
@@ -343,14 +374,18 @@ export class UsersAdminController {
   // ========================================================================
 
   @Get(":id/bookings")
-  @Permissions(Permission.USERS_BOOKINGS_VIEW)
+  @Permissions(
+    Permission.USERS_BOOKINGS_VIEW,
+  )
   bookings(
     @Param("id") id: string,
     @Query() q: any,
+    @Req() req: any,
   ) {
     return this.users.getBookings(
       id,
       q,
+      req.user,
     );
   }
 
@@ -359,14 +394,18 @@ export class UsersAdminController {
   // ========================================================================
 
   @Get(":id/payments")
-  @Permissions(Permission.USERS_PAYMENTS_VIEW)
+  @Permissions(
+    Permission.USERS_PAYMENTS_VIEW,
+  )
   payments(
     @Param("id") id: string,
     @Query() q: any,
+    @Req() req: any,
   ) {
     return this.users.getPayments(
       id,
       q,
+      req.user,
     );
   }
 
@@ -375,14 +414,18 @@ export class UsersAdminController {
   // ========================================================================
 
   @Get(":id/reports")
-  @Permissions(Permission.USERS_REPORTS_VIEW)
+  @Permissions(
+    Permission.USERS_REPORTS_VIEW,
+  )
   reports(
     @Param("id") id: string,
     @Query() q: any,
+    @Req() req: any,
   ) {
     return this.users.getReports(
       id,
       q,
+      req.user,
     );
   }
 
@@ -391,10 +434,16 @@ export class UsersAdminController {
   // ========================================================================
 
   @Get(":id/domains")
-  @Permissions(Permission.USERS_DOMAINS_VIEW)
+  @Permissions(
+    Permission.USERS_DOMAINS_VIEW,
+  )
   domains(
     @Param("id") id: string,
+    @Req() req: any,
   ) {
-    return this.users.getDomainSummary(id);
+    return this.users.getDomainSummary(
+      id,
+      req.user,
+    );
   }
 }

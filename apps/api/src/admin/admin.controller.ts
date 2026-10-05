@@ -15,8 +15,8 @@ import { Model } from "mongoose";
 import { AdminService } from "./admin.service";
 
 import { RbacGuard } from "./rbac/rbac.guard";
-import { Roles } from "./rbac/roles.decorator";
-import { Role } from "./rbac/roles.enum";
+import { RequirePermissions } from "./rbac/permissions.decorator";
+import { Permission } from "./rbac/permissions.enum";
 
 import { SuperAdminGuard } from "./safety/super-admin.guard";
 import { DestructiveGuard } from "./safety/destructive.guard";
@@ -40,10 +40,15 @@ export class AdminController {
    * GET /admin/users
    *
    * Main Users Admin dashboard list.
+   *
+   * Requires:
+   * - users.view
+   *
+   * Super Admin automatically passes RbacGuard.
    */
   @Get("users")
   @UseGuards(RbacGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @RequirePermissions(Permission.USERS_VIEW)
   getUsers(
     @Query() query: any,
     @Req() req: any,
@@ -60,12 +65,12 @@ export class AdminController {
    *
    * User Admin dashboard statistics.
    *
-   * IMPORTANT:
-   * This route must be before /users/:id.
+   * Requires:
+   * - users.view
    */
   @Get("users/stats")
   @UseGuards(RbacGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @RequirePermissions(Permission.USERS_VIEW)
   getUserStats(@Req() req: any) {
     return this.adminService.getUserStats(
       req.user,
@@ -77,10 +82,15 @@ export class AdminController {
    * GET /admin/users/:id
    *
    * Individual User Administration overview.
+   *
+   * Requires:
+   * - users.details.view
    */
   @Get("users/:id")
   @UseGuards(RbacGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @RequirePermissions(
+    Permission.USERS_DETAILS_VIEW,
+  )
   getUser(
     @Param("id") id: string,
     @Req() req: any,
@@ -96,9 +106,17 @@ export class AdminController {
   // MARKETPLACE DASHBOARD
   // ==========================================================================
 
+  /**
+   * GET /admin/marketplace/dashboard
+   *
+   * Requires:
+   * - marketplace.view
+   */
   @Get("marketplace/dashboard")
   @UseGuards(RbacGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @RequirePermissions(
+    Permission.MARKETPLACE_VIEW,
+  )
   marketplaceDashboard(
     @Req() req: any,
   ) {
@@ -112,9 +130,21 @@ export class AdminController {
   // ADMINISTRATORS
   // ==========================================================================
 
+  /**
+   * GET /admin/administrators
+   *
+   * View administrators.
+   *
+   * This does NOT grant permission to create, modify,
+   * delete, or change administrator roles.
+   *
+   * Those actions should use their own permissions.
+   */
   @Get("administrators")
   @UseGuards(RbacGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @RequirePermissions(
+    Permission.ADMINISTRATORS_VIEW,
+  )
   async getAdministrators(
     @Query("search") search?: string,
   ) {
@@ -130,7 +160,10 @@ export class AdminController {
     if (search?.trim()) {
       const escaped = search
         .trim()
-        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        .replace(
+          /[.*+?^${}()|[\]\\]/g,
+          "\\$&",
+        );
 
       const regex = new RegExp(
         escaped,
@@ -215,9 +248,17 @@ export class AdminController {
   // CLEANUP
   // ==========================================================================
 
+  /**
+   * POST /admin/cleanup/media
+   *
+   * Requires:
+   * - delete:media
+   */
   @Post("cleanup/media")
   @UseGuards(RbacGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @RequirePermissions(
+    Permission.DELETE_MEDIA,
+  )
   cleanupMedia(@Req() req: any) {
     return this.adminService.cleanupMedia(
       req.user,
@@ -225,12 +266,28 @@ export class AdminController {
     );
   }
 
+  /**
+   * POST /admin/cleanup/db
+   *
+   * Extremely destructive operation.
+   *
+   * Requires:
+   * - system:cleanup
+   *
+   * Plus:
+   * - DestructiveGuard
+   *
+   * Super Admin bypasses the permission check through RbacGuard,
+   * but DestructiveGuard still remains active.
+   */
   @Post("cleanup/db")
   @UseGuards(
     RbacGuard,
     DestructiveGuard,
   )
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @RequirePermissions(
+    Permission.SYSTEM_CLEANUP,
+  )
   cleanupDb(@Req() req: any) {
     return this.adminService.cleanupDb(
       req.user,
@@ -242,6 +299,14 @@ export class AdminController {
   // LEGACY USER DELETE
   // ==========================================================================
 
+  /**
+   * DELETE /admin/user/:id
+   *
+   * Super Admin ONLY.
+   *
+   * This remains intentionally protected by SuperAdminGuard
+   * because it is a legacy destructive user-deletion endpoint.
+   */
   @Delete("user/:id")
   @UseGuards(SuperAdminGuard)
   deleteLegacyUser(

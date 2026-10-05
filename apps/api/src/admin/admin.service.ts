@@ -1,8 +1,9 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from "@nestjs/common";
-
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 
@@ -29,6 +30,104 @@ export class AdminService {
   ) {}
 
   // ==========================================================================
+  // SECURITY HELPERS
+  // ==========================================================================
+
+  private normalizeRole(value: unknown): string {
+    return String(value ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/[\s-]+/g, "_");
+  }
+
+  private isSuperAdmin(actor: any): boolean {
+    if (!actor) {
+      return false;
+    }
+
+    if (actor.isSuperAdmin === true) {
+      return true;
+    }
+
+    if (
+      this.normalizeRole(actor.role) ===
+      "super_admin"
+    ) {
+      return true;
+    }
+
+    return (
+      Array.isArray(actor.roles) &&
+      actor.roles.some(
+        (role: unknown) =>
+          this.normalizeRole(role) ===
+          "super_admin",
+      )
+    );
+  }
+
+  private isAdminOrHigher(actor: any): boolean {
+    if (!actor) {
+      return false;
+    }
+
+    return (
+      this.isSuperAdmin(actor) ||
+      this.normalizeRole(actor.role) ===
+        "admin"
+    );
+  }
+
+  private getActorId(actor: any): string {
+    return String(
+      actor?.id ??
+        actor?._id ??
+        actor?.userId ??
+        actor?.sub ??
+        "",
+    ).trim();
+  }
+
+  private requireActor(actor: any): string {
+    const actorId =
+      this.getActorId(actor);
+
+    if (!actorId) {
+      throw new UnauthorizedException(
+        "Authentication required.",
+      );
+    }
+
+    return actorId;
+  }
+
+  private requireAdmin(actor: any): string {
+    const actorId =
+      this.requireActor(actor);
+
+    if (!this.isAdminOrHigher(actor)) {
+      throw new ForbiddenException(
+        "Administrator privileges required.",
+      );
+    }
+
+    return actorId;
+  }
+
+  private requireSuperAdmin(actor: any): string {
+    const actorId =
+      this.requireActor(actor);
+
+    if (!this.isSuperAdmin(actor)) {
+      throw new ForbiddenException(
+        "Super Admin privileges required.",
+      );
+    }
+
+    return actorId;
+  }
+
+  // ==========================================================================
   // USERS - DASHBOARD
   // ==========================================================================
 
@@ -37,6 +136,9 @@ export class AdminService {
     actor: any,
     req: any,
   ) {
+    const actorId =
+      this.requireAdmin(actor);
+
     const {
       search,
       status,
@@ -75,7 +177,10 @@ export class AdminService {
     ) {
       const escaped = search
         .trim()
-        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        .replace(
+          /[.*+?^${}()|[\]\\]/g,
+          "\\$&",
+        );
 
       const regex = new RegExp(
         escaped,
@@ -116,7 +221,8 @@ export class AdminService {
       accountType.trim()
     ) {
       filters.push({
-        accountType: accountType.trim(),
+        accountType:
+          accountType.trim(),
       });
     }
 
@@ -130,7 +236,8 @@ export class AdminService {
     ) {
       filters.push({
         verified:
-          String(verified) === "true",
+          String(verified) ===
+          "true",
       });
     }
 
@@ -144,7 +251,8 @@ export class AdminService {
     ) {
       filters.push({
         premium:
-          String(premium) === "true",
+          String(premium) ===
+          "true",
       });
     }
 
@@ -153,12 +261,15 @@ export class AdminService {
     // ------------------------------------------------------------------------
 
     if (
-      fockisIdAccessPaid !== undefined &&
+      fockisIdAccessPaid !==
+        undefined &&
       fockisIdAccessPaid !== ""
     ) {
       filters.push({
         fockisIdAccessPaid:
-          String(fockisIdAccessPaid) === "true",
+          String(
+            fockisIdAccessPaid,
+          ) === "true",
       });
     }
 
@@ -171,7 +282,8 @@ export class AdminService {
       locked !== ""
     ) {
       const wantsLocked =
-        String(locked) === "true";
+        String(locked) ===
+        "true";
 
       if (wantsLocked) {
         filters.push({
@@ -213,14 +325,17 @@ export class AdminService {
           .trim()
           .toLowerCase();
 
-      switch (normalizedStatus) {
+      switch (
+        normalizedStatus
+      ) {
         case "active":
           filters.push({
             $and: [
               {
                 $or: [
                   {
-                    status: "active",
+                    status:
+                      "active",
                   },
                   {
                     status: {
@@ -243,7 +358,8 @@ export class AdminService {
 
         case "suspended":
           filters.push({
-            status: "suspended",
+            status:
+              "suspended",
           });
           break;
 
@@ -251,7 +367,8 @@ export class AdminService {
           filters.push({
             $or: [
               {
-                status: "deactivated",
+                status:
+                  "deactivated",
               },
               {
                 isActive: false,
@@ -312,6 +429,9 @@ export class AdminService {
             pageSize,
         )
         .limit(pageSize)
+        .select(
+          "-password -passwordHash",
+        )
         .lean()
         .exec();
 
@@ -321,20 +441,12 @@ export class AdminService {
       );
 
     await this.audit.log({
-      userId:
-        actor?.id ??
-        actor?._id ??
-        actor?.userId,
-
+      userId: actorId,
       action:
         "VIEW_ADMIN_USERS",
-
       module: "users",
-
       targetId: "users",
-
       ip: req?.ip,
-
       userAgent:
         req?.headers?.[
           "user-agent"
@@ -343,15 +455,10 @@ export class AdminService {
 
     return {
       users: mappedUsers,
-
       data: mappedUsers,
-
       total,
-
       page: currentPage,
-
       limit: pageSize,
-
       totalPages:
         Math.max(
           Math.ceil(
@@ -370,6 +477,9 @@ export class AdminService {
     actor: any,
     req: any,
   ) {
+    const actorId =
+      this.requireAdmin(actor);
+
     const [
       totalUsers,
       activeUsers,
@@ -422,13 +532,15 @@ export class AdminService {
       }),
 
       this.userModel.countDocuments({
-        status: "suspended",
+        status:
+          "suspended",
       }),
 
       this.userModel.countDocuments({
         $or: [
           {
-            status: "deactivated",
+            status:
+              "deactivated",
           },
           {
             isActive: false,
@@ -437,7 +549,8 @@ export class AdminService {
       }),
 
       this.userModel.countDocuments({
-        fockisIdAccessPaid: true,
+        fockisIdAccessPaid:
+          true,
       }),
 
       this.userModel.countDocuments({
@@ -449,20 +562,12 @@ export class AdminService {
     ]);
 
     await this.audit.log({
-      userId:
-        actor?.id ??
-        actor?._id ??
-        actor?.userId,
-
+      userId: actorId,
       action:
         "VIEW_ADMIN_USER_STATS",
-
       module: "users",
-
       targetId: "stats",
-
       ip: req?.ip,
-
       userAgent:
         req?.headers?.[
           "user-agent"
@@ -471,25 +576,16 @@ export class AdminService {
 
     return {
       totalUsers,
-
       activeUsers,
-
       onlineUsers,
-
       verifiedUsers,
-
       premiumUsers,
-
       lockedUsers,
-
       suspendedUsers,
-
       deactivatedUsers,
-
       fockisIdPaid,
-
-      newUsers: newThisMonth,
-
+      newUsers:
+        newThisMonth,
       newThisMonth,
     };
   }
@@ -503,6 +599,9 @@ export class AdminService {
     actor: any,
     req: any,
   ) {
+    const actorId =
+      this.requireAdmin(actor);
+
     if (!userId?.trim()) {
       throw new NotFoundException(
         "User ID is required",
@@ -512,6 +611,9 @@ export class AdminService {
     const user =
       await this.userModel
         .findById(userId)
+        .select(
+          "-password -passwordHash",
+        )
         .lean()
         .exec();
 
@@ -525,20 +627,12 @@ export class AdminService {
       this.buildAdminUser(user);
 
     await this.audit.log({
-      userId:
-        actor?.id ??
-        actor?._id ??
-        actor?.userId,
-
+      userId: actorId,
       action:
         "VIEW_ADMIN_USER",
-
       module: "users",
-
       targetId: userId,
-
       ip: req?.ip,
-
       userAgent:
         req?.headers?.[
           "user-agent"
@@ -558,11 +652,15 @@ export class AdminService {
     const id =
       user?._id
         ? String(user._id)
-        : String(user?.id ?? "");
+        : String(
+            user?.id ?? "",
+          );
 
     const lockedUntil =
       user?.lockedUntil
-        ? new Date(user.lockedUntil)
+        ? new Date(
+            user.lockedUntil,
+          )
         : null;
 
     const isLocked =
@@ -582,7 +680,8 @@ export class AdminService {
       } else if (
         user?.isActive === false
       ) {
-        status = "deactivated";
+        status =
+          "deactivated";
       } else if (
         user?.online
       ) {
@@ -683,8 +782,9 @@ export class AdminService {
       isActive:
         user?.isActive !== false,
 
-      online:
-        Boolean(user?.online),
+      online: Boolean(
+        user?.online,
+      ),
 
       lastSeen:
         user?.lastSeen ??
@@ -707,11 +807,13 @@ export class AdminService {
         user?.updatedAt ??
         null,
 
-      verified:
-        Boolean(user?.verified),
+      verified: Boolean(
+        user?.verified,
+      ),
 
-      premium:
-        Boolean(user?.premium),
+      premium: Boolean(
+        user?.premium,
+      ),
 
       subscriptionExpiresAt:
         user?.subscriptionExpiresAt ??
@@ -753,14 +855,16 @@ export class AdminService {
           user?.followers,
         )
           ? user.followers.length
-          : user?.followersCount ?? 0,
+          : user?.followersCount ??
+            0,
 
       followingCount:
         Array.isArray(
           user?.following,
         )
           ? user.following.length
-          : user?.followingCount ?? 0,
+          : user?.followingCount ??
+            0,
 
       friendsCount:
         user?.friendsCount ?? 0,
@@ -811,21 +915,16 @@ export class AdminService {
     actor: any,
     req: any,
   ) {
-    await this.audit.log({
-      userId:
-        actor?.id ??
-        actor?._id ??
-        actor?.userId,
+    const actorId =
+      this.requireAdmin(actor);
 
+    await this.audit.log({
+      userId: actorId,
       action:
         "VIEW_MARKETPLACE_DASHBOARD",
-
       module: "marketplace",
-
       targetId: "dashboard",
-
       ip: req?.ip,
-
       userAgent:
         req?.headers?.[
           "user-agent"
@@ -834,13 +933,9 @@ export class AdminService {
 
     return {
       totalProducts: 0,
-
       totalOrders: 0,
-
       totalSales: 0,
-
       totalSellers: 0,
-
       message:
         "Marketplace dashboard loaded",
     };
@@ -855,14 +950,40 @@ export class AdminService {
     actor: any,
     req: any,
   ) {
+    const actorId =
+      this.requireSuperAdmin(actor);
+
     const user =
       await this.userModel
         .findById(userId)
+        .select("_id role isActive")
         .exec();
 
     if (!user) {
       throw new NotFoundException(
         "User not found",
+      );
+    }
+
+    const targetRole =
+      this.normalizeRole(
+        (user as any).role,
+      );
+
+    if (
+      targetRole === "super_admin"
+    ) {
+      throw new ForbiddenException(
+        "A Super Admin account cannot be deleted through this endpoint.",
+      );
+    }
+
+    if (
+      String(user._id) ===
+      actorId
+    ) {
+      throw new ForbiddenException(
+        "You cannot delete your own account.",
       );
     }
 
@@ -902,25 +1023,16 @@ export class AdminService {
     const result = {
       message:
         `User ${userId} soft-deleted`,
-
       userId,
     };
 
     await this.audit.log({
-      userId:
-        actor?.id ??
-        actor?._id ??
-        actor?.userId,
-
+      userId: actorId,
       action:
         "DELETE_USER_LEGACY",
-
       module: "admin",
-
       targetId: userId,
-
       ip: req?.ip,
-
       userAgent:
         req?.headers?.[
           "user-agent"
@@ -938,25 +1050,19 @@ export class AdminService {
     actor: any,
     req: any,
   ) {
+    const actorId =
+      this.requireSuperAdmin(actor);
+
     const result =
       await this.mediaAdmin
         .deleteOrphanMedia();
 
     await this.audit.log({
-      userId:
-        actor?.id ??
-        actor?._id ??
-        actor?.userId,
-
-      action:
-        "CLEAN_MEDIA",
-
+      userId: actorId,
+      action: "CLEAN_MEDIA",
       module: "admin",
-
       targetId: "media",
-
       ip: req?.ip,
-
       userAgent:
         req?.headers?.[
           "user-agent"
@@ -974,25 +1080,19 @@ export class AdminService {
     actor: any,
     req: any,
   ) {
+    const actorId =
+      this.requireSuperAdmin(actor);
+
     const result =
       await this.dbAdmin
         .cleanupDatabase();
 
     await this.audit.log({
-      userId:
-        actor?.id ??
-        actor?._id ??
-        actor?.userId,
-
-      action:
-        "CLEAN_DB",
-
+      userId: actorId,
+      action: "CLEAN_DB",
       module: "admin",
-
       targetId: "database",
-
       ip: req?.ip,
-
       userAgent:
         req?.headers?.[
           "user-agent"

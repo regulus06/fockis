@@ -5,47 +5,38 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
-
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 
-import {
-  User,
-  UserDocument,
-} from "../../../users/user.schema";
+import { User, UserDocument } from "../../../users/user.schema";
 
 import { AuditService } from "../../audit/audit.service";
+import { Permission } from "../../rbac/permissions.enum";
+import { Role } from "../../rbac/roles.enum";
+import { RolePermissions } from "../../rbac/role-permissions";
 
 import {
   normalizeUser,
   setIfPresent,
 } from "../user-admin-utils";
 
-import { Permission } from "../../rbac/permissions.enum";
+const SUPER_ADMIN_ONLY_PERMISSIONS =
+  new Set<string>([
+    Permission.USERS_ROLES_MANAGE,
+    Permission.USERS_PERMISSIONS_MANAGE,
 
-/**
- * Permissions that can materially change platform security,
- * administration, or destructive capabilities.
- *
- * These require Super Admin authority even when the actor has
- * users.permissions.manage.
- */
-const SUPER_ADMIN_ONLY_PERMISSIONS = new Set<string>([
-  Permission.USERS_ROLES_MANAGE,
-  Permission.USERS_PERMISSIONS_MANAGE,
+    Permission.ADMINISTRATORS_VIEW,
+    Permission.ADMINISTRATORS_CREATE,
+    Permission.ADMINISTRATORS_UPDATE,
+    Permission.ADMINISTRATORS_DELETE,
+    Permission.ADMINISTRATORS_ROLES_MANAGE,
 
-  Permission.ADMINISTRATORS_VIEW,
-  Permission.ADMINISTRATORS_CREATE,
-  Permission.ADMINISTRATORS_UPDATE,
-  Permission.ADMINISTRATORS_DELETE,
-  Permission.ADMINISTRATORS_ROLES_MANAGE,
+    Permission.SECURITY_MANAGE,
+    Permission.SYSTEM_SETTINGS_MANAGE,
 
-  Permission.SECURITY_MANAGE,
-  Permission.SYSTEM_SETTINGS_MANAGE,
-
-  Permission.DELETE_DB,
-  Permission.SYSTEM_CLEANUP,
-]);
+    Permission.DELETE_DB,
+    Permission.SYSTEM_CLEANUP,
+  ]);
 
 type SecurityUserRecord = {
   _id: Types.ObjectId;
@@ -64,28 +55,15 @@ export class UserPermissionService {
     private readonly audit: AuditService,
   ) {}
 
-  /**
-   * Update a user's direct permissions.
-   *
-   * Security rules:
-   *
-   * 1. Actor must be authenticated.
-   * 2. Target ID must be a valid Mongo ObjectId.
-   * 3. Permissions must exist in the Permission enum.
-   * 4. Sensitive administrative permissions require Super Admin.
-   * 5. Non-Super-Admins cannot increase their own permissions.
-   * 6. Non-Super-Admins cannot modify a Super Admin.
-   * 7. Changes are audited.
-   */
   async update(
     id: string,
     body: any,
     actor: any,
     req: any,
   ) {
-    // =========================================================================
+    // ========================================================================
     // TARGET ID
-    // =========================================================================
+    // ========================================================================
 
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException(
@@ -93,9 +71,9 @@ export class UserPermissionService {
       );
     }
 
-    // =========================================================================
+    // ========================================================================
     // ACTOR
-    // =========================================================================
+    // ========================================================================
 
     if (!actor) {
       throw new UnauthorizedException(
@@ -117,9 +95,9 @@ export class UserPermissionService {
       );
     }
 
-    // =========================================================================
+    // ========================================================================
     // PERMISSION INPUT
-    // =========================================================================
+    // ========================================================================
 
     if (!Array.isArray(body?.permissions)) {
       throw new BadRequestException(
@@ -127,7 +105,7 @@ export class UserPermissionService {
       );
     }
 
-    const requestedPermissions: string[] =
+    const requestedPermissions =
       Array.from(
         new Set<string>(
           body.permissions
@@ -143,18 +121,19 @@ export class UserPermissionService {
         ),
       );
 
-    // =========================================================================
+    // ========================================================================
     // VALID PERMISSION CATALOG
-    // =========================================================================
+    // ========================================================================
 
     const validPermissions =
       new Set<string>(
-        (Object.values(Permission) as string[])
-          .map((permission: string) =>
-            String(permission)
-              .trim()
-              .toLowerCase(),
-          ),
+        (
+          Object.values(Permission) as string[]
+        ).map((permission: string) =>
+          String(permission)
+            .trim()
+            .toLowerCase(),
+        ),
       );
 
     const invalidPermissions =
@@ -171,9 +150,9 @@ export class UserPermissionService {
       });
     }
 
-    // =========================================================================
+    // ========================================================================
     // LOAD ACTOR FROM DATABASE
-    // =========================================================================
+    // ========================================================================
 
     const databaseActor =
       (await this.userModel
@@ -196,9 +175,9 @@ export class UserPermissionService {
       );
     }
 
-    // =========================================================================
-    // ACTOR SUPER ADMIN STATUS
-    // =========================================================================
+    // ========================================================================
+    // ACTOR SECURITY LEVEL
+    // ========================================================================
 
     const actorRole =
       this.normalizeRole(
@@ -209,9 +188,9 @@ export class UserPermissionService {
       Boolean(databaseActor.isSuperAdmin) ||
       actorRole === "super_admin";
 
-    // =========================================================================
+    // ========================================================================
     // LOAD TARGET USER
-    // =========================================================================
+    // ========================================================================
 
     const targetUser =
       (await this.userModel
@@ -234,9 +213,9 @@ export class UserPermissionService {
       );
     }
 
-    // =========================================================================
-    // TARGET SUPER ADMIN STATUS
-    // =========================================================================
+    // ========================================================================
+    // TARGET SECURITY LEVEL
+    // ========================================================================
 
     const targetRole =
       this.normalizeRole(
@@ -247,10 +226,13 @@ export class UserPermissionService {
       Boolean(targetUser.isSuperAdmin) ||
       targetRole === "super_admin";
 
-    // =========================================================================
-    // PROTECT SUPER ADMIN ACCOUNTS
-    // =========================================================================
+    // ========================================================================
+    // PROTECT ADMINISTRATIVE ACCOUNTS
+    // ========================================================================
 
+    /*
+     * Only Super Admin may modify another Super Admin.
+     */
     if (
       targetIsSuperAdmin &&
       !actorIsSuperAdmin
@@ -260,18 +242,34 @@ export class UserPermissionService {
       );
     }
 
-    // =========================================================================
+    /*
+     * Only Super Admin may modify another Admin's
+     * direct permissions.
+     *
+     * This prevents Admin A from changing Admin B's
+     * privileges.
+     */
+    if (
+      targetRole === "admin" &&
+      !actorIsSuperAdmin
+    ) {
+      throw new ForbiddenException(
+        "Only a Super Admin can modify an Admin's permissions.",
+      );
+    }
+
+    // ========================================================================
     // PREVIOUS PERMISSIONS
-    // =========================================================================
+    // ========================================================================
 
     const previousPermissions =
       this.normalizePermissions(
         targetUser.permissions,
       );
 
-    // =========================================================================
+    // ========================================================================
     // SELF-PERMISSION ESCALATION
-    // =========================================================================
+    // ========================================================================
 
     const isSelfUpdate =
       String(targetUser._id) === actorId;
@@ -280,15 +278,15 @@ export class UserPermissionService {
       isSelfUpdate &&
       !actorIsSuperAdmin
     ) {
-      const actorCurrentPermissions =
-        this.normalizePermissions(
-          databaseActor.permissions,
+      const actorEffectivePermissions =
+        this.getEffectiveActorPermissions(
+          databaseActor,
         );
 
       const addedPermissions =
         requestedPermissions.filter(
           (permission: string) =>
-            !actorCurrentPermissions.includes(
+            !actorEffectivePermissions.has(
               permission,
             ),
         );
@@ -300,9 +298,9 @@ export class UserPermissionService {
       }
     }
 
-    // =========================================================================
+    // ========================================================================
     // SUPER-ADMIN-ONLY PERMISSIONS
-    // =========================================================================
+    // ========================================================================
 
     const requestedSuperAdminPermissions =
       requestedPermissions.filter(
@@ -321,9 +319,45 @@ export class UserPermissionService {
       );
     }
 
-    // =========================================================================
+    // ========================================================================
+    // NON-SUPER-ADMIN PERMISSION BOUNDARY
+    // ========================================================================
+
+    /*
+     * A non-Super-Admin may never grant a permission
+     * that they themselves do not effectively possess.
+     *
+     * This protects against privilege escalation through
+     * permission assignment.
+     */
+    if (!actorIsSuperAdmin) {
+      const actorEffectivePermissions =
+        this.getEffectiveActorPermissions(
+          databaseActor,
+        );
+
+      const unauthorizedPermissions =
+        requestedPermissions.filter(
+          (permission: string) =>
+            !actorEffectivePermissions.has(
+              permission,
+            ),
+        );
+
+      if (
+        unauthorizedPermissions.length > 0
+      ) {
+        throw new ForbiddenException({
+          message:
+            "You cannot grant permissions that you do not possess.",
+          unauthorizedPermissions,
+        });
+      }
+    }
+
+    // ========================================================================
     // CALCULATE CHANGES
-    // =========================================================================
+    // ========================================================================
 
     const addedPermissions =
       requestedPermissions.filter(
@@ -341,9 +375,9 @@ export class UserPermissionService {
           ),
       );
 
-    // =========================================================================
+    // ========================================================================
     // DATABASE UPDATE
-    // =========================================================================
+    // ========================================================================
 
     const update: Record<string, unknown> = {};
 
@@ -376,9 +410,9 @@ export class UserPermissionService {
       );
     }
 
-    // =========================================================================
+    // ========================================================================
     // AUDIT
-    // =========================================================================
+    // ========================================================================
 
     await this.audit.log({
       userId: actorId,
@@ -406,16 +440,16 @@ export class UserPermissionService {
         null,
     });
 
-    // =========================================================================
+    // ========================================================================
     // RESPONSE
-    // =========================================================================
+    // ========================================================================
 
     return normalizeUser(user);
   }
 
-  // ===========================================================================
+  // ==========================================================================
   // HELPERS
-  // ===========================================================================
+  // ==========================================================================
 
   private getActorId(
     actor: any,
@@ -469,5 +503,74 @@ export class UserPermissionService {
           ),
       ),
     );
+  }
+
+  /**
+   * Build the actor's effective permission set.
+   *
+   * This includes:
+   * - system role permissions
+   * - direct database permissions
+   *
+   * Super Admin is handled separately because it
+   * already has unrestricted access.
+   */
+  private getEffectiveActorPermissions(
+    actor: SecurityUserRecord,
+  ): Set<string> {
+    const permissions =
+      new Set<string>();
+
+    const role =
+      this.normalizeRole(actor.role);
+
+    let systemRole:
+      | Role
+      | undefined;
+
+    switch (role) {
+      case "user":
+        systemRole = Role.USER;
+        break;
+
+      case "moderator":
+        systemRole = Role.MODERATOR;
+        break;
+
+      case "admin":
+        systemRole = Role.ADMIN;
+        break;
+
+      case "super_admin":
+        systemRole = Role.SUPER_ADMIN;
+        break;
+    }
+
+    if (systemRole) {
+      const rolePermissions =
+        RolePermissions[systemRole] ?? [];
+
+      for (
+        const permission
+        of rolePermissions
+      ) {
+        permissions.add(
+          String(permission)
+            .trim()
+            .toLowerCase(),
+        );
+      }
+    }
+
+    for (
+      const permission
+      of this.normalizePermissions(
+        actor.permissions,
+      )
+    ) {
+      permissions.add(permission);
+    }
+
+    return permissions;
   }
 }
