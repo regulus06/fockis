@@ -29,6 +29,12 @@
     "android": {
       "package": "com.fockis.mobile",
       "usesCleartextTraffic": true,
+
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+
       "adaptiveIcon": {
         "foregroundImage": "./assets/fockis-icon.png",
         "backgroundColor": "#071B3A"
