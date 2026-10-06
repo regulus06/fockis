@@ -14,10 +14,6 @@ import {
 
 
 
-
-
-
-
 import {
 
 
@@ -31,10 +27,6 @@ import {
 
 
 } from "fs";
-
-
-
-
 
 
 
@@ -58,10 +50,6 @@ import {
 
 
 
-
-
-
-
 import {
 
 
@@ -78,19 +66,11 @@ import {
 
 
 
-
-
-
-
 import { MusicService } from "./music.service";
 
 
 
 import { FfmpegService } from "../../uploads/ffmpeg.service";
-
-
-
-
 
 
 
@@ -103,10 +83,6 @@ import { FfmpegService } from "../../uploads/ffmpeg.service";
 
 
 // ============================================================================
-
-
-
-
 
 
 
@@ -126,10 +102,6 @@ interface MusicProcessingContent {
 
 
 
-
-
-
-
   media?: {
 
 
@@ -146,10 +118,6 @@ interface MusicProcessingContent {
 
 
 
-
-
-
-
 // ============================================================================
 
 
@@ -162,19 +130,11 @@ interface MusicProcessingContent {
 
 
 
-
-
-
-
 const MB = 1024 * 1024;
 
 
 
 const GB = 1024 * 1024 * 1024;
-
-
-
-
 
 
 
@@ -187,10 +147,6 @@ const GB = 1024 * 1024 * 1024;
 
 
 // ============================================================================
-
-
-
-
 
 
 
@@ -211,10 +167,6 @@ interface MediaLimit {
 
 
 }
-
-
-
-
 
 
 
@@ -242,10 +194,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
 
-
-
-
-
   single: {
 
 
@@ -263,10 +211,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
   },
-
-
-
-
 
 
 
@@ -290,10 +234,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
 
-
-
-
-
   beat: {
 
 
@@ -311,10 +251,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
   },
-
-
-
-
 
 
 
@@ -338,10 +274,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
 
-
-
-
-
   album: {
 
 
@@ -359,10 +291,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
   },
-
-
-
-
 
 
 
@@ -386,10 +314,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
 
-
-
-
-
   music: {
 
 
@@ -407,10 +331,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
   },
-
-
-
-
 
 
 
@@ -434,10 +354,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
 
-
-
-
-
   music_video: {
 
 
@@ -455,10 +371,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
   },
-
-
-
-
 
 
 
@@ -482,10 +394,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
 
-
-
-
-
   live_performance: {
 
 
@@ -503,10 +411,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
   },
-
-
-
-
 
 
 
@@ -530,10 +434,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
 
-
-
-
-
   behind_the_scenes: {
 
 
@@ -551,10 +451,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
   },
-
-
-
-
 
 
 
@@ -578,10 +474,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
 
-
-
-
-
   exclusive: {
 
 
@@ -599,10 +491,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
   },
-
-
-
-
 
 
 
@@ -630,10 +518,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
 
-
-
-
-
 // ============================================================================
 
 
@@ -643,10 +527,6 @@ const MEDIA_LIMITS: Record<string, MediaLimit> = {
 
 
 // ============================================================================
-
-
-
-
 
 
 
@@ -670,10 +550,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
   constructor(
 
 
@@ -690,10 +566,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
   // ==========================================================================
 
 
@@ -703,10 +575,6 @@ export class MusicMediaProcessingService {
 
 
   // ==========================================================================
-
-
-
-
 
 
 
@@ -734,10 +602,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     if (!contentId) {
 
 
@@ -758,10 +622,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     this.logger.log(
 
 
@@ -774,19 +634,11 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     try {
 
 
 
       await this.processContent(content);
-
-
-
-
 
 
 
@@ -822,10 +674,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
       const stack =
 
 
@@ -842,10 +690,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
       this.logger.error(
 
 
@@ -859,10 +703,6 @@ export class MusicMediaProcessingService {
 
 
       );
-
-
-
-
 
 
 
@@ -914,10 +754,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
       throw error;
 
 
@@ -930,10 +766,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
   // ==========================================================================
 
 
@@ -943,10 +775,6 @@ export class MusicMediaProcessingService {
 
 
   // ==========================================================================
-
-
-
-
 
 
 
@@ -974,10 +802,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     const storageKey = String(
 
 
@@ -987,10 +811,6 @@ export class MusicMediaProcessingService {
 
 
     ).trim();
-
-
-
-
 
 
 
@@ -1014,10 +834,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     if (!storageKey) {
 
 
@@ -1038,10 +854,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     const mediaKind = String(
 
 
@@ -1059,10 +871,6 @@ export class MusicMediaProcessingService {
 
 
       .toLowerCase();
-
-
-
-
 
 
 
@@ -1098,10 +906,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     const contentType =
 
 
@@ -1115,10 +919,6 @@ export class MusicMediaProcessingService {
 
 
       );
-
-
-
-
 
 
 
@@ -1142,10 +942,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     await this.musicService.markMediaProcessing(
 
 
@@ -1155,10 +951,6 @@ export class MusicMediaProcessingService {
 
 
     );
-
-
-
-
 
 
 
@@ -1178,10 +970,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     this.logger.log(
 
 
@@ -1191,10 +979,6 @@ export class MusicMediaProcessingService {
 
 
     );
-
-
-
-
 
 
 
@@ -1238,10 +1022,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     this.validateFileSize(
 
 
@@ -1263,10 +1043,6 @@ export class MusicMediaProcessingService {
 
 
     );
-
-
-
-
 
 
 
@@ -1294,19 +1070,11 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
       return;
 
 
 
     }
-
-
-
-
 
 
 
@@ -1330,10 +1098,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     this.logger.log(
 
 
@@ -1350,10 +1114,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
   // ==========================================================================
 
 
@@ -1363,10 +1123,6 @@ export class MusicMediaProcessingService {
 
 
   // ==========================================================================
-
-
-
-
 
 
 
@@ -1402,10 +1158,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     const processed =
 
 
@@ -1419,10 +1171,6 @@ export class MusicMediaProcessingService {
 
 
       );
-
-
-
-
 
 
 
@@ -1446,10 +1194,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     const duration = Number(
 
 
@@ -1459,10 +1203,6 @@ export class MusicMediaProcessingService {
 
 
     );
-
-
-
-
 
 
 
@@ -1498,10 +1238,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     this.validateDuration(
 
 
@@ -1526,10 +1262,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     const storageKey =
 
 
@@ -1547,10 +1279,6 @@ export class MusicMediaProcessingService {
 
 
       );
-
-
-
-
 
 
 
@@ -1572,35 +1300,49 @@ export class MusicMediaProcessingService {
 
     }
 
-    const processedAudioPath =
-      this.resolveUploadPath(
+
+
+    if (!this.isGatewayMediaKey(storageKey)) {
+
+      const processedAudioPath =
+
+        this.resolveUploadPath(storageKey);
+
+
+
+      this.assertProcessedFileExists(
+
+        contentId,
+
+        "audio",
+
         storageKey,
+
+        processedAudioPath,
+
       );
 
-    this.assertProcessedFileExists(
-      contentId,
-      "audio",
-      storageKey,
-      processedAudioPath,
-    );
+    }
+
+
+
+    const storedMediaReference =
+
+      this.isGatewayMediaKey(storageKey)
+
+        ? processed.url
+
+        : storageKey;
+
+
 
     await this.musicService.updateProcessedMediaStorageKey(
 
-
-
       contentId,
 
-
-
-      storageKey,
-
-
+      storedMediaReference,
 
     );
-
-
-
-
 
 
 
@@ -1620,10 +1362,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     this.logger.log(
 
 
@@ -1640,10 +1378,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
   // ==========================================================================
 
 
@@ -1653,10 +1387,6 @@ export class MusicMediaProcessingService {
 
 
   // ==========================================================================
-
-
-
-
 
 
 
@@ -1692,10 +1422,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     // ------------------------------------------------------------------------
 
 
@@ -1705,10 +1431,6 @@ export class MusicMediaProcessingService {
 
 
     // ------------------------------------------------------------------------
-
-
-
-
 
 
 
@@ -1725,10 +1447,6 @@ export class MusicMediaProcessingService {
 
 
       );
-
-
-
-
 
 
 
@@ -1752,10 +1470,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     const duration = Number(
 
 
@@ -1765,10 +1479,6 @@ export class MusicMediaProcessingService {
 
 
     );
-
-
-
-
 
 
 
@@ -1804,10 +1514,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     this.validateDuration(
 
 
@@ -1832,10 +1538,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     if (!processed.outputPath) {
 
 
@@ -1856,10 +1558,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     // ------------------------------------------------------------------------
 
 
@@ -1869,10 +1567,6 @@ export class MusicMediaProcessingService {
 
 
     // ------------------------------------------------------------------------
-
-
-
-
 
 
 
@@ -1889,10 +1583,6 @@ export class MusicMediaProcessingService {
 
 
       );
-
-
-
-
 
 
 
@@ -1914,35 +1604,49 @@ export class MusicMediaProcessingService {
 
     }
 
-    const processedVideoResolvedPath =
-      this.resolveUploadPath(
+
+
+    if (!this.isGatewayMediaKey(processedStorageKey)) {
+
+      const processedVideoResolvedPath =
+
+        this.resolveUploadPath(processedStorageKey);
+
+
+
+      this.assertProcessedFileExists(
+
+        contentId,
+
+        "video",
+
         processedStorageKey,
+
+        processedVideoResolvedPath,
+
       );
 
-    this.assertProcessedFileExists(
-      contentId,
-      "video",
-      processedStorageKey,
-      processedVideoResolvedPath,
-    );
+    }
+
+
+
+    const storedVideoReference =
+
+      this.isGatewayMediaKey(processedStorageKey)
+
+        ? processed.url
+
+        : processedStorageKey;
+
+
 
     await this.musicService.updateProcessedMediaStorageKey(
 
-
-
       contentId,
 
-
-
-      processedStorageKey,
-
-
+      storedVideoReference,
 
     );
-
-
-
-
 
 
 
@@ -1958,10 +1662,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     // ------------------------------------------------------------------------
 
 
@@ -1971,10 +1671,6 @@ export class MusicMediaProcessingService {
 
 
     // ------------------------------------------------------------------------
-
-
-
-
 
 
 
@@ -1994,10 +1690,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     // ------------------------------------------------------------------------
 
 
@@ -2007,10 +1699,6 @@ export class MusicMediaProcessingService {
 
 
     // ------------------------------------------------------------------------
-
-
-
-
 
 
 
@@ -2030,10 +1718,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     this.logger.log(
 
 
@@ -2050,10 +1734,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
   // ==========================================================================
 
 
@@ -2063,10 +1743,6 @@ export class MusicMediaProcessingService {
 
 
   // ==========================================================================
-
-
-
-
 
 
 
@@ -2106,10 +1782,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     if (!existsSync(processedVideoPath)) {
 
 
@@ -2130,10 +1802,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     // ------------------------------------------------------------------------
 
 
@@ -2143,10 +1811,6 @@ export class MusicMediaProcessingService {
 
 
     // ------------------------------------------------------------------------
-
-
-
-
 
 
 
@@ -2163,10 +1827,6 @@ export class MusicMediaProcessingService {
 
 
       );
-
-
-
-
 
 
 
@@ -2190,19 +1850,11 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     const existingCover =
 
 
 
       content.coverImage?.storageKey?.trim();
-
-
-
-
 
 
 
@@ -2222,19 +1874,11 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
       return;
 
 
 
     }
-
-
-
-
 
 
 
@@ -2250,10 +1894,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     this.logger.log(
 
 
@@ -2263,10 +1903,6 @@ export class MusicMediaProcessingService {
 
 
     );
-
-
-
-
 
 
 
@@ -2283,10 +1919,6 @@ export class MusicMediaProcessingService {
 
 
       );
-
-
-
-
 
 
 
@@ -2310,10 +1942,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     const generatedStorageKey =
 
 
@@ -2331,10 +1959,6 @@ export class MusicMediaProcessingService {
 
 
       );
-
-
-
-
 
 
 
@@ -2358,10 +1982,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     // ------------------------------------------------------------------------
 
 
@@ -2374,27 +1994,23 @@ export class MusicMediaProcessingService {
 
 
 
+    const storedCoverReference =
 
+      this.isGatewayMediaKey(generatedStorageKey)
+
+        ? generated.url
+
+        : generatedStorageKey;
 
 
 
     await this.musicService.updateGeneratedCover(
 
-
-
       contentId,
 
-
-
-      generatedStorageKey,
-
-
+      storedCoverReference,
 
     );
-
-
-
-
 
 
 
@@ -2414,57 +2030,165 @@ export class MusicMediaProcessingService {
 
 
 
-
+  // ==========================================================================
 
 
 
   // ==========================================================================
 
-  // ==========================================================================
+
+
   // PROCESSED FILE VALIDATION
+
+
+
   // ==========================================================================
 
-  private assertProcessedFileExists(
-    contentId: string,
-    mediaKind: "audio" | "video",
-    storageKey: string,
-    resolvedPath: string,
-  ): void {
-    if (!existsSync(resolvedPath)) {
-      throw new Error(
-        [
-          `Processed ${mediaKind} media file does not exist.`,
-          `Content: ${contentId}`,
-          `Storage key: ${storageKey}`,
-          `Resolved path: ${resolvedPath}`,
-        ].join(" "),
-      );
-    }
 
-    const fileSize = Number(statSync(resolvedPath).size);
 
-    if (!Number.isFinite(fileSize) || fileSize <= 0) {
-      throw new Error(
-        [
-          `Processed ${mediaKind} media file is empty.`,
-          `Content: ${contentId}`,
-          `Storage key: ${storageKey}`,
-          `Resolved path: ${resolvedPath}`,
-        ].join(" "),
-      );
-    }
+  private isGatewayMediaKey(storageKey: string): boolean {
+    const normalized = String(storageKey ?? "")
+      .trim()
+      .replace(/^\/+/, "")
+      .toLowerCase();
 
-    this.logger.log(
-      `[PROCESSED FILE VERIFIED] ${contentId}: ${mediaKind} ${this.formatBytes(fileSize)}`,
+    return (
+      normalized.startsWith("post-media/") ||
+      normalized.startsWith("http://") ||
+      normalized.startsWith("https://") ||
+      normalized.startsWith("gs://")
     );
   }
 
+  private assertProcessedFileExists(
+
+
+
+    contentId: string,
+
+
+
+    mediaKind: "audio" | "video",
+
+
+
+    storageKey: string,
+
+
+
+    resolvedPath: string,
+
+
+
+  ): void {
+
+
+
+    if (!existsSync(resolvedPath)) {
+
+
+
+      throw new Error(
+
+
+
+        [
+
+
+
+          `Processed ${mediaKind} media file does not exist.`,
+
+
+
+          `Content: ${contentId}`,
+
+
+
+          `Storage key: ${storageKey}`,
+
+
+
+          `Resolved path: ${resolvedPath}`,
+
+
+
+        ].join(" "),
+
+
+
+      );
+
+
+
+    }
+
+
+
+    const fileSize = Number(statSync(resolvedPath).size);
+
+
+
+    if (!Number.isFinite(fileSize) || fileSize <= 0) {
+
+
+
+      throw new Error(
+
+
+
+        [
+
+
+
+          `Processed ${mediaKind} media file is empty.`,
+
+
+
+          `Content: ${contentId}`,
+
+
+
+          `Storage key: ${storageKey}`,
+
+
+
+          `Resolved path: ${resolvedPath}`,
+
+
+
+        ].join(" "),
+
+
+
+      );
+
+
+
+    }
+
+
+
+    this.logger.log(
+
+
+
+      `[PROCESSED FILE VERIFIED] ${contentId}: ${mediaKind} ${this.formatBytes(fileSize)}`,
+
+
+
+    );
+
+
+
+  }
+
+
+
   // LOAD COVER
+
+
+
   // ==========================================================================
-
-
-
-
 
 
 
@@ -2524,10 +2248,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     if (!content) {
 
 
@@ -2537,10 +2257,6 @@ export class MusicMediaProcessingService {
 
 
     }
-
-
-
-
 
 
 
@@ -2560,10 +2276,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
   // ==========================================================================
 
 
@@ -2573,10 +2285,6 @@ export class MusicMediaProcessingService {
 
 
   // ==========================================================================
-
-
-
-
 
 
 
@@ -2612,10 +2320,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     const limit =
 
 
@@ -2633,10 +2337,6 @@ export class MusicMediaProcessingService {
 
 
       );
-
-
-
-
 
 
 
@@ -2665,10 +2365,6 @@ export class MusicMediaProcessingService {
 
 
     );
-
-
-
-
 
 
 
@@ -2748,10 +2444,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
   // ==========================================================================
 
 
@@ -2761,10 +2453,6 @@ export class MusicMediaProcessingService {
 
 
   // ==========================================================================
-
-
-
-
 
 
 
@@ -2809,10 +2497,6 @@ export class MusicMediaProcessingService {
 
 
       );
-
-
-
-
 
 
 
@@ -2892,10 +2576,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
   // ==========================================================================
 
 
@@ -2905,10 +2585,6 @@ export class MusicMediaProcessingService {
 
 
   // ==========================================================================
-
-
-
-
 
 
 
@@ -2944,19 +2620,11 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     const configured =
 
 
 
       MEDIA_LIMITS[normalized];
-
-
-
-
 
 
 
@@ -2969,10 +2637,6 @@ export class MusicMediaProcessingService {
 
 
     }
-
-
-
-
 
 
 
@@ -3004,10 +2668,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     return {
 
 
@@ -3032,10 +2692,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
   // ==========================================================================
 
 
@@ -3045,10 +2701,6 @@ export class MusicMediaProcessingService {
 
 
   // ==========================================================================
-
-
-
-
 
 
 
@@ -3088,10 +2740,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     switch (normalized) {
 
 
@@ -3104,19 +2752,11 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
       case "liveperformance":
 
 
 
         return "live_performance";
-
-
-
-
 
 
 
@@ -3128,19 +2768,11 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
       case "exclusivevideo":
 
 
 
         return "exclusive_video";
-
-
-
-
 
 
 
@@ -3153,10 +2785,6 @@ export class MusicMediaProcessingService {
 
 
         return "video";
-
-
-
-
 
 
 
@@ -3176,10 +2804,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
   // ==========================================================================
 
 
@@ -3189,10 +2813,6 @@ export class MusicMediaProcessingService {
 
 
   // ==========================================================================
-
-
-
-
 
 
 
@@ -3228,10 +2848,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     if (bytes >= MB) {
 
 
@@ -3249,10 +2865,6 @@ export class MusicMediaProcessingService {
 
 
     }
-
-
-
-
 
 
 
@@ -3276,19 +2888,11 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     return `${bytes} bytes`;
 
 
 
   }
-
-
-
-
 
 
 
@@ -3301,10 +2905,6 @@ export class MusicMediaProcessingService {
 
 
   // ==========================================================================
-
-
-
-
 
 
 
@@ -3336,10 +2936,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     const hours = Math.floor(
 
 
@@ -3349,10 +2945,6 @@ export class MusicMediaProcessingService {
 
 
     );
-
-
-
-
 
 
 
@@ -3368,19 +2960,11 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     const remaining =
 
 
 
       total % 60;
-
-
-
-
 
 
 
@@ -3396,10 +2980,6 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     if (minutes > 0) {
 
 
@@ -3412,19 +2992,11 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
     return `${remaining}s`;
 
 
 
   }
-
-
-
-
 
 
 
@@ -3440,13 +3012,7 @@ export class MusicMediaProcessingService {
 
 
 
-
-
-
-
-  private resolveUploadPath(
-    storageKey: string,
-  ): string {
+  private resolveUploadPath(storageKey: string): string {
     let normalized = String(storageKey ?? "").trim();
 
     if (!normalized) {
@@ -3458,7 +3024,7 @@ export class MusicMediaProcessingService {
     normalized = normalized.split("?")[0];
     normalized = normalized.split("#")[0];
     normalized = normalized.replace(/^\/+/, "");
-    normalized = normalized.replace(/^uploads?\/?/i, "");
+    normalized = normalized.replace(/^uploads?\//i, "");
     normalized = normalized.replace(/^\/+/, "");
 
     if (!normalized) {
@@ -3490,13 +3056,13 @@ export class MusicMediaProcessingService {
     return finalPath;
   }
 
-  // ==========================================================================
-  // URL -> STORAGE KEY
-  // ==========================================================================
+  // ============================================================================
 
-  private toStorageKey(
-    value?: string,
-  ): string {
+  // URL -> STORAGE KEY
+
+  // ============================================================================
+
+  private toStorageKey(value?: string): string {
     let normalized = String(value ?? "").trim();
 
     if (!normalized) {
@@ -3508,7 +3074,7 @@ export class MusicMediaProcessingService {
     normalized = normalized.split("?")[0];
     normalized = normalized.split("#")[0];
     normalized = normalized.replace(/^\/+/, "");
-    normalized = normalized.replace(/^uploads?\/?/i, "");
+    normalized = normalized.replace(/^uploads?\//i, "");
     normalized = normalized.replace(/^\/+/, "");
 
     if (
@@ -3520,5 +3086,4 @@ export class MusicMediaProcessingService {
 
     return normalized.trim();
   }
-
 }

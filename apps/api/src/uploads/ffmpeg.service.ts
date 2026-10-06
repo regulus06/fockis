@@ -1,14 +1,26 @@
 import {
 
+
+
   Injectable,
 
+
+
   InternalServerErrorException,
+
+
 
 } from "@nestjs/common";
 
 
 
+import { Storage } from "@google-cloud/storage";
+
+
+
 import ffmpeg = require("fluent-ffmpeg");
+
+
 
 import ffmpegPath = require("ffmpeg-static");
 
@@ -20,9 +32,15 @@ import { randomUUID } from "crypto";
 
 import {
 
+
+
   join,
 
+
+
   resolve,
+
+
 
 } from "path";
 
@@ -30,9 +48,15 @@ import {
 
 import {
 
+
+
   mkdir,
 
+
+
   stat,
+
+
 
 } from "fs/promises";
 
@@ -40,7 +64,11 @@ import {
 
 // ============================================================================
 
+
+
 // FFMPEG CONFIGURATION
+
+
 
 // ============================================================================
 
@@ -48,11 +76,19 @@ import {
 
 if (ffmpegPath) {
 
+
+
   ffmpeg.setFfmpegPath(
+
+
 
     ffmpegPath as unknown as string,
 
+
+
   );
+
+
 
 }
 
@@ -60,7 +96,11 @@ if (ffmpegPath) {
 
 // ============================================================================
 
+
+
 // TYPES
+
+
 
 // ============================================================================
 
@@ -68,11 +108,20 @@ if (ffmpegPath) {
 
 export interface ProcessedVideoResult {
 
+
+
   outputPath: string;
 
+
+
   url: string;
+  storageKey: string;
+
+
 
   durationSeconds: number;
+
+
 
 }
 
@@ -80,13 +129,23 @@ export interface ProcessedVideoResult {
 
 export interface ProcessedAudioResult {
 
+
+
   outputPath: string;
+
+
 
   url: string;
 
+
+
   storageKey: string;
 
+
+
   durationSeconds: number;
+
+
 
 }
 
@@ -94,11 +153,19 @@ export interface ProcessedAudioResult {
 
 export interface GeneratedVideoCoverResult {
 
+
+
   outputPath: string;
+
+
 
   url: string;
 
+
+
   storageKey: string;
+
+
 
 }
 
@@ -106,7 +173,11 @@ export interface GeneratedVideoCoverResult {
 
 // ============================================================================
 
+
+
 // SERVICE
+
+
 
 // ============================================================================
 
@@ -114,263 +185,39 @@ export interface GeneratedVideoCoverResult {
 
 @Injectable()
 
+
+
 export class FfmpegService {
 
-  // ==========================================================================
+  private readonly storage: Storage;
 
-  // VIDEO PROCESSING
 
-  // ==========================================================================
 
+  private readonly bucketName: string;
 
 
-  /**
 
-   * Processes the complete video.
+  private readonly gcsEnabled: boolean;
 
-   *
 
-   * IMPORTANT:
 
-   *
+  constructor() {
 
-   * This method does NOT truncate the uploaded video.
+    this.storage = new Storage();
 
-   *
 
-   * Content-specific duration limits are enforced by
 
-   * MusicService / MusicMediaProcessingService.
+    this.bucketName =
 
-   */
+      process.env.GOOGLE_CLOUD_STORAGE_BUCKET?.trim() ||
 
-  async processVideo(
+      "fockis-ai-media-2026";
 
-    inputPath: string,
 
-    _maxDurationSeconds?: number,
 
-  ): Promise<ProcessedVideoResult> {
+    this.gcsEnabled = Boolean(
 
-    if (!inputPath?.trim()) {
-
-      throw new InternalServerErrorException(
-
-        "Video input path is required.",
-
-      );
-
-    }
-
-
-
-    const outputDirectory =
-
-      resolve(process.cwd(), "uploads/videos");
-
-
-
-    await mkdir(
-
-      outputDirectory,
-
-      {
-
-        recursive: true,
-
-      },
-
-    );
-
-
-
-    const outputName =
-
-      `${randomUUID()}.mp4`;
-
-
-
-    const outputPath =
-
-      join(
-
-        outputDirectory,
-
-        outputName,
-
-      );
-
-
-
-    return new Promise(
-
-      (resolve, reject) => {
-
-        let lastTimemark =
-
-          "00:00:00.00";
-
-
-
-        const command =
-
-          ffmpeg(inputPath)
-
-            .outputOptions([
-
-              "-c:v libx264",
-
-              "-preset fast",
-
-              "-crf 28",
-
-              "-c:a aac",
-
-              "-movflags +faststart",
-
-            ]);
-
-
-
-        command
-
-          .output(outputPath)
-
-
-
-          .on(
-
-            "progress",
-
-            (progress) => {
-
-              if (
-
-                progress?.timemark
-
-              ) {
-
-                lastTimemark =
-
-                  progress.timemark;
-
-              }
-
-            },
-
-          )
-
-
-
-          .on(
-
-            "end",
-
-            async () => {
-
-              let durationSeconds =
-
-                0;
-
-
-
-              try {
-
-                durationSeconds =
-
-                  await this.getMediaDuration(
-
-                    outputPath,
-
-                  );
-
-              } catch {
-
-                durationSeconds =
-
-                  this.parseTimemark(
-
-                    lastTimemark,
-
-                  );
-
-              }
-
-
-
-              if (
-
-                !Number.isFinite(
-
-                  durationSeconds,
-
-                ) ||
-
-                durationSeconds <= 0
-
-              ) {
-
-                reject(
-
-                  new InternalServerErrorException(
-
-                    "Unable to determine processed video duration.",
-
-                  ),
-
-                );
-
-
-
-                return;
-
-              }
-
-
-
-              resolve({
-
-                outputPath,
-
-
-
-                url:
-
-                  `/uploads/videos/${outputName}`,
-
-
-
-                durationSeconds,
-
-              });
-
-            },
-
-          )
-
-
-
-          .on(
-
-            "error",
-
-            (error) => {
-
-              reject(
-
-                error,
-
-              );
-
-            },
-
-          )
-
-
-
-          .run();
-
-      },
+      process.env.GOOGLE_CLOUD_STORAGE_BUCKET?.trim(),
 
     );
 
@@ -380,7 +227,11 @@ export class FfmpegService {
 
   // ==========================================================================
 
-  // AUTOMATIC VIDEO COVER
+
+
+  // VIDEO PROCESSING
+
+
 
   // ==========================================================================
 
@@ -388,47 +239,75 @@ export class FfmpegService {
 
   /**
 
-   * Generates a public JPG cover from a video.
+
+
+   * Processes the complete video.
+
+
 
    *
 
-   * The generated image is intentionally stored at:
+
+
+   * IMPORTANT:
+
+
 
    *
 
-   *   uploads/music-covers/
+
+
+   * This method does NOT truncate the uploaded video.
+
+
 
    *
 
-   * rather than:
 
-   *
 
-   *   uploads/music/
+   * Content-specific duration limits are enforced by
 
-   *
 
-   * because /uploads/music/* is protected by main.ts.
 
-   *
+   * MusicService / MusicMediaProcessingService.
 
-   * The video itself remains protected.
+
 
    */
 
-  async generateVideoCover(
+
+
+  async processVideo(
+
+
 
     inputPath: string,
 
-  ): Promise<GeneratedVideoCoverResult> {
+
+
+    _maxDurationSeconds?: number,
+
+
+
+  ): Promise<ProcessedVideoResult> {
+
+
 
     if (!inputPath?.trim()) {
 
+
+
       throw new InternalServerErrorException(
 
-        "Video input path is required for cover generation.",
+
+
+        "Video input path is required.",
+
+
 
       );
+
+
 
     }
 
@@ -436,19 +315,31 @@ export class FfmpegService {
 
     const outputDirectory =
 
-      resolve(process.cwd(), "uploads/music-covers");
+
+
+      resolve(process.cwd(), "uploads/videos");
 
 
 
     await mkdir(
 
+
+
       outputDirectory,
+
+
 
       {
 
+
+
         recursive: true,
 
+
+
       },
+
+
 
     );
 
@@ -456,17 +347,509 @@ export class FfmpegService {
 
     const outputName =
 
+
+
+      `${randomUUID()}.mp4`;
+
+
+
+    const outputPath =
+
+
+
+      join(
+
+
+
+        outputDirectory,
+
+
+
+        outputName,
+
+
+
+      );
+
+
+
+    return new Promise(
+
+
+
+      (resolve, reject) => {
+
+
+
+        let lastTimemark =
+
+
+
+          "00:00:00.00";
+
+
+
+        const command =
+
+
+
+          ffmpeg(inputPath)
+
+
+
+            .outputOptions([
+
+
+
+              "-c:v libx264",
+
+
+
+              "-preset fast",
+
+
+
+              "-crf 28",
+
+
+
+              "-c:a aac",
+
+
+
+              "-movflags +faststart",
+
+
+
+            ]);
+
+
+
+        command
+
+
+
+          .output(outputPath)
+
+
+
+          .on(
+
+
+
+            "progress",
+
+
+
+            (progress) => {
+
+
+
+              if (
+
+
+
+                progress?.timemark
+
+
+
+              ) {
+
+
+
+                lastTimemark =
+
+
+
+                  progress.timemark;
+
+
+
+              }
+
+
+
+            },
+
+
+
+          )
+
+
+
+          .on(
+
+
+
+            "end",
+
+
+
+            async () => {
+
+
+
+              let durationSeconds =
+
+
+
+                0;
+
+
+
+              try {
+
+
+
+                durationSeconds =
+
+
+
+                  await this.getMediaDuration(
+
+
+
+                    outputPath,
+
+
+
+                  );
+
+
+
+              } catch {
+
+
+
+                durationSeconds =
+
+
+
+                  this.parseTimemark(
+
+
+
+                    lastTimemark,
+
+
+
+                  );
+
+
+
+              }
+
+
+
+              if (
+
+
+
+                !Number.isFinite(
+
+
+
+                  durationSeconds,
+
+
+
+                ) ||
+
+
+
+                durationSeconds <= 0
+
+
+
+              ) {
+
+
+
+                reject(
+
+
+
+                  new InternalServerErrorException(
+
+
+
+                    "Unable to determine processed video duration.",
+
+
+
+                  ),
+
+
+
+                );
+
+
+
+                return;
+
+
+
+              }
+
+
+
+              try {
+
+                const cloud = await this.uploadToGoogleCloudStorage(
+
+                  outputPath,
+
+                  `posts/${outputName}`,
+
+                  "video/mp4",
+
+                );
+
+
+
+                resolve({
+
+                  outputPath,
+
+                  url:
+
+                    cloud?.url ??
+
+                    `/uploads/videos/${outputName}`,
+
+                  storageKey:
+
+                    cloud?.storageKey ??
+
+                    `videos/${outputName}`,
+
+                  durationSeconds,
+
+                });
+
+              } catch (uploadError) {
+
+                reject(uploadError);
+
+              }
+
+
+
+            },
+
+
+
+          )
+
+
+
+          .on(
+
+
+
+            "error",
+
+
+
+            (error) => {
+
+
+
+              reject(
+
+
+
+                error,
+
+
+
+              );
+
+
+
+            },
+
+
+
+          )
+
+
+
+          .run();
+
+
+
+      },
+
+
+
+    );
+
+
+
+  }
+
+
+
+  // ==========================================================================
+
+
+
+  // AUTOMATIC VIDEO COVER
+
+
+
+  // ==========================================================================
+
+
+
+  /**
+
+
+
+   * Generates a public JPG cover from a video.
+
+
+
+   *
+
+
+
+   * The generated image is intentionally stored at:
+
+
+
+   *
+
+
+
+   *   uploads/music-covers/
+
+
+
+   *
+
+
+
+   * rather than:
+
+
+
+   *
+
+
+
+   *   uploads/music/
+
+
+
+   *
+
+
+
+   * because /uploads/music/* is protected by main.ts.
+
+
+
+   *
+
+
+
+   * The video itself remains protected.
+
+
+
+   */
+
+
+
+  async generateVideoCover(
+
+
+
+    inputPath: string,
+
+
+
+  ): Promise<GeneratedVideoCoverResult> {
+
+
+
+    if (!inputPath?.trim()) {
+
+
+
+      throw new InternalServerErrorException(
+
+
+
+        "Video input path is required for cover generation.",
+
+
+
+      );
+
+
+
+    }
+
+
+
+    const outputDirectory =
+
+
+
+      resolve(process.cwd(), "uploads/music-covers");
+
+
+
+    await mkdir(
+
+
+
+      outputDirectory,
+
+
+
+      {
+
+
+
+        recursive: true,
+
+
+
+      },
+
+
+
+    );
+
+
+
+    const outputName =
+
+
+
       `${randomUUID()}.jpg`;
 
 
 
     const outputPath =
 
+
+
       join(
+
+
 
         outputDirectory,
 
+
+
         outputName,
+
+
 
       );
 
@@ -474,7 +857,11 @@ export class FfmpegService {
 
     // ------------------------------------------------------------------------
 
+
+
     // DETERMINE VIDEO DURATION
+
+
 
     // ------------------------------------------------------------------------
 
@@ -486,17 +873,31 @@ export class FfmpegService {
 
     try {
 
+
+
       durationSeconds =
+
+
 
         await this.getMediaDuration(
 
+
+
           inputPath,
+
+
 
         );
 
+
+
     } catch {
 
+
+
       durationSeconds = 0;
+
+
 
     }
 
@@ -504,37 +905,71 @@ export class FfmpegService {
 
     // ------------------------------------------------------------------------
 
+
+
     // CHOOSE REPRESENTATIVE FRAME
+
+
 
     // ------------------------------------------------------------------------
 
+
+
     //
+
+
 
     // We intentionally avoid frame 0 because many professional videos have:
 
+
+
     //
+
+
 
     // - black opening frames
 
+
+
     // - fade-ins
+
+
 
     // - production logos
 
+
+
     // - blank intro frames
 
+
+
     //
+
+
 
     // Strategy:
 
+
+
     //
+
+
 
     //   Very short video -> middle-ish safe frame
 
+
+
     //   Normal video      -> approximately 5% in
+
+
 
     //   Long video        -> never seek beyond 10 seconds
 
+
+
     //
+
+
 
     // ------------------------------------------------------------------------
 
@@ -546,35 +981,67 @@ export class FfmpegService {
 
     if (
 
+
+
       Number.isFinite(
+
+
 
         durationSeconds,
 
+
+
       ) &&
+
+
 
       durationSeconds > 0
 
+
+
     ) {
+
+
 
       if (
 
+
+
         durationSeconds <= 2
+
+
 
       ) {
 
+
+
         seekSeconds =
+
+
 
           Math.max(
 
+
+
             durationSeconds * 0.5,
+
+
 
             0,
 
+
+
           );
+
+
 
       } else {
 
+
+
         const fivePercent =
+
+
 
           durationSeconds * 0.05;
 
@@ -582,17 +1049,31 @@ export class FfmpegService {
 
         seekSeconds =
 
+
+
           Math.min(
+
+
 
             Math.max(
 
+
+
               fivePercent,
+
+
 
               1,
 
+
+
             ),
 
+
+
             10,
+
+
 
           );
 
@@ -600,31 +1081,59 @@ export class FfmpegService {
 
         /*
 
+
+
          * Never seek beyond the end of the video.
+
+
 
          */
 
+
+
         if (
+
+
 
           seekSeconds >=
 
+
+
           durationSeconds
+
+
 
         ) {
 
+
+
           seekSeconds =
+
+
 
             Math.max(
 
+
+
               durationSeconds - 0.1,
+
+
 
               0,
 
+
+
             );
+
+
 
         }
 
+
+
       }
+
+
 
     }
 
@@ -632,7 +1141,11 @@ export class FfmpegService {
 
     // =========================================================================
 
+
+
     // EXTRACT FRAME
+
+
 
     // =========================================================================
 
@@ -640,25 +1153,47 @@ export class FfmpegService {
 
     return new Promise(
 
+
+
       (resolve, reject) => {
+
+
 
         ffmpeg(inputPath)
 
+
+
           /*
+
+
 
            * Seek before decoding the frame.
 
+
+
            *
+
+
 
            * This is substantially more efficient than decoding
 
+
+
            * an entire multi-hour video just to obtain one image.
+
+
 
            */
 
+
+
           .seekInput(
 
+
+
             seekSeconds,
+
+
 
           )
 
@@ -670,11 +1205,19 @@ export class FfmpegService {
 
           .outputOptions([
 
+
+
             /*
+
+
 
              * High-quality JPEG.
 
+
+
              */
+
+
 
             "-q:v 2",
 
@@ -682,11 +1225,19 @@ export class FfmpegService {
 
             /*
 
+
+
              * Keep the cover reasonably sized while preserving
+
+
 
              * the original aspect ratio.
 
+
+
              */
+
+
 
             "-vf scale='min(1920,iw)':-2",
 
@@ -694,11 +1245,19 @@ export class FfmpegService {
 
             /*
 
+
+
              * Explicit JPEG output.
+
+
 
              */
 
+
+
             "-f image2",
+
+
 
           ])
 
@@ -706,7 +1265,11 @@ export class FfmpegService {
 
           .output(
 
+
+
             outputPath,
+
+
 
           )
 
@@ -714,15 +1277,27 @@ export class FfmpegService {
 
           .on(
 
+
+
             "end",
+
+
 
             async () => {
 
+
+
               try {
+
+
 
                 // --------------------------------------------------------------
 
+
+
                 // VERIFY GENERATED FILE
+
+
 
                 // --------------------------------------------------------------
 
@@ -730,9 +1305,15 @@ export class FfmpegService {
 
                 const fileStats =
 
+
+
                   await stat(
 
+
+
                     outputPath,
+
+
 
                   );
 
@@ -740,19 +1321,35 @@ export class FfmpegService {
 
                 if (
 
+
+
                   !fileStats.isFile() ||
+
+
 
                   fileStats.size <= 0
 
+
+
                 ) {
+
+
 
                   reject(
 
+
+
                     new InternalServerErrorException(
+
+
 
                       "FFmpeg completed but generated an empty video cover.",
 
+
+
                     ),
+
+
 
                   );
 
@@ -760,15 +1357,33 @@ export class FfmpegService {
 
                   return;
 
+
+
                 }
 
 
 
                 // --------------------------------------------------------------
 
+
+
                 // SUCCESS
 
+
+
                 // --------------------------------------------------------------
+
+
+
+                const cloud = await this.uploadToGoogleCloudStorage(
+
+                  outputPath,
+
+                  `posts/${outputName}`,
+
+                  "image/jpeg",
+
+                );
 
 
 
@@ -776,35 +1391,53 @@ export class FfmpegService {
 
                   outputPath,
 
-
-
                   url:
+
+                    cloud?.url ??
 
                     `/uploads/music-covers/${outputName}`,
 
-
-
                   storageKey:
+
+                    cloud?.storageKey ??
 
                     `music-covers/${outputName}`,
 
                 });
 
+
+
               } catch {
+
+
 
                 reject(
 
+
+
                   new InternalServerErrorException(
+
+
 
                     "FFmpeg completed but the generated video cover could not be verified.",
 
+
+
                   ),
+
+
 
                 );
 
+
+
               }
 
+
+
             },
+
+
 
           )
 
@@ -812,27 +1445,51 @@ export class FfmpegService {
 
           .on(
 
+
+
             "error",
+
+
 
             (error) => {
 
+
+
               reject(
+
+
 
                 new InternalServerErrorException(
 
+
+
                   `Unable to generate video cover: ${
+
+
 
                     error?.message ??
 
+
+
                     "Unknown FFmpeg error"
+
+
 
                   }`,
 
+
+
                 ),
+
+
 
               );
 
+
+
             },
+
+
 
           )
 
@@ -840,9 +1497,15 @@ export class FfmpegService {
 
           .run();
 
+
+
       },
 
+
+
     );
+
+
 
   }
 
@@ -850,7 +1513,11 @@ export class FfmpegService {
 
   // ==========================================================================
 
+
+
   // AUDIO PROCESSING
+
+
 
   // ==========================================================================
 
@@ -858,17 +1525,31 @@ export class FfmpegService {
 
   async processAudio(
 
+
+
     inputPath: string,
+
+
 
   ): Promise<ProcessedAudioResult> {
 
+
+
     if (!inputPath?.trim()) {
+
+
 
       throw new InternalServerErrorException(
 
+
+
         "Audio input path is required.",
 
+
+
       );
+
+
 
     }
 
@@ -876,19 +1557,31 @@ export class FfmpegService {
 
     const outputDirectory =
 
+
+
       resolve(process.cwd(), "uploads/music/processed");
 
 
 
     await mkdir(
 
+
+
       outputDirectory,
+
+
 
       {
 
+
+
         recursive: true,
 
+
+
       },
+
+
 
     );
 
@@ -896,17 +1589,27 @@ export class FfmpegService {
 
     const outputName =
 
+
+
       `${randomUUID()}.mp3`;
 
 
 
     const outputPath =
 
+
+
       join(
+
+
 
         outputDirectory,
 
+
+
         outputName,
+
+
 
       );
 
@@ -914,9 +1617,15 @@ export class FfmpegService {
 
     return new Promise(
 
+
+
       (resolve, reject) => {
 
+
+
         let lastTimemark =
+
+
 
           "00:00:00.00";
 
@@ -924,17 +1633,31 @@ export class FfmpegService {
 
         ffmpeg(inputPath)
 
+
+
           .outputOptions([
+
+
 
             "-vn",
 
+
+
             "-c:a libmp3lame",
+
+
 
             "-b:a 192k",
 
+
+
             "-ar 44100",
 
+
+
             "-ac 2",
+
+
 
           ])
 
@@ -942,31 +1665,55 @@ export class FfmpegService {
 
           .output(
 
+
+
             outputPath,
+
+
 
           )
 
 
 
           .on(
+
+
 
             "progress",
 
+
+
             (progress) => {
+
+
 
               if (
 
+
+
                 progress?.timemark
+
+
 
               ) {
 
+
+
                 lastTimemark =
+
+
 
                   progress.timemark;
 
+
+
               }
 
+
+
             },
+
+
 
           )
 
@@ -974,11 +1721,19 @@ export class FfmpegService {
 
           .on(
 
+
+
             "end",
+
+
 
             async () => {
 
+
+
               let durationSeconds =
+
+
 
                 0;
 
@@ -986,23 +1741,43 @@ export class FfmpegService {
 
               try {
 
+
+
                 durationSeconds =
+
+
 
                   await this.getMediaDuration(
 
+
+
                     outputPath,
 
+
+
                   );
+
+
 
               } catch {
 
+
+
                 durationSeconds =
+
+
 
                   this.parseTimemark(
 
+
+
                     lastTimemark,
 
+
+
                   );
+
+
 
               }
 
@@ -1010,23 +1785,43 @@ export class FfmpegService {
 
               if (
 
+
+
                 !Number.isFinite(
+
+
 
                   durationSeconds,
 
+
+
                 ) ||
+
+
 
                 durationSeconds <= 0
 
+
+
               ) {
+
+
 
                 reject(
 
+
+
                   new InternalServerErrorException(
+
+
 
                     "Unable to determine audio duration.",
 
+
+
                   ),
+
+
 
                 );
 
@@ -1034,33 +1829,57 @@ export class FfmpegService {
 
                 return;
 
+
+
               }
 
 
 
-              resolve({
+              try {
 
-                outputPath,
+                const cloud = await this.uploadToGoogleCloudStorage(
 
+                  outputPath,
 
+                  `posts/${outputName}`,
 
-                url:
+                  "audio/mpeg",
 
-                  `/uploads/music/processed/${outputName}`,
-
-
-
-                storageKey:
-
-                  `music/processed/${outputName}`,
+                );
 
 
 
-                durationSeconds,
+                resolve({
 
-              });
+                  outputPath,
+
+                  url:
+
+                    cloud?.url ??
+
+                    `/uploads/music/processed/${outputName}`,
+
+                  storageKey:
+
+                    cloud?.storageKey ??
+
+                    `music/processed/${outputName}`,
+
+                  durationSeconds,
+
+                });
+
+              } catch (uploadError) {
+
+                reject(uploadError);
+
+              }
+
+
 
             },
+
+
 
           )
 
@@ -1068,17 +1887,31 @@ export class FfmpegService {
 
           .on(
 
+
+
             "error",
+
+
 
             (error) => {
 
+
+
               reject(
+
+
 
                 error,
 
+
+
               );
 
+
+
             },
+
+
 
           )
 
@@ -1086,9 +1919,15 @@ export class FfmpegService {
 
           .run();
 
+
+
       },
 
+
+
     );
+
+
 
   }
 
@@ -1096,7 +1935,79 @@ export class FfmpegService {
 
   // ==========================================================================
 
+
+
+  // ==========================================================================
+
+  // GOOGLE CLOUD STORAGE
+
+  // ==========================================================================
+
+
+
+  private async uploadToGoogleCloudStorage(
+
+    localPath: string,
+
+    objectName: string,
+
+    contentType: string,
+
+  ): Promise<{ url: string; storageKey: string } | null> {
+
+    if (!this.gcsEnabled) {
+
+      return null;
+
+    }
+
+
+
+    await this.storage.bucket(this.bucketName).upload(
+
+      localPath,
+
+      {
+
+        destination: objectName,
+
+        resumable: true,
+
+        metadata: {
+
+          contentType,
+
+          cacheControl: "public, max-age=31536000, immutable",
+
+        },
+
+      },
+
+    );
+
+
+
+    const filename =
+
+      objectName.split("/").pop() || objectName;
+
+
+
+    return {
+
+      url: `/post-media/${encodeURIComponent(filename)}`,
+
+      storageKey: `post-media/${filename}`,
+
+    };
+
+  }
+
+
+
   // MEDIA DURATION
+
+
 
   // ==========================================================================
 
@@ -1104,17 +2015,31 @@ export class FfmpegService {
 
   async getMediaDuration(
 
+
+
     inputPath: string,
+
+
 
   ): Promise<number> {
 
+
+
     if (!inputPath?.trim()) {
+
+
 
       throw new InternalServerErrorException(
 
+
+
         "Media input path is required.",
 
+
+
       );
+
+
 
     }
 
@@ -1122,31 +2047,55 @@ export class FfmpegService {
 
     return new Promise(
 
+
+
       (resolve, reject) => {
+
+
 
         ffmpeg.ffprobe(
 
+
+
           inputPath,
+
+
 
           (
 
+
+
             error,
+
+
 
             metadata,
 
+
+
           ) => {
+
+
 
             if (error) {
 
+
+
               reject(
 
+
+
                 error,
+
+
 
               );
 
 
 
               return;
+
+
 
             }
 
@@ -1154,11 +2103,19 @@ export class FfmpegService {
 
             const duration =
 
+
+
               Number(
+
+
 
                 metadata?.format
 
+
+
                   ?.duration,
+
+
 
               );
 
@@ -1166,23 +2123,43 @@ export class FfmpegService {
 
             if (
 
+
+
               !Number.isFinite(
+
+
 
                 duration,
 
+
+
               ) ||
+
+
 
               duration <= 0
 
+
+
             ) {
+
+
 
               reject(
 
+
+
                 new Error(
+
+
 
                   "Media duration is unavailable.",
 
+
+
                 ),
+
+
 
               );
 
@@ -1190,23 +2167,39 @@ export class FfmpegService {
 
               return;
 
+
+
             }
 
 
 
             resolve(
 
+
+
               duration,
+
+
 
             );
 
+
+
           },
+
+
 
         );
 
+
+
       },
 
+
+
     );
+
+
 
   }
 
@@ -1214,7 +2207,11 @@ export class FfmpegService {
 
   // ==========================================================================
 
+
+
   // TIMEMARK FALLBACK
+
+
 
   // ==========================================================================
 
@@ -1222,21 +2219,39 @@ export class FfmpegService {
 
   private parseTimemark(
 
+
+
     timemark?: string,
+
+
 
   ): number {
 
+
+
     if (
+
+
 
       !timemark ||
 
+
+
       typeof timemark !==
+
+
 
         "string"
 
+
+
     ) {
 
+
+
       return 0;
+
+
 
     }
 
@@ -1244,15 +2259,27 @@ export class FfmpegService {
 
     const parts =
 
+
+
       timemark
+
+
 
         .split(":")
 
+
+
         .map(
+
+
 
           (value) =>
 
+
+
             Number(value),
+
+
 
         );
 
@@ -1260,23 +2287,43 @@ export class FfmpegService {
 
     if (
 
+
+
       parts.length !== 3 ||
+
+
 
       parts.some(
 
+
+
         (part) =>
+
+
 
           !Number.isFinite(
 
+
+
             part,
+
+
 
           ),
 
+
+
       )
+
+
 
     ) {
 
+
+
       return 0;
+
+
 
     }
 
@@ -1284,11 +2331,19 @@ export class FfmpegService {
 
     const [
 
+
+
       hours,
+
+
 
       minutes,
 
+
+
       seconds,
+
+
 
     ] = parts;
 
@@ -1296,14 +2351,26 @@ export class FfmpegService {
 
     return (
 
+
+
       hours * 3600 +
+
+
 
       minutes * 60 +
 
+
+
       seconds
+
+
 
     );
 
+
+
   }
+
+
 
 }
