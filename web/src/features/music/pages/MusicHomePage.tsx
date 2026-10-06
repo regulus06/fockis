@@ -11,6 +11,7 @@ import {
   type FormEvent,
 
   type MouseEvent,
+  type KeyboardEvent,
 
 } from "react";
 
@@ -998,6 +999,86 @@ function getCoverImage(
 
 
 
+function getVideoUrl(item: MusicContent): string | undefined {
+  const value = item as MusicContent & {
+    videoUrl?: unknown;
+    mediaUrl?: unknown;
+    processedVideoUrl?: unknown;
+    processedMediaUrl?: unknown;
+    playbackUrl?: unknown;
+    videoStorageKey?: unknown;
+    processedVideoStorageKey?: unknown;
+    processedMediaStorageKey?: unknown;
+    media?: unknown;
+    processedMedia?: unknown;
+  };
+
+  const candidates: unknown[] = [
+    value.videoUrl,
+    value.processedVideoUrl,
+    value.mediaUrl,
+    value.processedMediaUrl,
+    value.playbackUrl,
+    value.videoStorageKey,
+    value.processedVideoStorageKey,
+    value.processedMediaStorageKey,
+  ];
+
+  for (const source of [value.media, value.processedMedia]) {
+    if (source && typeof source === "object") {
+      const media = source as {
+        url?: unknown;
+        videoUrl?: unknown;
+        playbackUrl?: unknown;
+        storageKey?: unknown;
+        processedUrl?: unknown;
+        processedStorageKey?: unknown;
+      };
+
+      candidates.push(
+        media.url,
+        media.videoUrl,
+        media.playbackUrl,
+        media.storageKey,
+        media.processedUrl,
+        media.processedStorageKey,
+      );
+    }
+  }
+
+  const apiBaseUrl =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+      ? "http://localhost:3000"
+      : "https://fockis.onrender.com";
+
+  for (const candidate of candidates) {
+    if (typeof candidate !== "string") continue;
+
+    const raw = candidate.trim();
+    if (!raw) continue;
+
+    if (
+      raw.startsWith("http://") ||
+      raw.startsWith("https://") ||
+      raw.startsWith("blob:") ||
+      raw.startsWith("data:")
+    ) {
+      return raw;
+    }
+
+    if (raw.startsWith("/")) {
+      return `${apiBaseUrl}${raw}`;
+    }
+
+    const normalized = raw.replace(/^uploads[\\/]+/, "");
+    return `${apiBaseUrl}/uploads/${normalized}`;
+  }
+
+  return undefined;
+}
+
+
 function formatNumber(
 
   value: number,
@@ -1269,313 +1350,172 @@ function takeUnique(
 
 
 function MusicCard({
-
   item,
-
 }: {
-
   item: MusicContent;
-
 }) {
+  const navigate = useNavigate();
+  const id = getContentId(item);
+  const producerId = getProducerId(item);
+  const cover = getCoverImage(item);
+  const videoUrl = isVideo(item) ? getVideoUrl(item) : undefined;
 
-  const navigate =
-
-    useNavigate();
-
-
-
-  const id =
-
-    getContentId(item);
-
-
-
-  const producerId =
-
-    getProducerId(item);
-
-
-
-  const cover =
-
-    getCoverImage(item);
-
-
-
-  const openContent =
-
-    () => {
-
-      if (!id) {
-
-        console.warn(
-
-          "[Fockis Music] Cannot open content without an ID:",
-
-          item,
-
-        );
-
-
-
-        return;
-
-      }
-
-
-
-      navigate(
-
-        `/music/${encodeURIComponent(
-
-          id,
-
-        )}`,
-
+  const openContent = () => {
+    if (!id) {
+      console.warn(
+        "[Fockis Music] Cannot open content without an ID:",
+        item,
       );
+      return;
+    }
 
-    };
+    navigate(`/music/${encodeURIComponent(id)}`);
+  };
 
+  const handleArtKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openContent();
+    }
+  };
 
+  const openProducer = (
+    event: MouseEvent<HTMLButtonElement>,
+  ) => {
+    event.stopPropagation();
 
-  const openProducer =
+    if (!producerId) return;
 
-    (
-
-      event: MouseEvent<HTMLButtonElement>,
-
-    ) => {
-
-      event.stopPropagation();
-
-
-
-      if (!producerId) {
-
-        return;
-
-      }
-
-
-
-      navigate(
-
-        `/music/producers/${encodeURIComponent(
-
-          producerId,
-
-        )}`,
-
-      );
-
-    };
-
-
+    navigate(
+      `/music/producers/${encodeURIComponent(producerId)}`,
+    );
+  };
 
   return (
-
     <article className="music-home-card">
-
-      <button
-
-        type="button"
-
-        className="music-home-card-art-button"
-
+      <div
+        className={[
+          "music-home-card-art-button",
+          "music-home-card-art-clickable",
+          videoUrl ? "music-home-card-art-button--video" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        style={{
+          display: "block",
+          width: "100%",
+          padding: 0,
+          border: 0,
+          background: "transparent",
+          textAlign: "left",
+          cursor: id ? "pointer" : "default",
+        }}
+        role="button"
+        tabIndex={id ? 0 : -1}
         onClick={openContent}
-
-        disabled={!id}
-
+        onKeyDown={handleArtKeyDown}
         aria-label={`Open ${item.title}`}
-
       >
-
         <div className="music-home-card-art">
-
-          {cover ? (
-
-            <img
-
-              src={cover}
-
-              alt=""
-
-              loading="lazy"
-
+          {videoUrl ? (
+            <video
+              className="music-home-card-video"
+              src={videoUrl}
+              poster={cover || undefined}
+              controls
+              playsInline
+              preload="metadata"
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
               onError={(event) => {
-
-                event.currentTarget.style.display =
-
-                  "none";
-
+                console.error(
+                  "[Fockis Music] Video failed to load:",
+                  videoUrl,
+                  event.currentTarget.error,
+                );
               }}
-
             />
-
+          ) : cover ? (
+            <img
+              src={cover}
+              alt=""
+              loading="lazy"
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+              }}
+            />
           ) : (
-
             <div className="music-home-card-art-placeholder">
-
-              <span>
-
-                {getTypeIcon(item)}
-
-              </span>
-
+              <span>{getTypeIcon(item)}</span>
             </div>
-
           )}
 
-
-
-          <span className="music-home-card-play">
-
-            ▶
-
-          </span>
-
-
+          {!videoUrl && (
+            <span className="music-home-card-play">
+              ▶
+            </span>
+          )}
 
           <span className="music-home-card-type">
-
             {getTypeIcon(item)}{" "}
-
             {getTypeLabel(item)}
-
           </span>
-
-
 
           <span className="music-home-card-access">
-
             {getAccessLabel(item)}
-
           </span>
-
         </div>
-
-      </button>
-
-
-
-      <div className="music-home-card-body">
-
-        <button
-
-          type="button"
-
-          className="music-home-card-title-button"
-
-          onClick={openContent}
-
-          disabled={!id}
-
-          aria-label={`Open ${item.title}`}
-
-        >
-
-          <h3>{item.title}</h3>
-
-        </button>
-
-
-
-        <button
-
-          type="button"
-
-          className="music-home-card-producer-button"
-
-          onClick={openProducer}
-
-          disabled={!producerId}
-
-        >
-
-          {getProducerName(item)}
-
-        </button>
-
-
-
-        <div className="music-home-card-meta">
-
-          <span>
-
-            {formatNumber(
-
-              getPlayCount(item),
-
-            )}{" "}
-
-            plays
-
-          </span>
-
-
-
-          <span>
-
-            {formatNumber(
-
-              getViewCount(item),
-
-            )}{" "}
-
-            views
-
-          </span>
-
-
-
-          <span>
-
-            {formatPrice(item)}
-
-          </span>
-
-        </div>
-
-
-
-        {item.genre && (
-
-          <div className="music-home-card-exclusive">
-
-            #
-
-            {item.genre.replace(
-
-              /_/g,
-
-              " ",
-
-            )}
-
-          </div>
-
-        )}
-
-
-
-        {item.isExclusive && (
-
-          <div className="music-home-card-exclusive">
-
-            🔒 Exclusive
-
-          </div>
-
-        )}
-
       </div>
 
+      <div className="music-home-card-body">
+        <button
+          type="button"
+          className="music-home-card-title-button"
+          onClick={openContent}
+          disabled={!id}
+          aria-label={`Open ${item.title}`}
+        >
+          <h3>{item.title}</h3>
+        </button>
+
+        <button
+          type="button"
+          className="music-home-card-producer-button"
+          onClick={openProducer}
+          disabled={!producerId}
+        >
+          {getProducerName(item)}
+        </button>
+
+        <div className="music-home-card-meta">
+          <span>
+            {formatNumber(getPlayCount(item))}{" "}
+            plays
+          </span>
+
+          <span>
+            {formatNumber(getViewCount(item))}{" "}
+            views
+          </span>
+
+          <span>{formatPrice(item)}</span>
+        </div>
+
+        {item.genre && (
+          <div className="music-home-card-exclusive">
+            #{item.genre.replace(/_/g, " ")}
+          </div>
+        )}
+
+        {item.isExclusive && (
+          <div className="music-home-card-exclusive">
+            🔒 Exclusive
+          </div>
+        )}
+      </div>
     </article>
-
   );
-
 }
-
 
 
 // ============================================================================
