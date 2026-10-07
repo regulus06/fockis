@@ -5,9 +5,13 @@ import {
 
 import { Storage } from "@google-cloud/storage";
 
-import { createReadStream } from "fs";
+import {
+  createReadStream,
+} from "fs";
 
-import { randomUUID } from "crypto";
+import {
+  randomUUID,
+} from "crypto";
 
 import {
   basename,
@@ -61,6 +65,10 @@ export class CloudStorageService {
     }
   }
 
+  // ==========================================================================
+  // SERVICE ACCOUNT
+  // ==========================================================================
+
   private getServiceAccount():
     | {
         project_id?: string;
@@ -83,6 +91,10 @@ export class CloudStorageService {
       );
     }
   }
+
+  // ==========================================================================
+  // UPLOAD FILE
+  // ==========================================================================
 
   async uploadFile(
     filePath: string,
@@ -153,6 +165,10 @@ export class CloudStorageService {
     }
   }
 
+  // ==========================================================================
+  // UPLOAD BUFFER
+  // ==========================================================================
+
   async uploadBuffer(
     buffer: Buffer,
     objectKey: string,
@@ -196,6 +212,91 @@ export class CloudStorageService {
     }
   }
 
+  // ==========================================================================
+  // DOWNLOAD PRIVATE GCS OBJECT TO LOCAL FILE
+  // ==========================================================================
+
+  /**
+   * Downloads a private GCS object to a local file.
+   *
+   * This is used by background media processing when the
+   * original upload no longer exists on the Render filesystem.
+   *
+   * Example:
+   *
+   * GCS:
+   *   posts/videos/example.mp4
+   *
+   * Render:
+   *   /opt/render/project/src/apps/api/uploads/music-processing/example.mp4
+   */
+  async downloadToFile(
+    objectKey: string,
+    destinationPath: string,
+  ): Promise<void> {
+    try {
+      if (!objectKey?.trim()) {
+        throw new Error(
+          "GCS object key is required.",
+        );
+      }
+
+      if (!destinationPath?.trim()) {
+        throw new Error(
+          "Download destination path is required.",
+        );
+      }
+
+      const bucket =
+        this.storage.bucket(
+          this.bucketName,
+        );
+
+      const file =
+        bucket.file(
+          objectKey,
+        );
+
+      console.log(
+        "[GCS] Download starting:",
+        {
+          objectKey,
+          destinationPath,
+        },
+      );
+
+      await file.download({
+        destination:
+          destinationPath,
+      });
+
+      console.log(
+        "[GCS] Download completed:",
+        {
+          objectKey,
+          destinationPath,
+        },
+      );
+    } catch (error) {
+      console.error(
+        "[GCS] Download failed:",
+        {
+          objectKey,
+          destinationPath,
+          error,
+        },
+      );
+
+      throw new InternalServerErrorException(
+        "Failed to download media from Google Cloud Storage.",
+      );
+    }
+  }
+
+  // ==========================================================================
+  // SIGNED URL
+  // ==========================================================================
+
   async getSignedUrl(
     objectKey: string,
   ) {
@@ -237,6 +338,10 @@ export class CloudStorageService {
     }
   }
 
+  // ==========================================================================
+  // FILE METADATA
+  // ==========================================================================
+
   /**
    * Get metadata for a private GCS object.
    */
@@ -250,7 +355,9 @@ export class CloudStorageService {
         );
 
       const file =
-        bucket.file(objectKey);
+        bucket.file(
+          objectKey,
+        );
 
       const [
         metadata,
@@ -290,6 +397,10 @@ export class CloudStorageService {
     }
   }
 
+  // ==========================================================================
+  // PRIVATE GCS READ STREAM
+  // ==========================================================================
+
   /**
    * Create a readable stream from a private
    * GCS object.
@@ -309,7 +420,9 @@ export class CloudStorageService {
         );
 
       const file =
-        bucket.file(objectKey);
+        bucket.file(
+          objectKey,
+        );
 
       const options: {
         start?: number;
@@ -350,6 +463,10 @@ export class CloudStorageService {
     }
   }
 
+  // ==========================================================================
+  // UPLOAD + SIGN
+  // ==========================================================================
+
   async uploadAndSign(
     filePath: string,
     objectKey: string,
@@ -365,6 +482,10 @@ export class CloudStorageService {
       objectKey,
     );
   }
+
+  // ==========================================================================
+  // OBJECT KEY
+  // ==========================================================================
 
   createObjectKey(
     folder: string,
