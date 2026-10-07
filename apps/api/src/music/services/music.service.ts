@@ -1274,6 +1274,7 @@ export class MusicService {
         status:
           MusicPublishStatus.PUBLISHED,
       },
+
       {
         $inc: {
           playCount: 1,
@@ -1297,6 +1298,7 @@ export class MusicService {
         status:
           MusicPublishStatus.PUBLISHED,
       },
+
       {
         $inc: {
           viewCount: 1,
@@ -1320,6 +1322,7 @@ export class MusicService {
         status:
           MusicPublishStatus.PUBLISHED,
       },
+
       {
         $inc: {
           shareCount: 1,
@@ -1340,6 +1343,7 @@ export class MusicService {
       {
         _id: id,
       },
+
       {
         $inc: {
           purchaseCount: 1,
@@ -1360,6 +1364,7 @@ export class MusicService {
       {
         _id: id,
       },
+
       {
         $inc: {
           favoriteCount: 1,
@@ -1384,6 +1389,7 @@ export class MusicService {
           $gt: 0,
         },
       },
+
       {
         $inc: {
           favoriteCount: -1,
@@ -1416,6 +1422,7 @@ export class MusicService {
       {
         _id: id,
       },
+
       {
         $set: {
           rankScore,
@@ -1443,11 +1450,32 @@ export class MusicService {
       return asset;
     }
 
-    const storageKey =
-      typeof asset.storageKey ===
-      "string"
+    let storageKey =
+      typeof asset.storageKey === "string"
         ? asset.storageKey.trim()
         : "";
+
+    if (!storageKey) {
+      return asset;
+    }
+
+    // Normalize legacy storage-key and URL formats.
+    storageKey = storageKey
+      .replace(/\\/g, "/")
+      .replace(/^https?:\/\/[^/]+/i, "")
+      .split("?")[0]
+      .split("#")[0]
+      .replace(/^\/+/, "")
+      .replace(/^uploads\/media\//i, "")
+      .replace(/^uploads\//i, "")
+      .replace(/^\/+/, "");
+
+    // Older Music records used post-media/.
+    // The corrected FFmpeg pipeline uses posts/.
+    storageKey = storageKey.replace(
+      /^post-media\//i,
+      "posts/",
+    );
 
     if (!storageKey) {
       return asset;
@@ -1462,13 +1490,20 @@ export class MusicService {
         .trim()
         .replace(/\/+$/, "");
 
+    // Encode each path segment separately.
+    // Keep "/" separators intact so the NestJS wildcard route
+    // receives the actual GCS object path.
+    const encodedPath = storageKey
+      .split("/")
+      .map((part) => encodeURIComponent(part))
+      .join("/");
+
     const mediaUrl =
-      `${apiBaseUrl}/uploads/media/${encodeURIComponent(
-        storageKey,
-      )}`;
+      `${apiBaseUrl}/uploads/media/${encodedPath}`;
 
     return {
       ...asset,
+      storageKey,
       url: mediaUrl,
     };
   }
@@ -1601,6 +1636,7 @@ export class MusicService {
         return "exclusive_video";
 
       case "movie":
+
       case "film":
         return "video";
 
@@ -1768,6 +1804,7 @@ export class MusicService {
         };
 
       case "newest":
+
       default:
         return {
           releaseDate: -1,
