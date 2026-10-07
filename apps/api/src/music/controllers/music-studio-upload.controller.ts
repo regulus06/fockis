@@ -38,8 +38,8 @@ import {
 } from "../services/producer.service";
 
 import {
-  UploadService,
-} from "../../uploads/upload.service";
+  CloudStorageService,
+} from "../../uploads/cloud-storage.service";
 
 // ============================================================================
 // FOCKIS MUSIC STUDIO UPLOAD
@@ -48,43 +48,51 @@ import {
 // POST /music/studio/upload
 //
 // FormData:
+//
 //   file = audio / video / image
 //
 // Optional:
+//
 //   ?context=music
 //   ?context=story
 //
 // IMPORTANT:
 //
-// The multipart transport limit is intentionally 30 GB.
+// This endpoint ONLY handles:
 //
-// This is the GLOBAL TRANSPORT LIMIT.
+//   1. Authentication
+//   2. Producer authorization
+//   3. Multipart upload
+//   4. Original-file upload to Google Cloud Storage
+//   5. Returning the storage key
 //
-// The actual content-specific limits are enforced later by the
-// MusicService / MusicMediaProcessingService.
+// FFmpeg processing is NOT performed inside this HTTP request.
 //
-// Professional Fockis limits:
+// This prevents Render HTTP 502 / timeout problems with large media files.
 //
-//   Song / Single              500 MB   / 3 hours
-//   Album / Long Audio           2 GB   / 12 hours
-//   Music Video                  4 GB   / 3 hours
-//   Video / Long-form Video    20 GB   / 8 hours
-//   Recorded Live Stream       30 GB   / 12 hours
+// The later MusicMediaProcessingService is responsible for:
 //
-// DO NOT use memoryStorage() for these uploads.
-// Files are written directly to disk with diskStorage().
+//   GCS source
+//      ↓
+//   FFmpeg
+//      ↓
+//   processed media
+//      ↓
+//   GCS
+//      ↓
+//   READY
 //
 // ============================================================================
 
-const GB = 1024 * 1024 * 1024;
+const GB =
+  1024 *
+  1024 *
+  1024;
 
 /**
- * Maximum multipart upload size accepted by the transport layer.
+ * Maximum multipart upload accepted by the transport layer.
  *
- * This MUST be at least as large as the largest supported Fockis
- * media type.
- *
- * Largest supported media:
+ * Largest supported Fockis media type:
  *
  * Recorded Live Stream = 30 GB
  */
@@ -94,11 +102,11 @@ const MAX_MUSIC_STUDIO_UPLOAD_BYTES =
 @Controller("music/studio")
 export class MusicStudioUploadController {
   constructor(
-    private readonly uploadService:
-      UploadService,
-
     private readonly producerService:
       ProducerService,
+
+    private readonly cloudStorageService:
+      CloudStorageService,
   ) {}
 
   // ==========================================================================
@@ -109,6 +117,16 @@ export class MusicStudioUploadController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor("file", {
+      // ========================================================================
+      // DISK STORAGE
+      // ========================================================================
+      //
+      // DO NOT use memoryStorage().
+      //
+      // Large music/video files must be written to disk.
+      //
+      // ========================================================================
+
       storage: diskStorage({
         destination: (
           _req,
@@ -148,28 +166,18 @@ export class MusicStudioUploadController {
         },
       }),
 
-      // ======================================================================
-      // IMPORTANT: 30 GB TRANSPORT LIMIT
-      // ======================================================================
-      //
-      // This replaces the old:
-      //
-      // 100 * 1024 * 1024
-      //
-      // which was causing:
-      //
-      // HTTP 413 File too large
-      //
-      // ======================================================================
+      // ========================================================================
+      // TRANSPORT LIMIT
+      // ========================================================================
 
       limits: {
         fileSize:
           MAX_MUSIC_STUDIO_UPLOAD_BYTES,
       },
 
-      // ======================================================================
+      // ========================================================================
       // ALLOWED FILE TYPES
-      // ======================================================================
+      // ========================================================================
 
       fileFilter: (
         _req,
@@ -182,9 +190,9 @@ export class MusicStudioUploadController {
             .trim() || "";
 
         const allowedTypes = [
-          // ==================================================================
+          // ====================================================================
           // AUDIO
-          // ==================================================================
+          // ====================================================================
 
           "audio/mpeg",
           "audio/mp3",
@@ -199,22 +207,20 @@ export class MusicStudioUploadController {
           "audio/flac",
           "audio/x-flac",
 
-          // ==================================================================
+          // ====================================================================
           // VIDEO
-          // ==================================================================
+          // ====================================================================
 
           "video/mp4",
           "video/webm",
           "video/quicktime",
           "video/x-matroska",
-
-          // Some browsers/devices may report these MIME types.
           "video/mov",
           "video/x-msvideo",
 
-          // ==================================================================
+          // ====================================================================
           // IMAGE / COVER ART
-          // ==================================================================
+          // ====================================================================
 
           "image/jpeg",
           "image/jpg",
@@ -282,7 +288,9 @@ export class MusicStudioUploadController {
     // PRODUCER AUTHORIZATION
     // =========================================================================
     //
-    // Only approved Music creators can upload creator content.
+    // Keep this check.
+    //
+    // We are NOT removing the JwtAuthGuard or producer authorization.
     //
     // =========================================================================
 
@@ -292,19 +300,132 @@ export class MusicStudioUploadController {
       );
 
     // =========================================================================
-    // PROCESS UPLOAD
+    // CREATE GCS STORAGE KEY
     // =========================================================================
 
-    const processed =
-      await this.uploadService.processUpload(
-        file,
-        context,
+    const storageKey =
+      this.cloudStorageService.createObjectKey(
+        "music/source",
+        file.originalname,
       );
 
-    if (!processed) {
-      throw new BadRequestException(
-        "Upload processing failed.",
+    console.log(
+      "[MUSIC STUDIO] Uploading source file to GCS:",
+      {
+        userId:
+          String(userId),
+
+        context:
+          context ||
+          "music",
+
+        originalName:
+          file.originalname,
+
+        mimeType:
+          file.mimetype,
+
+        size:
+          file.size,
+
+        storageKey,
+      },
+    );
+
+    // =========================================================================
+    // UPLOAD ORIGINAL FILE TO GOOGLE CLOUD STORAGE
+    // =========================================================================
+
+    await this.cloudStorageService.uploadFile(
+      file.path,
+      storageKey,
+      file.mimetype,
+    );
+
+    console.log(
+      "[MUSIC STUDIO] Source upload complete:",
+      {
+        storageKey,
+      },
+    );
+
+    // =========================================================================
+    // REMOVE TEMPORARY RENDER DISK FILE
+    // =========================================================================
+
+    try {
+      const {
+        unlink,
+      } = await import(
+        "fs/promises"
       );
+
+      await unlink(
+        file.path,
+      );
+    } catch (error) {
+      console.warn(
+        "[MUSIC STUDIO] Could not remove temporary upload file:",
+        error,
+      );
+    }
+
+    // =========================================================================
+    // FOCKIS MEDIA GATEWAY URL
+    // =========================================================================
+    //
+    // IMPORTANT:
+    //
+    // Do NOT expose a private GCS signed URL to the browser.
+    //
+    // The browser uses:
+    //
+    //   /uploads/media/<storageKey>
+    //
+    // The Fockis API streams the private GCS object.
+    //
+    // =========================================================================
+
+    const apiBaseUrl =
+      (
+        process.env.PUBLIC_API_URL ||
+        process.env.API_PUBLIC_URL ||
+        "https://fockis.onrender.com"
+      )
+        .trim()
+        .replace(
+          /\/+$/,
+          "",
+        );
+
+    const mediaUrl =
+      `${apiBaseUrl}/uploads/media/${encodeURIComponent(
+        storageKey,
+      )}`;
+
+    // =========================================================================
+    // DETERMINE MEDIA TYPE
+    // =========================================================================
+
+    let type:
+      | "audio"
+      | "video"
+      | "image";
+
+    if (
+      file.mimetype
+        ?.toLowerCase()
+        .startsWith("audio/")
+    ) {
+      type = "audio";
+    } else if (
+      file.mimetype
+        ?.toLowerCase()
+        .startsWith("video/")
+    ) {
+      type = "video";
+    } else {
+      type = "image";
     }
 
     // =========================================================================
@@ -314,8 +435,7 @@ export class MusicStudioUploadController {
     return {
       success: true,
 
-      type:
-        processed.type,
+      type,
 
       filename:
         file.filename,
@@ -329,22 +449,22 @@ export class MusicStudioUploadController {
       size:
         file.size,
 
-      storageKey:
-        processed.storageKey,
+      storageKey,
 
       url:
-        processed.url,
+        mediaUrl,
 
       path:
-        processed.path,
+        mediaUrl,
 
       thumbnailUrl:
-        processed.thumbnailUrl ??
         null,
 
       thumbnailPath:
-        processed.thumbnailPath ??
         null,
+
+      processing:
+        true,
     };
   }
 }
