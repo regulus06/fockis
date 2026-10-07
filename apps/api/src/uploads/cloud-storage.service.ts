@@ -3,17 +3,11 @@ import {
   InternalServerErrorException,
 } from "@nestjs/common";
 
-import {
-  Storage,
-} from "@google-cloud/storage";
+import { Storage } from "@google-cloud/storage";
 
-import {
-  createReadStream,
-} from "fs";
+import { createReadStream } from "fs";
 
-import {
-  randomUUID,
-} from "crypto";
+import { randomUUID } from "crypto";
 
 import {
   basename,
@@ -239,6 +233,119 @@ export class CloudStorageService {
 
       throw new InternalServerErrorException(
         "Failed to create Google Cloud Storage URL.",
+      );
+    }
+  }
+
+  /**
+   * Get metadata for a private GCS object.
+   */
+  async getFileMetadata(
+    objectKey: string,
+  ) {
+    try {
+      const bucket =
+        this.storage.bucket(
+          this.bucketName,
+        );
+
+      const file =
+        bucket.file(objectKey);
+
+      const [
+        metadata,
+      ] = await file.getMetadata();
+
+      return {
+        size:
+          Number(
+            metadata.size || 0,
+          ),
+
+        contentType:
+          metadata.contentType ||
+          "application/octet-stream",
+
+        cacheControl:
+          metadata.cacheControl,
+
+        etag:
+          metadata.etag,
+
+        generation:
+          metadata.generation,
+      };
+    } catch (error) {
+      console.error(
+        "[GCS] Metadata lookup failed:",
+        {
+          objectKey,
+          error,
+        },
+      );
+
+      throw new InternalServerErrorException(
+        "Failed to read media metadata from Google Cloud Storage.",
+      );
+    }
+  }
+
+  /**
+   * Create a readable stream from a private
+   * GCS object.
+   *
+   * start/end are optional and allow HTTP
+   * Range requests for browser audio/video.
+   */
+  createReadStream(
+    objectKey: string,
+    start?: number,
+    end?: number,
+  ) {
+    try {
+      const bucket =
+        this.storage.bucket(
+          this.bucketName,
+        );
+
+      const file =
+        bucket.file(objectKey);
+
+      const options: {
+        start?: number;
+        end?: number;
+      } = {};
+
+      if (
+        start !== undefined
+      ) {
+        options.start =
+          start;
+      }
+
+      if (
+        end !== undefined
+      ) {
+        options.end =
+          end;
+      }
+
+      return file.createReadStream(
+        options,
+      );
+    } catch (error) {
+      console.error(
+        "[GCS] Read stream creation failed:",
+        {
+          objectKey,
+          start,
+          end,
+          error,
+        },
+      );
+
+      throw new InternalServerErrorException(
+        "Failed to stream media from Google Cloud Storage.",
       );
     }
   }

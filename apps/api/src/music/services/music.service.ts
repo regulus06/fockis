@@ -4,22 +4,43 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
+
+import {
+  InjectModel,
+} from "@nestjs/mongoose";
+
 import {
   Model,
   Types,
 } from "mongoose";
+
 import {
   MediaProcessingState,
   MusicAccessType,
   MusicContent,
   MusicPublishStatus,
 } from "../schemas/music-content.schema";
-import { CreateMusicDto } from "../dto/create-music.dto";
-import { UpdateMusicDto } from "../dto/update-music.dto";
-import { MusicQueryDto } from "../dto/music-query.dto";
-import { ProducerService } from "./producer.service";
-import { CloudStorageService } from "../../uploads/cloud-storage.service";
+
+import {
+  CreateMusicDto,
+} from "../dto/create-music.dto";
+
+import {
+  UpdateMusicDto,
+} from "../dto/update-music.dto";
+
+import {
+  MusicQueryDto,
+} from "../dto/music-query.dto";
+
+import {
+  ProducerService,
+} from "./producer.service";
+
+import {
+  CloudStorageService,
+} from "../../uploads/cloud-storage.service";
+
 import slugify from "./slugify";
 
 export interface MusicUpdateResult {
@@ -27,91 +48,151 @@ export interface MusicUpdateResult {
   mediaChanged: boolean;
 }
 
-const MB = 1024 * 1024;
-const GB = 1024 * 1024 * 1024;
+const MB =
+  1024 *
+  1024;
+
+const GB =
+  1024 *
+  1024 *
+  1024;
 
 export const FOCKIS_MUSIC_MEDIA_LIMITS = {
   song: {
-    maxDurationSeconds: 3 * 60 * 60,
-    maxFileSizeBytes: 500 * MB,
+    maxDurationSeconds:
+      3 * 60 * 60,
+    maxFileSizeBytes:
+      500 * MB,
   },
+
   single: {
-    maxDurationSeconds: 3 * 60 * 60,
-    maxFileSizeBytes: 500 * MB,
+    maxDurationSeconds:
+      3 * 60 * 60,
+    maxFileSizeBytes:
+      500 * MB,
   },
+
   track: {
-    maxDurationSeconds: 3 * 60 * 60,
-    maxFileSizeBytes: 500 * MB,
+    maxDurationSeconds:
+      3 * 60 * 60,
+    maxFileSizeBytes:
+      500 * MB,
   },
+
   beat: {
-    maxDurationSeconds: 3 * 60 * 60,
-    maxFileSizeBytes: 500 * MB,
+    maxDurationSeconds:
+      3 * 60 * 60,
+    maxFileSizeBytes:
+      500 * MB,
   },
+
   instrumental: {
-    maxDurationSeconds: 3 * 60 * 60,
-    maxFileSizeBytes: 500 * MB,
+    maxDurationSeconds:
+      3 * 60 * 60,
+    maxFileSizeBytes:
+      500 * MB,
   },
+
   album: {
-    maxDurationSeconds: 12 * 60 * 60,
-    maxFileSizeBytes: 2 * GB,
+    maxDurationSeconds:
+      12 * 60 * 60,
+    maxFileSizeBytes:
+      2 * GB,
   },
+
   ep: {
-    maxDurationSeconds: 12 * 60 * 60,
-    maxFileSizeBytes: 2 * GB,
+    maxDurationSeconds:
+      12 * 60 * 60,
+    maxFileSizeBytes:
+      2 * GB,
   },
+
   music: {
-    maxDurationSeconds: 12 * 60 * 60,
-    maxFileSizeBytes: 2 * GB,
+    maxDurationSeconds:
+      12 * 60 * 60,
+    maxFileSizeBytes:
+      2 * GB,
   },
+
   audio: {
-    maxDurationSeconds: 12 * 60 * 60,
-    maxFileSizeBytes: 2 * GB,
+    maxDurationSeconds:
+      12 * 60 * 60,
+    maxFileSizeBytes:
+      2 * GB,
   },
+
   music_video: {
-    maxDurationSeconds: 3 * 60 * 60,
-    maxFileSizeBytes: 4 * GB,
+    maxDurationSeconds:
+      3 * 60 * 60,
+    maxFileSizeBytes:
+      4 * GB,
   },
+
   video: {
-    maxDurationSeconds: 8 * 60 * 60,
-    maxFileSizeBytes: 20 * GB,
+    maxDurationSeconds:
+      8 * 60 * 60,
+    maxFileSizeBytes:
+      20 * GB,
   },
+
   live_performance: {
-    maxDurationSeconds: 12 * 60 * 60,
-    maxFileSizeBytes: 30 * GB,
+    maxDurationSeconds:
+      12 * 60 * 60,
+    maxFileSizeBytes:
+      30 * GB,
   },
+
   interview: {
-    maxDurationSeconds: 8 * 60 * 60,
-    maxFileSizeBytes: 20 * GB,
+    maxDurationSeconds:
+      8 * 60 * 60,
+    maxFileSizeBytes:
+      20 * GB,
   },
+
   behind_the_scenes: {
-    maxDurationSeconds: 8 * 60 * 60,
-    maxFileSizeBytes: 20 * GB,
+    maxDurationSeconds:
+      8 * 60 * 60,
+    maxFileSizeBytes:
+      20 * GB,
   },
+
   tutorial: {
-    maxDurationSeconds: 8 * 60 * 60,
-    maxFileSizeBytes: 20 * GB,
+    maxDurationSeconds:
+      8 * 60 * 60,
+    maxFileSizeBytes:
+      20 * GB,
   },
+
   exclusive: {
-    maxDurationSeconds: 8 * 60 * 60,
-    maxFileSizeBytes: 20 * GB,
+    maxDurationSeconds:
+      8 * 60 * 60,
+    maxFileSizeBytes:
+      20 * GB,
   },
+
   exclusive_video: {
-    maxDurationSeconds: 8 * 60 * 60,
-    maxFileSizeBytes: 20 * GB,
+    maxDurationSeconds:
+      8 * 60 * 60,
+    maxFileSizeBytes:
+      20 * GB,
   },
 } as const;
 
-const GLOBAL_MAX_UPLOAD_BYTES = 30 * GB;
+const GLOBAL_MAX_UPLOAD_BYTES =
+  30 * GB;
 
 @Injectable()
 export class MusicService {
   constructor(
     @InjectModel(MusicContent.name)
-    private readonly model: Model<MusicContent>,
+    private readonly model:
+      Model<MusicContent>,
 
-    private readonly producerService: ProducerService,
+    private readonly producerService:
+      ProducerService,
 
-    private readonly cloudStorageService: CloudStorageService,
+    private readonly cloudStorageService:
+      CloudStorageService,
   ) {}
 
   async create(
@@ -1008,7 +1089,8 @@ export class MusicService {
       content,
     ) as Promise<MusicContent>;
   }
-    async findBySlug(
+
+  async findBySlug(
     slug: string,
   ): Promise<MusicContent> {
     const normalizedSlug =
@@ -1342,6 +1424,18 @@ export class MusicService {
     );
   }
 
+  /**
+   * Resolve a private GCS media asset to the
+   * Fockis API streaming endpoint.
+   *
+   * The browser must NOT receive a GCS signed URL.
+   *
+   * Browser:
+   *   /uploads/media/<storageKey>
+   *
+   * Render/NestJS:
+   *   private GCS object
+   */
   private async resolveMediaAsset(
     asset: any,
   ): Promise<any> {
@@ -1350,7 +1444,8 @@ export class MusicService {
     }
 
     const storageKey =
-      typeof asset.storageKey === "string"
+      typeof asset.storageKey ===
+      "string"
         ? asset.storageKey.trim()
         : "";
 
@@ -1358,34 +1453,24 @@ export class MusicService {
       return asset;
     }
 
-    if (
-      typeof asset.url === "string" &&
-      /^https?:\/\//i.test(asset.url)
-    ) {
-      return asset;
-    }
+    const apiBaseUrl =
+      (
+        process.env.PUBLIC_API_URL ||
+        process.env.API_PUBLIC_URL ||
+        "https://fockis.onrender.com"
+      )
+        .trim()
+        .replace(/\/+$/, "");
 
-    try {
-      const url =
-        await this.cloudStorageService.getSignedUrl(
-          storageKey,
-        );
+    const mediaUrl =
+      `${apiBaseUrl}/uploads/media/${encodeURIComponent(
+        storageKey,
+      )}`;
 
-      return {
-        ...asset,
-        url,
-      };
-    } catch (error) {
-      console.error(
-        "[MUSIC] Failed to create signed media URL:",
-        {
-          storageKey,
-          error,
-        },
-      );
-
-      return asset;
-    }
+    return {
+      ...asset,
+      url: mediaUrl,
+    };
   }
 
   private async resolveMusicMedia(
@@ -1435,7 +1520,9 @@ export class MusicService {
   ): Promise<any[]> {
     return Promise.all(
       contents.map((content) =>
-        this.resolveMusicMedia(content),
+        this.resolveMusicMedia(
+          content,
+        ),
       ),
     );
   }
@@ -1551,28 +1638,30 @@ export class MusicService {
       );
     }
 
-    const audioTypes = new Set([
-      "song",
-      "single",
-      "track",
-      "beat",
-      "instrumental",
-      "album",
-      "ep",
-      "music",
-      "audio",
-    ]);
+    const audioTypes =
+      new Set([
+        "song",
+        "single",
+        "track",
+        "beat",
+        "instrumental",
+        "album",
+        "ep",
+        "music",
+        "audio",
+      ]);
 
-    const videoTypes = new Set([
-      "music_video",
-      "video",
-      "live_performance",
-      "interview",
-      "behind_the_scenes",
-      "tutorial",
-      "exclusive",
-      "exclusive_video",
-    ]);
+    const videoTypes =
+      new Set([
+        "music_video",
+        "video",
+        "live_performance",
+        "interview",
+        "behind_the_scenes",
+        "tutorial",
+        "exclusive",
+        "exclusive_video",
+      ]);
 
     if (
       normalizedKind === "audio" &&
