@@ -2,19 +2,14 @@ import {
   Injectable,
   InternalServerErrorException,
 } from "@nestjs/common";
-
 import { Storage } from "@google-cloud/storage";
-
 import ffmpeg = require("fluent-ffmpeg");
 import ffmpegPath = require("ffmpeg-static");
-
 import { randomUUID } from "crypto";
-
 import {
   join,
   resolve,
 } from "path";
-
 import {
   mkdir,
   stat,
@@ -163,6 +158,7 @@ export class FfmpegService {
         credentials: {
           client_email:
             clientEmail,
+
           private_key:
             privateKey,
         },
@@ -1077,9 +1073,7 @@ export class FfmpegService {
 
   private async uploadToGoogleCloudStorage(
     localPath: string,
-
     objectName: string,
-
     contentType: string,
   ): Promise<{
     url: string;
@@ -1090,41 +1084,56 @@ export class FfmpegService {
     }
 
     await this.storage
-      .bucket(
-        this.bucketName,
-      )
-      .upload(
-        localPath,
-        {
-          destination:
-            objectName,
+      .bucket(this.bucketName)
+      .upload(localPath, {
+        destination: objectName,
 
-          resumable:
-            true,
+        resumable: true,
 
-          metadata: {
-            contentType,
+        metadata: {
+          contentType,
 
-            cacheControl:
-              "public, max-age=31536000, immutable",
-          },
+          cacheControl:
+            "private, max-age=3600",
         },
-      );
+      });
 
-    const filename =
-      objectName
-        .split("/")
-        .pop() ||
-      objectName;
+    const apiBaseUrl =
+      (
+        process.env.PUBLIC_API_URL ||
+        process.env.API_PUBLIC_URL ||
+        "https://fockis.onrender.com"
+      )
+        .trim()
+        .replace(
+          /\/+$/,
+          "",
+        );
+
+    const mediaUrl =
+      `${apiBaseUrl}/uploads/media/${encodeURIComponent(
+        objectName,
+      )}`;
+
+    console.log(
+      "[FFMPEG GCS] Processed media uploaded:",
+      {
+        storageKey:
+          objectName,
+
+        url:
+          mediaUrl,
+
+        contentType,
+      },
+    );
 
     return {
       url:
-        `/post-media/${encodeURIComponent(
-          filename,
-        )}`,
+        mediaUrl,
 
       storageKey:
-        `post-media/${filename}`,
+        objectName,
     };
   }
 
