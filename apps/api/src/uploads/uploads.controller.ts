@@ -5,39 +5,63 @@ import {
   Query,
   UploadedFile,
   UseInterceptors,
-} from '@nestjs/common';
+} from "@nestjs/common";
 
 import {
   FileInterceptor,
-} from '@nestjs/platform-express';
+} from "@nestjs/platform-express";
 
 import {
   diskStorage,
-} from 'multer';
+} from "multer";
 
 import {
   extname,
-} from 'path';
+} from "path";
 
 import {
   randomUUID,
-} from 'crypto';
+} from "crypto";
+
+import {
+  mkdirSync,
+} from "fs";
 
 import {
   UploadService,
-} from './upload.service';
+} from "./upload.service";
 
-@Controller('uploads')
+@Controller("uploads")
 export class UploadsController {
   constructor(
-    private readonly uploadService: UploadService,
+    private readonly uploadService:
+      UploadService,
   ) {}
 
   @Post()
   @UseInterceptors(
-    FileInterceptor('file', {
+    FileInterceptor("file", {
       storage: diskStorage({
-        destination: './uploads',
+        destination: (
+          _req,
+          _file,
+          callback,
+        ) => {
+          const directory =
+            "./uploads";
+
+          mkdirSync(
+            directory,
+            {
+              recursive: true,
+            },
+          );
+
+          callback(
+            null,
+            directory,
+          );
+        },
 
         filename: (
           _req,
@@ -58,7 +82,7 @@ export class UploadsController {
 
       limits: {
         fileSize:
-          100 *
+          500 *
           1024 *
           1024,
       },
@@ -69,16 +93,26 @@ export class UploadsController {
         callback,
       ) => {
         const allowedTypes = [
-          'image/jpeg',
-          'image/jpg',
-          'image/png',
-          'image/gif',
-          'image/webp',
-          'image/avif',
-          'video/mp4',
-          'video/webm',
-          'video/quicktime',
-          'video/x-matroska',
+          "image/jpeg",
+          "image/jpg",
+          "image/png",
+          "image/gif",
+          "image/webp",
+          "image/avif",
+
+          "audio/mpeg",
+          "audio/mp3",
+          "audio/wav",
+          "audio/x-wav",
+          "audio/ogg",
+          "audio/aac",
+          "audio/mp4",
+          "audio/flac",
+
+          "video/mp4",
+          "video/webm",
+          "video/quicktime",
+          "video/x-matroska",
         ];
 
         if (
@@ -88,7 +122,7 @@ export class UploadsController {
         ) {
           return callback(
             new BadRequestException(
-              'Only image and video files are allowed.',
+              "Unsupported media type.",
             ),
             false,
           );
@@ -105,52 +139,53 @@ export class UploadsController {
     @UploadedFile()
     file: Express.Multer.File,
 
-    @Query('context')
+    @Query("context")
     context?: string,
   ) {
     if (!file) {
       throw new BadRequestException(
-        'No file uploaded.',
+        "No file uploaded.",
       );
     }
 
-    const mimeType =
-      file.mimetype?.toLowerCase() || '';
+    const processed =
+      await this.uploadService.processUpload(
+        file,
+        context,
+      );
 
-    /*
-     * VIDEO
-     * Routed through UploadService, which owns the
-     * ffmpeg transcode/trim pipeline.
-     */
-    if (mimeType.startsWith('video/')) {
-      const processed =
-        await this.uploadService.processUpload(
-          file,
-          context,
-        );
+    const durationSeconds =
+      "durationSeconds" in processed
+        ? processed.durationSeconds
+        : null;
 
-      return {
-        success: true,
-        filename: file.filename,
-        originalName: file.originalname,
-        mimetype: file.mimetype,
-        type: 'video',
-        media: processed.url,
-        thumbnailUrl: processed.thumbnailUrl,
-      };
-    }
-
-    /*
-     * IMAGE
-     * Passes through unchanged.
-     */
     return {
       success: true,
-      filename: file.filename,
-      originalName: file.originalname,
-      mimetype: file.mimetype,
-      type: 'image',
-      media: `/uploads/${file.filename}`,
+
+      filename:
+        file.filename,
+
+      originalName:
+        file.originalname,
+
+      mimetype:
+        file.mimetype,
+
+      type:
+        processed.type,
+
+      media:
+        processed.url,
+
+      thumbnailUrl:
+        processed.thumbnailUrl ??
+        null,
+
+      storageKey:
+        processed.storageKey ??
+        null,
+
+      durationSeconds,
     };
   }
 }

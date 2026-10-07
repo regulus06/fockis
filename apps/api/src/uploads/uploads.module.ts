@@ -11,6 +11,10 @@ import {
 } from "./upload.service";
 
 import {
+  CloudStorageService,
+} from "./cloud-storage.service";
+
+import {
   FfmpegService,
 } from "./ffmpeg.service";
 
@@ -30,6 +34,8 @@ import {
   providers: [
     UploadService,
 
+    CloudStorageService,
+
     FfmpegService,
 
     ThumbnailService,
@@ -39,6 +45,8 @@ import {
 
   exports: [
     UploadService,
+
+    CloudStorageService,
 
     FfmpegService,
 

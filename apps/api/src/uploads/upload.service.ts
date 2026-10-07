@@ -4,146 +4,122 @@ import {
 } from "@nestjs/common";
 
 import {
+  unlink,
+} from "fs/promises";
+
+import {
+  CloudStorageService,
+} from "./cloud-storage.service";
+
+import {
   VideoProcessingService,
 } from "./video-processing.service";
 
-// ============================================================================
-// STORY LIMIT
-// ============================================================================
-//
-// Stories are intentionally short.
-// This is separate from Fockis Music / Studio professional uploads.
-//
-// ============================================================================
-
 const STORY_MAX_VIDEO_SECONDS = 60;
 
-// ============================================================================
-// PROFESSIONAL UPLOAD LIMITS
-// ============================================================================
-//
-// The actual transport/upload interceptor should allow up to 30 GB.
-//
-// These limits are primarily enforced by the appropriate processing pipeline:
-//
-// Audio:
-//   Song / Single / Track     -> 500 MB / 3 hours
-//   Album / EP / Long Audio   -> 2 GB / 12 hours
-//
-// Video:
-//   Music Video               -> 4 GB / 3 hours
-//   Video / Long-form Video   -> 20 GB / 8 hours
-//   Recorded Live             -> 30 GB / 12 hours
-//
-// This generic UploadService does not know the Music content type.
-// Therefore it must NOT apply a generic 100 MB restriction.
-//
-// ============================================================================
+const MB =
+  1024 * 1024;
 
-const MB = 1024 * 1024;
-const GB = 1024 * 1024 * 1024;
+const GB =
+  1024 *
+  1024 *
+  1024;
 
 export const FOCKIS_UPLOAD_LIMITS = {
   song: {
-    maxDurationSeconds: 3 * 60 * 60,
-    maxFileSizeBytes: 500 * MB,
+    maxDurationSeconds:
+      3 * 60 * 60,
+    maxFileSizeBytes:
+      500 * MB,
   },
 
   single: {
-    maxDurationSeconds: 3 * 60 * 60,
-    maxFileSizeBytes: 500 * MB,
+    maxDurationSeconds:
+      3 * 60 * 60,
+    maxFileSizeBytes:
+      500 * MB,
   },
 
   track: {
-    maxDurationSeconds: 3 * 60 * 60,
-    maxFileSizeBytes: 500 * MB,
+    maxDurationSeconds:
+      3 * 60 * 60,
+    maxFileSizeBytes:
+      500 * MB,
   },
 
   beat: {
-    maxDurationSeconds: 3 * 60 * 60,
-    maxFileSizeBytes: 500 * MB,
+    maxDurationSeconds:
+      3 * 60 * 60,
+    maxFileSizeBytes:
+      500 * MB,
   },
 
   instrumental: {
-    maxDurationSeconds: 3 * 60 * 60,
-    maxFileSizeBytes: 500 * MB,
+    maxDurationSeconds:
+      3 * 60 * 60,
+    maxFileSizeBytes:
+      500 * MB,
   },
 
   album: {
-    maxDurationSeconds: 12 * 60 * 60,
-    maxFileSizeBytes: 2 * GB,
+    maxDurationSeconds:
+      12 * 60 * 60,
+    maxFileSizeBytes:
+      2 * GB,
   },
 
   ep: {
-    maxDurationSeconds: 12 * 60 * 60,
-    maxFileSizeBytes: 2 * GB,
+    maxDurationSeconds:
+      12 * 60 * 60,
+    maxFileSizeBytes:
+      2 * GB,
   },
 
   music: {
-    maxDurationSeconds: 12 * 60 * 60,
-    maxFileSizeBytes: 2 * GB,
+    maxDurationSeconds:
+      12 * 60 * 60,
+    maxFileSizeBytes:
+      2 * GB,
   },
 
   audio: {
-    maxDurationSeconds: 12 * 60 * 60,
-    maxFileSizeBytes: 2 * GB,
+    maxDurationSeconds:
+      12 * 60 * 60,
+    maxFileSizeBytes:
+      2 * GB,
   },
 
   music_video: {
-    maxDurationSeconds: 3 * 60 * 60,
-    maxFileSizeBytes: 4 * GB,
+    maxDurationSeconds:
+      3 * 60 * 60,
+    maxFileSizeBytes:
+      4 * GB,
   },
 
   video: {
-    maxDurationSeconds: 8 * 60 * 60,
-    maxFileSizeBytes: 20 * GB,
+    maxDurationSeconds:
+      8 * 60 * 60,
+    maxFileSizeBytes:
+      20 * GB,
   },
 
   live_performance: {
-    maxDurationSeconds: 12 * 60 * 60,
-    maxFileSizeBytes: 30 * GB,
-  },
-
-  interview: {
-    maxDurationSeconds: 8 * 60 * 60,
-    maxFileSizeBytes: 20 * GB,
-  },
-
-  behind_the_scenes: {
-    maxDurationSeconds: 8 * 60 * 60,
-    maxFileSizeBytes: 20 * GB,
-  },
-
-  tutorial: {
-    maxDurationSeconds: 8 * 60 * 60,
-    maxFileSizeBytes: 20 * GB,
-  },
-
-  exclusive: {
-    maxDurationSeconds: 8 * 60 * 60,
-    maxFileSizeBytes: 20 * GB,
-  },
-
-  exclusive_video: {
-    maxDurationSeconds: 8 * 60 * 60,
-    maxFileSizeBytes: 20 * GB,
+    maxDurationSeconds:
+      12 * 60 * 60,
+    maxFileSizeBytes:
+      30 * GB,
   },
 } as const;
-
-// ============================================================================
-// SERVICE
-// ============================================================================
 
 @Injectable()
 export class UploadService {
   constructor(
     private readonly videoProcessingService:
       VideoProcessingService,
-  ) {}
 
-  // ==========================================================================
-  // MAIN UPLOAD PROCESSOR
-  // ==========================================================================
+    private readonly cloudStorageService:
+      CloudStorageService,
+  ) {}
 
   async processUpload(
     file: Express.Multer.File,
@@ -156,75 +132,67 @@ export class UploadService {
     }
 
     const mimeType =
-      file.mimetype?.toLowerCase() ??
+      file.mimetype
+        ?.toLowerCase() ||
       "";
 
-    // ========================================================================
-    // IMAGE
-    // ========================================================================
+    try {
+      if (
+        mimeType.startsWith(
+          "image/",
+        )
+      ) {
+        return await this.processImage(
+          file,
+        );
+      }
 
-    if (
-      mimeType.startsWith(
-        "image/",
-      )
-    ) {
-      return this.processImage(
-        file,
+      if (
+        mimeType.startsWith(
+          "audio/",
+        )
+      ) {
+        return await this.processAudio(
+          file,
+        );
+      }
+
+      if (
+        mimeType.startsWith(
+          "video/",
+        )
+      ) {
+        return await this.processVideo(
+          file,
+          context,
+        );
+      }
+
+      throw new BadRequestException(
+        "Only image, audio, and video files are supported.",
+      );
+    } finally {
+      await this.cleanupFile(
+        file.path,
       );
     }
-
-    // ========================================================================
-    // AUDIO
-    // ========================================================================
-
-    if (
-      mimeType.startsWith(
-        "audio/",
-      )
-    ) {
-      return this.processAudio(
-        file,
-      );
-    }
-
-    // ========================================================================
-    // VIDEO
-    // ========================================================================
-
-    if (
-      mimeType.startsWith(
-        "video/",
-      )
-    ) {
-      return this.processVideo(
-        file,
-        context,
-      );
-    }
-
-    // ========================================================================
-    // UNSUPPORTED
-    // ========================================================================
-
-    throw new BadRequestException(
-      "Only image, audio, and video files are supported.",
-    );
   }
 
-  // ==========================================================================
-  // IMAGE
-  // ==========================================================================
-
-  private processImage(
+  private async processImage(
     file: Express.Multer.File,
   ) {
     const storageKey =
-      this.normalizeStorageKey(
-        file.filename,
+      this.cloudStorageService.createObjectKey(
+        "posts/images",
+        file.originalname,
       );
 
     const url =
-      `/uploads/${storageKey}`;
+      await this.cloudStorageService.uploadAndSign(
+        file.path,
+        storageKey,
+        file.mimetype,
+      );
 
     return {
       success: true,
@@ -233,30 +201,31 @@ export class UploadService {
 
       url,
 
-      path: url,
+      path: file.path,
 
       storageKey,
 
       thumbnailUrl: url,
 
-      thumbnailPath: url,
+      thumbnailPath: file.path,
     };
   }
 
-  // ==========================================================================
-  // AUDIO
-  // ==========================================================================
-
-  private processAudio(
+  private async processAudio(
     file: Express.Multer.File,
   ) {
     const storageKey =
-      this.normalizeStorageKey(
-        `music/${file.filename}`,
+      this.cloudStorageService.createObjectKey(
+        "music",
+        file.originalname,
       );
 
     const url =
-      `/uploads/${storageKey}`;
+      await this.cloudStorageService.uploadAndSign(
+        file.path,
+        storageKey,
+        file.mimetype,
+      );
 
     return {
       success: true,
@@ -265,7 +234,7 @@ export class UploadService {
 
       url,
 
-      path: url,
+      path: file.path,
 
       storageKey,
 
@@ -275,16 +244,13 @@ export class UploadService {
     };
   }
 
-  // ==========================================================================
-  // VIDEO
-  // ==========================================================================
-
   private async processVideo(
     file: Express.Multer.File,
     context?: string,
   ) {
     const isStory =
-      context?.trim()
+      context
+        ?.trim()
         .toLowerCase() ===
       "story";
 
@@ -305,26 +271,9 @@ export class UploadService {
       );
     }
 
-    const videoUrl =
-      String(
-        processed.videoUrl ??
-        "",
-      ).trim();
-
-    if (!videoUrl) {
+    if (!processed.videoUrl) {
       throw new BadRequestException(
-        "Video processing did not return a video URL.",
-      );
-    }
-
-    const videoStorageKey =
-      this.toStorageKey(
-        videoUrl,
-      );
-
-    if (!videoStorageKey) {
-      throw new BadRequestException(
-        "Unable to determine video storage key.",
+        "Video processing did not return a cloud URL.",
       );
     }
 
@@ -333,138 +282,40 @@ export class UploadService {
 
       type: "video",
 
-      url: videoUrl,
+      url:
+        processed.videoUrl,
 
       path:
         processed.videoPath,
 
       storageKey:
-        videoStorageKey,
+        processed.videoStorageKey,
 
       thumbnailUrl:
-        processed.thumbnailUrl ??
-        null,
+        processed.thumbnailUrl,
 
       thumbnailPath:
-        processed.thumbnailPath ??
-        null,
+        processed.thumbnailPath,
+
+      thumbnailStorageKey:
+        processed.thumbnailStorageKey,
+
+      durationSeconds:
+        processed.durationSeconds,
     };
   }
 
-  // ==========================================================================
-  // STORAGE KEY NORMALIZATION
-  // ==========================================================================
-
-  /**
-   * Converts a storage path into the canonical Fockis storage-key format.
-   *
-   * Examples:
-   *
-   *   uploads/music/file.mp3
-   *   /uploads/music/file.mp3
-   *   http://localhost:3000/uploads/music/file.mp3
-   *
-   * become:
-   *
-   *   music/file.mp3
-   */
-  private toStorageKey(
-    value: string,
-  ): string {
-    let normalized =
-      String(
-        value ?? "",
-      ).trim();
-
-    if (!normalized) {
-      return "";
+  private async cleanupFile(
+    filePath?: string,
+  ) {
+    if (!filePath) {
+      return;
     }
 
-    // Normalize Windows separators.
-    normalized =
-      normalized.replace(
-        /\\/g,
-        "/",
-      );
-
-    // Remove query string.
-    normalized =
-      normalized.split("?")[0];
-
-    // Remove fragment.
-    normalized =
-      normalized.split("#")[0];
-
-    // Remove absolute HTTP/HTTPS origin.
-    normalized =
-      normalized.replace(
-        /^https?:\/\/[^/]+/i,
-        "",
-      );
-
-    // Remove leading slashes.
-    normalized =
-      normalized.replace(
-        /^\/+/,
-        "",
-      );
-
-    // Remove uploads prefix.
-    normalized =
-      normalized.replace(
-        /^uploads\/?/i,
-        "",
-      );
-
-    // Remove any remaining leading slash.
-    normalized =
-      normalized.replace(
-        /^\/+/,
-        "",
-      );
-
-    return normalized.trim();
-  }
-
-  /**
-   * Normalizes a known relative storage key.
-   */
-  private normalizeStorageKey(
-    value: string,
-  ): string {
-    let normalized =
-      String(
-        value ?? "",
-      ).trim();
-
-    if (!normalized) {
-      return "";
+    try {
+      await unlink(filePath);
+    } catch {
+      return;
     }
-
-    normalized =
-      normalized.replace(
-        /\\/g,
-        "/",
-      );
-
-    normalized =
-      normalized.replace(
-        /^\/+/,
-        "",
-      );
-
-    normalized =
-      normalized.replace(
-        /^uploads\/?/i,
-        "",
-      );
-
-    normalized =
-      normalized.replace(
-        /^\/+/,
-        "",
-      );
-
-    return normalized.trim();
   }
 }
