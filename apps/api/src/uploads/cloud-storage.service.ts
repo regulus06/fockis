@@ -3,11 +3,17 @@ import {
   InternalServerErrorException,
 } from "@nestjs/common";
 
-import { Storage } from "@google-cloud/storage";
+import {
+  Storage,
+} from "@google-cloud/storage";
 
-import { createReadStream } from "fs";
+import {
+  createReadStream,
+} from "fs";
 
-import { randomUUID } from "crypto";
+import {
+  randomUUID,
+} from "crypto";
 
 import {
   basename,
@@ -17,11 +23,13 @@ import {
 @Injectable()
 export class CloudStorageService {
   private readonly storage: Storage;
+
   private readonly bucketName: string;
 
   constructor() {
     this.bucketName =
-      process.env.GOOGLE_CLOUD_STORAGE_BUCKET || "";
+      process.env.GOOGLE_CLOUD_STORAGE_BUCKET ||
+      "";
 
     if (!this.bucketName) {
       throw new Error(
@@ -29,21 +37,56 @@ export class CloudStorageService {
       );
     }
 
-    const credentialsPath =
-      process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim();
+    const serviceAccount =
+      this.getServiceAccount();
 
-    if (credentialsPath) {
-      this.storage = new Storage({
-        projectId:
-          process.env.GOOGLE_CLOUD_PROJECT || undefined,
+    if (serviceAccount) {
+      this.storage =
+        new Storage({
+          projectId:
+            process.env.GOOGLE_CLOUD_PROJECT ||
+            serviceAccount.project_id,
 
-        keyFilename: credentialsPath,
-      });
+          credentials: {
+            client_email:
+              serviceAccount.client_email,
+
+            private_key:
+              serviceAccount.private_key?.replace(
+                /\\n/g,
+                "\n",
+              ),
+          },
+        });
     } else {
-      this.storage = new Storage({
-        projectId:
-          process.env.GOOGLE_CLOUD_PROJECT || undefined,
-      });
+      this.storage =
+        new Storage({
+          projectId:
+            process.env.GOOGLE_CLOUD_PROJECT,
+        });
+    }
+  }
+
+  private getServiceAccount():
+    | {
+        project_id?: string;
+        client_email?: string;
+        private_key?: string;
+      }
+    | null {
+    const raw =
+      process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(raw);
+    } catch {
+      throw new Error(
+        "GOOGLE_SERVICE_ACCOUNT_JSON is not valid JSON.",
+      );
     }
   }
 
