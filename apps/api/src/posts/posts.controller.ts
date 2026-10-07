@@ -666,12 +666,27 @@ export class PostsController {
     const projectId =
       process.env.GOOGLE_CLOUD_PROJECT?.trim() || undefined;
 
+    const credentialsPath =
+      process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim();
+
+    if (credentialsPath) {
+      console.log(
+        '✅ Google Cloud Storage using GOOGLE_APPLICATION_CREDENTIALS:',
+        credentialsPath,
+      );
+
+      return new Storage({
+        projectId,
+        keyFilename: credentialsPath,
+      });
+    }
+
     const rawCredentials =
       process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim();
 
     if (!rawCredentials) {
       console.warn(
-        '⚠️ GOOGLE_SERVICE_ACCOUNT_JSON is not configured. Using Application Default Credentials.',
+        '⚠️ No explicit Google credentials configured. Using Application Default Credentials.',
       );
 
       return new Storage({
@@ -704,7 +719,7 @@ export class PostsController {
       }
 
       console.log(
-        '✅ Google Cloud Storage credentials loaded:',
+        '✅ Google Cloud Storage credentials loaded from GOOGLE_SERVICE_ACCOUNT_JSON:',
         {
           projectId,
           clientEmail,
@@ -731,13 +746,10 @@ export class PostsController {
       );
 
       throw new Error(
-        `GOOGLE_SERVICE_ACCOUNT_JSON is invalid: ${message}`,
+        `Google Cloud Storage credentials are invalid: ${message}`,
       );
     }
   }
-
-  // ============================================================
-
   // UPLOAD POST FILE TO GOOGLE CLOUD STORAGE
 
   // ============================================================
