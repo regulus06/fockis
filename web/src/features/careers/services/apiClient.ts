@@ -6,8 +6,11 @@ import { FOCKIS_API_URL } from "../../../config/fockisConfig";
  * ============================================================
  * FOCKIS API CLIENT
  *
- * Shared frontend API client used by Careers, Music,
- * Organization Identity, and other frontend features.
+ * Shared frontend API client used by:
+ *   - Careers
+ *   - Music
+ *   - Organization Identity
+ *   - Other frontend features
  *
  * Supports:
  *   - JSON requests
@@ -19,9 +22,12 @@ import { FOCKIS_API_URL } from "../../../config/fockisConfig";
  * ============================================================
  */
 
-const API_BASE =
+const API_BASE = (
   import.meta.env.VITE_API_URL ||
-  FOCKIS_API_URL;
+  FOCKIS_API_URL
+)
+  .trim()
+  .replace(/\/+$/, "");
 
 /* ============================================================
    TOKEN HELPERS
@@ -30,12 +36,16 @@ const API_BASE =
 /**
  * Get the currently stored JWT.
  *
- * Fockis has used more than one localStorage key across
- * different authentication flows. Check them in priority order
- * so older sessions continue to work.
+ * Fockis has used multiple authentication storage keys.
  *
- * IMPORTANT:
- * We only return the token itself. We never log it.
+ * We check:
+ *   1. access_token
+ *   2. token
+ *   3. jwt
+ *   4. authToken
+ *   5. auth_token
+ *
+ * The token itself is NEVER logged.
  */
 function getAuthToken(): string | null {
   if (
@@ -54,14 +64,18 @@ function getAuthToken(): string | null {
   ];
 
   for (const key of tokenKeys) {
-    const value =
-      localStorage.getItem(key);
+    try {
+      const value =
+        localStorage.getItem(key);
 
-    if (
-      typeof value === "string" &&
-      value.trim().length > 0
-    ) {
-      return value.trim();
+      if (
+        typeof value === "string" &&
+        value.trim().length > 0
+      ) {
+        return value.trim();
+      }
+    } catch {
+      // Ignore localStorage access errors.
     }
   }
 
@@ -86,18 +100,14 @@ async function request<T>(
    * ==========================================================
    * CONTENT TYPE
    *
-   * JSON:
-   *   Content-Type: application/json
-   *
-   * FormData:
-   *   DO NOT manually set Content-Type.
+   * For FormData uploads we MUST NOT manually set
+   * Content-Type.
    *
    * The browser automatically creates:
    *
-   *   multipart/form-data; boundary=...
+   * multipart/form-data; boundary=...
    *
-   * Setting it manually can prevent NestJS/Multer from parsing
-   * the upload correctly.
+   * NestJS/Multer needs that boundary.
    * ==========================================================
    */
 
@@ -120,11 +130,14 @@ async function request<T>(
    * JWT AUTHENTICATION
    * ==========================================================
    *
-   * Send the JWT using the standard:
+   * NestJS JwtAuthGuard expects:
    *
-   * Authorization: Bearer <token>
+   * Authorization: Bearer <JWT>
    *
-   * This is required by NestJS JwtAuthGuard.
+   * Never send:
+   *
+   * Authorization: Bearer null
+   * Authorization: Bearer undefined
    */
 
   if (token) {
@@ -133,16 +146,33 @@ async function request<T>(
       `Bearer ${token}`,
     );
   } else {
-    /*
-     * Do not send an empty Authorization header.
-     *
-     * This allows public endpoints to continue working and
-     * avoids sending:
-     *
-     * Authorization: Bearer null
-     */
     headers.delete(
       "Authorization",
+    );
+  }
+
+  /*
+   * ==========================================================
+   * DEBUG INFORMATION
+   *
+   * We intentionally DO NOT print the JWT.
+   *
+   * This only tells us whether a token was found.
+   * ==========================================================
+   */
+
+  if (
+    import.meta.env.DEV &&
+    path.includes("/music/studio/upload")
+  ) {
+    console.log(
+      "[FOCKIS API] Music Studio upload auth:",
+      {
+        hasToken: Boolean(token),
+        hasAuthorizationHeader:
+          headers.has("Authorization"),
+        apiBase: API_BASE,
+      },
     );
   }
 
@@ -152,19 +182,20 @@ async function request<T>(
    * ==========================================================
    */
 
-  const response = await fetch(
-    `${API_BASE}${path}`,
-    {
-      ...options,
-      headers,
+  const response =
+    await fetch(
+      `${API_BASE}${path}`,
+      {
+        ...options,
+        headers,
 
-      /*
-       * Keep cookies enabled in case authentication or another
-       * backend feature also uses cookies.
-       */
-      credentials: "include",
-    },
-  );
+        /*
+         * Keep cookies enabled for authentication flows
+         * that use cookies in addition to JWT.
+         */
+        credentials: "include",
+      },
+    );
 
   /* ==========================================================
      ERROR HANDLING
@@ -185,8 +216,8 @@ async function request<T>(
      * NestJS commonly returns:
      *
      * {
-     *   "statusCode": 400,
-     *   "message": "..."
+     *   "statusCode": 401,
+     *   "message": "Unauthorized"
      * }
      *
      * Validation errors may return:
@@ -202,7 +233,10 @@ async function request<T>(
       const parsed =
         JSON.parse(body);
 
-      if (parsed?.message) {
+      if (
+        parsed &&
+        parsed.message !== undefined
+      ) {
         message =
           Array.isArray(
             parsed.message,
@@ -220,13 +254,24 @@ async function request<T>(
     }
 
     /*
-     * If the backend rejects the token, give the frontend
-     * a clear authentication error.
+     * Make authentication failures clearer.
      */
     if (response.status === 401) {
       message =
         message ||
         "Authentication required. Please sign in again.";
+    }
+
+    /*
+     * Helpful producer authorization message.
+     *
+     * The Music Studio backend separately checks whether
+     * the authenticated account is an approved producer.
+     */
+    if (response.status === 403) {
+      message =
+        message ||
+        "You are authenticated, but your account is not authorized for this Music Studio action.";
     }
 
     throw new Error(
@@ -238,7 +283,9 @@ async function request<T>(
      EMPTY RESPONSE
   ========================================================== */
 
-  if (response.status === 204) {
+  if (
+    response.status === 204
+  ) {
     return undefined as T;
   }
 
@@ -254,7 +301,9 @@ async function request<T>(
   ========================================================== */
 
   try {
-    return JSON.parse(text) as T;
+    return JSON.parse(
+      text,
+    ) as T;
   } catch {
     throw new Error(
       "API returned an invalid JSON response.",
