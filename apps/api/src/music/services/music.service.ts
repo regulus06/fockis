@@ -4,36 +4,28 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-
 import { InjectModel } from "@nestjs/mongoose";
-
 import {
   Model,
   Types,
 } from "mongoose";
-
 import {
   MediaProcessingState,
   MusicAccessType,
   MusicContent,
   MusicPublishStatus,
 } from "../schemas/music-content.schema";
-
 import { CreateMusicDto } from "../dto/create-music.dto";
 import { UpdateMusicDto } from "../dto/update-music.dto";
 import { MusicQueryDto } from "../dto/music-query.dto";
-
 import { ProducerService } from "./producer.service";
+import { CloudStorageService } from "../../uploads/cloud-storage.service";
 import slugify from "./slugify";
 
 export interface MusicUpdateResult {
   content: MusicContent;
   mediaChanged: boolean;
 }
-
-// ============================================================================
-// PROFESSIONAL MEDIA LIMITS
-// ============================================================================
 
 const MB = 1024 * 1024;
 const GB = 1024 * 1024 * 1024;
@@ -43,82 +35,66 @@ export const FOCKIS_MUSIC_MEDIA_LIMITS = {
     maxDurationSeconds: 3 * 60 * 60,
     maxFileSizeBytes: 500 * MB,
   },
-
   single: {
     maxDurationSeconds: 3 * 60 * 60,
     maxFileSizeBytes: 500 * MB,
   },
-
   track: {
     maxDurationSeconds: 3 * 60 * 60,
     maxFileSizeBytes: 500 * MB,
   },
-
   beat: {
     maxDurationSeconds: 3 * 60 * 60,
     maxFileSizeBytes: 500 * MB,
   },
-
   instrumental: {
     maxDurationSeconds: 3 * 60 * 60,
     maxFileSizeBytes: 500 * MB,
   },
-
   album: {
     maxDurationSeconds: 12 * 60 * 60,
     maxFileSizeBytes: 2 * GB,
   },
-
   ep: {
     maxDurationSeconds: 12 * 60 * 60,
     maxFileSizeBytes: 2 * GB,
   },
-
   music: {
     maxDurationSeconds: 12 * 60 * 60,
     maxFileSizeBytes: 2 * GB,
   },
-
   audio: {
     maxDurationSeconds: 12 * 60 * 60,
     maxFileSizeBytes: 2 * GB,
   },
-
   music_video: {
     maxDurationSeconds: 3 * 60 * 60,
     maxFileSizeBytes: 4 * GB,
   },
-
   video: {
     maxDurationSeconds: 8 * 60 * 60,
     maxFileSizeBytes: 20 * GB,
   },
-
   live_performance: {
     maxDurationSeconds: 12 * 60 * 60,
     maxFileSizeBytes: 30 * GB,
   },
-
   interview: {
     maxDurationSeconds: 8 * 60 * 60,
     maxFileSizeBytes: 20 * GB,
   },
-
   behind_the_scenes: {
     maxDurationSeconds: 8 * 60 * 60,
     maxFileSizeBytes: 20 * GB,
   },
-
   tutorial: {
     maxDurationSeconds: 8 * 60 * 60,
     maxFileSizeBytes: 20 * GB,
   },
-
   exclusive: {
     maxDurationSeconds: 8 * 60 * 60,
     maxFileSizeBytes: 20 * GB,
   },
-
   exclusive_video: {
     maxDurationSeconds: 8 * 60 * 60,
     maxFileSizeBytes: 20 * GB,
@@ -127,10 +103,6 @@ export const FOCKIS_MUSIC_MEDIA_LIMITS = {
 
 const GLOBAL_MAX_UPLOAD_BYTES = 30 * GB;
 
-// ============================================================================
-// SERVICE
-// ============================================================================
-
 @Injectable()
 export class MusicService {
   constructor(
@@ -138,11 +110,9 @@ export class MusicService {
     private readonly model: Model<MusicContent>,
 
     private readonly producerService: ProducerService,
-  ) {}
 
-  // ==========================================================================
-  // CREATE
-  // ==========================================================================
+    private readonly cloudStorageService: CloudStorageService,
+  ) {}
 
   async create(
     producerId: string,
@@ -157,10 +127,6 @@ export class MusicService {
       producerId,
     );
 
-    // ------------------------------------------------------------------------
-    // MEDIA
-    // ------------------------------------------------------------------------
-
     const mediaStorageKey =
       dto.mediaStorageKey?.trim();
 
@@ -169,10 +135,6 @@ export class MusicService {
         "A media storage key is required.",
       );
     }
-
-    // ------------------------------------------------------------------------
-    // TITLE
-    // ------------------------------------------------------------------------
 
     const title =
       dto.title?.trim();
@@ -183,18 +145,10 @@ export class MusicService {
       );
     }
 
-    // ------------------------------------------------------------------------
-    // MEDIA TYPE VALIDATION
-    // ------------------------------------------------------------------------
-
     this.validateMediaConfiguration(
       dto.type,
       dto.mediaKind,
     );
-
-    // ------------------------------------------------------------------------
-    // PAID CONTENT
-    // ------------------------------------------------------------------------
 
     if (
       [
@@ -211,10 +165,6 @@ export class MusicService {
       );
     }
 
-    // ------------------------------------------------------------------------
-    // PRICE
-    // ------------------------------------------------------------------------
-
     const priceCents =
       dto.accessType ===
       MusicAccessType.FREE
@@ -226,10 +176,6 @@ export class MusicService {
         "Price cannot be negative.",
       );
     }
-
-    // ------------------------------------------------------------------------
-    // CURRENCY
-    // ------------------------------------------------------------------------
 
     const currency =
       (
@@ -245,16 +191,8 @@ export class MusicService {
       );
     }
 
-    // ------------------------------------------------------------------------
-    // SLUG
-    // ------------------------------------------------------------------------
-
     const slug =
       await this.uniqueSlug(title);
-
-    // ------------------------------------------------------------------------
-    // PUBLISHING STATE
-    // ------------------------------------------------------------------------
 
     const requestedStatus =
       dto.status ??
@@ -265,10 +203,6 @@ export class MusicService {
       MusicPublishStatus.PUBLISHED
         ? MusicPublishStatus.PROCESSING
         : requestedStatus;
-
-    // ------------------------------------------------------------------------
-    // RELEASE DATE
-    // ------------------------------------------------------------------------
 
     let releaseDate:
       | Date
@@ -294,10 +228,6 @@ export class MusicService {
         parsedDate;
     }
 
-    // ------------------------------------------------------------------------
-    // ALBUM
-    // ------------------------------------------------------------------------
-
     const albumId =
       dto.albumId
         ? this.toObjectId(
@@ -305,10 +235,6 @@ export class MusicService {
             "albumId",
           )
         : undefined;
-
-    // ------------------------------------------------------------------------
-    // TAGS
-    // ------------------------------------------------------------------------
 
     const tags =
       Array.isArray(dto.tags)
@@ -326,10 +252,6 @@ export class MusicService {
             )
             .filter(Boolean)
         : [];
-
-    // ------------------------------------------------------------------------
-    // CREATE DATABASE RECORD
-    // ------------------------------------------------------------------------
 
     const content =
       await this.model.create({
@@ -416,24 +338,21 @@ export class MusicService {
 
         albumId,
 
-        // --------------------------------------------------------------------
-        // SERVER CONTROLLED ANALYTICS
-        // --------------------------------------------------------------------
-
         playCount: 0,
+
         viewCount: 0,
+
         favoriteCount: 0,
+
         purchaseCount: 0,
+
         shareCount: 0,
+
         rankScore: 0,
       });
 
     return content;
   }
-
-  // ==========================================================================
-  // UPDATE
-  // ==========================================================================
 
   async update(
     id: string,
@@ -459,10 +378,6 @@ export class MusicService {
       );
     }
 
-    // ------------------------------------------------------------------------
-    // OWNERSHIP
-    // ------------------------------------------------------------------------
-
     if (
       content.producerId.toString() !==
       producerId
@@ -472,15 +387,7 @@ export class MusicService {
       );
     }
 
-    /*
-     * Media replacement is intentionally handled by the
-     * upload/media-processing pipeline rather than this DTO.
-     */
     const mediaChanged = false;
-
-    // ------------------------------------------------------------------------
-    // TYPE / MEDIA KIND
-    // ------------------------------------------------------------------------
 
     const effectiveType =
       dto.type ??
@@ -495,10 +402,6 @@ export class MusicService {
       effectiveMediaKind,
     );
 
-    // ------------------------------------------------------------------------
-    // PUBLISHING PROTECTION
-    // ------------------------------------------------------------------------
-
     if (
       dto.status ===
         MusicPublishStatus.PUBLISHED &&
@@ -512,10 +415,6 @@ export class MusicService {
         "Cannot publish while media is still processing.",
       );
     }
-
-    // ------------------------------------------------------------------------
-    // PRICE PROTECTION
-    // ------------------------------------------------------------------------
 
     if (
       dto.accessType &&
@@ -560,10 +459,6 @@ export class MusicService {
         dto.priceCents;
     }
 
-    // ------------------------------------------------------------------------
-    // TYPE
-    // ------------------------------------------------------------------------
-
     if (
       dto.type !==
       undefined
@@ -572,10 +467,6 @@ export class MusicService {
         dto.type;
     }
 
-    // ------------------------------------------------------------------------
-    // MEDIA KIND
-    // ------------------------------------------------------------------------
-
     if (
       dto.mediaKind !==
       undefined
@@ -583,10 +474,6 @@ export class MusicService {
       content.mediaKind =
         dto.mediaKind;
     }
-
-    // ------------------------------------------------------------------------
-    // TITLE / SLUG
-    // ------------------------------------------------------------------------
 
     if (
       dto.title !==
@@ -616,10 +503,6 @@ export class MusicService {
       }
     }
 
-    // ------------------------------------------------------------------------
-    // DESCRIPTION
-    // ------------------------------------------------------------------------
-
     if (
       dto.description !==
       undefined
@@ -627,10 +510,6 @@ export class MusicService {
       content.description =
         dto.description?.trim();
     }
-
-    // ------------------------------------------------------------------------
-    // COVER
-    // ------------------------------------------------------------------------
 
     if (
       dto.coverStorageKey !==
@@ -651,10 +530,6 @@ export class MusicService {
           : undefined;
     }
 
-    // ------------------------------------------------------------------------
-    // PREVIEW MEDIA
-    // ------------------------------------------------------------------------
-
     if (
       dto.previewMediaStorageKey !==
       undefined
@@ -674,10 +549,6 @@ export class MusicService {
           : undefined;
     }
 
-    // ------------------------------------------------------------------------
-    // GENRE
-    // ------------------------------------------------------------------------
-
     if (
       dto.genre !==
       undefined
@@ -685,10 +556,6 @@ export class MusicService {
       content.genre =
         dto.genre;
     }
-
-    // ------------------------------------------------------------------------
-    // TAGS
-    // ------------------------------------------------------------------------
 
     if (
       dto.tags !==
@@ -710,10 +577,6 @@ export class MusicService {
           .filter(Boolean);
     }
 
-    // ------------------------------------------------------------------------
-    // ACCESS TYPE
-    // ------------------------------------------------------------------------
-
     if (
       dto.accessType !==
       undefined
@@ -721,10 +584,6 @@ export class MusicService {
       content.accessType =
         dto.accessType;
     }
-
-    // ------------------------------------------------------------------------
-    // CURRENCY
-    // ------------------------------------------------------------------------
 
     if (
       dto.currency !==
@@ -745,10 +604,6 @@ export class MusicService {
         currency;
     }
 
-    // ------------------------------------------------------------------------
-    // PREVIEW DURATION
-    // ------------------------------------------------------------------------
-
     if (
       dto.previewDurationSeconds !==
       undefined
@@ -767,10 +622,6 @@ export class MusicService {
       content.previewDurationSeconds =
         dto.previewDurationSeconds;
     }
-
-    // ------------------------------------------------------------------------
-    // PERMISSIONS
-    // ------------------------------------------------------------------------
 
     if (
       dto.allowComments !==
@@ -795,10 +646,6 @@ export class MusicService {
       content.allowDownloads =
         dto.allowDownloads;
     }
-
-    // ------------------------------------------------------------------------
-    // STATUS
-    // ------------------------------------------------------------------------
 
     if (
       dto.status !==
@@ -833,10 +680,6 @@ export class MusicService {
       }
     }
 
-    // ------------------------------------------------------------------------
-    // RELEASE DATE
-    // ------------------------------------------------------------------------
-
     if (
       dto.releaseDate !==
       undefined
@@ -860,10 +703,6 @@ export class MusicService {
         parsedDate;
     }
 
-    // ------------------------------------------------------------------------
-    // ALBUM
-    // ------------------------------------------------------------------------
-
     if (
       dto.albumId !==
       undefined
@@ -877,10 +716,6 @@ export class MusicService {
           : undefined;
     }
 
-    // ------------------------------------------------------------------------
-    // SAVE
-    // ------------------------------------------------------------------------
-
     await content.save();
 
     return {
@@ -888,10 +723,6 @@ export class MusicService {
       mediaChanged,
     };
   }
-
-  // ==========================================================================
-  // MEDIA PROCESSING — START
-  // ==========================================================================
 
   async markMediaProcessing(
     id: string,
@@ -921,10 +752,6 @@ export class MusicService {
 
     await content.save();
   }
-
-  // ==========================================================================
-  // MEDIA PROCESSING — STORAGE KEY
-  // ==========================================================================
 
   async updateProcessedMediaStorageKey(
     id: string,
@@ -965,17 +792,6 @@ export class MusicService {
     await content.save();
   }
 
-  // ==========================================================================
-  // MEDIA PROCESSING — GENERATED COVER
-  // ==========================================================================
-
-  /**
-   * Saves an automatically generated video cover.
-   *
-   * IMPORTANT:
-   * If the producer already supplied a custom cover, this method preserves it.
-   * Automatic cover generation must never overwrite creator artwork.
-   */
   async updateGeneratedCover(
     id: string,
     coverStorageKey: string,
@@ -1003,10 +819,6 @@ export class MusicService {
       );
     }
 
-    /*
-     * A producer supplied cover always wins over
-     * an automatically generated cover.
-     */
     const existingCoverStorageKey =
       content.coverImage?.storageKey?.trim();
 
@@ -1024,10 +836,6 @@ export class MusicService {
 
     await content.save();
   }
-
-  // ==========================================================================
-  // MEDIA PROCESSING — SUCCESS
-  // ==========================================================================
 
   async markMediaReady(
     id: string,
@@ -1064,10 +872,6 @@ export class MusicService {
       );
     }
 
-    // ------------------------------------------------------------------------
-    // DURATION PROTECTION
-    // ------------------------------------------------------------------------
-
     const limit =
       this.getMediaLimit(
         content.type,
@@ -1092,10 +896,6 @@ export class MusicService {
     content.durationSeconds =
       durationSeconds;
 
-    // ------------------------------------------------------------------------
-    // AUTOMATIC PUBLICATION
-    // ------------------------------------------------------------------------
-
     if (
       content.status ===
       MusicPublishStatus.PROCESSING
@@ -1113,10 +913,6 @@ export class MusicService {
 
     await content.save();
   }
-
-  // ==========================================================================
-  // MEDIA PROCESSING — FAILURE
-  // ==========================================================================
 
   async markMediaFailed(
     id: string,
@@ -1149,10 +945,6 @@ export class MusicService {
 
     await content.save();
   }
-
-  // ==========================================================================
-  // DELETE
-  // ==========================================================================
 
   async delete(
     id: string,
@@ -1193,10 +985,6 @@ export class MusicService {
     });
   }
 
-  // ==========================================================================
-  // GET ONE
-  // ==========================================================================
-
   async findById(
     id: string,
   ): Promise<MusicContent> {
@@ -1216,14 +1004,11 @@ export class MusicService {
       );
     }
 
-    return content as MusicContent;
+    return this.resolveMusicMedia(
+      content,
+    ) as Promise<MusicContent>;
   }
-
-  // ==========================================================================
-  // GET BY SLUG
-  // ==========================================================================
-
-  async findBySlug(
+    async findBySlug(
     slug: string,
   ): Promise<MusicContent> {
     const normalizedSlug =
@@ -1252,12 +1037,10 @@ export class MusicService {
       );
     }
 
-    return content as MusicContent;
+    return this.resolveMusicMedia(
+      content,
+    ) as Promise<MusicContent>;
   }
-
-  // ==========================================================================
-  // MARKETPLACE QUERY
-  // ==========================================================================
 
   async query(
     dto: MusicQueryDto,
@@ -1270,36 +1053,20 @@ export class MusicService {
         MusicPublishStatus.PUBLISHED,
     };
 
-    // ------------------------------------------------------------------------
-    // TYPE
-    // ------------------------------------------------------------------------
-
     if (dto.type) {
       filter.type =
         dto.type;
     }
-
-    // ------------------------------------------------------------------------
-    // GENRE
-    // ------------------------------------------------------------------------
 
     if (dto.genre) {
       filter.genre =
         dto.genre;
     }
 
-    // ------------------------------------------------------------------------
-    // ACCESS TYPE
-    // ------------------------------------------------------------------------
-
     if (dto.accessType) {
       filter.accessType =
         dto.accessType;
     }
-
-    // ------------------------------------------------------------------------
-    // PRODUCER
-    // ------------------------------------------------------------------------
 
     if (dto.producerId) {
       this.assertObjectId(
@@ -1313,10 +1080,6 @@ export class MusicService {
         );
     }
 
-    // ------------------------------------------------------------------------
-    // SEARCH
-    // ------------------------------------------------------------------------
-
     if (
       dto.search?.trim()
     ) {
@@ -1325,10 +1088,6 @@ export class MusicService {
           dto.search.trim(),
       };
     }
-
-    // ------------------------------------------------------------------------
-    // PAGINATION
-    // ------------------------------------------------------------------------
 
     const offset =
       Math.max(
@@ -1345,18 +1104,10 @@ export class MusicService {
         100,
       );
 
-    // ------------------------------------------------------------------------
-    // SORT
-    // ------------------------------------------------------------------------
-
     const sort =
       this.resolveSort(
         dto.sort,
       );
-
-    // ------------------------------------------------------------------------
-    // DATABASE QUERY
-    // ------------------------------------------------------------------------
 
     const [
       items,
@@ -1374,17 +1125,18 @@ export class MusicService {
       ),
     ]);
 
+    const resolvedItems =
+      await this.resolveMusicMediaList(
+        items,
+      );
+
     return {
-      items,
+      items: resolvedItems,
       total,
       limit,
       offset,
     };
   }
-
-  // ==========================================================================
-  // PRODUCER CONTENT
-  // ==========================================================================
 
   async listForProducer(
     producerId: string,
@@ -1412,17 +1164,18 @@ export class MusicService {
         MusicPublishStatus.PUBLISHED;
     }
 
-    return this.model
-      .find(filter)
-      .sort({
-        createdAt: -1,
-      })
-      .lean();
-  }
+    const items =
+      await this.model
+        .find(filter)
+        .sort({
+          createdAt: -1,
+        })
+        .lean();
 
-  // ==========================================================================
-  // ANALYTICS — PLAY
-  // ==========================================================================
+    return this.resolveMusicMediaList(
+      items,
+    );
+  }
 
   async recordPlay(
     id: string,
@@ -1447,10 +1200,6 @@ export class MusicService {
     );
   }
 
-  // ==========================================================================
-  // ANALYTICS — VIEW
-  // ==========================================================================
-
   async recordView(
     id: string,
   ): Promise<void> {
@@ -1473,10 +1222,6 @@ export class MusicService {
       },
     );
   }
-
-  // ==========================================================================
-  // ANALYTICS — SHARE
-  // ==========================================================================
 
   async recordShare(
     id: string,
@@ -1501,10 +1246,6 @@ export class MusicService {
     );
   }
 
-  // ==========================================================================
-  // PURCHASE
-  // ==========================================================================
-
   async recordSuccessfulPurchase(
     id: string,
   ): Promise<void> {
@@ -1525,10 +1266,6 @@ export class MusicService {
     );
   }
 
-  // ==========================================================================
-  // FAVORITES — INCREMENT
-  // ==========================================================================
-
   async incrementFavorite(
     id: string,
   ): Promise<void> {
@@ -1548,10 +1285,6 @@ export class MusicService {
       },
     );
   }
-
-  // ==========================================================================
-  // FAVORITES — DECREMENT
-  // ==========================================================================
 
   async decrementFavorite(
     id: string,
@@ -1576,10 +1309,6 @@ export class MusicService {
       },
     );
   }
-
-  // ==========================================================================
-  // RANK SCORE
-  // ==========================================================================
 
   async setRankScore(
     id: string,
@@ -1613,9 +1342,103 @@ export class MusicService {
     );
   }
 
-  // ==========================================================================
-  // MEDIA LIMIT HELPERS
-  // ==========================================================================
+  private async resolveMediaAsset(
+    asset: any,
+  ): Promise<any> {
+    if (!asset) {
+      return asset;
+    }
+
+    const storageKey =
+      typeof asset.storageKey === "string"
+        ? asset.storageKey.trim()
+        : "";
+
+    if (!storageKey) {
+      return asset;
+    }
+
+    if (
+      typeof asset.url === "string" &&
+      /^https?:\/\//i.test(asset.url)
+    ) {
+      return asset;
+    }
+
+    try {
+      const url =
+        await this.cloudStorageService.getSignedUrl(
+          storageKey,
+        );
+
+      return {
+        ...asset,
+        url,
+      };
+    } catch (error) {
+      console.error(
+        "[MUSIC] Failed to create signed media URL:",
+        {
+          storageKey,
+          error,
+        },
+      );
+
+      return asset;
+    }
+  }
+
+  private async resolveMusicMedia(
+    content: any,
+  ): Promise<any> {
+    if (!content) {
+      return content;
+    }
+
+    const resolved = {
+      ...content,
+    };
+
+    if (content.media) {
+      resolved.media =
+        await this.resolveMediaAsset(
+          content.media,
+        );
+    }
+
+    if (content.previewMedia) {
+      resolved.previewMedia =
+        await this.resolveMediaAsset(
+          content.previewMedia,
+        );
+    }
+
+    if (content.coverImage) {
+      resolved.coverImage =
+        await this.resolveMediaAsset(
+          content.coverImage,
+        );
+    }
+
+    if (content.thumbnail) {
+      resolved.thumbnail =
+        await this.resolveMediaAsset(
+          content.thumbnail,
+        );
+    }
+
+    return resolved;
+  }
+
+  private async resolveMusicMediaList(
+    contents: any[],
+  ): Promise<any[]> {
+    return Promise.all(
+      contents.map((content) =>
+        this.resolveMusicMedia(content),
+      ),
+    );
+  }
 
   getMediaLimit(
     type?: string,
@@ -1663,17 +1486,9 @@ export class MusicService {
     };
   }
 
-  // ==========================================================================
-  // GLOBAL UPLOAD LIMIT
-  // ==========================================================================
-
   getGlobalMaxUploadBytes(): number {
     return GLOBAL_MAX_UPLOAD_BYTES;
   }
-
-  // ==========================================================================
-  // CONTENT TYPE NORMALIZATION
-  // ==========================================================================
 
   private normalizeContentType(
     type?: string,
@@ -1706,10 +1521,6 @@ export class MusicService {
         return normalized;
     }
   }
-
-  // ==========================================================================
-  // MEDIA CONFIGURATION VALIDATION
-  // ==========================================================================
 
   private validateMediaConfiguration(
     type?: string,
@@ -1786,10 +1597,6 @@ export class MusicService {
     }
   }
 
-  // ==========================================================================
-  // DURATION FORMAT
-  // ==========================================================================
-
   private formatDuration(
     seconds: number,
   ): string {
@@ -1816,10 +1623,6 @@ export class MusicService {
 
     return `${minutes} minutes`;
   }
-
-  // ==========================================================================
-  // SORTING
-  // ==========================================================================
 
   private resolveSort(
     sort?: string,
@@ -1884,10 +1687,6 @@ export class MusicService {
     }
   }
 
-  // ==========================================================================
-  // UNIQUE SLUG
-  // ==========================================================================
-
   private async uniqueSlug(
     title: string,
     excludeId?: string,
@@ -1936,10 +1735,6 @@ export class MusicService {
         `${base}-${suffix++}`;
     }
   }
-
-  // ==========================================================================
-  // OBJECT ID HELPERS
-  // ==========================================================================
 
   private assertObjectId(
     value: string,
