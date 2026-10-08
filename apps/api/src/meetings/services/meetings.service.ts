@@ -3504,8 +3504,18 @@ export class MeetingsService {
 
     }
 
-    participant.admitted = false;
-
+    /*
+     * IMPORTANT:
+     * Do not revoke admission when a socket disconnects.
+     *
+     * The gateway calls this method during Socket.IO disconnects, including
+     * normal browser refreshes. An admitted participant must remain admitted
+     * so the new socket can reconnect without being sent back to the waiting
+     * room.
+     *
+     * Waiting participants are different: if they leave before admission,
+     * they are no longer waiting.
+     */
     participant.waiting = false;
 
     participant.leftAt = new Date();
