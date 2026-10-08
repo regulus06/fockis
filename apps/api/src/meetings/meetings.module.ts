@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
 import { AuthModule } from "../auth/auth.module";
+import { LiveModule } from "../my-live/live.module";
 
 import {
   Meeting,
@@ -71,6 +72,15 @@ import { MeetingInvitationService } from "./services/meeting-invitation.service"
 @Module({
   imports: [
     AuthModule,
+
+    /*
+     * The existing Fockis LIVE module already owns
+     * LiveTokenService and LiveKit configuration.
+     *
+     * Meetings imports LiveModule so the meeting controller
+     * can use the same LiveKit token service.
+     */
+    LiveModule,
 
     MongooseModule.forFeature([
       {

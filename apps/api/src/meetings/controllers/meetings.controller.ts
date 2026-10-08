@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   Patch,
@@ -16,6 +17,10 @@ import { Public } from "../../auth/public.decorator";
 import {
   MeetingsService,
 } from "../services/meetings.service";
+
+import {
+  LiveTokenService,
+} from "../../my-live/services/live-token.service";
 
 import {
   CreateMeetingDto,
@@ -45,6 +50,7 @@ import {
 export class MeetingsController {
   constructor(
     private readonly meetingsService: MeetingsService,
+    private readonly liveTokenService: LiveTokenService,
   ) {}
 
   /* ==========================================================================
@@ -120,9 +126,6 @@ export class MeetingsController {
 
   /* ==========================================================================
    * INVITATIONS
-   *
-   * IMPORTANT:
-   * These routes must appear before :meetingId.
    * ======================================================================== */
 
   @Get("invitations")
@@ -138,18 +141,6 @@ export class MeetingsController {
 
   /* ==========================================================================
    * SECURE JOIN LINK
-   *
-   * GET /meetings/join-link/:joinToken
-   *
-   * Resolves the public Fockis meeting link token into the actual
-   * meeting ID needed by the lobby/join system.
-   *
-   * IMPORTANT:
-   * This route must appear before @Get(":meetingId").
-   *
-   * The token resolver is public because a user opening a Fockis
-   * meeting link may not yet have been admitted to the meeting.
-   * The actual join endpoint remains authenticated.
    * ======================================================================== */
 
   @Public()
@@ -164,8 +155,6 @@ export class MeetingsController {
 
   /* ==========================================================================
    * ACCEPT INVITATION
-   *
-   * POST /meetings/:meetingId/invitation/accept
    * ======================================================================== */
 
   @Post(":meetingId/invitation/accept")
@@ -183,8 +172,6 @@ export class MeetingsController {
 
   /* ==========================================================================
    * DECLINE INVITATION
-   *
-   * POST /meetings/:meetingId/invitation/decline
    * ======================================================================== */
 
   @Post(":meetingId/invitation/decline")
@@ -202,8 +189,6 @@ export class MeetingsController {
 
   /* ==========================================================================
    * CREATE / SCHEDULE MEETING
-   *
-   * POST /meetings
    * ======================================================================== */
 
   @Post()
@@ -328,9 +313,141 @@ export class MeetingsController {
   }
 
   /* ==========================================================================
-   * HOST — ADMIT PARTICIPANT
+   * LIVEKIT MEDIA TOKEN
    *
-   * POST /meetings/:meetingId/participants/:participantId/admit
+   * POST /meetings/:meetingId/media-token
+   *
+   * Gives an admitted meeting participant a LiveKit token
+   * for actual camera and microphone media.
+   *
+   * Socket.IO continues to handle:
+   * - waiting room
+   * - admission
+   * - chat
+   * - reactions
+   * - participant state
+   * - hand raising
+   * - meeting events
+   *
+   * LiveKit handles the actual audio/video transport.
+   * ======================================================================== */
+
+  @Post(":meetingId/media-token")
+  async createMediaToken(
+    @Req() req: Request,
+    @Param("meetingId") meetingId: string,
+  ) {
+    const user = this.getUser(req);
+
+    const meeting =
+      await this.meetingsService.getById(
+        meetingId,
+        user.id,
+      );
+
+    if (!meeting) {
+      throw new ForbiddenException(
+        "Meeting was not found.",
+      );
+    }
+
+    const meetingStatus =
+      String(
+        (meeting as any).status || "",
+      ).toLowerCase();
+
+    if (
+      meetingStatus === "ended" ||
+      meetingStatus === "cancelled"
+    ) {
+      throw new ForbiddenException(
+        "This meeting is no longer active.",
+      );
+    }
+
+    const participants =
+      Array.isArray(
+        (meeting as any).participants,
+      )
+        ? (meeting as any).participants
+        : [];
+
+    const participant =
+      participants.find(
+        (item: any) =>
+          String(item?.userId) ===
+          String(user.id),
+      );
+
+    if (!participant) {
+      throw new ForbiddenException(
+        "You are not a participant in this meeting.",
+      );
+    }
+
+    /*
+     * Do not issue a LiveKit token to someone
+     * who is still waiting for host admission.
+     */
+    if (
+      participant.waiting === true &&
+      participant.admitted !== true
+    ) {
+      throw new ForbiddenException(
+        "You must be admitted to the meeting before joining video.",
+      );
+    }
+
+    if (participant.admitted !== true) {
+      throw new ForbiddenException(
+        "You have not been admitted to this meeting.",
+      );
+    }
+
+    const roomName =
+      String(
+        (meeting as any).liveRoomName ||
+          `fockis-meeting-${meetingId}`,
+      ).trim();
+
+    if (!roomName) {
+      throw new ForbiddenException(
+        "Live meeting room is not configured.",
+      );
+    }
+
+    const serverUrl =
+      (
+        process.env.LIVEKIT_URL ||
+        process.env.LIVEKIT_SERVER_URL ||
+        ""
+      ).trim();
+
+    if (!serverUrl) {
+      throw new Error(
+        "LIVEKIT_URL is not configured.",
+      );
+    }
+
+    const token =
+      await this.liveTokenService.createToken({
+        userId: user.id,
+        userName: user.name,
+        roomName,
+        canPublish: true,
+        canSubscribe: true,
+      });
+
+    return {
+      token,
+      serverUrl,
+      roomName,
+      meetingId: String(meetingId),
+    };
+  }
+
+  /* ==========================================================================
+   * HOST — ADMIT PARTICIPANT
    * ======================================================================== */
 
   @Post(":meetingId/participants/:participantId/admit")
@@ -350,8 +467,6 @@ export class MeetingsController {
 
   /* ==========================================================================
    * HOST — REJECT PARTICIPANT
-   *
-   * POST /meetings/:meetingId/participants/:participantId/reject
    * ======================================================================== */
 
   @Post(":meetingId/participants/:participantId/reject")
@@ -371,8 +486,6 @@ export class MeetingsController {
 
   /* ==========================================================================
    * HOST — REMOVE INVITATION
-   *
-   * DELETE /meetings/:meetingId/participants/:participantId/invitation
    * ======================================================================== */
 
   @Delete(":meetingId/participants/:participantId/invitation")
