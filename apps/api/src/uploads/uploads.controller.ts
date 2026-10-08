@@ -44,6 +44,10 @@ import {
   CloudStorageService,
 } from "./cloud-storage.service";
 
+import {
+  Public,
+} from "../auth/public.decorator";
+
 @Controller("uploads")
 export class UploadsController {
   constructor(
@@ -208,9 +212,15 @@ export class UploadsController {
   /**
    * Stream private GCS media through the API.
    *
+   * This endpoint is intentionally public because
+   * browser <video> and <audio> elements cannot reliably
+   * attach the application's JWT Authorization header
+   * to their media requests.
+   *
    * Supports HTTP Range requests for
    * browser audio/video playback and seeking.
    */
+  @Public()
   @Get("media/*")
   async streamMedia(
     @Req()
