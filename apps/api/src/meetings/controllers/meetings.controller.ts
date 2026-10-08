@@ -11,6 +11,8 @@ import {
 
 import type { Request } from "express";
 
+import { Public } from "../../auth/public.decorator";
+
 import {
   MeetingsService,
 } from "../services/meetings.service";
@@ -144,8 +146,13 @@ export class MeetingsController {
    *
    * IMPORTANT:
    * This route must appear before @Get(":meetingId").
+   *
+   * The token resolver is public because a user opening a Fockis
+   * meeting link may not yet have been admitted to the meeting.
+   * The actual join endpoint remains authenticated.
    * ======================================================================== */
 
+  @Public()
   @Get("join-link/:joinToken")
   resolveJoinLink(
     @Param("joinToken") joinToken: string,
