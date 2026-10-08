@@ -13,7 +13,6 @@ import {
   Check,
   ChevronDown,
   Link2,
-  Lock,
   Mic,
   MicOff,
   Monitor,
@@ -37,7 +36,6 @@ import "../styles/global.scss";
 import "../styles/pages.scss";
 
 type DeviceStatus = "checking" | "ready" | "blocked";
-
 
 const MEETINGS_API_BASE_URL = String(
   import.meta.env.VITE_API_URL ||
@@ -196,16 +194,22 @@ async function resolveMeetingJoinToken(
           (payload as { message?: unknown }).message;
 
         if (Array.isArray(serverMessage)) {
-          message = serverMessage
-            .filter(
-              (item): item is string =>
-                typeof item === "string",
-            )
-            .join("\n") || message;
-        } else if (typeof serverMessage === "string") {
+          message =
+            serverMessage
+              .filter(
+                (item): item is string =>
+                  typeof item === "string",
+              )
+              .join("\n") || message;
+        } else if (
+          typeof serverMessage === "string"
+        ) {
           message = serverMessage;
         }
-      } else if (typeof payload === "string" && payload.trim()) {
+      } else if (
+        typeof payload === "string" &&
+        payload.trim()
+      ) {
         message = payload;
       }
 
@@ -219,7 +223,9 @@ async function resolveMeetingJoinToken(
       payload &&
       typeof payload === "object" &&
       "data" in payload
-        ? (payload as { data?: JoinTokenResolution }).data
+        ? (payload as {
+            data?: JoinTokenResolution;
+          }).data
         : (payload as JoinTokenResolution);
 
     if (!data?.meetingId) {
@@ -244,7 +250,6 @@ async function resolveMeetingJoinToken(
     };
   }
 }
-
 
 function getStoredDisplayName(): string {
   if (typeof window === "undefined") {
@@ -285,27 +290,29 @@ function getStoredDisplayName(): string {
   }
 }
 
+/**
+ * Extract a meeting ID or secure join token from:
+ *
+ * 123456789
+ * 809 465 187
+ * 809-465-187
+ * abc-def-123
+ * https://fockis.com/meetings/abc123
+ * https://fockis.com/meetings/abc123/lobby
+ * http://localhost:5173/meetings/abc123/lobby
+ * http://localhost:5173/meet/abc123
+ *
+ * Numeric meeting IDs may contain spaces or hyphens.
+ * They are normalized before being returned.
+ *
+ * Secure /meet/<token> links keep the token unchanged.
+ */
 function extractMeetingId(value: string): string {
   const trimmed = value.trim();
 
   if (!trimmed) {
     return "";
   }
-
-  /*
-   * Supports:
-   *
-   * 123456789
-   * abc-def-123
-   * https://fockis.com/meetings/abc123
-   * https://fockis.com/meetings/abc123/lobby
-   * http://localhost:5173/meetings/abc123/lobby
-   * http://localhost:5173/meet/abc123
-   *
-   * The /meet/<token> format is the secure Fockis direct-join link.
-   * The token is intentionally kept as the join value so the lobby
-   * can resolve it to the actual meeting.
-   */
 
   try {
     const url = new URL(trimmed);
@@ -315,7 +322,7 @@ function extractMeetingId(value: string): string {
       .filter(Boolean);
 
     const meetIndex = parts.findIndex(
-      (part) => part === "meet",
+      (part) => part.toLowerCase() === "meet",
     );
 
     if (meetIndex >= 0) {
@@ -323,14 +330,25 @@ function extractMeetingId(value: string): string {
     }
 
     const meetingsIndex = parts.findIndex(
-      (part) => part === "meetings",
+      (part) => part.toLowerCase() === "meetings",
     );
 
     if (meetingsIndex >= 0) {
-      return parts[meetingsIndex + 1] ?? "";
+      const valueFromPath =
+        parts[meetingsIndex + 1] ?? "";
+
+      if (/^\d[\d\s-]*$/.test(valueFromPath)) {
+        return valueFromPath.replace(/\D/g, "");
+      }
+
+      return valueFromPath;
     }
   } catch {
     // Not a URL. Treat the value as a meeting ID or join token.
+  }
+
+  if (/^\d[\d\s-]*$/.test(trimmed)) {
+    return trimmed.replace(/\D/g, "");
   }
 
   return trimmed;
@@ -338,24 +356,21 @@ function extractMeetingId(value: string): string {
 
 export default function MeetingJoinPage() {
   const navigate = useNavigate();
+
   const [searchParams] = useSearchParams();
-  const { joinToken: routeJoinToken } = useParams<{
+
+  const {
+    joinToken: routeJoinToken,
+  } = useParams<{
     joinToken?: string;
   }>();
 
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const videoRef =
+    useRef<HTMLVideoElement | null>(null);
 
-  /*
-   * Fockis supports two ways to arrive here:
-   *
-   * 1. /meetings/join?meetingId=644051219
-   * 2. /meet/Grrlj8qHDSESy0w1IKWkQ-Io
-   *
-   * The second form is the private shareable meeting link. When the
-   * route contains a join token, show it in the same field so the
-   * user can simply press "Join Meeting".
-   */
+  const streamRef =
+    useRef<MediaStream | null>(null);
+
   const initialMeetingValue =
     routeJoinToken?.trim() ||
     searchParams.get("meetingId")?.trim() ||
@@ -375,6 +390,7 @@ export default function MeetingJoinPage() {
   );
 
   const [cameraOn, setCameraOn] = useState(true);
+
   const [micOn, setMicOn] = useState(true);
 
   const [cameraPermission, setCameraPermission] =
@@ -393,19 +409,11 @@ export default function MeetingJoinPage() {
       : true,
   );
 
-  const [showOptions, setShowOptions] = useState(false);
+  const [showOptions, setShowOptions] =
+    useState(false);
 
-  const [linkCopied, setLinkCopied] = useState(false);
-
-  /*
-   * --------------------------------------------------------------------------
-   * DIRECT LINK / MEETING ID
-   * --------------------------------------------------------------------------
-   *
-   * If the user opens /meet/<joinToken>, the route token should always
-   * populate the join field. This also covers client-side navigation where
-   * the route params are available after the first render.
-   */
+  const [linkCopied, setLinkCopied] =
+    useState(false);
 
   useEffect(() => {
     const routeValue = routeJoinToken?.trim();
@@ -414,12 +422,6 @@ export default function MeetingJoinPage() {
       setMeetingId(routeValue);
     }
   }, [routeJoinToken, meetingId]);
-
-  /*
-   * --------------------------------------------------------------------------
-   * ONLINE / OFFLINE
-   * --------------------------------------------------------------------------
-   */
 
   useEffect(() => {
     const handleOnline = () => {
@@ -430,20 +432,28 @@ export default function MeetingJoinPage() {
       setIsOnline(false);
     };
 
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
+    window.addEventListener(
+      "online",
+      handleOnline,
+    );
+
+    window.addEventListener(
+      "offline",
+      handleOffline,
+    );
 
     return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener(
+        "online",
+        handleOnline,
+      );
+
+      window.removeEventListener(
+        "offline",
+        handleOffline,
+      );
     };
   }, []);
-
-  /*
-   * --------------------------------------------------------------------------
-   * CAMERA + MICROPHONE
-   * --------------------------------------------------------------------------
-   */
 
   useEffect(() => {
     let mounted = true;
@@ -563,12 +573,6 @@ export default function MeetingJoinPage() {
     };
   }, [cameraOn, micOn]);
 
-  /*
-   * --------------------------------------------------------------------------
-   * MICROPHONE TOGGLE
-   * --------------------------------------------------------------------------
-   */
-
   const toggleMic = () => {
     const next = !micOn;
 
@@ -584,12 +588,6 @@ export default function MeetingJoinPage() {
         });
     }
   };
-
-  /*
-   * --------------------------------------------------------------------------
-   * CAMERA TOGGLE
-   * --------------------------------------------------------------------------
-   */
 
   const toggleCamera = () => {
     const next = !cameraOn;
@@ -607,12 +605,6 @@ export default function MeetingJoinPage() {
     }
   };
 
-  /*
-   * --------------------------------------------------------------------------
-   * COPY MEETING LINK
-   * --------------------------------------------------------------------------
-   */
-
   const copyMeetingLink = async () => {
     const cleanId =
       extractMeetingId(meetingId);
@@ -626,12 +618,8 @@ export default function MeetingJoinPage() {
     }
 
     try {
-      /*
-       * If the current value is already a secure join token, preserve the
-       * clean /meet/<token> format. Numeric meeting IDs use the generic
-       * join page because the numeric ID is not the secure join token.
-       */
-      const isNumericMeetingId = /^\d{6,}$/.test(cleanId);
+      const isNumericMeetingId =
+        /^\d{6,}$/.test(cleanId);
 
       const link = isNumericMeetingId
         ? `${window.location.origin}/meetings/join?meetingId=${encodeURIComponent(cleanId)}`
@@ -651,22 +639,19 @@ export default function MeetingJoinPage() {
     }
   };
 
-  /*
-   * --------------------------------------------------------------------------
-   * JOIN
-   * --------------------------------------------------------------------------
-   */
-
   const handleJoin = async () => {
     setError("");
 
-    const cleanMeetingId = extractMeetingId(meetingId);
+    const cleanMeetingId =
+      extractMeetingId(meetingId);
+
     const cleanName = name.trim();
 
     if (!isOnline) {
       setError(
         "You appear to be offline. Check your internet connection before joining.",
       );
+
       return;
     }
 
@@ -674,16 +659,21 @@ export default function MeetingJoinPage() {
       setError(
         "Enter a meeting ID or paste a Fockis meeting link.",
       );
+
       return;
     }
 
     if (!cleanName) {
       setError("Enter your name before joining.");
+
       return;
     }
 
     if (cleanName.length > 80) {
-      setError("Your name must be 80 characters or fewer.");
+      setError(
+        "Your name must be 80 characters or fewer.",
+      );
+
       return;
     }
 
@@ -700,43 +690,60 @@ export default function MeetingJoinPage() {
 
     try {
       /*
-       * Numeric values are real meeting IDs. Secure /meet/<token> links
-       * must first be resolved by the backend before opening the lobby.
+       * Numeric values are real meeting IDs.
+       *
+       * Secure /meet/<token> links must first be
+       * resolved by the backend before opening
+       * the lobby.
        */
       let resolvedMeetingId = cleanMeetingId;
 
-      if (!/^\d{6,}$/.test(cleanMeetingId)) {
-        const resolved = await resolveMeetingJoinToken(
-          cleanMeetingId,
-        );
+      const isNumericMeetingId =
+        /^\d{6,}$/.test(cleanMeetingId);
 
-        if (!resolved.ok || !resolved.data?.meetingId) {
+      if (!isNumericMeetingId) {
+        const resolved =
+          await resolveMeetingJoinToken(
+            cleanMeetingId,
+          );
+
+        if (
+          !resolved.ok ||
+          !resolved.data?.meetingId
+        ) {
           setError(
             resolved.error ||
               "This meeting link is invalid or no longer available.",
           );
+
           return;
         }
 
-        resolvedMeetingId = resolved.data.meetingId;
+        resolvedMeetingId =
+          resolved.data.meetingId;
       }
 
       navigate(
-        MEETING_ROUTES.lobby(resolvedMeetingId),
+        MEETING_ROUTES.lobby(
+          resolvedMeetingId,
+        ),
         {
           state: {
             displayName: cleanName,
             passcode: passcode.trim(),
             micOn,
             cameraOn,
-            joinToken: /^\d{6,}$/.test(cleanMeetingId)
+            joinToken: isNumericMeetingId
               ? undefined
               : cleanMeetingId,
           },
         },
       );
     } catch (joinError) {
-      console.error("Unable to resolve meeting link:", joinError);
+      console.error(
+        "Unable to resolve meeting link:",
+        joinError,
+      );
 
       setError(
         joinError instanceof Error
@@ -748,25 +755,13 @@ export default function MeetingJoinPage() {
     }
   };
 
-  /*
-   * --------------------------------------------------------------------------
-   * ENTER KEY
-   * --------------------------------------------------------------------------
-   */
-
   const handleKeyDown = (
     event: React.KeyboardEvent,
   ) => {
     if (event.key === "Enter") {
-      handleJoin();
+      void handleJoin();
     }
   };
-
-  /*
-   * --------------------------------------------------------------------------
-   * DISPLAY NAME PERSISTENCE
-   * --------------------------------------------------------------------------
-   */
 
   useEffect(() => {
     if (!name.trim()) {
@@ -783,12 +778,6 @@ export default function MeetingJoinPage() {
     }
   }, [name]);
 
-  /*
-   * --------------------------------------------------------------------------
-   * DEVICE STATUS
-   * --------------------------------------------------------------------------
-   */
-
   const mediaReady =
     cameraPermission === "ready" ||
     micPermission === "ready";
@@ -797,18 +786,8 @@ export default function MeetingJoinPage() {
     cameraPermission === "blocked" &&
     micPermission === "blocked";
 
-  /*
-   * --------------------------------------------------------------------------
-   * RENDER
-   * --------------------------------------------------------------------------
-   */
-
   return (
     <div className="fm-join-page">
-      {/* ====================================================================
-       * TOP BAR
-       * ================================================================== */}
-
       <header className="fm-join-page__topbar">
         <Link
           to={MEETING_ROUTES.root}
@@ -847,16 +826,8 @@ export default function MeetingJoinPage() {
         </div>
       </header>
 
-      {/* ====================================================================
-       * MAIN
-       * ================================================================== */}
-
       <main className="fm-join-page__main">
         <section className="fm-join-page__card">
-          {/* ================================================================
-           * LEFT — CAMERA PREVIEW
-           * ============================================================ */}
-
           <div className="fm-join-preview">
             {cameraOn &&
             cameraPermission === "ready" ? (
@@ -892,10 +863,6 @@ export default function MeetingJoinPage() {
               {name.trim() || "You"}
             </div>
 
-            {/* --------------------------------------------------------------
-             * MEDIA STATUS
-             * ------------------------------------------------------------ */}
-
             <div className="fm-join-preview__status">
               {cameraOn &&
               cameraPermission === "ready" ? (
@@ -910,10 +877,6 @@ export default function MeetingJoinPage() {
                 </>
               )}
             </div>
-
-            {/* --------------------------------------------------------------
-             * PREVIEW CONTROLS
-             * ------------------------------------------------------------ */}
 
             <div className="fm-join-preview__controls">
               <button
@@ -960,19 +923,13 @@ export default function MeetingJoinPage() {
             </div>
           </div>
 
-          {/* ================================================================
-           * RIGHT — JOIN FORM
-           * ============================================================ */}
-
           <div className="fm-join-form">
             <div className="fm-join-form__heading">
               <span className="fm-join-form__eyebrow">
                 Fockis Meetings
               </span>
 
-              <h1>
-                Ready to join?
-              </h1>
+              <h1>Ready to join?</h1>
 
               <p>
                 Enter your meeting information,
@@ -980,10 +937,6 @@ export default function MeetingJoinPage() {
                 to the meeting lobby.
               </p>
             </div>
-
-            {/* ============================================================
-             * MEETING INFORMATION
-             * ======================================================== */}
 
             <div className="fm-join-section">
               <div className="fm-join-section__header">
@@ -993,7 +946,8 @@ export default function MeetingJoinPage() {
                   </strong>
 
                   <span>
-                    Enter your meeting ID or paste a Fockis meeting link.
+                    Enter your meeting ID or paste
+                    a Fockis meeting link.
                   </span>
                 </div>
 
@@ -1001,9 +955,7 @@ export default function MeetingJoinPage() {
               </div>
 
               <label className="fm-join-field">
-                <span>
-                  Meeting ID or link
-                </span>
+                <span>Meeting ID or link</span>
 
                 <input
                   type="text"
@@ -1041,36 +993,26 @@ export default function MeetingJoinPage() {
               </label>
             </div>
 
-            {/* ============================================================
-             * NAME
-             * ======================================================== */}
-
             <div className="fm-join-section">
               <div className="fm-join-section__header">
                 <div>
-                  <strong>
-                    Your identity
-                  </strong>
+                  <strong>Your identity</strong>
 
                   <span>
-                    This is how you'll appear
-                    to other participants.
+                    This is how you'll appear to
+                    other participants.
                   </span>
                 </div>
               </div>
 
               <label className="fm-join-field">
-                <span>
-                  Your name
-                </span>
+                <span>Your name</span>
 
                 <input
                   type="text"
                   value={name}
                   onChange={(event) =>
-                    setName(
-                      event.target.value,
-                    )
+                    setName(event.target.value)
                   }
                   onKeyDown={handleKeyDown}
                   placeholder="Enter your name"
@@ -1079,10 +1021,6 @@ export default function MeetingJoinPage() {
                 />
               </label>
             </div>
-
-            {/* ============================================================
-             * DEVICE STATUS
-             * ======================================================== */}
 
             <div className="fm-join-device-status">
               <div className="fm-join-device-status__icon">
@@ -1122,10 +1060,6 @@ export default function MeetingJoinPage() {
               </span>
             </div>
 
-            {/* ============================================================
-             * OPTIONS
-             * ======================================================== */}
-
             <button
               type="button"
               className="fm-join-options-toggle"
@@ -1136,16 +1070,12 @@ export default function MeetingJoinPage() {
               }
               aria-expanded={showOptions}
             >
-              <span>
-                Meeting options
-              </span>
+              <span>Meeting options</span>
 
               <ChevronDown
                 size={17}
                 className={
-                  showOptions
-                    ? "is-open"
-                    : ""
+                  showOptions ? "is-open" : ""
                 }
               />
             </button>
@@ -1220,10 +1150,6 @@ export default function MeetingJoinPage() {
               </div>
             )}
 
-            {/* ============================================================
-             * ERROR
-             * ======================================================== */}
-
             {error && (
               <div
                 className="fm-join-error"
@@ -1233,15 +1159,9 @@ export default function MeetingJoinPage() {
                   !
                 </span>
 
-                <span>
-                  {error}
-                </span>
+                <span>{error}</span>
               </div>
             )}
-
-            {/* ============================================================
-             * CONNECTION
-             * ======================================================== */}
 
             <div
               className={
@@ -1253,6 +1173,7 @@ export default function MeetingJoinPage() {
               {isOnline ? (
                 <>
                   <Wifi size={15} />
+
                   <span>
                     Internet connection available
                   </span>
@@ -1260,6 +1181,7 @@ export default function MeetingJoinPage() {
               ) : (
                 <>
                   <WifiOff size={15} />
+
                   <span>
                     No internet connection
                   </span>
@@ -1267,14 +1189,10 @@ export default function MeetingJoinPage() {
               )}
             </div>
 
-            {/* ============================================================
-             * JOIN BUTTON
-             * ======================================================== */}
-
             <button
               type="button"
               className="fm-join-button"
-              onClick={handleJoin}
+              onClick={() => void handleJoin()}
               disabled={joining || !isOnline}
             >
               {joining ? (
@@ -1290,10 +1208,6 @@ export default function MeetingJoinPage() {
               )}
             </button>
 
-            {/* ============================================================
-             * SECURITY NOTE
-             * ======================================================== */}
-
             <div className="fm-join-note">
               <Check size={16} />
 
@@ -1304,10 +1218,6 @@ export default function MeetingJoinPage() {
                 you can enter.
               </span>
             </div>
-
-            {/* ============================================================
-             * FOCKIS AI / FUTURE FEATURES
-             * ======================================================== */}
 
             <div className="fm-join-ai-note">
               <Sparkles size={17} />
@@ -1330,18 +1240,10 @@ export default function MeetingJoinPage() {
         </section>
       </main>
 
-      {/* ====================================================================
-       * FOOTER
-       * ================================================================== */}
-
       <footer className="fm-join-page__footer">
-        <span>
-          Fockis Meetings
-        </span>
+        <span>Fockis Meetings</span>
 
-        <span>
-          •
-        </span>
+        <span>•</span>
 
         <span>
           Your meeting starts in the lobby

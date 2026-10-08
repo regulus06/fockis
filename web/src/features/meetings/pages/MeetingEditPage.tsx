@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import {
   Link,
   useNavigate,
@@ -121,84 +122,101 @@ export function MeetingEditPage() {
       setLoading(true);
       setError(null);
 
-      const result =
-        await meetingsApi.getById(id);
+      try {
+        const result =
+          await meetingsApi.getById(id);
 
-      if (!mounted) {
-        return;
-      }
+        if (!mounted) {
+          return;
+        }
 
-      if (!result.ok) {
-        setError(result.error);
-        setLoading(false);
-        return;
-      }
+        if (!result.ok) {
+          setError(result.error);
+          setLoading(false);
+          return;
+        }
 
-      const meeting = result.data;
+        const meeting = result.data;
 
-      setTopic(meeting.topic ?? "");
+        setTopic(meeting.topic ?? "");
 
-      setDescription(
-        meeting.description ?? "",
-      );
+        setDescription(
+          meeting.description ?? "",
+        );
 
-      setDate(
-        formatDateForInput(
-          meeting.startTime,
-        ),
-      );
+        setDate(
+          formatDateForInput(
+            meeting.startTime,
+          ),
+        );
 
-      setTime(
-        formatTimeForInput(
-          meeting.startTime,
-        ),
-      );
+        setTime(
+          formatTimeForInput(
+            meeting.startTime,
+          ),
+        );
 
-      setDuration(
-        typeof meeting.durationMinutes ===
-          "number"
-          ? meeting.durationMinutes
-          : Math.max(
-              15,
-              Math.round(
-                (
-                  new Date(
-                    meeting.endTime,
-                  ).getTime() -
-                  new Date(
-                    meeting.startTime,
-                  ).getTime()
-                ) / 60000,
+        setDuration(
+          typeof meeting.durationMinutes ===
+            "number"
+            ? meeting.durationMinutes
+            : Math.max(
+                15,
+                Math.round(
+                  (
+                    new Date(
+                      meeting.endTime,
+                    ).getTime() -
+                    new Date(
+                      meeting.startTime,
+                    ).getTime()
+                  ) / 60000,
+                ),
               ),
-            ),
-      );
+        );
 
-      setTimezone(
-        meeting.timezone ||
-          "America/New_York",
-      );
+        setTimezone(
+          meeting.timezone ||
+            "America/New_York",
+        );
 
-      setPasscode(
-        meeting.passcode ?? "",
-      );
+        setPasscode(
+          meeting.passcode ?? "",
+        );
 
-      setAgenda(
-        Array.isArray(meeting.agenda)
-          ? meeting.agenda
-          : [],
-      );
+        setAgenda(
+          Array.isArray(meeting.agenda)
+            ? [...meeting.agenda].sort(
+                (a, b) =>
+                  (a.order ?? 0) -
+                  (b.order ?? 0),
+              )
+            : [],
+        );
 
-      setSecurity({
-        ...DEFAULT_SECURITY,
-        ...(meeting.security ?? {}),
-      });
+        setSecurity({
+          ...DEFAULT_SECURITY,
+          ...(meeting.security ?? {}),
+        });
 
-      setSecretary({
-        ...DEFAULT_SECRETARY,
-        ...(meeting.secretary ?? {}),
-      });
+        setSecretary({
+          ...DEFAULT_SECRETARY,
+          ...(meeting.secretary ?? {}),
+        });
 
-      setLoading(false);
+        setLoading(false);
+      } catch (err) {
+        if (!mounted) {
+          return;
+        }
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Unable to load meeting.",
+        );
+        setLoading(false);
+      }
     }
 
     loadMeeting();
@@ -232,49 +250,72 @@ export function MeetingEditPage() {
 
     /*
      * IMPORTANT:
+     * Send the complete agenda.
      *
-     * Send the complete MeetingAgendaItem[]
-     * here.
-     *
-     * meetingsApi.update() is responsible for
-     * converting the agenda into the backend
-     * format { title, order }.
+     * The backend persists these items in the
+     * MeetingAgenda collection.
      */
-    const result =
-      await meetingsApi.update(id, {
-        topic: topic.trim(),
+    const normalizedAgenda: MeetingAgendaItem[] =
+      agenda
+        .map((item) => ({
+          ...item,
+          title: item.title?.trim() ?? "",
+        }))
+        .filter(
+          (item) => item.title.length > 0,
+        )
+        .map((item, index) => ({
+          ...item,
+          order: index,
+        }));
 
-        description:
-          description.trim(),
+    try {
+      const result =
+        await meetingsApi.update(id, {
+          topic: topic.trim(),
 
-        date,
+          description:
+            description.trim(),
 
-        startTime: time,
+          date,
 
-        durationMinutes:
-          duration,
+          startTime: time,
 
-        timezone,
+          durationMinutes:
+            duration,
 
-        passcode,
+          timezone,
 
-        agenda,
+          passcode,
 
-        security,
+          agenda: normalizedAgenda,
 
-        secretary,
-      });
+          security,
 
-    setSaving(false);
+          secretary,
+        });
 
-    if (!result.ok) {
-      setError(result.error);
-      return;
+      if (!result.ok) {
+        setError(result.error);
+        setSaving(false);
+        return;
+      }
+
+      setAgenda(normalizedAgenda);
+
+      setSaving(false);
+
+      navigate(
+        MEETING_ROUTES.details(id),
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to save meeting.",
+      );
+      setSaving(false);
     }
-
-    navigate(
-      MEETING_ROUTES.details(id),
-    );
   };
 
   if (loading) {
@@ -326,7 +367,6 @@ export function MeetingEditPage() {
   return (
     <div className="fockis-meetings-root fm-page fm-page--light">
       <div className="fm-subpage">
-
         <Link
           to={
             id

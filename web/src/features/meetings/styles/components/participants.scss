@@ -1,27 +1,261 @@
 @use '../tokens' as t;
 
+/* =========================================================
+   FOCKIS PARTICIPANTS
+   ========================================================= */
+
 .fm-participant-item {
+  position: relative;
+
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 16px;
 
-  &:hover { background: t.$void-800; }
+  gap: 11px;
 
-  &__info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
-  &__name { color: t.$fog-0; font-size: t.$fs-sm; font-weight: 500; }
-  &__badge {
-    font-size: 9px;
-    text-transform: uppercase;
-    background: t.$signal-500;
-    color: white;
-    padding: 1px 6px;
-    border-radius: t.$radius-pill;
-    letter-spacing: 0.03em;
+  min-height: 58px;
+
+  padding: 8px 14px;
+
+  border-bottom: 1px solid rgba(148, 163, 184, 0.07);
+
+  color: #f8fafc;
+
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease;
+
+  &:hover {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(59, 130, 246, 0.09),
+        rgba(255, 255, 255, 0.025)
+      );
+
+    border-bottom-color:
+      rgba(148, 163, 184, 0.12);
   }
-  &__status { display: flex; align-items: center; gap: 8px; color: t.$fog-300; position: relative; }
-  &__muted { color: #ff8a8d; }
-  &__hand { color: t.$amber-500; }
-  &__more { background: none; border: none; color: t.$fog-300; display: flex; &:hover { color: t.$fog-0; } }
-  &__menu-wrap { position: relative; }
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &__info {
+    min-width: 0;
+    flex: 1;
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+  }
+
+  &__name {
+    min-width: 0;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    color: #f1f5f9;
+
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  &__badge {
+    flex: 0 0 auto;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 19px;
+
+    padding: 0 7px;
+
+    border-radius: 999px;
+
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.22);
+
+    color: #93c5fd;
+
+    font-size: 9px;
+    font-weight: 700;
+
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  &__status {
+    flex: 0 0 auto;
+
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+
+    color: #94a3b8;
+
+    position: relative;
+
+    svg {
+      width: 15px;
+      height: 15px;
+    }
+  }
+
+  &__muted {
+    color: #fb7185;
+
+    svg {
+      color: #fb7185;
+    }
+  }
+
+  &__hand {
+    color: #fbbf24;
+
+    svg {
+      color: #fbbf24;
+    }
+  }
+
+  &__more {
+    width: 32px;
+    height: 32px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 32px;
+
+    padding: 0;
+
+    border: 0;
+    border-radius: 9px;
+
+    background: transparent;
+
+    color: #64748b;
+
+    cursor: pointer;
+
+    transition:
+      background 0.16s ease,
+      color 0.16s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.07);
+      color: #f8fafc;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #60a5fa;
+      outline-offset: 2px;
+    }
+  }
+
+  &__menu-wrap {
+    position: relative;
+    flex: 0 0 auto;
+  }
+}
+
+/* =========================================================
+   PARTICIPANT AVATAR SUPPORT
+   ========================================================= */
+
+.fm-participant-item {
+  .fm-avatar {
+    flex: 0 0 auto;
+
+    width: 36px;
+    height: 36px;
+
+    border-radius: 50%;
+
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* =========================================================
+   PARTICIPANT PANEL ROWS
+   ========================================================= */
+
+.fm-participants-panel {
+  .fm-participant-item {
+    &:first-child {
+      margin-top: 2px;
+    }
+  }
+}
+
+/* =========================================================
+   ONLINE INDICATOR
+   ========================================================= */
+
+.fm-participant-item::before {
+  content: '';
+
+  position: absolute;
+
+  left: 5px;
+  top: 50%;
+
+  width: 4px;
+  height: 4px;
+
+  border-radius: 50%;
+
+  transform: translateY(-50%);
+
+  background: #10b981;
+
+  box-shadow:
+    0 0 7px rgba(16, 185, 129, 0.6);
+
+  opacity: 0;
+}
+
+.fm-participant-item.is-online::before,
+.fm-participant-item[data-online='true']::before {
+  opacity: 1;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 640px) {
+  .fm-participant-item {
+    min-height: 54px;
+
+    padding: 7px 12px;
+
+    gap: 9px;
+
+    &__name {
+      font-size: 12px;
+    }
+
+    &__badge {
+      font-size: 8px;
+    }
+
+    &__more {
+      width: 30px;
+      height: 30px;
+      flex-basis: 30px;
+    }
+
+    .fm-avatar {
+      width: 34px;
+      height: 34px;
+    }
+  }
 }

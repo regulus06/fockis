@@ -1,36 +1,454 @@
 @use '../tokens' as t;
 
+/* =========================================================
+   FOCKIS WAITING ROOM
+   ========================================================= */
+
 .fm-waiting-screen {
+  position: relative;
+
   min-height: 100vh;
+  min-height: 100dvh;
+
   display: flex;
   flex-direction: column;
+
   align-items: center;
   justify-content: center;
+
+  gap: 10px;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 50% 35%,
+      rgba(59, 130, 246, 0.14),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 50% 70%,
+      rgba(16, 185, 129, 0.05),
+      transparent 38%
+    ),
+    #050b16;
+
+  color: #f8fafc;
+
+  padding: 32px 24px;
+
   text-align: center;
-  gap: 8px;
-  background: t.$void-950;
-  color: t.$fog-0;
-  padding: 24px;
+
+  &::before {
+    content: '';
+
+    position: absolute;
+    inset: 0;
+
+    pointer-events: none;
+
+    background:
+      linear-gradient(
+        120deg,
+        transparent 20%,
+        rgba(255, 255, 255, 0.018),
+        transparent 80%
+      );
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
 
   &__icon {
-    width: 56px; height: 56px;
-    border-radius: 50%;
-    background: t.$void-800;
-    color: t.$signal-500;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 10px;
+    width: 76px;
+    height: 76px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 12px;
+
+    border-radius: 24px;
+
+    background:
+      linear-gradient(
+        145deg,
+        #3b82f6 0%,
+        #2563eb 55%,
+        #1d4ed8 100%
+      );
+
+    border: 6px solid rgba(59, 130, 246, 0.12);
+
+    color: #fff;
+
+    box-shadow:
+      0 0 0 1px rgba(59, 130, 246, 0.24),
+      0 0 55px rgba(37, 99, 235, 0.22),
+      0 22px 55px rgba(0, 0, 0, 0.4);
+
+    svg {
+      width: 30px;
+      height: 30px;
+    }
   }
-  h2 { font-size: t.$fs-xl; margin-bottom: 4px; }
-  &__topic { color: t.$fog-300; font-size: t.$fs-md; margin-bottom: 10px; }
-  &__hint { color: t.$fog-300; font-size: t.$fs-sm; max-width: 320px; }
+
+  h2 {
+    margin: 0;
+
+    color: #f8fafc;
+
+    font-size: clamp(24px, 3vw, 32px);
+    font-weight: 750;
+
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+  }
+
+  &__topic {
+    margin: 6px 0 4px;
+
+    color: #cbd5e1;
+
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  &__hint {
+    max-width: 390px;
+
+    margin: 5px auto 0;
+
+    color: #94a3b8;
+
+    font-size: 13px;
+    line-height: 1.6;
+  }
 }
 
+/* =========================================================
+   WAITING STATUS BADGE
+   ========================================================= */
+
+.fm-waiting-screen::after {
+  content: 'Waiting for host';
+
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 34px;
+
+  margin-top: 12px;
+
+  padding: 0 14px;
+
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 999px;
+
+  background: rgba(16, 185, 129, 0.08);
+
+  color: #6ee7b7;
+
+  font-size: 12px;
+  font-weight: 650;
+
+  box-shadow:
+    0 8px 25px rgba(16, 185, 129, 0.05);
+}
+
+/* =========================================================
+   WAITING ROOM ENTRY
+   ========================================================= */
+
 .fm-waiting-entry {
+  width: min(520px, 100%);
+
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
 
-  &__name { flex: 1; color: t.$fog-0; font-size: t.$fs-sm; font-weight: 500; }
-  &__actions { display: flex; gap: 6px; }
+  gap: 12px;
+
+  min-height: 58px;
+
+  margin-top: 10px;
+
+  padding: 9px 12px;
+
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(20, 34, 56, 0.88),
+      rgba(10, 21, 36, 0.9)
+    );
+
+  box-shadow:
+    0 12px 35px rgba(0, 0, 0, 0.22);
+
+  text-align: left;
+
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+
+  &:hover {
+    border-color: rgba(59, 130, 246, 0.25);
+
+    background:
+      linear-gradient(
+        180deg,
+        rgba(24, 42, 68, 0.94),
+        rgba(10, 21, 36, 0.94)
+      );
+  }
+
+  &__name {
+    min-width: 0;
+    flex: 1;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    color: #f1f5f9;
+
+    font-size: 13px;
+    font-weight: 650;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+
+    flex: 0 0 auto;
+
+    button {
+      min-height: 34px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      gap: 6px;
+
+      padding: 0 12px;
+
+      border-radius: 9px;
+
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+
+      cursor: pointer;
+
+      transition:
+        background 0.16s ease,
+        transform 0.16s ease;
+
+      &:active {
+        transform: translateY(1px);
+      }
+    }
+  }
+}
+
+/* =========================================================
+   ADMIT BUTTON
+   ========================================================= */
+
+.fm-waiting-entry__actions {
+  button:first-child,
+  .fm-waiting-entry__admit {
+    border: 1px solid rgba(16, 185, 129, 0.3);
+
+    background: rgba(16, 185, 129, 0.13);
+
+    color: #6ee7b7;
+
+    &:hover {
+      background: rgba(16, 185, 129, 0.22);
+    }
+  }
+}
+
+/* =========================================================
+   REJECT BUTTON
+   ========================================================= */
+
+.fm-waiting-entry__actions {
+  button:last-child,
+  .fm-waiting-entry__reject {
+    border: 1px solid rgba(239, 68, 68, 0.24);
+
+    background: rgba(239, 68, 68, 0.08);
+
+    color: #fca5a5;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.16);
+    }
+  }
+}
+
+/* =========================================================
+   HOST WAITING ROOM PANEL
+   ========================================================= */
+
+.fm-host-waiting-room,
+.fm-waiting-room-panel {
+  width: 100%;
+
+  color: #f8fafc;
+
+  background: transparent;
+}
+
+.fm-host-waiting-room__header,
+.fm-waiting-room-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  min-height: 62px;
+
+  padding: 0 16px;
+
+  border-bottom: 1px solid rgba(148, 163, 184, 0.11);
+}
+
+.fm-host-waiting-room__title,
+.fm-waiting-room-panel__title {
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  color: #f8fafc;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.fm-host-waiting-room__count,
+.fm-waiting-room-panel__count {
+  min-width: 22px;
+  height: 22px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 6px;
+
+  border-radius: 999px;
+
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.22);
+
+  color: #93c5fd;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   EMPTY WAITING ROOM
+   ========================================================= */
+
+.fm-host-waiting-room__empty,
+.fm-waiting-room-panel__empty {
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  min-height: 180px;
+
+  padding: 24px;
+
+  text-align: center;
+
+  color: #64748b;
+
+  svg {
+    width: 30px;
+    height: 30px;
+
+    margin-bottom: 10px;
+
+    color: #475569;
+  }
+
+  strong {
+    color: #94a3b8;
+
+    font-size: 13px;
+  }
+
+  span {
+    max-width: 250px;
+
+    margin-top: 5px;
+
+    font-size: 11px;
+    line-height: 1.5;
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 640px) {
+  .fm-waiting-screen {
+    padding: 24px 16px;
+
+    &__icon {
+      width: 64px;
+      height: 64px;
+
+      border-radius: 20px;
+
+      svg {
+        width: 27px;
+        height: 27px;
+      }
+    }
+
+    h2 {
+      font-size: 23px;
+    }
+
+    &__topic {
+      font-size: 14px;
+    }
+
+    &__hint {
+      font-size: 12px;
+    }
+  }
+
+  .fm-waiting-entry {
+    align-items: flex-start;
+
+    padding: 10px;
+
+    &__actions {
+      button {
+        min-width: 34px;
+        padding: 0 9px;
+      }
+    }
+  }
 }
