@@ -53,27 +53,39 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
             ? request.originalUrl.split("?")[0]
             : "";
 
-    // ========================================================================
-    // 3. PUBLIC POST MEDIA
-    // ========================================================================
-    //
-    // Post photos/videos are delivered through the GCS-backed media gateway.
-    //
-    // <img> and <video> browser requests cannot reliably attach the Fockis
-    // Authorization header, so this media delivery route must be public.
-    //
-    // This does NOT make the rest of the API public.
-    // ========================================================================
-
     const normalizedPath =
       String(path || "")
         .trim()
         .replace(/\/+$/, "")
         .toLowerCase();
 
+    // ========================================================================
+    // 3. PUBLIC POST MEDIA
+    // ========================================================================
+    //
+    // Post photos/videos are delivered through the GCS-backed media gateway.
+    //
+    // Browser <img> and <video> requests cannot reliably attach the Fockis
+    // Authorization header, so post media delivery must be public.
+    //
+    // IMPORTANT:
+    // - Only /uploads/media/posts/* is public here.
+    // - The rest of the Fockis API remains protected.
+    // - /uploads/music/* remains protected by the music security barrier.
+    // - The actual media is still read from the configured GCS bucket.
+    //
+    // Example:
+    //
+    // /uploads/media/posts/example.mp4
+    // /uploads/media/posts/example.jpg
+    //
+    // ========================================================================
+
     if (
-      normalizedPath === "/post-media" ||
-      normalizedPath.startsWith("/post-media/")
+      normalizedPath === "/uploads/media/posts" ||
+      normalizedPath.startsWith(
+        "/uploads/media/posts/",
+      )
     ) {
       return true;
     }
