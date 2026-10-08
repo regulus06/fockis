@@ -234,9 +234,9 @@ export class MeetingsService {
 
       if (
 
-        token.startsWith("http\\://") ||
+        token.startsWith("http://") ||
 
-        token.startsWith("https\\://")
+        token.startsWith("https://")
 
       ) {
 
@@ -402,9 +402,9 @@ export class MeetingsService {
 
       if (
 
-        token.startsWith("http\\://") ||
+        token.startsWith("http://") ||
 
-        token.startsWith("https\\://")
+        token.startsWith("https://")
 
       ) {
 
@@ -4237,59 +4237,97 @@ export class MeetingsService {
    * ======================================================================== */
 
   async getParticipants(
+
     meetingId: string,
+
     userId: string,
+
   ) {
+
     const meeting = await this.meetingModel.findById(
+
       this.meetingObjectId(meetingId),
+
     );
 
     if (!meeting) {
+
       throw new NotFoundException("Meeting not found");
+
     }
 
     const participant = await this.participantModel.findOne({
+
       meetingId: meeting._id,
+
       userId: this.userId(userId),
+
     });
 
     const isHost = meeting.hostId.toString() === userId;
 
     // The host must always be able to load the participant list,
+
     // including the waiting-room participants.
+
     if (isHost) {
+
       return this.participantModel
+
         .find({
+
           meetingId: meeting._id,
+
         })
+
         .lean();
+
     }
 
     if (!participant) {
+
       throw new ForbiddenException(
+
         "You are not a participant of this meeting",
+
       );
+
     }
 
     if (participant.invitationStatus === "declined") {
+
       throw new ForbiddenException(
+
         "You declined this meeting invitation",
+
       );
+
     }
 
     // Waiting-room participants may not see the full participant list
+
     // until they are admitted.
+
     if (participant.waiting || !participant.admitted) {
+
       throw new ForbiddenException(
+
         "You have not been admitted to this meeting",
+
       );
+
     }
 
     return this.participantModel
+
       .find({
+
         meetingId: meeting._id,
+
       })
+
       .lean();
+
   }
 
   /* ============================================================================
@@ -4365,50 +4403,81 @@ export class MeetingsService {
    * ======================================================================== */
 
   async ensureParticipant(
+
     meetingId: string,
+
     userId: string,
+
   ) {
+
     const meeting = await this.meetingModel.findById(
+
       this.meetingObjectId(meetingId),
+
     );
 
     if (!meeting) {
+
       throw new NotFoundException("Meeting not found");
+
     }
 
     const participant = await this.participantModel.findOne({
+
       meetingId: meeting._id,
+
       userId: this.userId(userId),
+
     });
 
     if (!participant) {
+
       throw new ForbiddenException(
+
         "You are not a participant",
+
       );
+
     }
 
     if (participant.invitationStatus === "declined") {
+
       throw new ForbiddenException(
+
         "You declined this meeting invitation",
+
       );
+
     }
 
     // IMPORTANT:
+
     // A waiting participant is authenticated and is a valid participant,
+
     // but is not yet admitted to the meeting room. Returning the record here
+
     // lets the Socket.IO gateway place them into the waiting room instead of
+
     // incorrectly returning HTTP/WebSocket 403.
+
     if (participant.waiting && !participant.admitted) {
+
       return participant;
+
     }
 
     if (!participant.admitted) {
+
       throw new ForbiddenException(
+
         "You have not been admitted to this meeting",
+
       );
+
     }
 
     return participant;
+
   }
 
 }
