@@ -135,6 +135,9 @@ export function VideoGrid({ participants }: VideoGridProps) {
   const [connectedRoom, setConnectedRoom] = useState<Room | null>(null);
   const [videoTracks, setVideoTracks] = useState<VideoTrackMap>({});
   const [mediaError, setMediaError] = useState<string | null>(null);
+  const [connectionAttempt, setConnectionAttempt] = useState(0);
+  const reconnectAttemptsRef = useRef(0);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const storeVideoTrack = useCallback(
     (keys: string[], track: VideoTrack) => {
@@ -233,6 +236,12 @@ export function VideoGrid({ participants }: VideoGridProps) {
 
     let cancelled = false;
     let room: Room | null = null;
+    let hasConnected = false;
+
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
 
     setConnectedRoom(null);
     setMediaError(null);
@@ -369,13 +378,32 @@ export function VideoGrid({ participants }: VideoGridProps) {
         });
 
         activeRoom.on(RoomEvent.Disconnected, () => {
-          // Ignore the intentional disconnect from this component's cleanup.
-          if (cancelled || roomRef.current !== activeRoom) return;
+          // Ignore intentional cleanup disconnects and events before a successful join.
+          if (!hasConnected || cancelled || roomRef.current !== activeRoom) return;
+
           roomRef.current = null;
           setConnectedRoom(null);
           setVideoTracks({});
           removeAudioElements();
-          setMediaError("The meeting's video connection was disconnected. Please try turning your camera off and on, or rejoin the meeting if it does not recover.");
+
+          const attempt = reconnectAttemptsRef.current + 1;
+          reconnectAttemptsRef.current = attempt;
+
+          if (attempt <= 5) {
+            const delayMs = Math.min(1000 * 2 ** (attempt - 1), 8000);
+            setMediaError(
+              `The meeting's video connection was lost. Reconnecting (${attempt}/5)…`,
+            );
+
+            reconnectTimerRef.current = setTimeout(() => {
+              reconnectTimerRef.current = null;
+              if (!cancelled) setConnectionAttempt((value) => value + 1);
+            }, delayMs);
+          } else {
+            setMediaError(
+              "The meeting video connection could not recover after several attempts. Select Reconnect to try again.",
+            );
+          }
         });
 
         await activeRoom.connect(credentials.serverUrl, credentials.token, {
@@ -387,6 +415,7 @@ export function VideoGrid({ participants }: VideoGridProps) {
           return;
         }
 
+        hasConnected = true;
         console.info("[Fockis Meeting] LiveKit connected", {
           room: activeRoom.name,
           identity: activeRoom.localParticipant.identity,
@@ -422,6 +451,10 @@ export function VideoGrid({ participants }: VideoGridProps) {
 
     return () => {
       cancelled = true;
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
       const activeRoom = room;
 
       if (roomRef.current === activeRoom) roomRef.current = null;
@@ -434,7 +467,7 @@ export function VideoGrid({ participants }: VideoGridProps) {
       removeAudioElements();
       setVideoTracks({});
     };
-  }, [id, getMediaToken, storeVideoTrack, removeVideoTrack]);
+  }, [id, getMediaToken, storeVideoTrack, removeVideoTrack, connectionAttempt]);
 
   /*
    * Publish/unpublish camera without reconnecting the meeting room.
@@ -547,6 +580,10 @@ export function VideoGrid({ participants }: VideoGridProps) {
             left: 12,
             right: 12,
             zIndex: 20,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
             padding: "8px 12px",
             borderRadius: 10,
             background: "rgba(120, 30, 30, 0.9)",
@@ -554,7 +591,33 @@ export function VideoGrid({ participants }: VideoGridProps) {
             fontSize: 12,
           }}
         >
-          {mediaError}
+          <span>{mediaError}</span>
+          {mediaError.toLowerCase().includes("reconnect") && (
+            <button
+              type="button"
+              onClick={() => {
+                if (reconnectTimerRef.current) {
+                  clearTimeout(reconnectTimerRef.current);
+                  reconnectTimerRef.current = null;
+                }
+                reconnectAttemptsRef.current = 0;
+                setMediaError(null);
+                setConnectionAttempt((value) => value + 1);
+              }}
+              style={{
+                flex: "0 0 auto",
+                border: "1px solid rgba(255,255,255,0.7)",
+                borderRadius: 6,
+                padding: "6px 10px",
+                background: "rgba(255,255,255,0.12)",
+                color: "#fff",
+                cursor: "pointer",
+                font: "inherit",
+              }}
+            >
+              Reconnect
+            </button>
+          )}
         </div>
       )}
 
