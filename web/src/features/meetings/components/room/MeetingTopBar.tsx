@@ -11,6 +11,7 @@ import { useElapsedTimer } from '../../hooks/useElapsedTimer';
 
 import '../../styles/components/room.scss';
 
+import FockisMark from "../../../../components/fockis/FockisMark";
 interface MeetingTopBarProps {
   topic: string;
   startedAt: string;
@@ -37,9 +38,7 @@ export function MeetingTopBar({
     <header className="fm-top-bar">
       <div className="fm-top-bar__left">
         <div className="fm-top-bar__brand">
-          <span className="fm-top-bar__brand-mark">
-            F
-          </span>
+          <span className="fm-top-bar__brand-mark"><FockisMark /></span>
 
           <span className="fm-top-bar__brand-name">
             Fockis

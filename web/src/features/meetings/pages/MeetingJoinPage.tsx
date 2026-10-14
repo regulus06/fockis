@@ -35,6 +35,7 @@ import { MEETING_ROUTES } from "../constants";
 import "../styles/global.scss";
 import "../styles/pages.scss";
 
+import FockisMark from "../../../components/fockis/FockisMark";
 type DeviceStatus = "checking" | "ready" | "blocked";
 
 const MEETINGS_API_BASE_URL = String(
@@ -798,9 +799,7 @@ export default function MeetingJoinPage() {
         </Link>
 
         <div className="fm-join-page__brand">
-          <div className="fm-join-page__brand-mark">
-            F
-          </div>
+          <div className="fm-join-page__brand-mark"><FockisMark /></div>
 
           <span>Fockis</span>
         </div>
