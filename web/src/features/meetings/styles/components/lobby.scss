@@ -1,8 +1,8 @@
 @use '../tokens' as t;
 
-/* ============================================================================
- * CAMERA PREVIEW (unchanged)
- * ========================================================================== */
+/* ==========================================================================
+   CAMERA PREVIEW
+   ========================================================================== */
 
 .fm-camera-preview {
   position: relative;
@@ -15,9 +15,23 @@
   align-items: center;
   justify-content: center;
 
-  &__video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-  &__off { display: flex; flex-direction: column; align-items: center; gap: 10px; color: t.$fog-300; }
+  &__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+  }
+
+  &__off {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: t.$fog-300;
+  }
+
   &__error { font-size: t.$fs-xs; }
+
   &__controls {
     position: absolute;
     bottom: 16px;
@@ -33,7 +47,7 @@
   height: 44px;
   border-radius: 50%;
   border: none;
-  background: rgba(255,255,255,0.14);
+  background: rgba(255, 255, 255, 0.14);
   color: white;
   backdrop-filter: blur(6px);
   display: flex;
@@ -41,26 +55,31 @@
   justify-content: center;
   transition: background t.$dur-fast t.$ease-out;
 
-  &:hover { background: rgba(255,255,255,0.22); }
+  &:hover { background: rgba(255, 255, 255, 0.22); }
   &--off { background: t.$red-500; }
   &--off:hover { background: t.$red-600; }
 }
 
-/* ============================================================================
- * DEVICE SELECT (unchanged)
- * ========================================================================== */
+/* ==========================================================================
+   DEVICE SELECT
+   ========================================================================== */
 
 .fm-device-select {
   display: flex;
   flex-direction: column;
   gap: 6px;
   margin-bottom: 14px;
-  &__label { font-size: t.$fs-xs; color: t.$ink-500; font-weight: 600; }
+
+  &__label {
+    font-size: t.$fs-xs;
+    color: t.$ink-500;
+    font-weight: 600;
+  }
 }
 
-/* ============================================================================
- * LOBBY LAYOUT (unchanged base rules)
- * ========================================================================== */
+/* ==========================================================================
+   LOBBY LAYOUT
+   ========================================================================== */
 
 .fm-lobby {
   min-height: 100vh;
@@ -72,28 +91,26 @@
 
   &__grid {
     display: grid;
-    grid-template-columns: 1.3fr 1fr;
-    gap: 36px;
-    max-width: 900px;
+    grid-template-columns: minmax(0, 1.3fr) minmax(320px, 1fr);
+    gap: 28px;
+    max-width: 1180px;
     width: 100%;
-    align-items: center;
-
-    @media (max-width: 760px) { grid-template-columns: 1fr; }
+    align-items: start;
   }
 
   &__meta { text-align: left; margin-bottom: 14px; }
   &__meta h1 { font-size: t.$fs-2xl; }
   &__panel { display: flex; flex-direction: column; gap: 10px; }
-  &__conn { display: flex; align-items: center; gap: 6px; font-size: t.$fs-xs; color: t.$ink-500; margin-top: 6px; }
-
-  /* --------------------------------------------------------------------------
-   * NEW: connection status offline variant
-   * ------------------------------------------------------------------------ */
+  &__conn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: t.$fs-xs;
+    color: t.$ink-500;
+    margin-top: 6px;
+  }
   &__conn--offline { color: t.$red-500; }
 
-  /* --------------------------------------------------------------------------
-   * NEW: title row + status badge
-   * ------------------------------------------------------------------------ */
   &__title-row {
     display: flex;
     align-items: center;
@@ -130,9 +147,6 @@
     animation: fm-live-pulse 1.6s ease-in-out infinite;
   }
 
-  /* --------------------------------------------------------------------------
-   * NEW: status message banner
-   * ------------------------------------------------------------------------ */
   &__status {
     font-size: t.$fs-xs;
     color: t.$ink-500;
@@ -143,18 +157,11 @@
 
     &--live { background: #f0fdf4; color: #166534; }
     &--late { background: #fef2f2; color: #991b1b; }
-    &--ended,
-    &--cancelled { background: #f3f4f6; color: #6b7280; }
+    &--ended, &--cancelled { background: #f3f4f6; color: #6b7280; }
   }
 
-  &__status-note {
-    display: block;
-    margin-top: 4px;
-  }
+  &__status-note { display: block; margin-top: 4px; }
 
-  /* --------------------------------------------------------------------------
-   * NEW: meeting info list
-   * ------------------------------------------------------------------------ */
   &__info {
     display: flex;
     flex-direction: column;
@@ -184,9 +191,6 @@
     }
   }
 
-  /* --------------------------------------------------------------------------
-   * NEW: waiting-for-host state
-   * ------------------------------------------------------------------------ */
   &__waiting {
     font-size: t.$fs-xs;
     background: #eff6ff;
@@ -196,9 +200,6 @@
     line-height: 1.4;
   }
 
-  /* --------------------------------------------------------------------------
-   * NEW: join button area — sticky on small screens for reachability
-   * ------------------------------------------------------------------------ */
   &__join-bar {
     display: flex;
     flex-direction: column;
@@ -213,9 +214,6 @@
     }
   }
 
-  /* --------------------------------------------------------------------------
-   * NEW: loading / error pages
-   * ------------------------------------------------------------------------ */
   &__loading {
     font-size: t.$fs-xs;
     color: t.$ink-500;
@@ -233,6 +231,104 @@
     h1 { font-size: t.$fs-2xl; }
     p { font-size: t.$fs-xs; color: t.$ink-500; }
   }
+
+  /* Participant cards displayed side by side */
+  &__participants-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    min-width: 0;
+    width: 100%;
+  }
+
+  &__participant-card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    border-radius: t.$radius-lg;
+    background: #fff;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.06);
+  }
+
+  &__participant-media {
+    overflow: hidden;
+    background: t.$void-900;
+
+    .fm-camera-preview {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border-radius: 0;
+    }
+  }
+
+  &__participant-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 180px;
+    aspect-ratio: 4 / 3;
+    padding: 16px;
+    background: #1f2937;
+    color: #fff;
+    text-align: center;
+  }
+
+  &__participant-avatar, &__participant-initials {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+  }
+
+  &__participant-avatar { display: block; object-fit: cover; }
+
+  &__participant-initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #334155;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  &__participant-placeholder-label {
+    color: #cbd5e1;
+    font-size: t.$fs-xs;
+  }
+
+  &__participant-caption {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+  }
+
+  &__participant-name {
+    overflow: hidden;
+    color: #111827;
+    font-size: t.$fs-xs;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__participant-status { color: #6b7280; font-size: t.$fs-xs; }
+
+  @media (max-width: 760px) {
+    padding: 16px;
+
+    &__grid { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+    &__participants-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    &__participant-placeholder { min-height: 130px; padding: 10px; }
+    &__participant-avatar, &__participant-initials { width: 52px; height: 52px; }
+    &__participant-caption { padding: 9px; }
+  }
+
+  @media (max-width: 380px) {
+    &__participants-grid { grid-template-columns: minmax(0, 1fr); }
+  }
 }
 
 @keyframes fm-live-pulse {
@@ -240,9 +336,9 @@
   50% { opacity: 0.35; }
 }
 
-/* ============================================================================
- * NEW: device settings panel
- * ========================================================================== */
+/* ==========================================================================
+   DEVICE SETTINGS
+   ========================================================================== */
 
 .fm-device-settings {
   display: flex;
@@ -253,10 +349,7 @@
   background: #f9fafb;
   margin-bottom: 4px;
 
-  &__hint {
-    font-size: t.$fs-xs;
-    color: t.$ink-500;
-  }
+  &__hint { font-size: t.$fs-xs; color: t.$ink-500; }
 }
 
 .fm-mic-meter {
@@ -264,11 +357,7 @@
   flex-direction: column;
   gap: 4px;
 
-  &__label {
-    font-size: t.$fs-xs;
-    color: t.$ink-500;
-    font-weight: 600;
-  }
+  &__label { font-size: t.$fs-xs; color: t.$ink-500; font-weight: 600; }
 
   &__track {
     width: 100%;
@@ -284,9 +373,5 @@
     transition: width 0.08s linear;
   }
 
-  &__error,
-  &__hint {
-    font-size: t.$fs-xs;
-    color: t.$ink-500;
-  }
+  &__error, &__hint { font-size: t.$fs-xs; color: t.$ink-500; }
 }
