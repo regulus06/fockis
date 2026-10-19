@@ -1,0 +1,436 @@
+/* ==========================================================
+   FOCKIS SHOP — WHITE LUXURY THEME
+   Load this file AFTER the existing Fockis Shop theme.
+   Preserves emerald and gold accents while making the page white.
+   ========================================================== */
+
+:root:has(.fockis-luxe-shop),
+body:has(.fockis-luxe-shop),
+#root:has(.fockis-luxe-shop) {
+  background: #ffffff !important;
+}
+
+body:has(.fockis-luxe-shop) {
+  color: #183126 !important;
+  color-scheme: light;
+}
+
+.fockis-luxe-shop {
+  --luxe-bg: #ffffff;
+  --luxe-bg-deep: #f7faf8;
+  --luxe-bg-soft: #f4f8f5;
+  --luxe-panel: #ffffff;
+  --luxe-panel-hover: #f0f7f2;
+  --luxe-green: #078744;
+  --luxe-green-bright: #0b9d52;
+  --luxe-gold: #c49a36;
+  --luxe-gold-light: #9a7118;
+  --luxe-text: #183126;
+  --luxe-muted: #64756b;
+  --luxe-border: #e1e9e3;
+  --luxe-border-green: rgba(7, 135, 68, 0.28);
+
+  color: #183126 !important;
+  background: #ffffff !important;
+  color-scheme: light;
+}
+
+.fockis-luxe-shop,
+.fockis-luxe-shop *,
+.fockis-luxe-shop *::before,
+.fockis-luxe-shop *::after {
+  box-sizing: border-box;
+}
+
+.fockis-luxe-shop .shop-page-root,
+.fockis-luxe-shop .mp-shell,
+.fockis-luxe-shop .wrap,
+.fockis-luxe-shop .luxe-shop-main,
+.fockis-luxe-shop .luxe-featured-section,
+.fockis-luxe-shop .luxe-product-section,
+.fockis-luxe-shop .luxe-category-section,
+.fockis-luxe-shop .luxe-promo-section,
+.fockis-luxe-shop .luxe-section {
+  color: #183126 !important;
+  background: #ffffff !important;
+  border-color: #e5ece7 !important;
+}
+
+.fockis-luxe-shop h1,
+.fockis-luxe-shop h2,
+.fockis-luxe-shop h3,
+.fockis-luxe-shop h4,
+.fockis-luxe-shop h5,
+.fockis-luxe-shop h6,
+.fockis-luxe-shop .section-head h2,
+.fockis-luxe-shop .reco-header h2,
+.fockis-luxe-shop .luxe-section-heading h2,
+.fockis-luxe-shop .luxe-hero-actions h1,
+.fockis-luxe-shop .luxe-delivery-copy h2,
+.fockis-luxe-shop .luxe-seller-intro h2,
+.fockis-luxe-shop .luxe-closing-band h2 {
+  color: #183126 !important;
+}
+
+.fockis-luxe-shop p,
+.fockis-luxe-shop small,
+.fockis-luxe-shop .luxe-section-heading p,
+.fockis-luxe-shop .luxe-delivery-copy p,
+.fockis-luxe-shop .luxe-seller-intro p,
+.fockis-luxe-shop .luxe-closing-band p,
+.fockis-luxe-shop .luxe-hero-actions p {
+  color: #64756b !important;
+}
+
+/* Header and category navigation */
+.fockis-luxe-shop header,
+.fockis-luxe-shop .shop-header,
+.fockis-luxe-shop .shop-navbar,
+.fockis-luxe-shop .luxe-category-nav {
+  color: #183126 !important;
+  background: #ffffff !important;
+  border-color: #e1e9e3 !important;
+  box-shadow: 0 2px 12px rgba(24, 49, 38, 0.035);
+}
+
+.fockis-luxe-shop header a,
+.fockis-luxe-shop .shop-header a,
+.fockis-luxe-shop .shop-navbar a,
+.fockis-luxe-shop .luxe-category-nav a {
+  color: #244a35 !important;
+}
+
+.fockis-luxe-shop header a:hover,
+.fockis-luxe-shop .luxe-category-nav a:hover {
+  color: #078744 !important;
+}
+
+.fockis-luxe-shop .logo,
+.fockis-luxe-shop .crest {
+  color: #078744 !important;
+  border-color: #078744 !important;
+}
+
+/* Announcement and hero */
+.fockis-luxe-shop .luxe-announcement {
+  color: #eaf7ef !important;
+  background: linear-gradient(90deg, #07552f, #078744, #07552f) !important;
+  border-color: #dce9df !important;
+}
+
+.fockis-luxe-shop .luxe-announcement > span:first-child,
+.fockis-luxe-shop .luxe-announcement-divider,
+.fockis-luxe-shop .luxe-overline,
+.fockis-luxe-shop .luxe-section-eyebrow,
+.fockis-luxe-shop .luxe-eyebrow-mark {
+  color: #9a7118 !important;
+}
+
+.fockis-luxe-shop .luxe-hero-frame {
+  color: #183126 !important;
+  background:
+    radial-gradient(ellipse at 78% 18%, rgba(7, 135, 68, 0.08), transparent 48%),
+    linear-gradient(135deg, #f8fbf9, #ffffff 75%) !important;
+  border-color: rgba(7, 135, 68, 0.24) !important;
+  box-shadow: 0 14px 38px rgba(24, 49, 38, 0.08) !important;
+}
+
+.fockis-luxe-shop .luxe-hero-frame::after,
+.fockis-luxe-shop .luxe-hero-frame .hero::before {
+  background-image:
+    linear-gradient(rgba(7, 135, 68, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(7, 135, 68, 0.035) 1px, transparent 1px) !important;
+}
+
+.fockis-luxe-shop .luxe-hero-frame .hero,
+.fockis-luxe-shop .luxe-hero-frame .hero h1 {
+  color: #183126 !important;
+  background: transparent !important;
+}
+
+.fockis-luxe-shop .luxe-hero-frame .hero p.lede {
+  color: #64756b !important;
+}
+
+.fockis-luxe-shop .luxe-hero-frame .hero-stats .stat b {
+  color: #183126 !important;
+}
+
+.fockis-luxe-shop .luxe-hero-frame .hero-stats .stat span {
+  color: #64756b !important;
+}
+
+.fockis-luxe-shop .luxe-hero-frame .hero-search {
+  background: #ffffff !important;
+  border-color: #d7e4da !important;
+  box-shadow: 0 8px 22px rgba(24, 49, 38, 0.08) !important;
+}
+
+/* Product, store, category, deal and trust cards */
+.fockis-luxe-shop .cat-grid,
+.fockis-luxe-shop .cat-tile,
+.fockis-luxe-shop .store-card,
+.fockis-luxe-shop .world-card,
+.fockis-luxe-shop .product-card,
+.fockis-luxe-shop .pcard,
+.fockis-luxe-shop .deal-card,
+.fockis-luxe-shop .deal-rail-card,
+.fockis-luxe-shop .store-rail-card,
+.fockis-luxe-shop .bundle-card,
+.fockis-luxe-shop .dept-rail-card,
+.fockis-luxe-shop .local-item,
+.fockis-luxe-shop .intl-example,
+.fockis-luxe-shop .trust-item,
+.fockis-luxe-shop .dash-shell,
+.fockis-luxe-shop .dash-stat,
+.fockis-luxe-shop .cart-panel,
+.fockis-luxe-shop .rail-arrow {
+  color: #183126 !important;
+  background: #ffffff !important;
+  border: 1px solid #e1e9e3 !important;
+  box-shadow: 0 4px 16px rgba(24, 49, 38, 0.035);
+}
+
+.fockis-luxe-shop .cat-grid,
+.fockis-luxe-shop .trust-grid {
+  background: #f7faf8 !important;
+}
+
+.fockis-luxe-shop .cat-tile:hover,
+.fockis-luxe-shop .pcard:hover,
+.fockis-luxe-shop .product-card:hover,
+.fockis-luxe-shop .store-card:hover {
+  background: #f8fbf9 !important;
+  border-color: rgba(7, 135, 68, 0.42) !important;
+  box-shadow: 0 10px 28px rgba(24, 49, 38, 0.09) !important;
+}
+
+.fockis-luxe-shop .product-card .thumb,
+.fockis-luxe-shop .pcard .thumb,
+.fockis-luxe-shop .deal-card .thumb,
+.fockis-luxe-shop .deal-rail-card .thumb,
+.fockis-luxe-shop .bundle-thumb,
+.fockis-luxe-shop .dept-rail-card .art,
+.fockis-luxe-shop .store-rail-card .logo {
+  background: #f6f8f6 !important;
+  border-color: #e1e9e3 !important;
+}
+
+.fockis-luxe-shop .product-card h4,
+.fockis-luxe-shop .pcard h5,
+.fockis-luxe-shop .deal-card h4,
+.fockis-luxe-shop .deal-rail-card h5,
+.fockis-luxe-shop .store-card h4,
+.fockis-luxe-shop .store-rail-card h5,
+.fockis-luxe-shop .local-item h5,
+.fockis-luxe-shop .trust-item h5,
+.fockis-luxe-shop .product-card a,
+.fockis-luxe-shop .pcard a {
+  color: #183126 !important;
+}
+
+.fockis-luxe-shop .product-card .store-line,
+.fockis-luxe-shop .pcard .store-line,
+.fockis-luxe-shop .store-card .loc,
+.fockis-luxe-shop .store-rail-card .loc,
+.fockis-luxe-shop .product-card .price-old,
+.fockis-luxe-shop .pcard .price-old,
+.fockis-luxe-shop .ship-row,
+.fockis-luxe-shop .ship-badges span,
+.fockis-luxe-shop .trust-item p,
+.fockis-luxe-shop .luxe-trust-strip small {
+  color: #64756b !important;
+}
+
+.fockis-luxe-shop .pcard .stars,
+.fockis-luxe-shop .rating .star {
+  color: #b38622 !important;
+}
+
+.fockis-luxe-shop .product-card .add-btn,
+.fockis-luxe-shop .store-card .cta,
+.fockis-luxe-shop .luxe-button-primary {
+  color: #ffffff !important;
+  background: #078744 !important;
+  border-color: #078744 !important;
+}
+
+.fockis-luxe-shop .product-card .add-btn:hover,
+.fockis-luxe-shop .store-card .cta:hover,
+.fockis-luxe-shop .luxe-button-primary:hover {
+  color: #ffffff !important;
+  background: #066d37 !important;
+}
+
+.fockis-luxe-shop .badge-verified {
+  color: #087b42 !important;
+  background: #e7f6ed !important;
+}
+
+.fockis-luxe-shop .badge-bestseller {
+  color: #8a6516 !important;
+  background: #fbf4df !important;
+}
+
+.fockis-luxe-shop .badge-sponsored {
+  color: #53685b !important;
+  background: #f1f5f2 !important;
+  border-color: #dfe7e1 !important;
+}
+
+.fockis-luxe-shop .badge-new {
+  color: #087b42 !important;
+  background: #e7f6ed !important;
+}
+
+/* Rails and horizontal scrollers */
+.fockis-luxe-shop .rail-scroll {
+  scrollbar-color: #b8c9bd transparent;
+}
+
+.fockis-luxe-shop .rail-arrow {
+  color: #078744 !important;
+}
+
+.fockis-luxe-shop .rail-arrow:hover {
+  border-color: #078744 !important;
+}
+
+/* Promotional panels */
+.fockis-luxe-shop .luxe-deals-band,
+.fockis-luxe-shop .luxe-delivery-panel,
+.fockis-luxe-shop .luxe-seller-section,
+.fockis-luxe-shop .luxe-closing-band {
+  color: #183126 !important;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(7, 135, 68, 0.045), transparent 50%),
+    #f8fbf9 !important;
+  border-color: #e1e9e3 !important;
+}
+
+.fockis-luxe-shop .luxe-trust-strip {
+  border-color: #e1e9e3 !important;
+}
+
+.fockis-luxe-shop .luxe-benefit-icon {
+  color: #078744 !important;
+  background: #ffffff !important;
+  border-color: #cfe1d4 !important;
+}
+
+.fockis-luxe-shop .luxe-text-link,
+.fockis-luxe-shop .luxe-button-outline {
+  color: #087b42 !important;
+}
+
+.fockis-luxe-shop .luxe-button-outline {
+  background: #ffffff !important;
+  border-color: #cfe1d4 !important;
+}
+
+.fockis-luxe-shop .luxe-button-outline:hover {
+  color: #066d37 !important;
+  border-color: #078744 !important;
+  background: #f0f8f3 !important;
+}
+
+/* Existing banners may contain their own text overlay */
+.fockis-luxe-shop .banner-slide::before {
+  background: linear-gradient(
+    90deg,
+    rgba(4, 30, 17, 0.78) 0%,
+    rgba(4, 30, 17, 0.35) 65%,
+    rgba(4, 30, 17, 0.04) 100%
+  ) !important;
+}
+
+/* Inputs */
+.fockis-luxe-shop input,
+.fockis-luxe-shop select,
+.fockis-luxe-shop textarea,
+.fockis-luxe-shop .hero-search input {
+  color: #183126 !important;
+  background: #ffffff !important;
+  border-color: #d7e2da !important;
+}
+
+.fockis-luxe-shop input::placeholder,
+.fockis-luxe-shop textarea::placeholder {
+  color: #7b8a80 !important;
+}
+
+/* Footer, including the separate luxury footer component */
+.fockis-luxe-shop .fockis-shop-footer,
+.fockis-shop-footer {
+  --footer-bg: #ffffff;
+  --footer-panel: #f7faf8;
+  --footer-green: #078744;
+  --footer-gold: #a77b1b;
+  --footer-text: #183126;
+  --footer-muted: #64756b;
+  --footer-border: #e1e9e3;
+
+  color: var(--footer-muted) !important;
+  background: #ffffff !important;
+  border-top: 1px solid #dce7df !important;
+}
+
+.fockis-shop-footer .fockis-shop-footer__logo,
+.fockis-shop-footer .fockis-shop-footer__wordmark,
+.fockis-shop-footer .fockis-shop-footer__group h2 {
+  color: #183126 !important;
+}
+
+.fockis-shop-footer .fockis-shop-footer__tagline,
+.fockis-shop-footer .fockis-shop-footer__group a {
+  color: #64756b !important;
+}
+
+.fockis-shop-footer .fockis-shop-footer__group a:hover,
+.fockis-shop-footer .fockis-shop-footer__back-to-shop {
+  color: #078744 !important;
+}
+
+.fockis-shop-footer .fockis-shop-footer__bottom p {
+  color: #718077 !important;
+}
+
+.fockis-shop-footer .fockis-shop-footer__crest {
+  color: #078744 !important;
+  border-color: #078744 !important;
+  background: #ffffff !important;
+}
+
+.fockis-shop-footer .fockis-shop-footer__logo:hover .fockis-shop-footer__crest {
+  color: #ffffff !important;
+  background: #078744 !important;
+}
+
+.fockis-shop-footer .fockis-shop-footer__bottom {
+  border-color: #e1e9e3 !important;
+}
+
+/* Accessibility and small-screen behavior */
+.fockis-luxe-shop a:focus-visible,
+.fockis-luxe-shop button:focus-visible {
+  outline-color: #078744 !important;
+}
+
+@media (max-width: 700px) {
+  .fockis-luxe-shop .luxe-shop-main {
+    width: calc(100% - 28px) !important;
+  }
+
+  .fockis-luxe-shop .luxe-trust-strip {
+    gap: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fockis-luxe-shop *,
+  .fockis-luxe-shop *::before,
+  .fockis-luxe-shop *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { ShopHeader } from "../components/common/ShopHeader";
 import { ShopFooter } from "../components/common/ShopFooter";
@@ -9,265 +9,183 @@ import { ShopLoading } from "../components/common/ShopLoading";
 import { ShopError } from "../components/common/ShopError";
 import { ShopPagination } from "../components/common/ShopPagination";
 
-import {
-listStores,
-type StoreListResult,
-} from "../services/storeApi";
+import { listStores, type StoreListResult } from "../services/storeApi";
 
 import type { StoreListFilters } from "../types/store.types";
 
+type LocationFilter = NonNullable<StoreListFilters["location"]>;
+
+const LOCATION_TABS: { value: LocationFilter; label: string }[] = [
+  { value: "all", label: "All stores" },
+  { value: "local", label: "Near you" },
+  { value: "national", label: "National" },
+  { value: "international", label: "International" },
+];
+
+const TITLES: Record<LocationFilter, string> = {
+  all: "All stores",
+  local: "Stores near you",
+  national: "National stores",
+  international: "International stores",
+};
+
 export default function ShopStoresPage() {
-const [searchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
-const locationParam = searchParams.get("location");
+  const locationParam = searchParams.get("location");
 
-const location: StoreListFilters["location"] =
-locationParam === "local" ||
-locationParam === "national" ||
-locationParam === "international"
-? locationParam
-: "all";
+  const location: LocationFilter =
+    locationParam === "local" ||
+    locationParam === "national" ||
+    locationParam === "international"
+      ? locationParam
+      : "all";
 
-const [filters, setFilters] =
-useState<StoreListFilters>({
-page: 1,
-pageSize: 12,
-location,
-});
-
-const [data, setData] =
-useState<StoreListResult | null>(null);
-
-const [loading, setLoading] = useState(true);
-
-const [error, setError] =
-useState<string | null>(null);
-
-useEffect(() => {
-setFilters((previous) => {
-if (
-previous.location === location &&
-previous.page === 1
-) {
-return previous;
-}
-
-  return {
-    ...previous,
-    location,
+  const [filters, setFilters] = useState<StoreListFilters>({
     page: 1,
-  };
-});
-
-}, [location]);
-
-useEffect(() => {
-let cancelled = false;
-
-setLoading(true);
-setError(null);
-
-listStores(filters)
-  .then((result) => {
-    if (cancelled) {
-      return;
-    }
-
-    setData(result);
-  })
-  .catch((err: unknown) => {
-    if (cancelled) {
-      return;
-    }
-
-    setData(null);
-
-    setError(
-      err instanceof Error
-        ? err.message
-        : "Failed to load stores.",
-    );
-  })
-  .finally(() => {
-    if (cancelled) {
-      return;
-    }
-
-    setLoading(false);
+    pageSize: 12,
+    location,
   });
 
-return () => {
-  cancelled = true;
-};
+  const [data, setData] = useState<StoreListResult | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-}, [
-filters.categorySlug,
-filters.countryCode,
-filters.query,
-filters.location,
-filters.minRating,
-filters.verifiedOnly,
-filters.sort,
-filters.page,
-filters.pageSize,
-]);
+  useEffect(() => {
+    setFilters((previous) =>
+      previous.location === location && previous.page === 1
+        ? previous
+        : { ...previous, location, page: 1 },
+    );
+  }, [location]);
 
-const pageTitle =
-location === "local"
-? "Stores near you"
-: location === "national"
-? "National stores"
-: location === "international"
-? "International stores"
-: "All stores";
+  useEffect(() => {
+    let cancelled = false;
 
-const handlePageChange = (page: number) => {
-setFilters((previous) => ({
-...previous,
-page,
-}));
-};
+    setLoading(true);
+    setError(null);
 
-const handleSortChange = (
-value: StoreListFilters["sort"],
-) => {
-setFilters((previous) => ({
-...previous,
-sort:
-value === "relevance"
-? undefined
-: value,
-page: 1,
-}));
-};
+    listStores(filters)
+      .then((result) => {
+        if (!cancelled) setData(result);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setData(null);
+        setError(err instanceof Error ? err.message : "Failed to load stores.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-return ( <div className="shop-page-root"> <ShopHeader />
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    filters.categorySlug,
+    filters.countryCode,
+    filters.query,
+    filters.location,
+    filters.minRating,
+    filters.verifiedOnly,
+    filters.sort,
+    filters.page,
+    filters.pageSize,
+  ]);
 
-```
-  <main>
-    <div
-      className="wrap"
-      style={{
-        paddingTop: 32,
-      }}
-    >
-      <ShopBreadcrumbs
-        items={[
-          {
-            label: "Shop",
-            to: "/shop",
-          },
-          {
-            label: "Stores",
-          },
-        ]}
-      />
-    </div>
+  const handleSortChange = (value: StoreListFilters["sort"]) => {
+    setFilters((previous) => ({
+      ...previous,
+      sort: value === "relevance" ? undefined : value,
+      page: 1,
+    }));
+  };
 
-    <section className="tight">
-      <div className="wrap">
-        <div className="section-head">
+  return (
+    <div className="shop-page-root fk-shop">
+      <ShopHeader />
+
+      <main className="fk-container fk-page">
+        <ShopBreadcrumbs items={[{ label: "Shop", to: "/shop" }, { label: "Stores" }]} />
+
+        <div className="fk-page__head">
           <div>
-            <div className="sec-label">
-              <span className="num">
-                01
-              </span>
-
-              STORES
-            </div>
-
-            <h1>{pageTitle}</h1>
-
-            {data && (
-              <p>
-                {data.total.toLocaleString()}{" "}
-                {data.total === 1
-                  ? "store"
-                  : "stores"}
-              </p>
-            )}
+            <h1>{TITLES[location]}</h1>
+            <p>
+              {data
+                ? `${data.total.toLocaleString()} ${data.total === 1 ? "store" : "stores"} on Fockis`
+                : "Independent sellers and businesses on Fockis"}
+            </p>
           </div>
 
-          <div
-            className="category-filters-row"
-            style={{
-              marginBottom: 0,
-            }}
-          >
-            <label
-              className="mono"
-              htmlFor="store-sort"
-            >
-              Sort by
+          <div className="fk-page__actions">
+            <label className="fk-pills__sort" htmlFor="store-sort">
+              <span>Sort by</span>
+              <select
+                id="store-sort"
+                value={filters.sort ?? "relevance"}
+                className="shop-select"
+                onChange={(event) =>
+                  handleSortChange(event.target.value as StoreListFilters["sort"])
+                }
+              >
+                <option value="relevance">Relevance</option>
+                <option value="rating">Highest rated</option>
+                <option value="newest">Newest</option>
+                <option value="most_orders">Most orders</option>
+              </select>
             </label>
 
-            <select
-              id="store-sort"
-              value={
-                filters.sort ?? "relevance"
-              }
-              className="shop-select"
-              onChange={(event) => {
-                const value =
-                  event.target.value as StoreListFilters["sort"];
-
-                handleSortChange(value);
-              }}
-            >
-              <option value="relevance">
-                Relevance
-              </option>
-
-              <option value="rating">
-                Highest Rated
-              </option>
-
-              <option value="newest">
-                Newest
-              </option>
-
-              <option value="most_orders">
-                Most Orders
-              </option>
-            </select>
+            <Link to="/shop/sell" className="fk-btn fk-btn--cart">
+              Open a store
+            </Link>
           </div>
         </div>
 
-        {loading && (
-          <ShopLoading
-            label="Loading stores…"
-            rows={3}
-          />
-        )}
+        <div className="fk-pills fk-pills--wrap" role="tablist" aria-label="Store location">
+          {LOCATION_TABS.map((tab) => (
+            <Link
+              key={tab.value}
+              role="tab"
+              aria-selected={location === tab.value}
+              to={tab.value === "all" ? "/shop/stores" : `/shop/stores?location=${tab.value}`}
+              className={location === tab.value ? "fk-pill is-active" : "fk-pill"}
+            >
+              {tab.label}
+            </Link>
+          ))}
+        </div>
 
-        {!loading && error && (
-          <ShopError message={error} />
-        )}
+        {loading && <ShopLoading label="Loading stores…" rows={3} />}
 
-        {!loading &&
-          !error &&
-          data && (
-            <>
-              <StoreGrid
-                stores={data.items}
+        {!loading && error && <ShopError message={error} />}
+
+        {!loading && !error && data && (
+          <>
+            <StoreGrid
+              stores={data.items}
+              emptyMessage={
+                location === "all"
+                  ? "Stores will appear here as sellers open their storefronts."
+                  : "No stores match this location yet."
+              }
+            />
+
+            {data.pages > 1 && (
+              <ShopPagination
+                page={data.page}
+                totalPages={data.pages}
+                onPageChange={(page) => {
+                  setFilters((previous) => ({ ...previous, page }));
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
               />
+            )}
+          </>
+        )}
+      </main>
 
-              {data.pages > 1 && (
-                <ShopPagination
-                  page={data.page}
-                  totalPages={data.pages}
-                  onPageChange={
-                    handlePageChange
-                  }
-                />
-              )}
-            </>
-          )}
-      </div>
-    </section>
-  </main>
-
-  <ShopFooter />
-</div>
-);
+      <ShopFooter />
+    </div>
+  );
 }

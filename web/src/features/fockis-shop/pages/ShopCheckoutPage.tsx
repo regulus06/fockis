@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ShopHeader } from "../components/common/ShopHeader";
 import { ShopFooter } from "../components/common/ShopFooter";
 import { ShopBreadcrumbs } from "../components/common/ShopBreadcrumbs";
+import { ShopEmptyState } from "../components/common/ShopEmptyState";
 
 import { CheckoutForm } from "../components/checkout/CheckoutForm";
 
@@ -10,103 +11,56 @@ import { useCheckout } from "../hooks/useCheckout";
 
 import StripeProvider from "../../payments/StripeProvider";
 
+const CRUMBS = [
+  { label: "Shop", to: "/shop" },
+  { label: "Cart", to: "/shop/cart" },
+  { label: "Checkout" },
+];
+
 function ShopCheckoutContent() {
-const checkout = useCheckout();
+  const checkout = useCheckout();
 
-if (
-checkout.checkoutItems.length === 0 ||
-checkout.checkoutSellerGroups.length === 0
-) {
-return (
-<>
-<div
-className="wrap"
-style={{
-paddingTop: 32,
-}}
->
-<ShopBreadcrumbs
-items={[
-{
-label: "Shop",
-to: "/shop",
-},
-{
-label: "Cart",
-to: "/shop/cart",
-},
-{
-label: "Checkout",
-},
-]}
-/> </div>
+  if (
+    checkout.checkoutItems.length === 0 ||
+    checkout.checkoutSellerGroups.length === 0
+  ) {
+    return (
+      <main className="fk-container fk-page">
+        <ShopBreadcrumbs items={CRUMBS} />
+        <ShopEmptyState
+          icon="🛒"
+          title="Your cart is empty"
+          message="Add products to your cart before continuing to checkout."
+          action={
+            <Link to="/shop" className="fk-btn fk-btn--cart">
+              Continue shopping
+            </Link>
+          }
+        />
+      </main>
+    );
+  }
 
-```
-    <section className="tight">
-      <div className="wrap">
-        <div className="shop-state-panel">
-          <div className="shop-state-icon">
-            🛒
-          </div>
-
-          <h4>Your cart is empty</h4>
-
-          <p>
-            Add products to your cart before continuing to checkout.
-          </p>
-
-          <Link
-            to="/shop"
-            className="btn btn-navy"
-          >
-            Continue shopping
-          </Link>
-        </div>
+  return (
+    <main className="fk-checkout">
+      <div className="fk-container fk-page fk-page--flush">
+        <ShopBreadcrumbs items={CRUMBS} />
       </div>
-    </section>
-  </>
-);
-
-}
-
-return (
-<>
-<div
-className="wrap"
-style={{
-paddingTop: 32,
-}}
->
-<ShopBreadcrumbs
-items={[
-{
-label: "Shop",
-to: "/shop",
-},
-{
-label: "Cart",
-to: "/shop/cart",
-},
-{
-label: "Checkout",
-},
-]}
-/> </div>
-  <CheckoutForm checkout={checkout} />
-</>
-
-);
+      <CheckoutForm checkout={checkout} />
+    </main>
+  );
 }
 
 export default function ShopCheckoutPage() {
-return ( <div className="shop-page-root"> <ShopHeader />
+  return (
+    <div className="shop-page-root fk-shop">
+      <ShopHeader />
 
-```
-  <StripeProvider>
-    <ShopCheckoutContent />
-  </StripeProvider>
+      <StripeProvider>
+        <ShopCheckoutContent />
+      </StripeProvider>
 
-  <ShopFooter />
-</div>
-);
+      <ShopFooter />
+    </div>
+  );
 }

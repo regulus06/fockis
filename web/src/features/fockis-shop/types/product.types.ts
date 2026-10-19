@@ -90,6 +90,12 @@ export interface Product {
   slug: string;
 
   /**
+   * Actual seller/user ID.
+   * This is not the same as storeId.
+   */
+  sellerId: string;
+
+  /**
    * Store ownership.
    */
   storeId: string;

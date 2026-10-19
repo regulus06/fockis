@@ -1,4 +1,4 @@
-export type BadgeVariant = 'verified' | 'bestseller' | 'sponsored' | 'new';
+export type BadgeVariant = 'verified' | 'bestseller' | 'sponsored' | 'new' | 'sale';
 
 interface BadgeProps {
   variant: BadgeVariant;
@@ -7,9 +7,10 @@ interface BadgeProps {
 
 const DEFAULT_LABEL: Record<BadgeVariant, string> = {
   verified: '✓ Verified Seller',
-  bestseller: '🏆 Best Seller',
+  bestseller: 'Best Seller',
   sponsored: 'Sponsored',
   new: 'New',
+  sale: 'Sale',
 };
 
 export function Badge({ variant, children }: BadgeProps) {

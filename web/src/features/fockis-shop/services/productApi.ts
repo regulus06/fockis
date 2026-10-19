@@ -1,7 +1,5 @@
 import { FOCKIS_API_URL } from "../../../config/fockisConfig";
-
 /**
-
 * ============================================================================
 * FOCKIS SHOP — PRODUCT API
 * ============================================================================
@@ -17,7 +15,6 @@ import { FOCKIS_API_URL } from "../../../config/fockisConfig";
 * Authentication is supported when a Fockis auth token exists.
 * ============================================================================
   */
-
 import type {
 Product,
 ProductListFilters,
@@ -29,20 +26,16 @@ ProductReviewSummary,
 StockStatus,
 ProductStatus,
 } from "../types/product.types";
-
 const API_BASE_URL =
 import.meta.env.VITE_API_BASE_URL ||
 import.meta.env.VITE_API_URL ||
 FOCKIS_API_URL;
-
 const FOCKIS_SHOP_BASE = "/fockis-shop";
-
 type ProductQueryFilters = ProductListFilters & {
 search?: string;
 categoryId?: string;
 pageSize?: number;
 };
-
 export interface ProductPaginatedResult {
 items: Product[];
 page: number;
@@ -50,109 +43,81 @@ pageSize: number;
 total: number;
 totalPages: number;
 }
-
 interface BackendProduct {
 _id?: string;
 id?: string;
-
 name?: string;
 description?: string;
 shortDescription?: string;
-
 price?: number;
 salePrice?: number | null;
 discount?: number;
 currency?: string;
-
 images?: unknown[];
 image?: string;
 emoji?: string;
-
 category?: unknown;
 categoryId?: string;
 categorySlug?: string;
-
 brand?: string;
 tags?: string[];
-
 stock?: number;
 stockQuantity?: number;
-
 sku?: string;
-
+sellerId?: unknown;
 seller?: unknown;
 storeId?: unknown;
-
 rating?: number;
 totalReviews?: number;
-
 shipping?: Partial<ProductShippingInfo>;
-
 status?: ProductStatus;
 isActive?: boolean;
-
 createdAt?: string;
 updatedAt?: string;
-
 slug?: string;
 }
-
 interface BackendProductPaginatedResult {
 items?: BackendProduct[];
 products?: BackendProduct[];
-
 page?: number;
 pageSize?: number;
 total?: number;
-
 pages?: number;
 totalPages?: number;
 }
-
 interface BackendReview {
 _id?: unknown;
 id?: unknown;
-
 productId?: unknown;
 authorId?: unknown;
-
 authorName?: unknown;
 authorAvatarUrl?: unknown;
-
 rating?: unknown;
 title?: unknown;
 body?: unknown;
-
 verifiedPurchase?: unknown;
 helpfulCount?: unknown;
-
 sellerReply?: {
 body?: unknown;
 createdAt?: unknown;
 } | null;
-
 sellerReplyBody?: unknown;
 sellerReplyCreatedAt?: unknown;
-
 createdAt?: unknown;
 updatedAt?: unknown;
 }
-
 interface BackendReviewSummary {
 averageRating?: unknown;
 totalReviews?: unknown;
 ratingBreakdown?: unknown;
 }
-
 type QueryValue =
 | string
 | number
 | boolean
 | undefined
 | null;
-
 type QueryParams = Record<string, QueryValue>;
-
 function isRecord(
 value: unknown,
 ): value is Record<string, unknown> {
@@ -162,12 +127,10 @@ value !== null &&
 !Array.isArray(value)
 );
 }
-
 function getAuthToken(): string | null {
 if (typeof window === "undefined") {
 return null;
 }
-
 return (
 localStorage.getItem("access_token") ||
 localStorage.getItem("accessToken") ||
@@ -178,7 +141,6 @@ localStorage.getItem("fockis_token") ||
 localStorage.getItem("fockis_auth_token")
 );
 }
-
 function buildUrl(
 path: string,
 params?: QueryParams,
@@ -187,7 +149,6 @@ const url = new URL(
 `${API_BASE_URL}${path}`,
 window.location.origin,
 );
-
 if (params) {
 Object.entries(params).forEach(
 ([key, value]) => {
@@ -204,40 +165,33 @@ String(value),
 },
 );
 }
-
 return url.toString();
 }
-
 async function request<T>(
 path: string,
 options: RequestInit = {},
 params?: QueryParams,
 ): Promise<T> {
 const token = getAuthToken();
-
 const headers = new Headers(
 options.headers,
 );
-
 headers.set(
 "Accept",
 "application/json",
 );
-
 if (options.body) {
 headers.set(
 "Content-Type",
 "application/json",
 );
 }
-
 if (token) {
 headers.set(
 "Authorization",
 `Bearer ${token}`,
 );
 }
-
 const response = await fetch(
 buildUrl(path, params),
 {
@@ -245,14 +199,11 @@ buildUrl(path, params),
 headers,
 },
 );
-
 const contentType =
 response.headers.get(
 "content-type",
 ) ?? "";
-
 let data: unknown;
-
 if (
 contentType.includes(
 "application/json",
@@ -262,7 +213,6 @@ data = await response.json();
 } else {
 data = await response.text();
 }
-
 if (!response.ok) {
 let message =
 `Request failed with status ${response.status}`;
@@ -271,7 +221,6 @@ if (isRecord(data)) {
     message?: unknown;
     error?: unknown;
   };
-
   if (
     Array.isArray(
       body.message,
@@ -307,36 +256,29 @@ if (isRecord(data)) {
 ) {
   message = data;
 }
-
 if (response.status === 401) {
   throw new Error(
     "UNAUTHORIZED",
   );
 }
-
 if (response.status === 404) {
   throw new Error(
     "PRODUCT_NOT_FOUND",
   );
 }
-
 throw new Error(message);
 }
-
 return data as T;
 }
-
 function getId(
 value: unknown,
 ): string {
 if (!value) {
 return "";
 }
-
 if (typeof value === "string") {
 return value;
 }
-
 if (isRecord(value)) {
 if (
 typeof value._id ===
@@ -350,12 +292,9 @@ if (
 ) {
   return value.id;
 }
-
 }
-
 return "";
 }
-
 function getString(
 value: unknown,
 fallback = "",
@@ -364,7 +303,6 @@ return typeof value === "string"
 ? value
 : fallback;
 }
-
 function getNumber(
 value: unknown,
 fallback = 0,
@@ -376,7 +314,6 @@ Number.isFinite(value)
 ? value
 : fallback;
 }
-
 function slugify(
 value: string,
 ): string {
@@ -392,7 +329,6 @@ return value
 "",
 );
 }
-
 function normalizeImages(
 images: unknown,
 fallbackImage?: string,
@@ -410,11 +346,8 @@ sortOrder: 0,
 },
 ];
 }
-
 return [];
-
 }
-
 return images
 .map(
 (
@@ -442,11 +375,9 @@ sortOrder: index,
         getString(
           image.src,
         );
-
       if (!url) {
         return null;
       }
-
       return {
         id:
           getString(
@@ -456,21 +387,17 @@ sortOrder: index,
             image._id,
           ) ||
           `image-${index}`,
-
         url,
-
         alt:
           getString(
             image.alt,
           ) ||
           productName,
-
         isPrimary:
           typeof image.isPrimary ===
           "boolean"
             ? image.isPrimary
             : index === 0,
-
         sortOrder:
           getNumber(
             image.sortOrder,
@@ -478,7 +405,6 @@ sortOrder: index,
           ),
       };
     }
-
     return null;
   },
 )
@@ -489,7 +415,6 @@ sortOrder: index,
     image !== null,
 );
 }
-
 function getStoreData(
 product: BackendProduct,
 ): {
@@ -501,7 +426,6 @@ storeVerified?: boolean;
 } {
 const store =
 product.storeId;
-
 if (isRecord(store)) {
 const storeName =
 getString(
@@ -511,9 +435,7 @@ store.name,
 return {
   storeId:
     getId(store),
-
   storeName,
-
   storeSlug:
     getString(
       store.slug,
@@ -521,41 +443,33 @@ return {
     slugify(
       storeName,
     ),
-
   storeCountryFlag:
     getString(
       store.countryFlag,
     ) ||
     undefined,
-
   storeVerified:
     typeof store.verified ===
     "boolean"
       ? store.verified
       : undefined,
 };
-
 }
-
 return {
 storeId:
 getId(store),
-
 storeName:
   "Fockis Store",
-
 storeSlug:
   "fockis-store",
 };
 }
-
 function getSellerName(
 seller: unknown,
 ): string | undefined {
 if (!isRecord(seller)) {
 return undefined;
 }
-
 return (
 getString(
 seller.displayName,
@@ -569,7 +483,6 @@ seller.username,
 undefined
 );
 }
-
 function getCategoryData(
 product: BackendProduct,
 ): {
@@ -583,17 +496,14 @@ product.category,
 ) {
 const category =
 product.category;
-
 const name =
   getString(
     category.name,
   );
-
 return {
   categoryId:
     product.categoryId ||
     getId(category),
-
   categorySlug:
     product.categorySlug ||
     getString(
@@ -601,15 +511,11 @@ return {
     ) ||
     slugify(name),
 };
-
-
 }
-
 const category =
 getString(
 product.category,
 );
-
 return {
 categoryId:
 product.categoryId ||
@@ -619,7 +525,6 @@ categorySlug:
   slugify(category),
 };
 }
-
 function normalizeStockStatus(
 product: BackendProduct,
 stockQuantity: number,
@@ -631,18 +536,14 @@ product.isActive === false
 ) {
 return "out_of_stock";
 }
-
 if (stockQuantity <= 0) {
 return "out_of_stock";
 }
-
 if (stockQuantity <= 5) {
 return "low_stock";
 }
-
 return "in_stock";
 }
-
 function normalizeReviews(
 product: BackendProduct,
 ): ProductReviewSummary {
@@ -652,13 +553,11 @@ getNumber(
 product.rating,
 0,
 ),
-
 totalReviews:
   getNumber(
     product.totalReviews,
     0,
   ),
-
 ratingBreakdown: {
   1: 0,
   2: 0,
@@ -668,13 +567,11 @@ ratingBreakdown: {
 },
 };
 }
-
 function normalizeShipping(
 product: BackendProduct,
 ): ProductShippingInfo {
 const shipping =
 product.shipping ?? {};
-
 return {
 localDelivery:
 shipping.localDelivery ??
@@ -682,70 +579,57 @@ false,
 nationalDelivery:
   shipping.nationalDelivery ??
   false,
-
 internationalShipping:
   shipping.internationalShipping ??
   false,
-
 pickupAvailable:
   shipping.pickupAvailable ??
   false,
-
 freeDeliveryThreshold:
   shipping.freeDeliveryThreshold ??
   null,
-
 estimatedDeliveryDays:
   shipping.estimatedDeliveryDays ??
   null,
-
 weightKg:
   shipping.weightKg ??
   null,
-
 dimensionsCm:
   shipping.dimensionsCm ??
   null,
-
-
 };
 }
-
 function normalizeProduct(
 raw: BackendProduct,
 ): Product {
 const id =
 getString(raw.id) ||
 getString(raw._id);
-
 const name =
 getString(
 raw.name,
 "Untitled Product",
 );
-
 const slug =
 getString(raw.slug) ||
 slugify(name);
-
 const store =
 getStoreData(raw);
-
+const sellerId =
+getId(raw.sellerId) ||
+getId(raw.seller);
 const category =
 getCategoryData(raw);
-
 const price =
 getNumber(
 raw.price,
 0,
 );
-
 const discount =
 getNumber(
 raw.discount,
 0,
 );
-
 const calculatedSalePrice =
 discount > 0
 ? Number(
@@ -755,29 +639,24 @@ price *
 ).toFixed(2),
 )
 : null;
-
 const salePrice =
 raw.salePrice ??
 calculatedSalePrice;
-
 const stockQuantity =
 getNumber(
 raw.stockQuantity ??
 raw.stock,
 0,
 );
-
 let image:
 | string
 | undefined;
-
 if (raw.image) {
 image =
 getString(
 raw.image,
 ) || undefined;
 }
-
 if (
 !image &&
 Array.isArray(raw.images)
@@ -803,14 +682,12 @@ if (
     undefined;
 }
 }
-
 const images =
 normalizeImages(
 raw.images,
 image,
 name,
 );
-
 const status: ProductStatus =
 raw.status ??
 (
@@ -818,44 +695,34 @@ raw.isActive === false
 ? "unpublished"
 : "active"
 );
-
 return {
 id,
 slug,
+sellerId,
 storeId:
   store.storeId,
-
 storeName:
   store.storeName,
-
 storeSlug:
   store.storeSlug,
-
 storeCountryFlag:
   store.storeCountryFlag,
-
 storeVerified:
   store.storeVerified,
-
 name,
-
 description:
   getString(
     raw.description,
   ),
-
 shortDescription:
   getString(
     raw.shortDescription,
   ) ||
   undefined,
-
 categoryId:
   category.categoryId,
-
 categorySlug:
   category.categorySlug,
-
 tags:
   Array.isArray(raw.tags)
     ? raw.tags.filter(
@@ -866,72 +733,54 @@ tags:
           "string",
       )
     : [],
-
 price,
-
 salePrice,
-
 currency:
   getString(
     raw.currency,
     "USD",
   ),
-
 image,
-
 images,
-
 emoji:
   getString(
     raw.emoji,
   ) ||
   undefined,
-
 stockQuantity,
-
 stockStatus:
   normalizeStockStatus(
     raw,
     stockQuantity,
   ),
-
 lowStockThreshold:
   5,
-
 sku:
   getString(
     raw.sku,
   ),
-
 hasVariants:
   false,
-
 variants: [],
-
 shipping:
   normalizeShipping(
     raw,
   ),
-
 reviews:
   normalizeReviews(
     raw,
   ),
-
 badge:
   salePrice !== null &&
   salePrice < price
     ? "sale"
     : null,
-
 status,
-
 createdAt:
   getString(
     raw.createdAt,
     new Date().toISOString(),
   ),
-
 updatedAt:
   getString(
     raw.updatedAt,
@@ -939,7 +788,6 @@ updatedAt:
   ),
 };
 }
-
 function normalizePaginatedResult(
 data:
 | BackendProductPaginatedResult
@@ -956,23 +804,17 @@ normalizeProduct(
 product,
 ),
 ),
-
   page: 1,
-
   pageSize:
     data.length,
-
   total:
     data.length,
-
   totalPages:
     data.length > 0
       ? 1
       : 0,
 };
-
 }
-
 const rawItems =
 Array.isArray(data.items)
 ? data.items
@@ -981,25 +823,21 @@ data.products,
 )
 ? data.products
 : [];
-
 const page =
 getNumber(
 data.page,
 1,
 );
-
 const pageSize =
 getNumber(
 data.pageSize,
 rawItems.length || 24,
 );
-
 const total =
 getNumber(
 data.total,
 rawItems.length,
 );
-
 const calculatedTotalPages =
 total > 0
 ? Math.ceil(
@@ -1010,14 +848,12 @@ pageSize,
 ),
 )
 : 0;
-
 const totalPages =
 getNumber(
 data.totalPages ??
 data.pages,
 calculatedTotalPages,
 );
-
 return {
 items:
 rawItems.map(
@@ -1028,18 +864,12 @@ normalizeProduct(
 product,
 ),
 ),
-
 page,
-
 pageSize,
-
 total,
-
 totalPages,
-
 };
 }
-
 function mapSort(
 sort:
 | ProductSortOption
@@ -1049,27 +879,20 @@ sort:
 switch (sort) {
 case "price_asc":
 return "price-low";
-
 case "price_desc":
   return "price-high";
-
 case "rating":
   return "rating";
-
 case "newest":
   return "newest";
-
 case "bestselling":
   return "rating";
-
 case "relevance":
   return undefined;
-
 default:
   return sort;
 }
 }
-
 function normalizeCategoryFilter(
 filters: ProductQueryFilters,
 ): string | undefined {
@@ -1078,14 +901,18 @@ filters.categoryId
 ) {
 return filters.categoryId;
 }
-
+// The backend's `categoryId` query param matches Product.category,
+// which stores the category slug (see products.service.ts).
+if (
+filters.categorySlug
+) {
+return filters.categorySlug;
+}
 return undefined;
 }
-
 // ============================================================================
 // PRODUCT REVIEWS — NORMALIZATION
 // ============================================================================
-
 function normalizeReview(
 raw: BackendReview,
 index: number,
@@ -1094,17 +921,14 @@ const id =
 getId(raw.id) ||
 getId(raw._id) ||
 `review-${index}`;
-
 const productId =
 getId(
 raw.productId,
 );
-
 const authorId =
 getId(
 raw.authorId,
 );
-
 const ratingNumber =
 Math.round(
 getNumber(
@@ -1112,7 +936,6 @@ raw.rating,
 0,
 ),
 );
-
 const rating =
 Math.min(
 5,
@@ -1126,7 +949,6 @@ ratingNumber || 1,
 | 3
 | 4
 | 5;
-
 const sellerReplyBody =
 getString(
 raw.sellerReplyBody,
@@ -1134,7 +956,6 @@ raw.sellerReplyBody,
 getString(
 raw.sellerReply?.body,
 );
-
 const sellerReplyCreatedAt =
 getString(
 raw.sellerReplyCreatedAt,
@@ -1142,84 +963,66 @@ raw.sellerReplyCreatedAt,
 getString(
 raw.sellerReply?.createdAt,
 );
-
 const createdAt =
 getString(
 raw.createdAt,
 new Date().toISOString(),
 );
-
 return {
 id,
-
 productId,
-
 authorId,
-
 authorName:
   getString(
     raw.authorName,
     "Fockis User",
   ),
-
 authorAvatarUrl:
   getString(
     raw.authorAvatarUrl,
   ) ||
   undefined,
-
 rating,
-
 title:
   getString(
     raw.title,
   ) ||
   undefined,
-
 body:
   getString(
     raw.body,
   ),
-
 verifiedPurchase:
   Boolean(
     raw.verifiedPurchase,
   ),
-
 helpfulCount:
   getNumber(
     raw.helpfulCount,
     0,
   ),
-
 createdAt,
-
 sellerReply:
   sellerReplyBody
     ? {
         body:
           sellerReplyBody,
-
         createdAt:
           sellerReplyCreatedAt ||
           createdAt,
       }
     : null,
-
 };
 }
-
 function extractReviewArray(
 data: unknown,
 ): BackendReview[] {
 if (Array.isArray(data)) {
 return data as BackendReview[];
 }
-
 if (!isRecord(data)) {
 return [];
 }
-
 if (
 Array.isArray(
 data.reviews,
@@ -1227,7 +1030,6 @@ data.reviews,
 ) {
 return data.reviews as BackendReview[];
 }
-
 if (
 Array.isArray(
 data.items,
@@ -1235,7 +1037,6 @@ data.items,
 ) {
 return data.items as BackendReview[];
 }
-
 if (
 Array.isArray(
 data.data,
@@ -1243,46 +1044,36 @@ data.data,
 ) {
 return data.data as BackendReview[];
 }
-
 return [];
 }
-
 function normalizeReviewSummary(
 data: unknown,
 ): ProductReviewSummary {
 let raw: BackendReviewSummary =
 {};
-
 if (isRecord(data)) {
 const source =
 isRecord(data.data)
 ? data.data
 : data;
-
 raw = {
   averageRating:
     source.averageRating,
-
   totalReviews:
     source.totalReviews,
-
   ratingBreakdown:
     source.ratingBreakdown,
 };
-
 }
-
 const breakdown: Record<
 string,
 unknown>
-
  =
  isRecord(
  raw.ratingBreakdown,
  )
  ? raw.ratingBreakdown
  : {};
-
 return {
 averageRating:
 getNumber(
@@ -1294,32 +1085,27 @@ totalReviews:
     raw.totalReviews,
     0,
   ),
-
 ratingBreakdown: {
   1:
     getNumber(
       breakdown["1"],
       0,
     ),
-
   2:
     getNumber(
       breakdown["2"],
       0,
     ),
-
   3:
     getNumber(
       breakdown["3"],
       0,
     ),
-
   4:
     getNumber(
       breakdown["4"],
       0,
     ),
-
   5:
     getNumber(
       breakdown["5"],
@@ -1328,11 +1114,9 @@ ratingBreakdown: {
 },
 };
 }
-
 // ============================================================================
 // LIST PRODUCTS
 // ============================================================================
-
 export async function listProducts(
 filters: ProductQueryFilters = {},
 ): Promise<ProductPaginatedResult> {
@@ -1344,7 +1128,6 @@ typeof filters.page ===
 filters.page,
 )
 : 1;
-
 const pageSize =
 typeof filters.pageSize ===
 "number"
@@ -1353,7 +1136,6 @@ typeof filters.pageSize ===
 filters.pageSize,
 )
 : 24;
-
 const search =
 typeof filters.search ===
 "string"
@@ -1362,17 +1144,14 @@ typeof filters.search ===
 "string"
 ? filters.query.trim()
 : undefined;
-
 const categoryId =
 normalizeCategoryFilter(
 filters,
 );
-
 const sort =
 mapSort(
 filters.sort,
 );
-
 const data =
 await request<
 BackendProductPaginatedResult
@@ -1389,16 +1168,13 @@ categoryId,
 sort,
 },
 );
-
 return normalizePaginatedResult(
 data,
 );
 }
-
 // ============================================================================
 // GET PRODUCTS
 // ============================================================================
-
 export async function getProducts(
 filters: ProductQueryFilters = {},
 ): Promise<ProductPaginatedResult> {
@@ -1406,11 +1182,9 @@ return listProducts(
 filters,
 );
 }
-
 // ============================================================================
 // SEARCH PRODUCTS
 // ============================================================================
-
 export async function searchProducts(
 search: string,
 page = 1,
@@ -1422,18 +1196,15 @@ page,
 pageSize,
 });
 }
-
 // ============================================================================
 // GET PRODUCT BY ID
 // ============================================================================
-
 export async function getProductById(
 productId: string,
 ): Promise<Product | null> {
 if (!productId) {
 return null;
 }
-
 try {
 const data =
 await request<
@@ -1449,7 +1220,6 @@ method: "GET",
 return normalizeProduct(
   data,
 );
-
 } catch (error) {
 if (
 error instanceof Error &&
@@ -1471,29 +1241,24 @@ return null;
 throw error;
 }
 }
-
 // ============================================================================
 // GET PRODUCT BY SLUG
 // ============================================================================
-
 export async function getProductBySlug(
 slug: string,
 ): Promise<Product | null> {
 if (!slug) {
 return null;
 }
-
 const normalizedSlug =
 slug
 .trim()
 .toLowerCase();
-
 const firstPage =
 await listProducts({
 page: 1,
 pageSize: 100,
 });
-
 const found =
 firstPage.items.find(
 (
@@ -1504,21 +1269,17 @@ product.slug
 .toLowerCase() ===
 normalizedSlug,
 );
-
 return found ?? null;
 }
-
 // ============================================================================
 // GET PRODUCT REVIEWS
 // ============================================================================
-
 export async function getProductReviews(
 productId: string,
 ): Promise<ProductReview[]> {
 if (!productId) {
 return [];
 }
-
 const data =
 await request<unknown>(
 `${FOCKIS_SHOP_BASE}/reviews/product/${encodeURIComponent(
@@ -1528,7 +1289,6 @@ await request<unknown>(
 method: "GET",
 },
 );
-
 return extractReviewArray(
 data,
 ).map(
@@ -1542,11 +1302,9 @@ index,
 ),
 );
 }
-
 // ============================================================================
 // GET PRODUCT REVIEW SUMMARY
 // ============================================================================
-
 export async function getProductReviewSummary(
 productId: string,
 ): Promise<ProductReviewSummary> {
@@ -1554,7 +1312,6 @@ if (!productId) {
 return {
 averageRating: 0,
   totalReviews: 0,
-
   ratingBreakdown: {
     1: 0,
     2: 0,
@@ -1563,9 +1320,7 @@ averageRating: 0,
     5: 0,
   },
 };
-
 }
-
 const data =
 await request<unknown>(
 `${FOCKIS_SHOP_BASE}/reviews/product/${encodeURIComponent(
@@ -1575,18 +1330,42 @@ await request<unknown>(
 method: "GET",
 },
 );
-
 return normalizeReviewSummary(
 data,
 );
 }
-
+// ============================================================================
+// LIST PRODUCTS FOR ONE STORE
+// GET /fockis-shop/products/store/:storeId (public, active products only)
+// ============================================================================
+export async function listStoreProducts(
+storeId: string,
+): Promise<Product[]> {
+if (!storeId) {
+return [];
+}
+const data =
+await request<
+BackendProductPaginatedResult
+| BackendProduct[]
+>(
+`${FOCKIS_SHOP_BASE}/products/store/${encodeURIComponent(
+storeId,
+)}`,
+{
+method: "GET",
+},
+);
+return normalizePaginatedResult(
+data,
+).items;
+}
 // ============================================================================
 // OBJECT API
 // ============================================================================
-
 export const productApi = {
 listProducts,
+listStoreProducts,
 getProducts,
 searchProducts,
 getProductById,
@@ -1594,5 +1373,4 @@ getProductBySlug,
 getProductReviews,
 getProductReviewSummary,
 };
-
 export default productApi;

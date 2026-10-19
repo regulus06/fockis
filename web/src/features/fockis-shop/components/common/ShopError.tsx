@@ -6,7 +6,8 @@ interface ShopErrorProps {
 
 export function ShopError({ title = "Something didn't load", message, onRetry }: ShopErrorProps) {
   return (
-    <div className="shop-state-panel">
+    <div className="shop-state-panel shop-state-panel--error" role="alert">
+      <div className="shop-state-icon" aria-hidden="true">⚠️</div>
       <h4>{title}</h4>
       {message && <p>{message}</p>}
       {onRetry && (

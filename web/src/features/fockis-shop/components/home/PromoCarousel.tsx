@@ -61,7 +61,6 @@ className={`banner-slide${index === slide ? ' active' : ''}`}
 > <div className="content"> <div className="eyebrow-sm">
 {item.eyebrow} </div>
 
-```
             <h3>{item.title}</h3>
 
             <p>{item.body}</p>

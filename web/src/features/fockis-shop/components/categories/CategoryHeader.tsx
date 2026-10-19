@@ -9,7 +9,8 @@ export function CategoryHeader({ category, resultCount }: { category: Category; 
         <span className="ic" aria-hidden="true">{category.icon}</span>
         <div>
           <h1>{category.name}</h1>
-          {resultCount != null && <p>{resultCount.toLocaleString()} products</p>}
+          {category.description && <p className="category-page-header-desc">{category.description}</p>}
+          {resultCount != null && <p>{resultCount.toLocaleString()} {resultCount === 1 ? 'product' : 'products'}</p>}
         </div>
       </div>
     </div>

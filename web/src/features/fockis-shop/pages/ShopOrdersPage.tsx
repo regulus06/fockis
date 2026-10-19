@@ -22,15 +22,16 @@ export default function ShopOrdersPage() {
   const { orders, loading } = useOrders();
 
   return (
-    <div className="shop-page-root">
+    <div className="shop-page-root fk-shop">
       <ShopHeader />
-      <div className="wrap" style={{ paddingTop: 32 }}>
+      <main className="fk-container fk-page">
         <ShopBreadcrumbs items={[{ label: 'Shop', to: '/shop' }, { label: 'Orders' }]} />
-      </div>
-      <section className="tight">
-        <div className="wrap">
-          <div className="section-head">
-            <div><h1>Your orders</h1></div>
+        <div>
+          <div className="fk-page__head">
+            <div>
+              <h1>Your orders</h1>
+              <p>Track, review and manage your Fockis orders.</p>
+            </div>
           </div>
 
           {loading && <ShopLoading label="Loading orders…" rows={3} />}
@@ -40,7 +41,7 @@ export default function ShopOrdersPage() {
               icon="📦"
               title="No orders yet"
               message="Orders you place will show up here."
-              action={<Link to="/shop" className="btn btn-navy">Start Shopping</Link>}
+              action={<Link to="/shop" className="fk-btn fk-btn--cart">Start shopping</Link>}
             />
           )}
 
@@ -57,7 +58,7 @@ export default function ShopOrdersPage() {
                   </div>
                   <div className="order-list-item-status">
                     {order.sellerGroups.map((g) => (
-                      <span className="tag" key={g.id}>{STATUS_LABEL[g.status]}</span>
+                      <span className={`tag order-status order-status--${g.status}`} key={g.id}>{STATUS_LABEL[g.status] ?? g.status}</span>
                     ))}
                   </div>
                   <div className="mono">{formatPrice(order.total)}</div>
@@ -66,7 +67,7 @@ export default function ShopOrdersPage() {
             </div>
           )}
         </div>
-      </section>
+      </main>
       <ShopFooter />
     </div>
   );

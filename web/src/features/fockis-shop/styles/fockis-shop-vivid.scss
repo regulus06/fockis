@@ -1,0 +1,1441 @@
+/* ============================================================================
+   FOCKIS SHOP — VIVID THEME ("Flash deal" design)
+   ============================================================================
+
+   Loaded LAST from routes/shopRoutes.tsx, after fockis-shop-theme.scss.
+   It re-colours every Shop page (deep indigo header & footer, hot-pink
+   actions, lavender canvas) and styles the new homepage blocks:
+
+     flash banner · pink deals panel · purple new-arrivals panel ·
+     pastel category tiles · Watch & Shop · compact product cards ·
+     category mini panels · store logo tiles · benefits · sell band
+
+   Everything is scoped under .shop-page-root. Delete the import line in
+   shopRoutes.tsx to go back to the previous look.
+   ========================================================================== */
+
+$bp-sm: 600px;
+$bp-md: 900px;
+$bp-lg: 1200px;
+
+@mixin sm-down { @media (max-width: #{$bp-sm - 1px}) { @content; } }
+@mixin md-down { @media (max-width: #{$bp-md - 1px}) { @content; } }
+@mixin lg-down { @media (max-width: #{$bp-lg - 1px}) { @content; } }
+
+@mixin line-clamp($lines) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------------------
+   TOKENS — the existing --fk-* names are re-pointed, so every component that
+   already uses them (cart, checkout, product page, stores…) follows along.
+   ------------------------------------------------------------------------ */
+
+.shop-page-root {
+  /* Primary action colour (was orange) → hot pink-red */
+  --fk-orange: #ff1f5a;
+  --fk-orange-600: #e8104b;
+  --fk-orange-700: #c70b3f;
+  --fk-orange-50: #fff0f4;
+  --fk-orange-100: #ffd3df;
+
+  /* Links / secondary (was blue) → indigo-violet */
+  --fk-blue: #3d2fd6;
+  --fk-blue-600: #2f21b8;
+  --fk-blue-50: #efecff;
+
+  /* Dark surfaces (was navy) → deep indigo */
+  --fk-navy: #1a0e4f;
+  --fk-navy-2: #21125f;
+  --fk-navy-3: #2e1a7c;
+
+  --fk-ink: #140b35;
+  --fk-text: #2a2346;
+  --fk-muted: #6b6787;
+  --fk-line: #ebe7f5;
+  --fk-line-2: #dcd6ee;
+  --fk-bg: #f5f2fc;
+  --fk-surface-2: #f7f5fd;
+
+  --fk-red: #ff1f5a;
+  --fk-red-50: #fff0f4;
+  --fk-yellow: #ffd23f;
+  --fk-yellow-600: #ffb81c;
+  --fk-purple: #5531ff;
+
+  --fk-radius: 12px;
+  --fk-shadow-sm: 0 1px 2px rgba(26, 14, 79, 0.06), 0 4px 14px -8px rgba(26, 14, 79, 0.16);
+  --fk-shadow: 0 2px 8px rgba(26, 14, 79, 0.08), 0 12px 28px -14px rgba(26, 14, 79, 0.3);
+
+  --fk-header-bg: linear-gradient(90deg, #150a44 0%, #22106a 50%, #170b4a 100%);
+
+  :focus-visible { outline-color: rgba(255, 31, 90, 0.5); }
+}
+
+/* Page canvas: lavender with soft pink / violet glows */
+.fk-app-content--shop > .shop-page-root.fk-shop.fk-home,
+.shop-page-root.fk-shop.fk-home {
+  background:
+    radial-gradient(900px 520px at -5% 8%, rgba(255, 31, 90, 0.10), transparent 70%),
+    radial-gradient(900px 520px at 105% 18%, rgba(85, 49, 255, 0.12), transparent 70%),
+    var(--fk-bg) !important;
+}
+
+/* ============================================================================
+   BUTTONS — rounded rectangles like the design
+   ========================================================================== */
+
+.shop-page-root {
+  .fk-btn {
+    border-radius: 8px;
+    font-weight: 700;
+
+    &--cart {
+      background: var(--fk-orange);
+      box-shadow: 0 6px 14px -8px rgba(255, 31, 90, 0.9);
+      &:hover:not(:disabled) { background: var(--fk-orange-600); }
+    }
+
+    &--buy {
+      background: var(--fk-navy-3);
+      &:hover:not(:disabled) { background: var(--fk-navy-2); }
+    }
+
+    &--yellow {
+      background: linear-gradient(180deg, #ffe066 0%, var(--fk-yellow) 45%, var(--fk-yellow-600) 100%);
+      color: #1f0f46 !important;
+      box-shadow: 0 8px 18px -10px rgba(255, 184, 28, 0.9);
+      &:hover { filter: brightness(1.04); }
+    }
+
+    &--ghost-light {
+      border-radius: 8px;
+      border-color: rgba(255, 255, 255, 0.75);
+    }
+  }
+
+  .btn { border-radius: 8px; }
+  .btn-navy, .btn-brass { box-shadow: 0 6px 14px -8px rgba(255, 31, 90, 0.9); }
+}
+
+/* ============================================================================
+   LOGO
+   ========================================================================== */
+
+.shop-page-root .fk-logo__word { font-size: 25px; font-weight: 800; }
+.shop-page-root .fk-logo__label {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: #ffc23d;
+}
+.shop-page-root .fk-logo__mark { border-radius: 26%; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35); }
+
+/* ============================================================================
+   HEADER
+   ========================================================================== */
+
+.shop-page-root .fk-header {
+  background: var(--fk-header-bg);
+
+  &__main {
+    gap: 18px;
+    min-height: 72px;
+  }
+
+  &__menu-btn {
+    display: inline-flex;
+    width: 42px;
+    height: 42px;
+  }
+
+  &__brand { padding: 2px 4px; margin-right: 24px; }
+
+  &__search {
+    flex: 1 1 auto;
+    max-width: 620px;
+    margin: 0 auto;
+  }
+
+  &__actions { gap: 10px; }
+
+  &__icon-action {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+
+    &:hover { border-color: transparent; background: rgba(255, 255, 255, 0.1); }
+  }
+
+  /* The cart is now an icon button like the others */
+  &__cart {
+    align-items: center;
+    padding: 0;
+    &:hover { border-color: transparent; }
+  }
+
+  &__count {
+    top: 2px;
+    right: 0;
+    background: var(--fk-orange);
+    color: #fff;
+    box-shadow: 0 0 0 2px #1d0e57;
+
+    &--cart {
+      top: 0;
+      right: -2px;
+      color: #fff;
+      background: var(--fk-orange);
+    }
+  }
+
+  @include md-down {
+    &__main { gap: 6px; min-height: 58px; }
+    &__brand { margin-right: 0; }
+  }
+
+  @include sm-down {
+    /* Keep account + cart on phones, hide wishlist (it's in the menu) */
+    &__icon-action { display: inline-flex; width: 40px; height: 40px; }
+    &__actions > a:nth-child(2) { display: none; }
+  }
+}
+
+/* Search: white field, pink button inset on the right */
+.shop-page-root .fk-search {
+  height: 46px;
+  border-radius: 8px;
+  padding: 4px;
+  border: 0;
+
+  &:focus-within {
+    box-shadow: 0 0 0 3px rgba(255, 31, 90, 0.35);
+  }
+
+  &__icon { padding: 0 2px 0 10px; color: #3a3456; }
+
+  input { font-size: 15px; }
+
+  button {
+    padding: 0 16px;
+    border-radius: 6px;
+    background: linear-gradient(180deg, #ff3a6c, var(--fk-orange));
+    &:hover { background: var(--fk-orange-600); }
+  }
+
+  &--hero,
+  &--compact { border: 1px solid var(--fk-line-2); }
+}
+
+/* ---------- Nav bar ---------- */
+
+.shop-page-root .fk-catbar {
+  background: var(--fk-header-bg);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+
+  &__inner {
+    height: 46px;
+    gap: 0;
+    overflow: visible;
+  }
+
+  &__scroll {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    height: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+
+  &__deliver {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px 0 0;
+    margin-right: 10px;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font-size: 13.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover { color: #ffc23d; }
+  }
+
+  &__flag { font-size: 12px; }
+
+  &__link {
+    position: relative;
+    height: 46px;
+    padding: 0 12px;
+    border: 0 !important;
+    border-radius: 0;
+    font-size: 14px;
+    font-weight: 600;
+
+    &:hover { background: rgba(255, 255, 255, 0.06); }
+
+    &.is-active {
+      background: transparent;
+      font-weight: 700;
+
+      &::after {
+        content: "";
+        position: absolute;
+        left: 10px;
+        right: 10px;
+        bottom: 0;
+        height: 3px;
+        border-radius: 3px 3px 0 0;
+        background: var(--fk-orange);
+      }
+    }
+  }
+
+  &__more {
+    position: relative;
+    flex-shrink: 0;
+    margin-left: 4px;
+  }
+
+  &__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 80;
+    min-width: 230px;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 6px;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 18px 40px -12px rgba(20, 10, 60, 0.45);
+
+    a {
+      display: block;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--fk-ink) !important;
+      text-decoration: none;
+
+      &:hover { background: var(--fk-surface-2); }
+      &.is-sell { color: var(--fk-orange-700) !important; }
+    }
+  }
+}
+
+.shop-page-root .fk-drawer__head { background: var(--fk-header-bg); }
+
+/* ============================================================================
+   SECTIONS (white cards)
+   ========================================================================== */
+
+.shop-page-root .fk-home__content {
+  padding-top: 14px;
+  padding-bottom: 28px;
+}
+
+.shop-page-root .fk-section {
+  margin-bottom: 14px;
+  padding: 16px 18px 12px;
+  border-radius: var(--fk-radius);
+  box-shadow: var(--fk-shadow-sm);
+
+  &__head {
+    align-items: flex-start;
+    margin-bottom: 12px;
+
+    h2 {
+      font-size: clamp(17px, 1.7vw, 21px);
+      color: var(--fk-ink) !important;
+    }
+
+    p { font-size: 12.5px; }
+  }
+
+  &__eyebrow { color: var(--fk-orange-700); }
+
+  &__link {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--fk-blue) !important;
+
+    &:hover { color: var(--fk-orange-700) !important; }
+  }
+}
+
+/* Title + subtitle on one line, like "Recently viewed  Pick up where…" */
+.shop-page-root .fk-rail-section--cards-compact .fk-section__head > div {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+}
+
+.shop-page-root .fk-rail-section--flash {
+  background: linear-gradient(100deg, #fff0f4 0%, #ffffff 60%);
+  border: 1px solid var(--fk-orange-100);
+  .fk-section__head h2 { color: var(--fk-orange-700) !important; }
+}
+
+.shop-page-root .rail-arrow {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+
+  &:hover { border-color: var(--fk-orange); color: var(--fk-orange-700); }
+}
+
+/* Empty states: soft lavender boxes */
+.shop-page-root .fk-section .shop-state-panel {
+  gap: 4px;
+  padding: 18px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--fk-surface-2);
+
+  h4 { font-size: 14px; font-weight: 700; }
+  p { font-size: 12px; }
+}
+
+.shop-page-root .shop-state-icon {
+  width: auto;
+  height: auto;
+  background: transparent;
+  color: #a99bf0;
+  font-size: 28px;
+}
+
+/* ============================================================================
+   PRODUCT CARDS
+   ========================================================================== */
+
+.shop-page-root .fk-card {
+  border-color: var(--fk-line);
+  border-radius: 10px;
+
+  &__discount {
+    left: 8px;
+    top: auto;
+    bottom: 8px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--fk-orange);
+    font-size: 12px;
+  }
+
+  &__title:hover { color: var(--fk-orange-700) !important; }
+  &__seller:hover { color: var(--fk-blue) !important; }
+  &__stock.is-low { color: var(--fk-orange-700); }
+}
+
+/* ---- "deal" — big white card inside the pink panel ---- */
+
+.shop-page-root .fk-card--deal {
+  border: 0;
+  box-shadow: 0 10px 24px -14px rgba(90, 0, 30, 0.6);
+
+  .fk-card__media {
+    aspect-ratio: 1.15 / 1;
+    background: #fff;
+    img { padding: 14px; }
+  }
+
+  .fk-card__body { gap: 4px; padding: 6px 14px 14px; }
+
+  .fk-card__title {
+    min-height: 0;
+    font-size: 15px;
+    font-weight: 700;
+    -webkit-line-clamp: 1;
+  }
+
+  .fk-card__price-row { margin: 0; gap: 8px; }
+  .fk-card__price { font-size: 22px; color: var(--fk-orange-600); }
+  .fk-card__was { font-size: 13px; color: #9b97b0; }
+
+  .fk-card__actions {
+    grid-template-columns: 1fr;
+    padding-top: 10px;
+
+    .fk-btn { min-height: 40px; font-size: 14px; border-radius: 6px; }
+  }
+}
+
+/* ---- "compact" — image left, details right, buttons underneath ---- */
+
+.shop-page-root .fk-card--compact {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  grid-template-rows: auto;
+  column-gap: 10px;
+  row-gap: 2px;
+  align-content: start;
+  width: clamp(216px, 17vw, 250px);
+  padding: 8px;
+  border-radius: 10px;
+
+  .fk-card__media {
+    grid-column: 1;
+    grid-row: 1 / span 5;
+    align-self: start;
+    width: 74px;
+    height: 74px;
+    aspect-ratio: auto;
+    border-radius: 8px;
+    background: var(--fk-surface-2);
+
+    img { object-fit: cover; padding: 0; mix-blend-mode: normal; }
+  }
+
+  .fk-card__discount { left: 4px; bottom: 4px; padding: 1px 6px; font-size: 10.5px; }
+  .fk-card__video-flag { display: none; }
+  .fk-card__placeholder { font-size: 26px; small { display: none; } }
+
+  .fk-card__body { display: contents; }
+
+  .fk-card__title,
+  .fk-card__price-row,
+  .fk-card__stock,
+  .fk-card__seller {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  .fk-card__title {
+    min-height: 0;
+    font-size: 13px;
+    font-weight: 600;
+    -webkit-line-clamp: 1;
+  }
+
+  .fk-card__price-row { margin: 0; gap: 0 6px; }
+  .fk-card__price { font-size: 14px; }
+  .fk-card__was { font-size: 11px; }
+  .fk-card__stock { font-size: 11.5px; }
+  .fk-card__stock.is-low,
+  .fk-card__stock.is-out { color: var(--fk-orange-600); }
+  .fk-card__seller { font-size: 11.5px; }
+
+  .fk-card__actions {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 0;
+
+    .fk-btn {
+      min-height: 30px;
+      padding: 5px 4px;
+      gap: 4px;
+      font-size: 11.5px;
+      border-radius: 6px;
+      box-shadow: none;
+    }
+
+    .fk-btn--cart {
+      background: #fff;
+      color: var(--fk-orange-600);
+      border-color: #ffb3c6;
+
+      &:hover:not(:disabled) { background: var(--fk-orange-50); }
+    }
+
+    .fk-btn--buy {
+      background: var(--fk-orange);
+      &:hover:not(:disabled) { background: var(--fk-orange-600); }
+    }
+  }
+
+  .fk-card__error { grid-column: 1 / -1; }
+
+  &.fk-card--skeleton {
+    .fk-card__body { display: flex; grid-column: 2; grid-row: 1; }
+    .fk-skel--btn { display: none; }
+  }
+
+  &:hover .fk-card__media img { transform: none; }
+}
+
+/* ============================================================================
+   FLASH DEAL BANNER
+   ========================================================================== */
+
+.shop-page-root .fk-flash {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  min-height: 300px;
+  margin-bottom: 14px;
+  padding: 28px clamp(20px, 4vw, 56px);
+  border-radius: 16px;
+  overflow: hidden;
+  isolation: isolate;
+  color: #fff;
+  background:
+    radial-gradient(420px 260px at 58% 50%, rgba(255, 210, 120, 0.45), transparent 70%),
+    radial-gradient(700px 360px at 30% 0%, rgba(255, 90, 130, 0.55), transparent 70%),
+    repeating-conic-gradient(from 0deg at 58% 50%, rgba(255, 255, 255, 0.05) 0deg 6deg, transparent 6deg 18deg),
+    linear-gradient(100deg, #5b0838 0%, #c90f3d 18%, #f21f4d 45%, #e4103f 72%, #4c0a4a 100%);
+  box-shadow: 0 18px 40px -22px rgba(160, 0, 50, 0.8);
+
+  &::after {
+    /* glossy top edge */
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14), inset 0 -60px 80px -40px rgba(60, 0, 40, 0.45);
+    pointer-events: none;
+  }
+
+  &__copy {
+    position: relative;
+    z-index: 2;
+    padding-left: clamp(30px, 6vw, 92px);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: clamp(46px, 6.6vw, 92px) !important;
+    font-weight: 900 !important;
+    font-style: italic;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    color: #fff !important;
+    text-shadow: 0 4px 0 rgba(120, 0, 30, 0.45), 0 10px 26px rgba(80, 0, 20, 0.45);
+    white-space: nowrap;
+
+    em {
+      font-style: italic;
+      background: linear-gradient(180deg, #fff6b0 0%, #ffd23f 45%, #ffa51c 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: none;
+      filter: drop-shadow(0 4px 0 rgba(120, 0, 30, 0.45));
+    }
+  }
+
+  p {
+    white-space: nowrap;
+    margin: 12px 0 18px;
+    font-size: clamp(14px, 1.4vw, 19px);
+    font-style: italic;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  &__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #ffe680 0%, #ffd23f 50%, #ffb81c 100%);
+    color: #2a0f3a !important;
+    font-size: 15px;
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow: 0 10px 22px -10px rgba(80, 20, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    transition: transform 0.15s ease, filter 0.15s ease;
+
+    &:hover { transform: translateY(-1px); filter: brightness(1.05); }
+  }
+
+  /* Products */
+  &__products {
+    position: relative;
+    z-index: 1;
+    height: 240px;
+  }
+
+  &__product {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 18px;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 20px 34px -16px rgba(40, 0, 20, 0.75);
+    transition: transform 0.2s ease;
+
+    img { width: 100%; height: 100%; object-fit: contain; padding: 10px; }
+
+    &:hover { z-index: 3; transform: translateY(-4px) scale(1.03) rotate(0deg); }
+
+    &--1 { left: 4%; top: 46px; width: 38%; aspect-ratio: 1; transform: rotate(-8deg); z-index: 2; }
+    &--2 { left: 32%; top: 0; width: 44%; aspect-ratio: 1; transform: rotate(3deg); z-index: 1; }
+    &--3 { right: 0; top: 64px; width: 34%; aspect-ratio: 1; transform: rotate(9deg); z-index: 2; }
+  }
+
+  /* Countdown */
+  &__timer {
+    position: relative;
+    z-index: 2;
+    align-self: start;
+    padding: 12px 14px 12px;
+    border-radius: 14px;
+    background: rgba(40, 4, 34, 0.55);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(4px);
+    text-align: center;
+  }
+
+  &__timer-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  &__timer-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  &__unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 54px;
+    padding: 8px 6px 6px;
+    border-radius: 10px;
+    background: rgba(20, 0, 20, 0.55);
+
+    strong {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    small { font-size: 11px; color: rgba(255, 255, 255, 0.85); }
+  }
+
+  &__colon {
+    padding-top: 8px;
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  /* Decorations */
+  &__bolt {
+    position: absolute;
+    z-index: 1;
+    width: clamp(36px, 5vw, 70px);
+    filter: drop-shadow(0 6px 10px rgba(80, 0, 0, 0.45));
+    pointer-events: none;
+
+    &--left { left: clamp(10px, 2.5vw, 34px); top: 18%; transform: rotate(8deg); }
+    &--right { right: 21%; bottom: -6%; width: clamp(30px, 4vw, 56px); transform: rotate(12deg); }
+  }
+
+  &__spark {
+    position: absolute;
+    z-index: 1;
+    width: 18px;
+    color: #ffe9a6;
+    filter: drop-shadow(0 0 6px rgba(255, 230, 150, 0.9));
+    pointer-events: none;
+
+    &--1 { left: 45%; top: 14%; }
+    &--2 { left: 30%; bottom: 14%; width: 12px; }
+    &--3 { right: 26%; top: 30%; width: 14px; }
+    &--4 { right: 6%; bottom: 18%; }
+  }
+
+  @include lg-down {
+    grid-template-columns: auto minmax(0, 1fr);
+
+    &__timer {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+    }
+
+    &__products { height: 190px; margin-top: 96px; }
+    &__product--1 { top: 30px; width: 34%; }
+    &__product--2 { width: 38%; }
+    &__product--3 { top: 40px; width: 32%; }
+  }
+
+  @include md-down {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    padding: 22px 18px 20px;
+
+    &__copy { padding-left: 0; padding-top: 70px; }
+    p { white-space: normal; }
+    &__products { display: none; }
+    &__timer { left: 18px; right: auto; top: 16px; padding: 8px 10px; }
+    &__timer-label { display: none; }
+    &__unit { min-width: 44px; padding: 6px 4px 4px; strong { font-size: 20px; } }
+    &__colon { padding-top: 4px; font-size: 18px; }
+    &__bolt--left { left: auto; right: 16px; top: 18px; }
+    &__bolt--right { display: none; }
+  }
+}
+
+/* ============================================================================
+   PINK DEALS PANEL + PURPLE NEW ARRIVALS PANEL
+   ========================================================================== */
+
+.shop-page-root .fk-panels {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 12px;
+  margin-bottom: 14px;
+
+  @include lg-down { grid-template-columns: minmax(0, 1fr); }
+}
+
+.shop-page-root .fk-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 14px 14px 16px;
+  border-radius: 14px;
+  overflow: hidden;
+  color: #fff;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+
+    h2 {
+      margin: 0;
+      font-size: clamp(19px, 2vw, 24px);
+      font-weight: 800;
+      color: #fff !important;
+    }
+  }
+
+  &__link {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff !important;
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
+  }
+
+  &__deals {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    flex: 1;
+
+    @include sm-down {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      gap: 10px;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+
+      > * { flex: 0 0 72%; scroll-snap-align: start; }
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    flex: 1;
+  }
+
+  &__tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 110px;
+    aspect-ratio: 1.6 / 1;
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 10px 24px -14px rgba(10, 0, 60, 0.7);
+    transition: transform 0.15s ease;
+
+    img { width: 100%; height: 100%; object-fit: cover; }
+    &:hover { transform: translateY(-2px); }
+
+    &.fk-skel { background: rgba(255, 255, 255, 0.25); }
+  }
+
+  &__emoji { font-size: 40px; }
+
+  &__empty {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 220px;
+    padding: 20px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.14);
+    text-align: center;
+
+    strong { font-size: 16px; }
+    span { font-size: 13px; opacity: 0.9; }
+  }
+
+  &--deals {
+    background:
+      radial-gradient(500px 220px at 0% 0%, rgba(255, 140, 170, 0.5), transparent 70%),
+      linear-gradient(135deg, #ff1d55 0%, #ff2b62 45%, #ff3c84 100%);
+    box-shadow: 0 16px 34px -20px rgba(255, 31, 90, 0.9);
+
+    .fk-card--skeleton { background: rgba(255, 255, 255, 0.9); }
+  }
+
+  @media (min-width: #{$bp-sm}) and (max-width: #{$bp-lg - 1px}) {
+    &__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    &__tile { aspect-ratio: 1; }
+    .fk-card--deal .fk-card__media { aspect-ratio: 1.5 / 1; }
+  }
+
+  &--arrivals {
+    background:
+      radial-gradient(420px 220px at 100% 0%, rgba(160, 120, 255, 0.55), transparent 70%),
+      linear-gradient(140deg, #5a2dff 0%, #4322e6 50%, #3317c2 100%);
+    box-shadow: 0 16px 34px -20px rgba(70, 30, 230, 0.9);
+  }
+}
+
+/* ============================================================================
+   SHOP BY CATEGORY — pastel icon tiles
+   ========================================================================== */
+
+.shop-page-root .fk-catgrid {
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 10px;
+
+  @include lg-down { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+  @include sm-down { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+}
+
+.shop-page-root .fk-catgrid__tile {
+  justify-content: center;
+  gap: 6px;
+  min-height: 82px;
+  padding: 12px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: #fdf3f7;
+
+  &:hover { box-shadow: var(--fk-shadow); border-color: transparent; }
+
+  &--tone-0 { background: #fff0f6; }
+  &--tone-1 { background: #f1eeff; }
+  &--tone-2 { background: #fff5ec; }
+  &--tone-3 { background: #f3f0ff; }
+  &--tone-4 { background: #fff0f3; }
+  &--tone-5 { background: #fff7e8; }
+
+  &.fk-skel { min-height: 82px; }
+}
+
+.shop-page-root .fk-catgrid__icon {
+  font-size: 32px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 6px rgba(80, 30, 120, 0.25));
+}
+
+.shop-page-root .fk-catgrid__name { font-size: 12.5px; color: var(--fk-ink); }
+
+/* ============================================================================
+   WATCH & SHOP
+   ========================================================================== */
+
+.shop-page-root .fk-watch {
+  padding: 16px 18px 14px;
+  background:
+    radial-gradient(520px 240px at 0% 0%, rgba(255, 31, 90, 0.28), transparent 70%),
+    radial-gradient(520px 240px at 100% 100%, rgba(120, 70, 255, 0.35), transparent 70%),
+    linear-gradient(135deg, #1b0d55 0%, #26137a 55%, #1d0f5e 100%) !important;
+  box-shadow: 0 16px 34px -20px rgba(30, 10, 100, 0.9);
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  &__badge {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin-top: 2px;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #ff4a78, var(--fk-orange));
+    color: #fff;
+    box-shadow: 0 8px 16px -8px rgba(255, 31, 90, 0.9);
+  }
+
+  &__titles {
+    flex: 1;
+    min-width: 0;
+
+    h2 { font-size: clamp(19px, 2vw, 24px) !important; }
+    p { margin-top: 4px !important; font-size: 13px !important; }
+  }
+
+  .fk-section__eyebrow { margin-bottom: 2px; font-size: 12px; color: var(--fk-yellow); }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+
+    .fk-section__link {
+      margin-right: 6px;
+      font-size: 14px;
+      color: var(--fk-yellow) !important;
+      &:hover { color: #fff !important; }
+    }
+  }
+
+  &__arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    cursor: pointer;
+
+    &:hover { background: rgba(255, 255, 255, 0.28); }
+  }
+
+  /* Header arrows replace the rail's own */
+  .rail-arrow { display: none !important; }
+
+  @include sm-down {
+    &__head { flex-wrap: wrap; }
+    &__arrow { display: none; }
+    &__controls { width: 100%; justify-content: flex-end; }
+  }
+}
+
+.shop-page-root .fk-vcard {
+  width: clamp(168px, 16.5vw, 212px);
+  border-radius: 10px;
+
+  &__media {
+    aspect-ratio: 16 / 11;
+    background: #f1eef9;
+  }
+
+  &__photo img { object-fit: cover; padding: 0; }
+
+  &__no-video {
+    left: auto;
+    right: 8px;
+    bottom: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(20, 10, 50, 0.7);
+    font-size: 10.5px;
+  }
+
+  &__play {
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #1b0d55;
+  }
+
+  &__mute { right: auto; left: 8px; width: 28px; height: 28px; }
+
+  &__duration {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    padding: 2px 7px;
+    border-radius: 5px;
+    background: rgba(10, 5, 30, 0.82);
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__discount { background: var(--fk-orange); border-radius: 999px; }
+
+  &__body { gap: 2px; padding: 10px 10px 12px; }
+
+  &__title {
+    font-size: 13.5px;
+    font-weight: 700;
+    -webkit-line-clamp: 1;
+  }
+
+  &__seller { font-size: 12px; }
+  &__price strong { font-size: 15px; }
+
+  &__cta {
+    margin-top: 8px;
+    min-height: 32px;
+    border-radius: 6px;
+    font-size: 12.5px;
+  }
+}
+
+/* ============================================================================
+   TODAY'S DEALS | TOP RATED — side by side
+   ========================================================================== */
+
+.shop-page-root .fk-home__duo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+
+  > .fk-section,
+  > .fk-toprated > .fk-section:last-child { margin-bottom: 0; height: 100%; }
+
+  > .fk-toprated { display: flex; flex-direction: column; }
+  > .fk-toprated > .fk-section { flex: 1; }
+  > * { min-width: 0; }
+
+  @include md-down { grid-template-columns: minmax(0, 1fr); }
+}
+
+.shop-page-root .fk-toprated .fk-pills { border-radius: var(--fk-radius) var(--fk-radius) 0 0; }
+
+.shop-page-root .fk-pill {
+  &:hover { border-color: var(--fk-blue); color: var(--fk-blue); }
+  &.is-active { background: var(--fk-blue); border-color: var(--fk-blue); }
+}
+
+/* ============================================================================
+   CATEGORY MINI PANELS
+   ========================================================================== */
+
+.shop-page-root .fk-minis {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+
+  @include lg-down { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @include sm-down { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+}
+
+.shop-page-root .fk-mini {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--fk-shadow-sm);
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    margin-bottom: 10px;
+
+    h3 {
+      margin: 0;
+      font-size: 14.5px;
+      font-weight: 800;
+      color: var(--fk-ink) !important;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  &__link {
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--fk-blue) !important;
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    text-decoration: none;
+  }
+
+  &__thumb {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    background: var(--fk-surface-2);
+    overflow: hidden;
+    font-size: 26px;
+
+    img { width: 100%; height: 100%; object-fit: cover; }
+  }
+
+  &__price { font-size: 12.5px; font-weight: 800; color: var(--fk-ink); }
+
+  &__empty {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 106px;
+    padding: 12px 8px;
+    border-radius: 10px;
+    background: var(--fk-surface-2);
+    color: var(--fk-muted);
+    text-align: center;
+
+    svg { margin-bottom: 4px; color: #9d8cf0; }
+    strong { font-size: 11.5px; font-weight: 700; color: var(--fk-ink); }
+    span { font-size: 10.5px; line-height: 1.35; }
+  }
+}
+
+/* ============================================================================
+   FEATURED STORES — logo tiles
+   ========================================================================== */
+
+.shop-page-root .fk-storelogos .rail-scroll { gap: 10px; }
+
+.shop-page-root .fk-storelogo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: clamp(128px, 13vw, 168px);
+  min-height: 112px;
+  padding: 12px 10px;
+  border: 1px solid var(--fk-line);
+  border-radius: 10px;
+  background: #fff;
+  text-align: center;
+  text-decoration: none;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+
+  &:hover { box-shadow: var(--fk-shadow); transform: translateY(-2px); }
+
+  &__mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 46px;
+    margin-bottom: 4px;
+    font-size: 32px;
+
+    img { max-width: 110px; max-height: 46px; object-fit: contain; }
+  }
+
+  strong {
+    max-width: 100%;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--fk-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  small {
+    max-width: 100%;
+    font-size: 11px;
+    color: var(--fk-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* ============================================================================
+   BENEFITS ROW
+   ========================================================================== */
+
+.shop-page-root .fk-benefits {
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  margin-bottom: 14px;
+
+  > div {
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: var(--fk-shadow-sm);
+  }
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: var(--fk-orange-50);
+
+    svg { color: var(--fk-orange); }
+  }
+
+  strong { font-size: 14px; }
+  small { font-size: 12px; }
+}
+
+/* ============================================================================
+   SELL BAND
+   ========================================================================== */
+
+.shop-page-root .fk-sell-band {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 20px;
+  padding: 22px 28px;
+  border-radius: 14px;
+  overflow: hidden;
+  background:
+    radial-gradient(420px 200px at 52% 120%, rgba(255, 31, 90, 0.55), transparent 70%),
+    radial-gradient(500px 220px at 100% 0%, rgba(120, 70, 255, 0.45), transparent 70%),
+    linear-gradient(110deg, #1d0d5a 0%, #2d1385 55%, #3a1393 100%);
+  box-shadow: 0 16px 34px -20px rgba(30, 10, 100, 0.9);
+
+  h2 { margin-bottom: 4px; font-size: clamp(19px, 2.2vw, 25px); }
+  p { font-size: 13.5px; color: rgba(255, 255, 255, 0.85); }
+
+  &__art {
+    position: relative;
+    width: 170px;
+    height: 76px;
+  }
+
+  &__box,
+  &__bag {
+    position: absolute;
+    line-height: 1;
+    filter: drop-shadow(0 10px 12px rgba(10, 0, 40, 0.5));
+  }
+
+  &__box--1 { left: 0; bottom: -4px; font-size: 58px; transform: rotate(-6deg); }
+  &__box--2 { left: 46px; top: -14px; font-size: 44px; transform: rotate(8deg); }
+  &__bag { right: 6px; bottom: -2px; font-size: 54px; transform: rotate(6deg); }
+
+  &__actions {
+    display: flex;
+    gap: 12px;
+
+    .fk-btn { min-width: 150px; min-height: 42px; }
+  }
+
+  @include lg-down {
+    grid-template-columns: minmax(0, 1fr) auto;
+    &__art { display: none; }
+  }
+
+  @include md-down {
+    grid-template-columns: 1fr;
+    padding: 20px 16px;
+    &__actions .fk-btn { flex: 1; min-width: 0; }
+  }
+}
+
+/* ============================================================================
+   FOOTER
+   ========================================================================== */
+
+.shop-page-root .fk-footer {
+  margin-top: 0;
+  background: linear-gradient(180deg, #170b4a 0%, #120838 100%) !important;
+
+  &__top {
+    height: 38px;
+    background: rgba(255, 255, 255, 0.06);
+    font-size: 12.5px;
+    font-weight: 600;
+
+    &:hover { background: rgba(255, 255, 255, 0.12); }
+  }
+
+  &__inner { padding-top: 30px; padding-bottom: 22px; }
+
+  &__nav {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    @include lg-down { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    @include sm-down { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  &__group {
+    h2 { font-size: 14px; }
+    ul { gap: 4px; }
+    a { font-size: 13px; }
+  }
+
+  &__brand p { font-size: 13px; }
+
+  &__bottom { background: rgba(0, 0, 0, 0.18); border-top-color: rgba(255, 255, 255, 0.08); }
+  &__bottom-inner { padding-top: 12px; padding-bottom: 12px; font-size: 12px; }
+}
+
+/* ============================================================================
+   OTHER PAGES — small touches so listings, product, cart and stores match
+   ========================================================================== */
+
+.shop-page-root .fk-deals-hero {
+  background:
+    radial-gradient(500px 220px at 100% 0%, rgba(255, 210, 120, 0.35), transparent 70%),
+    linear-gradient(110deg, #c90f3d 0%, #ff1f5a 55%, #ff3c84 100%) !important;
+}
+
+.shop-page-root .fk-card__price { color: var(--fk-ink); }
+
+.shop-page-root .store-card {
+  border-radius: 12px;
+  .cta { color: var(--fk-blue) !important; }
+}

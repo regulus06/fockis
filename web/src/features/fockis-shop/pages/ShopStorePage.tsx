@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 
 import { ShopHeader } from "../components/common/ShopHeader";
@@ -6,6 +7,7 @@ import { ShopBreadcrumbs } from "../components/common/ShopBreadcrumbs";
 import { ShopLoading } from "../components/common/ShopLoading";
 import { ShopEmptyState } from "../components/common/ShopEmptyState";
 import { ShopError } from "../components/common/ShopError";
+import { ProductGridSkeleton } from "../components/products/ProductGridSkeleton";
 
 import { StoreHeader } from "../components/stores/StoreHeader";
 import { StoreInfo } from "../components/stores/StoreInfo";
@@ -17,194 +19,128 @@ import { StoreReviews } from "../components/stores/StoreReviews";
 import { useStore } from "../hooks/useStore";
 import { useProducts } from "../hooks/useProducts";
 
+function StatePage({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="shop-page-root fk-shop">
+      <ShopHeader />
+      <main className="fk-container fk-page">{children}</main>
+      <ShopFooter />
+    </div>
+  );
+}
+
 export default function ShopStorePage() {
-const { slug } = useParams<{ slug: string }>();
+  const { slug } = useParams<{ slug: string }>();
+  const normalizedSlug = slug?.trim() || undefined;
 
-const normalizedSlug = slug?.trim() || undefined;
+  const { store, loading, error, notFound } = useStore(normalizedSlug);
 
-const {
-store,
-loading,
-error,
-notFound,
-} = useStore(normalizedSlug);
+  const {
+    data: productsData,
+    loading: productsLoading,
+    error: productsError,
+  } = useProducts(
+    normalizedSlug
+      ? { storeSlug: normalizedSlug, page: 1, pageSize: 100 }
+      : undefined,
+    { enabled: Boolean(normalizedSlug) },
+  );
 
-const {
-data: productsData,
-loading: productsLoading,
-error: productsError,
-} = useProducts(
-normalizedSlug
-? {
-storeSlug: normalizedSlug,
-page: 1,
-pageSize: 100,
-}
-: undefined,
-);
+  // The products endpoint does not filter by store, so keep only this
+  // store's products (matched by slug or store ID).
+  const products = useMemo(() => {
+    const items = productsData?.items ?? [];
+    if (!store) return [];
+    return items.filter(
+      (product) =>
+        (product.storeSlug && product.storeSlug === store.slug) ||
+        (product.storeId && String(product.storeId) === String(store.id)),
+    );
+  }, [productsData, store]);
 
-if (!normalizedSlug) {
-return ( <div className="shop-page-root"> <ShopHeader />
+  if (!normalizedSlug) {
+    return (
+      <StatePage>
+        <ShopEmptyState icon="🏪" title="Store not found" message="No store was specified." />
+      </StatePage>
+    );
+  }
 
-```
-    <main>
-      <div
-        className="wrap"
-        style={{
-          padding: "60px 32px",
-        }}
-      >
-        <ShopEmptyState
-          icon="🏪"
-          title="Store not found"
-          message="No store was specified."
-        />
-      </div>
-    </main>
+  if (loading) {
+    return (
+      <StatePage>
+        <ShopLoading label="Loading store…" rows={4} />
+      </StatePage>
+    );
+  }
 
-    <ShopFooter />
-  </div>
-);
-
-}
-
-if (loading) {
-return ( <div className="shop-page-root"> <ShopHeader />
-    <main>
-      <div
-        className="wrap"
-        style={{
-          padding: "60px 32px",
-        }}
-      >
-        <ShopLoading
-          label="Loading store…"
-          rows={4}
-        />
-      </div>
-    </main>
-
-    <ShopFooter />
-  </div>
-);
-
-}
-
-if (error) {
-return ( <div className="shop-page-root"> <ShopHeader />
-
-    <main>
-      <div
-        className="wrap"
-        style={{
-          padding: "60px 32px",
-        }}
-      >
+  if (error) {
+    return (
+      <StatePage>
         <ShopError message={error} />
-      </div>
-    </main>
+      </StatePage>
+    );
+  }
 
-    <ShopFooter />
-  </div>
-);
-
-}
-
-if (notFound || !store) {
-return ( <div className="shop-page-root"> <ShopHeader />
-
-    <main>
-      <div
-        className="wrap"
-        style={{
-          padding: "60px 32px",
-        }}
-      >
+  if (notFound || !store) {
+    return (
+      <StatePage>
         <ShopEmptyState
           icon="🏪"
           title="Store not found"
           message="This store may have been closed, renamed, or does not exist."
         />
-      </div>
-    </main>
+      </StatePage>
+    );
+  }
 
-    <ShopFooter />
-  </div>
-);
+  return (
+    <div className="shop-page-root fk-shop">
+      <ShopHeader />
 
-}
+      <main>
+        <StoreHeader store={store} />
 
-const products = productsData?.items ?? [];
+        <div className="fk-container fk-page">
+          <ShopBreadcrumbs
+            items={[
+              { label: "Shop", to: "/shop" },
+              { label: "Stores", to: "/shop/stores" },
+              { label: store.name },
+            ]}
+          />
 
-return ( <div className="shop-page-root"> <ShopHeader />
+          <div className="store-page-layout">
+            <div className="store-page-main">
+              {productsLoading ? (
+                <ProductGridSkeleton />
+              ) : productsError ? (
+                <ShopError message={productsError} />
+              ) : products.length === 0 ? (
+                <ShopEmptyState
+                  icon="📦"
+                  title="No products yet"
+                  message="This store does not have any products available right now."
+                />
+              ) : (
+                <StoreProducts products={products} />
+              )}
+            </div>
 
-  <StoreHeader store={store} />
+            <aside className="store-page-aside">
+              <StoreInfo store={store} />
+              <StoreShipping store={store} />
+              <StorePolicies store={store} />
+            </aside>
+          </div>
 
-  <div
-    className="wrap"
-    style={{
-      paddingTop: 20,
-    }}
-  >
-    <ShopBreadcrumbs
-      items={[
-        {
-          label: "Shop",
-          to: "/shop",
-        },
-        {
-          label: "Stores",
-          to: "/shop/stores",
-        },
-        {
-          label: store.name,
-        },
-      ]}
-    />
-  </div>
-
-  <section className="tight">
-    <div className="wrap">
-      <div className="store-page-layout">
-        <div>
-          <StoreInfo store={store} />
-
-          <StoreShipping store={store} />
-
-          <StorePolicies store={store} />
+          <div className="store-page-reviews">
+            <StoreReviews store={store} />
+          </div>
         </div>
-      </div>
-    </div>
-  </section>
+      </main>
 
-  <section>
-    <div className="wrap">
-      {productsLoading ? (
-        <ShopLoading
-          label="Loading products…"
-          rows={3}
-        />
-      ) : productsError ? (
-        <ShopError message={productsError} />
-      ) : products.length === 0 ? (
-        <ShopEmptyState
-          icon="📦"
-          title="No products yet"
-          message="This store does not have any products available right now."
-        />
-      ) : (
-        <StoreProducts products={products} />
-      )}
+      <ShopFooter />
     </div>
-  </section>
-
-  <section className="shaded">
-    <div className="wrap">
-      <StoreReviews store={store} />
-    </div>
-  </section>
-
-  <ShopFooter />
-</div>
-);
+  );
 }

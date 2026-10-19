@@ -17,7 +17,6 @@ const stores: Store[] = data?.items ?? [];
 return ( <section className="local-marketplace"> <div className="local-marketplace__header"> <div> <span className="local-marketplace__eyebrow">
 Local marketplace </span>
 
-```
       <h2>Stores near you</h2>
 
       <p>
