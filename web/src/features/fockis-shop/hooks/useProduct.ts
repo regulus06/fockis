@@ -2,7 +2,26 @@ import { useEffect, useState } from "react";
 
 import type { Product } from "../types/product.types";
 
-import { getProductBySlug } from "../services/productApi";
+import {
+  getProductById,
+  getProductBySlug,
+} from "../services/productApi";
+
+/**
+ * Product links use the slug. getProductBySlug only searches the first page
+ * of products, so when the slug is not found we also try the value as a
+ * product ID (cards fall back to the ID when a product has no slug).
+ */
+async function loadProduct(slugOrId: string): Promise<Product | null> {
+  const bySlug = await getProductBySlug(slugOrId);
+  if (bySlug) return bySlug;
+
+  if (/^[a-f0-9]{24}$/i.test(slugOrId)) {
+    return getProductById(slugOrId);
+  }
+
+  return null;
+}
 
 export interface UseProductResult {
   product: Product | null;
@@ -32,7 +51,7 @@ export function useProduct(
     setError(null);
     setLoading(true);
 
-    getProductBySlug(slug)
+    loadProduct(slug)
       .then((result) => {
         if (cancelled) {
           return;

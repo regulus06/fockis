@@ -1,32 +1,79 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface ShopSearchProps {
   initialValue?: string;
   placeholder?: string;
-  variant?: 'hero' | 'compact';
+  variant?: "hero" | "compact" | "header";
+  id?: string;
 }
 
-export function ShopSearch({ initialValue = '', placeholder = 'Search products, stores, brands, categories…', variant = 'hero' }: ShopSearchProps) {
+function SearchIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+  );
+}
+
+export function ShopSearch({
+  initialValue = "",
+  placeholder = "Search Fockis Shop",
+  variant = "hero",
+  id,
+}: ShopSearchProps) {
   const [value, setValue] = useState(initialValue);
   const navigate = useNavigate();
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const q = value.trim();
-    navigate(q ? `/shop/search?q=${encodeURIComponent(q)}` : '/shop/search');
+  // Keep the field in sync when the query in the URL changes.
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    const query = value.trim();
+    navigate(
+      query ? `/shop/search?q=${encodeURIComponent(query)}` : "/shop/search",
+    );
   }
 
   return (
-    <form className={variant === 'hero' ? 'hero-search' : 'hero-search hero-search-compact'} onSubmit={handleSubmit} role="search">
+    <form
+      className={`fk-search fk-search--${variant}`}
+      onSubmit={handleSubmit}
+      role="search"
+    >
+      <span className="fk-search__icon">
+        <SearchIcon />
+      </span>
+
       <input
-        type="text"
+        id={id}
+        type="search"
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(event) => setValue(event.target.value)}
         placeholder={placeholder}
-        aria-label="Search"
+        aria-label="Search products, stores and categories"
+        enterKeyHint="search"
+        autoComplete="off"
       />
-      <button type="submit">Search</button>
+
+      <button type="submit" aria-label="Search">
+        <SearchIcon />
+        <span className="fk-search__button-label">Search</span>
+      </button>
     </form>
   );
 }

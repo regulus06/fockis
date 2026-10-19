@@ -1,0 +1,65 @@
+/* ============================================================================
+   FOCKIS SHOP — LEGACY BASE STYLES, SCOPED
+   ============================================================================
+
+   shop-original.css and shop-extensions.css were written with global
+   selectors (h1–h4, header, footer, section, .btn, .icon-btn, .tag …).
+   Because the Shop routes load on every page of the app, those rules leaked
+   into Seller Center and the rest of Fockis.
+
+   This wrapper loads both files *inside* .shop-page-root so they only ever
+   apply to Shop pages. The two .css files themselves are unchanged.
+   Load order (in routes/shopRoutes.tsx):
+     1. shop-legacy-scoped.scss   (this file)
+     2. fockis-shop-theme.scss    (the current design)
+   ========================================================================== */
+
+@use "sass:meta";
+
+/* ---------------------------------------------------------------------------
+   App-wide basics that these files have always provided to the whole app.
+   Other parts of Fockis rely on them (e.g. border-box sizing), so they stay
+   global exactly as before. Only the conflicting rules (h1–h4 fonts,
+   header/section/footer, .btn, .icon-btn, .tag …) are scoped below.
+   ------------------------------------------------------------------------ */
+
+:root {
+  --navy: #1d7a3e;
+  --navy-2: #145c2e;
+  --paper: #ffffff;
+  --paper-2: #f6f7f4;
+  --paper-3: #ecece6;
+  --brass: #b8862e;
+  --brass-light: #e2a63b;
+  --slate: #5c655f;
+  --ink: #0d2740;
+  --line: #e7e7e1;
+  --green: #1d7a3e;
+  --green-bg: #e7f0ee;
+  --red: #c4432f;
+  --red-bg: #fbece9;
+  --radius: 6px;
+  --maxw: 1280px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+img { display: block; max-width: 100%; }
+
+/* --------------------------------------------------------------------------- */
+
+.shop-page-root {
+  @include meta.load-css("shop-original");
+  @include meta.load-css("shop-extensions");
+}

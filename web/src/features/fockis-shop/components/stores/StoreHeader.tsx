@@ -2,6 +2,7 @@ import type { Store } from '../../types/store.types';
 import { StoreBanner } from './StoreBanner';
 import { StoreLogo } from './StoreLogo';
 import { Badge } from '../common/Badge';
+import { Stars } from '../common/Stars';
 import { storeLocationLabel } from '../../utils/store';
 
 export function StoreHeader({ store }: { store: Store }) {
@@ -13,13 +14,15 @@ export function StoreHeader({ store }: { store: Store }) {
         <div className="store-page-header-info">
           <div className="row-top">
             <h1>{store.name}</h1>
-            <div className="rating"><span className="star">★</span>{store.rating.average.toFixed(1)} <span className="count mono">({store.rating.totalReviews.toLocaleString()})</span></div>
+            <Stars rating={store.rating.average} reviews={store.rating.totalReviews} showEmpty />
           </div>
-          <div className="loc">{storeLocationLabel(store)}</div>
+          {store.location?.country && <div className="loc">{storeLocationLabel(store)}</div>}
           <div className="badge-row">
             {store.verified && <Badge variant="verified" />}
             <span className="tag">{store.productCount} products</span>
-            {store.orderCount != null && <span className="tag">{store.orderCount.toLocaleString()}+ orders</span>}
+            {store.orderCount != null && store.orderCount > 0 && (
+              <span className="tag">{store.orderCount.toLocaleString()}+ orders</span>
+            )}
           </div>
         </div>
       </div>

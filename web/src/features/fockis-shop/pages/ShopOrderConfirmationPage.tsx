@@ -9,13 +9,11 @@ export default function ShopOrderConfirmationPage() {
   const orderNumber = searchParams.get('orderNumber');
 
   return (
-    <div className="shop-page-root">
+    <div className="shop-page-root fk-shop">
       <ShopHeader />
-      <section className="tight">
-        <div className="wrap">
-          <OrderConfirmation orderId={orderId} orderNumber={orderNumber} />
-        </div>
-      </section>
+      <main className="fk-container fk-page">
+        <OrderConfirmation orderId={orderId} orderNumber={orderNumber} />
+      </main>
       <ShopFooter />
     </div>
   );

@@ -13,15 +13,29 @@ export interface UseProductsResult {
   error: string | null;
 }
 
+export interface UseProductsOptions {
+  /** When false, no request is made (used for lazy, below-the-fold rails). */
+  enabled?: boolean;
+}
+
 export function useProducts(
   filters: ProductListFilters = {},
+  options: UseProductsOptions = {},
 ): UseProductsResult {
+  const enabled = options.enabled ?? true;
+
   const [data, setData] = useState<ProductPaginatedResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+
+    if (!enabled) {
+      return () => {
+        cancelled = true;
+      };
+    }
 
     setLoading(true);
     setError(null);
@@ -58,7 +72,7 @@ export function useProducts(
     return () => {
       cancelled = true;
     };
-  }, [JSON.stringify(filters)]);
+  }, [JSON.stringify(filters), enabled]);
 
   return {
     data,

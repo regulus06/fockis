@@ -17,7 +17,6 @@ pageSize: 8,
 return ( <section className="tight"> <div className="wrap"> <div className="reco-header"> <div> <div className="sec-label"> <span className="num">08</span>
 JUST LISTED </div>
 
-```
         <h2 style={{ fontSize: 26 }}>
           New arrivals
         </h2>

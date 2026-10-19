@@ -14,7 +14,6 @@ error,
 return ( <section id="categories"> <div className="wrap"> <div className="section-head"> <div> <div className="sec-label"> <span className="num">02</span>
 CATEGORIES </div>
 
-```
         <h2>Shop by category</h2>
       </div>
 

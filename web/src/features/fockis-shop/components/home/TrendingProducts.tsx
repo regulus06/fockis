@@ -13,7 +13,6 @@ pageSize: 8,
 return ( <section className="tight"> <div className="wrap"> <div className="reco-header"> <div> <div className="sec-label"> <span className="num">04</span>
 TRENDING NOW </div>
 
-```
         <h2 style={{ fontSize: 26 }}>
           Trending products
         </h2>

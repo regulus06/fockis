@@ -2,8 +2,13 @@ import { lazy, Suspense } from "react";
 import type { RouteObject } from "react-router-dom";
 import { ShopLoading } from "../components/common/ShopLoading";
 
-import "../styles/shop-original.css";
-import "../styles/shop-extensions.css";
+// Shop styles, in cascade order. The vivid theme must stay last.
+// The legacy sheets are loaded through a wrapper that scopes them to
+// .shop-page-root so they no longer leak into the rest of the app.
+import "../styles/shop-legacy-scoped.scss";
+import "../styles/fockis-shop-theme.scss";
+// "Flash deal" look (pink / indigo). Remove this line to go back.
+import "../styles/fockis-shop-vivid.scss";
 
 const ShopHomePage = lazy(
 () => import("../pages/ShopHomePage"),

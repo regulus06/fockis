@@ -1,111 +1,344 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import type { Product, ProductVariant } from '../../types/product.types';
-import { useCart } from '../../hooks/useCart';
-import { useWishlist } from '../../hooks/useWishlist';
-import { effectivePrice } from '../../utils/pricing';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Heart, Lock, MapPin, Truck } from "lucide-react";
 
-export function ProductActions({ product }: { product: Product }) {
-  const { addItem, openCart } = useCart();
-  const { has, toggle } = useWishlist();
-  const navigate = useNavigate();
+import type { Product } from "../../types/product.types";
+import { useCart } from "../../hooks/useCart";
+import { useWishlist } from "../../hooks/useWishlist";
+import { useCartToastStore } from "../../store/cartToastStore";
+import { useShop } from "../../hooks/useShop";
+import { effectivePrice } from "../../utils/pricing";
+import { formatPrice } from "../../utils/currency";
+import { shippingBadges } from "../../utils/shipping";
+import {
+  getDeliveryEstimate,
+  getPrimaryProductImage,
+} from "../../utils/productMedia";
 
-  const variantGroups = useMemo(() => {
-    if (!product.variants) return [];
-    const groups = new Map<string, Set<string>>();
-    for (const v of product.variants) {
-      for (const opt of v.options) {
-        if (!groups.has(opt.name)) groups.set(opt.name, new Set());
-        groups.get(opt.name)!.add(opt.value);
-      }
-    }
-    return Array.from(groups.entries()).map(([name, values]) => ({ name, values: Array.from(values) }));
-  }, [product.variants]);
+type UnknownRecord = Record<string, unknown>;
 
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
-  const [quantity, setQuantity] = useState(1);
+function asRecord(value: unknown): UnknownRecord | null {
+  return value !== null && typeof value === "object"
+    ? (value as UnknownRecord)
+    : null;
+}
 
-  const selectedVariant: ProductVariant | undefined = useMemo(() => {
-    if (!product.variants) return undefined;
-    return product.variants.find((v) => v.options.every((opt) => selectedOptions[opt.name] === opt.value));
-  }, [product.variants, selectedOptions]);
-
-  const outOfStock =
-    product.stockStatus === 'out_of_stock' || (product.hasVariants && selectedVariant && selectedVariant.stockQuantity === 0);
-  const needsVariantChoice = product.hasVariants && !selectedVariant;
-
-  function handleAddToCart() {
-    if (needsVariantChoice) return;
-    addItem({
-      productId: product.id,
-      productSlug: product.slug,
-      productName: product.name,
-      productEmoji: product.emoji,
-      storeId: product.storeId,
-      storeSlug: product.storeSlug,
-      storeName: product.storeName,
-      unitPrice: selectedVariant ? selectedVariant.salePrice ?? selectedVariant.price : effectivePrice(product),
-      quantity,
-      maxQuantity: selectedVariant ? selectedVariant.stockQuantity : product.stockQuantity,
-      variant: selectedVariant
-        ? {
-            variantId: selectedVariant.id,
-            optionsLabel: selectedVariant.options.map((o) => `${o.name}: ${o.value}`).join(' / '),
-          }
-        : undefined,
-    });
-    openCart();
+function readId(value: unknown): string | null {
+  if (typeof value === "string" && value.trim()) {
+    return value.trim();
   }
 
-  function handleBuyNow() {
-    handleAddToCart();
-    navigate('/shop/cart');
+  const record = asRecord(value);
+  if (!record) return null;
+
+  const id = record._id ?? record.id;
+
+  return typeof id === "string" && id.trim()
+    ? id.trim()
+    : null;
+}
+
+function resolveSellerId(product: Product): string | null {
+  const data = asRecord(product);
+  if (!data) return null;
+
+  const directSellerId =
+    readId(data.sellerId) ??
+    readId(data.seller) ??
+    readId(data.userId) ??
+    readId(data.ownerId);
+
+  if (directSellerId) return directSellerId;
+
+  const store = asRecord(data.storeId) ?? asRecord(data.store);
+
+  if (store) {
+    return (
+      readId(store.sellerId) ??
+      readId(store.seller) ??
+      readId(store.ownerId) ??
+      readId(store.userId)
+    );
+  }
+
+  return null;
+}
+
+/**
+ * Buy box: price, delivery, stock, quantity, Add to Cart,
+ * Buy Now, and wishlist.
+ */
+export function ProductActions({ product }: { product: Product }) {
+  const navigate = useNavigate();
+  const { addItem } = useCart();
+  const { has, toggle } = useWishlist();
+  const { deliverToCountryLabel } = useShop();
+  const showAddedToast = useCartToastStore((state) => state.show);
+
+  const [quantity, setQuantity] = useState(1);
+  const [status, setStatus] = useState<
+    "idle" | "adding" | "added" | "error"
+  >("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const unavailable =
+    product.stockStatus === "out_of_stock" ||
+    (typeof product.stockQuantity === "number" &&
+      product.stockQuantity <= 0);
+
+  const lowStock = !unavailable && product.stockStatus === "low_stock";
+
+  const maxQuantity =
+    typeof product.stockQuantity === "number" &&
+    product.stockQuantity > 0
+      ? Math.min(product.stockQuantity, 99)
+      : 99;
+
+  const price = effectivePrice(product);
+  const hasPrice = Number(price) > 0;
+  const canBuy = !unavailable && hasPrice;
+  const saved = has(product.id);
+
+  const delivery = getDeliveryEstimate(product);
+  const options = product.shipping
+    ? shippingBadges(product.shipping)
+    : [];
+  const freeThreshold = product.shipping?.freeDeliveryThreshold;
+
+  async function addToCart(): Promise<boolean> {
+    if (!canBuy || status === "adding") return false;
+
+    setStatus("adding");
+    setErrorMessage("");
+
+    const sellerId = resolveSellerId(product);
+
+    if (!sellerId) {
+      console.error(
+        "[ProductActions] Seller ID missing from product data.",
+        {
+          productId: product.id,
+          storeId: product.storeId,
+          availableProductFields: Object.keys(
+            (asRecord(product) ?? {}),
+          ),
+        },
+      );
+
+      setStatus("error");
+      setErrorMessage(
+        "Seller information is missing for this product. Please refresh the page or contact the store.",
+      );
+      return false;
+    }
+
+    try {
+      await addItem({
+        productId: product.id,
+        productSlug: product.slug,
+        productName: product.name,
+        productEmoji: product.emoji,
+        productImageUrl: getPrimaryProductImage(product)?.src,
+        sellerId,
+        storeId: product.storeId,
+        storeSlug: product.storeSlug,
+        storeName: product.storeName,
+        unitPrice: price,
+        maxQuantity,
+        quantity,
+      });
+
+      setStatus("added");
+      return true;
+    } catch (error) {
+      console.error(
+        "[ProductActions] Failed to add to cart:",
+        error,
+      );
+
+      setStatus("error");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not add this product to your cart. Please try again.",
+      );
+
+      return false;
+    }
+  }
+
+  async function handleBuyNow() {
+    if (await addToCart()) {
+      navigate("/shop/checkout");
+    }
   }
 
   return (
-    <div className="pdp-actions">
-      {variantGroups.map((group) => (
-        <div className="pdp-variant-group" key={group.name}>
-          <div className="pdp-variant-label mono">{group.name}</div>
-          <div className="pdp-variant-options">
-            {group.values.map((value) => (
-              <button
-                key={value}
-                type="button"
-                className={selectedOptions[group.name] === value ? 'active' : undefined}
-                onClick={() => setSelectedOptions((prev) => ({ ...prev, [group.name]: value }))}
-              >
-                {value}
-              </button>
-            ))}
-          </div>
-        </div>
-      ))}
-
-      <div className="pdp-qty-row">
-        <div className="pdp-qty-stepper">
-          <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} aria-label="Decrease quantity">−</button>
-          <span className="mono">{quantity}</span>
-          <button type="button" onClick={() => setQuantity((q) => q + 1)} aria-label="Increase quantity">+</button>
-        </div>
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label={has(product.id) ? 'Remove from wishlist' : 'Save to wishlist'}
-          onClick={() => toggle(product.id)}
-        >
-          {has(product.id) ? '♥' : '♡'}
-        </button>
+    <aside className="pdp-buybox" aria-label="Buy options">
+      <div className="pdp-buybox__price">
+        {hasPrice ? formatPrice(price) : "Price unavailable"}
       </div>
 
-      {needsVariantChoice && <div className="pdp-variant-hint">Select options above to continue.</div>}
+      <div className="pdp-buybox__delivery">
+        <Truck size={16} aria-hidden="true" />
+        <span>
+          {delivery ?? "Delivery details unavailable"}
+          {freeThreshold != null && freeThreshold > 0 && (
+            <small>
+              Free delivery from this store on orders over{" "}
+              {formatPrice(freeThreshold)}
+            </small>
+          )}
+        </span>
+      </div>
 
-      <button className="add-btn" type="button" onClick={handleAddToCart} disabled={outOfStock || needsVariantChoice}>
-        {outOfStock ? 'Out of Stock' : 'Add to Cart'}
+      <button
+        type="button"
+        className="pdp-buybox__deliver-to"
+        onClick={() => navigate("/shop/countries")}
+      >
+        <MapPin size={14} aria-hidden="true" />
+        Deliver to {deliverToCountryLabel}
       </button>
-      <button className="btn btn-navy" style={{ width: '100%', justifyContent: 'center', marginTop: 10 }} type="button" onClick={handleBuyNow} disabled={outOfStock || needsVariantChoice}>
-        Buy Now
+
+      <div
+        className={`pdp-buybox__stock${
+          unavailable ? " is-out" : lowStock ? " is-low" : ""
+        }`}
+      >
+        {unavailable
+          ? "Currently unavailable"
+          : lowStock
+            ? `Only ${product.stockQuantity} left in stock`
+            : "In stock"}
+      </div>
+
+      {canBuy && (
+        <label className="pdp-buybox__qty">
+          <span>Quantity</span>
+          <select
+            className="shop-select"
+            value={quantity}
+            onChange={(event) => {
+              setQuantity(Number(event.target.value));
+              setStatus("idle");
+              setErrorMessage("");
+            }}
+          >
+            {Array.from(
+              { length: Math.min(maxQuantity, 30) },
+              (_, index) => index + 1,
+            ).map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
+      <button
+        type="button"
+        className="fk-btn fk-btn--cart fk-btn--block"
+        onClick={async () => {
+          if (await addToCart()) {
+            showAddedToast({
+              name: product.name,
+              imageUrl: getPrimaryProductImage(product)?.src,
+              emoji: product.emoji,
+              unitPrice: price,
+              quantity,
+            });
+          }
+        }}
+        disabled={!canBuy || status === "adding"}
+      >
+        {unavailable
+          ? "Out of stock"
+          : status === "adding"
+            ? "Adding…"
+            : status === "added"
+              ? "Add again"
+              : "Add to Cart"}
       </button>
-    </div>
+
+      {canBuy && (
+        <button
+          type="button"
+          className="fk-btn fk-btn--buy fk-btn--block"
+          onClick={() => void handleBuyNow()}
+          disabled={status === "adding"}
+        >
+          Buy Now
+        </button>
+      )}
+
+      {status === "added" && (
+        <p className="pdp-buybox__feedback" role="status">
+          Added to cart. <Link to="/shop/cart">View cart</Link>
+        </p>
+      )}
+
+      {status === "error" && (
+        <p
+          className="pdp-buybox__feedback is-error"
+          role="alert"
+        >
+          {errorMessage}
+        </p>
+      )}
+
+      <dl className="pdp-buybox__meta">
+        <div>
+          <dt>Ships from</dt>
+          <dd>{product.storeName || "Seller details unavailable"}</dd>
+        </div>
+
+        <div>
+          <dt>Sold by</dt>
+          <dd>
+            {product.storeSlug ? (
+              <Link to={`/shop/store/${product.storeSlug}`}>
+                {product.storeName}
+              </Link>
+            ) : (
+              "Seller details unavailable"
+            )}
+          </dd>
+        </div>
+
+        <div>
+          <dt>Payment</dt>
+          <dd>
+            <Lock size={12} aria-hidden="true" />
+            Secure checkout
+          </dd>
+        </div>
+      </dl>
+
+      {options.length > 0 && (
+        <ul className="pdp-buybox__options">
+          {options.map((option) => (
+            <li key={option}>{option}</li>
+          ))}
+        </ul>
+      )}
+
+      <button
+        type="button"
+        className={`fk-btn fk-btn--outline fk-btn--block${
+          saved ? " is-saved" : ""
+        }`}
+        onClick={() => toggle(product.id)}
+        aria-pressed={saved}
+      >
+        <Heart
+          size={16}
+          fill={saved ? "currentColor" : "none"}
+          aria-hidden="true"
+        />
+        {saved ? "Saved to wishlist" : "Add to wishlist"}
+      </button>
+    </aside>
   );
 }

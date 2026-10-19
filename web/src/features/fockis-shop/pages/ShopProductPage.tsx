@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { ShopHeader } from "../components/common/ShopHeader";
@@ -6,301 +6,219 @@ import { ShopFooter } from "../components/common/ShopFooter";
 import { ShopBreadcrumbs } from "../components/common/ShopBreadcrumbs";
 import { ShopLoading } from "../components/common/ShopLoading";
 import { ShopEmptyState } from "../components/common/ShopEmptyState";
-import { ShopError } from "../components/common/ShopError";
 
 import { ProductGallery } from "../components/products/ProductGallery";
 import { ProductInfo } from "../components/products/ProductInfo";
 import { ProductActions } from "../components/products/ProductActions";
-import { ProductInventory } from "../components/products/ProductInventory";
-import { ProductShipping } from "../components/products/ProductShipping";
 import { ProductDescription } from "../components/products/ProductDescription";
+import { ProductSpecs } from "../components/products/ProductSpecs";
 import { ProductReviews } from "../components/products/ProductReviews";
-import { RelatedProducts } from "../components/products/RelatedProducts";
 import { FrequentlyBoughtTogether } from "../components/products/FrequentlyBoughtTogether";
+import { ProductRailSection } from "../components/products/ProductRailSection";
 
 import { useProduct } from "../hooks/useProduct";
+import { useCategories } from "../hooks/useCategories";
+import {
+  useRecentlyViewedProducts,
+  useRecordProductView,
+} from "../hooks/useRecentlyViewed";
 import { listProducts } from "../services/productApi";
 
-import type {
-Product,
-ProductListFilters,
-} from "../types/product.types";
+import type { Product, ProductListFilters } from "../types/product.types";
 
 function getProductCategory(product: Product): string {
-return (
-product.categorySlug ||
-product.categoryId ||
-""
-);
-}
-
-function getProductId(product: Product): string {
-return String(product.id ?? "");
+  return product.categorySlug || product.categoryId || "";
 }
 
 export default function ShopProductPage() {
-const { productId } = useParams<{
-productId: string;
-}>();
+  const { productId } = useParams<{ productId: string }>();
 
-const {
-product,
-loading,
-notFound,
-} = useProduct(productId);
+  const { product, loading, error, notFound } = useProduct(productId);
+  const { categories } = useCategories();
 
-const [related, setRelated] = useState<Product[]>([]);
-const [relatedLoading, setRelatedLoading] =
-useState(false);
-const [relatedError, setRelatedError] =
-useState<string | null>(null);
+  useRecordProductView(product);
 
-useEffect(() => {
-if (!product) {
-setRelated([]);
-setRelatedError(null);
-return;
-}
-let cancelled = false;
+  const recent = useRecentlyViewedProducts({
+    excludeId: product?.id,
+    limit: 12,
+    enabled: Boolean(product),
+  });
 
-const loadRelatedProducts = async () => {
-  setRelatedLoading(true);
-  setRelatedError(null);
+  const [related, setRelated] = useState<Product[]>([]);
+  const [relatedLoading, setRelatedLoading] = useState(false);
+  const [relatedError, setRelatedError] = useState<string | null>(null);
 
-  try {
-    const categorySlug =
-      getProductCategory(product);
+  useEffect(() => {
+    if (!product) {
+      setRelated([]);
+      setRelatedError(null);
+      return;
+    }
 
-    const filters: ProductListFilters = {
-      page: 1,
-      pageSize: 8,
-      ...(categorySlug
-        ? {
-            categorySlug,
-          }
-        : {}),
+    let cancelled = false;
+
+    const loadRelatedProducts = async () => {
+      setRelatedLoading(true);
+      setRelatedError(null);
+
+      try {
+        const categorySlug = getProductCategory(product);
+
+        const filters: ProductListFilters = {
+          page: 1,
+          pageSize: 16,
+          ...(categorySlug ? { categorySlug } : {}),
+        };
+
+        const result = await listProducts(filters);
+        if (cancelled) return;
+
+        setRelated(
+          result.items
+            .filter((item) => String(item.id) !== String(product.id))
+            .slice(0, 14),
+        );
+      } catch (err: unknown) {
+        if (cancelled) return;
+        setRelated([]);
+        setRelatedError(
+          err instanceof Error ? err.message : "Failed to load related products.",
+        );
+      } finally {
+        if (!cancelled) setRelatedLoading(false);
+      }
     };
 
-    const result =
-      await listProducts(filters);
+    void loadRelatedProducts();
 
-    if (cancelled) {
-      return;
-    }
+    return () => {
+      cancelled = true;
+    };
+  }, [product]);
 
-    const currentProductId =
-      getProductId(product);
+  const category = useMemo(
+    () =>
+      product
+        ? categories.find((c) => c.slug === getProductCategory(product))
+        : undefined,
+    [categories, product],
+  );
 
-    const relatedProducts =
-      result.items.filter(
-        (item) =>
-          getProductId(item) !==
-          currentProductId,
-      );
-
-    setRelated(
-      relatedProducts.slice(0, 8),
+  if (loading) {
+    return (
+      <div className="shop-page-root fk-shop">
+        <ShopHeader />
+        <main className="fk-container fk-page">
+          <ShopLoading label="Loading product…" rows={4} />
+        </main>
+        <ShopFooter />
+      </div>
     );
-  } catch (error: unknown) {
-    if (cancelled) {
-      return;
-    }
-
-    setRelated([]);
-
-    setRelatedError(
-      error instanceof Error
-        ? error.message
-        : "Failed to load related products.",
-    );
-  } finally {
-    if (!cancelled) {
-      setRelatedLoading(false);
-    }
   }
-};
 
-void loadRelatedProducts();
+  if (error || notFound || !product) {
+    return (
+      <div className="shop-page-root fk-shop">
+        <ShopHeader />
+        <main className="fk-container fk-page">
+          <ShopEmptyState
+            icon={error ? "⚠️" : "📦"}
+            title={error ? "This product couldn’t load" : "Product not found"}
+            message={
+              error ??
+              "This product may have been removed or unpublished by the seller."
+            }
+          />
+        </main>
+        <ShopFooter />
+      </div>
+    );
+  }
 
-return () => {
-  cancelled = true;
-};
+  const categorySlug = getProductCategory(product);
 
-}, [product]);
+  return (
+    <div className="shop-page-root fk-shop">
+      <ShopHeader />
 
-if (loading) {
-return ( <div className="shop-page-root"> <ShopHeader />
-
-    <div
-      className="wrap"
-      style={{
-        padding: "60px 32px",
-      }}
-    >
-      <ShopLoading
-        label="Loading product…"
-        rows={4}
-      />
-    </div>
-
-    <ShopFooter />
-  </div>
-);
-
-
-}
-
-if (notFound || !product) {
-return ( <div className="shop-page-root"> <ShopHeader />
-    <div
-      className="wrap"
-      style={{
-        padding: "60px 32px",
-      }}
-    >
-      <ShopEmptyState
-        icon="📦"
-        title="Product not found"
-        message="This product may have been removed or unpublished by the seller."
-      />
-    </div>
-
-    <ShopFooter />
-  </div>
-);
-
-
-}
-
-const categorySlug =
-product.categorySlug ||
-product.categoryId ||
-"";
-
-return ( <div className="shop-page-root"> <ShopHeader />
-
-  <div
-    className="wrap"
-    style={{
-      paddingTop: 32,
-    }}
-  >
-    <ShopBreadcrumbs
-      items={[
-        {
-          label: "Shop",
-          to: "/shop",
-        },
-        ...(categorySlug
-          ? [
-              {
-                label: categorySlug,
-                to: `/shop/category/${categorySlug}`,
-              },
-            ]
-          : []),
-        {
-          label: product.name,
-        },
-      ]}
-    />
-  </div>
-
-  <section className="tight">
-    <div className="wrap">
-      <div className="pdp-layout">
-        <ProductGallery
-          product={product}
+      <main className="fk-container fk-page pdp">
+        <ShopBreadcrumbs
+          items={[
+            { label: "Shop", to: "/shop" },
+            ...(categorySlug
+              ? [
+                  {
+                    label: category?.name ?? categorySlug,
+                    to: `/shop/category/${categorySlug}`,
+                  },
+                ]
+              : []),
+            { label: product.name || "Product" },
+          ]}
         />
 
-        <div>
-          <ProductInfo
-            product={product}
-          />
+        <div className="pdp-layout">
+          <div className="pdp-layout__gallery">
+            <ProductGallery product={product} />
+          </div>
 
-          <ProductInventory
-            product={product}
-          />
+          <div className="pdp-layout__info">
+            <ProductInfo product={product} />
+          </div>
 
-          <ProductActions
-            product={product}
-          />
+          <div className="pdp-layout__buy">
+            <ProductActions product={product} />
+          </div>
 
-          <ProductShipping
-            product={product}
-          />
+          <section className="pdp-layout__about pdp-block" aria-labelledby="pdp-about">
+            <h2 id="pdp-about">About this item</h2>
+            <ProductDescription product={product} />
+          </section>
         </div>
-      </div>
-    </div>
-  </section>
 
-  <section className="shaded">
-    <div className="wrap">
-      <ProductDescription
-        product={product}
-      />
-    </div>
-  </section>
+        {!relatedLoading && !relatedError && related.length >= 2 && (
+          <section className="pdp-section" aria-labelledby="pdp-fbt">
+            <h2 id="pdp-fbt">Frequently bought together</h2>
+            <p className="pdp-muted">
+              Suggested from the same category — not based on purchase history.
+            </p>
+            <FrequentlyBoughtTogether
+              mainProduct={product}
+              addOnProducts={related.slice(0, 2)}
+            />
+          </section>
+        )}
 
-  {relatedLoading && (
-    <section className="tight">
-      <div className="wrap">
-        <ShopLoading
-          label="Loading related products…"
-          rows={2}
+        <ProductRailSection
+          title="Related products"
+          subtitle={category ? `More in ${category.name}` : "More from Fockis sellers"}
+          seeAllTo={categorySlug ? `/shop/category/${categorySlug}` : "/shop/products"}
+          products={related}
+          loading={relatedLoading}
+          error={relatedError}
+          hideWhenEmpty
         />
-      </div>
-    </section>
-  )}
 
-  {!relatedLoading &&
-    relatedError && (
-      <section className="tight">
-        <div className="wrap">
-          <ShopError
-            message={relatedError}
+        <section className="pdp-section" aria-labelledby="pdp-specs">
+          <h2 id="pdp-specs">Product details</h2>
+          <ProductSpecs product={product} categoryName={category?.name} />
+        </section>
+
+        <section className="pdp-section" id="reviews">
+          <ProductReviews product={product} />
+        </section>
+
+        {recent.hasHistory && (
+          <ProductRailSection
+            title="Your recently viewed items"
+            products={recent.products}
+            loading={recent.loading}
+            hideWhenEmpty
           />
-        </div>
-      </section>
-    )}
+        )}
+      </main>
 
-  {!relatedLoading &&
-    !relatedError &&
-    related.length > 0 && (
-      <section className="tight">
-        <div className="wrap">
-          <FrequentlyBoughtTogether
-            mainProduct={product}
-            addOnProducts={related.slice(
-              0,
-              2,
-            )}
-          />
-        </div>
-      </section>
-    )}
-
-  <section>
-    <div className="wrap">
-      <ProductReviews
-        product={product}
-      />
+      <ShopFooter />
     </div>
-  </section>
-
-  {!relatedLoading &&
-    related.length > 0 && (
-      <section className="shaded">
-        <div className="wrap">
-          <RelatedProducts
-            products={related}
-          />
-        </div>
-      </section>
-    )}
-
-  <ShopFooter />
-</div>
-
-);
+  );
 }

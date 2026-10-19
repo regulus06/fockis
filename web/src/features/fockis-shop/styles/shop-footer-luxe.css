@@ -1,0 +1,289 @@
+/* ==========================================================
+   FOCKIS SHOP — WHITE LUXURY FOOTER
+   White background • Emerald green • Gold accents
+   ========================================================== */
+
+.fockis-shop-footer {
+  --footer-bg: #ffffff;
+  --footer-panel: #f7faf8;
+  --footer-green: #078744;
+  --footer-gold: #a77b1b;
+  --footer-text: #183126;
+  --footer-muted: #64756b;
+  --footer-border: #e1e9e3;
+
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  color: var(--footer-muted) !important;
+  background: var(--footer-bg) !important;
+  border-top: 1px solid var(--footer-border);
+  font-family: Inter, Arial, sans-serif;
+}
+
+.fockis-shop-footer,
+.fockis-shop-footer * {
+  box-sizing: border-box;
+}
+
+.fockis-shop-footer__inner {
+  width: min(100% - 64px, 1320px);
+  margin-inline: auto;
+}
+
+.fockis-shop-footer__top {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.2fr) minmax(0, 3fr);
+  gap: clamp(32px, 6vw, 90px);
+  padding: 54px 0 46px;
+}
+
+.fockis-shop-footer__brand {
+  min-width: 0;
+}
+
+.fockis-shop-footer__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--footer-text) !important;
+  text-decoration: none;
+}
+
+.fockis-shop-footer__crest {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border: 2px solid var(--footer-green);
+  border-radius: 50%;
+  color: var(--footer-green);
+  background: #ffffff;
+  font-family: Georgia, serif;
+  font-size: 17px;
+  font-weight: 700;
+  transition:
+    color 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease;
+}
+
+.fockis-shop-footer__logo:hover .fockis-shop-footer__crest {
+  color: #ffffff;
+  background: var(--footer-green);
+}
+
+.fockis-shop-footer__wordmark {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--footer-text) !important;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.fockis-shop-footer__shop-label {
+  color: var(--footer-gold) !important;
+  font-family: monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+.fockis-shop-footer__tagline {
+  margin: 20px 0 0;
+  color: var(--footer-muted) !important;
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.fockis-shop-footer__accent {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 24px;
+  color: var(--footer-gold) !important;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.fockis-shop-footer__accent span {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: var(--footer-green);
+  box-shadow: 0 0 10px rgba(7, 135, 68, 0.22);
+}
+
+.fockis-shop-footer__navigation {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(18px, 3vw, 42px);
+}
+
+.fockis-shop-footer__group {
+  min-width: 0;
+}
+
+.fockis-shop-footer__group h2 {
+  margin: 5px 0 19px;
+  color: var(--footer-text) !important;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+}
+
+.fockis-shop-footer__group ul {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fockis-shop-footer__group li {
+  margin: 0;
+  padding: 0;
+}
+
+.fockis-shop-footer__group a {
+  display: inline-block;
+  max-width: 100%;
+  color: var(--footer-muted) !important;
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+  transition:
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.fockis-shop-footer__group a:hover {
+  color: var(--footer-green) !important;
+  transform: translateX(2px);
+}
+
+.fockis-shop-footer__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+  padding: 22px 0 26px;
+  border-top: 1px solid var(--footer-border);
+}
+
+.fockis-shop-footer__bottom p {
+  margin: 0;
+  color: #718077 !important;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.fockis-shop-footer__back-to-shop {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--footer-green) !important;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.fockis-shop-footer__back-to-shop:hover {
+  color: var(--footer-gold) !important;
+}
+
+/* Tablet */
+@media (max-width: 1050px) {
+  .fockis-shop-footer__top {
+    grid-template-columns: minmax(160px, 0.8fr) minmax(0, 2fr);
+    gap: 32px;
+  }
+
+  .fockis-shop-footer__navigation {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 34px 24px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 650px) {
+  .fockis-shop-footer__inner {
+    width: calc(100% - 36px);
+  }
+
+  .fockis-shop-footer__top {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 34px;
+    padding: 34px 0 30px;
+  }
+
+  .fockis-shop-footer__brand {
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--footer-border);
+  }
+
+  .fockis-shop-footer__navigation {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 30px 20px;
+  }
+
+  .fockis-shop-footer__group h2 {
+    margin-bottom: 14px;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  .fockis-shop-footer__group ul {
+    gap: 11px;
+  }
+
+  .fockis-shop-footer__group a {
+    font-size: 12px;
+  }
+
+  .fockis-shop-footer__bottom {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 9px;
+    padding: 20px 0 28px;
+  }
+}
+
+/* Small phones */
+@media (max-width: 360px) {
+  .fockis-shop-footer__inner {
+    width: calc(100% - 28px);
+  }
+
+  .fockis-shop-footer__navigation {
+    gap: 26px 12px;
+  }
+
+  .fockis-shop-footer__wordmark {
+    font-size: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fockis-shop-footer *,
+  .fockis-shop-footer *::before,
+  .fockis-shop-footer *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

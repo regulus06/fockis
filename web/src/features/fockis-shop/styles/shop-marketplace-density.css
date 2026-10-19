@@ -1,293 +1,311 @@
-/* ============================================================
-   FOCKIS SHOP
-   MARKETPLACE DENSITY SYSTEM
-   ============================================================ */
+/* ==========================================
+   FOCKIS LUXE PRODUCT CARD — WHITE THEME
+========================================== */
 
-/*
- * This stylesheet is intentionally additive.
- *
- * It does not replace the existing shop-original.css or
- * shop-extensions.css styles.
- *
- * Its purpose is to make Fockis Shop feel like a dense,
- * production marketplace rather than a landing page.
- */
-
-
-/* ============================================================
-   MARKETPLACE SHELL
-   ============================================================ */
-
-.mp-shell {
-  width: 100%;
-}
-
-.mp-shell > * {
-  box-sizing: border-box;
-}
-
-
-/* ============================================================
-   SECTION DIVIDERS
-   ============================================================ */
-
-.mp-divider {
-  width: 100%;
-  height: 1px;
-  margin: 18px 0;
-  border: 0;
-  background: var(--shop-border, rgba(0, 0, 0, 0.1));
-}
-
-
-/* ============================================================
-   GENERIC MARKETPLACE GRIDS
-   ============================================================ */
-
-.mp-shell .product-grid,
-.mp-shell .products-grid,
-.mp-shell .shop-product-grid,
-.mp-shell .marketplace-product-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  width: 100%;
-}
-
-
-/* ============================================================
-   STORE GRIDS
-   ============================================================ */
-
-.mp-shell .store-grid,
-.mp-shell .stores-grid,
-.mp-shell .shop-store-grid,
-.mp-shell .marketplace-store-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  width: 100%;
-}
-
-
-/* ============================================================
-   CATEGORY GRIDS
-   ============================================================ */
-
-.mp-shell .category-grid,
-.mp-shell .categories-grid,
-.mp-shell .shop-category-grid {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 12px;
-  width: 100%;
-}
-
-
-/* ============================================================
-   DENSE SECTION SPACING
-   ============================================================ */
-
-.mp-shell section {
-  margin-bottom: 20px;
-}
-
-.mp-shell section:last-child {
-  margin-bottom: 0;
-}
-
-
-/* ============================================================
-   SECTION HEADERS
-   ============================================================ */
-
-.mp-shell .section-header,
-.mp-shell .sec-head,
-.mp-shell .marketplace-section-header {
-  margin-bottom: 12px;
-}
-
-
-/* ============================================================
-   PRODUCT CARD DENSITY
-   ============================================================ */
-
-.mp-shell .product-card,
-.mp-shell .shop-product-card,
-.mp-shell .marketplace-product-card {
-  min-width: 0;
-  overflow: hidden;
-}
-
-
-/* ============================================================
-   STORE CARD DENSITY
-   ============================================================ */
-
-.mp-shell .store-card,
-.mp-shell .shop-store-card,
-.mp-shell .marketplace-store-card {
-  min-width: 0;
-  overflow: hidden;
-}
-
-
-/* ============================================================
-   HORIZONTAL MARKETPLACE SHELVES
-   ============================================================ */
-
-.mp-shell .horizontal-products,
-.mp-shell .product-shelf,
-.mp-shell .horizontal-shelf {
+.luxe-product-card {
+  position: relative;
   display: flex;
-  gap: 14px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-bottom: 6px;
-  scrollbar-width: thin;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  color: #0d2740;
+  background: #ffffff;
+  border: 1px solid #e7e7e1;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(13, 39, 64, 0.05);
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
 }
 
-.mp-shell .horizontal-products > *,
-.mp-shell .product-shelf > *,
-.mp-shell .horizontal-shelf > * {
-  flex: 0 0 auto;
+.luxe-product-card:hover {
+  border-color: #1d7a3e;
+  box-shadow: 0 8px 26px rgba(29, 122, 62, 0.12);
+  transform: translateY(-2px);
 }
 
+.luxe-product-card__link {
+  display: block;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
 
-/* ============================================================
-   COMPACT BUTTON AREAS
-   ============================================================ */
-
-.mp-shell .actions,
-.mp-shell .card-actions {
+.luxe-product-card__media {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #f6f7f4;
+}
+
+.luxe-product-card__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  transition: transform 350ms ease;
+}
+
+.luxe-product-card:hover .luxe-product-card__image {
+  transform: scale(1.025);
+}
+
+.luxe-product-card__placeholder {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  background-color: #f6f7f4;
+  background-image:
+    linear-gradient(rgba(29, 122, 62, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29, 122, 62, 0.035) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.luxe-product-card__placeholder span {
+  font-size: clamp(2.4rem, 6vw, 4rem);
+}
+
+.luxe-product-card__image-shade {
+  position: absolute;
+  inset: 40% 0 0;
+  pointer-events: none;
+  background: linear-gradient(transparent, rgba(13, 39, 64, 0.04));
+}
+
+.luxe-product-card__discount {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 5px 8px;
+  color: #ffffff;
+  background: #c4432f;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.luxe-product-card__badge {
+  position: absolute;
+  bottom: 9px;
+  left: 9px;
+  max-width: calc(100% - 18px);
+}
+
+.luxe-product-card__wishlist {
+  position: absolute;
+  z-index: 2;
+  top: 9px;
+  right: 9px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  padding: 0;
+  color: #0d2740;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #e7e7e1;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.luxe-product-card__wishlist.is-saved {
+  color: #1d7a3e;
+  border-color: #1d7a3e;
+}
+
+.luxe-product-card__details {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 7px;
+  padding: 12px 12px 8px;
+  background: #ffffff;
+}
+
+.luxe-product-card__store {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: #5c655f;
+  font-size: 0.72rem;
+}
+
+.luxe-product-card__store > span:not(.luxe-product-card__store-mark) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.luxe-product-card__store-mark {
+  display: grid;
+  flex: 0 0 19px;
+  width: 19px;
+  height: 19px;
+  place-items: center;
+  color: #1d7a3e;
+  border: 1px solid #1d7a3e;
+  border-radius: 50%;
+  font-family: Georgia, serif;
+  font-size: 0.65rem;
+}
+
+.luxe-product-card__name {
+  display: -webkit-box;
+  min-height: 2.5em;
+  margin: 0;
+  overflow: hidden;
+  color: #0d2740;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.luxe-product-card__rating {
+  display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
 }
 
-
-/* ============================================================
-   RESPONSIVE — LARGE DESKTOP
-   ============================================================ */
-
-@media (max-width: 1200px) {
-  .mp-shell .product-grid,
-  .mp-shell .products-grid,
-  .mp-shell .shop-product-grid,
-  .mp-shell .marketplace-product-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .mp-shell .store-grid,
-  .mp-shell .stores-grid,
-  .mp-shell .shop-store-grid,
-  .mp-shell .marketplace-store-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .mp-shell .category-grid,
-  .mp-shell .categories-grid,
-  .mp-shell .shop-category-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
+.luxe-product-card__stars {
+  color: #b8862e;
+  font-size: 0.88rem;
+  letter-spacing: 1px;
+  white-space: nowrap;
 }
 
-
-/* ============================================================
-   RESPONSIVE — TABLET
-   ============================================================ */
-
-@media (max-width: 900px) {
-  .mp-shell .product-grid,
-  .mp-shell .products-grid,
-  .mp-shell .shop-product-grid,
-  .mp-shell .marketplace-product-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .mp-shell .store-grid,
-  .mp-shell .stores-grid,
-  .mp-shell .shop-store-grid,
-  .mp-shell .marketplace-store-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .mp-shell .category-grid,
-  .mp-shell .categories-grid,
-  .mp-shell .shop-category-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10px;
-  }
-
-  .mp-divider {
-    margin: 16px 0;
-  }
+.luxe-product-card__rating-label {
+  overflow: hidden;
+  color: #5c655f;
+  font-size: 0.65rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-
-/* ============================================================
-   RESPONSIVE — MOBILE
-   ============================================================ */
-
-@media (max-width: 650px) {
-  .mp-shell .product-grid,
-  .mp-shell .products-grid,
-  .mp-shell .shop-product-grid,
-  .mp-shell .marketplace-product-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-  }
-
-  .mp-shell .store-grid,
-  .mp-shell .stores-grid,
-  .mp-shell .shop-store-grid,
-  .mp-shell .marketplace-store-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-  }
-
-  .mp-shell .category-grid,
-  .mp-shell .categories-grid,
-  .mp-shell .shop-category-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .mp-shell section {
-    margin-bottom: 16px;
-  }
-
-  .mp-divider {
-    margin: 14px 0;
-  }
+.luxe-product-card__price-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
 }
 
+.luxe-product-card__price {
+  color: #0d2740;
+  font-size: 1.08rem;
+  font-weight: 800;
+}
 
-/* ============================================================
-   RESPONSIVE — SMALL PHONES
-   ============================================================ */
+.luxe-product-card__old-price {
+  color: #7c857f;
+  font-size: 0.78rem;
+  text-decoration: line-through;
+}
 
-@media (max-width: 420px) {
-  .mp-shell .product-grid,
-  .mp-shell .products-grid,
-  .mp-shell .shop-product-grid,
-  .mp-shell .marketplace-product-grid {
-    gap: 8px;
+.luxe-product-card__shipping {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.luxe-product-card__shipping span {
+  padding: 3px 6px;
+  color: #145c2e;
+  background: #e7f0e8;
+  border: 1px solid #d3e5d6;
+  border-radius: 4px;
+  font-size: 0.62rem;
+}
+
+.luxe-product-card__actions {
+  display: flex;
+  gap: 7px;
+  padding: 4px 10px 11px;
+  background: #ffffff;
+}
+
+.luxe-product-card__actions button {
+  min-width: 0;
+  min-height: 34px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.luxe-product-card__actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.luxe-product-card__buy {
+  flex: 1 1 50%;
+  color: #ffffff;
+  background: #1d7a3e;
+  border: 1px solid #1d7a3e;
+  box-shadow: 0 2px 8px rgba(29, 122, 62, 0.12);
+}
+
+.luxe-product-card__buy:hover:not(:disabled) {
+  background: #145c2e;
+  box-shadow: 0 0 18px rgba(29, 122, 62, 0.16);
+}
+
+.luxe-product-card__add {
+  flex: 1 1 50%;
+  color: #145c2e;
+  background: #ffffff;
+  border: 1px solid #1d7a3e;
+}
+
+.luxe-product-card__add:hover:not(:disabled) {
+  background: #e7f0e8;
+}
+
+.product-shelf .luxe-product-card,
+.product-carousel .luxe-product-card {
+  height: 100%;
+}
+
+@media (max-width: 480px) {
+  .luxe-product-card {
+    border-radius: 11px;
   }
 
-  .mp-shell .store-grid,
-  .mp-shell .stores-grid,
-  .mp-shell .shop-store-grid,
-  .mp-shell .marketplace-store-grid {
-    gap: 8px;
+  .luxe-product-card__details {
+    gap: 6px;
+    padding: 9px 9px 7px;
   }
 
-  .mp-shell .category-grid,
-  .mp-shell .categories-grid,
-  .mp-shell .shop-category-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .luxe-product-card__name {
+    font-size: 0.9rem;
+  }
+
+  .luxe-product-card__actions {
+    gap: 5px;
+    padding: 3px 8px 9px;
+  }
+
+  .luxe-product-card__actions button {
+    padding: 7px 5px;
+    font-size: 0.65rem;
   }
 }

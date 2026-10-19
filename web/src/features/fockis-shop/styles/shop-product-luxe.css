@@ -1,0 +1,358 @@
+/*
+ * FOCKIS SHOP — WHITE PRODUCT PAGE THEME
+ * Import this file AFTER shop-product-luxe.css.
+ * Preserves existing product-page layout and behavior.
+ * White surfaces, deep-green text, emerald actions, and subtle gold accents.
+ */
+
+.fockis-product-luxe {
+  --p-bg: #ffffff;
+  --p-panel: #ffffff;
+  --p-panel-2: #f5faf7;
+  --p-green: #078744;
+  --p-gold: #a77b1b;
+  --p-text: #183126;
+  --p-muted: #64756b;
+  --p-line: #e1e9e3;
+
+  color: var(--p-text) !important;
+  background: #ffffff !important;
+}
+
+.fockis-product-luxe,
+.fockis-product-luxe .product-luxe-main,
+.fockis-product-luxe .product-luxe-description,
+.fockis-product-luxe .product-luxe-section,
+.fockis-product-luxe .product-luxe-reviews {
+  color: #183126 !important;
+  background: #ffffff !important;
+}
+
+.fockis-product-luxe .product-luxe-main {
+  background-image: none !important;
+}
+
+.fockis-product-luxe .product-luxe-breadcrumbs,
+.fockis-product-luxe .pdp-store-line,
+.fockis-product-luxe .pdp-info p,
+.fockis-product-luxe .pdp-short-desc,
+.fockis-product-luxe .pdp-shipping p,
+.fockis-product-luxe .product-luxe-section-heading p,
+.fockis-product-luxe .luxe-pdp-gallery__placeholder-label,
+.fockis-product-luxe .product-luxe-assurances small,
+.fockis-product-luxe .review-item p,
+.fockis-product-luxe .review-author,
+.fockis-product-luxe .pdp-info .muted {
+  color: #64756b !important;
+}
+
+.fockis-product-luxe .pdp-title,
+.fockis-product-luxe .pdp-info,
+.fockis-product-luxe .pdp-actions,
+.fockis-product-luxe .pdp-reviews,
+.fockis-product-luxe .pdp-related,
+.fockis-product-luxe .pdp-fbt,
+.fockis-product-luxe .pdp-shipping,
+.fockis-product-luxe .pdp-inventory,
+.fockis-product-luxe .pdp-info h1,
+.fockis-product-luxe .pdp-info h2,
+.fockis-product-luxe .pdp-fbt h2,
+.fockis-product-luxe .pdp-related h2,
+.fockis-product-luxe .pdp-reviews h2,
+.fockis-product-luxe .section-head h2,
+.fockis-product-luxe .reco-header h2,
+.fockis-product-luxe .product-luxe-section-heading h2,
+.fockis-product-luxe .product-luxe-assurances strong,
+.fockis-product-luxe .pdp-related .pcard h5,
+.fockis-product-luxe .pdp-related .product-card h4,
+.fockis-product-luxe .pdp-related .pcard a,
+.fockis-product-luxe .pdp-related .product-card a,
+.fockis-product-luxe .pdp-description,
+.fockis-product-luxe .pdp-description h2,
+.fockis-product-luxe .pdp-description p {
+  color: #183126 !important;
+}
+
+.fockis-product-luxe .pdp-gallery-main,
+.fockis-product-luxe .luxe-pdp-gallery__main {
+  background: #f7faf8 !important;
+  border-color: #dce8df !important;
+  box-shadow: 0 10px 30px rgba(16, 54, 34, 0.07) !important;
+}
+
+.fockis-product-luxe .pdp-gallery-main img,
+.fockis-product-luxe .luxe-pdp-gallery__main img {
+  background: transparent !important;
+}
+
+.fockis-product-luxe .luxe-pdp-gallery__placeholder {
+  color: #183126 !important;
+  background: #f7faf8 !important;
+}
+
+.fockis-product-luxe .luxe-pdp-gallery__corner-label {
+  color: #8a6718 !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: #d8c58d !important;
+}
+
+.fockis-product-luxe .pdp-gallery-thumbs button,
+.fockis-product-luxe .pdp-variant-options button,
+.fockis-product-luxe .pdp-actions .icon-btn,
+.fockis-product-luxe .product-luxe-assurances > div > span:first-child,
+.fockis-product-luxe .bundle-card,
+.fockis-product-luxe .review-item,
+.fockis-product-luxe .pdp-related .pcard,
+.fockis-product-luxe .pdp-related .product-card {
+  color: #183126 !important;
+  background: #ffffff !important;
+  border-color: #e1e9e3 !important;
+}
+
+.fockis-product-luxe .pdp-qty-stepper {
+  color: #183126 !important;
+  background: #ffffff !important;
+  border: 1px solid #d5e1d8 !important;
+}
+
+.fockis-product-luxe .pdp-qty-stepper button {
+  color: #078744 !important;
+}
+
+.fockis-product-luxe .pdp-variant-options button.active,
+.fockis-product-luxe .pdp-actions .add-btn,
+.fockis-product-luxe .pdp-actions .btn.btn-navy,
+.fockis-product-luxe .bundle-card button {
+  color: #ffffff !important;
+  background: #078744 !important;
+  border-color: #078744 !important;
+}
+
+.fockis-product-luxe .pdp-store-line a,
+.fockis-product-luxe .pdp-variant-label,
+.fockis-product-luxe .product-luxe-eyebrow,
+.fockis-product-luxe .product-luxe-section-heading > span,
+.fockis-product-luxe .pdp-actions .icon-btn {
+  color: #078744 !important;
+}
+
+.fockis-product-luxe .product-luxe-eyebrow-mark {
+  background: #078744 !important;
+  box-shadow: 0 0 10px rgba(7, 135, 68, 0.18) !important;
+}
+
+.fockis-product-luxe .product-luxe-assurances,
+.fockis-product-luxe .product-luxe-description,
+.fockis-product-luxe .product-luxe-section,
+.fockis-product-luxe .product-luxe-reviews {
+  border-color: #e1e9e3 !important;
+}
+
+.fockis-product-luxe .product-luxe-section-heading h2,
+.fockis-product-luxe .pdp-description h2 {
+  color: #183126 !important;
+}
+
+.fockis-product-luxe .pdp-description,
+.fockis-product-luxe .bundle-card .bundle-thumb,
+.fockis-product-luxe .pdp-related .pcard .thumb,
+.fockis-product-luxe .pdp-related .product-card .thumb {
+  color: #183126 !important;
+  background: #f7faf8 !important;
+  border-color: #e1e9e3 !important;
+}
+
+.fockis-product-luxe .bundle-summary {
+  border-top-color: #e1e9e3 !important;
+}
+
+.fockis-product-luxe .bundle-total,
+.fockis-product-luxe .pdp-related .price,
+.fockis-product-luxe .pdp-related .price strong {
+  color: #078744 !important;
+}
+
+.fockis-product-luxe .bundle-total span {
+  color: #64756b !important;
+}
+
+.fockis-product-luxe .bundle-plus {
+  color: #a77b1b !important;
+}
+
+.fockis-product-luxe .review-breakdown,
+.fockis-product-luxe .review-breakdown-row,
+.fockis-product-luxe .review-list,
+.fockis-product-luxe .review-item,
+.fockis-product-luxe .review-item h5 {
+  color: #183126 !important;
+}
+
+.fockis-product-luxe .review-breakdown-track {
+  background: #e8f0ea !important;
+}
+
+.fockis-product-luxe .review-breakdown-fill {
+  background: #078744 !important;
+}
+
+.fockis-product-luxe .review-verified {
+  color: #078744 !important;
+}
+
+.fockis-product-luxe .pdp-related .pcard,
+.fockis-product-luxe .pdp-related .product-card {
+  box-shadow: 0 5px 18px rgba(16, 54, 34, 0.05) !important;
+}
+
+/* White announcement and category bars */
+.fockis-product-luxe .luxe-announcement {
+  color: #8a6718 !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e1e9e3 !important;
+}
+
+.fockis-product-luxe .luxe-announcement-divider {
+  color: #a77b1b !important;
+}
+
+.fockis-product-luxe .luxe-announcement span:last-child {
+  color: #183126 !important;
+}
+
+.fockis-product-luxe .luxe-category-nav {
+  background: #ffffff !important;
+  border-top: 1px solid #e1e9e3 !important;
+  border-bottom: 1px solid #e1e9e3 !important;
+}
+
+.fockis-product-luxe .luxe-category-nav a {
+  color: #183126 !important;
+}
+
+.fockis-product-luxe .luxe-category-nav a:hover,
+.fockis-product-luxe .luxe-category-nav a:focus-visible {
+  color: #078744 !important;
+}
+
+/* Keep the product header white with readable dark-green controls */
+.fockis-product-luxe > header,
+.fockis-product-luxe > header .header-inner,
+.fockis-product-luxe > header .header-right,
+.fockis-product-luxe > header .mobile-nav {
+  color: #183126 !important;
+  background: #ffffff !important;
+}
+
+.fockis-product-luxe > header {
+  border-bottom: 1px solid #e1e9e3 !important;
+}
+
+.fockis-product-luxe > header .logo,
+.fockis-product-luxe > header .icon-link,
+.fockis-product-luxe > header .mobile-nav a {
+  color: #063b28 !important;
+}
+
+.fockis-product-luxe > header .logo .crest {
+  color: #078744 !important;
+  background: #ffffff !important;
+  border-color: #078744 !important;
+}
+
+.fockis-product-luxe > header .mobile-toggle {
+  color: #164e37 !important;
+  background: #ffffff !important;
+  border-color: #e1e9e3 !important;
+}
+
+.fockis-product-luxe > header .mobile-nav {
+  border-top: 1px solid #e1e9e3 !important;
+}
+
+.fockis-product-luxe footer,
+.fockis-product-luxe .shop-footer {
+  color: #64756b !important;
+  background: #ffffff !important;
+}
+
+@media (max-width: 850px) {
+  .fockis-product-luxe .product-luxe-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 28px !important;
+  }
+
+  .fockis-product-luxe .product-luxe-purchase {
+    max-width: 720px;
+  }
+
+  .fockis-product-luxe .pdp-gallery-main,
+  .fockis-product-luxe .pdp-gallery-main img,
+  .fockis-product-luxe .luxe-pdp-gallery__placeholder {
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 600px) {
+  .fockis-product-luxe .wrap {
+    width: calc(100% - 24px);
+  }
+
+  .fockis-product-luxe .pdp-title {
+    font-size: 32px;
+  }
+
+  .fockis-product-luxe .product-luxe-assurances {
+    grid-template-columns: 1fr;
+  }
+
+  .fockis-product-luxe .bundle-card {
+    padding: 14px;
+  }
+
+  .fockis-product-luxe .product-luxe-description,
+  .fockis-product-luxe .product-luxe-section,
+  .fockis-product-luxe .product-luxe-reviews {
+    padding: 22px 0;
+  }
+
+  .fockis-product-luxe .luxe-announcement {
+    gap: 6px;
+    padding: 7px 8px;
+    font-size: 9px;
+    letter-spacing: 0.03em;
+  }
+
+  .fockis-product-luxe .luxe-category-nav {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 20px;
+    overflow-x: auto;
+    padding: 12px 16px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .fockis-product-luxe .luxe-category-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .fockis-product-luxe .luxe-category-nav a {
+    flex: 0 0 auto;
+    font-size: 10px;
+  }
+
+  .fockis-product-luxe > header .header-inner {
+    min-height: 64px;
+    gap: 10px;
+    padding: 10px 18px;
+  }
+
+  .fockis-product-luxe > header .header-right {
+    gap: 14px;
+  }
+
+  .fockis-product-luxe > header .logo {
+    gap: 7px;
+  }
+}

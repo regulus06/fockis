@@ -3,178 +3,99 @@ import { useEffect, useState } from 'react';
 import { ShopHeader } from '../components/common/ShopHeader';
 import { ShopFooter } from '../components/common/ShopFooter';
 import { ShopBreadcrumbs } from '../components/common/ShopBreadcrumbs';
-import { ShopLoading } from '../components/common/ShopLoading';
 import { ShopError } from '../components/common/ShopError';
+import { ProductGridSkeleton } from '../components/products/ProductGridSkeleton';
 
 import { WishlistGrid } from '../components/wishlist/WishlistGrid';
 
 import { useWishlist } from '../hooks/useWishlist';
-import { listProducts } from '../services/productApi';
+import { getProductById } from '../services/productApi';
 
 import type { Product } from '../types/product.types';
 
 export default function ShopWishlistPage() {
-const { productIds } = useWishlist();
+  const { productIds } = useWishlist();
 
-const [products, setProducts] = useState<Product[]>([]);
-const [loading, setLoading] = useState(false);
-const [error, setError] = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-useEffect(() => {
-let cancelled = false;
+  useEffect(() => {
+    let cancelled = false;
 
+    async function loadWishlistProducts() {
+      if (!productIds || productIds.length === 0) {
+        setProducts([]);
+        setLoading(false);
+        setError(null);
+        return;
+      }
 
-async function loadWishlistProducts() {
-  if (!productIds || productIds.length === 0) {
-    setProducts([]);
-    setLoading(false);
-    setError(null);
-    return;
-  }
+      setLoading(true);
+      setError(null);
 
-  setLoading(true);
-  setError(null);
+      try {
+        // Load each saved product directly by ID (one request per item)
+        // instead of paging through the whole catalogue.
+        const results = await Promise.allSettled(
+          productIds.map((id) => getProductById(id)),
+        );
 
-  try {
-    const wantedIds = new Set(productIds);
+        if (cancelled) return;
 
-    const firstPage = await listProducts({
-      page: 1,
-      pageSize: 100,
-    });
+        const failures = results.filter((result) => result.status === 'rejected');
+        const found = results
+          .map((result) => (result.status === 'fulfilled' ? result.value : null))
+          .filter((product): product is Product => Boolean(product));
 
-    const allProducts: Product[] = [...firstPage.items];
+        setProducts(found);
 
-    const totalPages = Math.max(
-      1,
-      Math.ceil(
-        firstPage.total / firstPage.pageSize,
-      ),
-    );
-
-    if (totalPages > 1) {
-      for (let page = 2; page <= totalPages; page += 1) {
-        if (cancelled) {
-          return;
+        if (found.length === 0 && failures.length > 0) {
+          const first = failures[0] as PromiseRejectedResult;
+          setError(first.reason instanceof Error ? first.reason.message : 'Unable to load your wishlist.');
         }
-
-        const pageResult = await listProducts({
-          page,
-          pageSize: 100,
-        });
-
-        allProducts.push(...pageResult.items);
+      } catch (err) {
+        if (cancelled) return;
+        setProducts([]);
+        setError(err instanceof Error ? err.message : 'Unable to load your wishlist.');
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
 
-    if (cancelled) {
-      return;
-    }
+    void loadWishlistProducts();
 
-    const matchedProducts = allProducts.filter(
-      (product) => wantedIds.has(product.id),
-    );
+    return () => {
+      cancelled = true;
+    };
+  }, [productIds]);
 
-    const productMap = new Map(
-      matchedProducts.map((product) => [
-        product.id,
-        product,
-      ]),
-    );
+  return (
+    <div className="shop-page-root fk-shop">
+      <ShopHeader />
 
-    const orderedProducts = productIds
-      .map((id) => productMap.get(id))
-      .filter(
-        (product): product is Product =>
-          Boolean(product),
-      );
+      <main className="fk-container fk-page">
+        <ShopBreadcrumbs items={[{ label: 'Shop', to: '/shop' }, { label: 'Wishlist' }]} />
 
-    setProducts(orderedProducts);
-  } catch (err) {
-    if (cancelled) {
-      return;
-    }
-
-    const message =
-      err instanceof Error
-        ? err.message
-        : 'Unable to load your wishlist.';
-
-    setProducts([]);
-    setError(message);
-  } finally {
-    if (!cancelled) {
-      setLoading(false);
-    }
-  }
-}
-
-void loadWishlistProducts();
-
-return () => {
-  cancelled = true;
-};
-
-}, [productIds]);
-
-return ( <div className="shop-page-root"> <ShopHeader />
-
-```
-  <div
-    className="wrap"
-    style={{
-      paddingTop: 32,
-    }}
-  >
-    <ShopBreadcrumbs
-      items={[
-        {
-          label: 'Shop',
-          to: '/shop',
-        },
-        {
-          label: 'Wishlist',
-        },
-      ]}
-    />
-  </div>
-
-  <section className="tight">
-    <div className="wrap">
-      <div className="section-head">
-        <div>
-          <h1>Your wishlist</h1>
-
-          {!loading && products.length > 0 && (
-            <p>
-              {products.length} saved item
-              {products.length === 1 ? '' : 's'}
-            </p>
-          )}
+        <div className="fk-page__head">
+          <div>
+            <h1>Your wishlist</h1>
+            {!loading && products.length > 0 && (
+              <p>
+                {products.length} saved item{products.length === 1 ? '' : 's'}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
 
-      {loading && (
-        <ShopLoading
-          label="Loading your wishlist…"
-          rows={4}
-        />
-      )}
+        {loading && <ProductGridSkeleton count={Math.min(8, productIds.length || 4)} />}
 
-      {error && (
-        <ShopError message={error} />
-      )}
+        {!loading && error && <ShopError message={error} />}
 
-      {!loading && !error && (
-        <WishlistGrid
-          products={products}
-        />
-      )}
+        {!loading && !error && <WishlistGrid products={products} />}
+      </main>
+
+      <ShopFooter />
     </div>
-  </section>
-
-  <ShopFooter />
-</div>
-
-);
+  );
 }

@@ -59,6 +59,8 @@ return ( <section className="pdp-reviews"> <div className="section-head"> <div> 
       <Stars
         rating={product.reviews.averageRating}
         reviews={product.reviews.totalReviews}
+        showEmpty
+        size="md"
       />
     </div>
   </div>
