@@ -1,0 +1,53 @@
+// ============================================================================
+// FOCKIS BUSINESSES — DESIGN TOKENS (imported as "./fkb-tokens")
+//
+// Shared by every Businesses stylesheet. Values are exposed as CSS custom
+// properties on `.fkb` (see BusinessUi.scss) so all pages and rails stay
+// consistent; Sass variables below are only for breakpoints and mixins.
+//
+// Contrast notes:
+// - Primary buttons use navy text on brand orange (#172033 on #F97316 ≈ 6.4:1).
+// - Orange text on white uses the darker --fkb-accent-text (≈ 5.2:1).
+// ============================================================================
+
+$fkb-bp-sm: 640px;
+$fkb-bp-md: 900px;
+$fkb-bp-lg: 1180px;
+
+@mixin fkb-up($bp) {
+  @media (min-width: $bp) {
+    @content;
+  }
+}
+
+@mixin fkb-down($bp) {
+  @media (max-width: ($bp - 1px)) {
+    @content;
+  }
+}
+
+@mixin fkb-focus-ring {
+  outline: 3px solid var(--fkb-focus);
+  outline-offset: 2px;
+}
+
+@mixin fkb-line-clamp($lines) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@mixin fkb-reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+@mixin fkb-surface {
+  background: var(--fkb-surface);
+  border: 1px solid var(--fkb-border);
+  border-radius: var(--fkb-radius-lg);
+  box-shadow: var(--fkb-shadow-sm);
+}

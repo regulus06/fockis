@@ -1439,3 +1439,108 @@ $bp-lg: 1200px;
   border-radius: 12px;
   .cta { color: var(--fk-blue) !important; }
 }
+
+
+/* ============================================================================
+   FOCKIS SHOP — PRODUCT CARD LAYOUT FIX
+   Full-file replacement includes the original theme above plus these overrides.
+   ========================================================================== */
+
+/* Compact cards: keep the image/details row stable and align the actions below. */
+.shop-page-root .fk-card--compact {
+  box-sizing: border-box;
+  grid-template-columns: 74px minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto auto;
+  align-content: start;
+  align-items: start;
+  min-height: 0;
+}
+
+.shop-page-root .fk-card--compact .fk-card__media {
+  grid-column: 1;
+  grid-row: 1 / span 4;
+  width: 74px;
+  height: 74px;
+  min-height: 74px;
+  aspect-ratio: auto;
+  overflow: hidden;
+}
+
+.shop-page-root .fk-card--compact .fk-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  padding: 0;
+}
+
+.shop-page-root .fk-card--compact .fk-card__actions {
+  grid-column: 1 / -1;
+  grid-row: 5;
+  align-self: end;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  margin-top: 8px;
+}
+
+.shop-page-root .fk-card--compact .fk-card__actions .fk-btn {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Flash Sale: equalize cards and keep actions at the bottom. */
+.shop-page-root .fk-rail-section--flash .fk-card--rail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.shop-page-root .fk-rail-section--flash .fk-card--rail .fk-card__media {
+  flex: 0 0 auto;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+
+.shop-page-root .fk-rail-section--flash .fk-card--rail .fk-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.shop-page-root .fk-rail-section--flash .fk-card--rail .fk-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.shop-page-root .fk-rail-section--flash .fk-card--rail .fk-card__actions {
+  margin-top: auto;
+}
+
+/* Small screens: prevent compact cards and their buttons from overflowing. */
+@media (max-width: 599px) {
+  .shop-page-root .fk-card--compact {
+    width: min(250px, 78vw);
+  }
+
+  .shop-page-root .fk-card--compact .fk-card__actions {
+    gap: 4px;
+  }
+
+  .shop-page-root .fk-card--compact .fk-card__actions .fk-btn {
+    padding-inline: 6px;
+    font-size: 12px;
+  }
+}

@@ -1,15 +1,17 @@
 import {
+  Eye,
   HelpCircle,
+  LayoutDashboard,
   LogOut,
+  Menu as MenuIcon,
+  MoreHorizontal,
+  Forward,
   Settings,
-  Wifi,
+  UserPlus,
   WifiOff,
   Loader2,
 } from "lucide-react";
-import {
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import type {
   ConnectionQuality,
@@ -21,15 +23,24 @@ import {
   formatDuration,
 } from "../utils";
 
-const CONNECTION_LABEL: Record<
-  ConnectionQuality,
-  string
-> = {
-  excellent: "Excellent connection",
-  good: "Good connection",
+import { Menu } from "./ui/Primitives";
+
+import FockisMark from "../../components/fockis/FockisMark";
+
+const CONNECTION_LABEL: Record<ConnectionQuality, string> = {
+  excellent: "Connected",
+  good: "Connected",
   poor: "Poor connection",
   reconnecting: "Reconnecting…",
   offline: "Offline",
+};
+
+const PHASE_LABEL: Record<Phase, string> = {
+  setup: "PREVIEW",
+  starting: "STARTING",
+  live: "LIVE",
+  ending: "ENDING",
+  ended: "ENDED",
 };
 
 export function Header({
@@ -39,6 +50,10 @@ export function Header({
   elapsedSeconds,
   username,
   onOpenSettings,
+  onShare,
+  onInviteGuest,
+  onOpenManager,
+  onOpenMenu,
 }: {
   phase: Phase;
   connection: ConnectionQuality;
@@ -46,152 +61,145 @@ export function Header({
   elapsedSeconds: number;
   username: string;
   onOpenSettings: () => void;
+  onShare?: () => void;
+  onInviteGuest?: () => void;
+  onOpenManager?: () => void;
+  /** Opens the scenes / sources / creator tools drawer (tablet & phone). */
+  onOpenMenu?: () => void;
 }) {
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const isBroadcasting =
-    phase === "live" ||
-    phase === "ending";
-
-  const handleHelp = () => {
-    /*
-     * Keep the user inside Fockis.
-     *
-     * If /help exists in the main application router,
-     * this navigates there normally.
-     */
-    if (location.pathname !== "/help") {
-      navigate("/help");
-      return;
-    }
-
-    /*
-     * Already on help.
-     */
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
-
-  const handleExitStudio = () => {
-    /*
-     * Do NOT end a LIVE broadcast here.
-     *
-     * Exit Studio only leaves the studio UI.
-     * The actual broadcast is ended by the End Live
-     * button/modal.
-     */
-    navigate("/my-live");
-  };
+  const isLive = phase === "live";
+  const isBroadcasting = phase === "live" || phase === "ending";
+  const isTransitioning = phase === "starting" || phase === "ending";
+  const connectionIssue =
+    connection === "poor" ||
+    connection === "reconnecting" ||
+    connection === "offline";
 
   return (
     <header className="header">
       <div className="header__brand">
-        <div className="header__brand-mark">
-          F
-        </div>
+        {onOpenMenu && (
+          <button
+            type="button"
+            className="header-btn header-btn--icon header-btn--menu"
+            onClick={onOpenMenu}
+            aria-label="Open studio menu"
+            title="Scenes, sources and creator tools"
+          >
+            <MenuIcon size={22} />
+          </button>
+        )}
 
-        <div className="header__brand-text">
-          <span className="header__brand-name">
-            FOCKIS
-          </span>
+        <span className="header__brand-mark">
+          <FockisMark />
+        </span>
 
-          <span className="header__brand-sub">
-            LIVE STUDIO
-          </span>
-        </div>
+        <span className="header__brand-text">
+          <span className="header__brand-name">FOCKIS</span>
+          <span className="header__brand-sub">LIVE STUDIO</span>
+        </span>
 
-        <span className="header__username">
+        <span className="header__divider" aria-hidden="true" />
+
+        <span className="header__username" title={`@${username}`}>
           @{username}
         </span>
       </div>
 
-      <div className="header__center">
-        {isBroadcasting ? (
-          <div className="live-status">
-            <span className="live-badge">
-              <span className="live-badge__dot" />
-              LIVE
-            </span>
+      <div className="header__center" aria-live="polite">
+        <span
+          className={`status-pill status-pill--${phase}`}
+          title={isLive ? "You are live" : "You are not broadcasting"}
+        >
+          {isTransitioning ? (
+            <Loader2 size={13} className="spin" aria-hidden="true" />
+          ) : (
+            <span className="status-pill__dot" aria-hidden="true" />
+          )}
+          {PHASE_LABEL[phase]}
+        </span>
 
-            <span className="header__divider" />
+        <span className="info-pill" title="Current viewers">
+          <Eye size={17} aria-hidden="true" />
+          <span>
+            {formatCount(isBroadcasting ? viewers : 0)}
+            <span className="info-pill__suffix"> viewers</span>
+          </span>
+        </span>
 
-            <span className="header__viewers">
-              {formatCount(viewers)} viewers
-            </span>
+        <span className="info-pill info-pill--mono" title="Session duration">
+          {formatDuration(isBroadcasting ? elapsedSeconds : 0)}
+        </span>
 
-            <span className="header__divider" />
-
-            <span className="header__timer">
-              {formatDuration(
-                elapsedSeconds,
-              )}
-            </span>
-          </div>
-        ) : (
-          <div
-            className={`connection-pill connection-pill--${connection}`}
-          >
-            {connection === "poor" ||
-            connection === "reconnecting" ? (
-              <Loader2
-                size={13}
-                className="spin"
-              />
-            ) : connection === "offline" ? (
-              <WifiOff size={13} />
+        {connectionIssue && (
+          <span className={`info-pill info-pill--warn`} role="status">
+            {connection === "offline" ? (
+              <WifiOff size={14} aria-hidden="true" />
             ) : (
-              <Wifi size={13} />
+              <Loader2 size={14} className="spin" aria-hidden="true" />
             )}
-
             {CONNECTION_LABEL[connection]}
-          </div>
+          </span>
         )}
       </div>
 
       <div className="header__actions">
-        <button
-          className="icon-action"
-          onClick={onOpenSettings}
-          type="button"
-          title="Settings"
-          aria-label="Open settings"
-        >
-          <Settings size={17} />
+        <Menu
+          label="More studio options"
+          trigger={<MoreHorizontal size={20} />}
+          triggerClassName="header-btn header-btn--icon"
+          items={[
+            {
+              id: "settings",
+              label: "Stream settings",
+              icon: <Settings size={16} />,
+              onSelect: onOpenSettings,
+            },
+            {
+              id: "manager",
+              label: "Live Manager",
+              icon: <LayoutDashboard size={16} />,
+              onSelect: onOpenManager ?? (() => navigate("/my-live")),
+            },
+            {
+              id: "help",
+              label: "Help",
+              icon: <HelpCircle size={16} />,
+              onSelect: () => navigate("/help"),
+            },
+            {
+              id: "exit",
+              label: isBroadcasting ? "Leave studio (stays live)" : "Exit studio",
+              icon: <LogOut size={16} />,
+              // Leaving the studio UI never ends the broadcast. Ending is
+              // only done through the End live session confirmation.
+              onSelect: () => navigate("/my-live"),
+            },
+          ]}
+        />
 
-          <span className="icon-action__label">
-            Settings
-          </span>
+        <button
+          type="button"
+          className="header-btn header-btn--share"
+          onClick={onShare}
+          disabled={!isLive || !onShare}
+          title={isLive ? "Share your live" : "You can share once you're live"}
+        >
+          <Forward size={19} aria-hidden="true" />
+          <span className="header-btn__label">Share</span>
         </button>
 
         <button
-          className="icon-action"
-          onClick={handleHelp}
           type="button"
-          title="Help"
-          aria-label="Open help"
+          className="header-btn header-btn--primary"
+          onClick={onInviteGuest}
+          disabled={!onInviteGuest}
+          title="Invite a guest to your live"
         >
-          <HelpCircle size={17} />
-
-          <span className="icon-action__label">
-            Help
-          </span>
-        </button>
-
-        <button
-          className="icon-action icon-action--exit"
-          onClick={handleExitStudio}
-          type="button"
-          title="Exit studio"
-          aria-label="Exit studio"
-        >
-          <LogOut size={17} />
-
-          <span className="icon-action__label">
-            Exit studio
-          </span>
+          <UserPlus size={18} aria-hidden="true" />
+          <span className="header-btn__label">Invite guest</span>
         </button>
       </div>
     </header>

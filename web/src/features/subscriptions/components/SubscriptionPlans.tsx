@@ -1,403 +1,66 @@
-import React from "react";
-
 import type {
   BillingInterval,
   SubscriptionPlan,
   SubscriptionPlanConfig,
 } from "../types/subscriptionTypes";
 
-import SubscriptionPlanCard from "../components/SubscriptionPlanCard";
+import { sortActivePlans } from "../utils/subscriptionPlanUtils";
+import type { PlanCardAction } from "../utils/subscriptionPlanUtils";
+
+import SubscriptionPlanCard from "./SubscriptionPlanCard";
 
 /* ============================================================================
-   FOCKIS SUBSCRIPTION PLANS
+   FOCKIS SUBSCRIPTION PLAN GRID
+
+   Renders the backend plans exactly as configured (active only, in
+   displayOrder). No frontend feature or price fallbacks.
 ============================================================================ */
 
 interface SubscriptionPlansProps {
-  plans?: SubscriptionPlanConfig[];
-
+  plans: SubscriptionPlanConfig[];
   currentPlan: SubscriptionPlan;
-
   billingInterval: BillingInterval;
-
   loading?: boolean;
-
-  onSelect: (
-    plan: SubscriptionPlan,
-  ) => void;
+  pendingPlan?: SubscriptionPlan | null;
+  getAction?: (config: SubscriptionPlanConfig) => PlanCardAction;
+  onSelect: (plan: SubscriptionPlan) => void;
+  id?: string;
 }
 
-/* ============================================================================
-   DEFAULT PLANS
-
-   Used when the backend does not provide plans.
-
-   IMPORTANT:
-   These objects use the COMPLETE SubscriptionPlanConfig type.
-============================================================================ */
-
-const DEFAULT_PLANS: SubscriptionPlanConfig[] = [
-  {
-    plan: "BASIC",
-
-    name: "Basic",
-
-    description:
-      "Free Fockis account with essential services.",
-
-    monthlyPrice: 0,
-
-    yearlyPrice: 0,
-
-    currency: "USD",
-
-    features: [
-      {
-        name: "Fockis Feed",
-        included: true,
-      },
-
-      {
-        name: "Create posts",
-        included: true,
-      },
-
-      {
-        name: "Friends and groups",
-        included: true,
-      },
-
-      {
-        name: "Marketplace browsing",
-        included: true,
-      },
-
-      {
-        name: "Basic profile",
-        included: true,
-      },
-
-      {
-        name: "Premium account features",
-        included: false,
-      },
-    ],
-
-    active: true,
-
-    popular: false,
-
-    displayOrder: 1,
-
-    rank: 1,
-  },
-
-  {
-    plan: "BRONZE",
-
-    name: "Bronze",
-
-    description:
-      "More Fockis services and higher account limits.",
-
-    monthlyPrice: 9.99,
-
-    yearlyPrice: 99.99,
-
-    currency: "USD",
-
-    features: [
-      {
-        name: "Everything in Basic",
-        included: true,
-      },
-
-      {
-        name: "Higher account limits",
-        included: true,
-      },
-
-      {
-        name: "Enhanced profile features",
-        included: true,
-      },
-
-      {
-        name: "Additional Fockis services",
-        included: true,
-      },
-
-      {
-        name: "Advanced analytics",
-        included: false,
-      },
-    ],
-
-    active: true,
-
-    popular: false,
-
-    displayOrder: 2,
-
-    rank: 2,
-  },
-
-  {
-    plan: "SILVER",
-
-    name: "Silver",
-
-    description:
-      "Expanded Fockis services for growing users.",
-
-    monthlyPrice: 19.99,
-
-    yearlyPrice: 199.99,
-
-    currency: "USD",
-
-    features: [
-      {
-        name: "Everything in Bronze",
-        included: true,
-      },
-
-      {
-        name: "Expanded account limits",
-        included: true,
-      },
-
-      {
-        name: "Advanced profile tools",
-        included: true,
-      },
-
-      {
-        name: "Advanced marketplace tools",
-        included: true,
-      },
-
-      {
-        name: "Advanced analytics",
-        included: true,
-      },
-    ],
-
-    active: true,
-
-    popular: true,
-
-    displayOrder: 3,
-
-    rank: 3,
-  },
-
-  {
-    plan: "GOLDEN",
-
-    name: "Golden",
-
-    description:
-      "Advanced Fockis services and premium capabilities.",
-
-    monthlyPrice: 39.99,
-
-    yearlyPrice: 399.99,
-
-    currency: "USD",
-
-    features: [
-      {
-        name: "Everything in Silver",
-        included: true,
-      },
-
-      {
-        name: "Premium account capabilities",
-        included: true,
-      },
-
-      {
-        name: "Advanced marketing tools",
-        included: true,
-      },
-
-      {
-        name: "Premium analytics",
-        included: true,
-      },
-
-      {
-        name: "Priority features",
-        included: true,
-      },
-    ],
-
-    active: true,
-
-    popular: false,
-
-    displayOrder: 4,
-
-    rank: 4,
-  },
-
-  {
-    plan: "DIAMOND",
-
-    name: "Diamond",
-
-    description:
-      "The highest Fockis account level with maximum services.",
-
-    monthlyPrice: 79.99,
-
-    yearlyPrice: 799.99,
-
-    currency: "USD",
-
-    features: [
-      {
-        name: "Everything in Golden",
-        included: true,
-      },
-
-      {
-        name: "Maximum account limits",
-        included: true,
-      },
-
-      {
-        name: "Maximum premium capabilities",
-        included: true,
-      },
-
-      {
-        name: "Advanced marketing",
-        included: true,
-      },
-
-      {
-        name: "Maximum analytics",
-        included: true,
-      },
-
-      {
-        name: "Highest Fockis account level",
-        included: true,
-      },
-    ],
-
-    active: true,
-
-    popular: false,
-
-    displayOrder: 5,
-
-    rank: 5,
-  },
-];
-
-/* ============================================================================
-   COMPONENT
-============================================================================ */
-
 export default function SubscriptionPlans({
-  plans = DEFAULT_PLANS,
-
+  plans,
   currentPlan,
-
   billingInterval,
-
   loading = false,
-
+  pendingPlan = null,
+  getAction,
   onSelect,
+  id,
 }: SubscriptionPlansProps) {
+  const activePlans = sortActivePlans(plans);
 
-  /* --------------------------------------------------------------------------
-     ACTIVE PLANS
-  -------------------------------------------------------------------------- */
-
-  const activePlans =
-    [...plans]
-      .filter(
-        (plan) =>
-          plan.active,
-      )
-      .sort(
-        (a, b) =>
-          a.displayOrder -
-          b.displayOrder,
-      );
-
-  /* --------------------------------------------------------------------------
-     RENDER
-  -------------------------------------------------------------------------- */
+  if (activePlans.length === 0) {
+    return (
+      <p className="fk-sub-empty" role="status">
+        No subscription plans are available right now. Please check back soon.
+      </p>
+    );
+  }
 
   return (
-    <section className="fk-subscription-plans">
-
-      {/* ======================================================================
-          BILLING INFORMATION
-      ====================================================================== */}
-
-      <div className="fk-subscription-plans__billing">
-
-        <span>
-          Billing
-        </span>
-
-        <strong>
-          {billingInterval === "YEARLY"
-            ? "Yearly"
-            : "Monthly"}
-        </strong>
-
-      </div>
-
-
-      {/* ======================================================================
-          PLAN GRID
-      ====================================================================== */}
-
-      <div className="fk-subscription-plans__grid">
-
-        {activePlans.map(
-          (config) => (
-
-            <SubscriptionPlanCard
-              key={config.plan}
-
-              /*
-               * IMPORTANT:
-               *
-               * Pass the COMPLETE config directly.
-               *
-               * Do NOT create another cardConfig object.
-               */
-              config={config}
-
-              currentPlan={
-                currentPlan
-              }
-
-              billingInterval={
-                billingInterval
-              }
-
-              loading={
-                loading
-              }
-
-              onSelect={
-                onSelect
-              }
-            />
-
-          ),
-        )}
-
-      </div>
-
+    <section id={id} className="fk-sub-grid" aria-label="Fockis account plans">
+      {activePlans.map((config) => (
+        <SubscriptionPlanCard
+          key={config.plan}
+          config={config}
+          currentPlan={currentPlan}
+          billingInterval={billingInterval}
+          loading={loading}
+          pending={pendingPlan === config.plan}
+          action={getAction?.(config)}
+          onSelect={onSelect}
+        />
+      ))}
     </section>
   );
 }

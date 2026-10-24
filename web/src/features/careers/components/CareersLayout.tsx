@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import styles from "../styles/CareersLayout.module.scss";
 
+import FockisMark from "../../../components/fockis/FockisMark";
 const PRIMARY_NAV = [
   { to: "/careers", label: "Careers", end: true },
   { to: "/careers/search", label: "Find Jobs" },
@@ -30,7 +31,7 @@ export function CareersLayout() {
       <header className={styles.topbar}>
         <div className={styles.topbarInner}>
           <div className={styles.logo}>
-            <div className={styles.mark}>F</div>
+            <div className={styles.mark}><FockisMark /></div>
             Fockis <span className={styles.sub}>careers</span>
           </div>
 
@@ -96,7 +97,7 @@ export function CareersLayout() {
         >
           <div className={styles.sheet}>
             <div className={styles.logo}>
-              <div className={styles.mark}>F</div>
+              <div className={styles.mark}><FockisMark /></div>
               Fockis
             </div>
 

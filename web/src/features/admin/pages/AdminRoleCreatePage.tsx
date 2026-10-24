@@ -366,7 +366,7 @@ export default function AdminRoleCreatePage() {
       <Link
         to="/admin/roles"
         style={{
-          color: "#2563eb",
+          color: "#163a5f",
           textDecoration:
             "none",
           fontSize: 13,
@@ -754,7 +754,7 @@ export default function AdminRoleCreatePage() {
             border: 0,
             borderRadius: 8,
             background:
-              "#2563eb",
+              "#b8862f",
             color: "#fff",
             fontWeight:
               700,

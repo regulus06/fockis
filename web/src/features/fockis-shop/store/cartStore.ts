@@ -62,6 +62,22 @@ interface AddToCartInput {
 
   sku?: string | null;
 
+  shipping?: {
+    weightKg?: number | null;
+    dimensionsCm?: {
+      length: number;
+      width: number;
+      height: number;
+    } | null;
+  } | null;
+
+  shippingWeight?: number | string | null;
+  shippingWeightUnit?: "lb" | "oz" | "kg" | "g";
+  shippingLength?: number | string | null;
+  shippingWidth?: number | string | null;
+  shippingHeight?: number | string | null;
+  shippingDimensionUnit?: "in" | "cm" | "ft" | "mm" | "m";
+
 }
 
 interface CartState {
@@ -584,6 +600,227 @@ function getServerOriginalPrice(
 
 }
 
+type CartShippingInfo = {
+  weightKg?: number | null;
+  dimensionsCm?: {
+    length: number;
+    width: number;
+    height: number;
+  } | null;
+};
+
+type CartLineItemWithShipping = CartLineItem & {
+  shipping?: CartShippingInfo;
+};
+
+function getServerProductShipping(
+  product: Record<string, unknown> | null,
+): CartShippingInfo | undefined {
+  if (!product) return undefined;
+
+  const asRecord = (value: unknown): Record<string, unknown> | null =>
+    value !== null && typeof value === "object"
+      ? (value as Record<string, unknown>)
+      : null;
+
+  const shipping = asRecord(product.shipping);
+  const dimensionsCmRecord = asRecord(shipping?.dimensionsCm);
+  const dimensions =
+    dimensionsCmRecord ??
+    asRecord(shipping?.dimensions);
+
+  const readNumber = (...values: unknown[]): number | null => {
+    for (const value of values) {
+      if (typeof value === "number" && Number.isFinite(value)) {
+        return value;
+      }
+
+      if (typeof value === "string" && value.trim() !== "") {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed)) return parsed;
+      }
+    }
+
+    return null;
+  };
+
+  const existingWeightKg = readNumber(
+    shipping?.weightKg,
+    product.weightKg,
+  );
+
+  const rawWeight = readNumber(
+    shipping?.shippingWeight,
+    product.shippingWeight,
+    shipping?.weight,
+    product.weight,
+    product.productWeight,
+  );
+
+  const weightUnit = String(
+    shipping?.shippingWeightUnit ??
+      product.shippingWeightUnit ??
+      shipping?.weightUnit ??
+      product.weightUnit ??
+      "lb",
+  ).toLowerCase();
+
+  let weightKg = existingWeightKg;
+
+  if (weightKg === null && rawWeight !== null) {
+    switch (weightUnit) {
+      case "kg":
+        weightKg = rawWeight;
+        break;
+      case "g":
+        weightKg = rawWeight / 1000;
+        break;
+      case "oz":
+        weightKg = rawWeight * 0.028349523125;
+        break;
+      case "lb":
+      case "lbs":
+      case "pound":
+      case "pounds":
+        weightKg = rawWeight * 0.45359237;
+        break;
+      default:
+        weightKg = null;
+    }
+  }
+
+  const rawLength = readNumber(
+    dimensions?.length,
+    shipping?.shippingLength,
+    product.shippingLength,
+    shipping?.length,
+    product.length,
+  );
+
+  const rawWidth = readNumber(
+    dimensions?.width,
+    shipping?.shippingWidth,
+    product.shippingWidth,
+    shipping?.width,
+    product.width,
+  );
+
+  const rawHeight = readNumber(
+    dimensions?.height,
+    shipping?.shippingHeight,
+    product.shippingHeight,
+    shipping?.height,
+    product.height,
+  );
+
+  const dimensionUnit = dimensionsCmRecord
+    ? "cm"
+    : String(
+        shipping?.shippingDimensionUnit ??
+          product.shippingDimensionUnit ??
+          shipping?.dimensionUnit ??
+          product.dimensionUnit ??
+          "in",
+      ).toLowerCase();
+
+  const toCm = (value: number | null): number | null => {
+    if (value === null) return null;
+
+    switch (dimensionUnit) {
+      case "cm":
+        return value;
+      case "mm":
+        return value / 10;
+      case "m":
+        return value * 100;
+      case "ft":
+        return value * 30.48;
+      case "in":
+      case "inch":
+      case "inches":
+        return value * 2.54;
+      default:
+        return null;
+    }
+  };
+
+  const length = toCm(rawLength);
+  const width = toCm(rawWidth);
+  const height = toCm(rawHeight);
+
+  return {
+    weightKg:
+      weightKg !== null && weightKg > 0 ? weightKg : null,
+    dimensionsCm:
+      length !== null &&
+      width !== null &&
+      height !== null &&
+      length > 0 &&
+      width > 0 &&
+      height > 0
+        ? { length, width, height }
+        : null,
+  };
+}
+function getInputShipping(input: AddToCartInput): CartShippingInfo | undefined {
+  const supplied = input.shipping;
+  const readPositive = (value: unknown): number | null => {
+    const n =
+      typeof value === "number"
+        ? value
+        : typeof value === "string" && value.trim()
+          ? Number(value)
+          : NaN;
+    return Number.isFinite(n) && n > 0 ? n : null;
+  };
+
+  const suppliedWeightKg = readPositive(supplied?.weightKg);
+  const flatWeight = readPositive(input.shippingWeight);
+  const weightUnit = input.shippingWeightUnit ?? "lb";
+  const weightKg =
+    suppliedWeightKg ??
+    (flatWeight === null
+      ? null
+      : weightUnit === "kg"
+        ? flatWeight
+        : weightUnit === "g"
+          ? flatWeight / 1000
+          : weightUnit === "oz"
+            ? flatWeight * 0.028349523125
+            : flatWeight * 0.45359237);
+
+  const suppliedDimensions = supplied?.dimensionsCm;
+  const dimensionUnit = input.shippingDimensionUnit ?? "in";
+  const toCm = (value: unknown): number | null => {
+    const n = readPositive(value);
+    if (n === null) return null;
+    switch (dimensionUnit) {
+      case "cm": return n;
+      case "mm": return n / 10;
+      case "m": return n * 100;
+      case "ft": return n * 30.48;
+      case "in": return n * 2.54;
+      default: return null;
+    }
+  };
+
+  const length = readPositive(suppliedDimensions?.length) ?? toCm(input.shippingLength);
+  const width = readPositive(suppliedDimensions?.width) ?? toCm(input.shippingWidth);
+  const height = readPositive(suppliedDimensions?.height) ?? toCm(input.shippingHeight);
+
+  if (weightKg === null && length === null && width === null && height === null) {
+    return supplied ? { weightKg: null, dimensionsCm: null } : undefined;
+  }
+
+  return {
+    weightKg,
+    dimensionsCm:
+      length !== null && width !== null && height !== null
+        ? { length, width, height }
+        : null,
+  };
+}
+
 function getServerProductImage(
 
   product:
@@ -700,7 +937,7 @@ function mergeServerCart(
 
   }
 
-  const merged: CartLineItem[] =
+  const merged: CartLineItemWithShipping[] =
 
     [];
 
@@ -790,22 +1027,34 @@ function mergeServerCart(
 
         );
 
+      const serverShipping = getServerProductShipping(product);
+      const localShipping =
+        (localItem as CartLineItemWithShipping).shipping;
+
+      // Older cart entries can store package information as flat fields
+      // (shippingWeight, shippingLength, etc.) instead of `shipping`.
+      // Normalize those fields before merging so hydration cannot discard
+      // valid shipping data saved when the item was added to the cart.
+      const localFlatShipping = getServerProductShipping(
+        localItem as unknown as Record<string, unknown>,
+      );
+
       merged.push({
-
         ...localItem,
-
         sellerId,
-
-        quantity:
-
-          Math.min(
-
-            serverQuantity,
-
-            maxQuantity,
-
-          ),
-
+        quantity: Math.min(serverQuantity, maxQuantity),
+        shipping: {
+          weightKg:
+            serverShipping?.weightKg ??
+            localShipping?.weightKg ??
+            localFlatShipping?.weightKg ??
+            null,
+          dimensionsCm:
+            serverShipping?.dimensionsCm ??
+            localShipping?.dimensionsCm ??
+            localFlatShipping?.dimensionsCm ??
+            null,
+        },
       });
 
       continue;
@@ -939,6 +1188,8 @@ function mergeServerCart(
       currency: "USD",
 
       sku: null,
+
+      shipping: getServerProductShipping(product),
 
     });
 
@@ -1124,6 +1375,8 @@ export const useCartStore =
 
           async (input) => {
 
+            const inputShipping = getInputShipping(input);
+
             const sellerId =
 
         typeof input.sellerId === "string" ? input.sellerId.trim() : "";
@@ -1235,6 +1488,8 @@ export const useCartStore =
                             quantity:
 
                               newQuantity,
+
+                            shipping: inputShipping ?? (item as CartLineItemWithShipping).shipping,
 
                           }
 
@@ -1352,7 +1607,7 @@ export const useCartStore =
 
               );
 
-            const newItem: CartLineItem =
+            const newItem: CartLineItemWithShipping =
 
               {
 
@@ -1453,6 +1708,8 @@ export const useCartStore =
                   input.sku ??
 
                   null,
+
+                shipping: inputShipping,
 
               };
 
@@ -2558,7 +2815,7 @@ export const useCartStore =
 
         name: "fockis-shop-cart",
 
-        version: 8,
+        version: 9,
 
         migrate:
 

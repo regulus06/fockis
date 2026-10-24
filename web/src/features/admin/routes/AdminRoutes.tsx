@@ -21,6 +21,16 @@ import { AdministratorsPage } from "../pages/AdministratorsPage";
 import { AuditLogsPage } from "../pages/AuditLogsPage";
 import { AccessDeniedPage } from "../pages/AccessDeniedPage";
 import { ModulePendingPage } from "../pages/ModulePendingPage";
+import ModerationOverviewPage from "../moderation/pages/ModerationOverviewPage";
+import ModerationQueuePage from "../moderation/pages/ModerationQueuePage";
+import ModerationCaseDetailsPage from "../moderation/pages/ModerationCaseDetailsPage";
+import ModerationSettingsPage from "../moderation/pages/ModerationSettingsPage";
+
+/* ================================================================
+   SUBSCRIPTION PLAN MANAGEMENT
+================================================================ */
+
+import SubscriptionPlanManagementPage from "../../subscriptions/pages/SubscriptionPlanManagementPage";
 
 /* ================================================================
    ADMIN RBAC
@@ -261,21 +271,16 @@ export function AdminRoutes(): React.ReactElement {
             path="moderation"
             element={guarded(
               [P.MODERATION_VIEW],
-              <ModulePendingPage
-                title="Moderation"
-                description="Reports, moderation cases, and content review."
-              />,
+              <ModerationOverviewPage />,
             )}
           />
 
+          {/* "Moderation Reports" nav item: same queue, all cases. */}
           <Route
             path="moderation/reports"
             element={guarded(
               [P.MODERATION_VIEW],
-              <ModulePendingPage
-                title="Reports"
-                description="User and content reports awaiting review."
-              />,
+              <ModerationQueuePage />,
             )}
           />
 
@@ -283,10 +288,31 @@ export function AdminRoutes(): React.ReactElement {
             path="moderation/cases"
             element={guarded(
               [P.MODERATION_VIEW],
-              <ModulePendingPage
-                title="Moderation Cases"
-                description="Open and resolved moderation cases."
-              />,
+              <ModerationQueuePage />,
+            )}
+          />
+
+          <Route
+            path="moderation/cases/:caseId"
+            element={guarded(
+              [P.MODERATION_VIEW],
+              <ModerationCaseDetailsPage />,
+            )}
+          />
+
+          <Route
+            path="moderation/appeals"
+            element={guarded(
+              [P.MODERATION_APPEALS],
+              <ModerationQueuePage mode="appeals" />,
+            )}
+          />
+
+          <Route
+            path="moderation/settings"
+            element={guarded(
+              [P.MODERATION_VIEW],
+              <ModerationSettingsPage />,
             )}
           />
 
@@ -454,14 +480,23 @@ export function AdminRoutes(): React.ReactElement {
               SUBSCRIPTIONS / GIFTS
           ====================================================== */}
 
+          {/* Subscriber billing and subscription records are managed by FinanceAdminRoutes. */}
           <Route
             path="subscriptions"
+            element={
+              <Navigate
+                to="/admin/finance/subscriptions"
+                replace
+              />
+            }
+          />
+
+          {/* Manage the available Fockis subscription plans. */}
+          <Route
+            path="subscription-plans"
             element={guarded(
               [P.SUBSCRIPTIONS_VIEW],
-              <ModulePendingPage
-                title="Subscriptions"
-                description="Subscription plans and subscribers."
-              />,
+              <SubscriptionPlanManagementPage />,
             )}
           />
 

@@ -84,8 +84,21 @@ export default function FockisMobileHeader() {
           className="fk-mobile-header__brand"
           aria-label="Fockis Feed"
         >
-          <span className="fk-mobile-header__logo">
-            F
+          <span
+            className="fk-mobile-header__logo"
+            style={{ overflow: "hidden", padding: 0 }}
+          >
+            <img
+              src="/brand/fockis-icon-96.png"
+              alt=""
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                borderRadius: "inherit",
+                display: "block",
+              }}
+            />
           </span>
 
           <span className="fk-mobile-header__wordmark">

@@ -39,6 +39,7 @@ export type AdvertisementStatus =
 export type CampaignPlacement =
   | "FEED"
   | "FEED_RAIL"
+  | "WAVES"
   | "STORY"
   | "MARKETPLACE_BANNER"
   | "PRODUCT"
@@ -89,12 +90,13 @@ export type ConversionType =
    CAMPAIGN OBJECTIVES
 ============================================================================ */
 
+/* Must match the NestJS CampaignObjective enum (campaign.schema.ts). */
 export type CampaignObjective =
-  | "AWARENESS"
-  | "TRAFFIC"
+  | "APP_INSTALL"
+  | "PRODUCT_SALES"
+  | "WEBSITE_TRAFFIC"
   | "ENGAGEMENT"
-  | "CONVERSIONS"
-  | "APP_INSTALLS";
+  | "BRAND_AWARENESS";
 
 
 /* ============================================================================

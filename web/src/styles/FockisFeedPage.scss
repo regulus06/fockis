@@ -49,7 +49,9 @@ html,
 body {
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
+  /* clip (not hidden): stops sideways scrolling without turning html and
+     body into two separate scroll containers, which showed two scrollbars. */
+  overflow-x: clip;
 }
 
 body {
@@ -2482,5 +2484,51 @@ body {
   .fk-shell__left .fk-sidebar {
     position: fixed !important;
     z-index: 100001 !important;
+  }
+}
+
+/* ============================================================================
+   MOBILE DRAWER OPEN/CLOSED STATE
+   The React component toggles fk-sidebar--mobile-open on FockisSidebar.
+   Keep the drawer off-canvas until the hamburger opens it.
+============================================================================ */
+
+@media (max-width: 900px) {
+  .fk-shell__left .fk-sidebar {
+    transform: translateX(-105%) !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transition:
+      transform 220ms ease,
+      visibility 220ms ease !important;
+    will-change: transform;
+  }
+
+  .fk-shell__left .fk-sidebar.fk-sidebar--mobile-open {
+    transform: translateX(0) !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  .fk-sidebar-backdrop {
+    opacity: 0;
+    pointer-events: none !important;
+    visibility: hidden;
+    transition:
+      opacity 180ms ease,
+      visibility 180ms ease;
+  }
+
+  .fk-sidebar-backdrop.is-visible {
+    opacity: 1;
+    pointer-events: auto !important;
+    visibility: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-shell__left .fk-sidebar,
+  .fk-sidebar-backdrop {
+    transition: none !important;
   }
 }

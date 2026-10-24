@@ -1,723 +1,428 @@
-import React, {
-  useEffect,
-  useState,
-} from 'react';
-
+import { useCallback, useEffect, useState } from "react";
 import {
-  useNavigate,
-  useParams,
-} from 'react-router-dom';
+  ArrowLeft,
+  Ban,
+  CalendarClock,
+  ExternalLink,
+  Globe,
+  Lock,
+  MapPin,
+  Pencil,
+  Trash2,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
-import EventRsvpButton from '../components/EventRsvpButton';
-
+import EventAttendees from "../components/EventAttendees";
+import EventCover from "../components/EventCover";
+import EventDateBadge from "../components/EventDateBadge";
+import EventDiscoverySection from "../components/EventDiscoverySection";
+import EventEmptyState from "../components/EventEmptyState";
+import EventInviteDialog from "../components/EventInviteDialog";
+import EventOrganizer from "../components/EventOrganizer";
+import EventRsvpActions from "../components/EventRsvpActions";
+import EventShareButton from "../components/EventShareButton";
+import EventSkeleton from "../components/EventSkeleton";
+import EventSocialProof from "../components/EventSocialProof";
+import EventStatusBadge from "../components/EventStatusBadge";
+import EventsShell from "../components/EventsShell";
+import { categoryMeta } from "../constants/eventCategories";
+import { publishEventPatch, useSyncedEvent } from "../hooks/eventSync";
+import { useEventClock } from "../hooks/useEventClock";
+import { eventsApi, EventsApiError, isAbortError } from "../services/eventsApi";
+import type { FockisEvent } from "../types/event.types";
 import {
-  eventsApi,
-} from '../services/eventsApi';
+  countdown,
+  differsFromViewerZone,
+  fullRange,
+  getEventStatus,
+  isEventActive,
+} from "../utils/eventTime";
 
-import type {
-  FockisEvent,
-} from '../types/event.types';
+const VISIBILITY_LABEL: Record<string, { label: string; icon: typeof Globe }> = {
+  public: { label: "Public event", icon: Globe },
+  friends: { label: "Friends of the organizer", icon: Users },
+  private: { label: "Private · invite only", icon: Lock },
+  organization: { label: "Organization · invite only", icon: Lock },
+};
 
-import '../styles/EventsPage.scss';
-
-// ============================================================================
-// DATE FORMATTER
-// ============================================================================
-
-function formatDate(
-  value: string,
-) {
-  const date =
-    new Date(value);
-
-  if (
-    Number.isNaN(
-      date.getTime(),
-    )
-  ) {
-    return 'Invalid date';
+function mapLink(event: FockisEvent): string {
+  if (typeof event.latitude === "number" && typeof event.longitude === "number") {
+    return `https://www.openstreetmap.org/?mlat=${event.latitude}&mlon=${event.longitude}#map=16/${event.latitude}/${event.longitude}`;
   }
 
-  return new Intl.DateTimeFormat(
-    undefined,
-    {
-      dateStyle: 'full',
-      timeStyle: 'short',
-    },
-  ).format(date);
+  const query = [event.locationName, event.address].filter(Boolean).join(", ");
+
+  return query ? `https://www.openstreetmap.org/search?query=${encodeURIComponent(query)}` : "";
 }
 
-// ============================================================================
-// AUTHENTICATED USER ID
-// ============================================================================
+function mapEmbed(event: FockisEvent): string {
+  if (typeof event.latitude !== "number" || typeof event.longitude !== "number") return "";
 
-function getCurrentUserId(): string | null {
-  const token =
-    localStorage.getItem('token') ??
-    localStorage.getItem('accessToken');
+  const d = 0.008;
+  const bbox = [event.longitude - d, event.latitude - d, event.longitude + d, event.latitude + d].join(",");
 
-  if (!token) {
-    return null;
-  }
-
-  try {
-    const parts =
-      token.split('.');
-
-    if (parts.length !== 3) {
-      return null;
-    }
-
-    const base64Payload =
-      parts[1]
-        .replace(/-/g, '+')
-        .replace(/_/g, '/');
-
-    const paddedPayload =
-      base64Payload.padEnd(
-        Math.ceil(
-          base64Payload.length / 4,
-        ) * 4,
-        '=',
-      );
-
-    const payload =
-      JSON.parse(
-        atob(paddedPayload),
-      ) as Record<
-        string,
-        unknown
-      >;
-
-    const userId =
-      payload.id ??
-      payload._id ??
-      payload.userId ??
-      payload.sub;
-
-    if (
-      userId === undefined ||
-      userId === null ||
-      String(userId).trim() === ''
-    ) {
-      return null;
-    }
-
-    return String(userId);
-  } catch (error) {
-    console.error(
-      '[EventDetailsPage] Unable to read authenticated user from token:',
-      error,
-    );
-
-    return null;
-  }
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${event.latitude},${event.longitude}`;
 }
 
-// ============================================================================
-// PAGE
-// ============================================================================
-
-export default function EventDetailsPage() {
-  const {
-    eventId,
-  } = useParams<{
-    eventId: string;
-  }>();
-
-  const navigate =
-    useNavigate();
-
-  const [
-    event,
-    setEvent,
-  ] = useState<FockisEvent | null>(
-    null,
-  );
-
-  const [
-    loading,
-    setLoading,
-  ] = useState(
-    Boolean(eventId),
-  );
-
-  const [
-    error,
-    setError,
-  ] = useState<string | null>(
-    null,
-  );
-
-  const [
-    cancelling,
-    setCancelling,
-  ] = useState(false);
-
-  // ==========================================================================
-  // AUTHORIZATION
-  //
-  // The frontend uses this only to decide whether owner controls should be
-  // displayed. The NestJS backend must still enforce ownership.
-  // ==========================================================================
-
-  const currentUserId =
-    getCurrentUserId();
-
-  const isEventOwner =
-    Boolean(
-      event &&
-      currentUserId &&
-      String(event.creatorId) ===
-        String(currentUserId),
-    );
-
-  // ==========================================================================
-  // LOAD EVENT
-  // ==========================================================================
+function Details({ initial, onChanged }: { initial: FockisEvent; onChanged: (event: FockisEvent) => void }) {
+  const navigate = useNavigate();
+  const event = useSyncedEvent(initial);
+  const now = useEventClock([event]);
+  const status = getEventStatus(event, now);
+  const active = isEventActive(event, now);
+  const category = categoryMeta(event.category);
+  const visibility = VISIBILITY_LABEL[event.visibility] ?? VISIBILITY_LABEL.public;
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [inviting, setInviting] = useState(false);
+  const [confirming, setConfirming] = useState<"cancel" | "delete" | null>(null);
+  const [reason, setReason] = useState("");
+  const [related, setRelated] = useState<FockisEvent[]>([]);
+  const [relatedLoading, setRelatedLoading] = useState(true);
 
   useEffect(() => {
-    let active = true;
+    const controller = new AbortController();
 
-    if (!eventId) {
-      setLoading(false);
-
-      setError(
-        'No event ID was provided.',
-      );
-
-      return () => {
-        active = false;
-      };
-    }
-
-    setLoading(true);
-    setError(null);
-    setEvent(null);
-
+    setRelatedLoading(true);
     eventsApi
-      .getById(eventId)
-      .then((result) => {
-        if (!active) {
-          return;
-        }
-
-        if (!result) {
-          setError(
-            'Event not found.',
-          );
-
-          setEvent(null);
-
-          return;
-        }
-
-        setEvent(result);
-      })
-      .catch((err) => {
-        if (!active) {
-          return;
-        }
-
-        console.error(
-          '[EventDetailsPage] Failed to load event:',
-          err,
-        );
-
-        setEvent(null);
-
-        setError(
-          err instanceof Error
-            ? err.message
-            : 'Unable to load event.',
-        );
-      })
+      .related(event.id, controller.signal)
+      .then(setRelated)
+      .catch(() => setRelated([]))
       .finally(() => {
-        if (!active) {
-          return;
-        }
-
-        setLoading(false);
+        if (!controller.signal.aborted) setRelatedLoading(false);
       });
 
-    return () => {
-      active = false;
-    };
-  }, [eventId]);
+    return () => controller.abort();
+  }, [event.id]);
 
-  // ==========================================================================
-  // CANCEL EVENT
-  // ==========================================================================
+  // The meeting link is only sent to people on the event: fetch it as soon
+  // as the viewer RSVPs.
+  useEffect(() => {
+    if (!event.isOnline || event.onlineUrl || !event.viewerRsvp) return;
 
-  async function handleCancelEvent() {
-    if (
-      !eventId ||
-      !event ||
-      !isEventOwner
-    ) {
-      return;
-    }
+    const controller = new AbortController();
 
-    const reason =
-      window.prompt(
-        'Why are you cancelling this event?\n\nThis message will be shown to people who view the event.',
-        '',
-      );
+    eventsApi
+      .getById(event.id, controller.signal)
+      .then((fresh) => {
+        if (fresh.onlineUrl) publishEventPatch({ id: fresh.id, onlineUrl: fresh.onlineUrl });
+      })
+      .catch(() => undefined);
 
-    if (reason === null) {
-      return;
-    }
+    return () => controller.abort();
+  }, [event.id, event.isOnline, event.onlineUrl, event.viewerRsvp]);
 
-    const confirmed =
-      window.confirm(
-        'Are you sure you want to cancel this event?\n\nThe public will be able to see that the event has been cancelled.',
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    setCancelling(true);
-    setError(null);
+  async function cancelEvent() {
+    setBusy(true);
+    setError("");
 
     try {
-      const updated =
-        await eventsApi.cancel(
-          eventId,
-          reason.trim() ||
-            'This event has been cancelled by the organizer.',
-        );
+      const updated = await eventsApi.cancel(event.id, reason);
 
-      setEvent(updated);
-    } catch (err) {
-      console.error(
-        '[EventDetailsPage] Failed to cancel event:',
-        err,
-      );
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Unable to cancel event.',
-      );
+      publishEventPatch({ id: updated.id, isCancelled: true, status: "cancelled", cancellationReason: updated.cancellationReason });
+      onChanged(updated);
+      setConfirming(null);
+      setNotice("Event cancelled. It no longer appears in discovery or the feed.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to cancel the event.");
     } finally {
-      setCancelling(false);
+      setBusy(false);
     }
   }
 
-  // ==========================================================================
-  // LOADING
-  // ==========================================================================
+  async function deleteEvent() {
+    setBusy(true);
+    setError("");
 
-  if (loading) {
-    return (
-      <main className="fk-events-page">
-        <div className="fk-events-state">
-          Loading event...
-        </div>
-      </main>
-    );
+    try {
+      await eventsApi.delete(event.id);
+      navigate("/events/my-events", { replace: true });
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to delete the event.");
+      setBusy(false);
+    }
   }
 
-  // ==========================================================================
-  // ERROR / NOT FOUND
-  // ==========================================================================
-
-  if (error || !event) {
-    return (
-      <main className="fk-events-page">
-        <div className="fk-events-state error">
-
-          <h2>
-            Unable to load event
-          </h2>
-
-          <p>
-            {error ??
-              'Event not found.'}
-          </p>
-
-          <button
-            type="button"
-            className="fk-event-back"
-            onClick={() =>
-              navigate('/events')
-            }
-          >
-            ← Back to Events
-          </button>
-
-        </div>
-      </main>
-    );
-  }
-
-  // ==========================================================================
-  // EVENT STATUS
-  // ==========================================================================
-
-  const isCancelled =
-    event.status === 'cancelled' ||
-    event.isCancelled;
-
-  const isEnded =
-    event.status === 'ended';
-
-  const canRsvp =
-    !isCancelled &&
-    !isEnded;
-
-  // ==========================================================================
-  // EVENT DETAILS
-  // ==========================================================================
+  const place = [event.locationName, event.address].filter(Boolean).join(" · ");
+  const map = mapLink(event);
+  const embed = mapEmbed(event);
 
   return (
-    <main className="fk-events-page">
+    <article className={`fke-details ${active ? "" : "is-inactive"}`}>
+      <Link to="/events" className="fke-back">
+        <ArrowLeft size={16} aria-hidden="true" /> All events
+      </Link>
 
-      <div className="fk-events-container">
-
-        {/* ====================================================================
-            BACK BUTTON
-        ===================================================================== */}
-
-        <button
-          type="button"
-          className="fk-event-back"
-          onClick={() =>
-            navigate('/events')
-          }
-        >
-          ← Back to Events
-        </button>
-
-        <article className="fk-event-details">
-
-          {/* ==================================================================
-              COVER IMAGE
-          =================================================================== */}
-
-          {event.coverImageUrl && (
-            <div className="fk-event-details-cover">
-
-              <img
-                src={event.coverImageUrl}
-                alt={event.title}
-                onError={() =>
-                  setError(
-                    'Unable to load the event cover image.',
-                  )
-                }
-              />
-
+      <div className="fke-details__hero">
+        <EventCover event={event} controls className="fke-details__cover" />
+        <span className="fke-details__scrim" aria-hidden="true" />
+        <div className="fke-details__hero-content">
+          <EventDateBadge date={event.startDate} size="lg" />
+          <div>
+            <div className="fke-details__badges">
+              <span className="fke-pill fke-pill--glass">
+                <category.icon size={14} aria-hidden="true" /> {category.label}
+              </span>
+              <EventStatusBadge event={event} now={now} />
             </div>
-          )}
+            <h1>{event.title}</h1>
+            {active && <p className="fke-details__countdown">{countdown(event, now)}</p>}
+          </div>
+        </div>
+      </div>
 
-          {/* ==================================================================
-              EVENT VIDEO
-          =================================================================== */}
+      {status === "cancelled" && (
+        <div className="fke-banner fke-banner--danger" role="status">
+          <Ban size={18} aria-hidden="true" />
+          <div>
+            <strong>This event was cancelled.</strong>
+            {event.cancellationReason && <p>{event.cancellationReason}</p>}
+          </div>
+        </div>
+      )}
+      {status === "ended" && (
+        <div className="fke-banner" role="status">
+          <CalendarClock size={18} aria-hidden="true" />
+          <strong>This event has ended.</strong>
+        </div>
+      )}
+      {error && <div className="fke-banner fke-banner--danger" role="alert">{error}</div>}
+      {notice && <div className="fke-banner fke-banner--success" role="status">{notice}</div>}
 
-          {event.eventVideoUrl && (
-            <div className="fk-event-details-video">
-
-              <video
-                src={event.eventVideoUrl}
-                controls
-                playsInline
-                preload="metadata"
-                className="fk-event-details-cover-video"
-              />
-
+      <div className="fke-details__layout">
+        <div className="fke-details__main">
+          <section className="fke-panel fke-details__actions-panel">
+            <div className="fke-details__actions">
+              <EventRsvpActions event={event} now={now} />
+              <EventShareButton event={event} />
+              {event.isOwner && active && (
+                <button type="button" className="fke-btn fke-btn--ghost" onClick={() => setInviting(true)}>
+                  <UserPlus size={16} aria-hidden="true" /> Invite
+                </button>
+              )}
             </div>
-          )}
+            <EventSocialProof event={event} className="fke-details__proof" />
+          </section>
 
-          {/* ==================================================================
-              CONTENT
-          =================================================================== */}
-
-          <div className="fk-event-details-content">
-
-            {/* ================================================================
-                CANCELLATION NOTICE
-            ================================================================ */}
-
-            {isCancelled && (
-              <div
-                className="fk-event-cancelled-notice"
-                role="alert"
-              >
-
-                <div className="fk-event-cancelled-title">
-                  🔴 Event Cancelled
+          <section className="fke-panel">
+            <ul className="fke-facts">
+              <li>
+                <CalendarClock size={20} aria-hidden="true" />
+                <div>
+                  <strong>{fullRange(event)}</strong>
+                  {differsFromViewerZone(event.timeZone) && fullRange(event, event.timeZone) !== fullRange(event) && (
+                    <small>Organizer's time: {fullRange(event, event.timeZone)}</small>
+                  )}
                 </div>
-
-                <p>
-                  This event has been
-                  cancelled by the
-                  organizer.
-                </p>
-
-                {(
-                  event as FockisEvent & {
-                    cancellationReason?: string;
-                  }
-                ).cancellationReason && (
-                  <p>
-                    <strong>
-                      Reason:
-                    </strong>{' '}
-                    {
-                      (
-                        event as FockisEvent & {
-                          cancellationReason?: string;
-                        }
-                      ).cancellationReason
-                    }
-                  </p>
-                )}
-
-              </div>
-            )}
-
-            {/* ================================================================
-                STATUS
-            ================================================================ */}
-
-            <div
-              className={`fk-event-status ${event.status}`}
-            >
-              {event.status ===
-                'upcoming' &&
-                'Upcoming'}
-
-              {event.status ===
-                'live' &&
-                'Live now'}
-
-              {event.status ===
-                'ended' &&
-                'Ended'}
-
-              {event.status ===
-                'cancelled' &&
-                'Cancelled'}
-            </div>
-
-            {/* ================================================================
-                CATEGORY
-            ================================================================ */}
-
-            <span className="fk-events-eyebrow">
-              {event.category}
-            </span>
-
-            {/* ================================================================
-                TITLE
-            ================================================================ */}
-
-            <h1>
-              {event.title}
-            </h1>
-
-            {/* ================================================================
-                DESCRIPTION
-            ================================================================ */}
-
-            {event.description && (
-              <p className="fk-event-description">
-                {event.description}
-              </p>
-            )}
-
-            {/* ================================================================
-                EVENT INFORMATION
-            ================================================================ */}
-
-            <div className="fk-event-detail-list">
-
-              <div>
-                <strong>
-                  Begin
-                </strong>
-
-                <span>
-                  {formatDate(
-                    event.startDate,
+              </li>
+              <li>
+                {event.isOnline ? <Globe size={20} aria-hidden="true" /> : <MapPin size={20} aria-hidden="true" />}
+                <div>
+                  <strong>{event.isOnline ? "Online event" : place || "Location to be announced"}</strong>
+                  {event.isOnline ? (
+                    event.onlineUrl ? (
+                      active ? (
+                        <a href={event.onlineUrl} target="_blank" rel="noopener noreferrer" className="fke-link">
+                          Join online <ExternalLink size={13} aria-hidden="true" />
+                        </a>
+                      ) : null
+                    ) : (
+                      active && <small>The link appears once you're going or interested.</small>
+                    )
+                  ) : (
+                    map && (
+                      <a href={map} target="_blank" rel="noopener noreferrer" className="fke-link">
+                        Open map <ExternalLink size={13} aria-hidden="true" />
+                      </a>
+                    )
                   )}
-                </span>
-              </div>
-
-              <div>
-                <strong>
-                  End / expiration
-                </strong>
-
-                <span>
-                  {formatDate(
-                    event.endDate,
+                </div>
+              </li>
+              <li>
+                <visibility.icon size={20} aria-hidden="true" />
+                <div>
+                  <strong>{visibility.label}</strong>
+                  {event.capacity !== null && (
+                    <small>
+                      {event.spotsLeft === 0 ? "Full" : `${event.spotsLeft} of ${event.capacity} spots left`}
+                    </small>
                   )}
-                </span>
-              </div>
+                </div>
+              </li>
+            </ul>
 
-              <div>
-                <strong>
-                  Location
-                </strong>
-
-                <span>
-                  {event.isOnline
-                    ? 'Online event'
-                    : event.locationName ||
-                      event.address ||
-                      'Location not specified'}
-                </span>
-              </div>
-
-              {event.isOnline &&
-                event.onlineUrl && (
-                  <div>
-                    <strong>
-                      Online link
-                    </strong>
-
-                    <a
-                      href={
-                        event.onlineUrl
-                      }
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Open online event
-                    </a>
-                  </div>
-                )}
-
-              <div>
-                <strong>
-                  Attendees
-                </strong>
-
-                <span>
-                  {event.attendeeCount}
-                </span>
-              </div>
-
-            </div>
-
-            {/* ================================================================
-                CANCELLED EVENT INFORMATION
-            ================================================================ */}
-
-            {isCancelled && (
-              <div className="fk-event-cancelled-details">
-
-                <strong>
-                  This event is no longer
-                  accepting RSVPs.
-                </strong>
-
-                <p>
-                  The event organizer has
-                  cancelled this event.
-                </p>
-
-              </div>
+            {embed && (
+              <iframe
+                className="fke-map"
+                title={`Map of ${event.locationName || "the venue"}`}
+                src={embed}
+                loading="lazy"
+                referrerPolicy="no-referrer"
+              />
             )}
+          </section>
 
-            {/* ================================================================
-                ONLINE EVENT BUTTON
-            ================================================================ */}
+          <section className="fke-panel">
+            <h2 className="fke-panel__title">About this event</h2>
+            <p className="fke-description">{event.description || "The organizer hasn't added a description yet."}</p>
+          </section>
 
-            {event.isOnline &&
-              event.onlineUrl &&
-              canRsvp && (
-                <a
-                  className="fk-event-online-button"
-                  href={
-                    event.onlineUrl
-                  }
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Join Online Event
-                </a>
-              )}
+          <EventDiscoverySection
+            id="related"
+            title="You might also like"
+            events={related}
+            loading={relatedLoading}
+          />
+        </div>
 
-            {/* ================================================================
-                RSVP
-            ================================================================ */}
+        <aside className="fke-details__side">
+          <section className="fke-panel">
+            <EventOrganizer organizer={event.organizer} creatorId={event.creatorId} isOwner={event.isOwner} />
+          </section>
 
-            {eventId &&
-              canRsvp && (
-                <EventRsvpButton
-                  eventId={eventId}
-                  onChanged={(
-                    _going,
-                    attendeeCount,
-                  ) => {
-                    setEvent(
-                      (current) =>
-                        current
-                          ? {
-                              ...current,
-                              attendeeCount,
-                            }
-                          : current,
-                    );
-                  }}
-                />
-              )}
-
-            {/* ================================================================
-                OWNER ACTIONS
-               
-                IMPORTANT:
-                These controls are ONLY rendered when the authenticated
-                user's ID matches event.creatorId.
-               
-                Backend authorization is still required and already protects
-                PATCH /events/:id and DELETE /events/:id.
-            ================================================================ */}
-
-            {isEventOwner && (
-              <div className="fk-event-owner-actions">
-
+          {event.isOwner && (
+            <section className="fke-panel fke-owner">
+              <h2 className="fke-panel__title">Manage</h2>
+              <div className="fke-owner__actions">
+                {!event.isCancelled && (
+                  <Link to={`/events/${event.id}/edit`} className="fke-btn fke-btn--outline">
+                    <Pencil size={16} aria-hidden="true" /> Edit event
+                  </Link>
+                )}
+                {active && (
+                  <button
+                    type="button"
+                    className="fke-btn fke-btn--danger-ghost"
+                    disabled={busy}
+                    aria-expanded={confirming === "cancel"}
+                    onClick={() => setConfirming(confirming === "cancel" ? null : "cancel")}
+                  >
+                    <Ban size={16} aria-hidden="true" /> Cancel event
+                  </button>
+                )}
                 <button
                   type="button"
-                  className="fk-event-button primary"
-                  onClick={() =>
-                    navigate(
-                      `/events/${event.id}/edit`,
-                    )
-                  }
+                  className="fke-btn fke-btn--danger-ghost"
+                  disabled={busy}
+                  aria-expanded={confirming === "delete"}
+                  onClick={() => setConfirming(confirming === "delete" ? null : "delete")}
                 >
-                  ✏️ Edit Event
+                  <Trash2 size={16} aria-hidden="true" /> Delete
                 </button>
-
-                {!isCancelled &&
-                  !isEnded && (
-                    <button
-                      type="button"
-                      className="fk-event-button danger"
-                      onClick={
-                        handleCancelEvent
-                      }
-                      disabled={
-                        cancelling
-                      }
-                    >
-                      {cancelling
-                        ? 'Cancelling...'
-                        : 'Cancel Event'}
-                    </button>
-                  )}
-
               </div>
-            )}
 
-          </div>
-        </article>
+              {confirming === "cancel" && (
+                <div className="fke-confirm" role="group" aria-label="Confirm cancellation">
+                  <p>
+                    Cancelling removes the event from discovery and the feed. People who RSVP'd will see it as
+                    cancelled.
+                  </p>
+                  <label className="fke-field">
+                    <span>Reason (optional, shown on the event)</span>
+                    <textarea rows={2} maxLength={1000} value={reason} onChange={(changeEvent) => setReason(changeEvent.target.value)} />
+                  </label>
+                  <div className="fke-confirm__actions">
+                    <button type="button" className="fke-btn fke-btn--ghost" onClick={() => setConfirming(null)} disabled={busy}>
+                      Keep event
+                    </button>
+                    <button type="button" className="fke-btn fke-btn--danger" onClick={() => void cancelEvent()} disabled={busy}>
+                      {busy ? "Cancelling…" : "Cancel event"}
+                    </button>
+                  </div>
+                </div>
+              )}
 
+              {confirming === "delete" && (
+                <div className="fke-confirm" role="group" aria-label="Confirm deletion">
+                  <p>Permanently delete this event and its RSVPs? This can't be undone. Cancelling keeps the history.</p>
+                  <div className="fke-confirm__actions">
+                    <button type="button" className="fke-btn fke-btn--ghost" onClick={() => setConfirming(null)} disabled={busy}>
+                      Keep event
+                    </button>
+                    <button type="button" className="fke-btn fke-btn--danger" onClick={() => void deleteEvent()} disabled={busy}>
+                      {busy ? "Deleting…" : "Delete permanently"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
+          <EventAttendees event={event} />
+        </aside>
       </div>
-    </main>
+
+      {inviting && (
+        <EventInviteDialog
+          eventId={event.id}
+          onClose={() => setInviting(false)}
+          onInvited={(count) => setNotice(`Invited ${count} ${count === 1 ? "person" : "people"}.`)}
+        />
+      )}
+    </article>
+  );
+}
+
+export default function EventDetailsPage() {
+  const { eventId } = useParams<{ eventId: string }>();
+  const [event, setEvent] = useState<FockisEvent | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<{ message: string; status?: number } | null>(null);
+
+  const load = useCallback(
+    (signal?: AbortSignal) => {
+      if (!eventId) return;
+
+      setLoading(true);
+      setError(null);
+
+      eventsApi
+        .getById(eventId, signal)
+        .then(setEvent)
+        .catch((caught) => {
+          if (isAbortError(caught)) return;
+
+          setError({
+            message: caught instanceof Error ? caught.message : "Unable to load the event.",
+            status: caught instanceof EventsApiError ? caught.status : undefined,
+          });
+        })
+        .finally(() => {
+          if (!signal?.aborted) setLoading(false);
+        });
+    },
+    [eventId],
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    load(controller.signal);
+
+    return () => controller.abort();
+  }, [load]);
+
+  return (
+    <EventsShell hideTabs>
+      {loading && !event && <EventSkeleton variant="details" />}
+
+      {error && !event && (
+        <EventEmptyState
+          tone={error.status === 404 ? "default" : "error"}
+          title={error.status === 404 ? "Event not found" : "This event couldn't load"}
+          body={error.status === 404 ? "It may have been deleted, or it's private." : error.message}
+          action={
+            <Link to="/events" className="fke-btn fke-btn--primary">
+              Browse events
+            </Link>
+          }
+        />
+      )}
+
+      {event && <Details key={event.id} initial={event} onChanged={setEvent} />}
+    </EventsShell>
   );
 }

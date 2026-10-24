@@ -49,6 +49,7 @@ type CampaignAdFormat =
 
 type BackendPlacement =
   | "FEED"
+  | "WAVES"
   | "STORY"
   | "MARKETPLACE_BANNER"
   | "PRODUCT"
@@ -63,6 +64,7 @@ type BackendPlacement =
 
 type FormPlacement =
   | "FEED"
+  | "WAVES"
   | "STORY"
   | "SIDEBAR"
   | "MARKETPLACE";
@@ -77,6 +79,12 @@ const PLACEMENT_MAP: Record<
   BackendPlacement | null
 > = {
   FEED: "FEED",
+
+  /*
+   * Sponsored video between organic Waves videos
+   * (backend CampaignPlacement.WAVES).
+   */
+  WAVES: "WAVES",
 
   STORY: "STORY",
 
@@ -105,7 +113,7 @@ const PLACEMENT_MAP: Record<
  * FormPlacement[] while the backend uses BackendPlacement[].
  */
 
-type CampaignFormValues =
+export type CampaignFormValues =
   Omit<
     Partial<CreateCampaignPayload>,
     "placements"
@@ -156,18 +164,23 @@ const PLACEMENT_OPTIONS: {
   },
 
   {
+    value: "WAVES",
+    label: "Waves",
+    description:
+      "Vertical video shown after every two Waves people watch. Video only.",
+  },
+
+  {
     value: "STORY",
     label: "Stories",
     description:
       "Show your advertisement in Fockis stories.",
   },
 
-  {
-    value: "SIDEBAR",
-    label: "Sidebar",
-    description:
-      "Show your advertisement in supported sidebar locations.",
-  },
+  /*
+   * SIDEBAR is not offered: the backend has no sidebar placement, so the
+   * option would be silently dropped on submit.
+   */
 
   {
     value: "MARKETPLACE",
@@ -1013,6 +1026,21 @@ export default function CampaignForm({
     }
 
 
+    /*
+     * Waves only plays vertical video. The server enforces the same rule.
+     */
+    if (
+      backendPlacements.includes("WAVES") &&
+      adFormat !== "VIDEO"
+    ) {
+      setError(
+        "Waves placement needs a video ad. Change the ad format to Video or remove Waves.",
+      );
+
+      return;
+    }
+
+
     /* ------------------------------------------------------------------------
        MEDIA VALIDATION
     ------------------------------------------------------------------------ */
@@ -1222,9 +1250,20 @@ export default function CampaignForm({
     );
 
 
-    await onSubmit(
-      payload,
-    );
+    /*
+     * The page shows the server's message; catching here prevents an
+     * unhandled promise rejection when the API refuses the request.
+     */
+    try {
+      await onSubmit(
+        payload,
+      );
+    } catch (submitError) {
+      console.error(
+        "[Fockis Ads] Campaign save failed:",
+        submitError,
+      );
+    }
 
   }
 

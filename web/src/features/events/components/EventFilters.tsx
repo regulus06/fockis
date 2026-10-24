@@ -1,109 +1,215 @@
-import React from 'react';
+import { LocateFixed, Search, SlidersHorizontal, X } from "lucide-react";
+import { useState } from "react";
 
-import type { EventCategory } from '../types/event.types';
+import { EVENT_CATEGORIES } from "../constants/eventCategories";
+import type {
+  EventAvailability,
+  EventCategory,
+  EventFormat,
+  EventSort,
+  EventWhen,
+} from "../types/event.types";
 
-interface Props {
-  category: EventCategory | 'all';
-  status:
-    | 'all'
-    | 'upcoming'
-    | 'live'
-    | 'ended';
-
-  search: string;
-
-  onCategoryChange: (
-    category: EventCategory | 'all',
-  ) => void;
-
-  onStatusChange: (
-    status:
-      | 'all'
-      | 'upcoming'
-      | 'live'
-      | 'ended',
-  ) => void;
-
-  onSearchChange: (
-    search: string,
-  ) => void;
+export interface EventFilterValues {
+  q: string;
+  category: EventCategory | "";
+  when: EventWhen;
+  format: EventFormat;
+  availability: EventAvailability;
+  sort: EventSort;
+  radiusKm: number | "";
 }
 
-export default function EventFilters({
-  category,
-  status,
-  search,
-  onCategoryChange,
-  onStatusChange,
-  onSearchChange,
-}: Props) {
+export const DEFAULT_EVENT_FILTERS: EventFilterValues = {
+  q: "",
+  category: "",
+  when: "any",
+  format: "any",
+  availability: "any",
+  sort: "relevance",
+  radiusKm: "",
+};
+
+interface Props {
+  value: EventFilterValues;
+  onChange: (patch: Partial<EventFilterValues>) => void;
+  onReset: () => void;
+  hasLocation: boolean;
+  locating?: boolean;
+  onRequestLocation: () => void;
+}
+
+const WHEN: Array<[EventWhen, string]> = [
+  ["any", "Any time"],
+  ["live", "Happening now"],
+  ["today", "Today"],
+  ["tomorrow", "Tomorrow"],
+  ["this-week", "Next 7 days"],
+  ["this-weekend", "This weekend"],
+  ["next-30-days", "Next 30 days"],
+];
+
+export function isFiltered(value: EventFilterValues): boolean {
   return (
-    <div className="fk-event-filters">
-      <input
-        value={search}
-        onChange={(e) =>
-          onSearchChange(e.target.value)
-        }
-        placeholder="Search events..."
-      />
+    value.q.trim() !== "" ||
+    value.category !== "" ||
+    value.when !== "any" ||
+    value.format !== "any" ||
+    value.availability !== "any" ||
+    value.radiusKm !== ""
+  );
+}
 
-      <select
-        value={category}
-        onChange={(e) =>
-          onCategoryChange(
-            e.target.value as EventCategory | 'all',
-          )
-        }
-      >
-        <option value="all">
-          All categories
-        </option>
+export default function EventFilters({ value, onChange, onReset, hasLocation, locating, onRequestLocation }: Props) {
+  const [open, setOpen] = useState(false);
+  const featured = EVENT_CATEGORIES.filter((category) => category.featured);
 
-        <option value="music">Music</option>
-        <option value="sports">Sports</option>
-        <option value="business">Business</option>
-        <option value="education">
-          Education
-        </option>
-        <option value="food">Food</option>
-        <option value="community">
-          Community
-        </option>
-        <option value="party">Party</option>
-        <option value="conference">
-          Conference
-        </option>
-        <option value="other">Other</option>
-      </select>
+  return (
+    <div className="fke-filters">
+      <div className="fke-filters__bar">
+        <label className="fke-search">
+          <Search size={18} aria-hidden="true" />
+          <span className="fke-sr-only">Search events</span>
+          <input
+            type="search"
+            value={value.q}
+            onChange={(changeEvent) => onChange({ q: changeEvent.target.value })}
+            placeholder="Search events, places, categories…"
+            enterKeyHint="search"
+          />
+          {value.q && (
+            <button type="button" className="fke-search__clear" onClick={() => onChange({ q: "" })} aria-label="Clear search">
+              <X size={16} />
+            </button>
+          )}
+        </label>
 
-      <select
-        value={status}
-        onChange={(e) =>
-          onStatusChange(
-            e.target.value as
-              | 'all'
-              | 'upcoming'
-              | 'live'
-              | 'ended',
-          )
-        }
-      >
-        <option value="all">
-          All events
-        </option>
+        <button
+          type="button"
+          className={`fke-btn fke-btn--outline fke-filters__toggle ${open ? "is-active" : ""}`}
+          aria-expanded={open}
+          aria-controls="fke-filter-panel"
+          onClick={() => setOpen((current) => !current)}
+        >
+          <SlidersHorizontal size={16} aria-hidden="true" />
+          Filters
+        </button>
+      </div>
 
-        <option value="upcoming">
-          Upcoming
-        </option>
+      <div className="fke-chips" role="group" aria-label="Categories">
+        <button
+          type="button"
+          className={`fke-chip ${value.category === "" ? "is-active" : ""}`}
+          aria-pressed={value.category === ""}
+          onClick={() => onChange({ category: "" })}
+        >
+          All
+        </button>
+        {featured.map((category) => (
+          <button
+            key={category.value}
+            type="button"
+            className={`fke-chip ${value.category === category.value ? "is-active" : ""}`}
+            aria-pressed={value.category === category.value}
+            onClick={() => onChange({ category: value.category === category.value ? "" : category.value })}
+          >
+            <category.icon size={15} aria-hidden="true" />
+            {category.label}
+          </button>
+        ))}
+      </div>
 
-        <option value="live">
-          Live now
-        </option>
+      {open && (
+        <div className="fke-filters__panel" id="fke-filter-panel">
+          <label className="fke-field">
+            <span>Date</span>
+            <select value={value.when} onChange={(changeEvent) => onChange({ when: changeEvent.target.value as EventWhen })}>
+              {WHEN.map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
 
-        <option value="ended">
-          Ended
-        </option>
-      </select>
+          <label className="fke-field">
+            <span>Category</span>
+            <select
+              value={value.category}
+              onChange={(changeEvent) => onChange({ category: changeEvent.target.value as EventCategory | "" })}
+            >
+              <option value="">All categories</option>
+              {EVENT_CATEGORIES.map((category) => (
+                <option key={category.value} value={category.value}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="fke-field">
+            <span>Format</span>
+            <select value={value.format} onChange={(changeEvent) => onChange({ format: changeEvent.target.value as EventFormat })}>
+              <option value="any">Online & in person</option>
+              <option value="in-person">In person</option>
+              <option value="online">Online</option>
+            </select>
+          </label>
+
+          <label className="fke-field">
+            <span>Availability</span>
+            <select
+              value={value.availability}
+              onChange={(changeEvent) => onChange({ availability: changeEvent.target.value as EventAvailability })}
+            >
+              <option value="any">Any</option>
+              <option value="open">Spots available</option>
+            </select>
+          </label>
+
+          <label className="fke-field">
+            <span>Distance</span>
+            <select
+              value={String(value.radiusKm)}
+              disabled={!hasLocation}
+              onChange={(changeEvent) =>
+                onChange({ radiusKm: changeEvent.target.value ? Number(changeEvent.target.value) : "" })
+              }
+            >
+              <option value="">Anywhere</option>
+              {[5, 10, 25, 50, 100].map((km) => (
+                <option key={km} value={km}>
+                  Within {km} km
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="fke-field">
+            <span>Sort by</span>
+            <select value={value.sort} onChange={(changeEvent) => onChange({ sort: changeEvent.target.value as EventSort })}>
+              <option value="relevance">Relevance</option>
+              <option value="date">Date</option>
+              <option value="popularity">Popularity</option>
+              <option value="distance" disabled={!hasLocation}>
+                Distance{hasLocation ? "" : " (needs location)"}
+              </option>
+            </select>
+          </label>
+
+          <div className="fke-filters__footer">
+            {!hasLocation && (
+              <button type="button" className="fke-btn fke-btn--ghost" onClick={onRequestLocation} disabled={locating}>
+                <LocateFixed size={16} aria-hidden="true" />
+                {locating ? "Locating…" : "Use my location"}
+              </button>
+            )}
+            <button type="button" className="fke-btn fke-btn--ghost" onClick={onReset}>
+              Reset filters
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

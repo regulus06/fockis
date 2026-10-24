@@ -3,6 +3,7 @@ import { FOCKIS_API_URL } from "../../../config/fockisConfig";
 import React, { useState } from "react";
 import type { AiMessage } from "../types/fockisAi.types";
 
+import FockisMark from "../../../components/fockis/FockisMark";
 const API_URL =
   import.meta.env.VITE_API_URL ||
   FOCKIS_API_URL;
@@ -404,9 +405,7 @@ export default function AiMessageBubble({
       }`}
     >
       {!user && (
-        <div className="fai-avatar">
-          ✦
-        </div>
+        <div className="fai-avatar"><FockisMark spacer="✦" /></div>
       )}
 
       <div className="fai-message-content">

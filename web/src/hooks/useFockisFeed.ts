@@ -1,7 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getFeed } from "../api/feedApi";
+import { getFeed, type FeedMode } from "../api/feedApi";
+import {
+  FEED_SCROLL_CONFIG,
+  backoffDelay,
+  caughtUpCooldown,
+  classifyFeedError,
+  createdAtMs,
+  pickNewPosts,
+  selectRecyclable,
+  shouldRetry,
+  uniqueById,
+} from "./feedScrollPolicy";
 import { storyApi } from "../api/storyApi";
+import {
+  excludeList,
+  placeFeedEvents,
+  type PlacedFeedEvent,
+} from "../features/events/utils/feedEventPlacement";
+import { readStoredLocation } from "../features/events/hooks/useViewerLocation";
 
 import type { FockisStory } from "../components/fockis/FockisStoriesRail";
 import type {
@@ -28,10 +45,56 @@ import {
 } from "../utils/fockisFeedHelpers";
 
 /* ============================================================================
+   FEED SESSION ID
+   One id per scrolling session. The backend stores the For You ranking
+   under it, so page 2, 3, ... continue the same order instead of
+   re-ranking (which would duplicate or skip posts).
+============================================================================ */
+
+function createFeedSessionId(): string {
+  try {
+    if (
+      typeof crypto !== "undefined" &&
+      typeof crypto.randomUUID === "function"
+    ) {
+      return crypto.randomUUID();
+    }
+  } catch {
+    // Fall through to the non-crypto id.
+  }
+
+  return `${Date.now().toString(36)}-${Math.random()
+    .toString(36)
+    .slice(2, 10)}`;
+}
+
+/* ============================================================================
+   FEED STATUS
+   idle       ready; more posts load as the user scrolls
+   loading    a manual retry is in progress
+   retrying   a recoverable failure; retrying automatically with backoff
+   error      automatic retries stopped; the user can retry
+   blocked    401/403; no further requests until retry or mode switch
+   caught-up  nothing unseen right now; checks continue in the background
+   empty      the feed has no posts at all yet
+============================================================================ */
+
+export type FeedStatus =
+  | "idle"
+  | "loading"
+  | "retrying"
+  | "error"
+  | "blocked"
+  | "caught-up"
+  | "empty";
+
+type LoadReason = "initial" | "scroll" | "continue" | "manual";
+
+/* ============================================================================
    HOOK
 ============================================================================ */
 
-export function useFockisFeed() {
+export function useFockisFeed(mode: FeedMode = "for-you") {
   const [posts, setPosts] = useState<FockisPost[]>([]);
   const [stories, setStories] = useState<FockisStory[]>([]);
 
@@ -41,43 +104,84 @@ export function useFockisFeed() {
   const [notificationCount, setNotificationCount] =
     useState(0);
 
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const [interactions, setInteractions] =
     useState<Record<string, FockisPostInteraction>>({});
 
+  /*
+   * Events placed between posts (see features/events). They are kept
+   * separate from `posts`, anchored to the post they follow, so posts,
+   * interactions and the video reel never see them.
+   */
+  const [feedEvents, setFeedEvents] = useState<PlacedFeedEvent[]>([]);
+  const placedEventIdsRef = useRef<Set<string>>(new Set());
+  const dismissedEventIdsRef = useRef<Set<string>>(new Set());
+  const takenEventAnchorsRef = useRef<Set<string>>(new Set());
+
   /* ==========================================================================
-     REFS: background refresh / scroll-safety
-     - isRefreshingRef: prevents overlapping "check for new posts" calls
-       from bottom-of-feed, visibility-return, and manual refresh all firing
-       at once.
-     - lastVisibilityRefreshRef: cooldown so multiple lifecycle events
-       (visibilitychange + focus + pageshow) firing together only refresh once.
-     - lastEndOfFeedCheckRef: cooldown so repeatedly hitting the bottom of an
-       exhausted feed doesn't spam the API.
-     - scrollAdjustRef: records scrollHeight right before a prepend so the
-       post-commit effect can offset scroll and avoid a visual jump.
+     FEED LOADING STATE
+     Pagination lives in refs so a mode switch can reset it synchronously
+     and no callback ever reads a stale page, cursor or session. React
+     state mirrors only what the UI renders.
+
+     - feedGenerationRef increments on every mode switch and on unmount;
+       responses from an older generation are ignored.
+     - isLoadingMoreRef makes next-page loading single-flight.
+     - nextAllowedAtRef is the one gate for backoff and cooldowns: nothing
+       requests the next page before it.
+     - For You runs in "cycles". Each cycle is one ranked session on the
+       server. When a cycle ends, the next one starts with a new session
+       (fresh ranking, already-viewed posts demoted). Only when a whole
+       cycle had nothing unseen may real, already-shown posts come back,
+       and only after enough other posts were shown in between.
   ========================================================================== */
 
-  const isRefreshingRef = useRef(false);
-  const lastVisibilityRefreshRef = useRef(0);
-  const lastEndOfFeedCheckRef = useRef(0);
-  const scrollAdjustRef =
-    useRef<{ prevScrollHeight: number } | null>(null);
+  const [feedStatus, setFeedStatus] =
+    useState<FeedStatus>("idle");
+  const [feedError, setFeedError] =
+    useState<string | null>(null);
+  const [pendingNewPosts, setPendingNewPosts] =
+    useState<FockisPost[]>([]);
 
-  // Stable DOM sentinel used by the infinite-scroll observer.
-  // Using a React ref is more reliable than document.querySelector()
-  // because the sentinel belongs to this feed component.
+  // Bottom sentinel, attached by FockisFeedPage.
   const feedLoaderRef =
     useRef<HTMLDivElement | null>(null);
 
-  // Prevent duplicate pagination requests while the sentinel remains visible.
-  const isLoadingMoreRef = useRef(false);
+  const pageRef = useRef(1);
+  const cursorRef = useRef<string | undefined>(undefined);
+  const hasMoreRef = useRef(true);
+  const sessionIdRef = useRef<string>(createFeedSessionId());
+  const feedGenerationRef = useRef(0);
+  const lastModeRef = useRef<FeedMode>(mode);
 
-  const VISIBILITY_REFRESH_COOLDOWN_MS = 15_000;
-  const END_OF_FEED_COOLDOWN_MS = 30_000;
+  const isLoadingMoreRef = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
+  const continueTimerRef = useRef<number | null>(null);
+  const nextAllowedAtRef = useRef(0);
+  // Why the gate is closed: an error backoff can be lifted early (back
+  // online, manual retry); a caught-up cooldown cannot.
+  const gateKindRef = useRef<"none" | "backoff" | "cooldown">("none");
+  const retryAttemptRef = useRef(0);
+  const emptyPagesRef = useRef(0);
+  const blockedRef = useRef(false);
+  const sentinelVisibleRef = useRef(false);
+
+  const cycleRef = useRef(0);
+  const cycleAddedRef = useRef(0);
+  const exhaustedStreakRef = useRef(0);
+
+  const displayedIdsRef = useRef<Set<string>>(new Set());
+  const lastShownAtRef = useRef<Map<string, number>>(new Map());
+  const renderedCountRef = useRef(0);
+
+  const isCheckingNewRef = useRef(false);
+  const newestKnownMsRef = useRef(Date.now() - 2 * 60_000);
+  const pendingIdsRef = useRef<Set<string>>(new Set());
+  const lastVisibilityRefreshRef = useRef(0);
+  const pollFailuresRef = useRef(0);
+  const pollBlockedUntilRef = useRef(0);
 
   /* ==========================================================================
      AUTH HELPERS
@@ -497,385 +601,695 @@ export function useFockisFeed() {
     }, [authenticatedFetch]);
 
   /* ==========================================================================
-     LOAD FEED
+     FEED LIST HELPERS
   ========================================================================== */
 
-  const loadFeed =
-    useCallback(async () => {
+  const registerInteractions =
+    useCallback((items: FockisPost[]) => {
+      if (items.length === 0) {
+        return;
+      }
+
+      setInteractions((previous) => {
+        const next = { ...previous };
+
+        items.forEach((post) => {
+          next[post.id] = {
+            ...(next[post.id] || {
+              reacted: false,
+              reposted: false,
+              saved: false,
+              menuOpen: false,
+            }),
+            reacted: post.likedBy.includes(currentUserId),
+            reposted: post.repostedBy.includes(currentUserId),
+          };
+        });
+
+        return next;
+      });
+    }, [currentUserId]);
+
+  const trackNewest = (items: FockisPost[]) => {
+    for (const item of items) {
+      const created = createdAtMs(item);
+
+      if (created > newestKnownMsRef.current) {
+        newestKnownMsRef.current = created;
+      }
+    }
+  };
+
+  /**
+   * Appends to the bottom. Recycled posts get their own render key so
+   * React keeps the earlier card (and its media) untouched.
+   */
+  const appendPosts =
+    useCallback((items: FockisPost[], recycled = false) => {
+      if (items.length === 0) {
+        return;
+      }
+
+      const stamped = items.map((post, index) => {
+        const position = renderedCountRef.current + index;
+
+        lastShownAtRef.current.set(post.id, position);
+        displayedIdsRef.current.add(post.id);
+
+        return recycled
+          ? {
+              ...post,
+              feedKey: `${post.id}~r${position}`,
+              feedRecycled: true,
+            }
+          : post;
+      });
+
+      renderedCountRef.current += stamped.length;
+      trackNewest(items);
+
+      setPosts((previous) => {
+        if (recycled) {
+          return [...previous, ...stamped];
+        }
+
+        const present = new Set(previous.map((post) => post.id));
+
+        return [
+          ...previous,
+          ...stamped.filter((post) => !present.has(post.id)),
+        ];
+      });
+
+      registerInteractions(items);
+    }, [registerInteractions]);
+
+  /** Inserts genuinely new posts above the current list. */
+  const prependPosts =
+    useCallback((items: FockisPost[]) => {
+      if (items.length === 0) {
+        return;
+      }
+
+      items.forEach((post) => {
+        displayedIdsRef.current.add(post.id);
+        pendingIdsRef.current.delete(post.id);
+        lastShownAtRef.current.set(post.id, renderedCountRef.current);
+      });
+
+      renderedCountRef.current += items.length;
+      trackNewest(items);
+
+      setPosts((previous) => {
+        const present = new Set(previous.map((post) => post.id));
+
+        return [
+          ...items.filter((post) => !present.has(post.id)),
+          ...previous,
+        ];
+      });
+
+      registerInteractions(items);
+    }, [registerInteractions]);
+
+  /* ==========================================================================
+     LOAD NEXT PAGE
+     Called by the bottom sentinel, by scheduled continuations and by the
+     manual retry. Never runs twice at once and never before
+     nextAllowedAtRef.
+  ========================================================================== */
+
+  const loadNextPageRef =
+    useRef<(reason?: LoadReason) => Promise<void>>(async () => undefined);
+
+  const scheduleContinue = useCallback(() => {
+    if (continueTimerRef.current !== null) {
+      window.clearTimeout(continueTimerRef.current);
+      continueTimerRef.current = null;
+    }
+
+    if (blockedRef.current || !sentinelVisibleRef.current) {
+      return;
+    }
+
+    const delay = Math.max(0, nextAllowedAtRef.current - Date.now());
+
+    // Never wait "forever": a hard stop is expressed by blockedRef.
+    if (!Number.isFinite(delay)) {
+      return;
+    }
+
+    continueTimerRef.current = window.setTimeout(() => {
+      continueTimerRef.current = null;
+
+      if (sentinelVisibleRef.current) {
+        void loadNextPageRef.current("continue");
+      }
+    }, delay);
+  }, []);
+
+  const loadNextPage =
+    useCallback(async (reason: LoadReason = "scroll") => {
+      if (isLoadingMoreRef.current || blockedRef.current) {
+        return;
+      }
+
       if (
-        loading ||
-        !hasMore ||
-        isLoadingMoreRef.current
+        reason !== "manual" &&
+        Date.now() < nextAllowedAtRef.current
       ) {
         return;
       }
 
+      const isForYou = mode === "for-you";
+
+      // The current list is exhausted.
+      if (!hasMoreRef.current) {
+        if (!isForYou) {
+          // Chronological modes really end here. New posts still arrive
+          // through the background check.
+          setFeedStatus(
+            renderedCountRef.current > 0 ? "caught-up" : "empty",
+          );
+          return;
+        }
+
+        // For You: start a fresh ranked cycle with a new session.
+        cycleRef.current += 1;
+        cycleAddedRef.current = 0;
+        emptyPagesRef.current = 0;
+        sessionIdRef.current = createFeedSessionId();
+        pageRef.current = 1;
+        hasMoreRef.current = true;
+      }
+
+      const generation = feedGenerationRef.current;
+      const controller = new AbortController();
+
+      abortRef.current = controller;
       isLoadingMoreRef.current = true;
       setLoading(true);
 
+      if (reason === "manual") {
+        setFeedStatus("loading");
+      }
+
       try {
-        const res =
-          await getFeed(
-            page,
-            10,
-          );
-
-        const feedItems =
-          Array.isArray(res?.feed)
-            ? (res.feed as BackendPostData[])
-            : [];
-
-        const newPosts =
-          mapFeedItemsToPosts(
-            feedItems,
-          );
-
-        setPosts(
-          (previousPosts) => {
-            const existingIds =
-              new Set(
-                previousPosts.map(
-                  (post) => post.id,
-                ),
-              );
-
-            const uniquePosts =
-              newPosts.filter(
-                (post) =>
-                  !existingIds.has(
-                    post.id,
-                  ),
-              );
-
-            return [
-              ...previousPosts,
-              ...uniquePosts,
-            ];
+        const res = await getFeed(
+          pageRef.current,
+          FEED_SCROLL_CONFIG.pageSize,
+          {
+            mode,
+            session: isForYou ? sessionIdRef.current : undefined,
+            cursor: isForYou ? undefined : cursorRef.current,
+            excludeEvents: excludeList([
+              ...placedEventIdsRef.current,
+              ...dismissedEventIdsRef.current,
+            ]),
+            location: readStoredLocation(),
+            signal: controller.signal,
+            timeoutMs: FEED_SCROLL_CONFIG.requestTimeoutMs,
           },
         );
 
-        setInteractions(
-          (previous) => {
-            const next = {
-              ...previous,
-            };
+        if (generation !== feedGenerationRef.current) {
+          return;
+        }
 
-            newPosts.forEach(
-              (post) => {
-                next[post.id] = {
-                  ...(next[post.id] || {
-                    reacted: false,
-                    reposted: false,
-                    saved: false,
-                    menuOpen: false,
-                  }),
+        const pagePosts = mapFeedItemsToPosts(
+          Array.isArray(res?.feed)
+            ? (res.feed as BackendPostData[])
+            : [],
+        );
 
-                  reacted:
-                    post.likedBy.includes(
-                      currentUserId,
-                    ),
+        const known = new Set([
+          ...displayedIdsRef.current,
+          ...pendingIdsRef.current,
+        ]);
 
-                  reposted:
-                    post.repostedBy.includes(
-                      currentUserId,
-                    ),
-                };
-              },
+        const unseen = uniqueById(pagePosts, known);
+
+        pageRef.current += 1;
+        cursorRef.current = res?.nextCursor;
+        hasMoreRef.current = Boolean(res?.hasMore);
+        retryAttemptRef.current = 0;
+        setFeedError(null);
+
+        let added = 0;
+
+        if (unseen.length > 0) {
+          appendPosts(unseen);
+          added = unseen.length;
+
+          const placed = placeFeedEvents(
+            Array.isArray(res?.events) ? res.events : [],
+            pagePosts.map((post) => post.id),
+            unseen.map((post) => post.id),
+            new Set([
+              ...placedEventIdsRef.current,
+              ...dismissedEventIdsRef.current,
+            ]),
+            takenEventAnchorsRef.current,
+          );
+
+          if (placed.length > 0) {
+            placed.forEach((item) =>
+              placedEventIdsRef.current.add(item.event.id),
             );
+            setFeedEvents((previous) => [...previous, ...placed]);
+          }
+          cycleAddedRef.current += unseen.length;
+          exhaustedStreakRef.current = 0;
+        } else if (
+          isForYou &&
+          cycleRef.current > 0 &&
+          exhaustedStreakRef.current > 0
+        ) {
+          // A whole earlier cycle had nothing unseen: allow real posts to
+          // come back, spaced out, instead of a dead end.
+          const recycled = selectRecyclable(
+            pagePosts.filter((post) => !pendingIdsRef.current.has(post.id)),
+            lastShownAtRef.current,
+            renderedCountRef.current,
+            FEED_SCROLL_CONFIG.recycleMinGap,
+          );
 
-            return next;
-          },
-        );
+          if (recycled.length > 0) {
+            appendPosts(recycled, true);
+            added = recycled.length;
+          }
+        }
 
-        setHasMore(
-          Boolean(res?.hasMore),
-        );
+        emptyPagesRef.current = added > 0 ? 0 : emptyPagesRef.current + 1;
 
-        setPage(
-          (previousPage) =>
-            previousPage + 1,
-        );
+        // A refresh cycle that keeps returning only posts already shown
+        // is cut short instead of being paged through to the end.
+        if (
+          isForYou &&
+          cycleRef.current > 0 &&
+          cycleAddedRef.current === 0 &&
+          added === 0 &&
+          emptyPagesRef.current >= FEED_SCROLL_CONFIG.maxEmptyPagesInARow
+        ) {
+          hasMoreRef.current = false;
+        }
+
+        if (!hasMoreRef.current) {
+          if (isForYou && cycleAddedRef.current === 0 && added === 0) {
+            exhaustedStreakRef.current += 1;
+            gateKindRef.current = "cooldown";
+            nextAllowedAtRef.current =
+              Date.now() + caughtUpCooldown(exhaustedStreakRef.current);
+            setFeedStatus(
+              renderedCountRef.current > 0 ? "caught-up" : "empty",
+            );
+            // Nothing unseen in the ranking: look for brand-new posts.
+            void checkForNewPostsRef.current();
+          } else if (isForYou) {
+            gateKindRef.current = "none";
+            nextAllowedAtRef.current = 0;
+            setFeedStatus("idle");
+          } else {
+            setFeedStatus(
+              renderedCountRef.current > 0 ? "caught-up" : "empty",
+            );
+          }
+        } else if (emptyPagesRef.current >= FEED_SCROLL_CONFIG.maxEmptyPagesInARow) {
+          // Several pages in a row added nothing: slow down.
+          gateKindRef.current = "cooldown";
+          nextAllowedAtRef.current =
+            Date.now() +
+            backoffDelay(
+              emptyPagesRef.current - FEED_SCROLL_CONFIG.maxEmptyPagesInARow,
+            );
+          setFeedStatus("idle");
+        } else {
+          gateKindRef.current = "none";
+          nextAllowedAtRef.current = 0;
+          setFeedStatus("idle");
+        }
       } catch (error) {
-        console.error(
-          "Fockis Feed error:",
-          error,
-        );
-      } finally {
-        isLoadingMoreRef.current = false;
-        setLoading(false);
-      }
-    }, [
-      page,
-      loading,
-      hasMore,
-      currentUserId,
-    ]);
+        if (generation !== feedGenerationRef.current) {
+          return;
+        }
 
-  /* ==========================================================================
-     CHECK FOR NEW POSTS (scroll-safe, concurrency-guarded)
+        const info = classifyFeedError(error);
 
-     Fetches page 1 and prepends any post IDs not already present, without
-     disturbing existing posts or state. Used by:
-       - refreshFeed() (manual / post-created trigger)
-       - end-of-feed IntersectionObserver check
-       - visibility/focus/pageshow return-to-app detection
+        if (info.kind === "aborted") {
+          return;
+        }
 
-     Returns the number of newly inserted posts so callers can decide
-     whether to scroll to top (only when genuinely nothing new was found).
-  ========================================================================== */
-
-  const checkForNewPosts =
-    useCallback(async (): Promise<number> => {
-      if (isRefreshingRef.current) {
-        return 0;
-      }
-
-      isRefreshingRef.current = true;
-
-      try {
-        const res =
-          await getFeed(
-            1,
-            10,
+        if (info.kind === "auth" || info.kind === "forbidden") {
+          // The shared client already signs the user out on 401.
+          blockedRef.current = true;
+          setFeedStatus("blocked");
+          setFeedError(
+            info.kind === "auth"
+              ? "Your session has ended. Please sign in again."
+              : "You don't have access to this feed.",
           );
+          return;
+        }
 
-        const feedItems =
-          Array.isArray(res?.feed)
-            ? (res.feed as BackendPostData[])
-            : [];
+        const attempt = retryAttemptRef.current;
 
-        const freshPosts =
-          mapFeedItemsToPosts(
-            feedItems,
+        if (shouldRetry(info, attempt)) {
+          retryAttemptRef.current = attempt + 1;
+          gateKindRef.current = "backoff";
+          nextAllowedAtRef.current =
+            Date.now() + backoffDelay(attempt, FEED_SCROLL_CONFIG, info.retryAfterMs);
+          setFeedStatus("retrying");
+          setFeedError(
+            info.kind === "rate-limited"
+              ? "Fockis is busy. Trying again shortly…"
+              : "Connection problem. Trying again…",
           );
-
-        let insertedCount = 0;
-
-        setPosts(
-          (previousPosts) => {
-            const existingIds =
-              new Set(
-                previousPosts.map(
-                  (post) => post.id,
-                ),
-              );
-
-            const newOnly =
-              freshPosts.filter(
-                (post) =>
-                  !existingIds.has(
-                    post.id,
-                  ),
-              );
-
-            insertedCount =
-              newOnly.length;
-
-            if (newOnly.length === 0) {
-              return previousPosts;
-            }
-
-            // Capture scroll height BEFORE this prepend commits so the
-            // effect below can offset scroll by exactly what was added.
-            scrollAdjustRef.current = {
-              prevScrollHeight:
-                document.documentElement
-                  .scrollHeight,
-            };
-
-            return [
-              ...newOnly,
-              ...previousPosts,
-            ];
-          },
-        );
-
-        if (insertedCount > 0) {
-          setInteractions(
-            (previous) => {
-              const next = {
-                ...previous,
-              };
-
-              freshPosts.forEach(
-                (post) => {
-                  if (!next[post.id]) {
-                    next[post.id] = {
-                      reacted:
-                        post.likedBy.includes(
-                          currentUserId,
-                        ),
-
-                      reposted:
-                        post.repostedBy.includes(
-                          currentUserId,
-                        ),
-
-                      saved: false,
-                      menuOpen: false,
-                    };
-                  }
-                },
-              );
-
-              return next;
-            },
+        } else {
+          // Stop automatic retries. The user can retry, and coming back
+          // online or to the tab resets this.
+          gateKindRef.current = "backoff";
+          nextAllowedAtRef.current =
+            Date.now() + FEED_SCROLL_CONFIG.maxBackoffMs;
+          setFeedStatus("error");
+          setFeedError(
+            info.kind === "server"
+              ? "Fockis couldn't load more posts right now."
+              : "More posts couldn't be loaded.",
           );
         }
 
-        return insertedCount;
-      } catch (error) {
-        console.error(
-          "Feed refresh error:",
-          error,
+        console.error("Fockis Feed error:", error);
+      } finally {
+        if (generation === feedGenerationRef.current) {
+          isLoadingMoreRef.current = false;
+          abortRef.current = null;
+          setLoading(false);
+          // Keep filling while the sentinel is still on screen.
+          scheduleContinue();
+        }
+      }
+    }, [mode, appendPosts, scheduleContinue]);
+
+  /** Kept for callers of the previous API name. */
+  const loadFeed = loadNextPage;
+
+  /* ==========================================================================
+     NEW POSTS
+     Checks the newest posts (Latest for For You, the same mode otherwise)
+     and keeps only posts created after the newest one this feed already
+     knew about. Near the top they are inserted directly; further down
+     they wait behind the "new posts" pill so the reading position never
+     jumps. Existing posts are never reordered.
+  ========================================================================== */
+
+  const checkForNewPostsRef =
+    useRef<(options?: { insertNow?: boolean }) => Promise<number>>(
+      async () => 0,
+    );
+
+  const checkForNewPosts =
+    useCallback(async (
+      options: { insertNow?: boolean } = {},
+    ): Promise<number> => {
+      if (isCheckingNewRef.current || blockedRef.current) {
+        return 0;
+      }
+
+      if (
+        !options.insertNow &&
+        Date.now() < pollBlockedUntilRef.current
+      ) {
+        return 0;
+      }
+
+      isCheckingNewRef.current = true;
+
+      const generation = feedGenerationRef.current;
+
+      try {
+        const res = await getFeed(1, FEED_SCROLL_CONFIG.pageSize, {
+          // No session: a one-off check must not store or replace the
+          // ranking being scrolled.
+          mode: mode === "for-you" ? "latest" : mode,
+          timeoutMs: FEED_SCROLL_CONFIG.requestTimeoutMs,
+        });
+
+        if (generation !== feedGenerationRef.current) {
+          return 0;
+        }
+
+        pollFailuresRef.current = 0;
+        pollBlockedUntilRef.current = 0;
+
+        const latest = mapFeedItemsToPosts(
+          Array.isArray(res?.feed)
+            ? (res.feed as BackendPostData[])
+            : [],
         );
 
+        const known = new Set([
+          ...displayedIdsRef.current,
+          ...pendingIdsRef.current,
+        ]);
+
+        // An empty feed shows whatever exists now.
+        const fresh =
+          displayedIdsRef.current.size === 0
+            ? uniqueById(latest, known)
+            : pickNewPosts(latest, newestKnownMsRef.current, known);
+
+        if (fresh.length === 0) {
+          return 0;
+        }
+
+        const nearTop =
+          typeof window === "undefined" ||
+          window.scrollY <= FEED_SCROLL_CONFIG.autoInsertScrollTop;
+
+        if (
+          options.insertNow ||
+          nearTop ||
+          displayedIdsRef.current.size === 0
+        ) {
+          prependPosts(fresh);
+
+          if (renderedCountRef.current > 0) {
+            setFeedStatus((status) =>
+              status === "empty" ? "caught-up" : status,
+            );
+          }
+        } else {
+          fresh.forEach((post) => pendingIdsRef.current.add(post.id));
+          trackNewest(fresh);
+          setPendingNewPosts((previous) => [
+            ...fresh,
+            ...previous.filter((post) => !fresh.some((item) => item.id === post.id)),
+          ]);
+        }
+
+        return fresh.length;
+      } catch (error) {
+        const info = classifyFeedError(error);
+
+        if (info.kind === "aborted") {
+          return 0;
+        }
+
+        if (info.kind === "auth") {
+          blockedRef.current = true;
+          return 0;
+        }
+
+        pollFailuresRef.current += 1;
+        pollBlockedUntilRef.current =
+          Date.now() +
+          backoffDelay(
+            pollFailuresRef.current - 1,
+            {
+              baseBackoffMs: FEED_SCROLL_CONFIG.pollIntervalMs,
+              maxBackoffMs: 15 * 60_000,
+            },
+            info.retryAfterMs,
+          );
+
+        console.error("Feed refresh error:", error);
         return 0;
       } finally {
-        isRefreshingRef.current = false;
+        isCheckingNewRef.current = false;
       }
-    }, [currentUserId]);
+    }, [mode, prependPosts]);
+
+  /** Shows posts waiting behind the "new posts" pill. */
+  const showPendingNewPosts = useCallback(() => {
+    if (pendingNewPosts.length > 0) {
+      prependPosts(pendingNewPosts);
+    }
+
+    setPendingNewPosts([]);
+  }, [pendingNewPosts, prependPosts]);
 
   /* ==========================================================================
      REFRESH FEED
      Public entry point (e.g. called by FockisCreatePost after posting).
-     Name/signature preserved for backward compatibility.
+     The viewer's own new post is inserted right away.
   ========================================================================== */
 
   const refreshFeed =
     useCallback(async () => {
-      await checkForNewPosts();
+      await checkForNewPosts({ insertNow: true });
     }, [checkForNewPosts]);
 
+  /** Manual retry after an error. */
+  const retryFeed = useCallback(() => {
+    blockedRef.current = false;
+    retryAttemptRef.current = 0;
+
+    if (gateKindRef.current === "backoff") {
+      gateKindRef.current = "none";
+      nextAllowedAtRef.current = 0;
+    }
+
+    setFeedError(null);
+    void loadNextPageRef.current("manual");
+  }, []);
+
+  // Always call the newest versions from timers and observers.
+  useEffect(() => {
+    loadNextPageRef.current = loadNextPage;
+    checkForNewPostsRef.current = checkForNewPosts;
+  }, [loadNextPage, checkForNewPosts]);
+
   /* ==========================================================================
-     INITIAL LOAD
+     INITIAL LOAD AND UNMOUNT
   ========================================================================== */
 
   useEffect(() => {
-    void loadFeed();
+    void loadNextPage("initial");
     void loadStories();
     void loadNotifications();
     void loadSavedPostIds();
 
+    return () => {
+      // Ignore anything still in flight and stop all timers.
+      feedGenerationRef.current += 1;
+      abortRef.current?.abort();
+      abortRef.current = null;
+      isLoadingMoreRef.current = false;
+      isCheckingNewRef.current = false;
+
+      if (continueTimerRef.current !== null) {
+        window.clearTimeout(continueTimerRef.current);
+        continueTimerRef.current = null;
+      }
+    };
     // Intentionally run once on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /* ==========================================================================
-     SCROLL PRESERVATION FOR PREPENDS
-
-     Runs after any posts-state commit. Only adjusts scroll when
-     checkForNewPosts flagged a prepend via scrollAdjustRef; bottom-appends
-     from loadFeed never set that ref, so pagination is unaffected.
+     FEED MODE SWITCH (For You / Following / Latest / Friends)
+     Only runs when the mode actually changes. Cancels the old request,
+     resets pagination, dedupe and cycle state, and loads page 1.
   ========================================================================== */
 
   useEffect(() => {
-    if (!scrollAdjustRef.current) {
+    if (lastModeRef.current === mode) {
       return;
     }
 
-    const { prevScrollHeight } =
-      scrollAdjustRef.current;
+    lastModeRef.current = mode;
+    feedGenerationRef.current += 1;
+    abortRef.current?.abort();
+    abortRef.current = null;
 
-    scrollAdjustRef.current = null;
+    if (continueTimerRef.current !== null) {
+      window.clearTimeout(continueTimerRef.current);
+      continueTimerRef.current = null;
+    }
 
-    requestAnimationFrame(() => {
-      const newScrollHeight =
-        document.documentElement
-          .scrollHeight;
+    sessionIdRef.current = createFeedSessionId();
+    pageRef.current = 1;
+    cursorRef.current = undefined;
+    hasMoreRef.current = true;
+    isLoadingMoreRef.current = false;
+    isCheckingNewRef.current = false;
+    nextAllowedAtRef.current = 0;
+    gateKindRef.current = "none";
+    retryAttemptRef.current = 0;
+    emptyPagesRef.current = 0;
+    blockedRef.current = false;
+    cycleRef.current = 0;
+    cycleAddedRef.current = 0;
+    exhaustedStreakRef.current = 0;
+    displayedIdsRef.current = new Set();
+    lastShownAtRef.current = new Map();
+    renderedCountRef.current = 0;
+    pendingIdsRef.current = new Set();
+    newestKnownMsRef.current = Date.now() - 2 * 60_000;
+    placedEventIdsRef.current = new Set();
+    takenEventAnchorsRef.current = new Set();
 
-      const delta =
-        newScrollHeight - prevScrollHeight;
+    setPosts([]);
+    setFeedEvents([]);
+    setPendingNewPosts([]);
+    setFeedStatus("idle");
+    setFeedError(null);
+    setLoading(false);
 
-      if (delta > 0) {
-        window.scrollBy(0, delta);
-      }
-    });
-  }, [posts]);
+    window.scrollTo({ top: 0, behavior: "auto" });
+
+    void loadNextPage("initial");
+  }, [mode, loadNextPage]);
 
   /* ==========================================================================
-     INFINITE SCROLL + END-OF-FEED CHECK
-
-     The feed page provides a real React ref for the bottom sentinel.
-     The observer starts loading the next page before the user reaches the
-     absolute bottom, which makes the feed feel continuous.
-
-     When the backend reports hasMore === false, we check page 1 for newer
-     posts. We do NOT send the user back to the top when there are no new posts.
+     INFINITE SCROLL SENTINEL
+     One IntersectionObserver for the life of the feed. It only records
+     whether the sentinel is near the viewport and asks for the next page;
+     all gating (single flight, backoff, cooldown) is in loadNextPage.
   ========================================================================== */
 
   useEffect(() => {
     const element = feedLoaderRef.current;
 
-    if (!element) {
+    if (!element || typeof IntersectionObserver === "undefined") {
       return;
     }
 
-    const observer =
-      new IntersectionObserver(
-        (entries) => {
-          const entry = entries[0];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.some((entry) => entry.isIntersecting);
 
-          if (!entry?.isIntersecting) {
-            return;
-          }
+        sentinelVisibleRef.current = visible;
 
-          if (
-            !loading &&
-            hasMore &&
-            !isLoadingMoreRef.current
-          ) {
-            void loadFeed();
-            return;
-          }
-
-          if (
-            !hasMore &&
-            !isRefreshingRef.current
-          ) {
-            const now = Date.now();
-
-            if (
-              now -
-                lastEndOfFeedCheckRef.current <
-              END_OF_FEED_COOLDOWN_MS
-            ) {
-              return;
-            }
-
-            lastEndOfFeedCheckRef.current =
-              now;
-
-            void checkForNewPosts();
-          }
-        },
-        {
-          // Start loading well before the user reaches the end.
-          root: null,
-          rootMargin: "800px 0px",
-          threshold: 0,
-        },
-      );
+        if (visible) {
+          void loadNextPageRef.current("scroll");
+        } else if (continueTimerRef.current !== null) {
+          window.clearTimeout(continueTimerRef.current);
+          continueTimerRef.current = null;
+        }
+      },
+      {
+        root: null,
+        rootMargin: FEED_SCROLL_CONFIG.prefetchRootMargin,
+        threshold: 0,
+      },
+    );
 
     observer.observe(element);
 
     return () => {
       observer.disconnect();
+      sentinelVisibleRef.current = false;
     };
-  }, [
-    loadFeed,
-    loading,
-    hasMore,
-    checkForNewPosts,
-  ]);
+  }, []);
 
   /* ==========================================================================
-     RETURN-TO-APP DETECTION
-
-     Covers: screen unlock, tab switch back, app foreground, and bfcache
-     restore (pageshow). All three listeners funnel through the same
-     cooldown-guarded maybeRefresh so simultaneous firings (e.g. focus +
-     visibilitychange together) trigger at most one refresh.
+     BACKGROUND NEW-POST CHECKS
+     - every pollIntervalMs while the tab is visible (paused when hidden)
+     - when the user returns (visibilitychange, focus, pageshow), debounced
+     - when the network comes back, which also lifts an error backoff
+     The backend has no "new post" socket event, so this is the only
+     live-update path for the feed (no duplicate polling).
   ========================================================================== */
 
   useEffect(() => {
@@ -887,16 +1301,19 @@ export function useFockisFeed() {
       const now = Date.now();
 
       if (
-        now -
-          lastVisibilityRefreshRef.current <
-        VISIBILITY_REFRESH_COOLDOWN_MS
+        now - lastVisibilityRefreshRef.current <
+        FEED_SCROLL_CONFIG.visibilityRefreshCooldownMs
       ) {
         return;
       }
 
       lastVisibilityRefreshRef.current = now;
+      void checkForNewPostsRef.current();
 
-      void checkForNewPosts();
+      // A suspended tab may have missed a scheduled continuation.
+      if (sentinelVisibleRef.current) {
+        void loadNextPageRef.current("continue");
+      }
     };
 
     const handleVisibilityChange = () => {
@@ -905,46 +1322,45 @@ export function useFockisFeed() {
       }
     };
 
-    const handlePageShow = () => {
+    const handleOnline = () => {
+      retryAttemptRef.current = 0;
+
+      // Lift an error backoff only; a caught-up cooldown stays.
+      if (!blockedRef.current && gateKindRef.current === "backoff") {
+        gateKindRef.current = "none";
+        nextAllowedAtRef.current = 0;
+      }
+
+      pollBlockedUntilRef.current = 0;
+      lastVisibilityRefreshRef.current = 0;
       maybeRefresh();
     };
 
-    const handleFocus = () => {
-      maybeRefresh();
-    };
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        void checkForNewPostsRef.current();
+      }
+    }, FEED_SCROLL_CONFIG.pollIntervalMs);
 
-    document.addEventListener(
-      "visibilitychange",
-      handleVisibilityChange,
-    );
-
-    window.addEventListener(
-      "pageshow",
-      handlePageShow,
-    );
-
-    window.addEventListener(
-      "focus",
-      handleFocus,
-    );
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pageshow", maybeRefresh);
+    window.addEventListener("focus", maybeRefresh);
+    window.addEventListener("online", handleOnline);
 
     return () => {
-      document.removeEventListener(
-        "visibilitychange",
-        handleVisibilityChange,
-      );
-
-      window.removeEventListener(
-        "pageshow",
-        handlePageShow,
-      );
-
-      window.removeEventListener(
-        "focus",
-        handleFocus,
-      );
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pageshow", maybeRefresh);
+      window.removeEventListener("focus", maybeRefresh);
+      window.removeEventListener("online", handleOnline);
     };
-  }, [checkForNewPosts]);
+  }, []);
+
+  // hasMore kept for existing callers: false only once the feed is
+  // caught up or empty.
+  useEffect(() => {
+    setHasMore(feedStatus !== "caught-up" && feedStatus !== "empty");
+  }, [feedStatus]);
 
   /* ==========================================================================
      GET INTERACTION
@@ -1499,6 +1915,11 @@ export function useFockisFeed() {
               (post) =>
                 post.id !== id,
             ),
+        );
+
+        pendingIdsRef.current.delete(id);
+        setPendingNewPosts((pending) =>
+          pending.filter((post) => post.id !== id),
         );
 
         setInteractions(
@@ -2253,6 +2674,23 @@ export function useFockisFeed() {
     };
 
   /* ==========================================================================
+     FEED EVENTS
+  ========================================================================== */
+
+  /** Hides an event card for the rest of this session (and from later pages). */
+  const dismissFeedEvent = useCallback((eventId: string) => {
+    dismissedEventIdsRef.current.add(eventId);
+    setFeedEvents((previous) =>
+      previous.filter((item) => item.event.id !== eventId),
+    );
+  }, []);
+
+  /** Lets rails report what they show, so the feed does not repeat it. */
+  const markEventsShown = useCallback((eventIds: string[]) => {
+    eventIds.forEach((id) => placedEventIdsRef.current.add(id));
+  }, []);
+
+  /* ==========================================================================
      RETURN
   ========================================================================== */
 
@@ -2268,6 +2706,12 @@ export function useFockisFeed() {
 
     // Attach this to the bottom sentinel in FockisFeedPage.
     feedLoaderRef,
+    feedStatus,
+    feedError,
+    retryFeed,
+    loadFeed,
+    pendingNewPostsCount: pendingNewPosts.length,
+    showPendingNewPosts,
 
     currentUserId,
     currentUser,
@@ -2310,5 +2754,9 @@ export function useFockisFeed() {
     handleProductClick,
 
     refreshFeed,
+
+    feedEvents,
+    dismissFeedEvent,
+    markEventsShown,
   };
 }

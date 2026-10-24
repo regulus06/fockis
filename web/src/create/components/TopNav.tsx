@@ -1,10 +1,11 @@
-export default function TopNav() {
+
+import FockisMark from "../../components/fockis/FockisMark";export default function TopNav() {
   return (
     <header className="topnav">
       <div className="topnav-inner">
         <div className="nav-left">
           <a className="brand" href="#top" aria-label="Fockis home">
-            <span className="brand-mark" aria-hidden="true">F</span>
+            <span className="brand-mark" aria-hidden="true"><FockisMark /></span>
             <span className="brand-name">FOCKIS</span>
           </a>
           <nav className="breadcrumb" aria-label="Breadcrumb">

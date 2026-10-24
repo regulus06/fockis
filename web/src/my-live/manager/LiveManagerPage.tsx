@@ -7,7 +7,7 @@ import {
 
 import {
   Activity,
-  ArrowLeft,
+  Radio,
   RefreshCw,
   Search,
   Users,
@@ -21,6 +21,8 @@ import { api } from "../api";
 import LiveManagerCard from "./LiveManagerCard";
 
 import "./liveManager.scss";
+
+import FockisMark from "../../components/fockis/FockisMark";
 
 type LiveRecord = {
   _id?: string;
@@ -446,65 +448,42 @@ export default function LiveManagerPage() {
     <div className="live-manager">
 
       <header className="live-manager__header">
-
         <div className="live-manager__header-left">
+          <span className="live-manager__brand-mark" aria-hidden="true">
+            <FockisMark />
+          </span>
+
+          <div className="live-manager__title">
+            <span className="live-manager__eyebrow">Fockis Live</span>
+            <h1>Live Manager</h1>
+            <p>Start, watch and manage your livestreams.</p>
+          </div>
+        </div>
+
+        <div className="live-manager__header-actions">
+          <button
+            type="button"
+            className="live-manager__refresh"
+            onClick={() => void loadLives(true)}
+            disabled={refreshing || loading}
+            aria-label="Refresh live streams"
+          >
+            <RefreshCw
+              size={16}
+              className={refreshing ? "live-manager__spin" : ""}
+            />
+            <span>{refreshing ? "Refreshing…" : "Refresh"}</span>
+          </button>
 
           <button
             type="button"
-            className="live-manager__back"
-            onClick={() =>
-              navigate("/my-live/studio")
-            }
+            className="live-manager__primary"
+            onClick={() => navigate("/my-live/studio")}
           >
-            <ArrowLeft size={18} />
-
-            <span>
-              Live Studio
-            </span>
+            <Radio size={17} />
+            {activeCount > 0 ? "Open Live Studio" : "Go live"}
           </button>
-
-          <div className="live-manager__title">
-
-            <div className="live-manager__title-icon">
-              <Video size={22} />
-            </div>
-
-            <div>
-              <h1>
-                Live Manager
-              </h1>
-
-              <p>
-                Manage your Fockis livestreams.
-              </p>
-            </div>
-
-          </div>
-
         </div>
-
-        <button
-          type="button"
-          className="live-manager__refresh"
-          onClick={() =>
-            void loadLives(true)
-          }
-          disabled={refreshing}
-        >
-          <RefreshCw
-            size={16}
-            className={
-              refreshing
-                ? "live-manager__spin"
-                : ""
-            }
-          />
-
-          {refreshing
-            ? "Refreshing..."
-            : "Refresh"}
-        </button>
-
       </header>
 
       <section className="live-manager__stats">
@@ -520,7 +499,7 @@ export default function LiveManagerPage() {
             </span>
 
             <strong>
-              {lives.length}
+              {lives.length.toLocaleString()}
             </strong>
           </div>
         </div>
@@ -536,7 +515,7 @@ export default function LiveManagerPage() {
             </span>
 
             <strong>
-              {activeCount}
+              {activeCount.toLocaleString()}
             </strong>
           </div>
         </div>
@@ -552,7 +531,7 @@ export default function LiveManagerPage() {
             </span>
 
             <strong>
-              {totalViewers}
+              {totalViewers.toLocaleString()}
             </strong>
           </div>
         </div>
@@ -568,7 +547,7 @@ export default function LiveManagerPage() {
             </span>
 
             <strong>
-              {peakViewers}
+              {peakViewers.toLocaleString()}
             </strong>
           </div>
         </div>
@@ -577,10 +556,12 @@ export default function LiveManagerPage() {
 
       <section className="live-manager__controls">
 
-        <div className="live-manager__tabs">
+        <div className="live-manager__tabs" role="tablist" aria-label="Filter live streams">
 
           <button
             type="button"
+            role="tab"
+            aria-selected={tab === "all"}
             className={
               tab === "all"
                 ? "active"
@@ -599,6 +580,8 @@ export default function LiveManagerPage() {
 
           <button
             type="button"
+            role="tab"
+            aria-selected={tab === "active"}
             className={
               tab === "active"
                 ? "active"
@@ -617,6 +600,8 @@ export default function LiveManagerPage() {
 
           <button
             type="button"
+            role="tab"
+            aria-selected={tab === "ended"}
             className={
               tab === "ended"
                 ? "active"
@@ -648,6 +633,7 @@ export default function LiveManagerPage() {
               )
             }
             placeholder="Search live streams..."
+            aria-label="Search live streams"
           />
 
         </div>
@@ -655,7 +641,7 @@ export default function LiveManagerPage() {
       </section>
 
       {error && (
-        <div className="live-manager__error">
+        <div className="live-manager__error" role="alert">
           <strong>
             Unable to load Live Manager
           </strong>
@@ -676,23 +662,20 @@ export default function LiveManagerPage() {
       )}
 
       {loading ? (
-        <div className="live-manager__loading">
-
-          <RefreshCw
-            size={26}
-            className="live-manager__spin"
-          />
-
-          <h2>
-            Loading live streams...
-          </h2>
-
-          <p>
-            Getting your Fockis livestreams.
-          </p>
-
-        </div>
-      ) : filteredLives.length === 0 ? (
+        <section className="live-manager__list" aria-busy="true" aria-label="Loading live streams">
+          <div className="live-manager__grid">
+            {Array.from({ length: 6 }, (_, index) => (
+              <div className="live-card live-card--skeleton" key={index} aria-hidden="true">
+                <div className="live-card__media" />
+                <div className="live-card__content">
+                  <span className="live-card__skeleton-line" />
+                  <span className="live-card__skeleton-line live-card__skeleton-line--short" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : error ? null : filteredLives.length === 0 ? (
         <div className="live-manager__empty">
 
           <div className="live-manager__empty-icon">

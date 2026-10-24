@@ -1,769 +1,493 @@
-/* ============================================================================
-   FOCKIS BUSINESS MANAGER PAGE
-============================================================================ */
+@use "./fkb-tokens" as *;
 
-.business-manager-page {
+// ============================================================================
+// BUSINESS MANAGER
+// ============================================================================
 
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px;
-
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-
-  box-sizing: border-box;
-
-  * {
-    box-sizing: border-box;
-  }
-
-
-
-  /* ==========================================================================
-     HEADER
-  ========================================================================== */
-
-  .manager-header {
-
+.fkb-manager {
+  &__header {
     display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
     justify-content: space-between;
-    align-items: center;
-
-    gap: 20px;
-
-    padding: 28px 32px;
-
-    border-radius: 20px;
-
-    background: linear-gradient(135deg, #ff9900, #ff5e00);
-    box-shadow: 0 12px 30px rgba(255, 94, 0, .25);
-
-    color: white;
-
+    gap: 16px;
+    margin-bottom: 24px;
 
     h1 {
-
-      margin: 0 0 6px;
-
-      font-size: 30px;
-      line-height: 1.2;
-
+      margin-top: 6px;
+      font-size: clamp(1.625rem, 1.25rem + 1.3vw, 2.125rem);
       font-weight: 800;
-      letter-spacing: -.02em;
-
     }
-
-
 
     p {
-
-      margin: 0;
-
-      opacity: .9;
-
-      font-size: 15px;
-
+      margin-top: 6px;
+      color: var(--fkb-text-muted);
     }
-
-
-
-    .primary-button {
-
-      flex-shrink: 0;
-
-      border: none;
-
-      padding: 13px 24px;
-
-      border-radius: 12px;
-
-      cursor: pointer;
-
-      background: white;
-
-      color: #ff6500;
-
-      font-size: 14px;
-      font-weight: 800;
-
-      transition: transform .2s ease, box-shadow .2s ease;
-
-      box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
-
-
-
-      &:hover {
-
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, .16);
-
-      }
-
-      &:active {
-        transform: translateY(0);
-      }
-
-    }
-
   }
 
-
-
-
-
-  /* ==========================================================================
-     FORM PANEL
-  ========================================================================== */
-
-  .panel {
-
-    background: white;
-
-    border-radius: 20px;
-
-    padding: 28px;
-
-    box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
-
+  &__notice {
+    margin-bottom: 20px;
   }
 
-
-
-
-
-  /* ==========================================================================
-     BUSINESS GRID
-  ========================================================================== */
-
-  .business-grid {
-
-    width: 100%;
-
+  &__loading {
     display: grid;
+    gap: 20px;
+    grid-template-columns: minmax(0, 1fr);
 
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    @include fkb-up($fkb-bp-md) {
+      grid-template-columns: 260px minmax(0, 1fr);
+    }
+  }
 
+  &__layout {
+    display: grid;
     gap: 24px;
+    grid-template-columns: minmax(0, 1fr);
 
+    @include fkb-up($fkb-bp-md) {
+      grid-template-columns: 260px minmax(0, 1fr);
+      align-items: start;
+    }
   }
 
-  .empty-state {
+  // --------------------------------------------------------------------------
+  // SIDEBAR
+  // --------------------------------------------------------------------------
 
+  &__sidebar {
     display: flex;
     flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    @include fkb-surface;
+
+    @include fkb-up($fkb-bp-md) {
+      position: sticky;
+      top: 24px;
+    }
+  }
+
+  &__identity {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
+    gap: 12px;
+    min-width: 0;
 
-    padding: 60px 24px;
-
-    text-align: center;
-
-    background: white;
-    border-radius: 20px;
-    border: 1px dashed #e2e2e2;
-
-    color: #888;
-
-    grid-column: 1 / -1;
+    div {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      min-width: 0;
+    }
 
     strong {
-
-      font-size: 17px;
-
-      color: #333;
-
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
-
-    p {
-
-      max-width: 320px;
-
-      margin: 0;
-
-      font-size: 14px;
-      line-height: 1.5;
-
-    }
-
   }
 
-
-
-
-
-  /* ==========================================================================
-     BUSINESS CARD
-  ========================================================================== */
-
-  .business-card {
-
+  &__nav {
     display: flex;
-
     flex-direction: column;
+    gap: 2px;
 
-    min-height: 420px;
+    @include fkb-down($fkb-bp-md) {
+      flex-direction: row;
+      margin: 0 -16px;
+      padding: 0 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
 
-    background: white;
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+  }
 
-    border-radius: 20px;
-
-    overflow: hidden;
-
-    border: 1px solid #eeeeee;
-
-    box-shadow: 0 8px 25px rgba(0, 0, 0, .08);
-
-    transition: transform .2s ease, box-shadow .2s ease;
-
-
+  &__nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 42px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--fkb-radius-sm);
+    background: transparent;
+    color: var(--fkb-text-muted);
+    font: inherit;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-align: left;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
 
     &:hover {
-
-      transform: translateY(-5px);
-
-      box-shadow: 0 15px 35px rgba(0, 0, 0, .14);
-
+      background: var(--fkb-navy-soft);
+      color: var(--fkb-text);
     }
 
+    &[aria-current="page"] {
+      background: var(--fkb-accent-soft);
+      color: var(--fkb-accent-text);
+    }
   }
 
+  &__unavailable {
+    padding-top: 14px;
+    border-top: 1px solid var(--fkb-border);
 
+    @include fkb-down($fkb-bp-md) {
+      display: none;
+    }
 
+    ul {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin: 8px 0 0;
+      padding: 0;
+      list-style: none;
+    }
 
+    li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 34px;
+      padding: 0 12px;
+      color: #94a3b8;
+      font-size: 0.875rem;
+    }
+  }
 
-  /* ==========================================================================
-     BUSINESS IMAGE
-  ========================================================================== */
+  &__unavailable-title {
+    padding: 0 12px;
+    color: var(--fkb-text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
 
-  .business-logo {
+  // --------------------------------------------------------------------------
+  // CONTENT
+  // --------------------------------------------------------------------------
 
+  &__content {
+    min-width: 0;
+  }
+
+  &__stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__stats {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    @include fkb-up($fkb-bp-lg) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  &__stats-note {
+    margin-top: -8px;
+  }
+
+  &__grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(0, 1fr);
+
+    @include fkb-up($fkb-bp-lg) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+    padding: 20px;
+    @include fkb-surface;
+
+    > * {
+      max-width: 100%;
+    }
+  }
+
+  &__card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     width: 100%;
 
-    height: 210px;
-
-    object-fit: cover;
-
-    display: block;
-
-    background: linear-gradient(135deg, #ff9900, #ff5e00);
-
-  }
-
-
-
-
-  .business-logo-placeholder {
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    height: 210px;
-
-    font-size: 64px;
-
-    color: white;
-
-    background: linear-gradient(135deg, #ff9900, #ff5e00);
-
-  }
-
-
-
-
-
-  /* ==========================================================================
-     BUSINESS CONTENT
-  ========================================================================== */
-
-  .business-content {
-
-    display: flex;
-
-    flex-direction: column;
-
-    flex: 1;
-
-    padding: 20px;
-
-
-
     h2 {
-
-      margin: 0 0 10px;
-
-      font-size: 20px;
-
-      font-weight: 800;
-
-      line-height: 1.3;
-
-      overflow: hidden;
-
-      text-overflow: ellipsis;
-
-      white-space: nowrap;
-
-    }
-
-
-
-    p {
-
-      flex: 1;
-
-      margin: 0 0 18px;
-
-      color: #666;
-
-      font-size: 14px;
-
-      line-height: 1.55;
-
-
-      display: -webkit-box;
-
-      -webkit-box-orient: vertical;
-
-      -webkit-line-clamp: 3;
-
-      line-clamp: 3;
-
-      overflow: hidden;
-
-    }
-
-  }
-
-
-
-
-
-  /* ==========================================================================
-     STATUS BADGES
-  ========================================================================== */
-
-  .status-badge-row {
-
-    display: flex;
-
-    flex-wrap: wrap;
-
-    align-items: center;
-
-    gap: 8px;
-
-    margin-bottom: 12px;
-
-  }
-
-
-  .status-badge {
-
-    display: inline-flex;
-
-    align-items: center;
-
-    gap: 4px;
-
-    padding: 5px 12px;
-
-    border-radius: 999px;
-
-    font-size: 12px;
-
-    font-weight: 700;
-
-    line-height: 1.4;
-
-    white-space: nowrap;
-
-
-    &--live {
-
-      background: #e6f7ec;
-
-      color: #1c8a44;
-
-    }
-
-
-    &--pending {
-
-      background: #f1f1f1;
-
-      color: #777;
-
-    }
-
-
-    &--spotlight {
-
-      background: #fff1e6;
-
-      color: #d9540a;
-
-    }
-
-  }
-
-
-
-
-
-  /* ==========================================================================
-     ACTION BUTTONS
-  ========================================================================== */
-
-  .business-actions {
-
-    display: grid;
-
-    grid-template-columns: repeat(2, 1fr);
-
-    gap: 8px;
-
-    margin-top: auto;
-
-
-
-    button {
-
-      height: 40px;
-
-      border: none;
-
-      border-radius: 10px;
-
-      cursor: pointer;
-
-      font-size: 13px;
-
+      font-size: 1rem;
       font-weight: 700;
-
-      background: #f1f1f1;
-
-      color: #333;
-
-      transition: transform .2s ease, opacity .2s ease, box-shadow .2s ease;
-
-
-
-      &:hover:not(:disabled) {
-
-        transform: translateY(-2px);
-
-      }
-
-
-      &:disabled {
-
-        cursor: not-allowed;
-
-        opacity: .6;
-
-        transform: none;
-
-      }
-
     }
-
-
-    > button:first-child,
-    > button:nth-child(2) {
-
-      grid-column: span 1;
-
-    }
-
-
-    .danger {
-
-      grid-column: 1 / -1;
-
-      background: transparent;
-
-      color: #ff3b30;
-
-      border: 1px solid #ffd6d3;
-
-
-      &:hover:not(:disabled) {
-
-        background: #fff5f4;
-
-      }
-
-    }
-
-
-    .secondary {
-
-      background: #f1f1f1;
-
-      color: #444;
-
-    }
-
-
-    .primary-button {
-
-      border: none;
-
-      border-radius: 10px;
-
-      background: linear-gradient(135deg, #ff9900, #ff5e00);
-
-      color: white;
-
-      box-shadow: 0 4px 12px rgba(255, 94, 0, .25);
-
-    }
-
-
-    .spotlight-button {
-
-      background: linear-gradient(135deg, #ffb300, #ff7a00);
-
-      color: white;
-
-      box-shadow: 0 4px 12px rgba(255, 122, 0, .25);
-
-    }
-
-  }
-
-
-
-
-
-  /* ==========================================================================
-     SELECTED BUSINESS
-  ========================================================================== */
-
-  .selected-panel {
-
-    background: white;
-
-    border-radius: 20px;
-
-    padding: 28px;
-
-    box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
-
-
-
-    h2 {
-
-      margin: 0 0 4px;
-
-      font-size: 26px;
-      font-weight: 800;
-
-    }
-
-
-
-    h3 {
-
-      margin: 24px 0 4px;
-
-      font-size: 16px;
-      font-weight: 700;
-
-      color: #555;
-
-      text-transform: uppercase;
-      letter-spacing: .04em;
-
-    }
-
-
-
-    > p {
-
-      margin: 8px 0 0;
-
-      color: #888;
-      font-size: 14px;
-
-    }
-
-  }
-
-
-
-
-
-  /* ==========================================================================
-     DEAL ROW
-  ========================================================================== */
-
-  .deal-row {
-
-    display: flex;
-
-    justify-content: space-between;
-
-    align-items: center;
-
-    gap: 15px;
-
-    padding: 14px 16px;
-
-    margin-top: 10px;
-
-    border-radius: 12px;
-
-    background: #fafafa;
-
-    border: 1px solid #eeeeee;
-
-    transition: background .2s ease;
-
-
-    &:hover {
-
-      background: #f5f5f5;
-
-    }
-
-
 
     strong {
-
-      font-weight: 700;
-      font-size: 14px;
-
+      font-size: 1.125rem;
     }
-
-
-
-    span {
-
-      flex-shrink: 0;
-
-      color: #ff6a00;
-
-      font-weight: 800;
-      font-size: 14px;
-
-    }
-
   }
 
-}
+  &__card-text {
+    color: var(--fkb-text-muted);
+    font-size: 0.9375rem;
+  }
 
+  &__complete {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--fkb-success);
+  }
 
+  &__facts {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin: 0;
 
-
-
-/* ============================================================================
-   MOBILE
-============================================================================ */
-
-@media (max-width: 768px) {
-
-
-  .business-manager-page {
-
-    padding: 15px;
-    gap: 16px;
-
-
-
-    .manager-header {
-
-      flex-direction: column;
-
-      align-items: flex-start;
-
-      padding: 20px;
-
-
-
-      h1 {
-
-        font-size: 24px;
-
-      }
-
-
-
-      .primary-button {
-
-        width: 100%;
-
-      }
-
-    }
-
-
-
-
-    .business-grid {
-
-      grid-template-columns: 1fr;
-
-      gap: 16px;
-
-    }
-
-
-
-    /* ==========================================================================
-       Explicit spacing between stacked cards on mobile.
-
-       This is a safeguard in addition to the grid `gap` above — some
-       mobile webviews / older browsers don't reliably render `gap` on
-       grid containers, which caused cards to visually touch with no
-       space between them.
-    ========================================================================== */
-
-    .business-card {
-
-      margin-bottom: 16px;
-
-
+    div {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--fkb-border);
 
       &:last-child {
-
-        margin-bottom: 0;
-
+        border-bottom: 0;
       }
-
     }
 
-
-
-    .business-actions {
-
-      grid-template-columns: 1fr;
-
-
-
-      .danger {
-
-        grid-column: 1;
-
-      }
-
+    dt {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--fkb-text-muted);
+      font-size: 0.875rem;
     }
 
-
-
-    .panel,
-    .selected-panel {
-
-      padding: 20px;
-
+    dd {
+      margin: 0;
+      min-width: 0;
+      overflow-wrap: anywhere;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-align: right;
     }
-
   }
 
+  &__preview-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__mini-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--fkb-border);
+      font-size: 0.875rem;
+
+      span {
+        color: var(--fkb-text-muted);
+        white-space: nowrap;
+      }
+    }
+  }
+
+  &__inline-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
+
+// ============================================================================
+// STAT TILE
+// ============================================================================
+
+.fkb-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px;
+  @include fkb-surface;
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    margin-bottom: 8px;
+    border-radius: var(--fkb-radius-sm);
+    background: var(--fkb-navy-soft);
+    color: var(--fkb-navy);
+  }
+
+  &__value {
+    font-size: 1.625rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+
+  &__label {
+    color: var(--fkb-text-muted);
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+}
+
+// ============================================================================
+// PROGRESS + CHECKLIST
+// ============================================================================
+
+.fkb-progress {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--fkb-radius-pill);
+  background: var(--fkb-navy-soft);
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--fkb-accent);
+    transition: width 0.4s var(--fkb-ease);
+  }
+}
+
+.fkb-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--fkb-text);
+    font-size: 0.875rem;
+
+    svg {
+      color: #94a3b8;
+    }
+  }
+}
+
+// ============================================================================
+// DEAL LIST
+// ============================================================================
+
+.fkb-deal-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  @include fkb-surface;
+  overflow: hidden;
+
+  &__item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--fkb-border);
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  &__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__meta {
+    color: var(--fkb-text-muted);
+    font-size: 0.8125rem;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+  }
+}
+
+// ============================================================================
+// SETTINGS ROWS
+// ============================================================================
+
+.fkb-setting {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+
+  > div {
+    flex: 1 1 280px;
+    min-width: 0;
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin-top: 4px;
+    color: var(--fkb-text-muted);
+    font-size: 0.875rem;
+  }
+
+  &--danger {
+    border-color: #fecaca;
+  }
 }

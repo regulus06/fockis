@@ -1,6 +1,588 @@
 /* ============================================================================
-   FOCKIS SUBSCRIPTION PLANS (grid wrapper component)
-   All visual rules live in the shared partial (.fk-subscription-plans).
+   FOCKIS — CHOOSE YOUR PLAN
+   Hero, current-plan banner, billing toolbar and the gemstone plan grid.
 ============================================================================ */
 
-@use "./fockis-subscription-shared";
+@use "./fockis-subscription-shared" as shared;
+
+/* ============================================================================
+   PAGE
+============================================================================ */
+
+/* Doubled class: the shared partial is emitted by several stylesheets,
+   so a single-class override could lose to a later copy. */
+.fk-sub-page.fk-sub-plans-page {
+  max-width: 1440px;
+
+  @media (min-width: shared.$fk-sub-bp-lg) {
+    padding-inline: 32px;
+  }
+}
+
+/* ============================================================================
+   HERO
+============================================================================ */
+
+.fk-sub-hero {
+  max-width: 760px;
+  margin: 0 auto 28px;
+  text-align: center;
+
+  &__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 14px 6px 6px;
+    border: 1px solid var(--fk-border);
+    border-radius: var(--fk-r-pill);
+    background: var(--fk-surface);
+    box-shadow: var(--fk-shadow-xs);
+
+    img {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+  }
+
+  &__title {
+    margin: 16px 0 10px;
+    font-size: clamp(30px, 5vw, 48px);
+    font-weight: 800;
+    line-height: 1.06;
+    letter-spacing: -0.04em;
+  }
+
+  &__subtitle {
+    margin: 0 auto;
+    max-width: 560px;
+    color: var(--fk-text-2);
+    font-size: clamp(15px, 1.6vw, 17px);
+    line-height: 1.6;
+  }
+}
+
+/* ============================================================================
+   CURRENT PLAN BANNER
+============================================================================ */
+
+.fk-sub-current {
+  @include shared.fk-sub-gem-palettes;
+  @include shared.fk-sub-card;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 14px 20px;
+  max-width: 1040px;
+  min-height: 96px;
+  margin: 0 auto 20px;
+  padding: 16px 20px;
+  border-color: var(--gem-ring, var(--fk-border));
+  background:
+    linear-gradient(90deg, var(--gem-soft, transparent) 0%, transparent 55%),
+    var(--fk-surface);
+
+  @media (min-width: shared.$fk-sub-bp-sm) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  &__gem {
+    display: none;
+    width: 96px;
+    height: 56px;
+    border-radius: var(--fk-r-md);
+    object-fit: cover;
+
+    @media (min-width: shared.$fk-sub-bp-sm) {
+      display: block;
+    }
+  }
+
+  &__copy {
+    min-width: 0;
+  }
+
+  &__heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    margin-top: 2px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0 0;
+    color: var(--fk-text-2);
+    font-size: 14px;
+    line-height: 1.45;
+
+    svg {
+      flex: 0 0 auto;
+      color: var(--fk-amber);
+    }
+  }
+
+  > .fk-sub-btn {
+    justify-self: start;
+
+    @media (min-width: shared.$fk-sub-bp-sm) {
+      justify-self: end;
+    }
+  }
+
+  &.is-loading {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  &.is-unknown {
+    border-left: 4px solid var(--fk-warning);
+
+    @media (min-width: shared.$fk-sub-bp-sm) {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+  }
+}
+
+/* ============================================================================
+   BILLING TOOLBAR
+============================================================================ */
+
+.fk-sub-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 24px;
+  max-width: 1040px;
+  margin: 0 auto 24px;
+  padding: 14px 20px;
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-xl);
+  background: var(--fk-surface);
+
+  &__copy {
+    min-width: 0;
+
+    h2 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    p {
+      margin: 3px 0 0;
+      color: var(--fk-text-2);
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: #{shared.$fk-sub-bp-sm - 1px}) {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+}
+
+.fk-sub-page.fk-sub-plans-page > .fk-sub-alert {
+  max-width: 1040px;
+  margin-inline: auto;
+}
+
+/* ============================================================================
+   PLAN GRID
+============================================================================ */
+
+.fk-sub-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 16px;
+  scroll-margin-top: calc(var(--fk-topbar-height, 64px) + 16px);
+
+  @media (min-width: shared.$fk-sub-bp-sm) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (min-width: shared.$fk-sub-bp-md) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (min-width: shared.$fk-sub-bp-lg) {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  @media (max-width: #{shared.$fk-sub-bp-sm - 1px}) {
+    max-width: 440px;
+    margin-inline: auto;
+  }
+}
+
+/* ============================================================================
+   PLAN CARD
+============================================================================ */
+
+.fk-sub-plan {
+  @include shared.fk-sub-gem-palettes;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-xl);
+  background: var(--fk-surface);
+  box-shadow: var(--fk-shadow-sm);
+  transition:
+    transform var(--fk-normal) var(--fk-ease),
+    box-shadow var(--fk-normal) var(--fk-ease),
+    border-color var(--fk-normal) var(--fk-ease);
+
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-3px);
+      border-color: var(--gem-ring, var(--fk-border-strong));
+      box-shadow: 0 18px 36px -20px var(--gem-ring, rgba(15, 27, 43, 0.3)), var(--fk-shadow-md);
+    }
+  }
+
+  &:focus-within {
+    border-color: var(--gem-ring, var(--fk-border-strong));
+  }
+
+  /* ---------- media ---------- */
+
+  &__media {
+    position: relative;
+    aspect-ratio: 266 / 156;
+    overflow: hidden;
+    background: var(--gem-soft, var(--fk-bg));
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform var(--fk-slow) var(--fk-ease);
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 28%;
+      background: linear-gradient(180deg, transparent, var(--fk-surface));
+      pointer-events: none;
+    }
+  }
+
+  @media (hover: hover) {
+    &:hover &__media img {
+      transform: scale(1.04);
+    }
+  }
+
+  &__flags {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1;
+    display: flex;
+    gap: 6px;
+  }
+
+  /* ---------- body ---------- */
+
+  &__body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    padding: 4px 18px 18px;
+  }
+
+  &__level {
+    align-self: flex-start;
+    padding: 3px 10px;
+    border: 1px solid var(--gem-ring, var(--fk-border));
+    border-radius: var(--fk-r-pill);
+    background: var(--gem-soft, var(--fk-bg));
+    color: var(--gem-accent, var(--fk-text-2));
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  &__name {
+    margin: 10px 0 4px;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  &__description {
+    min-height: 2.9em;
+    margin: 0;
+    color: var(--fk-text-2);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  &__price {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 6px;
+    margin-top: 16px;
+    min-height: 40px;
+  }
+
+  &__amount {
+    color: var(--fk-text);
+    font-family: var(--fk-font-display);
+    font-size: clamp(26px, 2.4vw, 30px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+
+    &--muted {
+      color: var(--fk-text-3);
+      font-size: 18px;
+    }
+  }
+
+  &__interval {
+    color: var(--fk-text-2);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  &__billing-note {
+    min-height: 1.4em;
+    margin: 2px 0 0;
+    color: var(--gem-accent, var(--fk-text-2));
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* ---------- features ---------- */
+
+  &__features {
+    display: grid;
+    gap: 9px;
+    margin: 16px 0 0;
+    padding: 16px 0 0;
+    border-top: 1px solid var(--fk-border);
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      color: var(--fk-text);
+      font-size: 14px;
+      line-height: 1.4;
+
+      &.is-excluded {
+        color: var(--fk-text-3);
+      }
+    }
+  }
+
+  &__feature-icon {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    margin-top: -1px;
+    border-radius: 50%;
+    background: var(--gem-soft, var(--fk-bg));
+    color: var(--gem-accent, var(--fk-success));
+
+    .is-excluded & {
+      background: var(--fk-sunken);
+      color: var(--fk-text-3);
+    }
+  }
+
+  &__feature-text {
+    min-width: 0;
+    overflow-wrap: anywhere;
+
+    small {
+      display: block;
+      margin-top: 2px;
+      color: var(--fk-text-2);
+      font-size: 12px;
+    }
+  }
+
+  &__features-empty {
+    margin: 16px 0 0;
+    padding: 14px 12px;
+    border: 1px dashed var(--fk-border-strong);
+    border-radius: var(--fk-r-lg);
+    color: var(--fk-text-2);
+    font-size: 13px;
+    text-align: center;
+  }
+
+  /* ---------- footer ---------- */
+
+  &__footer {
+    margin-top: auto;
+    padding-top: 20px;
+  }
+
+  &__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 14px;
+    border: 1px solid transparent;
+    border-radius: var(--fk-r-lg);
+    background: var(--gem-solid, var(--fk-fjord));
+    color: var(--gem-on-solid, #ffffff);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition:
+      background-color var(--fk-fast) var(--fk-ease),
+      box-shadow var(--fk-fast) var(--fk-ease);
+
+    &:hover:not(:disabled) {
+      background: var(--gem-solid-hover, var(--fk-fjord-dark));
+      box-shadow: 0 8px 18px -10px var(--gem-ring, rgba(0, 0, 0, 0.4));
+    }
+
+    &:focus-visible {
+      @include shared.fk-sub-focus;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+
+    &--current,
+    &--unknown,
+    &--unavailable {
+      border-color: var(--fk-border);
+      background: var(--fk-bg);
+      color: var(--fk-text-2);
+    }
+
+    &--manage,
+    &--included {
+      border-color: var(--gem-ring, var(--fk-border-strong));
+      background: var(--fk-surface);
+      color: var(--fk-text);
+
+      &:hover:not(:disabled) {
+        background: var(--gem-soft, var(--fk-surface-hover));
+        box-shadow: none;
+      }
+    }
+
+    &[aria-busy="true"] {
+      cursor: progress;
+      opacity: 0.9;
+    }
+  }
+
+  &__hint {
+    margin: 8px 0 0;
+    color: var(--fk-text-2);
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  /* ---------- states ---------- */
+
+  &.is-current {
+    border-width: 2px;
+    border-color: var(--gem-ring, var(--fk-fjord-bright));
+  }
+
+  &.is-featured {
+    border-color: var(--gem-ring);
+    box-shadow:
+      0 0 0 1px var(--gem-ring),
+      0 22px 44px -24px rgba(20, 70, 200, 0.55);
+
+    .fk-sub-plan__name {
+      color: var(--gem-accent);
+    }
+  }
+
+  &--skeleton {
+    pointer-events: none;
+  }
+}
+
+/* ============================================================================
+   FLAGS
+============================================================================ */
+
+.fk-sub-flag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--fk-r-pill);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+
+  &--current {
+    background: #ffffff;
+    color: #163a5f;
+  }
+
+  &--popular {
+    background: #1c2b39;
+    color: #ffffff;
+  }
+
+  &--featured {
+    background: #1446c8;
+    color: #ffffff;
+  }
+}
+
+/* ============================================================================
+   TRUST FOOTER
+============================================================================ */
+
+.fk-sub-trust {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 28px;
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--fk-border);
+  color: var(--fk-text-2);
+  font-size: 13px;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}

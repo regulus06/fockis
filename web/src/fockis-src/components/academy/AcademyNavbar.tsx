@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
+import FockisMark from "../../../components/fockis/FockisMark";
 const UTILITY_LINKS = [
   { label: 'Students', href: '/academy/portal' },
   { label: 'Faculty & Staff', href: '/academy/faculty' },
@@ -80,12 +81,7 @@ export default function AcademyNavbar() {
       <nav className="mainnav">
         <div className="wrap">
           <Link className="logo" to="/academy">
-            <span className="logo-mark">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path d="M4 8L12 4L20 8L12 12L4 8Z" stroke="#E3A542" strokeWidth={1.6} strokeLinejoin="round" />
-                <path d="M7 10.5V16C7 16 9 18 12 18C15 18 17 16 17 16V10.5" stroke="#E3A542" strokeWidth={1.6} />
-              </svg>
-            </span>
+            <span className="logo-mark"><FockisMark /></span>
             FOCKIS ACADEMY
           </Link>
           <div className="nav-links">

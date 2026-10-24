@@ -65,6 +65,7 @@ export const LATE_NOTICE_OPTIONS_MIN = [
 export const RIGHT_PANEL_TABS = [
   "participants",
   "chat",
+  "settings",
   "secretary",
 ] as const;
 

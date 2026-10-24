@@ -1,61 +1,104 @@
 /* ============================================================================
-   FOCKIS PROFILE TABS
-   src/styles/FockisProfileTabs.scss
-   Posts / About / Friends / Photos / Marketplace row, teal underline
-   on the active tab.
+   FOCKIS PROFILE TABS  (component: FockisProfileTabs.tsx)
+   Segmented pill bar; the selected tab is a filled blue chip with an
+   underline glow. Scrolls horizontally on phones without clipping.
 ============================================================================ */
 
-@use "./fockis-theme";
+@use "./fockis-social-tokens";
 
 .fk-profile-tabs {
+  position: sticky;
+  z-index: 5;
+  top: 8px;
+  margin: 18px 20px 0;
+  padding: 6px;
   display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border: 1px solid var(--fks-border);
+  border-radius: 18px;
+  background: var(--fks-glass);
+  box-shadow: var(--fks-shadow-card);
+  backdrop-filter: blur(16px);
 
-  border-bottom: 1px solid var(--fk-border);
-
-  background: var(--fk-surface);
-  border-radius: var(--fk-r-lg) var(--fk-r-lg) 0 0;
-
-  button {
-    flex: 1;
-
-    padding: 14px 8px;
-
-    border: none;
-    border-bottom: 2px solid transparent;
-
-    background: none;
-
-    color: var(--fk-text-2);
-
-    font-size: 13.5px;
-    font-weight: 700;
-
-    cursor: pointer;
-
-    transition:
-      color var(--fk-fast) var(--fk-ease),
-      border-color var(--fk-fast) var(--fk-ease),
-      background var(--fk-fast) var(--fk-ease);
-
-    &:hover {
-      color: var(--fk-text);
-      background: var(--fk-sunken);
-    }
-
-    &.is-active {
-      color: var(--fk-fjord);
-      border-bottom-color: var(--fk-fjord);
-    }
+  &::-webkit-scrollbar {
+    display: none;
   }
 }
 
-/* ============================================================================
-   MOBILE
-============================================================================ */
+.fk-profile-tabs__tab {
+  position: relative;
+  flex: 1 0 auto;
+  min-height: 42px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--fks-text-2);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
 
-@media (max-width: 767px) {
-  .fk-profile-tabs button {
-    padding: 12px 4px;
-    font-size: 12.5px;
+  &:hover {
+    background: var(--fks-surface-2);
+    color: var(--fks-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fks-cyan);
+    outline-offset: 1px;
+  }
+
+  &.is-active {
+    background: linear-gradient(135deg, var(--fks-primary-bright), var(--fks-primary));
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(47, 123, 255, 0.32);
+  }
+}
+
+.fk-profile-tabs__count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--fks-surface-3);
+  color: var(--fks-text-2);
+  font-size: 11px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+
+  .is-active & {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+  }
+}
+
+@media (max-width: 640px) {
+  .fk-profile-tabs {
+    margin: 14px 10px 0;
+    border-radius: 16px;
+  }
+
+  .fk-profile-tabs__tab {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-profile-tabs__tab {
+    transition: none;
   }
 }

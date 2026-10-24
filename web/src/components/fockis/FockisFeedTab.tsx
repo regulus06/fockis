@@ -1,4 +1,9 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
+
+import {
+  parseFeedMode,
+  type FeedMode,
+} from "../../api/feedApi";
 
 import "../../styles/FockisFeedTabs.scss";
 
@@ -9,49 +14,41 @@ import "../../styles/FockisFeedTabs.scss";
 type FeedTab = {
   label: string;
   path: string;
+  /** Set for tabs that switch the feed on this page via ?feed=. */
+  feedMode?: FeedMode;
 };
 
 /* ============================================================================
    TABS
-   Matches the prototype's FeedTabs exactly: For You / Following / Friends /
-   Waves / Marketplace — no icons, just labels inside pill buttons.
+   Same pill tabs as before. For You / Following / Latest / Friends stay on
+   the feed page and switch its mode through the ?feed= query parameter;
+   For You is the default when no parameter is present.
 
-   IMPORTANT: these paths previously were all "/fockis/*" - a route
-   prefix that doesn't exist ANYWHERE in App.tsx. Every tab click was
-   falling through to the app's catch-all route and silently
-   redirecting to /marketplace. Only "Marketplace" looked like it
-   worked, purely by coincidence (its broken redirect target happened
-   to match its intended destination anyway).
+   The feed page is registered at /fockis-preview in App.tsx.
 ============================================================================ */
+
+const FEED_PATH = "/fockis-preview";
 
 const feedTabs: FeedTab[] = [
   {
     label: "For You",
-    /*
-     * The feed page itself is registered at /fockis-preview in
-     * App.tsx - there is no /fockis route at all.
-     */
-    path: "/fockis-preview",
+    path: FEED_PATH,
+    feedMode: "for-you",
   },
   {
     label: "Following",
-    /*
-     * TODO: no backend/route support for a "following-only" feed
-     * exists yet (nothing in App.tsx serves this). Pointing at the
-     * main feed for now rather than a nonexistent path, until a real
-     * filtered route/endpoint exists.
-     */
-    path: "/fockis-preview",
+    path: `${FEED_PATH}?feed=following`,
+    feedMode: "following",
+  },
+  {
+    label: "Latest",
+    path: `${FEED_PATH}?feed=latest`,
+    feedMode: "latest",
   },
   {
     label: "Friends",
-    /*
-     * TODO: same situation as "Following" - there's a general
-     * /friends page (Friends.tsx) but it isn't a filtered version of
-     * THIS feed, so it's not a real equivalent destination yet.
-     * Pointing at the main feed for now.
-     */
-    path: "/fockis-preview",
+    path: `${FEED_PATH}?feed=friends`,
+    feedMode: "friends",
   },
   {
     label: "Waves",
@@ -73,33 +70,68 @@ const feedTabs: FeedTab[] = [
   },
 ];
 
+function tabClassName(active: boolean): string {
+  return `fk-feed-tabs__item${
+    active ? " fk-feed-tabs__item--active" : ""
+  }`;
+}
+
 /* ============================================================================
    FEED TABS
 ============================================================================ */
 
 export default function FockisFeedTab() {
+  const location = useLocation();
+
+  const onFeedPage = location.pathname === FEED_PATH;
+
+  const currentMode = parseFeedMode(
+    new URLSearchParams(location.search).get("feed"),
+  );
+
   return (
     <div
       className="fk-feed-tabs"
       role="tablist"
       aria-label="Feed navigation"
     >
-      {feedTabs.map((tab) => (
-        <NavLink
-          key={tab.label}
-          to={tab.path}
-          end={tab.path === "/fockis-preview"}
-          role="tab"
-          className={({ isActive }) =>
-            `fk-feed-tabs__item${
-              isActive ? " fk-feed-tabs__item--active" : ""
-            }`
-          }
-          aria-label={tab.label}
-        >
-          {tab.label}
-        </NavLink>
-      ))}
+      {feedTabs.map((tab) => {
+        if (tab.feedMode) {
+          /*
+           * NavLink matches on pathname only, so all four feed tabs would
+           * look active at once. Compare the ?feed= mode instead.
+           */
+          const active =
+            onFeedPage && currentMode === tab.feedMode;
+
+          return (
+            <Link
+              key={tab.label}
+              to={tab.path}
+              replace
+              role="tab"
+              aria-selected={active}
+              aria-current={active ? "page" : undefined}
+              className={tabClassName(active)}
+              aria-label={tab.label}
+            >
+              {tab.label}
+            </Link>
+          );
+        }
+
+        return (
+          <NavLink
+            key={tab.label}
+            to={tab.path}
+            role="tab"
+            className={({ isActive }) => tabClassName(isActive)}
+            aria-label={tab.label}
+          >
+            {tab.label}
+          </NavLink>
+        );
+      })}
     </div>
   );
 }

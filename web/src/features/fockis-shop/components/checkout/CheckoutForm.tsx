@@ -544,78 +544,12 @@ export function CheckoutForm({ checkout }: Props) {
 
               }
 
-              onSelect={(selection) => {
-
-                if (typeof selection === "string") {
-
-                  const parts = selection.split(":");
-
-                  if (parts.length >= 2) {
-
-                    const storeId = parts[0];
-
-                    const optionId = parts
-
-                      .slice(1)
-
-                      .join(":");
-
-                    if (storeId && optionId) {
-
-                      checkout.selectShipping(
-
-                        storeId,
-
-                        optionId,
-
-                      );
-
-                    }
-
-                  }
-
+              onSelect={(storeId, optionId) => {
+                if (!storeId || !optionId) {
                   return;
-
                 }
 
-                if (
-
-                  selection &&
-
-                  typeof selection === "object"
-
-                ) {
-
-                  const selected = selection as {
-
-                    storeId?: string;
-
-                    optionId?: string;
-
-                    id?: string;
-
-                  };
-
-                  if (
-
-                    selected.storeId &&
-
-                    selected.optionId
-
-                  ) {
-
-                    checkout.selectShipping(
-
-                      selected.storeId,
-
-                      selected.optionId,
-
-                    );
-
-                  }
-
-                }
-
+                checkout.selectShipping(storeId, optionId);
               }}
 
             />

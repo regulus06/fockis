@@ -1,0 +1,223 @@
+/* ============================================================================
+   FINANCE & SUBSCRIPTIONS — APP ADMIN CENTER THEME LAYER
+
+   The finance pages keep their own markup and stylesheets
+   (FinanceDashboardPage.scss / FinanceAdmin.scss). This layer, scoped to
+   .fk-finance-section, re-points their tokens at the shared navy & gold
+   palette and replaces the large navy "hero" headers with the compact
+   heading used across the Admin Center. No class names were changed.
+============================================================================ */
+
+.fk-finance-section {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.fk-finance-section__bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 14px;
+
+  background: var(--fk-bg-panel, #ffffff);
+  border: 1px solid var(--fk-border, #e4eaf1);
+  border-radius: var(--fk-radius-lg, 12px);
+}
+
+.fk-finance-section__title {
+  color: var(--fk-text-secondary, #718096);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ---------- token remap ---------- */
+.fk-finance-section .finance-page,
+.fk-finance-section .fa {
+  --fd-ink: #10243d;
+  --fd-navy-900: #10243d;
+  --fd-navy-700: #163a5f;
+  --fd-navy-500: #2a5a8c;
+  --fd-amber: #b8862f;
+  --fd-amber-strong: #9c7023;
+  --fd-bg: transparent;
+  --fd-surface: #ffffff;
+  --fd-soft: #f8fafc;
+  --fd-border: #e4eaf1;
+  --fd-text: #10243d;
+  --fd-muted: #718096;
+  --fd-serif: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fd-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fd-radius: 12px;
+  --fd-shadow: 0 1px 2px rgba(16, 36, 61, 0.04);
+
+  --fa-ink: #10243d;
+  --fa-navy-900: #10243d;
+  --fa-navy-700: #163a5f;
+  --fa-navy-500: #2a5a8c;
+  --fa-amber: #b8862f;
+  --fa-amber-strong: #9c7023;
+  --fa-bg: transparent;
+  --fa-border: #e4eaf1;
+  --fa-text: #10243d;
+  --fa-muted: #718096;
+  --fa-serif: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fa-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fa-radius: 12px;
+  --fa-shadow: 0 1px 2px rgba(16, 36, 61, 0.04);
+
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  gap: 18px;
+
+  background: transparent;
+  font-size: 14px;
+}
+
+/* ---------- compact page heading (replaces navy hero) ---------- */
+.fk-shell .fk-finance-section .finance-page .finance-page-header {
+  align-items: flex-end;
+  gap: 16px;
+
+  padding: 0;
+  overflow: visible;
+
+  color: var(--fk-text-primary, #10243d);
+  background: none;
+  border: 0;
+  border-radius: 0;
+
+  &::before,
+  &::after {
+    display: none;
+  }
+
+  > div:first-child {
+    max-width: 72ch;
+
+    > span {
+      margin-bottom: 6px;
+      color: var(--fk-text-secondary, #718096);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+    }
+
+    h1 {
+      color: var(--fk-text-primary, #10243d);
+      font-family: var(--fk-font-display, inherit);
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+
+    p {
+      margin-top: 6px;
+      color: var(--fk-text-secondary, #718096);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  }
+
+  select {
+    color: var(--fk-text-primary, #10243d);
+    background-color: #ffffff;
+    border-color: var(--fk-border, #e4eaf1);
+  }
+
+  @media (max-width: 767.98px) {
+    > div:first-child h1 {
+      font-size: 24px;
+    }
+  }
+}
+
+/* ---------- buttons ---------- */
+.fk-shell .fk-finance-section .finance-page {
+  .finance-button {
+    min-height: 38px;
+    height: 38px;
+    padding: 0 16px;
+
+    color: #ffffff;
+    background: var(--fk-accent, #b8862f);
+    border-radius: var(--fk-radius-md, 8px);
+    box-shadow: none;
+
+    font-size: 13.5px;
+
+    &:hover:not(:disabled) {
+      background: var(--fk-accent-strong, #9c7023);
+    }
+  }
+
+  .finance-button-secondary {
+    color: var(--fk-text-primary, #10243d);
+    background: #ffffff;
+    border-color: var(--fk-border, #e4eaf1);
+
+    &:hover:not(:disabled) {
+      background: var(--fk-bg-hover, #f1f5fa);
+    }
+  }
+
+  /* ---------- stat cards: all white, like the reference ---------- */
+  .finance-stat,
+  .finance-stat-card {
+    padding: 16px 18px;
+    border-radius: var(--fk-radius-lg, 12px);
+
+    > strong {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    &:first-child {
+      color: var(--fk-text-primary, #10243d);
+      background: #ffffff;
+      border-color: var(--fd-border);
+      box-shadow: inset 3px 0 0 var(--fk-accent, #b8862f);
+
+      > span,
+      > small {
+        color: var(--fk-text-secondary, #718096);
+      }
+    }
+  }
+
+  /* ---------- panels & tables ---------- */
+  .finance-panel {
+    border-radius: var(--fk-radius-lg, 12px);
+    box-shadow: var(--fd-shadow);
+  }
+
+  .finance-table th {
+    color: var(--fk-text-primary, #10243d);
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .finance-table td {
+    font-size: 13.5px;
+  }
+
+  .finance-dashboard-navigation__item--active,
+  .finance-dashboard-navigation__item--active:hover {
+    background: var(--fk-navy-900, #10243d);
+    border-color: var(--fk-navy-900, #10243d);
+  }
+}
+
+/* The section tab bar above replaces the Finance dashboard's own link row;
+   the "Finance operations" cards on that page still link to every tool. */
+.fk-finance-section .finance-page .finance-dashboard-navigation {
+  display: none;
+}

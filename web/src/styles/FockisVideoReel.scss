@@ -1,1008 +1,606 @@
 /* ============================================================================
-   FOCKIS VIDEO REEL
-   src/styles/FockisVideoReel.scss
+   FOCKIS WAVES PLAYER
+   web/src/styles/FockisVideoReel.scss  (component: FockisVideoReel.tsx)
 
-   Responsive redesign:
-   - Desktop keeps the original full-screen reel appearance.
-   - Mobile fills the actual phone viewport.
-   - Safe areas supported for iPhone/Android.
-   - No horizontal overflow.
-   - Controls remain reachable on small screens.
-   - Gold active state preserved.
+   Phone: edge-to-edge vertical video with the info card and engagement
+   rail floating over it. Desktop: a centred 9:16 canvas on a midnight
+   backdrop with the engagement rail beside it and up/down steppers.
 ============================================================================ */
+
+@use "./fockis-social-tokens";
+
+/* The bottom navigation is hidden while Waves is open (body class is set
+   by FockisVideoReel). */
+body.fk-reel-open .fk-bottom-nav {
+  display: none !important;
+}
 
 .fk-video-reel {
   position: fixed;
   inset: 0;
-
-  z-index: 2000;
-
-  width: 100%;
-  max-width: 100vw;
-
-  height: 100vh;
-  height: 100dvh;
-
-  margin: 0;
-  padding: 0;
-
-  background: #000;
-
-  overflow: hidden;
-
-  box-sizing: border-box;
-
-  overscroll-behavior: contain;
+  z-index: 100100;
+  background:
+    radial-gradient(60% 50% at 50% 0%, rgba(47, 123, 255, 0.22), transparent 70%),
+    radial-gradient(40% 40% at 100% 100%, rgba(139, 92, 246, 0.16), transparent 70%),
+    #02050d;
+  color: #ffffff;
+  font-family: var(--fks-font, system-ui, sans-serif);
 }
 
 /* ============================================================================
-   CLOSE
+   TOP BAR
 ============================================================================ */
 
-.fk-video-reel__close {
-  position: fixed;
-
-  top: max(16px, env(safe-area-inset-top));
-  right: max(16px, env(safe-area-inset-right));
-
-  z-index: 2001;
-
-  width: 40px;
-  height: 40px;
-
+.fk-video-reel__topbar {
+  position: absolute;
+  z-index: 6;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  padding: calc(10px + env(safe-area-inset-top)) 16px 0;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  pointer-events: none;
 
-  margin: 0;
-  padding: 0;
+  > * {
+    pointer-events: auto;
+  }
+}
 
+.fk-video-reel__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 999px;
+  background: rgba(2, 5, 13, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(124, 172, 255, 0.2);
+  backdrop-filter: blur(10px);
+
+  strong {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+}
+
+.fk-video-reel__brand-mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, #22d3ee, #2f7bff 55%, #8b5cf6);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.45);
+}
+
+.fk-video-reel__position {
+  color: rgba(226, 235, 255, 0.7);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.fk-video-reel__close {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
   border: 0;
   border-radius: 50%;
-
-  background: rgba(10, 34, 64, 0.6);
-
-  color: #fff;
-
+  background: rgba(2, 5, 13, 0.5);
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(124, 172, 255, 0.25);
   cursor: pointer;
-
-  box-sizing: border-box;
-
-  -webkit-tap-highlight-color: transparent;
-
-  transition:
-    background 0.2s ease,
-    transform 0.15s ease;
+  backdrop-filter: blur(10px);
 
   &:hover {
-    background: rgba(10, 34, 64, 0.85);
+    background: #2f7bff;
   }
 
-  &:active {
-    transform: scale(0.94);
-  }
-
-  svg {
-    width: 20px;
-    height: 20px;
-
-    flex: 0 0 auto;
+  &:focus-visible {
+    outline: 2px solid #22d3ee;
+    outline-offset: 2px;
   }
 }
 
 /* ============================================================================
-   SCROLLER
+   SCROLLER + SLIDES
 ============================================================================ */
 
 .fk-video-reel__scroller {
-  position: relative;
-
-  width: 100%;
-  max-width: 100%;
-
   height: 100%;
-  height: 100dvh;
-
-  margin: 0;
-  padding: 0;
-
-  overflow-x: hidden;
   overflow-y: auto;
-
+  overscroll-behavior: contain;
   scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
-
   scrollbar-width: none;
-
-  overscroll-behavior-y: contain;
-
-  -webkit-overflow-scrolling: touch;
 
   &::-webkit-scrollbar {
     display: none;
-    width: 0;
-    height: 0;
   }
 }
-
-/* ============================================================================
-   SLIDE
-============================================================================ */
 
 .fk-video-reel__slide {
   position: relative;
-
-  width: 100%;
-  max-width: 100vw;
-
-  height: 100vh;
   height: 100dvh;
-
-  min-height: 100vh;
   min-height: 100dvh;
-
-  margin: 0;
-  padding: 0;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
-  flex: 0 0 100%;
-
+  gap: 18px;
   scroll-snap-align: start;
   scroll-snap-stop: always;
-
-  overflow: hidden;
-
-  box-sizing: border-box;
-
-  background: #000;
 }
 
-/* ============================================================================
-   MEDIA
-============================================================================ */
-
-.fk-video-reel__media {
+.fk-video-reel__canvas {
   position: relative;
-
-  width: 100%;
-  max-width: 100%;
-
   height: 100%;
-
-  margin: 0;
-  padding: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
+  width: 100%;
   overflow: hidden;
-
-  box-sizing: border-box;
+  background: #000;
 }
 
 .fk-video-reel__video {
-  display: block;
-
   width: 100%;
-  max-width: 100%;
-
   height: 100%;
-  max-height: 100%;
-
-  margin: 0;
-  padding: 0;
-
+  display: block;
   object-fit: contain;
-
   background: #000;
-
-  outline: none;
-
-  user-select: none;
-
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
 }
 
-/* ============================================================================
-   HEADER
-============================================================================ */
-
-.fk-video-reel__header {
+.fk-video-reel__buffering,
+.fk-video-reel__big-play {
   position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
 
-  top: max(16px, env(safe-area-inset-top));
-  left: max(16px, env(safe-area-inset-left));
-
-  z-index: 3;
-
-  max-width: calc(100% - 80px);
-
+.fk-video-reel__buffering {
+  color: rgba(255, 255, 255, 0.85);
   pointer-events: none;
 
-  box-sizing: border-box;
+  svg {
+    animation: fk-reel-spin 900ms linear infinite;
+  }
+}
 
-  strong {
-    display: block;
+.fk-video-reel__big-play {
+  width: 76px;
+  height: 76px;
+  display: grid;
+  place-items: center;
+  padding-left: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  background: rgba(2, 5, 13, 0.5);
+  color: #ffffff;
+  backdrop-filter: blur(8px);
+  cursor: pointer;
 
-    max-width: 100%;
-
-    color: #fff;
-
-    font-family: var(--fk-font-display, Georgia, serif);
-
-    font-size: 15px;
-    font-weight: 700;
-
-    line-height: 1.25;
-
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-
-    text-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.7),
-      0 2px 8px rgba(0, 0, 0, 0.35);
+  &:focus-visible {
+    outline: 3px solid #22d3ee;
+    outline-offset: 3px;
   }
 }
 
 /* ============================================================================
-   CAPTION OVERLAY
+   INFO CARD (creator + caption)
 ============================================================================ */
 
-.fk-video-reel__overlay {
+.fk-video-reel__info {
   position: absolute;
+  z-index: 3;
+  left: 14px;
+  right: 86px;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(8, 18, 42, 0.35), rgba(8, 18, 42, 0.7));
+  box-shadow: inset 0 0 0 1px rgba(124, 172, 255, 0.16);
+  backdrop-filter: blur(10px);
+}
 
-  left: 0;
-  right: 88px;
-  bottom: 0;
+.fk-video-reel__creator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
 
-  z-index: 2;
+.fk-video-reel__avatar {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 13px;
+  background: linear-gradient(140deg, #2f7bff, #8b5cf6);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 0 0 2px rgba(2, 5, 13, 0.7), 0 0 0 3.5px #22d3ee;
 
-  width: auto;
-  max-width: 100%;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
-  margin: 0;
-  box-sizing: border-box;
+  &:focus-visible {
+    outline: 2px solid #22d3ee;
+    outline-offset: 3px;
+  }
+}
 
-  padding:
-    24px
-    16px
-    calc(24px + env(safe-area-inset-bottom))
-    max(16px, env(safe-area-inset-left));
+.fk-video-reel__name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  background: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.78) 0%,
-    rgba(0, 0, 0, 0.42) 48%,
-    rgba(0, 0, 0, 0) 100%
-  );
+.fk-video-reel__follow {
+  flex: 0 0 auto;
+  height: 30px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: #2f7bff;
+  color: #ffffff;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 750;
+  cursor: pointer;
 
-  pointer-events: none;
+  &:hover {
+    background: #5596ff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #22d3ee;
+    outline-offset: 2px;
+  }
+
+  &.is-following,
+  &.is-muted {
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(226, 235, 255, 0.85);
+    cursor: default;
+  }
 }
 
 .fk-video-reel__caption {
-  margin: 0;
-
-  max-width: 100%;
-
-  color: #fff;
-
-  font-size: 14.5px;
-  line-height: 1.5;
-
-  white-space: pre-wrap;
-
+  margin: 8px 0 0;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: rgba(234, 241, 255, 0.92);
+  font-size: 14px;
+  line-height: 1.45;
   overflow-wrap: anywhere;
-  word-break: break-word;
 
-  text-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.7);
+  &.is-expanded {
+    -webkit-line-clamp: unset;
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+
+  .fk-rich-text__tag,
+  .fk-rich-text__mention {
+    color: #6fd6ff;
+  }
+}
+
+.fk-video-reel__more {
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #9fc4ff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 /* ============================================================================
-   REEL ACTIONS
+   PLAYBACK CONTROLS
+============================================================================ */
+
+.fk-video-reel__controls {
+  position: absolute;
+  z-index: 3;
+  left: 14px;
+  right: 14px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  height: 48px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 16px;
+  background: rgba(2, 5, 13, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(124, 172, 255, 0.16);
+  backdrop-filter: blur(10px);
+}
+
+.fk-video-reel__control {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #22d3ee;
+    outline-offset: 1px;
+  }
+}
+
+.fk-video-reel__progress {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  input[type="range"] {
+    --fill: 0%;
+
+    flex: 1;
+    min-width: 0;
+    height: 4px;
+    margin: 0;
+    appearance: none;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #22d3ee 0%, #2f7bff var(--fill), rgba(255, 255, 255, 0.22) var(--fill));
+    cursor: pointer;
+
+    &::-webkit-slider-thumb {
+      width: 14px;
+      height: 14px;
+      appearance: none;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(47, 123, 255, 0.5);
+    }
+
+    &::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border: 0;
+      border-radius: 50%;
+      background: #ffffff;
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #22d3ee;
+      outline-offset: 4px;
+    }
+  }
+}
+
+.fk-video-reel__time {
+  flex: 0 0 auto;
+  color: rgba(226, 235, 255, 0.75);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================================
+   ENGAGEMENT RAIL
 ============================================================================ */
 
 .fk-video-reel__actions {
   position: absolute;
-
-  right: max(12px, env(safe-area-inset-right));
-  bottom: max(24px, env(safe-area-inset-bottom));
-
   z-index: 4;
-
+  right: 10px;
+  bottom: calc(80px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   align-items: center;
-
-  gap: 18px;
-
-  box-sizing: border-box;
-
-  button {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    gap: 4px;
-
-    min-width: 42px;
-    min-height: 42px;
-
-    margin: 0;
-    padding: 6px;
-
-    border: 0;
-    background: transparent;
-
-    color: #fff;
-
-    cursor: pointer;
-
-    box-sizing: border-box;
-
-    -webkit-tap-highlight-color: transparent;
-
-    transition:
-      transform 0.15s ease,
-      color 0.15s ease;
-
-    svg {
-      display: block;
-
-      width: 26px;
-      height: 26px;
-
-      flex: 0 0 auto;
-
-      filter:
-        drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
-    }
-
-    span {
-      max-width: 50px;
-
-      font-size: 11px;
-      font-weight: 700;
-
-      line-height: 1.1;
-
-      text-align: center;
-
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-
-      text-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.7);
-    }
-
-    &.is-active {
-      color: var(--fk-amber-bright, #ffc72c);
-    }
-
-    &:active {
-      transform: scale(0.92);
-    }
-  }
+  gap: 14px;
 }
 
-/* ============================================================================
-   MEDIA CONTROLS
-============================================================================ */
-
-.fk-video-reel__media-controls {
-  position: absolute;
-
-  right: max(12px, env(safe-area-inset-right));
-
-  bottom: max(24px, env(safe-area-inset-bottom));
-
-  z-index: 5;
-
-  display: flex;
-  align-items: center;
-
-  gap: 8px;
-
-  box-sizing: border-box;
-}
-
-.fk-video-reel__media-control {
-  width: 38px;
-  height: 38px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  margin: 0;
+.fk-video-reel__action {
+  width: 62px;
   padding: 0;
-
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
   border: 0;
-  border-radius: 50%;
-
-  background: rgba(0, 0, 0, 0.5);
-
-  color: #fff;
-
-  font-size: 18px;
-  line-height: 1;
-
+  background: transparent;
+  color: #ffffff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
 
-  box-sizing: border-box;
+  &:focus-visible {
+    outline: none;
 
-  -webkit-tap-highlight-color: transparent;
-
-  transition:
-    background 0.2s ease,
-    transform 0.15s ease;
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.75);
+    .fk-video-reel__action-icon {
+      outline: 2px solid #22d3ee;
+      outline-offset: 2px;
+    }
   }
 
-  &:active {
+  &:hover .fk-video-reel__action-icon {
+    background: rgba(47, 123, 255, 0.45);
+  }
+
+  &--like.is-active .fk-video-reel__action-icon {
+    background: linear-gradient(140deg, #2f7bff, #22d3ee);
+    box-shadow: 0 8px 22px rgba(34, 211, 238, 0.45);
+  }
+
+  &--repost.is-active .fk-video-reel__action-icon {
+    background: rgba(52, 211, 153, 0.85);
+  }
+
+  &--save.is-active .fk-video-reel__action-icon {
+    background: rgba(34, 211, 238, 0.85);
+  }
+}
+
+.fk-video-reel__action-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: rgba(2, 5, 13, 0.5);
+  box-shadow: inset 0 0 0 1px rgba(124, 172, 255, 0.22);
+  backdrop-filter: blur(10px);
+  transition: background-color 160ms ease, transform 160ms ease;
+
+  .fk-video-reel__action:active & {
     transform: scale(0.92);
   }
 }
 
 /* ============================================================================
-   MORE MENU
+   DESKTOP STEPPER
 ============================================================================ */
 
-.fk-video-reel__more-menu {
-  position: absolute;
+.fk-video-reel__stepper {
+  display: none;
+}
 
-  right: 0;
-  bottom: 46px;
+.fk-video-reel__step {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(124, 172, 255, 0.3);
+  border-radius: 50%;
+  background: rgba(8, 18, 42, 0.75);
+  color: #ffffff;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
 
-  z-index: 20;
+  &:hover:not(:disabled) {
+    background: #2f7bff;
+  }
 
-  width: max-content;
-  min-width: 170px;
-  max-width: calc(100vw - 24px);
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
 
-  padding: 6px;
-
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-
-  background: rgba(10, 20, 30, 0.96);
-
-  box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.5);
-
-  box-sizing: border-box;
-
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-
-  button {
-    width: 100%;
-    min-height: 42px;
-
-    margin: 0;
-    padding: 9px 12px;
-
-    border: 0;
-    border-radius: 8px;
-
-    background: transparent;
-
-    color: #fff;
-
-    font-size: 13px;
-    font-weight: 600;
-
-    text-align: left;
-
-    cursor: pointer;
-
-    box-sizing: border-box;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    &:active {
-      background: rgba(255, 255, 255, 0.14);
-    }
+  &:focus-visible {
+    outline: 2px solid #22d3ee;
+    outline-offset: 2px;
   }
 }
 
 /* ============================================================================
-   PROGRESS
+   TABLET / DESKTOP: balanced 9:16 canvas
 ============================================================================ */
 
-.fk-video-reel__progress {
-  position: absolute;
-
-  left: max(16px, env(safe-area-inset-left));
-  right: max(16px, env(safe-area-inset-right));
-
-  bottom: max(8px, env(safe-area-inset-bottom));
-
-  z-index: 6;
-
-  display: flex;
-  align-items: center;
-
-  gap: 8px;
-
-  box-sizing: border-box;
-
-  input[type="range"] {
-    flex: 1 1 auto;
-
-    min-width: 0;
-    width: 100%;
-
-    height: 4px;
-
-    margin: 0;
-
-    cursor: pointer;
-
-    accent-color: var(--fk-amber-bright, #ffc72c);
-  }
-
-  span {
-    flex: 0 0 auto;
-
-    min-width: 70px;
-
-    color: #fff;
-
-    font-size: 11px;
-    font-weight: 600;
-
-    text-align: right;
-
-    white-space: nowrap;
-
-    text-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.7);
-  }
-}
-
-/* ============================================================================
-   TABLET
-============================================================================ */
-
-@media (max-width: 900px) {
-  .fk-video-reel__overlay {
-    right: 76px;
-
-    padding-right: 12px;
-  }
-
-  .fk-video-reel__actions {
-    right: max(8px, env(safe-area-inset-right));
-
-    gap: 14px;
-
-    button {
-      min-width: 40px;
-      min-height: 40px;
-
-      svg {
-        width: 24px;
-        height: 24px;
-      }
-    }
-  }
-}
-
-/* ============================================================================
-   MOBILE
-============================================================================ */
-
-@media (max-width: 768px) {
-  .fk-video-reel {
-    position: fixed;
-
-    inset: 0;
-
-    width: 100vw;
-    max-width: 100vw;
-
-    height: 100dvh;
-
-    overflow: hidden;
-  }
-
-  .fk-video-reel__scroller {
-    width: 100vw;
-    max-width: 100vw;
-
-    height: 100dvh;
-
-    overflow-x: hidden;
-    overflow-y: auto;
-
-    scroll-snap-type: y mandatory;
-
-    overscroll-behavior-x: none;
-  }
-
+@media (min-width: 768px) {
   .fk-video-reel__slide {
-    width: 100vw;
-    max-width: 100vw;
-
-    height: 100dvh;
-    min-height: 100dvh;
-
-    flex: 0 0 100vw;
+    padding: 74px 0 24px;
   }
 
-  .fk-video-reel__media {
-    width: 100vw;
-    max-width: 100vw;
-
-    height: 100dvh;
+  .fk-video-reel__canvas {
+    width: auto;
+    height: 100%;
+    aspect-ratio: 9 / 16;
+    max-width: min(520px, calc(100vw - 220px));
+    border-radius: 26px;
+    box-shadow:
+      0 0 0 1px rgba(124, 172, 255, 0.22),
+      0 30px 80px rgba(0, 0, 0, 0.55);
   }
 
-  .fk-video-reel__video {
-    width: 100vw;
-    max-width: 100vw;
-
-    height: 100dvh;
-    max-height: 100dvh;
-
-    object-fit: contain;
+  .fk-video-reel__info {
+    right: 14px;
+    bottom: 74px;
   }
 
-  .fk-video-reel__close {
-    top: max(12px, env(safe-area-inset-top));
-    right: max(12px, env(safe-area-inset-right));
-
-    width: 38px;
-    height: 38px;
+  .fk-video-reel__controls {
+    bottom: 14px;
   }
 
-  .fk-video-reel__header {
-    top: max(14px, env(safe-area-inset-top));
-    left: max(14px, env(safe-area-inset-left));
-
-    max-width: calc(100vw - 72px);
-
-    strong {
-      font-size: 14px;
-    }
-  }
-
-  .fk-video-reel__overlay {
-    left: 0;
-    right: 68px;
-    bottom: 0;
-
-    padding:
-      20px
-      10px
-      calc(72px + env(safe-area-inset-bottom))
-      max(12px, env(safe-area-inset-left));
-
-    background: linear-gradient(
-      to top,
-      rgba(0, 0, 0, 0.84),
-      rgba(0, 0, 0, 0.45) 50%,
-      rgba(0, 0, 0, 0)
-    );
-  }
-
-  .fk-video-reel__caption {
-    font-size: 14px;
-    line-height: 1.45;
-  }
-
+  // Rail sits beside the canvas rather than over the video.
   .fk-video-reel__actions {
-    right: max(6px, env(safe-area-inset-right));
-
-    bottom: max(76px, calc(66px + env(safe-area-inset-bottom)));
-
-    gap: 9px;
-
-    max-height: calc(100dvh - 150px);
-
-    button {
-      min-width: 40px;
-      min-height: 40px;
-
-      padding: 5px;
-
-      gap: 3px;
-
-      svg {
-        width: 23px;
-        height: 23px;
-      }
-
-      span {
-        max-width: 44px;
-
-        font-size: 10px;
-      }
-    }
+    position: static;
+    align-self: flex-end;
+    margin-bottom: 24px;
   }
 
-  .fk-video-reel__media-controls {
-    right: max(8px, env(safe-area-inset-right));
-
-    bottom: max(72px, calc(62px + env(safe-area-inset-bottom)));
-
-    gap: 6px;
-  }
-
-  .fk-video-reel__media-control {
-    width: 36px;
-    height: 36px;
-
-    font-size: 16px;
-  }
-
-  .fk-video-reel__more-menu {
-    right: 0;
-    bottom: 42px;
-
-    min-width: 155px;
-    max-width: calc(100vw - 24px);
-  }
-
-  .fk-video-reel__progress {
-    left: max(10px, env(safe-area-inset-left));
-    right: max(10px, env(safe-area-inset-right));
-
-    bottom: max(7px, env(safe-area-inset-bottom));
-
-    gap: 6px;
-
-    input[type="range"] {
-      min-width: 0;
-    }
-
-    span {
-      min-width: 58px;
-
-      font-size: 10px;
-    }
+  .fk-video-reel__stepper {
+    position: absolute;
+    z-index: 6;
+    right: 28px;
+    top: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transform: translateY(-50%);
   }
 }
 
 /* ============================================================================
-   SMALL PHONES
+   MOTION
 ============================================================================ */
 
-@media (max-width: 480px) {
-  .fk-video-reel {
-    width: 100vw;
-    max-width: 100vw;
-
-    height: 100dvh;
-  }
-
-  .fk-video-reel__slide,
-  .fk-video-reel__media,
-  .fk-video-reel__video {
-    width: 100vw;
-    max-width: 100vw;
-
-    height: 100dvh;
-  }
-
-  .fk-video-reel__close {
-    width: 36px;
-    height: 36px;
-
-    top: max(10px, env(safe-area-inset-top));
-    right: max(10px, env(safe-area-inset-right));
-  }
-
-  .fk-video-reel__header {
-    top: max(11px, env(safe-area-inset-top));
-    left: max(11px, env(safe-area-inset-left));
-
-    strong {
-      font-size: 13px;
-    }
-  }
-
-  .fk-video-reel__overlay {
-    right: 62px;
-
-    padding:
-      16px
-      8px
-      calc(68px + env(safe-area-inset-bottom))
-      max(10px, env(safe-area-inset-left));
-  }
-
-  .fk-video-reel__caption {
-    font-size: 13px;
-    line-height: 1.4;
-  }
-
-  .fk-video-reel__actions {
-    right: max(4px, env(safe-area-inset-right));
-
-    bottom: max(72px, calc(60px + env(safe-area-inset-bottom)));
-
-    gap: 6px;
-
-    button {
-      min-width: 36px;
-      min-height: 36px;
-
-      padding: 4px;
-
-      svg {
-        width: 21px;
-        height: 21px;
-      }
-
-      span {
-        max-width: 40px;
-
-        font-size: 9px;
-      }
-    }
-  }
-
-  .fk-video-reel__media-controls {
-    right: max(6px, env(safe-area-inset-right));
-
-    bottom: max(68px, calc(58px + env(safe-area-inset-bottom)));
-
-    gap: 4px;
-  }
-
-  .fk-video-reel__media-control {
-    width: 34px;
-    height: 34px;
-
-    font-size: 15px;
-  }
-
-  .fk-video-reel__progress {
-    left: max(8px, env(safe-area-inset-left));
-    right: max(8px, env(safe-area-inset-right));
-
-    bottom: max(6px, env(safe-area-inset-bottom));
-
-    span {
-      min-width: 54px;
-
-      font-size: 9px;
-    }
+@keyframes fk-reel-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
-
-/* ============================================================================
-   VERY SMALL PHONES
-============================================================================ */
-
-@media (max-width: 360px) {
-  .fk-video-reel__overlay {
-    right: 56px;
-  }
-
-  .fk-video-reel__caption {
-    font-size: 12px;
-  }
-
-  .fk-video-reel__actions {
-    right: 3px;
-
-    gap: 4px;
-
-    button {
-      min-width: 33px;
-      min-height: 33px;
-
-      padding: 3px;
-
-      svg {
-        width: 19px;
-        height: 19px;
-      }
-
-      span {
-        max-width: 36px;
-
-        font-size: 8px;
-      }
-    }
-  }
-
-  .fk-video-reel__media-control {
-    width: 32px;
-    height: 32px;
-
-    font-size: 14px;
-  }
-}
-
-/* ============================================================================
-   LANDSCAPE PHONES
-============================================================================ */
-
-@media (max-width: 900px) and (orientation: landscape) {
-  .fk-video-reel__slide,
-  .fk-video-reel__media,
-  .fk-video-reel__video {
-    height: 100dvh;
-    min-height: 100dvh;
-  }
-
-  .fk-video-reel__actions {
-    bottom: max(8px, env(safe-area-inset-bottom));
-
-    gap: 4px;
-
-    button {
-      min-width: 34px;
-      min-height: 34px;
-
-      svg {
-        width: 20px;
-        height: 20px;
-      }
-
-      span {
-        font-size: 8px;
-      }
-    }
-  }
-
-  .fk-video-reel__overlay {
-    padding-bottom: 18px;
-  }
-
-  .fk-video-reel__progress {
-    bottom: max(4px, env(safe-area-inset-bottom));
-  }
-}
-
-/* ============================================================================
-   TOUCH DEVICES
-============================================================================ */
-
-@media (hover: none) and (pointer: coarse) {
-  .fk-video-reel__close,
-  .fk-video-reel__actions button,
-  .fk-video-reel__media-control {
-    touch-action: manipulation;
-  }
-
-  .fk-video-reel__close:hover {
-    background: rgba(10, 34, 64, 0.6);
-  }
-
-  .fk-video-reel__media-control:hover {
-    background: rgba(0, 0, 0, 0.5);
-  }
-}
-
-/* ============================================================================
-   REDUCED MOTION
-============================================================================ */
 
 @media (prefers-reduced-motion: reduce) {
   .fk-video-reel__scroller {
     scroll-behavior: auto;
   }
 
-  .fk-video-reel__close,
-  .fk-video-reel__actions button,
-  .fk-video-reel__media-control {
+  .fk-video-reel__buffering svg {
+    animation: none;
+  }
+
+  .fk-video-reel__action-icon {
     transition: none;
   }
+}
+
+/* Specificity guard against `.fk-app button { font: inherit }`. */
+.fk-video-reel .fk-video-reel__follow {
+  font-size: 12.5px;
+}
+
+.fk-video-reel .fk-video-reel__more {
+  font-size: 13px;
+}
+
+.fk-video-reel .fk-video-reel__action {
+  font-size: 12px;
 }

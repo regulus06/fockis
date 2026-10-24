@@ -1,5 +1,6 @@
 import React, {
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -17,7 +18,12 @@ import FockisCreatePost from "../../components/fockis/FockisCreatePost";
 import FockisStoriesRail from "../../components/fockis/FockisStoriesRail";
 
 import type { FockisEvent } from "../../features/events/types/event.types";
-import { eventsApi } from "../../features/events/services/eventsApi";
+import { eventsApi, isAbortError } from "../../features/events/services/eventsApi";
+import EventFeedCard from "../../features/events/components/EventFeedCard";
+import { useEventClock } from "../../features/events/hooks/useEventClock";
+import { readStoredLocation } from "../../features/events/hooks/useViewerLocation";
+import { isEventActive } from "../../features/events/utils/eventTime";
+import type { PlacedFeedEvent } from "../../features/events/utils/feedEventPlacement";
 
 import FockisPostCard, {
   buildMediaList,
@@ -38,7 +44,6 @@ import {
 } from "../../features/marketing/utils/adFrequency";
 
 import LiveNowRail from "./LiveNowRail";
-import CreateEventPrompt from "./CreateEventPrompt";
 import FockisVideoReel from "./FockisVideoReel";
 import FeedRailInsertions from "./FeedRailInsertions";
 
@@ -48,7 +53,7 @@ import {
 } from "./liveStreams";
 
 function FeedInner() {
-  const { theme } =
+  const { theme, toggleTheme } =
     useFockisTheme();
 
   const feed =
@@ -129,56 +134,133 @@ function FeedInner() {
     );
   }
 
+  /*
+   * EVENTS RAIL
+   * A small, ranked set from GET /events/sections (never the whole events
+   * collection). The server only returns active events; the client clock
+   * removes any that end while the page stays open, and the rail is
+   * revalidated every few minutes and when the tab becomes visible.
+   */
   const [
     events,
     setEvents,
   ] = useState<FockisEvent[]>([]);
 
   const [
+    eventsRailTitle,
+    setEventsRailTitle,
+  ] = useState("Events You Might Like");
+
+  const [
     eventsLoading,
     setEventsLoading,
   ] = useState(true);
 
+  const [
+    eventsRevalidate,
+    setEventsRevalidate,
+  ] = useState(0);
+
   useEffect(() => {
-    let mounted = true;
+    const controller = new AbortController();
 
-    async function loadEvents() {
-      try {
-        setEventsLoading(true);
+    eventsApi
+      .sections(
+        { location: readStoredLocation(), radiusKm: 50, limit: 10 },
+        controller.signal,
+      )
+      .then((sections) => {
+        let title = "Upcoming Events";
+        let list = sections.upcoming;
 
-        const result =
-          await eventsApi.getAll();
-
-        if (
-          mounted &&
-          Array.isArray(result)
-        ) {
-          setEvents(result);
+        if (sections.nearby.length >= 2) {
+          title = "Upcoming Near You";
+          list = sections.nearby;
+        } else if (sections.recommended.length > 0) {
+          title = "Events You Might Like";
+          list = sections.recommended;
+        } else if (sections.happeningNow.length + sections.today.length > 0) {
+          title = "Happening Today";
+          list = [...sections.happeningNow, ...sections.today];
         }
-      } catch (error) {
-        console.error(
-          "[FockisFeedPage] Failed to load events:",
-          error,
-        );
 
-        if (mounted) {
-          setEvents([]);
-        }
-      } finally {
-        if (mounted) {
-          setEventsLoading(
-            false,
+        setEventsRailTitle(title);
+        setEvents(list);
+      })
+      .catch((error) => {
+        if (!isAbortError(error)) {
+          console.error(
+            "[FockisFeedPage] Failed to load events:",
+            error,
           );
         }
-      }
-    }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setEventsLoading(false);
+        }
+      });
 
-    void loadEvents();
+    return () => controller.abort();
+  }, [eventsRevalidate]);
+
+  useEffect(() => {
+    const bump = () => setEventsRevalidate((value) => value + 1);
+    const interval = window.setInterval(bump, 5 * 60_000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        bump();
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
 
     return () => {
-      mounted = false;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
+
+  // Rail events are already on screen: keep them out of the feed cards.
+  const { markEventsShown } = feed;
+
+  useEffect(() => {
+    markEventsShown(events.map((event) => event.id));
+  }, [events, markEventsShown]);
+
+  /*
+   * EVENT CARDS BETWEEN POSTS
+   * Grouped by the post they follow. Expired or cancelled events drop out
+   * at their end instant (useEventClock), without waiting for a reload.
+   */
+  const feedEventItems = feed.feedEvents;
+  const feedEventsNow = useEventClock(
+    useMemo(
+      () => feedEventItems.map((item) => item.event),
+      [feedEventItems],
+    ),
+  );
+
+  const eventsByAnchor = useMemo(() => {
+    const railIds = new Set(events.map((event) => event.id));
+    const map = new Map<string, PlacedFeedEvent[]>();
+
+    for (const item of feedEventItems) {
+      if (
+        railIds.has(item.event.id) ||
+        !isEventActive(item.event, feedEventsNow)
+      ) {
+        continue;
+      }
+
+      map.set(item.anchorPostId, [
+        ...(map.get(item.anchorPostId) ?? []),
+        item,
+      ]);
+    }
+
+    return map;
+  }, [feedEventItems, feedEventsNow, events]);
 
   function handleCreateEvent() {
     navigate(
@@ -287,6 +369,15 @@ function FeedInner() {
         </button>
 
         <div className="fk-mobile-header__brand">
+          <span className="fk-mobile-header__logo" style={{ overflow: "hidden", padding: 0 }}>
+            <img
+              src="/brand/fockis-icon-96.png"
+              alt=""
+              width={34}
+              height={34}
+              style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit", display: "block" }}
+            />
+          </span>
           <span className="fk-mobile-header__logo-text">Fockis</span>
         </div>
       </header>
@@ -343,6 +434,8 @@ function FeedInner() {
               notificationCount={
                 feed.notificationCount
               }
+              theme={theme}
+              onToggleTheme={toggleTheme}
             />
 
             <FockisStoriesRail
@@ -436,7 +529,7 @@ function FeedInner() {
 
                 return (
                   <React.Fragment
-                    key={post.id}
+                    key={post.feedKey ?? post.id}
                   >
                     <FockisPostCard
                       post={post}
@@ -553,9 +646,21 @@ function FeedInner() {
                       }
                     />
 
+                    {(eventsByAnchor.get(post.id) ?? []).map(
+                      (item) => (
+                        <EventFeedCard
+                          key={item.key}
+                          event={item.event}
+                          now={feedEventsNow}
+                          onDismiss={feed.dismissFeedEvent}
+                        />
+                      ),
+                    )}
+
                     <FeedRailInsertions
                       index={index}
                       events={events}
+                      eventsTitle={eventsRailTitle}
                       eventsLoading={
                         eventsLoading
                       }

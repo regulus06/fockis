@@ -50,7 +50,7 @@
 
     margin: 0;
 
-    color: #b97812;
+    color: #1570ef;
 
     font-family: fockis.$font-body;
     font-size: 11px;
@@ -96,16 +96,12 @@
   }
 
   .accent {
-    color: #b97812;
+    color: #1570ef;
   }
 
   .mono {
-    font-family:
-      "SFMono-Regular",
-      Consolas,
-      "Liberation Mono",
-      Menlo,
-      monospace;
+    font-family: inherit;
+    font-variant-numeric: tabular-nums;
   }
 
   /* --------------------------------------------------------------------------
@@ -127,7 +123,7 @@
     }
 
     &:focus-visible {
-      outline: 3px solid rgba(240, 169, 62, 0.45);
+      outline: 3px solid rgba(21, 112, 239, 0.45);
       outline-offset: 4px;
       border-radius: 4px;
     }
@@ -187,7 +183,7 @@
     }
 
     &:focus-visible {
-      outline: 3px solid rgba(240, 169, 62, 0.4);
+      outline: 3px solid rgba(21, 112, 239, 0.4);
       outline-offset: 3px;
     }
 
@@ -221,14 +217,14 @@
 
   .btn-amber {
     color: #172033;
-    background: #f0a93e;
-    border-color: #f0a93e;
+    background: #1570ef;
+    border-color: #1570ef;
     box-shadow: 0 8px 22px rgba(214, 144, 31, 0.2);
 
     &:hover {
       color: #111827;
-      background: #d6901f;
-      border-color: #d6901f;
+      background: #0b5bd3;
+      border-color: #0b5bd3;
       box-shadow: 0 11px 28px rgba(214, 144, 31, 0.3);
     }
   }
@@ -244,7 +240,7 @@
     background:
       radial-gradient(
         circle at 88% 18%,
-        rgba(240, 169, 62, 0.18),
+        rgba(21, 112, 239, 0.18),
         transparent 26%
       ),
       linear-gradient(
@@ -378,7 +374,7 @@
     }
 
     &:focus-visible {
-      outline: 3px solid rgba(240, 169, 62, 0.45);
+      outline: 3px solid rgba(21, 112, 239, 0.45);
       outline-offset: 3px;
     }
   }
@@ -402,7 +398,7 @@
     background:
       radial-gradient(
         circle at 88% 18%,
-        rgba(240, 169, 62, 0.2),
+        rgba(21, 112, 239, 0.2),
         transparent 25%
       ),
       linear-gradient(
@@ -428,7 +424,7 @@
       width: 360px;
       height: 360px;
 
-      border: 1px solid rgba(240, 169, 62, 0.08);
+      border: 1px solid rgba(21, 112, 239, 0.08);
       border-radius: 50%;
 
       pointer-events: none;
@@ -444,7 +440,7 @@
       width: 270px;
       height: 270px;
 
-      border: 1px solid rgba(240, 169, 62, 0.13);
+      border: 1px solid rgba(21, 112, 239, 0.13);
       border-radius: 50%;
 
       pointer-events: none;
@@ -461,7 +457,7 @@
     }
 
     .eyebrow {
-      color: #f0a93e;
+      color: #8fb8ff;
     }
 
     p {
@@ -469,8 +465,8 @@
     }
 
     .btn-amber {
-      color: #152033;
-      background: #f0a93e;
+      color: #ffffff;
+      background: #1570ef;
     }
   }
 
@@ -509,7 +505,7 @@
     background:
       radial-gradient(
         circle at 82% 14%,
-        rgba(240, 169, 62, 0.16),
+        rgba(21, 112, 239, 0.16),
         transparent 28%
       ),
       linear-gradient(
@@ -547,7 +543,7 @@
       width: 460px;
       height: 460px;
 
-      border: 1px solid rgba(240, 169, 62, 0.08);
+      border: 1px solid rgba(21, 112, 239, 0.08);
       border-radius: 50%;
 
       pointer-events: none;
@@ -563,7 +559,7 @@
     }
 
     .eyebrow {
-      color: #f0a93e;
+      color: #8fb8ff;
     }
 
     h2 {
@@ -591,11 +587,11 @@
           transform: translateY(-4px);
 
           background: rgba(255, 255, 255, 0.085);
-          border-color: rgba(240, 169, 62, 0.3);
+          border-color: rgba(58, 139, 255, 0.4);
         }
 
         svg {
-          color: #f0a93e;
+          color: #8fb8ff;
           stroke-width: 2.2;
         }
 
@@ -639,7 +635,7 @@
         width: 250px;
         height: 250px;
 
-        border: 1px solid rgba(240, 169, 62, 0.14);
+        border: 1px solid rgba(21, 112, 239, 0.14);
         border-radius: 50%;
 
         pointer-events: none;

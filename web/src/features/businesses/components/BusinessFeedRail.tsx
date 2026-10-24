@@ -1,305 +1,177 @@
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import {
-  businessesApi,
-} from "../services/businessesApi";
+import { Link } from "react-router-dom";
+
+import { ArrowRight, Building2 } from "lucide-react";
+
+import { businessesApi } from "../services/businessesApi";
 
 import type {
   Business,
+  BusinessCategory,
 } from "../types/business.types";
 
+import BusinessSpotlightCard from "./BusinessSpotlightCard";
+
+import {
+  BusinessCardSkeleton,
+  RailNav,
+  useRailScroll,
+} from "./BusinessUi";
+
+import { dedupeById } from "../utils/businessUtils";
+
+import "../styles/BusinessUi.scss";
 import "../styles/BusinessFeedRail.scss";
 
 
 /* ============================================================================
    BUSINESS FEED RAIL
+
+   Horizontal rail of published businesses.
+
+   - In the Fockis Feed it is rendered without props and shows the latest
+     published businesses.
+   - On a business profile it shows related businesses: same category,
+     excluding the business being viewed.
+
+   The root and scroller class names (.fk-business-feed-rail,
+   .fk-business-feed-rail__scroller) are kept because the feed page styles
+   target them.
 ============================================================================ */
 
-export default function BusinessFeedRail() {
+interface Props {
+  title?: string;
+  description?: string;
+  category?: BusinessCategory;
+  excludeId?: string;
+  limit?: number;
+  /*
+   * Hide the whole rail when there is nothing to show (used for related
+   * businesses). The feed keeps its empty state.
+   */
+  hideWhenEmpty?: boolean;
+}
 
-  const [
-    businesses,
-    setBusinesses,
-  ] = useState<Business[]>([]);
+export default function BusinessFeedRail({
+  title = "Businesses on Fockis",
+  description,
+  category,
+  excludeId,
+  limit = 12,
+  hideWhenEmpty = false,
+}: Props) {
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
 
-
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
-
-
-  const [
-    error,
-    setError,
-  ] = useState<string | null>(null);
-
-
+  const { trackRef, canPrev, canNext, scrollBy } = useRailScroll();
 
   useEffect(() => {
-
-    async function loadBusinesses() {
-
-      try {
-
-        setLoading(true);
-        setError(null);
-
-
-        const data =
-          await businessesApi.getAll();
-
-
-        setBusinesses(data);
-
-
-      } catch (err) {
-
-        console.error(
-          "[BusinessFeedRail] Failed",
-          err,
-        );
-
-
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to load businesses",
-        );
-
-
-      } finally {
-
-        setLoading(false);
-
-      }
-
-    }
-
-
-    loadBusinesses();
-
-  }, []);
-
-
-
-
-
-  if (loading) {
-
-    return (
-
-      <section className="fk-business-feed-rail">
-
-        <div className="fk-business-feed-rail__header">
-
-          <h3 className="fk-business-feed-rail__title">
-            Businesses
-          </h3>
-
-        </div>
-
-
-        <p className="fk-business-feed-rail__status">
-          Loading businesses...
-        </p>
-
-      </section>
-
-    );
-
-  }
-
-
-
-
-
-  if (error) {
-
-    return (
-
-      <section className="fk-business-feed-rail">
-
-        <div className="fk-business-feed-rail__header">
-
-          <h3 className="fk-business-feed-rail__title">
-            Businesses
-          </h3>
-
-        </div>
-
-
-        <p className="fk-business-feed-rail__status fk-business-feed-rail__status--error">
-          {error}
-        </p>
-
-      </section>
-
-    );
-
-  }
-
-
-
-
-
-  if (!businesses.length) {
-
-    return (
-
-      <section className="fk-business-feed-rail">
-
-        <div className="fk-business-feed-rail__header">
-
-          <h3 className="fk-business-feed-rail__title">
-            Businesses
-          </h3>
-
-        </div>
-
-
-        <p className="fk-business-feed-rail__status">
-          No businesses available.
-        </p>
-
-      </section>
-
-    );
-
-  }
-
-
-
-
-
-  return (
-
-    <section className="fk-business-feed-rail">
-
-
-      <div className="fk-business-feed-rail__header">
-
-        <h3 className="fk-business-feed-rail__title">
-          Businesses
-        </h3>
-
-      </div>
-
-
-
-
-      {/* ==========================================================================
-          SCROLLER
-
-          This is the element FockisFeedPage.scss targets for horizontal
-          scroll behavior (overflow-x: auto, touch-action: pan-x, mobile
-          width overrides, etc). It must keep this exact class name.
-      ========================================================================== */}
-
-      <div className="fk-business-feed-rail__scroller">
-
-
-        {
-          businesses.map(
-            (business) => (
-
-              <article
-
-                key={
-                  business.id
-                }
-
-                className="fk-business-card"
-
-              >
-
-
-                {
-                  business.logoUrl ? (
-
-                    <img
-
-                      src={
-                        business.logoUrl
-                      }
-
-                      alt={
-                        business.name
-                      }
-
-                      className="fk-business-card__logo"
-
-                    />
-
-                  ) : (
-
-                    <div className="fk-business-card__logo-placeholder">
-
-                      🏪
-
-                    </div>
-
-                  )
-
-                }
-
-
-
-
-
-                <div className="fk-business-card__content">
-
-
-                  <h4 className="fk-business-card__name">
-
-                    {
-                      business.name
-                    }
-
-                  </h4>
-
-
-
-
-                  <p className="fk-business-card__description">
-
-                    {
-                      business.description ||
-                      "No description available."
-                    }
-
-                  </p>
-
-
-
-                  <button
-                    type="button"
-                    className="fk-business-card__button"
-                  >
-
-                    View Business
-
-                  </button>
-
-
-                </div>
-
-
-              </article>
-
-            )
-          )
+    let mounted = true;
+
+    setLoading(true);
+    setFailed(false);
+
+    businessesApi
+      .list({
+        category,
+        sort: "newest",
+        // Fetch one extra so excluding the current business still fills
+        // the rail.
+        limit: excludeId ? limit + 1 : limit,
+      })
+      .then((data) => {
+        if (mounted) {
+          setBusinesses(data);
         }
+      })
+      .catch(() => {
+        if (mounted) {
+          setFailed(true);
+          setBusinesses([]);
+        }
+      })
+      .finally(() => {
+        if (mounted) {
+          setLoading(false);
+        }
+      });
 
+    return () => {
+      mounted = false;
+    };
+  }, [category, excludeId, limit]);
 
-      </div>
-
-
-    </section>
-
+  const visible = useMemo(
+    () =>
+      dedupeById(businesses)
+        .filter((business) => business.id !== excludeId)
+        .slice(0, limit),
+    [businesses, excludeId, limit],
   );
 
+  if (!loading && hideWhenEmpty && (failed || visible.length === 0)) {
+    return null;
+  }
+
+  return (
+    <section
+      className="fkb fk-business-feed-rail fkb-feed-rail"
+      aria-label={title}
+    >
+      <div className="fkb-section-head">
+        <div>
+          <h2 className="fkb-feed-rail__title">{title}</h2>
+          {description && <p>{description}</p>}
+        </div>
+
+        <div className="fkb-section-head__actions">
+          <RailNav
+            label={title}
+            canPrev={canPrev}
+            canNext={canNext}
+            onScroll={scrollBy}
+          />
+
+          <Link to="/businesses" className="fkb-link">
+            See all
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
+      </div>
+
+      {!loading && failed ? (
+        <p className="fkb-feed-rail__status">
+          Businesses could not be loaded right now.
+        </p>
+      ) : !loading && visible.length === 0 ? (
+        <div className="fkb-feed-rail__empty">
+          <Building2 size={20} aria-hidden="true" />
+          <span>No businesses have been published yet.</span>
+        </div>
+      ) : (
+        <div className="fkb-rail">
+          <div
+            ref={trackRef}
+            className="fkb-rail__track fk-business-feed-rail__scroller"
+            role={loading ? "status" : undefined}
+            aria-label={loading ? "Loading businesses" : undefined}
+          >
+            {loading
+              ? Array.from({ length: 3 }, (_, index) => (
+                  <BusinessCardSkeleton key={index} />
+                ))
+              : visible.map((business) => (
+                  <BusinessSpotlightCard
+                    key={business.id}
+                    business={business}
+                    variant="compact"
+                  />
+                ))}
+          </div>
+        </div>
+      )}
+    </section>
+  );
 }

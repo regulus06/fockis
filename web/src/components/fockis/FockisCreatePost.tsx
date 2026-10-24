@@ -18,6 +18,9 @@ import {
   IconWaves,
 } from "./FockisIcons";
 
+import { useNavigate } from "react-router-dom";
+import { CircleDollarSign, Sparkles } from "lucide-react";
+
 import "../../styles/FockisCreatePost.scss";
 
 import { sellerApi } from "../../features/seller/services/sellerApi";
@@ -539,6 +542,8 @@ COMPONENT
 export default function FockisCreatePost({
   onPostCreated,
 }: FockisCreatePostProps) {
+  const navigate = useNavigate();
+
   /* ==========================================================================
   POST STATE
   ========================================================================== */
@@ -1359,6 +1364,17 @@ export default function FockisCreatePost({
               maxLength={5000}
               rows={1}
             />
+
+            {/* Existing AI Studio (/create/ai) */}
+            <button
+              type="button"
+              className="fk-create-post__ai"
+              onClick={() => navigate("/create/ai")}
+              aria-label="Create with Fockis AI Studio"
+            >
+              <Sparkles size={16} aria-hidden="true" />
+              <span>AI</span>
+            </button>
           </div>
 
           {content.length > 0 && (
@@ -1525,15 +1541,23 @@ export default function FockisCreatePost({
                 openMonetization
               }
             >
-              <span aria-hidden="true">
-                💰
-              </span>
+              <CircleDollarSign size={17} aria-hidden="true" />
 
               <span>
                 {monetizationActive
                   ? "Monetized"
                   : "Monetize"}
               </span>
+            </button>
+
+            <button
+              type="button"
+              data-tool="ai"
+              className="fk-create-post__tool"
+              onClick={() => navigate("/create/ai")}
+            >
+              <Sparkles size={17} aria-hidden="true" />
+              <span>Create with AI</span>
             </button>
 
             {hasContent && (

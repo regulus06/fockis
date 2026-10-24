@@ -109,6 +109,81 @@ function formatDate(value: unknown): string {
 }
 
 
+function normalizeStatusKey(value: unknown): string {
+  return readString(value).toLowerCase().replace(/[\s-]+/g, '_');
+}
+
+function isValidDateValue(value: unknown): boolean {
+  if (typeof value !== 'string' && typeof value !== 'number' && !(value instanceof Date)) return false;
+  return !Number.isNaN(new Date(value).getTime());
+}
+
+/** Find a real timestamp recorded for a status in order/shipment history. */
+function findStatusTimestamp(order: UnknownRecord, statusKey: string): unknown {
+  const aliases: Record<string, string[]> = {
+    paid: ['paid', 'payment_succeeded', 'order_placed', 'created'],
+    processing: ['processing', 'confirmed', 'order_processing'],
+    ready_to_ship: ['ready_to_ship', 'ready_for_shipment', 'packed'],
+    shipped: ['shipped', 'label_purchased', 'dispatched', 'shipment_created'],
+    in_transit: ['in_transit', 'transit', 'accepted', 'intransit'],
+    out_for_delivery: ['out_for_delivery', 'outfordelivery'],
+    delivered: ['delivered', 'delivery_confirmed'],
+  };
+  const wanted = new Set([statusKey, ...(aliases[statusKey] ?? [])]);
+  const historyKeys = ['statusHistory', 'status_history', 'statusEvents', 'status_events', 'timeline', 'trackingEvents', 'tracking_events', 'events', 'history'];
+  const timestampKeys = ['timestamp', 'occurredAt', 'occurred_at', 'createdAt', 'created_at', 'updatedAt', 'updated_at', 'date', 'time', 'eventTime', 'event_time'];
+
+  const inspect = (value: unknown): unknown => {
+    if (!Array.isArray(value)) return undefined;
+    for (let i = value.length - 1; i >= 0; i--) {
+      const event = value[i];
+      if (!isRecord(event)) continue;
+      const eventStatus = normalizeStatusKey(readValue(event, ['status', 'type', 'event', 'eventType', 'event_type', 'description', 'name']));
+      const timestamp = readValue(event, timestampKeys);
+      if (wanted.has(eventStatus) && isValidDateValue(timestamp)) return timestamp;
+    }
+    return undefined;
+  };
+
+  for (const key of historyKeys) {
+    const found = inspect(order[key]);
+    if (found !== undefined) return found;
+  }
+
+  const shipments = Array.isArray(order.shipments) ? order.shipments : [];
+  for (const shipment of shipments) {
+    if (!isRecord(shipment)) continue;
+    for (const key of historyKeys) {
+      const found = inspect(shipment[key]);
+      if (found !== undefined) return found;
+    }
+    // Some carrier responses store normalized milestone timestamps directly.
+    const directKeys: Record<string, string[]> = {
+      shipped: ['shippedAt', 'shipped_at', 'labelCreatedAt', 'label_created_at'],
+      in_transit: ['inTransitAt', 'in_transit_at'],
+      out_for_delivery: ['outForDeliveryAt', 'out_for_delivery_at'],
+      delivered: ['deliveredAt', 'delivered_at'],
+    };
+    const direct = readValue(shipment, directKeys[statusKey] ?? []);
+    if (isValidDateValue(direct)) return direct;
+  }
+
+  if (statusKey === 'paid') {
+    const created = readValue(order, ['placedAt', 'createdAt', 'created_at', 'orderDate', 'dateCreated']);
+    if (isValidDateValue(created)) return created;
+  }
+
+  // updatedAt is only a reliable milestone proxy for the currently recorded status,
+  // not for every earlier step.
+  const currentStatus = normalizeStatusKey(readValue(order, ['status', 'orderStatus', 'order_status']));
+  if (currentStatus === statusKey) {
+    const updated = readValue(order, ['updatedAt', 'updated_at']);
+    if (isValidDateValue(updated)) return updated;
+  }
+  return undefined;
+}
+
+
 
 function normalizeItem(value: unknown, index: number, fallbackLineTotal = 0) {
   const item = isRecord(value) ? value : {};
@@ -427,14 +502,21 @@ export default function ShopOrderDetailsPage() {
                   const currentIndex = statusIndex >= 0 ? statusIndex : (isPaid ? 0 : -1);
                   const complete = index <= currentIndex;
                   const current = index === currentIndex;
+                  const milestoneTimestamp = findStatusTimestamp(rawOrder ?? {}, step.key);
+                  const timestampText = milestoneTimestamp !== undefined
+                    ? formatDate(milestoneTimestamp)
+                    : 'Time not recorded';
                   return (
-                    <li key={step.key} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', opacity: complete ? 1 : 0.58 }}>
+                    <li key={step.key} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', opacity: complete ? 1 : 0.72 }}>
                       <span aria-hidden="true" style={{ width: 26, height: 26, flex: '0 0 26px', borderRadius: '50%', display: 'grid', placeItems: 'center', background: complete ? '#167847' : '#e8edf3', color: complete ? '#fff' : '#526174', fontSize: 13, fontWeight: 700 }}>
                         {complete ? '✓' : index + 1}
                       </span>
                       <div>
                         <div style={{ fontWeight: 700 }}>{step.label}{current ? ' · Current' : ''}</div>
                         <div style={{ color: '#657286', fontSize: 13, marginTop: 3 }}>{step.detail}</div>
+                        <div style={{ color: milestoneTimestamp !== undefined ? '#344054' : '#8a94a3', fontSize: 12, marginTop: 4, fontWeight: 600 }}>
+                          {milestoneTimestamp !== undefined ? `Date & time: ${timestampText}` : timestampText}
+                        </div>
                       </div>
                     </li>
                   );

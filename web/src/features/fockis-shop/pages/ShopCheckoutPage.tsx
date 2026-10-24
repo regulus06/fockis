@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 
 import { ShopHeader } from "../components/common/ShopHeader";
@@ -20,13 +21,15 @@ const CRUMBS = [
 function ShopCheckoutContent() {
   const checkout = useCheckout();
 
-  if (
-    checkout.checkoutItems.length === 0 ||
-    checkout.checkoutSellerGroups.length === 0
-  ) {
+  const hasCheckoutItems =
+    checkout.checkoutItems.length > 0 &&
+    checkout.checkoutSellerGroups.length > 0;
+
+  if (!hasCheckoutItems) {
     return (
       <main className="fk-container fk-page">
         <ShopBreadcrumbs items={CRUMBS} />
+
         <ShopEmptyState
           icon="🛒"
           title="Your cart is empty"
@@ -46,6 +49,7 @@ function ShopCheckoutContent() {
       <div className="fk-container fk-page fk-page--flush">
         <ShopBreadcrumbs items={CRUMBS} />
       </div>
+
       <CheckoutForm checkout={checkout} />
     </main>
   );

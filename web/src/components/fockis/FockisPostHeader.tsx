@@ -15,6 +15,8 @@ import {
   IconMore,
 } from "./FockisIcons";
 
+import { Globe, Lock, Users } from "lucide-react";
+
 import {
   fockisFollowApi,
 } from "../../features/gifts/fockisprofile/service/fockisFollowApi";
@@ -34,6 +36,9 @@ export interface FockisPostHeaderProps {
 
   createdAt?: string;
 
+  /** Backend audience value: "public" | "friends" | "private". */
+  audience?: string;
+
   menuOpen: boolean;
 
   canDelete: boolean;
@@ -43,6 +48,9 @@ export interface FockisPostHeaderProps {
   onEdit: () => void;
 
   onDelete: () => void;
+
+  /** Shown as "Report post" on other people's posts when provided. */
+  onReport?: () => void;
 
 }
 
@@ -333,6 +341,8 @@ export default function FockisPostHeader({
 
   createdAt,
 
+  audience,
+
   menuOpen,
 
   canDelete,
@@ -342,6 +352,8 @@ export default function FockisPostHeader({
   onEdit,
 
   onDelete,
+
+  onReport,
 
 }: FockisPostHeaderProps) {
 
@@ -388,6 +400,16 @@ export default function FockisPostHeader({
       normalizedUserId &&
       currentUserId ===
         normalizedUserId,
+    );
+
+
+  // Signed-in viewers can report posts that aren't their own.
+  const canReport =
+    Boolean(
+      onReport &&
+      currentUserId &&
+      normalizedUserId &&
+      !isOwnPost,
     );
 
 
@@ -559,6 +581,23 @@ export default function FockisPostHeader({
 
 
   /* ==========================================================================
+     AUDIENCE (only shown when the backend sent one)
+  ========================================================================== */
+
+  const normalizedAudience =
+    String(audience || "").toLowerCase();
+
+  const audienceInfo =
+    normalizedAudience === "public"
+      ? { label: "Public", Icon: Globe }
+      : normalizedAudience === "friends"
+        ? { label: "Friends", Icon: Users }
+        : normalizedAudience === "private"
+          ? { label: "Only me", Icon: Lock }
+          : null;
+
+
+  /* ==========================================================================
      RENDER
   ========================================================================== */
 
@@ -646,6 +685,23 @@ export default function FockisPostHeader({
             {relativeTime}
           </time>
 
+          {audienceInfo && (
+            <>
+              <span
+                className="fk-post__meta-dot"
+                aria-hidden="true"
+              />
+
+              <span
+                className="fk-post__audience"
+                title={audienceInfo.label}
+              >
+                <audienceInfo.Icon aria-hidden="true" />
+                {audienceInfo.label}
+              </span>
+            </>
+          )}
+
         </div>
 
       </div>
@@ -714,14 +770,14 @@ export default function FockisPostHeader({
 
 
         {menuOpen &&
-          canDelete && (
+          (canDelete || canReport) && (
 
           <div
             className="fk-post-menu"
             role="menu"
           >
 
-            {isOwnPost && (
+            {canDelete && isOwnPost && (
               <button
                 type="button"
                 className="fk-post-menu__edit"
@@ -732,14 +788,27 @@ export default function FockisPostHeader({
               </button>
             )}
 
-            <button
-              type="button"
-              className="fk-post-menu__delete"
-              onClick={onDelete}
-              role="menuitem"
-            >
-              Delete post
-            </button>
+            {canDelete && (
+              <button
+                type="button"
+                className="fk-post-menu__delete"
+                onClick={onDelete}
+                role="menuitem"
+              >
+                Delete post
+              </button>
+            )}
+
+            {canReport && (
+              <button
+                type="button"
+                className="fk-post-menu__edit fk-post-menu__report"
+                onClick={onReport}
+                role="menuitem"
+              >
+                Report post
+              </button>
+            )}
 
           </div>
 

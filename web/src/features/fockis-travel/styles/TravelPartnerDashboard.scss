@@ -223,7 +223,7 @@ color: #9e382f;
 }
 
 &__alert--warning {
-background: rgba(240, 169, 62, 0.12);
+background: rgba(21, 112, 239, 0.12);
 border-color: rgba(214, 144, 31, 0.28);
 color: #855813;
 }
@@ -257,7 +257,7 @@ display: flex;
 align-items: center;
 justify-content: center;
 overflow: hidden;
-border: 2px solid rgba(240, 169, 62, 0.65);
+border: 2px solid rgba(21, 112, 239, 0.65);
 border-radius: 16px;
 background:
 linear-gradient(
@@ -354,7 +354,7 @@ border: 1px solid rgba(63, 166, 106, 0.25);
 }
 
 .is-warning {
-background: rgba(240, 169, 62, 0.15);
+background: rgba(21, 112, 239, 0.15);
 color: #8a5a12;
 border: 1px solid rgba(214, 144, 31, 0.28);
 }
@@ -782,7 +782,7 @@ text-decoration: none;
 }
 
 &__operation-card:hover {
-border-color: rgba(240, 169, 62, 0.55);
+border-color: rgba(21, 112, 239, 0.55);
 background: rgba(255, 255, 255, 0.09);
 transform: translateY(-3px);
 }
@@ -801,7 +801,7 @@ align-items: center;
 justify-content: center;
 margin-bottom: 17px;
 border-radius: 12px;
-background: rgba(240, 169, 62, 0.14);
+background: rgba(21, 112, 239, 0.14);
 color: fockis.$gold-500;
 }
 

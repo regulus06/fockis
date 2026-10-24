@@ -10,9 +10,12 @@ import { Link } from "react-router-dom";
 
 import FockisPostHeader from "./FockisPostHeader";
 import FockisPostActions from "./FockisPostActions";
+import FockisRichText from "./FockisRichText";
+import { ImageOff, Play } from "lucide-react";
 import { IconRepost } from "./FockisIcons";
 
 import GiftModal from "../../features/gifts/components/GiftModal";
+import ReportDialog from "../../features/reports/components/ReportDialog";
 import GiftSendersModal from "../../features/gifts/components/GiftSendersModal";
 import { useGifts } from "../../features/gifts/hooks/useGifts";
 
@@ -65,6 +68,46 @@ function getStoredProfilePhoto(): string {
   }
 }
 
+/**
+ * Resolve the author's avatar from all supported feed payload shapes.
+ * Some endpoints provide `userPhoto`, while others populate `author` or
+ * `user` with the user document. Own posts can fall back to the cached
+ * current-user profile only when the author IDs match.
+ */
+function getPostAuthorPhoto(post: FockisPost): string {
+  const rawPost = post as FockisPost & Record<string, any>;
+  const nestedUser =
+    rawPost.author && typeof rawPost.author === "object"
+      ? rawPost.author
+      : rawPost.user && typeof rawPost.user === "object"
+        ? rawPost.user
+        : null;
+
+  const photo =
+    rawPost.userPhoto ||
+    nestedUser?.avatar ||
+    nestedUser?.userPhoto ||
+    nestedUser?.photo ||
+    nestedUser?.profilePhoto ||
+    nestedUser?.profilePicture ||
+    nestedUser?.profileImage ||
+    rawPost.authorPhoto ||
+    rawPost.profilePicture ||
+    rawPost.profileImage ||
+    "";
+
+  if (typeof photo === "string" && photo.trim()) {
+    return buildMediaUrl(photo.trim());
+  }
+
+  const currentId = String(getUserId() || "");
+  if (post.userId && currentId && String(post.userId) === currentId) {
+    return getStoredProfilePhoto();
+  }
+
+  return "";
+}
+
 function getCommentPhoto(comment: FockisPostComment): string {
   if (comment.userPhoto) return buildMediaUrl(comment.userPhoto);
   const cached = commentProfilePhotoCache.get(String(comment.userId || ""));
@@ -101,6 +144,15 @@ export interface FockisPostComment {
 export interface FockisPost {
   id: string;
 
+  /**
+   * Render key in the home feed. Equals `id` except for a For You post
+   * shown again after the feed was exhausted (see useFockisFeed).
+   */
+  feedKey?: string;
+
+  /** True for a post shown again after the For You feed was exhausted. */
+  feedRecycled?: boolean;
+
   user: string;
 
   userId?: string;
@@ -126,6 +178,9 @@ export interface FockisPost {
   views: number;
 
   giftsCount?: number;
+
+  /** Backend post audience ("public" | "friends" | "private"), when provided. */
+  audience?: string;
 
   likedBy: string[];
 
@@ -1495,6 +1550,9 @@ function FockisMediaViewer({
    POST CARD
 ============================================================================ */
 
+/* Tiles shown in the feed grid; the last one shows "+N" for the rest. */
+const MAX_GRID_TILES = 5;
+
 export default function FockisPostCard({
   post,
   interaction,
@@ -1535,6 +1593,9 @@ export default function FockisPostCard({
     useState(false);
 
   const [editingPost, setEditingPost] =
+    useState(false);
+
+  const [reportOpen, setReportOpen] =
     useState(false);
 
   const [editingPostText, setEditingPostText] =
@@ -1666,6 +1727,10 @@ export default function FockisPostCard({
     captionExpanded,
     setCaptionExpanded,
   ] = useState(false);
+
+  /* Media URLs that failed to load (shown as a placeholder instead). */
+  const [failedMedia, setFailedMedia] =
+    useState<Record<string, boolean>>({});
 
   /* ==========================================================================
      GIFTS
@@ -2422,7 +2487,8 @@ export default function FockisPostCard({
       <FockisPostHeader
         user={post.user}
         userId={post.userId}
-        userPhoto={post.userPhoto}
+        userPhoto={getPostAuthorPhoto(post)}
+        audience={post.audience}
         createdAt={
           post.createdAt
         }
@@ -2442,6 +2508,15 @@ export default function FockisPostCard({
         }
         onDelete={
           onDelete
+        }
+        onReport={
+          post.id
+            ? () => {
+                // Close the menu (onMenu toggles it) and open the dialog.
+                if (interaction.menuOpen) onMenu();
+                setReportOpen(true);
+              }
+            : undefined
         }
       />
 
@@ -2491,7 +2566,7 @@ export default function FockisPostCard({
         post.content && (
           <div className="fk-post__body">
             <p className="fk-post__caption">
-              {displayedCaption}
+              <FockisRichText text={displayedCaption} />
 
               {captionIsLong && (
                 <button
@@ -2518,49 +2593,67 @@ export default function FockisPostCard({
           MEDIA GRID
       ===================================================================== */}
 
-      {mediaItems.length >
-        0 && (
-        <div className="fk-post__media-grid">
-          {mediaItems.map(
-            (
-              item,
-              index,
-            ) => (
+      {mediaItems.length > 0 && (
+        <div
+          className="fk-post__media-grid"
+          data-count={Math.min(mediaItems.length, MAX_GRID_TILES)}
+        >
+          {mediaItems.slice(0, MAX_GRID_TILES).map((item, index) => {
+            const hiddenCount =
+              index === MAX_GRID_TILES - 1
+                ? mediaItems.length - MAX_GRID_TILES
+                : 0;
+
+            return (
               <button
                 type="button"
                 key={`${item.url}-${index}`}
                 className="fk-post__media-tile"
-                onClick={() =>
-                  handleMediaClick(
-                    index,
-                  )
-                }
+                onClick={() => handleMediaClick(index)}
                 aria-label={
-                  item.type ===
-                  "video"
-                    ? `Open video ${index + 1}`
-                    : `Open image ${index + 1}`
+                  hiddenCount > 0
+                    ? `Open media ${index + 1}, plus ${hiddenCount} more`
+                    : item.type === "video"
+                      ? `Play video ${index + 1}`
+                      : `Open image ${index + 1}`
                 }
               >
-                {item.type ===
-                "video" ? (
-                  <FockisVideoThumbnail
-                    src={
-                      item.url
-                    }
-                  />
+                {item.type === "video" ? (
+                  <>
+                    <FockisVideoThumbnail src={item.url} />
+                    <span className="fk-post__media-play" aria-hidden="true">
+                      <Play size={24} fill="currentColor" />
+                    </span>
+                  </>
+                ) : failedMedia[item.url] ? (
+                  <span className="fk-post__media-error">
+                    <ImageOff size={18} aria-hidden="true" />
+                    Image unavailable
+                  </span>
                 ) : (
                   <img
-                    src={
-                      item.url
-                    }
+                    src={item.url}
                     alt=""
+                    loading={index === 0 ? "eager" : "lazy"}
+                    decoding="async"
                     className="fk-post__media-preview"
+                    onError={() =>
+                      setFailedMedia((previous) => ({
+                        ...previous,
+                        [item.url]: true,
+                      }))
+                    }
                   />
                 )}
+
+                {hiddenCount > 0 && (
+                  <span className="fk-post__media-more" aria-hidden="true">
+                    +{hiddenCount}
+                  </span>
+                )}
               </button>
-            ),
-          )}
+            );
+          })}
         </div>
       )}
 
@@ -3052,6 +3145,17 @@ export default function FockisPostCard({
         onClose={
           closeGiftSendersModal
         }
+      />
+
+      {/* ====================================================================
+          REPORT POST
+      ===================================================================== */}
+
+      <ReportDialog
+        open={reportOpen}
+        targetType="post"
+        targetId={String(post.id)}
+        onClose={() => setReportOpen(false)}
       />
     </article>
   );

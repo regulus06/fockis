@@ -1,0 +1,320 @@
+@use "./travel-ui" as ui;
+
+// =============================================================================
+// Fockis Travel — search panel (components/TravelSearchPanel.tsx)
+// =============================================================================
+
+.ft-search {
+  position: relative;
+  border: 1px solid ui.$line-soft;
+  border-radius: ui.$radius-lg;
+  background: ui.$white;
+  box-shadow: ui.$shadow-panel;
+  font-family: ui.$font;
+  text-align: left;
+
+  // ------------------------------------------------------------------ tabs
+  &__tabs {
+    display: flex;
+    gap: 4px;
+    padding: 0 12px;
+    border-bottom: 1px solid ui.$line;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &__tab {
+    position: relative;
+    display: inline-flex;
+    flex: 1 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 54px;
+    padding: 0 16px;
+    border: 0;
+    background: transparent;
+    color: ui.$ink-2;
+    font: 500 14px/1 ui.$font;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.15s ease;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: -1px;
+      height: 3px;
+      border-radius: 3px 3px 0 0;
+      background: transparent;
+      transition: background-color 0.15s ease;
+    }
+
+    &:hover {
+      color: ui.$blue;
+    }
+
+    &.is-active {
+      color: ui.$blue;
+      font-weight: 600;
+
+      &::after {
+        background: ui.$blue;
+      }
+    }
+
+    @include ui.focus-ring;
+
+    &:focus-visible {
+      outline-offset: -3px;
+    }
+  }
+
+  // ---------------------------------------------------------------- fields
+  &__fields {
+    display: grid;
+    grid-template-columns: minmax(0, 2.1fr) repeat(3, minmax(0, 1fr)) auto;
+    gap: 12px;
+    align-items: stretch;
+    padding: 18px 20px 20px;
+
+    &--single {
+      grid-template-columns: minmax(0, 2.1fr) repeat(2, minmax(0, 1fr)) auto;
+    }
+
+    &--range.ft-search__fields--no-people {
+      grid-template-columns: minmax(0, 2.1fr) repeat(2, minmax(0, 1fr)) auto;
+    }
+  }
+
+  &__field {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+    min-height: 58px;
+    padding: 8px 14px;
+    border: 1px solid ui.$line;
+    border-radius: ui.$radius-sm;
+    background: ui.$white;
+    cursor: text;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+      border-color: #cfd4dc;
+    }
+
+    &:focus-within {
+      border-color: ui.$blue;
+      box-shadow: 0 0 0 3px ui.$blue-ring;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: ui.$ink;
+      font: 400 14px/1.4 ui.$font;
+      appearance: none;
+    }
+
+    input::placeholder {
+      color: ui.$subtle;
+    }
+
+    input[type="search"]::-webkit-search-cancel-button {
+      cursor: pointer;
+    }
+  }
+
+  &__field--people {
+    cursor: pointer;
+
+    select {
+      cursor: pointer;
+      padding-right: 18px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right center;
+    }
+  }
+
+  &__label {
+    color: ui.$ink;
+    font: 600 13px/1.2 ui.$font;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__date {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+
+    > svg {
+      flex-shrink: 0;
+      color: ui.$subtle;
+      pointer-events: none;
+    }
+
+    input {
+      position: relative;
+      z-index: 1;
+      cursor: pointer;
+    }
+
+    // Hide the browser's own calendar glyph; ours sits at the right.
+    input::-webkit-calendar-picker-indicator {
+      opacity: 0;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+  }
+
+  // "Add dates" placeholder: visible only while the input is empty and not
+  // being edited, so keyboard users still see the native segments.
+  &__field--date:not(.has-value):not(:focus-within) input {
+    color: transparent;
+  }
+
+  &__date-text {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: ui.$subtle;
+    font: 400 14px/1.4 ui.$font;
+    pointer-events: none;
+  }
+
+  &__field--date:focus-within &__date-text {
+    display: none;
+  }
+
+  &__submit {
+    @include ui.btn-primary;
+    min-width: 132px;
+    min-height: 58px;
+    padding: 0 26px;
+    font-size: 16px;
+  }
+
+  &__submit-icon {
+    display: none;
+  }
+
+  &__error {
+    margin: -8px 20px 16px;
+    color: ui.$danger;
+    font: 500 13px/1.4 ui.$font;
+  }
+
+  // ------------------------------------------------------------ responsive
+  @media (max-width: 1080px) {
+    &__fields,
+    &__fields--single,
+    &__fields--range.ft-search__fields--no-people {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    &__field--where {
+      grid-column: 1 / -1;
+    }
+
+    &__fields--single &__field--people,
+    &__fields--no-people &__field--date:last-of-type {
+      grid-column: span 2;
+    }
+
+    &__submit {
+      grid-column: 1 / -1;
+      min-height: 50px;
+    }
+
+    &__submit-icon {
+      display: block;
+    }
+  }
+
+  @media (max-width: 640px) {
+    border-radius: ui.$radius;
+
+    &__tabs {
+      padding: 0 4px;
+    }
+
+    &__tab {
+      flex: 0 0 auto;
+      min-height: 48px;
+      padding: 0 12px;
+      font-size: 13px;
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    &__fields {
+      gap: 8px;
+      padding: 12px;
+    }
+
+    &__field {
+      min-height: 54px;
+      padding: 7px 10px;
+    }
+
+    &__label {
+      font-size: 11.5px;
+    }
+
+    &__field input,
+    &__field select,
+    &__date-text {
+      font-size: 13px;
+    }
+
+    &__date > svg {
+      display: none;
+    }
+
+    &__submit {
+      min-height: 48px;
+    }
+
+    &__error {
+      margin: -4px 12px 12px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    &__fields,
+    &__fields--single,
+    &__fields--range.ft-search__fields--no-people {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    &__field--people {
+      grid-column: 1 / -1;
+    }
+  }
+}

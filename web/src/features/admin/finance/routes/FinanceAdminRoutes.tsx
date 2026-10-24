@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import FinanceSectionLayout from "../components/FinanceSectionLayout";
 
 import FinanceDashboardPage from "../pages/FinanceDashboardPage";
 import TransactionsPage from "../pages/TransactionsPage";
@@ -33,6 +34,7 @@ function guarded(
 export default function FinanceAdminRoutes(): React.ReactElement {
   return (
     <Routes>
+      <Route element={<FinanceSectionLayout />}>
       {/* ============================================================
           FINANCE DASHBOARD
           ============================================================ */}
@@ -202,6 +204,7 @@ export default function FinanceAdminRoutes(): React.ReactElement {
           />
         }
       />
+      </Route>
     </Routes>
   );
 }

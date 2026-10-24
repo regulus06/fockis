@@ -7,6 +7,8 @@ import {
   IconMessages,
   IconSun,
   IconMoon,
+  IconHome,
+  IconFriends,
 } from "./FockisIcons";
 
 import { ListVideo } from "lucide-react";
@@ -30,6 +32,19 @@ export interface FockisTopBarProps {
   isPlaylistsActive?: boolean;
 
   theme?: "light" | "dark";
+
+  /*
+   * Optional extras. Each one renders only when provided, so existing
+   * callers keep the exact same top bar.
+   */
+  showPlaylists?: boolean;
+  onHomeClick?: () => void;
+  onFriendsClick?: () => void;
+  profile?: {
+    name: string;
+    avatarUrl?: string;
+    onClick: () => void;
+  };
 }
 
 /* ============================================================================
@@ -46,6 +61,10 @@ export default function FockisTopBar({
   notificationCount = 0,
   isPlaylistsActive = false,
   theme = "light",
+  showPlaylists = true,
+  onHomeClick,
+  onFriendsClick,
+  profile,
 }: FockisTopBarProps) {
   const [query, setQuery] = useState("");
 
@@ -65,10 +84,12 @@ export default function FockisTopBar({
       ====================================================================== */}
 
       <div className="fk-topbar__logo">
+        {/* Official Fockis icon: public/brand (copied from mobile/Fockis-Mobile-Shell/assets/fockis-icon.png) */}
         <img
-          src="/Fockis-Logo/fockis1.png"
+          src="/brand/fockis-icon-96.png"
           alt="Fockis"
           className="fk-topbar__logo-image"
+          style={{ borderRadius: "24%", objectFit: "cover" }}
         />
 
         <span className="fk-topbar__logo-text">
@@ -100,26 +121,56 @@ export default function FockisTopBar({
       ====================================================================== */}
 
       <div className="fk-topbar__actions">
+        {/* HOME (optional) */}
+
+        {onHomeClick && (
+          <button
+            type="button"
+            className="fk-icon-btn fk-topbar__action fk-topbar__action--home"
+            onClick={onHomeClick}
+            aria-label="Home"
+            title="Home"
+          >
+            <IconHome size={20} />
+          </button>
+        )}
+
+        {/* FRIENDS (optional) */}
+
+        {onFriendsClick && (
+          <button
+            type="button"
+            className="fk-icon-btn fk-topbar__action fk-topbar__action--friends"
+            onClick={onFriendsClick}
+            aria-label="Friends"
+            title="Friends"
+          >
+            <IconFriends size={20} />
+          </button>
+        )}
+
         {/* PLAYLISTS */}
 
-        <button
-          type="button"
-          className={`fk-icon-btn fk-topbar__action ${
-            isPlaylistsActive
-              ? "fk-topbar__action--active"
-              : ""
-          }`}
-          onClick={onPlaylistsClick}
-          aria-label="Playlists"
-          aria-current={
-            isPlaylistsActive
-              ? "page"
-              : undefined
-          }
-          title="Playlists"
-        >
-          <ListVideo size={20} />
-        </button>
+        {showPlaylists && (
+          <button
+            type="button"
+            className={`fk-icon-btn fk-topbar__action ${
+              isPlaylistsActive
+                ? "fk-topbar__action--active"
+                : ""
+            }`}
+            onClick={onPlaylistsClick}
+            aria-label="Playlists"
+            aria-current={
+              isPlaylistsActive
+                ? "page"
+                : undefined
+            }
+            title="Playlists"
+          >
+            <ListVideo size={20} />
+          </button>
+        )}
 
         {/* MESSAGES */}
 
@@ -172,6 +223,26 @@ export default function FockisTopBar({
               <IconMoon size={20} />
             ) : (
               <IconSun size={20} />
+            )}
+          </button>
+        )}
+
+        {/* PROFILE (optional) */}
+
+        {profile && (
+          <button
+            type="button"
+            className="fk-topbar__profile"
+            onClick={profile.onClick}
+            aria-label={`Open profile for ${profile.name}`}
+            title={profile.name}
+          >
+            {profile.avatarUrl ? (
+              <img src={profile.avatarUrl} alt="" />
+            ) : (
+              <span aria-hidden="true">
+                {(profile.name.trim().charAt(0) || "F").toUpperCase()}
+              </span>
             )}
           </button>
         )}

@@ -1,468 +1,485 @@
-.fk-business-form {
+@use "./fkb-tokens" as *;
+
+// ============================================================================
+// BUSINESS FORM (create + edit)
+// Field and input styles: BusinessUi.scss (.fkb-field, .fkb-input, .fkb-toggle)
+// ============================================================================
+
+.fkb-form {
   width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 28px;
 
-  border: 1px solid #e5e7eb;
-  border-radius: 20px;
+  &__layout {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: minmax(0, 1fr);
 
-  background: #ffffff;
-
-  box-shadow:
-    0 12px 40px rgba(15, 23, 42, 0.08);
-
-  box-sizing: border-box;
-
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-
-  // ============================================================
-  // HEADER
-  // ============================================================
-
-  &__header {
-    margin-bottom: 24px;
-
-    h2 {
-      margin: 0;
-
-      color: #111827;
-
-      font-size: 1.75rem;
-      line-height: 1.2;
-      font-weight: 800;
-    }
-
-    p {
-      margin: 8px 0 0;
-
-      color: #6b7280;
-
-      font-size: 0.95rem;
-      line-height: 1.5;
+    @include fkb-up($fkb-bp-lg) {
+      grid-template-columns: minmax(0, 1fr) 320px;
+      align-items: start;
     }
   }
 
-  // ============================================================
-  // ERROR
-  // ============================================================
-
-  &__error {
-    margin-bottom: 20px;
-
-    padding: 13px 16px;
-
-    border: 1px solid #fecaca;
-    border-radius: 12px;
-
-    background: #fef2f2;
-    color: #b91c1c;
-
-    font-size: 0.9rem;
-    line-height: 1.5;
-    font-weight: 600;
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
   }
 
-  // ============================================================
+  // --------------------------------------------------------------------------
+  // SECTION NAV
+  // --------------------------------------------------------------------------
+
+  &__nav {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    gap: 4px;
+    margin: 0 -4px;
+    padding: 8px 4px;
+    overflow-x: auto;
+    background: var(--fkb-bg);
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    a {
+      flex-shrink: 0;
+      padding: 6px 12px;
+      border-radius: var(--fkb-radius-pill);
+      color: var(--fkb-text-muted);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      text-decoration: none;
+
+      &:hover {
+        background: var(--fkb-navy-soft);
+        color: var(--fkb-text);
+      }
+    }
+  }
+
+  // --------------------------------------------------------------------------
   // SECTIONS
-  // ============================================================
+  // --------------------------------------------------------------------------
 
   &__section {
-    margin-top: 24px;
-    padding: 22px;
+    padding: 20px;
+    @include fkb-surface;
+    scroll-margin-top: 64px;
 
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-
-    background: #fafafa;
+    @include fkb-up($fkb-bp-md) {
+      padding: 24px;
+    }
   }
 
-  &__section-title {
+  &__section-head {
     margin-bottom: 18px;
 
-    h3 {
-      margin: 0;
-
-      color: #111827;
-
-      font-size: 1.05rem;
-      line-height: 1.3;
-      font-weight: 800;
-    }
-
-    p {
-      margin: 5px 0 0;
-
-      color: #6b7280;
-
-      font-size: 0.86rem;
-      line-height: 1.5;
-    }
-  }
-
-  // ============================================================
-  // GRID
-  // ============================================================
-
-  &__grid {
-    display: grid;
-
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-
-    gap: 18px;
-  }
-
-  // ============================================================
-  // FIELDS
-  // ============================================================
-
-  &__field {
-    display: flex;
-
-    min-width: 0;
-
-    flex-direction: column;
-    gap: 7px;
-
-    &--full {
-      grid-column: 1 / -1;
-    }
-
-    label {
-      display: block;
-
-      color: #1f2937;
-
-      font-size: 0.86rem;
-      line-height: 1.4;
+    h2 {
+      font-size: 1.125rem;
       font-weight: 700;
     }
 
-    input,
-    select,
-    textarea {
+    p {
+      margin-top: 4px;
+      color: var(--fkb-text-muted);
+      font-size: 0.875rem;
+    }
+  }
+
+  &__subsection {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--fkb-border);
+  }
+
+  &__grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(0, 1fr);
+
+    @include fkb-up($fkb-bp-sm) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  &__stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__row-between {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px 16px;
+  }
+
+  &__counter {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__ok {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--fkb-success);
+  }
+
+  &__fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+
+    legend {
+      margin-bottom: 8px;
+      padding: 0;
+    }
+  }
+
+  &__choices {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr);
+
+    @include fkb-up($fkb-bp-sm) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  &__store-empty {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px dashed var(--fkb-border-strong);
+    border-radius: var(--fkb-radius-md);
+    color: var(--fkb-text-muted);
+    font-size: 0.875rem;
+
+    svg {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    a {
+      color: var(--fkb-accent-text);
+      font-weight: 600;
+    }
+  }
+
+  &__button-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    border-radius: var(--fkb-radius-md);
+    background: var(--fkb-surface-muted);
+  }
+
+  &__button-preview-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    .fkb-btn[aria-disabled="true"] {
+      opacity: 1;
+      cursor: default;
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // IMAGES
+  // --------------------------------------------------------------------------
+
+  &__images {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: minmax(0, 1fr);
+
+    @include fkb-up($fkb-bp-sm) {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // ACTIONS
+  // --------------------------------------------------------------------------
+
+  &__actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--fkb-border);
+    border-radius: var(--fkb-radius-lg);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: var(--fkb-shadow-md);
+    backdrop-filter: blur(6px);
+  }
+
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--fkb-text-muted);
+    font-size: 0.875rem;
+  }
+
+  &__actions-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-left: auto;
+
+    @include fkb-down($fkb-bp-sm) {
       width: 100%;
 
-      border: 1px solid #d1d5db;
-      border-radius: 10px;
-
-      background: #ffffff;
-      color: #111827;
-
-      font: inherit;
-
-      outline: none;
-
-      transition:
-        border-color 150ms ease,
-        box-shadow 150ms ease,
-        background 150ms ease;
-
-      &:focus {
-        border-color: #2563eb;
-
-        box-shadow:
-          0 0 0 3px
-          rgba(37, 99, 235, 0.12);
+      .fkb-btn {
+        flex: 1;
       }
-
-      &:disabled {
-        cursor: not-allowed;
-
-        opacity: 0.6;
-      }
-
-      &::placeholder {
-        color: #9ca3af;
-      }
-    }
-
-    input,
-    select {
-      min-height: 44px;
-
-      padding: 0 13px;
-    }
-
-    textarea {
-      min-height: 120px;
-
-      padding: 12px 13px;
-
-      resize: vertical;
-
-      line-height: 1.5;
-    }
-
-    select {
-      cursor: pointer;
     }
   }
 
-  // ============================================================
-  // VISIBILITY / OPTIONS
-  // ============================================================
+  // --------------------------------------------------------------------------
+  // PREVIEW
+  // --------------------------------------------------------------------------
 
-  &__options {
-    display: grid;
+  &__preview {
+    display: none;
 
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-
-    gap: 18px;
-
-    align-items: start;
-  }
-
-  &__checkbox {
-    display: flex;
-
-    min-height: 64px;
-
-    align-items: flex-start;
-
-    gap: 12px;
-
-    padding: 14px;
-
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-
-    background: #ffffff;
-
-    color: #1f2937;
-
-    cursor: pointer;
-
-    transition:
-      border-color 150ms ease,
-      box-shadow 150ms ease,
-      background 150ms ease;
-
-    &:hover {
-      border-color: #bfdbfe;
-
-      background: #f8fbff;
-
-      box-shadow:
-        0 4px 12px
-        rgba(15, 23, 42, 0.04);
-    }
-
-    input {
-      flex: 0 0 auto;
-
-      width: 18px;
-      height: 18px;
-
-      margin: 2px 0 0;
-
-      accent-color: #2563eb;
-
-      cursor: pointer;
-    }
-
-    span {
+    @include fkb-up($fkb-bp-lg) {
+      position: sticky;
+      top: 16px;
       display: flex;
-
-      min-width: 0;
-
       flex-direction: column;
-
-      gap: 4px;
-    }
-
-    strong {
-      color: #111827;
-
-      font-size: 0.9rem;
-      line-height: 1.35;
-      font-weight: 800;
-    }
-
-    small {
-      color: #6b7280;
-
-      font-size: 0.76rem;
-      line-height: 1.45;
-      font-weight: 400;
+      gap: 10px;
     }
   }
 
-  // ============================================================
-  // ACTIONS
-  // ============================================================
+  &__preview-label {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__preview-card {
+    pointer-events: none;
+    user-select: none;
+
+    .fkb-card:hover {
+      transform: none;
+    }
+  }
+}
+
+// ============================================================================
+// IMAGE FIELD
+// ============================================================================
+
+.fkb-image-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__modes {
+    display: inline-flex;
+    gap: 6px;
+
+    .fkb-chip {
+      min-height: 30px;
+      padding: 0 10px;
+      font-size: 0.8125rem;
+    }
+  }
+
+  &__preview {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px dashed var(--fkb-border-strong);
+    border-radius: var(--fkb-radius-md);
+    background: var(--fkb-surface-muted);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &--logo &__preview {
+    aspect-ratio: 1 / 1;
+    max-width: 200px;
+  }
+
+  &--cover &__preview {
+    aspect-ratio: 8 / 3;
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px;
+    color: var(--fkb-text-muted);
+    font-size: 0.8125rem;
+    text-align: center;
+  }
 
   &__actions {
     display: flex;
-
-    justify-content: flex-end;
-
-    gap: 12px;
-
-    margin-top: 24px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
   }
 
-  &__button {
-    min-height: 44px;
+  &__picker {
+    position: relative;
 
-    padding: 0 20px;
+    &:focus-within {
+      @include fkb-focus-ring;
+    }
+  }
+}
 
-    border-radius: 10px;
+// ============================================================================
+// HOURS EDITOR
+// ============================================================================
 
-    font: inherit;
+.fkb-hours-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 14px;
+  border: 1px solid var(--fkb-border);
+  border-radius: var(--fkb-radius-md);
 
-    font-size: 0.9rem;
-    font-weight: 800;
+  &__row {
+    display: grid;
+    grid-template-columns: 110px 80px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    min-height: 52px;
+    border-bottom: 1px solid var(--fkb-border);
 
+    &:last-of-type {
+      border-bottom: 0;
+    }
+
+    @include fkb-down($fkb-bp-sm) {
+      grid-template-columns: 1fr auto;
+      padding: 8px 0;
+    }
+  }
+
+  &__day {
+    font-weight: 600;
+    font-size: 0.9375rem;
+  }
+
+  &__closed {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.875rem;
     cursor: pointer;
 
-    transition:
-      transform 150ms ease,
-      box-shadow 150ms ease,
-      background 150ms ease,
-      border-color 150ms ease;
+    input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--fkb-accent-hover);
+    }
+  }
 
-    &:disabled {
-      cursor: not-allowed;
+  &__times {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 
-      opacity: 0.6;
-
-      transform: none;
+    .fkb-input {
+      min-height: 38px;
+      padding: 6px 10px;
+      max-width: 150px;
     }
 
-    &--secondary {
-      border: 1px solid #d1d5db;
-
-      background: #ffffff;
-      color: #374151;
-
-      &:hover:not(:disabled) {
-        background: #f3f4f6;
-
-        border-color: #9ca3af;
-      }
+    @include fkb-down($fkb-bp-sm) {
+      grid-column: 1 / -1;
     }
+  }
 
-    &--primary {
-      border: 1px solid #2563eb;
-
-      background: #2563eb;
-      color: #ffffff;
-
-      &:hover:not(:disabled) {
-        background: #1d4ed8;
-
-        border-color: #1d4ed8;
-
-        box-shadow:
-          0 6px 18px
-          rgba(37, 99, 235, 0.22);
-
-        transform: translateY(-1px);
-      }
-
-      &:active:not(:disabled) {
-        transform: translateY(0);
-      }
-    }
+  &__copy {
+    align-self: flex-start;
+    margin: 6px 0;
   }
 }
 
-// ============================================================
-// TABLET
-// ============================================================
-
-@media (max-width: 900px) {
-  .fk-business-form {
-    &__options {
-      grid-template-columns: 1fr;
-    }
-  }
+.fkb-input-group--brand > svg {
+  width: 16px;
+  height: 16px;
 }
 
-// ============================================================
-// MOBILE
-// ============================================================
+// ============================================================================
+// CREATE BUSINESS PAGE
+// ============================================================================
 
-@media (max-width: 760px) {
-  .fk-business-form {
-    padding: 18px;
+.fkb-create {
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+    color: var(--fkb-text-muted);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
 
-    border-radius: 14px;
-
-    &__header {
-      h2 {
-        font-size: 1.45rem;
-      }
-    }
-
-    &__section {
-      padding: 16px;
-    }
-
-    &__grid {
-      grid-template-columns: 1fr;
-    }
-
-    &__field--full {
-      grid-column: auto;
-    }
-
-    &__options {
-      grid-template-columns: 1fr;
-    }
-
-    &__actions {
-      flex-direction: column-reverse;
-
-      button {
-        width: 100%;
-      }
+    &:hover {
+      color: var(--fkb-text);
     }
   }
-}
 
-// ============================================================
-// SMALL MOBILE
-// ============================================================
+  &__header {
+    max-width: 680px;
+    margin-bottom: 20px;
 
-@media (max-width: 480px) {
-  .fk-business-form {
-    padding: 14px;
-
-    &__section {
-      padding: 14px;
+    h1 {
+      margin-top: 6px;
+      font-size: clamp(1.625rem, 1.25rem + 1.3vw, 2.125rem);
+      font-weight: 800;
     }
 
-    &__section-title {
-      h3 {
-        font-size: 0.98rem;
-      }
-
-      p {
-        font-size: 0.8rem;
-      }
-    }
-
-    &__field {
-      input,
-      select {
-        min-height: 42px;
-      }
-
-      textarea {
-        min-height: 110px;
-      }
-    }
-
-    &__checkbox {
-      padding: 12px;
+    p {
+      margin-top: 8px;
+      color: var(--fkb-text-muted);
     }
   }
 }

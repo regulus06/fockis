@@ -1,12 +1,14 @@
+
 import { FOCKIS_API_URL } from "../../../config/fockisConfig";
 
 import {
+  useCallback,
   useEffect,
 } from "react";
 
 import {
   io,
-  Socket,
+  type Socket,
 } from "socket.io-client";
 
 import {
@@ -23,31 +25,83 @@ import type {
 
 /* ============================================================================
 GIFT SOCKET
-
-GiftsGateway namespace:
-
-/gifts
-
-Therefore this MUST connect to:
-
-${FOCKIS_API_URL}/gifts
 ============================================================================ */
 
 const socket: Socket = io(
-  FOCKIS_API_URL + "/gifts",
+  `${FOCKIS_API_URL}/gifts`,
   {
     transports: [
       "websocket",
       "polling",
     ],
-
     autoConnect: true,
-
     reconnection: true,
     reconnectionAttempts: Infinity,
     reconnectionDelay: 1000,
   },
 );
+
+/* ============================================================================
+SHARED GIFT CATALOG CACHE
+============================================================================ */
+
+const GIFTS_CACHE_TTL = 60_000;
+
+type GiftCatalog = Awaited<
+  ReturnType<typeof giftsApi.getGifts>
+>;
+
+let cachedGifts: GiftCatalog | null = null;
+let cachedAt = 0;
+let giftsRequest: Promise<GiftCatalog> | null = null;
+
+/**
+ * Clear the cached catalog when gifts are added, removed,
+ * or updated by the backend.
+ */
+export function invalidateGiftsCache(): void {
+  cachedGifts = null;
+  cachedAt = 0;
+}
+
+/**
+ * Reuse the same request when multiple components load the catalog.
+ */
+async function loadGifts(
+  force = false,
+): Promise<GiftCatalog> {
+  const now = Date.now();
+
+  if (
+    !force &&
+    cachedGifts !== null &&
+    now - cachedAt < GIFTS_CACHE_TTL
+  ) {
+    return cachedGifts;
+  }
+
+  if (giftsRequest !== null) {
+    return giftsRequest;
+  }
+
+  const request = giftsApi
+    .getGifts()
+    .then((data) => {
+      cachedGifts = data;
+      cachedAt = Date.now();
+
+      return data;
+    })
+    .finally(() => {
+      if (giftsRequest === request) {
+        giftsRequest = null;
+      }
+    });
+
+  giftsRequest = request;
+
+  return request;
+}
 
 /* ============================================================================
 HOOK
@@ -62,20 +116,18 @@ export function useGifts(
     selectedGift,
     selectGift,
     showGift,
-  } =
-    useGiftsStore();
+  } = useGiftsStore();
 
-  /* ========================================================================
-     LOAD AVAILABLE GIFTS
-     ======================================================================== */
+  /* ==========================================================================
+  LOAD AVAILABLE GIFTS
+  ========================================================================== */
 
   useEffect(() => {
     let cancelled = false;
 
-    async function loadGifts() {
+    async function loadCatalog() {
       try {
-        const data =
-          await giftsApi.getGifts();
+        const data = await loadGifts();
 
         if (!cancelled) {
           setGifts(data);
@@ -88,16 +140,16 @@ export function useGifts(
       }
     }
 
-    void loadGifts();
+    void loadCatalog();
 
     return () => {
       cancelled = true;
     };
   }, [setGifts]);
 
-  /* ========================================================================
-     JOIN LIVE GIFT ROOM
-     ======================================================================== */
+  /* ==========================================================================
+  JOIN LIVE GIFT ROOM AND RECEIVE GIFTS
+  ========================================================================== */
 
   useEffect(() => {
     if (!liveId) {
@@ -112,72 +164,34 @@ export function useGifts(
 
       socket.emit(
         "join_live_gifts",
-        {
-          liveId,
-        },
+        { liveId },
       );
     };
-
-    /* ======================================================================
-       RECEIVE GIFT
-       ====================================================================== */
 
     const handleGiftReceived = (
       gift: ReceivedGift,
     ) => {
+      if (gift.liveId !== liveId) {
+        return;
+      }
+
       console.log(
         "[Gifts] LIVE GIFT RECEIVED:",
         gift,
       );
 
-      /*
-       * Make absolutely sure this event belongs
-       * to the currently watched live.
-       */
-      if (
-        gift.liveId !== liveId
-      ) {
-        return;
-      }
-
-      /*
-       * This updates Zustand.
-       *
-       * Every viewer that receives the Socket.IO
-       * event will therefore display the gift.
-       */
       showGift(gift);
     };
 
-    /* ======================================================================
-       CONNECTION
-       ====================================================================== */
-
-    socket.on(
-      "connect",
-      joinLive,
-    );
-
-    /* ======================================================================
-       GIFT EVENT
-       ====================================================================== */
-
+    socket.on("connect", joinLive);
     socket.on(
       "gift_received",
       handleGiftReceived,
     );
 
-    /*
-     * If socket is already connected,
-     * join immediately.
-     */
     if (socket.connected) {
       joinLive();
     }
-
-    /* ======================================================================
-       CLEANUP
-       ====================================================================== */
 
     return () => {
       console.log(
@@ -185,45 +199,44 @@ export function useGifts(
         liveId,
       );
 
-      socket.off(
-        "connect",
-        joinLive,
-      );
+      socket.off("connect", joinLive);
 
       socket.off(
         "gift_received",
         handleGiftReceived,
       );
 
-      /*
-       * Tell backend that this client is leaving
-       * the gift room.
-       */
-      socket.emit(
-        "leave_live_gifts",
-        {
-          liveId,
-        },
-      );
+      if (socket.connected) {
+        socket.emit(
+          "leave_live_gifts",
+          { liveId },
+        );
+      }
     };
   }, [
     liveId,
     showGift,
   ]);
 
-  /* ========================================================================
-     RETURN
-     ======================================================================== */
+  /* ==========================================================================
+  SEND GIFT
+  ========================================================================== */
+
+  const sendGift = useCallback(
+    (...args: Parameters<typeof giftsApi.sendGift>) =>
+      giftsApi.sendGift(...args),
+    [],
+  );
+
+  /* ==========================================================================
+  RETURN
+  ========================================================================== */
 
   return {
     gifts,
-
     selectedGift,
-
     selectGift,
-
-    sendGift:
-      giftsApi.sendGift,
+    sendGift,
   };
 }
 

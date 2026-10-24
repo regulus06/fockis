@@ -1,6 +1,93 @@
 /* ============================================================================
-   FOCKIS BILLING INTERVAL SELECTOR
-   All visual rules live in the shared partial (.fk-billing-selector).
+   FOCKIS BILLING INTERVAL SELECTOR (segmented radio group)
 ============================================================================ */
 
-@use "./fockis-subscription-shared";
+@use "./fockis-subscription-shared" as shared;
+
+.fk-sub-interval {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 260px;
+  padding: 4px;
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-pill);
+  background: var(--fk-bg);
+
+  @media (max-width: #{shared.$fk-sub-bp-sm - 1px}) {
+    width: 100%;
+    min-width: 0;
+  }
+
+  &__thumb {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    border-radius: var(--fk-r-pill);
+    background: var(--fk-fjord);
+    box-shadow: 0 4px 12px -4px rgba(22, 58, 95, 0.5);
+    transition: transform var(--fk-normal) var(--fk-ease);
+  }
+
+  &.is-yearly &__thumb {
+    transform: translateX(100%);
+  }
+
+  &__option {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    min-height: 44px;
+    padding: 6px 18px;
+    border: 0;
+    border-radius: var(--fk-r-pill);
+    background: transparent;
+    color: var(--fk-text-2);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: color var(--fk-fast) var(--fk-ease);
+
+    &:hover:not(:disabled):not(.is-selected) {
+      color: var(--fk-text);
+    }
+
+    &.is-selected {
+      color: #ffffff;
+    }
+
+    &:focus-visible {
+      @include shared.fk-sub-focus;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+  }
+
+  &__save {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--fk-success);
+
+    .is-selected & {
+      color: #c9f2dc;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-sub-interval__thumb,
+  .fk-sub-interval__option {
+    transition: none;
+  }
+}

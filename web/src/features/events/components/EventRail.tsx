@@ -1,292 +1,86 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useRef } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
+import { useActiveEvents } from "../hooks/useEventClock";
 import type { FockisEvent } from "../types/event.types";
+import EventCard from "./EventCard";
+import EventSkeleton from "./EventSkeleton";
 
-interface EventRailProps {
+import "../styles/EventRail.scss";
+
+interface Props {
   events: FockisEvent[];
   title?: string;
+  subtitle?: string;
   maxEvents?: number;
+  loading?: boolean;
+  seeAllTo?: string;
+  /** Rendered when there are no active events (default: nothing). */
+  empty?: React.ReactNode;
+  className?: string;
 }
 
+/**
+ * Horizontally scrollable, touch-friendly rail of event cards. Events that
+ * end or are cancelled while the rail is on screen disappear at that moment.
+ */
 export default function EventRail({
   events,
   title = "Upcoming Events",
+  subtitle,
   maxEvents = 10,
-}: EventRailProps) {
-  const navigate = useNavigate();
+  loading = false,
+  seeAllTo = "/events",
+  empty = null,
+  className = "",
+}: Props) {
+  const { active, now } = useActiveEvents(events);
+  const scroller = useRef<HTMLDivElement>(null);
+  const visible = active.slice(0, maxEvents);
 
-  /*
-   * Only show a maximum of 10 events in one rail.
-   */
-  const visibleEvents = events.slice(0, maxEvents);
+  if (!loading && visible.length === 0) return <>{empty}</>;
 
-  /*
-   * Do not render an empty rail.
-   */
-  if (visibleEvents.length === 0) {
-    return null;
-  }
+  const scrollBy = (direction: 1 | -1) => {
+    const element = scroller.current;
 
-  function openEvent(eventId: string) {
-    navigate(`/events/${eventId}`);
-  }
-
-  function formatEventDate(dateString: string) {
-    const date = new Date(dateString);
-
-    if (Number.isNaN(date.getTime())) {
-      return "Date unavailable";
-    }
-
-    return date.toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  }
-
-  function formatEventTime(dateString: string) {
-    const date = new Date(dateString);
-
-    if (Number.isNaN(date.getTime())) {
-      return "";
-    }
-
-    return date.toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  }
-
-  function getEventLocation(event: FockisEvent) {
-    if (event.isOnline) {
-      return "Online event";
-    }
-
-    if (event.locationName) {
-      return event.locationName;
-    }
-
-    if (event.address) {
-      return event.address;
-    }
-
-    return "Location not specified";
-  }
+    if (element) element.scrollBy({ left: direction * element.clientWidth * 0.85, behavior: "smooth" });
+  };
 
   return (
-    <section
-      className="fk-event-rail"
-      aria-label={title}
-    >
-      {/* ============================================================
-          RAIL HEADER
-      ============================================================ */}
-
-      <div className="fk-event-rail__header">
-        <div className="fk-event-rail__heading">
-          <span
-            className="fk-event-rail__emoji"
-            aria-hidden="true"
-          >
-            🎉
-          </span>
-
-          <div>
-            <h2 className="fk-event-rail__title">
-              {title}
-            </h2>
-
-            <p className="fk-event-rail__subtitle">
-              Discover events happening around you
-            </p>
-          </div>
+    <section className={`fke-rail fk-social-scope ${className}`} aria-label={title}>
+      <header className="fke-rail__header">
+        <div>
+          <span className="fke-eyebrow">Fockis Events</span>
+          <h2 className="fke-rail__title">{title}</h2>
+          {subtitle && <p className="fke-rail__subtitle">{subtitle}</p>}
         </div>
-
-        <button
-          type="button"
-          className="fk-event-rail__view-all"
-          onClick={() => navigate("/events")}
-        >
-          View all
-        </button>
-      </div>
-
-      {/* ============================================================
-          HORIZONTAL EVENT LIST
-      ============================================================ */}
-
-      <div className="fk-event-rail__scroller">
-        {visibleEvents.map((event) => (
-          <article
-            key={event.id}
-            className="fk-event-card"
-            role="button"
-            tabIndex={0}
-            onClick={() => openEvent(event.id)}
-            onKeyDown={(keyboardEvent) => {
-              if (
-                keyboardEvent.key === "Enter" ||
-                keyboardEvent.key === " "
-              ) {
-                keyboardEvent.preventDefault();
-                openEvent(event.id);
-              }
-            }}
-          >
-            {/* ======================================================
-                COVER IMAGE
-            ====================================================== */}
-
-            <div className="fk-event-card__image-wrapper">
-              {event.coverImageUrl ? (
-                <img
-                  src={event.coverImageUrl}
-                  alt={event.title}
-                  className="fk-event-card__image"
-                  loading="lazy"
-                  onError={(imageEvent) => {
-                    imageEvent.currentTarget.style.display =
-                      "none";
-                  }}
-                />
-              ) : (
-                <div
-                  className="fk-event-card__image-placeholder"
-                  aria-hidden="true"
-                >
-                  🎉
-                </div>
-              )}
-
-              {/* STATUS */}
-
-              <span
-                className={`fk-event-card__status fk-event-card__status--${event.status}`}
-              >
-                {event.status === "live"
-                  ? "LIVE"
-                  : event.status === "upcoming"
-                    ? "UPCOMING"
-                    : event.status.toUpperCase()}
-              </span>
-
-              {/* ONLINE BADGE */}
-
-              {event.isOnline && (
-                <span className="fk-event-card__online-badge">
-                  Online
-                </span>
-              )}
-            </div>
-
-            {/* ======================================================
-                CONTENT
-            ====================================================== */}
-
-            <div className="fk-event-card__content">
-              <div className="fk-event-card__category">
-                {event.category}
-              </div>
-
-              <h3 className="fk-event-card__title">
-                {event.title}
-              </h3>
-
-              {event.description && (
-                <p className="fk-event-card__description">
-                  {event.description}
-                </p>
-              )}
-
-              {/* DATE */}
-
-              <div className="fk-event-card__meta">
-                <span
-                  className="fk-event-card__meta-icon"
-                  aria-hidden="true"
-                >
-                  📅
-                </span>
-
-                <span>
-                  {formatEventDate(event.startDate)}
-                </span>
-              </div>
-
-              {/* TIME */}
-
-              <div className="fk-event-card__meta">
-                <span
-                  className="fk-event-card__meta-icon"
-                  aria-hidden="true"
-                >
-                  🕐
-                </span>
-
-                <span>
-                  {formatEventTime(event.startDate)}
-                </span>
-              </div>
-
-              {/* LOCATION */}
-
-              <div className="fk-event-card__meta">
-                <span
-                  className="fk-event-card__meta-icon"
-                  aria-hidden="true"
-                >
-                  📍
-                </span>
-
-                <span className="fk-event-card__location">
-                  {getEventLocation(event)}
-                </span>
-              </div>
-
-              {/* ATTENDEES */}
-
-              <div className="fk-event-card__footer">
-                <span className="fk-event-card__attendees">
-                  👥 {event.attendeeCount}{" "}
-                  {event.attendeeCount === 1
-                    ? "person"
-                    : "people"}{" "}
-                  going
-                </span>
-
-                <button
-                  type="button"
-                  className="fk-event-card__open-button"
-                  onClick={(clickEvent) => {
-                    clickEvent.stopPropagation();
-                    openEvent(event.id);
-                  }}
-                >
-                  View
-                </button>
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
-
-      {/* ============================================================
-          RAIL FOOTER
-      ============================================================ */}
-
-      {events.length > maxEvents && (
-        <div className="fk-event-rail__footer">
-          <button
-            type="button"
-            className="fk-event-rail__more-button"
-            onClick={() => navigate("/events")}
-          >
-            See more events
+        <div className="fke-rail__controls">
+          <button type="button" className="fke-icon-btn" onClick={() => scrollBy(-1)} aria-label="Scroll left">
+            <ChevronLeft size={18} />
           </button>
+          <button type="button" className="fke-icon-btn" onClick={() => scrollBy(1)} aria-label="Scroll right">
+            <ChevronRight size={18} />
+          </button>
+          {seeAllTo && (
+            <Link className="fke-link" to={seeAllTo}>
+              See all
+            </Link>
+          )}
         </div>
-      )}
+      </header>
+
+      <div className="fke-rail__scroller" ref={scroller} role="list">
+        {loading && visible.length === 0 ? (
+          <EventSkeleton variant="rail" count={3} />
+        ) : (
+          visible.map((event) => (
+            <div className="fke-rail__item" role="listitem" key={event.id}>
+              <EventCard event={event} variant="rail" now={now} />
+            </div>
+          ))
+        )}
+      </div>
     </section>
   );
 }

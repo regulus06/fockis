@@ -1,390 +1,299 @@
-import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { FormEvent } from "react";
+import { useSearchParams } from "react-router-dom";
+import { AlertCircle, BedDouble, RefreshCw, Search, SlidersHorizontal } from "lucide-react";
 
-import { useEffect, useMemo, useState } from 'react';
-import { SlidersHorizontal } from 'lucide-react';
+import TravelListingCard from "../components/TravelListingCard";
+import {
+  buildVerifiedPartnerIndex,
+  fetchTravelListings,
+  fetchVerifiedBusinesses,
+  findListingPartner,
+  getListingId,
+  listingMatchesQuery,
+  sortFeaturedFirst,
+} from "../services/travelListingView";
+import type {
+  TravelListingView,
+  VerifiedBusinessView,
+} from "../services/travelListingView";
+import "../styles/TravelStaysPage.scss";
 
-import StayCard from '../components/StayCard';
-import '../styles/TravelStaysPage.scss';
+/**
+ * ============================================================================
+ * FOCKIS TRAVEL — STAYS
+ * ============================================================================
+ *
+ * Endpoint: GET /travel/listings?type=stay
+ *
+ * Reads the home search from the URL so the traveller's selection carries
+ * over:  ?destination=…&checkIn=YYYY-MM-DD&checkOut=YYYY-MM-DD&guests=N
+ * Dates and travelers are passed on to each stay's details page, where the
+ * booking card is pre-filled. Filtering and sorting run on the loaded list.
+ * ============================================================================
+ */
 
-interface Listing {
-  _id: string;
-  name: string;
-  type: string;
-  description?: string;
-  country: string;
-  city: string;
-  address?: string;
-  images?: string[];
-  amenities?: string[];
-  tags?: string[];
-  rating?: number;
-  reviewCount?: number;
-  currency: string;
-  price: number;
-  priceUnit?: string;
-  active?: boolean;
+type SortKey = "recommended" | "price-low" | "price-high" | "rating";
+
+function todayString(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
-interface ListingsResponse {
-  items: Listing[];
-  total: number;
-  page: number;
+function nextDay(date: string): string {
+  const value = new Date(`${date}T12:00:00`);
+  value.setDate(value.getDate() + 1);
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
 }
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
-  FOCKIS_API_URL;
-
-function getListingImage(listing: Listing): string {
-  return (
-    listing.images?.[0] ||
-    'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800'
-  );
-}
-
-function getCurrencySymbol(currency: string): string {
-  const symbols: Record<string, string> = {
-    USD: '$',
-    HTG: 'G',
-    EUR: '€',
-    GBP: '£',
-    CAD: 'C$',
-    DOP: 'RD$',
-    JPY: '¥',
-    AUD: 'A$',
-  };
-
-  return symbols[currency?.toUpperCase()] || currency || '$';
-}
-
-function getAmenities(listing: Listing): string {
-  if (listing.amenities?.length) {
-    return listing.amenities.slice(0, 4).join(' · ');
-  }
-
-  return 'Comfortable stay · Fockis verified';
+function validDate(value: string | null): string {
+  return value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
 }
 
 export default function TravelStaysPage() {
-  const [stays, setStays] = useState<Listing[]>([]);
-  const [sort, setSort] = useState<
-    'recommended' | 'price-low' | 'price-high' | 'rating'
-  >('recommended');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const today = useMemo(todayString, []);
 
+  const destination = (searchParams.get("destination") || searchParams.get("search") || "").trim();
+  const checkIn = validDate(searchParams.get("checkIn"));
+  const checkOut = validDate(searchParams.get("checkOut"));
+  const guests = Math.min(16, Math.max(1, Number(searchParams.get("guests")) || 2));
+
+  const [draftDestination, setDraftDestination] = useState(destination);
+  const [draftCheckIn, setDraftCheckIn] = useState(checkIn);
+  const [draftCheckOut, setDraftCheckOut] = useState(checkOut);
+  const [draftGuests, setDraftGuests] = useState(guests);
+  const [formError, setFormError] = useState("");
+
+  const [sort, setSort] = useState<SortKey>("recommended");
   const [minRating, setMinRating] = useState(0);
-  const [destination, setDestination] = useState('');
 
+  const [stays, setStays] = useState<TravelListingView[]>([]);
+  const [businesses, setBusinesses] = useState<VerifiedBusinessView[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  /*
-   * Load real stays from the Fockis Travel backend.
-   *
-   * Endpoint:
-   * GET /travel/listings?type=stay
-   */
+  // Keep the form in step with back/forward navigation.
   useEffect(() => {
-    let cancelled = false;
+    setDraftDestination(destination);
+    setDraftCheckIn(checkIn);
+    setDraftCheckOut(checkOut);
+    setDraftGuests(guests);
+  }, [destination, checkIn, checkOut, guests]);
 
-    async function loadStays() {
-      try {
-        setLoading(true);
-        setError('');
-
-        const params = new URLSearchParams({
-          type: 'stay',
-          limit: '100',
-          skip: '0',
-        });
-
-        const response = await fetch(
-          `${API_BASE_URL}/travel/listings?${params.toString()}`,
-          {
-            method: 'GET',
-            headers: {
-              Accept: 'application/json',
-            },
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            `Unable to load stays. Server returned ${response.status}.`,
-          );
-        }
-
-        const data: ListingsResponse = await response.json();
-
-        if (!cancelled) {
-          setStays(Array.isArray(data.items) ? data.items : []);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          console.error('Travel stays error:', err);
-
-          setError(
-            err instanceof Error
-              ? err.message
-              : 'Unable to load stays right now.',
-          );
-
-          setStays([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
+  const loadStays = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      setStays(await fetchTravelListings({ type: "stay" }));
+    } catch (reason) {
+      console.error("Travel stays error:", reason);
+      setError(
+        reason && typeof reason === "object" && "message" in reason
+          ? String((reason as { message?: unknown }).message)
+          : "Unable to load stays right now.",
+      );
+      setStays([]);
+    } finally {
+      setLoading(false);
     }
-
-    loadStays();
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
-  /*
-   * Client-side filtering and sorting.
-   *
-   * The backend already returns only:
-   * type=stay
-   */
+  useEffect(() => {
+    void loadStays();
+    fetchVerifiedBusinesses()
+      .then(setBusinesses)
+      .catch(() => undefined);
+  }, [loadStays]);
+
+  const verifiedIndex = useMemo(() => buildVerifiedPartnerIndex(businesses), [businesses]);
+
   const filtered = useMemo(() => {
-    let list = stays.filter((stay) => {
-      const rating = stay.rating ?? 0;
+    const list = stays.filter(
+      (stay) => listingMatchesQuery(stay, destination) && Number(stay.rating || 0) >= minRating,
+    );
 
-      const search = destination.trim().toLowerCase();
+    if (sort === "price-low") return [...list].sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+    if (sort === "price-high") return [...list].sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
+    if (sort === "rating") return [...list].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
+    return [...list].sort(sortFeaturedFirst);
+  }, [stays, destination, minRating, sort]);
 
-      const matchesRating = rating >= minRating;
+  const detailsSearch = useMemo(() => {
+    const params = new URLSearchParams();
+    if (checkIn) params.set("checkIn", checkIn);
+    if (checkOut) params.set("checkOut", checkOut);
+    params.set("guests", String(guests));
+    return params.toString();
+  }, [checkIn, checkOut, guests]);
 
-      const matchesDestination =
-        !search ||
-        stay.city?.toLowerCase().includes(search) ||
-        stay.country?.toLowerCase().includes(search) ||
-        stay.name?.toLowerCase().includes(search) ||
-        stay.address?.toLowerCase().includes(search);
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
 
-      return matchesRating && matchesDestination;
-    });
-
-    list = [...list];
-
-    if (sort === 'price-low') {
-      list.sort((a, b) => a.price - b.price);
+    if (draftCheckIn && draftCheckOut && draftCheckOut <= draftCheckIn) {
+      setFormError("Check-out must be after check-in.");
+      return;
     }
 
-    if (sort === 'price-high') {
-      list.sort((a, b) => b.price - a.price);
-    }
-
-    if (sort === 'rating') {
-      list.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-    }
-
-    return list;
-  }, [stays, sort, minRating, destination]);
+    setFormError("");
+    const params = new URLSearchParams();
+    if (draftDestination.trim()) params.set("destination", draftDestination.trim());
+    if (draftCheckIn) params.set("checkIn", draftCheckIn);
+    if (draftCheckOut) params.set("checkOut", draftCheckOut);
+    params.set("guests", String(draftGuests));
+    setSearchParams(params);
+  }
 
   function clearFilters() {
-    setDestination('');
     setMinRating(0);
-    setSort('recommended');
+    setSort("recommended");
+    const params = new URLSearchParams(searchParams);
+    params.delete("destination");
+    params.delete("search");
+    setSearchParams(params);
   }
 
   return (
-    <div className="travel-stays-page">
-      <section className="tight">
-        <div className="wrap">
-          <div className="eyebrow">Stays</div>
+    <div className="ft-stays">
+      <div className="ft-stays__wrap">
+        <header className="ft-stays__head">
+          <h1>{destination ? `Stays in ${destination}` : "Find your perfect stay"}</h1>
+          <p>Hotels, resorts, apartments and villas from Fockis Travel partners.</p>
+        </header>
 
-          <h1 style={{ fontSize: 'clamp(28px, 4vw, 42px)' }}>
-            Find your perfect stay
-          </h1>
-
-          <p
-            style={{
-              color: 'var(--slate, #5B6B76)',
-              marginTop: 10,
-              maxWidth: 520,
-            }}
-          >
-            Hotels, resorts, apartments and villas — for the international
-            traveler and the local guest alike.
-          </p>
-
-          <form
-            className="travel-search travel-search--inline"
-            style={{ marginTop: 28 }}
-            onSubmit={(e) => e.preventDefault()}
-          >
-            <div className="search-fields">
-              <label className="field">
-                <span>Destination</span>
-
-                <input
-                  id="s-dest"
-                  className="value"
-                  placeholder="Search by city or country"
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                />
-              </label>
-
-              <label className="field">
-                <span>Check-in</span>
-
-                <input
-                  id="s-checkin"
-                  type="date"
-                  className="value"
-                />
-              </label>
-
-              <label className="field">
-                <span>Check-out</span>
-
-                <input
-                  id="s-checkout"
-                  type="date"
-                  className="value"
-                />
-              </label>
-
-              <button type="submit" className="search-submit">
-                Search →
-              </button>
-            </div>
-          </form>
-        </div>
-      </section>
-
-      <section>
-        <div className="wrap">
-          <div className="stays-filters-row">
-            <span className="ft-pill">
-              <SlidersHorizontal size={13} aria-hidden="true" />
-              Filters
-            </span>
-
-            <label className="ft-field" style={{ margin: 0 }}>
-              <span className="ft-hide-mobile">Min rating</span>
-
-              <select
-                id="min-rating"
-                value={minRating}
-                onChange={(e) => setMinRating(Number(e.target.value))}
-              >
-                <option value={0}>Any rating</option>
-                <option value={4}>4.0+</option>
-                <option value={4.5}>4.5+</option>
-              </select>
-            </label>
-
-            <label
-              className="ft-field"
-              style={{ margin: '0 0 0 auto' }}
-            >
-              <span className="ft-hide-mobile">Sort by</span>
-
-              <select
-                id="stay-sort"
-                value={sort}
-                onChange={(e) =>
-                  setSort(e.target.value as typeof sort)
+        <form className="ft-stays__search" onSubmit={handleSubmit} role="search" aria-label="Search stays">
+          <label className="ft-stays__field ft-stays__field--wide">
+            <span>Destination</span>
+            <input
+              type="search"
+              value={draftDestination}
+              onChange={(event) => setDraftDestination(event.target.value)}
+              placeholder="City, country or hotel"
+            />
+          </label>
+          <label className="ft-stays__field">
+            <span>Check in</span>
+            <input
+              type="date"
+              value={draftCheckIn}
+              min={today}
+              onChange={(event) => {
+                setDraftCheckIn(event.target.value);
+                if (draftCheckOut && event.target.value && draftCheckOut <= event.target.value) {
+                  setDraftCheckOut(nextDay(event.target.value));
                 }
-              >
-                <option value="recommended">Recommended</option>
-                <option value="price-low">
-                  Price: low to high
+              }}
+            />
+          </label>
+          <label className="ft-stays__field">
+            <span>Check out</span>
+            <input
+              type="date"
+              value={draftCheckOut}
+              min={draftCheckIn ? nextDay(draftCheckIn) : today}
+              onChange={(event) => setDraftCheckOut(event.target.value)}
+            />
+          </label>
+          <label className="ft-stays__field">
+            <span>Travelers</span>
+            <select value={draftGuests} onChange={(event) => setDraftGuests(Number(event.target.value))}>
+              {Array.from({ length: 16 }, (_, index) => index + 1).map((count) => (
+                <option key={count} value={count}>
+                  {count} {count === 1 ? "traveler" : "travelers"}
                 </option>
-                <option value="price-high">
-                  Price: high to low
-                </option>
-                <option value="rating">Top rated</option>
-              </select>
-            </label>
-          </div>
-
-          {loading ? (
-            <div className="ft-empty-state">
-              <div className="ic" aria-hidden="true">
-                🏨
-              </div>
-
-              <h4>Loading stays...</h4>
-
-              <p>
-                We're finding available accommodations for you.
-              </p>
-            </div>
-          ) : error ? (
-            <div className="ft-empty-state">
-              <div className="ic" aria-hidden="true">
-                ⚠️
-              </div>
-
-              <h4>Unable to load stays</h4>
-
-              <p>{error}</p>
-
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={() => window.location.reload()}
-              >
-                Try again
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="results-count">
-                {filtered.length}{' '}
-                {filtered.length === 1 ? 'stay' : 'stays'} found
-              </div>
-
-              {filtered.length === 0 ? (
-                <div className="ft-empty-state">
-                  <div className="ic" aria-hidden="true">
-                    🏨
-                  </div>
-
-                  <h4>No stays match your filters</h4>
-
-                  <p>
-                    Try clearing the destination search or lowering
-                    the minimum rating.
-                  </p>
-
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={clearFilters}
-                  >
-                    Clear filters
-                  </button>
-                </div>
-              ) : (
-                <div className="stays-grid">
-                  {filtered.map((stay) => (
-                    <StayCard
-                      key={stay._id}
-                      id={stay._id}
-                      name={stay.name}
-                      location={`${stay.city}, ${stay.country}`}
-                      image={getListingImage(stay)}
-                      rating={stay.rating ?? 0}
-                      amenities={getAmenities(stay)}
-                      price={stay.price}
-                      currency={getCurrencySymbol(stay.currency)}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
+              ))}
+            </select>
+          </label>
+          <button type="submit" className="ft-stays__submit">
+            <Search size={18} aria-hidden="true" /> Search
+          </button>
+          {formError && (
+            <p className="ft-stays__form-error" role="alert">
+              {formError}
+            </p>
           )}
+        </form>
+
+        <div className="ft-stays__toolbar">
+          <span className="ft-stays__filters-label">
+            <SlidersHorizontal size={15} aria-hidden="true" /> Filters
+          </span>
+
+          <label className="ft-stays__select">
+            <span>Rating</span>
+            <select value={minRating} onChange={(event) => setMinRating(Number(event.target.value))}>
+              <option value={0}>Any rating</option>
+              <option value={4}>4.0+</option>
+              <option value={4.5}>4.5+</option>
+            </select>
+          </label>
+
+          <label className="ft-stays__select ft-stays__select--end">
+            <span>Sort by</span>
+            <select value={sort} onChange={(event) => setSort(event.target.value as SortKey)}>
+              <option value="recommended">Recommended</option>
+              <option value="price-low">Price: low to high</option>
+              <option value="price-high">Price: high to low</option>
+              <option value="rating">Top rated</option>
+            </select>
+          </label>
         </div>
-      </section>
+
+        {loading ? (
+          <div className="ft-stays__grid" aria-busy="true">
+            {Array.from({ length: 8 }, (_, index) => (
+              <div key={index} className="ft-skel-card" aria-hidden="true">
+                <div className="ft-skel ft-skel-card__media" />
+                <div className="ft-skel-card__body">
+                  <div className="ft-skel ft-skel--line" />
+                  <div className="ft-skel ft-skel--line ft-skel--short" />
+                  <div className="ft-skel ft-skel--button" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="ft-stays__empty" role="alert">
+            <AlertCircle size={28} aria-hidden="true" />
+            <h2>Unable to load stays</h2>
+            <p>{error}</p>
+            <button type="button" className="ft-stays__outline" onClick={() => void loadStays()}>
+              <RefreshCw size={16} aria-hidden="true" /> Try again
+            </button>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="ft-stays__empty">
+            <BedDouble size={28} aria-hidden="true" />
+            <h2>{stays.length === 0 ? "No stays listed yet" : "No stays match your search"}</h2>
+            <p>
+              {stays.length === 0
+                ? "Hotels and resorts will appear here as soon as partners publish them."
+                : "Try another destination or lower the minimum rating."}
+            </p>
+            {stays.length > 0 && (
+              <button type="button" className="ft-stays__outline" onClick={clearFilters}>
+                Clear filters
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            <p className="ft-stays__count">
+              {filtered.length} {filtered.length === 1 ? "stay" : "stays"} found
+            </p>
+            <div className="ft-stays__grid">
+              {filtered.map((stay) => (
+                <TravelListingCard
+                  key={getListingId(stay)}
+                  listing={stay}
+                  linkSearch={detailsSearch}
+                  verified={Boolean(findListingPartner(stay, verifiedIndex))}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

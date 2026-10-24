@@ -19,6 +19,7 @@ import type {
   DeviceState,
   Guest,
   GuestLayout,
+  LiveGuestDTO,
   PanelId,
   Phase,
   Product,
@@ -1806,6 +1807,111 @@ export function useStudio() {
   }, []);
 
   // ==========================================================================
+  // RESTORE AN EXISTING HOST SESSION AFTER REFRESH
+  // ==========================================================================
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const restoreExistingLiveSession = async () => {
+      try {
+        // The /live/mine endpoint returns only streams owned by this account.
+        // Never create a new stream just because the Studio page was refreshed.
+        const myStreams = await api.getMyLiveStreams();
+
+        if (cancelled || !mountedRef.current) {
+          return;
+        }
+
+        const existingLive = myStreams
+          .filter((item) => item.status === "live")
+          .sort((a, b) => {
+            const aTime = Date.parse(String(a.startedAt || a.createdAt || "")) || 0;
+            const bTime = Date.parse(String(b.startedAt || b.createdAt || "")) || 0;
+            return bTime - aTime;
+          })[0];
+
+        const id = existingLive?._id ?? existingLive?.id;
+
+        if (!existingLive || !id) {
+          return;
+        }
+
+        setPhase("starting");
+
+        // Host joins are explicitly excluded from viewer-count increments by
+        // the existing backend join endpoint. This obtains fresh LiveKit
+        // credentials for the original room instead of creating a new room.
+        const join = await api.joinSession(id);
+
+        if (cancelled || !mountedRef.current) {
+          return;
+        }
+
+        if (!join.token || !join.serverUrl) {
+          throw new Error("LIVE backend did not return LiveKit credentials for the existing session.");
+        }
+
+        setSessionId(id);
+        setActiveGuestSessionId(null);
+        setLiveKitToken(join.token);
+        setLiveKitServerUrl(join.serverUrl);
+
+        setStreamInfo((current) => ({
+          ...current,
+          title: existingLive.title || current.title,
+          description: existingLive.description || "",
+          category: existingLive.category || "General",
+          thumbnailUrl: existingLive.thumbnailUrl || "",
+        }));
+
+        const startedAtMs = Date.parse(
+          String(existingLive.startedAt || existingLive.createdAt || ""),
+        );
+
+        setElapsedSeconds(
+          Number.isFinite(startedAtMs)
+            ? Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000))
+            : 0,
+        );
+
+        setAnalytics((current) => ({
+          ...current,
+          currentViewers: Math.max(0, Number(join.viewerCount ?? existingLive.viewerCount ?? 0)),
+          peakViewers: Math.max(0, Number(join.peakViewerCount ?? existingLive.peakViewerCount ?? 0)),
+          likes: Math.max(0, Number(existingLive.likeCount ?? 0)),
+          comments: Math.max(0, Number(existingLive.commentCount ?? 0)),
+          shares: Math.max(0, Number(existingLive.shareCount ?? 0)),
+        }));
+
+        setPhase("live");
+
+        window.dispatchEvent(
+          new CustomEvent("fockis:live-updated", {
+            detail: { sessionId: id, status: "live" },
+          }),
+        );
+
+        console.info("[FOCKIS LIVE] Restored existing host session after refresh:", id);
+      } catch (error) {
+        if (cancelled || !mountedRef.current) {
+          return;
+        }
+
+        // A failed restore must not create or end any stream. Keep Studio usable.
+        console.warn("[FOCKIS LIVE] Could not restore an existing host session:", error);
+        setPhase((current) => current === "starting" ? "setup" : current);
+      }
+    };
+
+    void restoreExistingLiveSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // ==========================================================================
   // GO LIVE
   // ==========================================================================
 
@@ -1880,11 +1986,22 @@ export function useStudio() {
         }
 
         // ------------------------------------------------------------------
-        // CREATE BACKEND LIVE STREAM
+        // REUSE AN EXISTING HOST LIVE SESSION WHEN POSSIBLE
         // ------------------------------------------------------------------
 
-        const session =
-          await api.startSession(payload);
+        // Refresh recovery can still be in flight if the host clicks Go Live
+        // immediately. Check the server before creating anything so this
+        // action cannot create a second live_streams record for the host.
+        const ownedStreams = await api.getMyLiveStreams();
+        const existingLive = ownedStreams
+          .filter((item) => item.status === "live")
+          .sort((a, b) => {
+            const aTime = Date.parse(String(a.startedAt || a.createdAt || "")) || 0;
+            const bTime = Date.parse(String(b.startedAt || b.createdAt || "")) || 0;
+            return bTime - aTime;
+          })[0];
+
+        const session = existingLive || await api.startSession(payload);
 
         const id =
           session._id ??
@@ -2161,50 +2278,198 @@ export function useStudio() {
   // GUESTS
   // ==========================================================================
 
+  /**
+   * Map a backend LiveGuest record onto the studio's Guest model.
+   * Keeps any local "muted" flag the host set for a connected guest.
+   */
+  const toStudioGuest = useCallback(
+    (record: LiveGuestDTO, previous?: Guest): Guest | null => {
+      const user = (record.guest ?? {}) as Record<string, unknown>;
+      const id = String(
+        record.guestUserId || user.id || user._id || "",
+      ).trim();
+
+      if (!id) {
+        return null;
+      }
+
+      const fullName = [user.firstName, user.lastName]
+        .filter((part) => typeof part === "string" && part.trim())
+        .join(" ");
+
+      const name =
+        String(
+          user.displayName ||
+            user.name ||
+            fullName ||
+            user.username ||
+            previous?.name ||
+            "Fockis User",
+        ).trim() || "Fockis User";
+
+      const status = record.status;
+      const keepMuted =
+        previous?.status === "muted" && status === "connected";
+
+      return {
+        id,
+        name,
+        username:
+          typeof user.username === "string"
+            ? user.username
+            : previous?.username,
+        avatarUrl:
+          (typeof user.profilePicture === "string" && user.profilePicture) ||
+          (typeof user.avatar === "string" && user.avatar) ||
+          previous?.avatarUrl,
+        avatarTone: previous?.avatarTone ?? "signal",
+        status: keepMuted ? "muted" : status,
+        streamId: record.streamId,
+        hostId: record.hostId,
+        invitationId: record.id,
+        message: record.message,
+      };
+    },
+    [],
+  );
+
+  /**
+   * Invite a Fockis user to join this LIVE as a guest.
+   *
+   * Uses the existing backend invitation flow. The guest shows as
+   * "invited" until they accept and their publisher connects; the
+   * status poll below keeps it in sync.
+   */
   const inviteGuest =
-    useCallback((guest: Guest) => {
-      setGuests((current) => {
-        if (
-          current.some(
-            (item) =>
-              item.id === guest.id,
-          )
-        ) {
-          return current;
-        }
-
-        return [
-          ...current,
-          {
-            ...guest,
-            status: "connected",
-          },
-        ];
-      });
-
-      setGuestLayout((layout) =>
-        layout === "solo"
-          ? "side-by-side"
-          : layout,
-      );
-    }, []);
-
-  const removeGuest =
-    useCallback((id: string) => {
-      setGuests((current) => {
-        const next =
-          current.filter(
-            (guest) =>
-              guest.id !== id,
+    useCallback(
+      async (guest: Guest) => {
+        if (!sessionId || phase !== "live") {
+          throw new Error(
+            "Go live first, then invite guests to join your stage.",
           );
-
-        if (!next.length) {
-          setGuestLayout("solo");
         }
 
-        return next;
-      });
-    }, []);
+        const record = await api.inviteGuest(sessionId, guest.id);
+
+        setGuests((current) => {
+          const previous = current.find((item) => item.id === guest.id);
+          const mapped =
+            toStudioGuest(record, previous ?? guest) ?? {
+              ...guest,
+              status: "invited" as const,
+            };
+
+          return previous
+            ? current.map((item) => (item.id === guest.id ? mapped : item))
+            : [...current, mapped];
+        });
+      },
+      [phase, sessionId, toStudioGuest],
+    );
+
+  /**
+   * Remove a guest from the LIVE. Uses the backend when a session exists;
+   * the local list updates either way so the stage stops showing them.
+   */
+  const removeGuest =
+    useCallback(
+      async (id: string) => {
+        if (sessionId) {
+          await api.removeGuest(sessionId, id);
+        }
+
+        setGuests((current) => {
+          const next =
+            current.filter(
+              (guest) =>
+                guest.id !== id,
+            );
+
+          if (!next.length) {
+            setGuestLayout("solo");
+          }
+
+          return next;
+        });
+      },
+      [sessionId],
+    );
+
+  const guestAutoLayoutRef = useRef(false);
+
+  /*
+   * Keep guest statuses in sync with the backend while LIVE.
+   */
+  useEffect(() => {
+    if (phase !== "live" || !sessionId || activeGuestSessionId) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const refresh = async () => {
+      try {
+        const records = await api.getLiveGuests(sessionId);
+
+        if (cancelled || !Array.isArray(records)) {
+          return;
+        }
+
+        const hasConnected = records.some(
+          (record) => record.status === "connected",
+        );
+
+        // When the first guest actually connects, switch from Solo to
+        // Side by side once so they appear on stage (matches the previous
+        // behaviour of inviteGuest). The host can switch back at any time.
+        if (hasConnected && !guestAutoLayoutRef.current) {
+          guestAutoLayoutRef.current = true;
+          setGuestLayout((layout) =>
+            layout === "solo" ? "side-by-side" : layout,
+          );
+        }
+
+        if (!hasConnected) {
+          guestAutoLayoutRef.current = false;
+        }
+
+        setGuests((current) => {
+          const byId = new Map(current.map((guest) => [guest.id, guest]));
+
+          return records
+            .filter(
+              (record) =>
+                record.status === "invited" ||
+                record.status === "accepted" ||
+                record.status === "connected",
+            )
+            .map((record) =>
+              toStudioGuest(
+                record,
+                byId.get(String(record.guestUserId ?? "")),
+              ),
+            )
+            .filter((guest): guest is Guest => guest !== null);
+        });
+      } catch (error) {
+        console.warn(
+          "[FOCKIS LIVE] Failed to refresh LIVE guests:",
+          error,
+        );
+      }
+    };
+
+    void refresh();
+
+    const interval = window.setInterval(() => {
+      void refresh();
+    }, 5000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [activeGuestSessionId, phase, sessionId, toStudioGuest]);
 
   const toggleMuteGuest =
     useCallback((id: string) => {
@@ -2535,6 +2800,15 @@ export function useStudio() {
     sendChatMessage,
     pinMessage,
     deleteMessage,
+
+    shareLive,
+    shareCount,
+    mutedUsernames,
+    blockedUsernames,
+    muteUser,
+    unmuteUser,
+    blockUser,
+    unblockUser,
 
     guests,
     guestLayout,

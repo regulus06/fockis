@@ -3,6 +3,11 @@ import { FOCKIS_API_URL } from "../../../config/fockisConfig";
 import type {
   Business,
   BusinessDeal,
+  BusinessHoursEntry,
+  BusinessImageUploadResponse,
+  BusinessInput,
+  BusinessListQuery,
+  BusinessStoreSummary,
 } from "../types/business.types";
 
 /* ============================================================================
@@ -20,12 +25,16 @@ const API_URL = (
 ============================================================================ */
 
 function getToken(): string | null {
-  return (
-    localStorage.getItem("access_token") ||
-    localStorage.getItem("token") ||
-    localStorage.getItem("jwt") ||
-    null
-  );
+  try {
+    return (
+      localStorage.getItem("access_token") ||
+      localStorage.getItem("token") ||
+      localStorage.getItem("jwt") ||
+      null
+    );
+  } catch {
+    return null;
+  }
 }
 
 function requireToken(
@@ -45,25 +54,16 @@ function authHeaders(
 ): Headers {
   const headers = new Headers();
 
-  headers.set(
-    "Accept",
-    "application/json",
-  );
+  headers.set("Accept", "application/json");
 
   const token = getToken();
 
   if (token) {
-    headers.set(
-      "Authorization",
-      `Bearer ${token}`,
-    );
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
   if (includeJson) {
-    headers.set(
-      "Content-Type",
-      "application/json",
-    );
+    headers.set("Content-Type", "application/json");
   }
 
   return headers;
@@ -72,84 +72,67 @@ function authHeaders(
 
 /* ============================================================================
    MEDIA URL
+
+   Uploaded files are stored as "/uploads/..." paths; they are expanded to
+   absolute API URLs for display only.
 ============================================================================ */
 
 function normalizeMediaUrl(
   value: unknown,
 ): string | undefined {
-  if (
-    typeof value !== "string" ||
-    !value.trim()
-  ) {
+  if (typeof value !== "string" || !value.trim()) {
     return undefined;
   }
 
   const url = value.trim();
 
-  if (
-    url.startsWith("http://") ||
-    url.startsWith("https://") ||
-    url.startsWith("data:") ||
-    url.startsWith("blob:")
-  ) {
+  if (/^(https?:\/\/|data:image\/|blob:)/i.test(url)) {
     return url;
   }
 
   if (url.startsWith("//")) {
-    return `http:${url}`;
+    return `https:${url}`;
   }
 
-  if (url.startsWith("/")) {
-    return `${API_URL}${url}`;
+  // Only API-relative paths are expanded. Anything else (for example a
+  // javascript: value) is dropped.
+  if (/^[a-z][a-z\d+.-]*:/i.test(url)) {
+    return undefined;
   }
 
-  return `${API_URL}/${url}`;
+  return url.startsWith("/")
+    ? `${API_URL}${url}`
+    : `${API_URL}/${url}`;
 }
 
 
 /* ============================================================================
-   SAFE STRING
+   SAFE VALUES
 ============================================================================ */
 
-function stringValue(
-  value: unknown,
-): string {
-  if (
-    value === null ||
-    value === undefined
-  ) {
+function stringValue(value: unknown): string {
+  if (value === null || value === undefined) {
     return "";
   }
 
   return String(value);
 }
 
+function optionalString(value: unknown): string | undefined {
+  const text = stringValue(value).trim();
 
-/* ============================================================================
-   SAFE NUMBER
-============================================================================ */
+  return text || undefined;
+}
 
-function numberValue(
-  value: unknown,
-  fallback = 0,
-): number {
-  if (
-    typeof value === "number" &&
-    Number.isFinite(value)
-  ) {
+function numberValue(value: unknown, fallback = 0): number {
+  if (typeof value === "number" && Number.isFinite(value)) {
     return value;
   }
 
-  if (
-    typeof value === "string" &&
-    value.trim()
-  ) {
-    const parsed =
-      Number(value);
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
 
-    if (
-      Number.isFinite(parsed)
-    ) {
+    if (Number.isFinite(parsed)) {
       return parsed;
     }
   }
@@ -157,19 +140,26 @@ function numberValue(
   return fallback;
 }
 
+function optionalNumber(value: unknown): number | undefined {
+  if (value === null || value === undefined || value === "") {
+    return undefined;
+  }
+
+  const parsed = numberValue(value, Number.NaN);
+
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 
 /* ============================================================================
    RESPONSE ERROR
 ============================================================================ */
 
-async function getErrorMessage(
-  response: Response,
-): Promise<string> {
+async function getErrorMessage(response: Response): Promise<string> {
   let text = "";
 
   try {
-    text =
-      await response.text();
+    text = await response.text();
   } catch {
     return `Request failed with status ${response.status}`;
   }
@@ -179,107 +169,61 @@ async function getErrorMessage(
   }
 
   try {
-    const data =
-      JSON.parse(text);
+    const data = JSON.parse(text);
 
-    if (
-      Array.isArray(
-        data?.message,
-      )
-    ) {
+    if (Array.isArray(data?.message)) {
       return data.message
-        .map(
-          (item: unknown) =>
-            typeof item === "string"
-              ? item
-              : JSON.stringify(item),
-        )
+        .map((item: unknown) => (typeof item === "string" ? item : JSON.stringify(item)))
         .join(", ");
     }
 
-    if (
-      typeof data?.message ===
-      "string"
-    ) {
+    if (typeof data?.message === "string") {
       return data.message;
     }
 
-    if (
-      data?.message !== undefined &&
-      data?.message !== null
-    ) {
-      return String(
-        data.message,
-      );
-    }
-
-    if (
-      typeof data?.error ===
-      "string"
-    ) {
+    if (typeof data?.error === "string") {
       return data.error;
     }
 
-    if (
-      data?.error !== undefined &&
-      data?.error !== null
-    ) {
-      return String(
-        data.error,
-      );
-    }
-
-    return text;
+    return `Request failed with status ${response.status}`;
   } catch {
-    return text;
+    return `Request failed with status ${response.status}`;
   }
 }
 
 
-/* ============================================================================
-   JSON REQUEST
-============================================================================ */
+/*
+ * Errors carry the HTTP status so pages can tell "not found" apart from
+ * network or server failures.
+ */
+export class BusinessApiError extends Error {
+  readonly status: number;
 
-async function requestJson<T>(
-  response: Response,
-): Promise<T> {
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "BusinessApiError";
+    this.status = status;
+  }
+}
+
+
+async function requestJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const message =
-      await getErrorMessage(
-        response,
-      );
+    const message = await getErrorMessage(response);
 
-    console.error(
-      "[businessesApi] API ERROR",
-      {
-        status:
-          response.status,
-        statusText:
-          response.statusText,
-        message,
-      },
-    );
-
-    throw new Error(
-      `${response.status}: ${message}`,
-    );
+    throw new BusinessApiError(response.status, message);
   }
 
-  const text =
-    await response.text();
+  const text = await response.text();
 
   if (!text.trim()) {
     return {} as T;
   }
 
   try {
-    return JSON.parse(
-      text,
-    ) as T;
+    return JSON.parse(text) as T;
   } catch {
-    throw new Error(
-      "Server returned invalid JSON.",
-    );
+    throw new Error("Server returned invalid JSON.");
   }
 }
 
@@ -288,61 +232,23 @@ async function requestJson<T>(
    RESPONSE ARRAY
 ============================================================================ */
 
-function extractArray(
-  data: any,
-): any[] {
+function extractArray(data: any): any[] {
   if (Array.isArray(data)) {
     return data;
   }
 
-  if (
-    Array.isArray(
-      data?.businesses,
-    )
-  ) {
-    return data.businesses;
-  }
-
-  if (
-    Array.isArray(
-      data?.data,
-    )
-  ) {
-    return data.data;
-  }
-
-  if (
-    Array.isArray(
-      data?.items,
-    )
-  ) {
-    return data.items;
-  }
-
-  if (
-    Array.isArray(
-      data?.results,
-    )
-  ) {
-    return data.results;
+  for (const key of ["businesses", "data", "items", "results"]) {
+    if (Array.isArray(data?.[key])) {
+      return data[key];
+    }
   }
 
   return [];
 }
 
 
-/* ============================================================================
-   RESPONSE BUSINESS
-============================================================================ */
-
-function extractBusiness(
-  data: any,
-): Business {
-  return normalizeBusiness(
-    data?.business ??
-      data?.data ??
-      data,
-  );
+function extractBusiness(data: any): Business {
+  return normalizeBusiness(data?.business ?? data?.data ?? data);
 }
 
 
@@ -350,100 +256,97 @@ function extractBusiness(
    NORMALIZE DEAL
 ============================================================================ */
 
-function normalizeDeal(
-  raw: any,
-): BusinessDeal {
-  const source =
-    raw?.deal ??
-    raw?.data ??
-    raw ??
-    {};
+function normalizeDeal(raw: any): BusinessDeal {
+  const source = raw?.deal ?? raw?.data ?? raw ?? {};
 
-  const id =
-    stringValue(
-      source?.id ??
-        source?._id ??
-        source?.dealId,
-    );
+  const id = stringValue(source?.id ?? source?._id ?? source?.dealId);
 
-  const businessId =
-    stringValue(
-      source?.businessId ??
-        source?.business?._id ??
-        source?.business?.id,
-    );
+  const businessId = stringValue(
+    source?.businessId ?? source?.business?._id ?? source?.business?.id,
+  );
 
-  const active =
-    source?.active ??
-    source?.isActive ??
-    true;
+  const active = source?.active ?? source?.isActive ?? true;
 
   return {
     ...source,
 
     id,
 
-    _id:
-      source?._id
-        ? stringValue(
-            source._id,
-          )
-        : id,
+    _id: source?._id ? stringValue(source._id) : id,
 
     businessId,
 
-    title:
-      stringValue(
-        source?.title ??
-          source?.name,
-      ),
+    title: stringValue(source?.title ?? source?.name),
 
-    description:
-      stringValue(
-        source?.description,
-      ),
+    description: stringValue(source?.description),
 
-    discount:
-      stringValue(
-        source?.discount,
-      ),
+    discount: stringValue(source?.discount),
 
-    couponCode:
-      stringValue(
-        source?.couponCode,
-      ),
+    couponCode: stringValue(source?.couponCode),
 
-    expiresAt:
-      stringValue(
-        source?.expiresAt ??
-          source?.expirationDate,
-      ),
+    expiresAt: stringValue(source?.expiresAt ?? source?.expirationDate),
 
-    active:
-      Boolean(active),
+    active: Boolean(active),
 
-    isActive:
-      Boolean(active),
+    isActive: Boolean(active),
 
-    imageUrl:
-      normalizeMediaUrl(
-        source?.imageUrl ??
-          source?.image,
-      ),
+    imageUrl: normalizeMediaUrl(source?.imageUrl ?? source?.image),
 
-    clicks:
-      numberValue(
-        source?.clicks,
-      ),
+    clicks: numberValue(source?.clicks),
 
-    createdAt:
-      source?.createdAt ??
-      undefined,
+    createdAt: source?.createdAt ?? undefined,
 
-    updatedAt:
-      source?.updatedAt ??
-      undefined,
+    updatedAt: source?.updatedAt ?? undefined,
   };
+}
+
+
+/* ============================================================================
+   NORMALIZE STORE SUMMARY
+============================================================================ */
+
+function normalizeStoreSummary(raw: any): BusinessStoreSummary | null {
+  if (!raw || typeof raw !== "object") {
+    return null;
+  }
+
+  const id = stringValue(raw.id ?? raw._id);
+  const slug = stringValue(raw.slug).trim();
+
+  if (!id || !slug) {
+    return null;
+  }
+
+  return {
+    id,
+    slug,
+    name: stringValue(raw.name) || "Fockis Store",
+    logo: normalizeMediaUrl(raw.logo ?? raw.logoUrl),
+    banner: normalizeMediaUrl(raw.banner ?? raw.bannerUrl),
+    verified: Boolean(raw.verified),
+  };
+}
+
+
+/* ============================================================================
+   NORMALIZE HOURS
+============================================================================ */
+
+function normalizeHours(raw: unknown): BusinessHoursEntry[] | undefined {
+  if (!Array.isArray(raw)) {
+    return undefined;
+  }
+
+  const entries = raw
+    .map((entry: any) => ({
+      day: numberValue(entry?.day, -1),
+      open: optionalString(entry?.open),
+      close: optionalString(entry?.close),
+      closed: Boolean(entry?.closed),
+    }))
+    .filter((entry) => entry.day >= 0 && entry.day <= 6);
+
+  return entries.length ? entries : undefined;
 }
 
 
@@ -451,84 +354,30 @@ function normalizeDeal(
    NORMALIZE BUSINESS
 ============================================================================ */
 
-function normalizeBusiness(
-  raw: any,
-): Business {
-  const source =
-    raw?.business ??
-    raw ??
-    {};
+function normalizeBusiness(raw: any): Business {
+  const source = raw?.business ?? raw ?? {};
 
-  const id =
-    stringValue(
-      source?.id ??
-        source?._id ??
-        source?.businessId,
-    );
+  const id = stringValue(source?.id ?? source?._id ?? source?.businessId);
 
-  const ownerId =
-    stringValue(
-      source?.ownerId ??
-        source?.owner?._id ??
-        source?.owner?.id,
-    );
+  const ownerId = stringValue(
+    source?.ownerId ?? source?.owner?._id ?? source?.owner?.id,
+  );
 
-  const socialLinks =
-    source?.socialLinks ??
-    {
-      facebook:
-        source?.facebookUrl ??
-        source?.facebook ??
-        undefined,
+  const rawSocial = source?.socialLinks ?? {};
 
-      instagram:
-        source?.instagramUrl ??
-        source?.instagram ??
-        undefined,
+  const socialLinks = {
+    facebook: optionalString(rawSocial.facebook ?? source?.facebookUrl),
+    instagram: optionalString(rawSocial.instagram ?? source?.instagramUrl),
+    tiktok: optionalString(rawSocial.tiktok ?? source?.tiktokUrl),
+    youtube: optionalString(rawSocial.youtube ?? source?.youtubeUrl),
+    linkedin: optionalString(rawSocial.linkedin ?? source?.linkedinUrl),
+  };
 
-      tiktok:
-        source?.tiktokUrl ??
-        source?.tiktok ??
-        undefined,
+  const verified = Boolean(source?.verified ?? source?.isVerified ?? false);
 
-      youtube:
-        source?.youtubeUrl ??
-        source?.youtube ??
-        undefined,
-
-      linkedin:
-        source?.linkedinUrl ??
-        source?.linkedin ??
-        undefined,
-    };
-
-  const verified =
-    Boolean(
-      source?.verified ??
-        source?.isVerified ??
-        false,
-    );
-
-  const latitude =
-    source?.latitude !==
-      undefined &&
-    source?.latitude !==
-      null
-      ? numberValue(
-          source.latitude,
-          NaN,
-        )
-      : undefined;
-
-  const longitude =
-    source?.longitude !==
-      undefined &&
-    source?.longitude !==
-      null
-      ? numberValue(
-          source.longitude,
-          NaN,
-        )
+  const primaryAction =
+    source?.primaryAction === "WEBSITE" || source?.primaryAction === "STORE"
+      ? source.primaryAction
       : undefined;
 
   return {
@@ -536,322 +385,244 @@ function normalizeBusiness(
 
     id,
 
-    _id:
-      source?._id
-        ? stringValue(
-            source._id,
-          )
-        : id,
+    _id: source?._id ? stringValue(source._id) : id,
 
     ownerId,
 
-    name:
-      stringValue(
-        source?.name ??
-          source?.businessName,
-      ),
+    name: stringValue(source?.name ?? source?.businessName),
 
-    description:
-      stringValue(
-        source?.description,
-      ),
+    description: stringValue(source?.description),
 
-    category:
-      source?.category ??
-      "OTHER",
+    category: source?.category ?? "OTHER",
 
-    logoUrl:
-      normalizeMediaUrl(
-        source?.logoUrl ??
-          source?.logo,
-      ),
+    tagline: optionalString(source?.tagline),
 
-    coverImageUrl:
-      normalizeMediaUrl(
-        source?.coverImageUrl ??
-          source?.coverImage,
-      ),
+    foundedYear: optionalNumber(source?.foundedYear),
 
-    websiteUrl:
-      source?.websiteUrl ??
-      source?.website ??
-      undefined,
+    businessSize: optionalString(source?.businessSize) as Business["businessSize"],
 
-    phone:
-      source?.phone ??
-      source?.phoneNumber ??
-      undefined,
+    logoUrl: normalizeMediaUrl(source?.logoUrl ?? source?.logo),
 
-    email:
-      source?.email ??
-      undefined,
+    coverImageUrl: normalizeMediaUrl(source?.coverImageUrl ?? source?.coverImage),
 
-    address:
-      stringValue(
-        source?.address,
-      ),
+    websiteUrl: optionalString(source?.websiteUrl ?? source?.website),
 
-    city:
-      stringValue(
-        source?.city,
-      ),
+    phone: optionalString(source?.phone ?? source?.phoneNumber),
 
-    state:
-      stringValue(
-        source?.state,
-      ),
+    email: optionalString(source?.email),
 
-    zipCode:
-      stringValue(
-        source?.zipCode ??
-          source?.postalCode,
-      ),
+    storeId: optionalString(source?.storeId),
 
-    postalCode:
-      stringValue(
-        source?.postalCode ??
-          source?.zipCode,
-      ),
+    store: normalizeStoreSummary(source?.store),
 
-    country:
-      stringValue(
-        source?.country,
-      ),
+    primaryAction,
 
-    latitude:
-      Number.isFinite(
-        latitude,
-      )
-        ? latitude
-        : undefined,
+    address: stringValue(source?.address),
 
-    longitude:
-      Number.isFinite(
-        longitude,
-      )
-        ? longitude
-        : undefined,
+    city: stringValue(source?.city),
 
-    facebookUrl:
-      source?.facebookUrl ??
-      socialLinks?.facebook ??
-      undefined,
+    state: stringValue(source?.state),
 
-    instagramUrl:
-      source?.instagramUrl ??
-      socialLinks?.instagram ??
-      undefined,
+    zipCode: stringValue(source?.zipCode ?? source?.postalCode),
 
-    tiktokUrl:
-      source?.tiktokUrl ??
-      socialLinks?.tiktok ??
-      undefined,
+    postalCode: stringValue(source?.postalCode ?? source?.zipCode),
 
-    youtubeUrl:
-      source?.youtubeUrl ??
-      socialLinks?.youtube ??
-      undefined,
+    country: stringValue(source?.country),
 
-    linkedinUrl:
-      source?.linkedinUrl ??
-      socialLinks?.linkedin ??
-      undefined,
+    latitude: optionalNumber(source?.latitude),
+
+    longitude: optionalNumber(source?.longitude),
+
+    hours: normalizeHours(source?.hours),
+
+    byAppointmentOnly: Boolean(source?.byAppointmentOnly),
+
+    timeZone: optionalString(source?.timeZone),
+
+    facebookUrl: socialLinks.facebook,
+
+    instagramUrl: socialLinks.instagram,
+
+    tiktokUrl: socialLinks.tiktok,
+
+    youtubeUrl: socialLinks.youtube,
+
+    linkedinUrl: socialLinks.linkedin,
 
     socialLinks,
 
-    status:
-      source?.status ??
-      "ACTIVE",
+    status: source?.status ?? "DRAFT",
 
-    spotlightEnabled:
-      Boolean(
-        source?.spotlightEnabled ??
-          source?.spotlight ??
-          false,
-      ),
+    feedEnabled: Boolean(source?.feedEnabled),
 
-    spotlightPriority:
-      numberValue(
-        source?.spotlightPriority,
-      ),
+    spotlightEnabled: Boolean(source?.spotlightEnabled ?? source?.spotlight ?? false),
 
-    views:
-      numberValue(
-        source?.views,
-      ),
+    spotlightPriority: numberValue(source?.spotlightPriority),
 
-    websiteClicks:
-      numberValue(
-        source?.websiteClicks,
-      ),
+    views: numberValue(source?.views),
+
+    websiteClicks: numberValue(source?.websiteClicks),
+
+    storeClicks: numberValue(source?.storeClicks),
 
     verified,
 
-    isVerified:
-      verified,
+    isVerified: verified,
 
-    deals:
-      Array.isArray(
-        source?.deals,
-      )
-        ? source.deals.map(
-            normalizeDeal,
-          )
-        : [],
+    deals: Array.isArray(source?.deals) ? source.deals.map(normalizeDeal) : [],
 
-    createdAt:
-      source?.createdAt ??
-      "",
+    createdAt: source?.createdAt ?? "",
 
-    updatedAt:
-      source?.updatedAt ??
-      "",
+    updatedAt: source?.updatedAt ?? "",
   };
+}
+
+function normalizeList(data: any): Business[] {
+  const seen = new Set<string>();
+
+  return extractArray(data)
+    .map(normalizeBusiness)
+    .filter((business) => {
+      if (!business.id || seen.has(business.id)) {
+        return false;
+      }
+
+      seen.add(business.id);
+
+      return true;
+    });
 }
 
 
 /* ============================================================================
-   CLEAN BUSINESS PAYLOAD
+   PAYLOADS
 ============================================================================ */
 
-function cleanBusinessPayload(
-  data: Partial<Business>,
+const TEXT_FIELDS = [
+  "name",
+  "description",
+  "tagline",
+  "logoUrl",
+  "coverImageUrl",
+  "websiteUrl",
+  "phone",
+  "email",
+  "address",
+  "city",
+  "state",
+  "zipCode",
+  "country",
+  "timeZone",
+] as const;
+
+/*
+ * create: empty values are omitted.
+ * update: empty values are sent as "" / null so the backend clears them.
+ */
+function buildBusinessPayload(
+  input: BusinessInput,
+  mode: "create" | "update",
 ): Record<string, unknown> {
-  const payload: Record<
-    string,
-    unknown
-  > = {};
+  const payload: Record<string, unknown> = {};
 
-  if (
-    data?.name !==
-      undefined &&
-    data?.name !== null
-  ) {
+  for (const field of TEXT_FIELDS) {
+    const value = input[field];
 
-    payload.name =
-      stringValue(
-        data.name,
-      ).trim();
+    if (value === undefined) {
+      continue;
+    }
 
-  }
+    const text = stringValue(value).trim();
 
-  if (
-    data?.description !==
-      undefined &&
-    data?.description !== null
-  ) {
-
-    payload.description =
-      stringValue(
-        data.description,
-      ).trim();
-
-  }
-
-  if (
-    data?.category !==
-      undefined &&
-    data?.category !== null
-  ) {
-
-    payload.category =
-      data.category;
-
-  }
-
-  const optionalFields: Array<
-    keyof Business
-  > = [
-    "logoUrl",
-    "coverImageUrl",
-    "websiteUrl",
-    "phone",
-    "email",
-    "address",
-    "city",
-    "state",
-    "country",
-  ];
-
-  for (
-    const field of optionalFields
-  ) {
-    const value =
-      data?.[field];
-
-    if (
-      value !==
-        undefined &&
-      value !== null &&
-      String(value).trim() !== ""
-    ) {
-      payload[field] =
-        String(value).trim();
+    if (text || mode === "update") {
+      payload[field] = text;
     }
   }
 
-  const zipCode =
-    data?.zipCode ??
-    data?.postalCode;
-
-  if (
-    zipCode !==
-      undefined &&
-    zipCode !== null &&
-    String(zipCode).trim() !== ""
-  ) {
-    payload.zipCode =
-      String(zipCode).trim();
+  if (input.category) {
+    payload.category = input.category;
   }
 
-  if (
-    typeof data?.latitude ===
-      "number" &&
-    Number.isFinite(
-      data.latitude,
-    )
-  ) {
-    payload.latitude =
-      data.latitude;
+  const nullableFields = [
+    "foundedYear",
+    "businessSize",
+    "storeId",
+    "primaryAction",
+    "latitude",
+    "longitude",
+  ] as const;
+
+  for (const field of nullableFields) {
+    const value = input[field];
+
+    if (value === undefined) {
+      continue;
+    }
+
+    const empty = value === null || value === "";
+
+    if (empty) {
+      if (mode === "update") {
+        payload[field] = null;
+      }
+
+      continue;
+    }
+
+    payload[field] = value;
   }
 
-  if (
-    typeof data?.longitude ===
-      "number" &&
-    Number.isFinite(
-      data.longitude,
-    )
-  ) {
-    payload.longitude =
-      data.longitude;
+  if (input.hours !== undefined) {
+    payload.hours = input.hours;
   }
 
-  if (
-    data?.socialLinks &&
-    typeof data.socialLinks ===
-      "object"
-  ) {
-    payload.socialLinks =
-      data.socialLinks;
+  if (input.byAppointmentOnly !== undefined) {
+    payload.byAppointmentOnly = input.byAppointmentOnly;
   }
 
-  if (
-    typeof data?.spotlightEnabled ===
-    "boolean"
-  ) {
-    payload.spotlightEnabled =
-      data.spotlightEnabled;
+  if (input.socialLinks !== undefined) {
+    const links: Record<string, string> = {};
+
+    for (const [key, value] of Object.entries(input.socialLinks)) {
+      const text = stringValue(value).trim();
+
+      if (text || mode === "update") {
+        links[key] = text;
+      }
+    }
+
+    payload.socialLinks = links;
   }
 
-  if (
-    typeof data?.spotlightPriority ===
-      "number" &&
-    Number.isFinite(
-      data.spotlightPriority,
-    )
-  ) {
-    payload.spotlightPriority =
-      data.spotlightPriority;
+  if (mode === "update" && typeof input.spotlightEnabled === "boolean") {
+    payload.spotlightEnabled = input.spotlightEnabled;
+  }
+
+  return payload;
+}
+
+
+function buildDealPayload(data: Partial<BusinessDeal>): Record<string, unknown> {
+  const payload: Record<string, unknown> = {
+    title: stringValue(data?.title).trim(),
+  };
+
+  for (const field of ["description", "discount", "couponCode"] as const) {
+    if (data?.[field] !== undefined) {
+      payload[field] = stringValue(data[field]).trim();
+    }
+  }
+
+  if (data?.expiresAt) {
+    // A date-only value ("2026-10-31") means "valid through the end of that
+    // day" in the owner's local time.
+    payload.expiresAt = /^\d{4}-\d{2}-\d{2}$/.test(data.expiresAt)
+      ? new Date(`${data.expiresAt}T23:59:59`).toISOString()
+      : data.expiresAt;
+  }
+
+  if (typeof data?.active === "boolean") {
+    payload.active = data.active;
   }
 
   return payload;
@@ -859,77 +630,77 @@ function cleanBusinessPayload(
 
 
 /* ============================================================================
-   CLEAN DEAL PAYLOAD
+   REQUEST HELPERS
 ============================================================================ */
 
-function cleanDealPayload(
-  data: Partial<BusinessDeal>,
-): {
-  title: string;
-  description?: string;
-  discount?: string;
-  couponCode?: string;
-  expiresAt: string;
-} {
-  const title =
-    stringValue(
-      data?.title,
-    ).trim();
+function businessUrl(id: string, suffix = ""): string {
+  if (!id) {
+    throw new Error("Business ID is required.");
+  }
 
-  const description =
-    stringValue(
-      data?.description,
-    ).trim();
+  return `${API_URL}/businesses/${encodeURIComponent(id)}${suffix}`;
+}
 
-  const discount =
-    stringValue(
-      data?.discount,
-    ).trim();
+async function sendJson<T>(
+  url: string,
+  method: "POST" | "PATCH" | "DELETE",
+  body?: unknown,
+): Promise<T> {
+  const response = await fetch(url, {
+    method,
+    headers: authHeaders(body !== undefined),
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
 
-  const couponCode =
-    stringValue(
-      data?.couponCode,
-    ).trim();
+  return requestJson<T>(response);
+}
 
-  const expiresAt =
-    data?.expiresAt
-      ? String(
-          data.expiresAt,
-        )
-      : "";
+/*
+ * Fire-and-forget analytics. Never throws.
+ */
+function track(url: string): void {
+  try {
+    void fetch(url, {
+      method: "POST",
+      headers: authHeaders(),
+      keepalive: true,
+    }).catch(() => undefined);
+  } catch {
+    // ignore
+  }
+}
 
-  const payload: {
-    title: string;
-    description?: string;
-    discount?: string;
-    couponCode?: string;
-    expiresAt: string;
-  } = {
-    title,
-    expiresAt,
+async function uploadImage(
+  businessId: string,
+  file: File,
+  endpoint: "logo" | "cover-image",
+): Promise<BusinessImageUploadResponse> {
+  requireToken("You must be logged in to upload a business image.");
+
+  if (!file) {
+    throw new Error("Please choose an image.");
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  // Content-Type is set by the browser (multipart boundary).
+  const response = await fetch(businessUrl(businessId, `/${endpoint}`), {
+    method: "POST",
+    headers: authHeaders(),
+    body: formData,
+  });
+
+  const result = await requestJson<any>(response);
+
+  return {
+    success: Boolean(result?.success ?? true),
+    business: {
+      id: stringValue(result?.business?.id ?? businessId),
+      logoUrl: normalizeMediaUrl(result?.business?.logoUrl),
+      coverImageUrl: normalizeMediaUrl(result?.business?.coverImageUrl),
+    },
   };
-
-  if (description) {
-    payload.description =
-      description;
-  }
-
-  if (discount) {
-    payload.discount =
-      discount;
-  }
-
-  if (couponCode) {
-    payload.couponCode =
-      couponCode;
-  }
-
-  console.log(
-    "[businessesApi] DEAL PAYLOAD",
-    payload,
-  );
-
-  return payload;
 }
 
 
@@ -940,48 +711,44 @@ function cleanDealPayload(
 export const businessesApi = {
 
   /* ==========================================================================
+     LIST PUBLIC BUSINESSES
+     GET /businesses?q=&category=&city=&sort=&page=&limit=
+  ========================================================================== */
+
+  async list(query: BusinessListQuery = {}): Promise<Business[]> {
+    const url = new URL(`${API_URL}/businesses`);
+
+    const params: Record<string, string | number | undefined> = {
+      q: query.q?.trim() || undefined,
+      category: query.category,
+      city: query.city?.trim() || undefined,
+      sort: query.sort,
+      page: query.page,
+      limit: query.limit,
+    };
+
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== "") {
+        url.searchParams.set(key, String(value));
+      }
+    }
+
+    const response = await fetch(url.toString(), {
+      method: "GET",
+      headers: authHeaders(),
+    });
+
+    return normalizeList(await requestJson<any>(response));
+  },
+
+
+  /* ==========================================================================
      GET ALL PUBLIC BUSINESSES
      GET /businesses
   ========================================================================== */
 
-  async getAll(): Promise<
-    Business[]
-  > {
-    const url =
-      `${API_URL}/businesses`;
-
-    console.log(
-      "[businessesApi] GET ALL",
-      url,
-    );
-
-    const response =
-      await fetch(
-        url,
-        {
-          method: "GET",
-          headers:
-            authHeaders(),
-        },
-      );
-
-    const data =
-      await requestJson<any>(
-        response,
-      );
-
-    return extractArray(data)
-      .map(
-        normalizeBusiness,
-      )
-      .filter(
-        (
-          business,
-        ) =>
-          Boolean(
-            business.id,
-          ),
-      );
+  async getAll(): Promise<Business[]> {
+    return businessesApi.list();
   },
 
 
@@ -990,44 +757,13 @@ export const businessesApi = {
      GET /businesses/spotlight
   ========================================================================== */
 
-  async getSpotlight(): Promise<
-    Business[]
-  > {
-    const url =
-      `${API_URL}/businesses/spotlight`;
+  async getSpotlight(): Promise<Business[]> {
+    const response = await fetch(`${API_URL}/businesses/spotlight`, {
+      method: "GET",
+      headers: authHeaders(),
+    });
 
-    console.log(
-      "[businessesApi] GET SPOTLIGHT",
-      url,
-    );
-
-    const response =
-      await fetch(
-        url,
-        {
-          method: "GET",
-          headers:
-            authHeaders(),
-        },
-      );
-
-    const data =
-      await requestJson<any>(
-        response,
-      );
-
-    return extractArray(data)
-      .map(
-        normalizeBusiness,
-      )
-      .filter(
-        (
-          business,
-        ) =>
-          Boolean(
-            business.id,
-          ),
-      );
+    return normalizeList(await requestJson<any>(response));
   },
 
 
@@ -1036,48 +772,15 @@ export const businessesApi = {
      GET /businesses/mine
   ========================================================================== */
 
-  async getMine(): Promise<
-    Business[]
-  > {
-    requireToken(
-      "You must be logged in to manage businesses.",
-    );
+  async getMine(): Promise<Business[]> {
+    requireToken("You must be logged in to manage businesses.");
 
-    const url =
-      `${API_URL}/businesses/mine`;
+    const response = await fetch(`${API_URL}/businesses/mine`, {
+      method: "GET",
+      headers: authHeaders(),
+    });
 
-    console.log(
-      "[businessesApi] GET MINE",
-      url,
-    );
-
-    const response =
-      await fetch(
-        url,
-        {
-          method: "GET",
-          headers:
-            authHeaders(),
-        },
-      );
-
-    const data =
-      await requestJson<any>(
-        response,
-      );
-
-    return extractArray(data)
-      .map(
-        normalizeBusiness,
-      )
-      .filter(
-        (
-          business,
-        ) =>
-          Boolean(
-            business.id,
-          ),
-      );
+    return normalizeList(await requestJson<any>(response));
   },
 
 
@@ -1086,38 +789,13 @@ export const businessesApi = {
      GET /businesses/:id
   ========================================================================== */
 
-  async getById(
-    id: string,
-  ): Promise<Business> {
-    if (!id) {
-      throw new Error(
-        "Business ID is required.",
-      );
-    }
+  async getById(id: string): Promise<Business> {
+    const response = await fetch(businessUrl(id), {
+      method: "GET",
+      headers: authHeaders(),
+    });
 
-    const url =
-      `${API_URL}/businesses/${encodeURIComponent(
-        id,
-      )}`;
-
-    const response =
-      await fetch(
-        url,
-        {
-          method: "GET",
-          headers:
-            authHeaders(),
-        },
-      );
-
-    const data =
-      await requestJson<any>(
-        response,
-      );
-
-    return extractBusiness(
-      data,
-    );
+    return extractBusiness(await requestJson<any>(response));
   },
 
 
@@ -1126,324 +804,72 @@ export const businessesApi = {
      POST /businesses
   ========================================================================== */
 
-  async create(
-    data: Partial<Business>,
-  ): Promise<Business> {
-    requireToken(
-      "You must be logged in to create a business.",
+  async create(data: BusinessInput): Promise<Business> {
+    requireToken("You must be logged in to create a business.");
+
+    const result = await sendJson<any>(
+      `${API_URL}/businesses`,
+      "POST",
+      buildBusinessPayload(data, "create"),
     );
 
-    const url =
-      `${API_URL}/businesses`;
-
-    const payload =
-      cleanBusinessPayload(
-        data,
-      );
-
-    console.log(
-      "[businessesApi] CREATE",
-      {
-        url,
-        payload,
-      },
-    );
-
-    const response =
-      await fetch(
-        url,
-        {
-          method: "POST",
-          headers:
-            authHeaders(true),
-          body:
-            JSON.stringify(
-              payload,
-            ),
-        },
-      );
-
-    const result =
-      await requestJson<any>(
-        response,
-      );
-
-    return extractBusiness(
-      result,
-    );
+    return extractBusiness(result);
   },
 
 
   /* ==========================================================================
      UPDATE BUSINESS
      PATCH /businesses/:id
+
+     Only the fields present in `data` are sent. Image URLs are never
+     re-sent unless the caller changes them, so uploaded images keep their
+     stored path.
   ========================================================================== */
 
-  async update(
-    id: string,
-    data: Partial<Business>,
-  ): Promise<Business> {
-    requireToken(
-      "You must be logged in to update a business.",
+  async update(id: string, data: BusinessInput): Promise<Business> {
+    requireToken("You must be logged in to update a business.");
+
+    const result = await sendJson<any>(
+      businessUrl(id),
+      "PATCH",
+      buildBusinessPayload(data, "update"),
     );
 
-    if (!id) {
-      throw new Error(
-        "Business ID is required.",
-      );
-    }
-
-    const url =
-      `${API_URL}/businesses/${encodeURIComponent(
-        id,
-      )}`;
-
-    /*
-     * IMPORTANT:
-     *
-     * Mongoose re-validates every required path on
-     * business.save(), not just the fields touched by
-     * this request. That means a partial update (e.g.
-     * toggling spotlightEnabled alone) can still fail
-     * with "name is required" / "category is required"
-     * if the stored document is ever missing either
-     * field for any reason.
-     *
-     * To make partial updates safe regardless of the
-     * document's current state, fetch the business
-     * first and merge it under the caller's changes so
-     * required fields are always resent with a valid
-     * current value.
-     */
-
-    const current =
-      await businessesApi.getById(
-        id,
-      );
-
-    const payload =
-      cleanBusinessPayload({
-        ...current,
-        ...data,
-
-        name:
-          data.name ??
-          current.name,
-
-        category:
-          data.category ??
-          current.category,
-      });
-
-    console.log(
-      "[businessesApi] UPDATE",
-      {
-        url,
-        payload,
-      },
-    );
-
-    const response =
-      await fetch(
-        url,
-        {
-          method: "PATCH",
-          headers:
-            authHeaders(true),
-          body:
-            JSON.stringify(
-              payload,
-            ),
-        },
-      );
-
-    const result =
-      await requestJson<any>(
-        response,
-      );
-
-    return extractBusiness(
-      result,
-    );
+    return extractBusiness(result);
   },
 
 
   /* ==========================================================================
-     PUBLISH BUSINESS TO FEED
-     POST /businesses/:id/publish
-  ========================================================================== */
-
-  async publish(
-    id: string,
-  ): Promise<Business> {
-    requireToken(
-      "You must be logged in to publish a business.",
-    );
-
-    if (!id) {
-      throw new Error(
-        "Business ID is required.",
-      );
-    }
-
-    const url =
-      `${API_URL}/businesses/${encodeURIComponent(
-        id,
-      )}/publish`;
-
-    console.log(
-      "[businessesApi] PUBLISH",
-      url,
-    );
-
-    const response =
-      await fetch(
-        url,
-        {
-          method: "POST",
-          headers:
-            authHeaders(),
-        },
-      );
-
-    const result =
-      await requestJson<any>(
-        response,
-      );
-
-    return extractBusiness(
-      result,
-    );
-  },
-
-
-  /* ==========================================================================
-     UNPUBLISH BUSINESS FROM FEED
+     PUBLISH / UNPUBLISH
+     POST   /businesses/:id/publish
      DELETE /businesses/:id/publish
   ========================================================================== */
 
-  async unpublish(
-    id: string,
-  ): Promise<Business> {
-    requireToken(
-      "You must be logged in to unpublish a business.",
-    );
+  async publish(id: string): Promise<Business> {
+    requireToken("You must be logged in to publish a business.");
 
-    if (!id) {
-      throw new Error(
-        "Business ID is required.",
-      );
-    }
+    return extractBusiness(await sendJson<any>(businessUrl(id, "/publish"), "POST"));
+  },
 
-    const url =
-      `${API_URL}/businesses/${encodeURIComponent(
-        id,
-      )}/publish`;
+  async unpublish(id: string): Promise<Business> {
+    requireToken("You must be logged in to unpublish a business.");
 
-    console.log(
-      "[businessesApi] UNPUBLISH",
-      url,
-    );
-
-    const response =
-      await fetch(
-        url,
-        {
-          method: "DELETE",
-          headers:
-            authHeaders(),
-        },
-      );
-
-    const result =
-      await requestJson<any>(
-        response,
-      );
-
-    return extractBusiness(
-      result,
-    );
+    return extractBusiness(await sendJson<any>(businessUrl(id, "/publish"), "DELETE"));
   },
 
 
   /* ==========================================================================
-     UPLOAD COVER IMAGE
+     IMAGE UPLOADS
+     POST /businesses/:id/logo
      POST /businesses/:id/cover-image
   ========================================================================== */
 
-  async uploadCoverImage(
-    businessId: string,
-    file: File,
-  ): Promise<{
-    success: boolean;
-    business: {
-      id: string;
-      _id?: string;
-      coverImageUrl?: string;
-      coverImageSource?: string;
-    };
-  }> {
-    requireToken(
-      "You must be logged in to upload a business image.",
-    );
+  async uploadLogo(businessId: string, file: File): Promise<BusinessImageUploadResponse> {
+    return uploadImage(businessId, file, "logo");
+  },
 
-    if (!businessId) {
-      throw new Error(
-        "Business ID is required.",
-      );
-    }
-
-    if (!file) {
-      throw new Error(
-        "Cover image file is required.",
-      );
-    }
-
-    const url =
-      `${API_URL}/businesses/${encodeURIComponent(
-        businessId,
-      )}/cover-image`;
-
-    const formData =
-      new FormData();
-
-    formData.append(
-      "file",
-      file,
-    );
-
-    /*
-     * DO NOT set Content-Type manually.
-     * The browser adds the multipart boundary.
-     */
-
-    const response =
-      await fetch(
-        url,
-        {
-          method: "POST",
-          headers:
-            authHeaders(),
-          body:
-            formData,
-        },
-      );
-
-    const result =
-      await requestJson<any>(
-        response,
-      );
-
-    if (
-      result?.business
-    ) {
-      result.business =
-        normalizeBusiness(
-          result.business,
-        );
-    }
-
-    return result;
+  async uploadCoverImage(businessId: string, file: File): Promise<BusinessImageUploadResponse> {
+    return uploadImage(businessId, file, "cover-image");
   },
 
 
@@ -1452,297 +878,88 @@ export const businessesApi = {
      DELETE /businesses/:id
   ========================================================================== */
 
-  async remove(
-    id: string,
-  ): Promise<{
-    success: boolean;
-  }> {
-    requireToken(
-      "You must be logged in to delete a business.",
-    );
+  async remove(id: string): Promise<{ success: boolean }> {
+    requireToken("You must be logged in to delete a business.");
 
-    if (!id) {
-      throw new Error(
-        "Business ID is required.",
-      );
-    }
-
-    const url =
-      `${API_URL}/businesses/${encodeURIComponent(
-        id,
-      )}`;
-
-    const response =
-      await fetch(
-        url,
-        {
-          method: "DELETE",
-          headers:
-            authHeaders(),
-        },
-      );
-
-    return requestJson<{
-      success: boolean;
-    }>(
-      response,
-    );
+    return sendJson<{ success: boolean }>(businessUrl(id), "DELETE");
   },
 
 
   /* ==========================================================================
-     CREATE DEAL
-     POST /businesses/:id/deals
+     DEALS
+     POST   /businesses/:id/deals
+     PATCH  /businesses/:id/deals/:dealId
+     DELETE /businesses/:id/deals/:dealId
   ========================================================================== */
 
-  async createDeal(
-    businessId: string,
-    data: Partial<BusinessDeal>,
-  ): Promise<BusinessDeal> {
-    requireToken(
-      "You must be logged in to create a deal.",
+  async createDeal(businessId: string, data: Partial<BusinessDeal>): Promise<BusinessDeal> {
+    requireToken("You must be logged in to create a deal.");
+
+    const result = await sendJson<any>(
+      businessUrl(businessId, "/deals"),
+      "POST",
+      buildDealPayload(data),
     );
 
-    if (!businessId) {
-      throw new Error(
-        "Business ID is required.",
-      );
-    }
-
-    const url =
-      `${API_URL}/businesses/${encodeURIComponent(
-        businessId,
-      )}/deals`;
-
-    const payload =
-      cleanDealPayload(
-        data,
-      );
-
-    console.log(
-      "[businessesApi] CREATE DEAL",
-      {
-        url,
-        businessId,
-        payload,
-      },
-    );
-
-    const response =
-      await fetch(
-        url,
-        {
-          method: "POST",
-          headers:
-            authHeaders(true),
-          body:
-            JSON.stringify(
-              payload,
-            ),
-        },
-      );
-
-    const result =
-      await requestJson<any>(
-        response,
-      );
-
-    return normalizeDeal(
-      result?.deal ??
-        result?.data ??
-        result,
-    );
+    return normalizeDeal(result);
   },
-
-
-  /* ==========================================================================
-     UPDATE DEAL
-     PATCH /businesses/deals/:dealId
-  ========================================================================== */
 
   async updateDeal(
+    businessId: string,
     dealId: string,
     data: Partial<BusinessDeal>,
   ): Promise<BusinessDeal> {
-    requireToken(
-      "You must be logged in to update a deal.",
-    );
+    requireToken("You must be logged in to update a deal.");
 
     if (!dealId) {
-      throw new Error(
-        "Deal ID is required.",
-      );
+      throw new Error("Deal ID is required.");
     }
 
-    const url =
-      `${API_URL}/businesses/deals/${encodeURIComponent(
-        dealId,
-      )}`;
-
-    const payload =
-      cleanDealPayload(
-        data,
-      );
-
-    console.log(
-      "[businessesApi] UPDATE DEAL",
-      {
-        url,
-        dealId,
-        payload,
-      },
+    const result = await sendJson<any>(
+      businessUrl(businessId, `/deals/${encodeURIComponent(dealId)}`),
+      "PATCH",
+      buildDealPayload(data),
     );
 
-    const response =
-      await fetch(
-        url,
-        {
-          method: "PATCH",
-          headers:
-            authHeaders(true),
-          body:
-            JSON.stringify(
-              payload,
-            ),
-        },
-      );
+    return normalizeDeal(result);
+  },
 
-    const result =
-      await requestJson<any>(
-        response,
-      );
+  async deleteDeal(businessId: string, dealId: string): Promise<{ success: boolean }> {
+    requireToken("You must be logged in to delete a deal.");
 
-    return normalizeDeal(
-      result?.deal ??
-        result?.data ??
-        result,
+    if (!dealId) {
+      throw new Error("Deal ID is required.");
+    }
+
+    return sendJson<{ success: boolean }>(
+      businessUrl(businessId, `/deals/${encodeURIComponent(dealId)}`),
+      "DELETE",
     );
   },
 
 
   /* ==========================================================================
-     DELETE DEAL
-     DELETE /businesses/deals/:dealId
-  ========================================================================== */
-
-  async deleteDeal(
-    dealId: string,
-  ): Promise<{
-    success: boolean;
-  }> {
-    requireToken(
-      "You must be logged in to delete a deal.",
-    );
-
-    if (!dealId) {
-      throw new Error(
-        "Deal ID is required.",
-      );
-    }
-
-    const url =
-      `${API_URL}/businesses/deals/${encodeURIComponent(
-        dealId,
-      )}`;
-
-    const response =
-      await fetch(
-        url,
-        {
-          method: "DELETE",
-          headers:
-            authHeaders(),
-        },
-      );
-
-    return requestJson<{
-      success: boolean;
-    }>(
-      response,
-    );
-  },
-
-
-  /* ==========================================================================
-     TRACK VIEW
+     ANALYTICS
      POST /businesses/:id/view
+     POST /businesses/:id/website-click
+     POST /businesses/:id/store-click
   ========================================================================== */
 
-  async trackView(
-    id: string,
-  ): Promise<void> {
-    if (!id) {
-      return;
-    }
-
-    try {
-      const response =
-        await fetch(
-          `${API_URL}/businesses/${encodeURIComponent(
-            id,
-          )}/view`,
-          {
-            method: "POST",
-            headers:
-              authHeaders(),
-          },
-        );
-
-      if (!response.ok) {
-        console.warn(
-          "[businessesApi] trackView failed",
-          response.status,
-        );
-      }
-    } catch (
-      error
-    ) {
-      console.warn(
-        "[businessesApi] trackView error",
-        error,
-      );
+  async trackView(id: string): Promise<void> {
+    if (id) {
+      track(businessUrl(id, "/view"));
     }
   },
 
-
-  /* ==========================================================================
-     TRACK WEBSITE CLICK
-     POST /businesses/:id/website-click
-  ========================================================================== */
-
-  async trackWebsiteClick(
-    id: string,
-  ): Promise<void> {
-    if (!id) {
-      return;
+  async trackWebsiteClick(id: string): Promise<void> {
+    if (id) {
+      track(businessUrl(id, "/website-click"));
     }
+  },
 
-    try {
-      const response =
-        await fetch(
-          `${API_URL}/businesses/${encodeURIComponent(
-            id,
-          )}/website-click`,
-          {
-            method: "POST",
-            headers:
-              authHeaders(),
-          },
-        );
-
-      if (!response.ok) {
-        console.warn(
-          "[businessesApi] trackWebsiteClick failed",
-          response.status,
-        );
-      }
-    } catch (
-      error
-    ) {
-      console.warn(
-        "[businessesApi] trackWebsiteClick error",
-        error,
-      );
+  async trackStoreClick(id: string): Promise<void> {
+    if (id) {
+      track(businessUrl(id, "/store-click"));
     }
   },
 };

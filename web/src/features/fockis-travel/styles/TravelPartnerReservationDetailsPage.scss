@@ -157,9 +157,9 @@
   }
 
   .travel-status-badge.pending {
-    background: rgba(240, 169, 62, 0.18);
+    background: rgba(21, 112, 239, 0.18);
     color: $gold-100;
-    border-color: rgba(240, 169, 62, 0.45);
+    border-color: rgba(21, 112, 239, 0.45);
   }
 
   .travel-status-badge.cancelled {
@@ -250,13 +250,13 @@
   }
 
   .travel-primary-button {
-    background: $navy-900;
+    background: $gold-500;
     color: #ffffff;
     border: 1px solid $navy-900;
     box-shadow: 0 4px 12px rgba(10, 24, 48, 0.14);
 
     &:hover {
-      background: $navy-800;
+      background: $gold-600;
       border-color: $navy-800;
     }
   }

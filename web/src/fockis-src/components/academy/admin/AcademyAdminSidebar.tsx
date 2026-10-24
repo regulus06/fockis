@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { ADMIN_NAV } from './adminNavConfig';
 
+import FockisMark from "../../../../components/fockis/FockisMark";
 export default function AcademyAdminSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const location = useLocation();
   const currentPath = location.pathname + location.search;
@@ -16,7 +17,7 @@ export default function AcademyAdminSidebar({ open, onClose }: { open: boolean; 
       <div className={`admin-sidebar-overlay${open ? ' open' : ''}`} onClick={onClose} />
       <aside className={`admin-sidebar${open ? ' open' : ''}`}>
         <div className="admin-sidebar-brand">
-          <span className="logo-mark">FA</span>
+          <span className="logo-mark"><FockisMark spacer="FA" /></span>
           FOCKIS ACADEMY ADMIN
         </div>
         {ADMIN_NAV.map((group) => (

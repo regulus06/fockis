@@ -123,19 +123,19 @@ export default function StayCard({
         <div className="row1">
           <h4>{name}</h4>
 
-          <div className="rating">
-            <span className="star">
-              <Star
-                size={12}
-                fill="currentColor"
-                aria-hidden="true"
-              />
-            </span>
+          {Number.isFinite(rating) && rating > 0 && (
+            <div className="rating">
+              <span className="star">
+                <Star
+                  size={12}
+                  fill="currentColor"
+                  aria-hidden="true"
+                />
+              </span>
 
-            {Number.isFinite(rating)
-              ? rating.toFixed(1)
-              : "0.0"}
-          </div>
+              {rating.toFixed(1)}
+            </div>
+          )}
         </div>
 
         <div className="loc">{location}</div>

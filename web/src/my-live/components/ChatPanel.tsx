@@ -1,146 +1,447 @@
-import { useEffect, useRef, useState } from "react";
-import { Ban, Heart, MessageSquare, MicOff, Pin, Send, Share2, Trash2, UserPlus } from "lucide-react";
-import { initialActivity } from "../data";
-import type { ActivityItem, ActivityType, ChatMessage, Phase } from "../types";
-import { Avatar, EmptyState } from "./ui/Primitives";
+import {
+  memo,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import {
+  EyeOff,
+  MessageSquare,
+  MoreHorizontal,
+  Pin,
+  SendHorizontal,
+  Smile,
+  UserPlus,
+  Users,
+  UserX,
+} from "lucide-react";
 
-const ACTIVITY_ICON: Record<ActivityType, typeof Heart> = {
-  follow: UserPlus,
-  gift: Heart,
-  join: MessageSquare,
-  share: Share2,
-  "like-burst": Heart
+import type {
+  Analytics,
+  ChatMessage,
+  Guest,
+  Phase,
+} from "../types";
+import { formatCount } from "../utils";
+import { Avatar, EmptyState, Menu } from "./ui/Primitives";
+
+/** Only the most recent messages are rendered to keep long lives smooth. */
+const MAX_RENDERED_MESSAGES = 200;
+
+const EMOJIS = [
+  "😀", "😂", "😍", "🥰", "😎", "🤩", "😮", "😢",
+  "🔥", "💙", "❤️", "👏", "🙌", "👍", "🎉", "✨",
+  "💯", "🙏", "👀", "🤝", "🎮", "🌹", "⭐", "🚀",
+];
+
+type RightTab = "chat" | "guests" | "viewers";
+
+const GUEST_STATUS_LABEL: Record<Guest["status"], string> = {
+  invited: "Invited",
+  accepted: "Connecting…",
+  connected: "Connected",
+  muted: "Muted",
+  declined: "Declined",
+  removed: "Removed",
+  left: "Disconnected",
 };
 
-function ChatMessageRow({ message, onPin, onDelete }: { message: ChatMessage; onPin: (id: string) => void; onDelete: (id: string) => void }) {
+/* ============================================================================
+   CHAT ROW
+   ============================================================================ */
+
+const ChatMessageRow = memo(function ChatMessageRow({
+  message,
+  onPin,
+  onHide,
+  onHideUser,
+}: {
+  message: ChatMessage;
+  onPin: (id: string) => void;
+  onHide: (id: string) => void;
+  onHideUser?: (username: string) => void;
+}) {
   return (
-    <div className={`chat-row ${message.isPinned ? "chat-row--pinned" : ""}`}>
-      <Avatar name={message.username} tone={message.avatarTone} size="sm" />
+    <li className={`chat-row ${message.isPinned ? "chat-row--pinned" : ""}`}>
+      <Avatar name={message.username} tone={message.avatarTone} size="md" />
+
       <div className="chat-row__body">
-        <div className="chat-row__meta">
-          <span className={`chat-row__username ${message.isModerator ? "chat-row__username--mod" : ""}`}>{message.username}</span>
-          <span className="chat-row__time">{message.timestamp}</span>
-          {message.isPinned && <span className="chat-row__pin-tag">Pinned</span>}
-        </div>
-        <p className="chat-row__text">{message.message}</p>
+        <span className={`chat-row__username ${message.isModerator ? "chat-row__username--mod" : ""}`}>
+          {message.username}
+          {message.isPinned && <span className="chat-row__pin-tag">Highlighted</span>}
+        </span>
+        <p className="chat-row__text">
+          {message.message}
+          {message.timestamp && (
+            <span className="chat-row__time">{message.timestamp}</span>
+          )}
+        </p>
       </div>
-      <div className="chat-row__controls">
-        <button title="Pin message" onClick={() => onPin(message.id)} type="button">
-          <Pin size={13} />
-        </button>
-        <button title="Mute user" type="button">
-          <MicOff size={13} />
-        </button>
-        <button title="Block user" type="button">
-          <Ban size={13} />
-        </button>
-        <button title="Delete message" onClick={() => onDelete(message.id)} type="button" className="chat-row__delete">
-          <Trash2 size={13} />
-        </button>
-      </div>
-    </div>
+
+      <Menu
+        label={`Actions for ${message.username}'s message`}
+        trigger={<MoreHorizontal size={18} />}
+        triggerClassName="chat-row__more"
+        items={[
+          {
+            id: "pin",
+            label: message.isPinned ? "Remove highlight" : "Highlight message",
+            icon: <Pin size={15} />,
+            onSelect: () => onPin(message.id),
+          },
+          {
+            id: "hide",
+            label: "Hide message",
+            icon: <EyeOff size={15} />,
+            onSelect: () => onHide(message.id),
+          },
+          ...(onHideUser && !message.isModerator
+            ? [
+                {
+                  id: "hide-user",
+                  label: `Hide messages from ${message.username}`,
+                  icon: <UserX size={15} />,
+                  danger: true,
+                  onSelect: () => onHideUser(message.username),
+                },
+              ]
+            : []),
+        ]}
+      />
+    </li>
   );
-}
+});
+
+/* ============================================================================
+   RIGHT PANEL: Chat · Guests · Viewers
+   ============================================================================ */
 
 export function ChatPanel({
   chatMessages,
-  chatTab,
-  setChatTab,
   sendChatMessage,
   pinMessage,
   deleteMessage,
-  phase
+  phase,
+  viewers = 0,
+  analytics,
+  guests = [],
+  onOpenGuests,
+  mutedUsernames = [],
+  onMuteUser,
+  onUnmuteUser,
 }: {
   chatMessages: ChatMessage[];
-  chatTab: "chat" | "questions" | "activity";
-  setChatTab: (tab: "chat" | "questions" | "activity") => void;
-  sendChatMessage: (text: string) => void;
+  sendChatMessage: (text: string) => void | Promise<void>;
   pinMessage: (id: string) => void;
   deleteMessage: (id: string) => void;
   phase: Phase;
+  viewers?: number;
+  analytics?: Analytics;
+  guests?: Guest[];
+  onOpenGuests?: () => void;
+  mutedUsernames?: string[];
+  onMuteUser?: (username: string) => void;
+  onUnmuteUser?: (username: string) => void;
 }) {
+  const [tab, setTab] = useState<RightTab>("chat");
   const [draft, setDraft] = useState("");
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [sending, setSending] = useState(false);
+
   const listRef = useRef<HTMLDivElement>(null);
+  const stickToNewestRef = useRef(true);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const emojiRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
-  }, [chatMessages, chatTab]);
-
-  const questions = chatMessages.filter((m) => m.isQuestion);
   const isLive = phase === "live";
 
+  const hidden = new Set(mutedUsernames);
+  // Newest message first, like the stage comment feed.
+  const visibleMessages = chatMessages
+    .filter((message) => !hidden.has(message.username))
+    .slice(-MAX_RENDERED_MESSAGES)
+    .reverse();
+
+  /* Keep the newest message in view unless the host scrolled down to read. */
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (list && stickToNewestRef.current) {
+      list.scrollTop = 0;
+    }
+  }, [visibleMessages.length, tab]);
+
+  useEffect(() => {
+    if (!emojiOpen) return;
+
+    const close = (event: MouseEvent) => {
+      if (emojiRef.current && !emojiRef.current.contains(event.target as Node)) {
+        setEmojiOpen(false);
+      }
+    };
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setEmojiOpen(false);
+    };
+
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", onKey);
+
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [emojiOpen]);
+
+  const submit = async () => {
+    const text = draft.trim();
+    if (!text || !isLive || sending) return;
+
+    setSending(true);
+    try {
+      await sendChatMessage(text);
+      setDraft("");
+      stickToNewestRef.current = true;
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const tabs: { id: RightTab; label: string }[] = [
+    { id: "chat", label: "Chat" },
+    { id: "guests", label: guests.length ? `Guests (${guests.length})` : "Guests" },
+    { id: "viewers", label: `Viewers (${formatCount(isLive ? viewers : 0)})` },
+  ];
+
   return (
-    <aside className="chat-panel">
-      <div className="chat-panel__header">
-        <h3 className="chat-panel__title">Live chat</h3>
-        <div className="chat-panel__tabs">
-          <TabButton label="Chat" active={chatTab === "chat"} onClick={() => setChatTab("chat")} count={chatMessages.length} />
-          <TabButton label="Questions" active={chatTab === "questions"} onClick={() => setChatTab("questions")} count={questions.length} />
-          <TabButton label="Activity" active={chatTab === "activity"} onClick={() => setChatTab("activity")} />
-        </div>
+    <section className="chat-panel" aria-label="Live interaction">
+      <div className="chat-panel__tabs" role="tablist" aria-label="Live interaction">
+        {tabs.map((item) => (
+          <button
+            key={item.id}
+            id={`fls-tab-${item.id}`}
+            role="tab"
+            type="button"
+            aria-selected={tab === item.id}
+            aria-controls={`fls-tabpanel-${item.id}`}
+            tabIndex={tab === item.id ? 0 : -1}
+            className={`chat-tab ${tab === item.id ? "chat-tab--active" : ""}`}
+            onClick={() => setTab(item.id)}
+            onKeyDown={(event) => {
+              if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+              const index = tabs.findIndex((t) => t.id === tab);
+              const next =
+                tabs[(index + (event.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+              setTab(next.id);
+              document.getElementById(`fls-tab-${next.id}`)?.focus();
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
       </div>
 
-      <div className="chat-panel__list" ref={listRef}>
-        {!isLive && (
-          <EmptyState icon={<MessageSquare size={20} />} title="Chat is quiet for now" description="Once you go live, viewer messages will appear here in real time." />
-        )}
-        {isLive && chatTab === "chat" && chatMessages.length === 0 && (
-          <EmptyState icon={<MessageSquare size={20} />} title="No messages yet" description="Say hi to get the conversation started." />
-        )}
-        {isLive && chatTab === "chat" && chatMessages.map((m) => <ChatMessageRow key={m.id} message={m} onPin={pinMessage} onDelete={deleteMessage} />)}
+      {/* ------------------------------------------------------------ CHAT */}
+      {tab === "chat" && (
+        <div
+          className="chat-panel__tabpanel"
+          role="tabpanel"
+          id="fls-tabpanel-chat"
+          aria-labelledby="fls-tab-chat"
+        >
+          <div
+            className="chat-panel__list"
+            ref={listRef}
+            onScroll={(event) => {
+              const el = event.currentTarget;
+              stickToNewestRef.current = el.scrollTop < 48;
+            }}
+            aria-live="polite"
+            aria-relevant="additions"
+          >
+            {!isLive && visibleMessages.length === 0 && (
+              <EmptyState
+                icon={<MessageSquare size={20} />}
+                title="Chat opens when you go live"
+                description="Viewer messages will appear here in real time."
+              />
+            )}
 
-        {isLive && chatTab === "questions" && questions.length === 0 && (
-          <EmptyState icon={<MessageSquare size={20} />} title="No questions yet" description="Viewer questions will be collected here for easy Q&A." />
-        )}
-        {isLive && chatTab === "questions" && questions.map((m) => <ChatMessageRow key={m.id} message={m} onPin={pinMessage} onDelete={deleteMessage} />)}
+            {isLive && visibleMessages.length === 0 && (
+              <EmptyState
+                icon={<MessageSquare size={20} />}
+                title="No messages yet"
+                description="Say hi to get the conversation started."
+              />
+            )}
 
-        {isLive && chatTab === "activity" && (
-          <div className="activity-list">
-            {initialActivity.map((item: ActivityItem) => {
-              const Icon = ACTIVITY_ICON[item.type];
-              return (
-                <div className="activity-row" key={item.id}>
-                  <span className={`activity-row__icon activity-row__icon--${item.type}`}>
-                    <Icon size={13} />
-                  </span>
-                  <span className="activity-row__text">
-                    <strong>{item.username}</strong>{" "}
-                    {item.type === "follow" && "started following you"}
-                    {item.type === "gift" && item.detail}
-                    {item.type === "join" && "joined the stream"}
-                    {item.type === "share" && "shared your stream"}
-                    {item.type === "like-burst" && item.detail}
-                  </span>
-                  <span className="activity-row__time">{item.timestamp}</span>
-                </div>
-              );
-            })}
+            {visibleMessages.length > 0 && (
+              <ul className="chat-list">
+                {visibleMessages.map((message) => (
+                  <ChatMessageRow
+                    key={message.id}
+                    message={message}
+                    onPin={pinMessage}
+                    onHide={deleteMessage}
+                    onHideUser={onMuteUser}
+                  />
+                ))}
+              </ul>
+            )}
           </div>
-        )}
-      </div>
 
-      <form
-        className="chat-composer"
-        onSubmit={(e) => {
-          e.preventDefault();
-          sendChatMessage(draft);
-          setDraft("");
-        }}
-      >
-        <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Say something…" className="chat-composer__input" disabled={!isLive} />
-        <button type="submit" className="chat-composer__send" disabled={!isLive || !draft.trim()} aria-label="Send message">
-          <Send size={15} />
-        </button>
-      </form>
-    </aside>
-  );
-}
+          {mutedUsernames.length > 0 && onUnmuteUser && (
+            <div className="chat-panel__muted">
+              <EyeOff size={14} aria-hidden="true" />
+              <span>
+                Hiding {mutedUsernames.length} {mutedUsernames.length === 1 ? "person" : "people"}
+              </span>
+              <button
+                type="button"
+                onClick={() => mutedUsernames.forEach((name) => onUnmuteUser(name))}
+              >
+                Show all
+              </button>
+            </div>
+          )}
 
-function TabButton({ label, active, onClick, count }: { label: string; active: boolean; onClick: () => void; count?: number }) {
-  return (
-    <button className={`chat-tab ${active ? "chat-tab--active" : ""}`} onClick={onClick} type="button">
-      {label}
-      {count !== undefined && count > 0 && <span className="chat-tab__count">{count}</span>}
-    </button>
+          <form
+            className="chat-composer"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submit();
+            }}
+          >
+            <div className="chat-composer__field" ref={emojiRef}>
+              <label className="sr-only" htmlFor="fls-chat-input">Chat message</label>
+              <input
+                id="fls-chat-input"
+                ref={inputRef}
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                placeholder={isLive ? "Say something…" : "Go live to chat with viewers"}
+                className="chat-composer__input"
+                disabled={!isLive}
+                maxLength={500}
+                autoComplete="off"
+                enterKeyHint="send"
+              />
+
+              <button
+                type="button"
+                className="chat-composer__emoji"
+                aria-label="Insert emoji"
+                aria-expanded={emojiOpen}
+                disabled={!isLive}
+                onClick={() => setEmojiOpen((value) => !value)}
+              >
+                <Smile size={22} />
+              </button>
+
+              {emojiOpen && (
+                <div className="emoji-picker" role="dialog" aria-label="Emoji picker">
+                  {EMOJIS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      className="emoji-picker__item"
+                      aria-label={`Insert ${emoji}`}
+                      onClick={() => {
+                        setDraft((value) => `${value}${emoji}`);
+                        inputRef.current?.focus();
+                      }}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="chat-composer__send"
+              disabled={!isLive || !draft.trim() || sending}
+              aria-label="Send message"
+            >
+              <SendHorizontal size={20} />
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* ---------------------------------------------------------- GUESTS */}
+      {tab === "guests" && (
+        <div
+          className="chat-panel__tabpanel chat-panel__tabpanel--padded"
+          role="tabpanel"
+          id="fls-tabpanel-guests"
+          aria-labelledby="fls-tab-guests"
+        >
+          {guests.length === 0 ? (
+            <EmptyState
+              icon={<UserPlus size={20} />}
+              title="No guests yet"
+              description={
+                isLive
+                  ? "Invite a follower or any Fockis user to join your stage."
+                  : "Go live, then invite guests to join your stage."
+              }
+              action={
+                onOpenGuests && (
+                  <button type="button" className="btn btn--outline btn--sm" onClick={onOpenGuests}>
+                    Invite guest
+                  </button>
+                )
+              }
+            />
+          ) : (
+            <ul className="mini-guest-list">
+              {guests.map((guest) => (
+                <li key={guest.id} className="mini-guest">
+                  <Avatar name={guest.name} tone={guest.avatarTone} size="md" src={guest.avatarUrl} />
+                  <span className="mini-guest__name">{guest.name}</span>
+                  <span className={`guest-status guest-status--${guest.status}`}>
+                    <span className="guest-status__dot" aria-hidden="true" />
+                    {GUEST_STATUS_LABEL[guest.status]}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {/* --------------------------------------------------------- VIEWERS */}
+      {tab === "viewers" && (
+        <div
+          className="chat-panel__tabpanel chat-panel__tabpanel--padded"
+          role="tabpanel"
+          id="fls-tabpanel-viewers"
+          aria-labelledby="fls-tab-viewers"
+        >
+          <div className="viewer-stats">
+            <div className="viewer-stats__item">
+              <span className="viewer-stats__value">{formatCount(isLive ? viewers : 0)}</span>
+              <span className="viewer-stats__label">Watching now</span>
+            </div>
+            <div className="viewer-stats__item">
+              <span className="viewer-stats__value">{formatCount(analytics?.peakViewers ?? 0)}</span>
+              <span className="viewer-stats__label">Peak viewers</span>
+            </div>
+            <div className="viewer-stats__item">
+              <span className="viewer-stats__value">{formatCount(analytics?.newFollowers ?? 0)}</span>
+              <span className="viewer-stats__label">New followers</span>
+            </div>
+          </div>
+
+          <EmptyState
+            icon={<Users size={20} />}
+            title="Viewer list not available yet"
+            description="Fockis currently reports viewer counts for your live, not individual viewers."
+          />
+        </div>
+      )}
+    </section>
   );
 }

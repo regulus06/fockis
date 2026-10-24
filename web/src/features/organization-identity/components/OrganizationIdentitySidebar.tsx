@@ -2,6 +2,7 @@ import {
   NavLink,
 } from "react-router-dom";
 
+import FockisMark from "../../../components/fockis/FockisMark";
 interface Props {
   organizationId: string;
 }
@@ -20,9 +21,7 @@ export default function OrganizationIdentitySidebar({
   return (
     <aside className="identity-sidebar">
       <div className="identity-sidebar__brand">
-        <div className="identity-sidebar__logo">
-          F
-        </div>
+        <div className="identity-sidebar__logo"><FockisMark /></div>
 
         <div>
           <strong>

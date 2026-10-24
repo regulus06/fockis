@@ -275,7 +275,7 @@ export default function AdminRolesPage() {
               cursor: "pointer",
               fontWeight: 700,
               background:
-                "#2563eb",
+                "#b8862f",
               color: "#fff",
             }}
           >
@@ -714,7 +714,7 @@ function Badge({
         color:
           active === false
             ? "#991b1b"
-            : "#1d4ed8",
+            : "#10243d",
       }}
     >
       {children}
@@ -735,8 +735,8 @@ const linkButton: React.CSSProperties = {
   padding:
     "7px 10px",
   borderRadius: 7,
-  background: "#eff6ff",
-  color: "#1d4ed8",
+  background: "#e8eef6",
+  color: "#163a5f",
   textDecoration: "none",
   fontSize: 12,
   fontWeight: 700,

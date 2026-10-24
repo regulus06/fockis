@@ -54,7 +54,9 @@ export function CheckoutSummary({
   isHaiti = false,
   tipAmount = 0,
   orderTotal,
+  shippingComplete = false,
   placing = false,
+  canPlaceOrder = false,
   formatPrice,
 }: Props) {
   const safeGroups = Array.isArray(groups) ? groups : [];
@@ -103,7 +105,7 @@ export function CheckoutSummary({
             ? '🅿️ PayPal'
             : '💳 Credit / Debit Card';
 
-  const buttonDisabled = placing;
+  const buttonDisabled = placing || !canPlaceOrder;
 
   return (
     <aside className="checkout-sidebar">
@@ -257,13 +259,21 @@ export function CheckoutSummary({
               <span>Shipping</span>
 
               <strong>
-                {safeTotals.estimatedShipping === 0
-                  ? 'FREE'
-                  : displayPrice(
-                      safeTotals.estimatedShipping,
-                    )}
+                {shippingComplete
+                  ? safeTotals.estimatedShipping === 0
+                    ? 'FREE'
+                    : displayPrice(safeTotals.estimatedShipping)
+                  : 'Not calculated'}
               </strong>
             </div>
+            {!shippingComplete && (
+              <p
+                role="status"
+                style={{ color: 'var(--slate)', fontSize: 12, margin: '4px 0 10px' }}
+              >
+                Shipping cost will appear after valid delivery rates are loaded and selected.
+              </p>
+            )}
 
             <div className="cart-summary-row">
               <span>Estimated tax</span>

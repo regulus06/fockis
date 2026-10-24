@@ -4,6 +4,7 @@ import { NAV_SECTIONS } from '../permissions/permissionGroups';
 import { useAdminSessionStore } from '../store/adminSessionStore';
 import { hasAnyPermission } from '../permissions/permissionHelpers';
 
+import FockisMark from "../../components/fockis/FockisMark";
 export function AdminSidebar() {
   const permissions = useAdminSessionStore((s) => s.permissions);
   const switchToken = useAdminSessionStore((s) => s.switchToken);
@@ -16,7 +17,7 @@ export function AdminSidebar() {
   return (
     <aside key={switchToken} className="fk-sidebar fk-scrollbar fk-sidebar--pulse">
       <div className="fk-sidebar__brand">
-        <div className="fk-sidebar__mark">F</div>
+        <div className="fk-sidebar__mark"><FockisMark /></div>
         <div>
           <div className="fk-sidebar__brand-text">Fockis</div>
           <div className="fk-sidebar__brand-sub">Administration</div>

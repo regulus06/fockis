@@ -17,6 +17,7 @@ import { NOTIFICATION_ICONS } from "../utils/platformLabels";
 import { timeAgo } from "../utils/format";
 import type { IconName } from "./ui/Icon";
 
+import FockisMark from "../../../../components/fockis/FockisMark";
 interface SearchResult {
   id: string;
   label: string;
@@ -226,7 +227,7 @@ export function MailchimpHeader({ onOpenMenu }: HeaderProps) {
         <Icon name="menu" />
       </button>
       <Link to={to()} className="fm-header__title">
-        <span className="fm-logo fm-logo--sm" aria-hidden>F</span>
+        <span className="fm-logo fm-logo--sm" aria-hidden><FockisMark /></span>
         <span>Fockis Marketing</span>
       </Link>
       <GlobalSearch />

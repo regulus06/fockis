@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -6,12 +7,18 @@ import {
 
 import {
   CameraOff,
+  ChevronDown,
+  ChevronRight,
+  Forward,
+  Gamepad2,
+  Gift,
   Heart,
   Loader2,
-  MessageSquare,
+  MessageCircle,
   MicOff,
-  Share2,
+  SendHorizontal,
   ShieldAlert,
+  Smile,
   WifiOff,
   X,
 } from "lucide-react";
@@ -35,105 +42,74 @@ import type { RemoteVideoTrack } from "livekit-client";
 import { Avatar } from "./ui/Primitives";
 import { formatCount } from "../utils";
 
-const HEART_EMOJI = [
-  "❤️",
-  "💛",
-  "💙",
-  "💜",
-  "🧡",
-];
+/* ============================================================================
+   HEARTS — only float when the real like count goes up.
+   ============================================================================ */
 
-function HeartsField({
-  active,
-}: {
-  active: boolean;
-}) {
+const HEART_COLORS = ["#ff4d6d", "#2f7bff", "#ff8fab", "#5596ff", "#ffffff"];
+
+function HeartsField({ likes }: { likes: number }) {
   const [hearts, setHearts] = useState<
-    {
-      id: number;
-      left: number;
-      tone: number;
-      drift: number;
-      duration: number;
-    }[]
+    { id: number; left: number; color: string; drift: number; duration: number }[]
   >([]);
 
+  const previousLikesRef = useRef(likes);
+  const counterRef = useRef(0);
+
   useEffect(() => {
-    if (!active) {
-      setHearts([]);
-      return;
-    }
+    const delta = likes - previousLikesRef.current;
+    previousLikesRef.current = likes;
 
-    let counter = 0;
+    if (delta <= 0) return;
 
-    const interval = window.setInterval(() => {
-      counter += 1;
+    const burst = Math.min(delta, 6);
+    const next = Array.from({ length: burst }, () => {
+      counterRef.current += 1;
+      return {
+        id: counterRef.current,
+        left: 10 + Math.random() * 60,
+        color: HEART_COLORS[Math.floor(Math.random() * HEART_COLORS.length)],
+        drift: (Math.random() - 0.5) * 40,
+        duration: 2400 + Math.random() * 1200,
+      };
+    });
 
-      setHearts((current) => [
-        ...current.slice(-14),
-        {
-          id: counter,
-          left: 60 + Math.random() * 30,
-          tone: Math.floor(
-            Math.random() * HEART_EMOJI.length,
-          ),
-          drift: (Math.random() - 0.5) * 40,
-          duration:
-            2600 + Math.random() * 1400,
-        },
-      ]);
-    }, 900);
-
-    return () => {
-      window.clearInterval(interval);
-    };
-  }, [active]);
+    setHearts((current) => [...current.slice(-14), ...next]);
+  }, [likes]);
 
   return (
-    <div
-      className="hearts-field"
-      aria-hidden="true"
-    >
+    <div className="hearts-field" aria-hidden="true">
       {hearts.map((heart) => (
         <span
           key={heart.id}
           className="hearts-field__heart"
           style={{
             left: `${heart.left}%`,
+            color: heart.color,
             animationDuration: `${heart.duration}ms`,
             ["--drift" as string]: `${heart.drift}px`,
           }}
+          onAnimationEnd={() =>
+            setHearts((current) => current.filter((item) => item.id !== heart.id))
+          }
         >
-          {HEART_EMOJI[heart.tone]}
+          <Heart size={22} fill="currentColor" strokeWidth={0} />
         </span>
       ))}
     </div>
   );
 }
 
-function GiftToast({
-  gifts,
-}: {
-  gifts: SentGift[];
-}) {
+function GiftToast({ gifts }: { gifts: SentGift[] }) {
   const last = gifts[gifts.length - 1];
 
-  if (!last) {
-    return null;
-  }
+  if (!last) return null;
 
   return (
-    <div
-      className="gift-toast"
-      key={last.id}
-    >
-      <span className="gift-toast__icon">
-        {last.giftIcon}
-      </span>
-
+    <div className="gift-toast" key={last.id} role="status">
+      <span className="gift-toast__icon" aria-hidden="true">{last.giftIcon}</span>
       <span className="gift-toast__text">
-        <strong>{last.username}</strong>{" "}
-        sent a {last.giftLabel}
+        <strong>{last.username}</strong> sent a {last.giftLabel}
       </span>
     </div>
   );
@@ -151,79 +127,61 @@ function FeaturedProductCard({
       <button
         className="product-slot-card__dismiss"
         onClick={onDismiss}
-        aria-label="Unfeature product"
+        aria-label="Stop featuring this product"
         type="button"
       >
         <X size={12} />
       </button>
 
-      <div
-        className={`product-slot-card__thumb product-slot-card__thumb--${product.imageTone}`}
-      />
+      <div className={`product-slot-card__thumb product-slot-card__thumb--${product.imageTone}`} />
 
       <div className="product-slot-card__info">
-        <span className="product-slot-card__name">
-          {product.name}
-        </span>
-
+        <span className="product-slot-card__name">{product.name}</span>
         <span className="product-slot-card__meta">
-          <span className="product-slot-card__rating">
-            ★ {product.rating}
-          </span>
-
-          <span className="product-slot-card__price">
-            {product.price}
-          </span>
+          {product.rating > 0 && (
+            <span className="product-slot-card__rating">★ {product.rating}</span>
+          )}
+          <span className="product-slot-card__price">{product.price}</span>
         </span>
-
-        <button
-          className="product-slot-card__shop"
-          type="button"
-        >
-          Shop now
-        </button>
+        <span className="product-slot-card__tag">Featured for viewers</span>
       </div>
     </div>
   );
 }
 
-function LiveChatOverlay({
-  messages,
-}: {
-  messages: ChatMessage[];
-}) {
-  const recent = messages.slice(-4);
+/* ============================================================================
+   LIVE COMMENTS OVERLAY (real chat, newest at the bottom)
+   ============================================================================ */
+
+function LiveChatOverlay({ messages }: { messages: ChatMessage[] }) {
+  // Newest first, matching the chat panel.
+  const recent = messages.slice(-5).reverse();
+
+  if (recent.length === 0) return null;
 
   return (
-    <div className="stage-chat-feed">
+    <ul className="stage-comments" aria-label="Recent comments">
       {recent.map((message) => (
-        <div
-          className="stage-chat-feed__row"
-          key={message.id}
-        >
-          <Avatar
-            name={message.username}
-            tone={message.avatarTone}
-            size="xs"
-          />
-
-          <span className="stage-chat-feed__text">
-            <span className="stage-chat-feed__username">
-              {message.username}
-            </span>{" "}
-            {message.message}
+        <li className="stage-comment" key={message.id}>
+          <Avatar name={message.username} tone={message.avatarTone} size="md" />
+          <span className="stage-comment__body">
+            <span className="stage-comment__meta">
+              <strong>{message.username}</strong>
+              {message.timestamp && <span> · {message.timestamp}</span>}
+            </span>
+            <span className="stage-comment__text">{message.message}</span>
           </span>
-        </div>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
 
-function GuestRemoteVideo({
-  track,
-}: {
-  track: RemoteVideoTrack;
-}) {
+/* ============================================================================
+   REMOTE GUEST VIDEO
+   ============================================================================ */
+
+function GuestRemoteVideo({ track }: { track: RemoteVideoTrack }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
@@ -245,23 +203,57 @@ function GuestRemoteVideo({
     };
   }, [track]);
 
+  return <video ref={videoRef} autoPlay muted playsInline className="stage-fill-video" />;
+}
+
+function findGuestTrack(
+  guest: Guest,
+  guestTracks: Record<string, RemoteVideoTrack>,
+) {
+  const username = String(guest.username ?? "").toLowerCase();
+
+  const identity = Object.keys(guestTracks).find(
+    (key) =>
+      key === guest.id ||
+      key === guest.username ||
+      (!!username && key.toLowerCase().includes(username)),
+  );
+
+  return identity ? guestTracks[identity] : undefined;
+}
+
+function GuestTile({
+  guest,
+  guestTracks,
+  className,
+}: {
+  guest: Guest;
+  guestTracks: Record<string, RemoteVideoTrack>;
+  className: string;
+}) {
+  const track = findGuestTrack(guest, guestTracks);
+
   return (
-    <video
-      ref={videoRef}
-      autoPlay
-      muted
-      playsInline
-      className="stage-guest-tile__video"
-      style={{
-        position: "absolute",
-        inset: 0,
-        width: "100%",
-        height: "100%",
-        objectFit: "cover",
-      }}
-    />
+    <div className={className}>
+      {track ? (
+        <GuestRemoteVideo track={track} />
+      ) : (
+        <div className="stage-tile-placeholder">
+          <Avatar name={guest.name} tone={guest.avatarTone} size="lg" src={guest.avatarUrl} />
+          <span>Waiting for video…</span>
+        </div>
+      )}
+      <span className="stage-tile-name">
+        {guest.status === "muted" && <MicOff size={11} aria-label="Muted" />}
+        {guest.name}
+      </span>
+    </div>
   );
 }
+
+/* ============================================================================
+   STAGE
+   ============================================================================ */
 
 interface StageProps {
   phase: Phase;
@@ -269,6 +261,8 @@ interface StageProps {
   connection: ConnectionQuality;
   viewers: number;
   likes: number;
+  comments?: number;
+  shares?: number;
   chatMessages: ChatMessage[];
   giftFeed: SentGift[];
   featuredProduct: Product | null;
@@ -280,14 +274,20 @@ interface StageProps {
   screenStream: MediaStream | null;
   sourceState: StudioSourceState;
 
-  // REAL LOGGED-IN USER
+  // Real logged-in user
   username: string;
   avatarUrl?: string;
 
-  // REAL CAMERA
+  // Real camera
   cameraStream: MediaStream | null;
   mediaError: string | null;
   guestTracks?: Record<string, RemoteVideoTrack>;
+
+  // Interactions
+  onSendComment?: (text: string) => void | Promise<void>;
+  onShare?: () => void;
+  onOpenGifts?: () => void;
+  onOpenSettings?: () => void;
 }
 
 export function Stage({
@@ -296,6 +296,8 @@ export function Stage({
   connection,
   viewers,
   likes,
+  comments,
+  shares = 0,
   chatMessages,
   giftFeed,
   featuredProduct,
@@ -311,200 +313,140 @@ export function Stage({
   cameraStream,
   mediaError,
   guestTracks = {},
+  onSendComment,
+  onShare,
+  onOpenGifts,
+  onOpenSettings,
 }: StageProps) {
-  const videoRef =
-    useRef<HTMLVideoElement | null>(null);
-
-  const screenVideoRef =
-    useRef<HTMLVideoElement | null>(null);
-
   const isLive = phase === "live";
   const isStarting = phase === "starting";
   const isEnding = phase === "ending";
+  const isBroadcasting = isLive || isEnding;
 
-  const cameraOff =
-    devices.camera !== "connected" ||
-    !devices.cameraEnabled;
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [comment, setComment] = useState("");
+  const [sendingComment, setSendingComment] = useState(false);
+  const commentRef = useRef<HTMLInputElement>(null);
+
+  const cameraOff = devices.camera !== "connected" || !devices.cameraEnabled;
 
   const poorConnection =
-    isLive &&
-    (connection === "poor" ||
-      connection === "reconnecting");
+    isLive && (connection === "poor" || connection === "reconnecting");
 
-  const isImageSource =
-    sourceState.activeSource === "image" &&
-    !!sourceState.imageUrl;
-
-  const isVideoSource =
-    sourceState.activeSource === "video" &&
-    !!sourceState.videoUrl;
-
-  const isTextSource =
-    sourceState.activeSource === "text" &&
-    !!sourceState.text;
-
-  const isBrowserSource =
-    sourceState.activeSource === "browser" &&
-    !!sourceState.browserUrl;
-
-  const sourceIsActive =
-    isImageSource ||
-    isVideoSource ||
-    isTextSource ||
-    isBrowserSource;
+  const isImageSource = sourceState.activeSource === "image" && !!sourceState.imageUrl;
+  const isVideoSource = sourceState.activeSource === "video" && !!sourceState.videoUrl;
+  const isTextSource = sourceState.activeSource === "text" && !!sourceState.text;
+  const isBrowserSource = sourceState.activeSource === "browser" && !!sourceState.browserUrl;
+  const sourceIsActive = isImageSource || isVideoSource || isBrowserSource;
 
   const connectedGuests = guests.filter(
-    (guest) =>
-      guest.status === "connected" ||
-      guest.status === "muted",
+    (guest) => guest.status === "connected" || guest.status === "muted",
   );
 
-  const [featuredGuestId, setFeaturedGuestId] =
-    useState<string | null>(null);
-
-  useEffect(() => {
-    if (connectedGuests.length === 0) {
-      setFeaturedGuestId(null);
-      return;
-    }
-
-    if (
-      !featuredGuestId ||
-      !connectedGuests.some(
-        (guest) => guest.id === featuredGuestId,
-      )
-    ) {
-      setFeaturedGuestId(connectedGuests[0].id);
-    }
-  }, [connectedGuests, featuredGuestId]);
+  const [featuredGuestId, setFeaturedGuestId] = useState<string | null>(null);
 
   const featuredGuest =
-    connectedGuests.find(
-      (guest) => guest.id === featuredGuestId,
-    ) ?? connectedGuests[0] ?? null;
+    connectedGuests.find((guest) => guest.id === featuredGuestId) ??
+    connectedGuests[0] ??
+    null;
 
-  const guestLimit = connectedGuests.length;
+  const sceneName = activeScene?.name?.trim().toLowerCase() || "main camera";
+  const isStartingScene = sceneName.includes("starting soon");
+  const isScreenShareScene = sceneName.includes("screen");
+  const isInterviewScene = sceneName.includes("interview");
+  const isEndingScene = sceneName.includes("ending");
+  const isCameraScene = !isScreenShareScene && !isStartingScene && !isEndingScene;
 
-  const sceneName =
-    activeScene?.name?.trim().toLowerCase() ||
-    "main camera";
+  const showGuestLayout =
+    isCameraScene && connectedGuests.length > 0 && guestLayout !== "solo";
 
-  const isStartingScene =
-    sceneName.includes("starting soon");
+  /* ------------------------------------------------------------------------
+     Attach the real camera stream to whichever <video> is mounted.
+     A callback ref re-attaches when the layout swaps the element.
+  ------------------------------------------------------------------------ */
+  const attachCamera = useCallback(
+    (video: HTMLVideoElement | null) => {
+      if (!video) return;
 
-  const isScreenShareScene =
-    sceneName.includes("screen share") ||
-    sceneName.includes("screen");
+      if (!cameraStream) {
+        video.srcObject = null;
+        return;
+      }
 
-  const isInterviewScene =
-    sceneName.includes("interview");
+      if (video.srcObject !== cameraStream) {
+        video.srcObject = cameraStream;
+      }
 
-  const isEndingScene =
-    sceneName.includes("ending");
+      video.muted = true;
+      video.playsInline = true;
 
-  /*
-   * ================================================================
-   * ATTACH REAL CAMERA STREAM
-   * ================================================================
-   */
+      void video.play().catch((error) => {
+        console.warn("[FOCKIS LIVE] Video autoplay failed:", error);
+      });
+    },
+    [cameraStream],
+  );
 
-  useEffect(() => {
-    const video = videoRef.current;
+  const attachScreen = useCallback(
+    (video: HTMLVideoElement | null) => {
+      if (!video) return;
 
-    if (!video) {
-      return;
+      if (!screenStream) {
+        video.srcObject = null;
+        return;
+      }
+
+      if (video.srcObject !== screenStream) {
+        video.srcObject = screenStream;
+      }
+
+      video.muted = true;
+      video.playsInline = true;
+
+      void video.play().catch((error) => {
+        console.warn("[FOCKIS LIVE] Screen-share preview autoplay failed:", error);
+      });
+    },
+    [screenStream],
+  );
+
+  const sendComment = async () => {
+    const text = comment.trim();
+    if (!text || !onSendComment || !isLive || sendingComment) return;
+
+    setSendingComment(true);
+    try {
+      await onSendComment(text);
+      setComment("");
+    } finally {
+      setSendingComment(false);
     }
+  };
 
-    if (!cameraStream) {
-      video.srcObject = null;
-      return;
-    }
-
-    if (video.srcObject !== cameraStream) {
-      video.srcObject = cameraStream;
-    }
-
-    video.muted = true;
-    video.playsInline = true;
-
-    void video.play().catch((error) => {
-      console.warn(
-        "[FOCKIS LIVE] Video autoplay failed:",
-        error,
-      );
-    });
-
-    console.log(
-      "[FOCKIS LIVE] Camera stream attached to video element.",
-      {
-        videoTracks:
-          cameraStream.getVideoTracks().length,
-        audioTracks:
-          cameraStream.getAudioTracks().length,
-      },
+  const hostVideo = (className: string) =>
+    cameraStream && !cameraOff ? (
+      <video ref={attachCamera} className={className} autoPlay muted playsInline />
+    ) : (
+      <div className="stage-tile-placeholder">
+        <Avatar name={username} tone="signal" size="lg" src={avatarUrl} />
+        <span>Camera off</span>
+      </div>
     );
 
-    return () => {
-      if (video.srcObject === cameraStream) {
-        video.srcObject = null;
-      }
-    };
-  }, [cameraStream]);
-
-  /*
-   * Attach the real browser screen-share stream when the Screen Share scene
-   * is active.
-   */
-  useEffect(() => {
-    const video = screenVideoRef.current;
-
-    if (!video) {
-      return;
-    }
-
-    if (!screenStream || !isScreenShareScene) {
-      video.srcObject = null;
-      return;
-    }
-
-    video.srcObject = screenStream;
-    video.muted = true;
-    video.playsInline = true;
-
-    void video.play().catch((error) => {
-      console.warn(
-        "[FOCKIS LIVE] Screen-share preview autoplay failed:",
-        error,
-      );
-    });
-
-    return () => {
-      if (video.srcObject === screenStream) {
-        video.srcObject = null;
-      }
-    };
-  }, [isScreenShareScene, screenStream]);
+  const commentCount = comments ?? chatMessages.length;
+  const category = streamInfo.category.trim();
 
   return (
     <div className="stage-wrap">
-      <div className="stage-frame">
-        <div className="stage-frame__texture">
-          <div className="stage-frame__glow stage-frame__glow--a" />
-          <div className="stage-frame__glow stage-frame__glow--b" />
-          <div className="stage-frame__desk-line" />
-          <div className="stage-frame__vignette" />
-        </div>
+      <div className={`stage-frame ${showGuestLayout ? `stage-frame--${guestLayout}` : ""}`}>
+        <div className="stage-frame__backdrop" aria-hidden="true" />
 
         {/* ============================================================
             USER SOURCES
         ============================================================ */}
 
         {isImageSource && (
-          <img
-            src={sourceState.imageUrl ?? ""}
-            alt="Live source"
-            className="stage-source-image"
-          />
+          <img src={sourceState.imageUrl ?? ""} alt="Image source" className="stage-source-image" />
         )}
 
         {isVideoSource && (
@@ -527,15 +469,7 @@ export function Stage({
               className="stage-source-browser__frame"
               sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-presentation allow-same-origin allow-scripts"
             />
-            <div className="stage-source-browser__label">
-              {sourceState.browserUrl}
-            </div>
-          </div>
-        )}
-
-        {isTextSource && (
-          <div className="stage-source-text">
-            {sourceState.text}
+            <div className="stage-source-browser__label">{sourceState.browserUrl}</div>
           </div>
         )}
 
@@ -544,496 +478,129 @@ export function Stage({
         ============================================================ */}
 
         {isScreenShareScene && screenStream && (
-          <video
-            ref={screenVideoRef}
-            className="stage-camera-video"
-            autoPlay
-            muted
-            playsInline
-          />
+          <video ref={attachScreen} className="stage-screen-video" autoPlay muted playsInline />
         )}
 
         {/* ============================================================
-            CAMERA ERROR
+            CAMERA / GUEST LAYOUTS
         ============================================================ */}
 
-        {!isScreenShareScene &&
-          !isStartingScene &&
-          !isEndingScene &&
-          mediaError &&
-          devices.camera !== "permission-denied" &&
-          devices.camera !== "unavailable" && (
-            <div className="stage-block-state">
-              <CameraOff size={30} />
-
-              <p className="stage-block-state__title">
-                Camera unavailable
-              </p>
-
-              <p className="stage-block-state__description">
-                {mediaError}
-              </p>
-            </div>
-          )}
-
-        {!isScreenShareScene &&
-          !isStartingScene &&
-          !isEndingScene &&
-          devices.camera ===
-            "permission-denied" && (
-          <div className="stage-block-state">
-            <ShieldAlert size={30} />
-
-            <p className="stage-block-state__title">
-              Camera access denied
-            </p>
-
-            <p className="stage-block-state__description">
-              Allow camera access in your browser
-              settings to go live.
-            </p>
-          </div>
+        {isCameraScene && !sourceIsActive && !showGuestLayout && cameraStream && !cameraOff && (
+          <video ref={attachCamera} className="stage-camera-video" autoPlay muted playsInline />
         )}
 
-        {!isScreenShareScene &&
-          !isStartingScene &&
-          !isEndingScene &&
-          devices.camera ===
-            "unavailable" && (
-          <div className="stage-block-state">
-            <CameraOff size={30} />
-
-            <p className="stage-block-state__title">
-              No camera detected
-            </p>
-
-            <p className="stage-block-state__description">
-              Plug in a camera or choose a
-              different video source.
-            </p>
-          </div>
-        )}
-
-        {!isScreenShareScene &&
-          !isStartingScene &&
-          !isEndingScene &&
-          devices.camera ===
-            "connected" &&
-          !devices.cameraEnabled && (
-            <div className="stage-block-state">
-              <CameraOff size={30} />
-
-              <p className="stage-block-state__title">
-                Camera is off
-              </p>
-
-              <p className="stage-block-state__description">
-                Viewers see your avatar and
-                username while it's off.
-              </p>
-            </div>
-          )}
-
-        {/* ============================================================
-            SCALABLE PARTICIPANT STAGE
-
-            Solo:
-              host fills the stage.
-
-            Side by side:
-              host + featured guest share the main area.
-
-            Guest full screen:
-              featured guest fills the main area while everyone else
-              remains visible in the participant rail.
-
-            Grid 2 / Grid 4:
-              the main area remains responsive and every connected
-              participant stays available in the rail.
-
-            This intentionally does not hard-limit the stage to four
-            people. The rail can contain many participants and scrolls.
-        ============================================================ */}
-
-        {connectedGuests.length > 0 && !cameraOff && (
-          <div
-            className="stage-participants"
-            data-layout={guestLayout}
-            style={{
-              position: "absolute",
-              inset: 0,
-              zIndex: 2,
-              display: "flex",
-              flexDirection: "column",
-              pointerEvents: "none",
-            }}
-          >
-            <div className="stage-participants__main"
-              style={{
-                flex: 1,
-                minHeight: 0,
-                position: "relative",
-                display: "flex",
-                overflow: "hidden",
-                paddingBottom: 88,
-              }}>
-              {guestLayout === "solo" ? (
-                <video
-                  ref={videoRef}
-                  className="stage-camera-video stage-participants__host-video"
-                  autoPlay
-                  muted
-                  playsInline
-                />
-              ) : guestLayout === "side-by-side" ? (
-                <div className="stage-participants__split"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: 8,
-                  }}>
-                  <div className="stage-participants__host-card"
-                    style={{
-                      position: "relative",
-                      minWidth: 0,
-                      overflow: "hidden",
-                      borderRadius: 16,
-                    }}>
-                    {cameraStream && (
-                      <video
-                        ref={videoRef}
-                        className="stage-participants__video"
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                        autoPlay
-                        muted
-                        playsInline
-                      />
-                    )}
-                    <span className="stage-participants__name">
-                      @{username}
-                    </span>
-                  </div>
-
-                  {featuredGuest && (
-                    <div className="stage-participants__featured-card"
-                    style={{
-                      position: "relative",
-                      minWidth: 0,
-                      overflow: "hidden",
-                      borderRadius: 16,
-                    }}>
-                      {(() => {
-                        const identity = Object.keys(guestTracks).find(
-                          (key) =>
-                            key === featuredGuest.id ||
-                            key === featuredGuest.username ||
-                            key.toLowerCase().includes(
-                              String(featuredGuest.username ?? "").toLowerCase(),
-                            ),
-                        );
-                        const track = identity
-                          ? guestTracks[identity]
-                          : undefined;
-
-                        return track ? (
-                          <GuestRemoteVideo track={track} />
-                        ) : (
-                          <Avatar
-                            name={featuredGuest.name}
-                            tone={featuredGuest.avatarTone}
-                            size="lg"
-                          />
-                        );
-                      })()}
-                      <span className="stage-participants__name">
-                        {featuredGuest.name}
-                      </span>
-                    </div>
-                  )}
+        {showGuestLayout && (
+          <div className={`stage-participants stage-participants--${guestLayout}`}>
+            {guestLayout === "guest-full" && featuredGuest ? (
+              <>
+                <GuestTile guest={featuredGuest} guestTracks={guestTracks} className="stage-tile stage-tile--full" />
+                <div className="stage-pip">
+                  {hostVideo("stage-fill-video")}
+                  <span className="stage-tile-name">You</span>
                 </div>
-              ) : guestLayout === "guest-full" ? (
-                <div className="stage-participants__featured-full"
-                  style={{
-                    position: "relative",
-                    width: "100%",
-                    height: "100%",
-                    overflow: "hidden",
-                    borderRadius: 16,
-                  }}>
-                  {featuredGuest && (() => {
-                    const identity = Object.keys(guestTracks).find(
-                      (key) =>
-                        key === featuredGuest.id ||
-                        key === featuredGuest.username ||
-                        key.toLowerCase().includes(
-                          String(featuredGuest.username ?? "").toLowerCase(),
-                        ),
-                    );
-                    const track = identity
-                      ? guestTracks[identity]
-                      : undefined;
-
-                    return track ? (
-                      <GuestRemoteVideo track={track} />
-                    ) : (
-                      <Avatar
-                        name={featuredGuest.name}
-                        tone={featuredGuest.avatarTone}
-                        size="lg"
-                      />
-                    );
-                  })()}
-                  <span className="stage-participants__name">
-                    {featuredGuest?.name ?? "Guest"}
-                  </span>
-                </div>
-              ) : (
-                <div className="stage-participants__host-featured"
-                  style={{
-                    position: "relative",
-                    width: "100%",
-                    height: "100%",
-                    overflow: "hidden",
-                    borderRadius: 16,
-                  }}>
-                  {cameraStream && (
-                    <video
-                      ref={videoRef}
-                      className="stage-participants__video"
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      autoPlay
-                      muted
-                      playsInline
-                    />
-                  )}
-                  <span className="stage-participants__name">
-                    @{username}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div
-              className="stage-participants__rail"
-              role="list"
-              style={{
-                position: "absolute",
-                left: 12,
-                right: 12,
-                bottom: 12,
-                zIndex: 5,
-                display: "flex",
-                gap: 8,
-                overflowX: "auto",
-                overflowY: "hidden",
-                padding: 4,
-                pointerEvents: "auto",
-                scrollbarWidth: "thin",
-              }}
-              aria-label="Live participants"
-            >
-              <button
-                type="button"
-                className={`stage-participant-thumb stage-participant-thumb--host${
-                  guestLayout !== "guest-full" && !featuredGuestId
-                    ? " is-active"
-                    : ""
-                }`}
-                onClick={() => setFeaturedGuestId(null)}
-                title={`Feature @${username}`}
-                style={{
-                  position: "relative",
-                  flex: "0 0 88px",
-                  width: 88,
-                  height: 56,
-                  overflow: "hidden",
-                  borderRadius: 10,
-                  border: !featuredGuestId ? "2px solid white" : "1px solid rgba(255,255,255,.25)",
-                  background: "rgba(10,10,14,.88)",
-                  cursor: "pointer",
-                  padding: 0,
-                }}
-              >
-                {cameraStream ? (
-                  <video
-                    className="stage-participant-thumb__video"
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                    ref={(element) => {
-                      if (element && element.srcObject !== cameraStream) {
-                        element.srcObject = cameraStream;
-                      }
-                    }}
-                    autoPlay
-                    muted
-                    playsInline
-                  />
-                ) : (
-                  <Avatar name={username} tone="signal" size="sm" />
-                )}
-                <span className="stage-participant-thumb__label">
-                  You
-                </span>
-              </button>
-
-              {connectedGuests.map((guest) => {
-                const identity = Object.keys(guestTracks).find(
-                  (key) =>
-                    key === guest.id ||
-                    key === guest.username ||
-                    key.toLowerCase().includes(
-                      String(guest.username ?? "").toLowerCase(),
-                    ),
-                );
-                const track = identity
-                  ? guestTracks[identity]
-                  : undefined;
-
-                return (
-                  <button
-                    type="button"
-                    role="listitem"
-                    className={`stage-participant-thumb${
-                      featuredGuest?.id === guest.id
-                        ? " is-active"
-                        : ""
-                    }`}
-                    key={guest.id}
-                    onClick={() => setFeaturedGuestId(guest.id)}
-                    title={`Feature ${guest.name}`}
-                    style={{
-                      position: "relative",
-                      flex: "0 0 88px",
-                      width: 88,
-                      height: 56,
-                      overflow: "hidden",
-                      borderRadius: 10,
-                      border: featuredGuest?.id === guest.id ? "2px solid white" : "1px solid rgba(255,255,255,.25)",
-                      background: "rgba(10,10,14,.88)",
-                      cursor: "pointer",
-                      padding: 0,
-                    }}
-                  >
-                    {track ? (
-                      <GuestRemoteVideo track={track} />
-                    ) : (
-                      <Avatar
-                        name={guest.name}
-                        tone={guest.avatarTone}
-                        size="sm"
-                      />
-                    )}
-                    <span className="stage-participant-thumb__label">
-                      {guest.name}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ============================================================
-            NO GUESTS: keep the normal host camera presentation.
-        ============================================================ */}
-
-        {connectedGuests.length === 0 && (
-          <div className="stage-host-only">
-            {!sourceIsActive &&
-              !isScreenShareScene &&
-              !isStartingScene &&
-              !isEndingScene &&
-              !cameraOff &&
-              cameraStream && (
-                <video
-                  ref={videoRef}
-                  className="stage-camera-video"
-                  autoPlay
-                  muted
-                  playsInline
-                />
-              )}
-          </div>
-        )}
-
-        {/* ============================================================
-            TOP OVERLAY
-        ============================================================ */}
-
-        <div className="stage-top-overlay">
-          <div className="stage-identity-row">
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={username}
-                className="stage-identity-photo"
-              />
+              </>
             ) : (
-              <Avatar
-                name={username}
-                tone="signal"
-                size="md"
-              />
+              <>
+                <div className="stage-tile">
+                  {hostVideo("stage-fill-video")}
+                  <span className="stage-tile-name">@{username}</span>
+                </div>
+                {featuredGuest && (
+                  <GuestTile guest={featuredGuest} guestTracks={guestTracks} className="stage-tile" />
+                )}
+              </>
             )}
 
-            <div className="stage-identity-text">
-              <span className="stage-handle">
-                @{username}
-              </span>
-
-              {isLive || isEnding ? (
-                <span className="stage-live-tag">
-                  <span className="stage-live-tag__dot" />
-                  LIVE {formatCount(viewers)}
-                </span>
-              ) : (
-                <span className="stage-preview-tag">
-                  Preview · only you can see this
-                </span>
-              )}
-            </div>
-
-            {(isLive || isEnding) && (
-              <button
-                className="stage-follow-btn"
-                type="button"
-              >
-                Follow
-              </button>
+            {connectedGuests.length > 1 && (
+              <div className="stage-participants__rail" role="group" aria-label="Choose featured guest">
+                {connectedGuests.map((guest) => (
+                  <button
+                    key={guest.id}
+                    type="button"
+                    className={`stage-thumb ${featuredGuest?.id === guest.id ? "stage-thumb--active" : ""}`}
+                    onClick={() => setFeaturedGuestId(guest.id)}
+                    aria-pressed={featuredGuest?.id === guest.id}
+                    title={`Feature ${guest.name}`}
+                  >
+                    <Avatar name={guest.name} tone={guest.avatarTone} size="sm" src={guest.avatarUrl} />
+                    <span>{guest.name}</span>
+                  </button>
+                ))}
+              </div>
             )}
           </div>
-
-          {devices.microphone ===
-            "connected" &&
-            !devices.micEnabled && (
-              <span className="stage-mic-off-chip">
-                <MicOff size={11} />
-                Muted
-              </span>
-            )}
-        </div>
+        )}
 
         {/* ============================================================
-            REAL SCENE PRESENTATION
+            CAMERA STATES
+        ============================================================ */}
+
+        {isCameraScene && !sourceIsActive && !showGuestLayout && (
+          <>
+            {mediaError &&
+              devices.camera !== "permission-denied" &&
+              devices.camera !== "unavailable" && (
+                <div className="stage-block-state" role="alert">
+                  <CameraOff size={30} />
+                  <p className="stage-block-state__title">Camera unavailable</p>
+                  <p className="stage-block-state__description">{mediaError}</p>
+                </div>
+              )}
+
+            {devices.camera === "permission-denied" && (
+              <div className="stage-block-state" role="alert">
+                <ShieldAlert size={30} />
+                <p className="stage-block-state__title">Camera access denied</p>
+                <p className="stage-block-state__description">
+                  Allow camera access in your browser settings to go live.
+                </p>
+              </div>
+            )}
+
+            {devices.camera === "unavailable" && !mediaError && (
+              <div className="stage-block-state">
+                <CameraOff size={30} />
+                <p className="stage-block-state__title">No camera detected</p>
+                <p className="stage-block-state__description">
+                  Plug in a camera or choose a different source.
+                </p>
+              </div>
+            )}
+
+            {devices.camera === "connected" && !devices.cameraEnabled && (
+              <div className="stage-block-state">
+                <Avatar name={username} tone="signal" size="lg" src={avatarUrl} />
+                <p className="stage-block-state__title">Camera is off</p>
+                <p className="stage-block-state__description">
+                  Viewers see your avatar and username while it's off.
+                </p>
+              </div>
+            )}
+          </>
+        )}
+
+        {isTextSource && <div className="stage-source-text">{sourceState.text}</div>}
+
+        {/* ============================================================
+            SCENE PRESENTATION
         ============================================================ */}
 
         {isStartingScene && (
           <div className="stage-status-overlay">
-            <span className="stage-live-tag__dot" />
-            <strong>Starting Soon</strong>
+            <strong>Starting soon</strong>
             <span>We'll be live in a moment.</span>
           </div>
         )}
 
         {isScreenShareScene && !screenStream && (
           <div className="stage-status-overlay">
-            <span>Choose a screen or window to share.</span>
+            <strong>Screen share</strong>
+            <span>Choose a screen, window or tab to share.</span>
           </div>
         )}
 
-        {isInterviewScene && guests.length === 0 && (
-          <div className="stage-status-overlay">
+        {isInterviewScene && guests.length === 0 && !showGuestLayout && (
+          <div className="stage-status-overlay stage-status-overlay--soft">
             <strong>Interview</strong>
             <span>Invite a guest to join your stage.</span>
           </div>
@@ -1042,103 +609,113 @@ export function Stage({
         {isEndingScene && (
           <div className="stage-status-overlay">
             <strong>Thanks for watching</strong>
-            <span>Your live stream is ending.</span>
+            <span>See you next time.</span>
           </div>
         )}
 
-        {/* ============================================================
-            STARTING
-        ============================================================ */}
-
-        {isStarting && (
-          <div className="stage-status-overlay">
-            <Loader2
-              size={26}
-              className="spin"
-            />
-            <span>Going live…</span>
+        {(isStarting || isEnding) && (
+          <div className="stage-status-overlay" role="status">
+            <Loader2 size={26} className="spin" />
+            <span>{isStarting ? "Going live…" : "Ending stream…"}</span>
           </div>
         )}
 
-        {/* ============================================================
-            ENDING
-        ============================================================ */}
-
-        {isEnding && (
-          <div className="stage-status-overlay">
-            <Loader2
-              size={26}
-              className="spin"
-            />
-            <span>Ending stream…</span>
-          </div>
-        )}
+        <div className="stage-shade" aria-hidden="true" />
 
         {/* ============================================================
-            CONNECTION
+            TOP: creator identity
         ============================================================ */}
 
-        {poorConnection && (
-          <div className="stage-connection-banner">
-            <WifiOff size={13} />
+        <div className="stage-top">
+          <div className="stage-identity">
+            <span className={`stage-identity__ring ${isBroadcasting ? "is-live" : ""}`}>
+              <Avatar name={username} tone="signal" size="lg" src={avatarUrl} />
+            </span>
 
-            {connection === "poor"
-              ? "Poor connection — video quality reduced"
-              : "Reconnecting…"}
-          </div>
-        )}
-
-        {/* ============================================================
-            HEARTS
-        ============================================================ */}
-
-        {isLive && (
-          <HeartsField active={isLive} />
-        )}
-
-        {/* ============================================================
-            RIGHT RAIL
-        ============================================================ */}
-
-        {(isLive || isEnding) && (
-          <div className="stage-right-rail">
-            <button
-              className="stage-rail-btn"
-              type="button"
-            >
-              <Heart size={20} />
-              <span>
-                {formatCount(likes)}
+            <div className="stage-identity__text">
+              <span className="stage-identity__row">
+                <span className="stage-identity__handle">@{username}</span>
+                {/* Viewers see a Follow button here; the creator sees a preview of it. */}
+                <span className="stage-follow-preview" aria-hidden="true" title="Viewers see a Follow button here">
+                  + Follow
+                </span>
               </span>
-            </button>
+              <span className="stage-identity__meta">
+                {isBroadcasting
+                  ? `${formatCount(viewers)} viewers`
+                  : "Preview · only you can see this"}
+                {category && ` · ${category}`}
+              </span>
+            </div>
 
             <button
-              className="stage-rail-btn"
               type="button"
+              className={`stage-round-btn stage-collapse ${detailsOpen ? "is-open" : ""}`}
+              onClick={() => setDetailsOpen((value) => !value)}
+              aria-expanded={detailsOpen}
+              aria-controls="fls-stage-details"
+              aria-label={detailsOpen ? "Hide stream details" : "Show stream details"}
             >
-              <Share2 size={19} />
-              <span>Share</span>
+              <ChevronDown size={20} />
             </button>
           </div>
-        )}
 
-        {/* ============================================================
-            PRODUCT
-        ============================================================ */}
+          <button
+            type="button"
+            className="stage-chip"
+            onClick={onOpenSettings}
+            disabled={!onOpenSettings}
+            title="Change category"
+          >
+            <Gamepad2 size={17} aria-hidden="true" />
+            {category || "Add a category"}
+            <ChevronRight size={16} aria-hidden="true" />
+          </button>
 
-        {featuredProduct &&
-          (isLive || phase === "setup") && (
-            <div className="stage-product-slot">
-              <FeaturedProductCard
-                product={featuredProduct}
-                onDismiss={unfeatureProduct}
-              />
+          {detailsOpen && (
+            <div className="stage-details" id="fls-stage-details">
+              <strong>{streamInfo.title.trim() || "Untitled live"}</strong>
+              {streamInfo.description.trim() && <p>{streamInfo.description}</p>}
+              <span>
+                {streamInfo.visibility === "public"
+                  ? "Public"
+                  : streamInfo.visibility === "followers"
+                    ? "Followers only"
+                    : "Private"}
+                {" · "}
+                {activeScene?.name ?? "Main Camera"}
+              </span>
             </div>
           )}
 
-        {/* ============================================================
-            GIFTS
-        ============================================================ */}
+          {devices.microphone === "connected" && !devices.micEnabled && (
+            <span className="stage-mic-off-chip" role="status">
+              <MicOff size={12} />
+              Your mic is muted
+            </span>
+          )}
+
+          {isScreenShareScene && screenStream && isBroadcasting && (
+            <span className="stage-mic-off-chip stage-mic-off-chip--info" role="status">
+              Screen share is a studio preview — viewers still see your camera
+            </span>
+          )}
+
+          {poorConnection && (
+            <div className="stage-connection-banner" role="status">
+              <WifiOff size={13} />
+              {connection === "poor" ? "Poor connection — video quality reduced" : "Reconnecting…"}
+            </div>
+          )}
+        </div>
+
+        {isLive && <HeartsField likes={likes} />}
+
+        {featuredProduct && (isLive || phase === "setup") && (
+          <div className="stage-product-slot">
+            <FeaturedProductCard product={featuredProduct} onDismiss={unfeatureProduct} />
+          </div>
+        )}
 
         {isLive && (
           <div className="stage-gift-slot">
@@ -1147,29 +724,108 @@ export function Stage({
         )}
 
         {/* ============================================================
-            BOTTOM OVERLAY
+            RIGHT RAIL
         ============================================================ */}
 
-        <div className="stage-bottom-overlay">
-          <p className="stage-title">
-            {streamInfo.title}
-          </p>
+        <div className="stage-rail">
+          <div className="stage-rail__item" title="Likes on this live">
+            <span className="stage-rail__btn stage-rail__btn--static">
+              <Heart size={30} fill="currentColor" strokeWidth={0} aria-hidden="true" />
+              <span className="stage-rail__count">{formatCount(likes)}</span>
+            </span>
+            <span className="sr-only">{likes} likes</span>
+          </div>
 
-          {isLive ? (
-            <LiveChatOverlay
-              messages={chatMessages}
-            />
+          <button
+            type="button"
+            className="stage-rail__btn"
+            onClick={() => commentRef.current?.focus()}
+            disabled={!isLive}
+            aria-label={`${commentCount} comments — write a comment`}
+          >
+            <MessageCircle size={28} fill="currentColor" strokeWidth={0} aria-hidden="true" />
+            <span className="stage-rail__dots" aria-hidden="true">•••</span>
+            <span className="stage-rail__count">{formatCount(commentCount)}</span>
+          </button>
+
+          <button
+            type="button"
+            className="stage-rail__btn"
+            onClick={onShare}
+            disabled={!isLive || !onShare}
+            aria-label={`Share this live (${shares} shares)`}
+          >
+            <Forward size={30} fill="currentColor" strokeWidth={1.5} aria-hidden="true" />
+            <span className="stage-rail__count">{formatCount(shares)}</span>
+          </button>
+
+          <button
+            type="button"
+            className="stage-rail__btn stage-rail__btn--gift"
+            onClick={onOpenGifts}
+            disabled={!onOpenGifts}
+            aria-label="Gifts"
+          >
+            <Gift size={34} aria-hidden="true" />
+            <span className="stage-rail__count">Gift</span>
+          </button>
+        </div>
+
+        {/* ============================================================
+            BOTTOM: comments + composer
+        ============================================================ */}
+
+        <div className="stage-bottom">
+          {isBroadcasting ? (
+            <LiveChatOverlay messages={chatMessages} />
           ) : (
-            <p className="stage-preview-hint">
-              This is what your viewers will see
-              once you go live.
-            </p>
+            <p className="stage-preview-hint">This is what your viewers will see once you go live.</p>
           )}
+
+          <form
+            className="stage-composer"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void sendComment();
+            }}
+          >
+            <div className="stage-composer__field">
+              <label htmlFor="fls-stage-comment" className="sr-only">Add a comment</label>
+              <input
+                id="fls-stage-comment"
+                ref={commentRef}
+                value={comment}
+                onChange={(event) => setComment(event.target.value)}
+                placeholder={isLive ? "Add a comment…" : "Comments open when you're live"}
+                disabled={!isLive || !onSendComment}
+                maxLength={500}
+                autoComplete="off"
+                enterKeyHint="send"
+              />
+              <button
+                type="button"
+                className="stage-composer__emoji"
+                aria-label="Add a heart"
+                disabled={!isLive || !onSendComment}
+                onClick={() => {
+                  setComment((value) => `${value}💙`);
+                  commentRef.current?.focus();
+                }}
+              >
+                <Smile size={24} />
+              </button>
+            </div>
+            <button
+              type="submit"
+              className="stage-composer__send"
+              disabled={!isLive || !comment.trim() || sendingComment}
+              aria-label="Post comment"
+            >
+              <SendHorizontal size={22} />
+            </button>
+          </form>
         </div>
       </div>
     </div>
   );
 }
-
-// Keep this import available for the existing icon set.
-void MessageSquare;

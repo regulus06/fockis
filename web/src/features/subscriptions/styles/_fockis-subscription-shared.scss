@@ -1,346 +1,240 @@
 /* ============================================================================
-   FOCKIS SUBSCRIPTIONS — SHARED CHROME
-   Complete styling for:
-   - Subscription overview
-   - Subscription plans
-   - Billing
-   - Admin
-   - Success / cancel states
+   FOCKIS SUBSCRIPTIONS — SHARED DESIGN SYSTEM
+
+   Used by every subscription page and component:
+   plans, overview, billing, success, cancel, feature gate, admin.
+
+   - Everything is scoped under `.fk-sub-*` classes (no global element
+     selectors), so nothing leaks into unrelated pages.
+   - Colors come from the Fockis theme tokens (light + dark) plus five
+     gemstone accent palettes exposed as CSS custom properties.
 ============================================================================ */
 
 @use "../../../styles/fockis-theme";
 
 /* ============================================================================
+   BREAKPOINTS & MIXINS
+============================================================================ */
+
+$fk-sub-bp-sm: 600px;
+$fk-sub-bp-md: 900px;
+$fk-sub-bp-lg: 1280px;
+
+@mixin fk-sub-focus {
+  outline: 3px solid var(--fk-fjord-bright);
+  outline-offset: 2px;
+}
+
+@mixin fk-sub-card {
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-xl);
+  box-shadow: var(--fk-shadow-sm);
+}
+
+/* ============================================================================
+   GEMSTONE PALETTES
+   --gem-accent        : text/icon accent (AA on surface)
+   --gem-solid         : button background
+   --gem-solid-hover   : button hover background
+   --gem-on-solid      : button text (AA on --gem-solid)
+   --gem-soft          : tinted backgrounds
+   --gem-ring          : border / glow
+============================================================================ */
+
+@mixin fk-sub-gem-palettes {
+  &--pearl {
+    --gem-accent: #5b6472;
+    --gem-solid: #eef0f3;
+    --gem-solid-hover: #e2e6eb;
+    --gem-on-solid: #1c2b39;
+    --gem-soft: rgba(235, 228, 214, 0.45);
+    --gem-ring: rgba(180, 170, 150, 0.45);
+  }
+
+  &--bronze {
+    --gem-accent: #9a4a1c;
+    --gem-solid: #a8521f;
+    --gem-solid-hover: #8f4418;
+    --gem-on-solid: #ffffff;
+    --gem-soft: rgba(196, 110, 52, 0.12);
+    --gem-ring: rgba(196, 110, 52, 0.45);
+  }
+
+  &--silver {
+    --gem-accent: #4f5a67;
+    --gem-solid: #5d6875;
+    --gem-solid-hover: #4c5662;
+    --gem-on-solid: #ffffff;
+    --gem-soft: rgba(140, 152, 166, 0.14);
+    --gem-ring: rgba(140, 152, 166, 0.5);
+  }
+
+  &--golden {
+    --gem-accent: #8a6100;
+    --gem-solid: #e3a82b;
+    --gem-solid-hover: #d29a20;
+    --gem-on-solid: #2a1c00;
+    --gem-soft: rgba(232, 168, 43, 0.14);
+    --gem-ring: rgba(214, 160, 40, 0.55);
+  }
+
+  &--diamond {
+    --gem-accent: #1446c8;
+    --gem-solid: #1446c8;
+    --gem-solid-hover: #0f38a3;
+    --gem-on-solid: #ffffff;
+    --gem-soft: rgba(36, 104, 230, 0.1);
+    --gem-ring: rgba(36, 104, 230, 0.55);
+  }
+}
+
+[data-theme="dark"] {
+  .fk-sub-plan--pearl,
+  .fk-sub-current--pearl,
+  .fk-sub-membership--pearl,
+  .fk-sub-admin-card--pearl,
+  .fk-sub-gate--pearl,
+  .fk-sub-result--pearl {
+    --gem-accent: #c9ced6;
+    --gem-solid: #3a3d42;
+    --gem-solid-hover: #474b51;
+    --gem-on-solid: #f1f2f4;
+  }
+
+  .fk-sub-plan--bronze,
+  .fk-sub-current--bronze,
+  .fk-sub-membership--bronze,
+  .fk-sub-admin-card--bronze,
+  .fk-sub-gate--bronze,
+  .fk-sub-result--bronze {
+    --gem-accent: #e59a68;
+  }
+
+  .fk-sub-plan--silver,
+  .fk-sub-current--silver,
+  .fk-sub-membership--silver,
+  .fk-sub-admin-card--silver,
+  .fk-sub-gate--silver,
+  .fk-sub-result--silver {
+    --gem-accent: #c3cbd5;
+  }
+
+  .fk-sub-plan--golden,
+  .fk-sub-current--golden,
+  .fk-sub-membership--golden,
+  .fk-sub-admin-card--golden,
+  .fk-sub-gate--golden,
+  .fk-sub-result--golden {
+    --gem-accent: #f2c35e;
+  }
+
+  .fk-sub-plan--diamond,
+  .fk-sub-current--diamond,
+  .fk-sub-membership--diamond,
+  .fk-sub-admin-card--diamond,
+  .fk-sub-gate--diamond,
+  .fk-sub-result--diamond {
+    --gem-accent: #8db3ff;
+    --gem-solid: #2a62e8;
+    --gem-solid-hover: #3b71f0;
+  }
+}
+
+/* ============================================================================
    PAGE SHELL
 ============================================================================ */
 
-.fk-subscription-page,
-.fk-subscriptions-page,
-.fk-subscription-admin-page,
-.fk-subscription-plans-page {
+.fk-sub-page {
+  box-sizing: border-box;
   width: 100%;
+  max-width: 1080px;
   min-height: 100vh;
-
-  max-width: 1180px;
-
   margin: 0 auto;
-  padding: 32px 24px 90px;
-
-  background: var(--fk-bg);
+  padding: clamp(20px, 3vw, 40px) 16px 96px;
   color: var(--fk-text);
-
   font-family: var(--fk-font-body);
-}
 
-/* ============================================================================
-   SUBSCRIPTION PLANS PAGE
-============================================================================ */
-
-.fk-subscription-plans-page {
-  width: 100%;
-}
-
-/* ============================================================================
-   PLANS PAGE HEADER
-============================================================================ */
-
-.fk-subscription-plans-page__header {
-  width: 100%;
-
-  margin-bottom: 24px;
-  padding: 8px 2px 0;
-
-  text-align: left;
-
-  .fk-subscriptions-eyebrow {
-    display: inline-block;
-
-    margin-bottom: 8px;
-
-    color: var(--fk-fjord);
-
-    font-size: 11px;
-    font-weight: 800;
-
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
+  @media (min-width: $fk-sub-bp-sm) {
+    padding-inline: 24px;
   }
 
-  h1 {
-    margin: 0;
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
 
-    color: var(--fk-text);
-
+  h1,
+  h2,
+  h3 {
     font-family: var(--fk-font-display);
-
-    font-size: clamp(28px, 4vw, 40px);
-    font-weight: 800;
-
-    line-height: 1.1;
-    letter-spacing: -0.035em;
+    color: var(--fk-text);
   }
 
-  p {
-    max-width: 680px;
-
-    margin: 10px 0 0;
-
-    color: var(--fk-text-2);
-
-    font-size: 15px;
-    line-height: 1.6;
+  img {
+    max-width: 100%;
   }
 }
 
-/* ============================================================================
-   CURRENT ACCOUNT SUMMARY
-============================================================================ */
-
-.fk-subscription-current-summary {
-  width: 100%;
-
-  margin: 0 0 24px;
-  padding: 16px 20px;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 16px;
-
-  background: var(--fk-surface);
-
-  border: 1px solid var(--fk-border);
-  border-radius: var(--fk-r-lg);
-
-  box-shadow: var(--fk-shadow-sm);
-
-  span {
-    color: var(--fk-text-2);
-
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  strong {
-    display: inline-flex;
-    align-items: center;
-
-    min-height: 32px;
-
-    padding: 5px 12px;
-
-    background: var(--fk-fjord-soft);
-    color: var(--fk-fjord);
-
-    border-radius: var(--fk-r-pill);
-
-    font-size: 12px;
-    font-weight: 800;
-
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
+.fk-sub-sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-/* ============================================================================
-   CHECKOUT MESSAGE
-============================================================================ */
-
-.fk-subscription-checkout-message {
-  width: 100%;
-
-  margin-bottom: 18px;
-  padding: 14px 18px;
-
-  display: flex;
-  align-items: center;
-
-  gap: 10px;
-
-  background: color-mix(
-    in srgb,
-    var(--fk-fjord) 8%,
-    transparent
-  );
-
-  color: var(--fk-fjord);
-
-  border: 1px solid color-mix(
-    in srgb,
-    var(--fk-fjord) 25%,
-    transparent
-  );
-
-  border-radius: var(--fk-r-md);
-
-  font-size: 13px;
-  font-weight: 700;
-
-  &::before {
-    content: "";
-
-    width: 7px;
-    height: 7px;
-
-    flex: 0 0 auto;
-
-    border-radius: 50%;
-
-    background: var(--fk-fjord);
-  }
-}
-
-/* ============================================================================
-   EYEBROW
-============================================================================ */
-
-.fk-subscription-eyebrow,
-.fk-subscriptions-eyebrow,
-.fk-subscription-admin-eyebrow {
-  display: block;
-
-  margin-bottom: 4px;
-
-  color: var(--fk-fjord);
-
-  font-size: 10px;
+.fk-sub-eyebrow {
+  display: inline-block;
+  color: var(--fk-fjord-bright);
+  font-size: 11px;
   font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
 
-  letter-spacing: 0.14em;
-  line-height: 1.2;
+.fk-sub-note {
+  margin: 12px 0 0;
+  color: var(--fk-text-2);
+  font-size: 13px;
+  line-height: 1.55;
 }
 
 /* ============================================================================
-   GENERAL HEADER
+   PAGE HEADER (overview, billing, admin)
 ============================================================================ */
 
-.fk-account-header,
-.fk-subscriptions-header,
-.fk-subscription-admin-page__header {
-  width: 100%;
-
-  margin-bottom: 22px;
-  padding: 4px 2px;
-
+.fk-sub-page-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 16px;
-
   flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin-bottom: 24px;
+
+  > div {
+    min-width: 0;
+    flex: 1 1 320px;
+  }
 
   h1 {
-    margin: 0;
-
-    color: var(--fk-text);
-
-    font-family: var(--fk-font-display);
-    font-size: 28px;
+    margin: 6px 0 6px;
+    font-size: clamp(26px, 3.6vw, 36px);
     font-weight: 800;
-
-    line-height: 1.15;
+    line-height: 1.12;
     letter-spacing: -0.03em;
   }
 
   p {
-    margin: 6px 0 0;
-
-    color: var(--fk-text-2);
-
-    font-size: 14px;
-    line-height: 1.5;
-  }
-}
-
-/* ============================================================================
-   RESULT HERO
-============================================================================ */
-
-.fk-subscription-result {
-  width: 100%;
-  max-width: 480px;
-
-  margin: 40px auto 0;
-  padding: 40px 32px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  gap: 10px;
-
-  text-align: center;
-
-  background: var(--fk-surface);
-
-  border: 1px solid var(--fk-border);
-  border-radius: var(--fk-r-lg);
-
-  box-shadow: var(--fk-shadow-sm);
-
-  h1 {
-    margin: 6px 0 0;
-
-    color: var(--fk-text);
-
-    font-family: var(--fk-font-display);
-    font-size: 24px;
-    font-weight: 800;
-
-    line-height: 1.25;
-  }
-
-  p {
     margin: 0;
-
     color: var(--fk-text-2);
-
-    font-size: 14px;
-    line-height: 1.6;
-  }
-
-  > button {
-    margin-top: 10px;
-  }
-}
-
-.fk-subscription-result__icon {
-  width: 56px;
-  height: 56px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: var(--fk-r-pill);
-
-  background: var(--fk-fjord-soft);
-  color: var(--fk-fjord);
-
-  font-size: 24px;
-  font-weight: 800;
-}
-
-.fk-subscription-success-details {
-  width: 100%;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 6px;
-
-  p {
-    margin: 0;
-
-    color: var(--fk-text-2);
-
-    font-size: 14px;
-
-    strong {
-      color: var(--fk-text);
-    }
+    font-size: 15px;
+    line-height: 1.55;
   }
 }
 
@@ -348,899 +242,734 @@
    BUTTONS
 ============================================================================ */
 
-.fk-subscription-page button,
-.fk-subscriptions-page button,
-.fk-subscription-admin-page button,
-.fk-subscription-plans-page button,
-.fk-subscription-result button,
-.fk-primary-button {
-  height: 42px;
-
-  padding: 0 20px;
-
+.fk-sub-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
-  border: 0;
-  border-radius: var(--fk-r-md);
-
-  background: var(--fk-fjord);
-  color: var(--fk-text-inverse);
-
-  font-family: var(--fk-font-body);
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  border-radius: var(--fk-r-lg);
+  font: inherit;
   font-size: 14px;
   font-weight: 700;
-
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
-
   transition:
     background-color var(--fk-fast) var(--fk-ease),
-    transform var(--fk-fast) var(--fk-ease),
-    box-shadow var(--fk-fast) var(--fk-ease);
-
-  &:hover {
-    background: var(--fk-fjord-dark);
-  }
-
-  &:active {
-    transform: scale(0.97);
-  }
+    border-color var(--fk-fast) var(--fk-ease),
+    box-shadow var(--fk-fast) var(--fk-ease),
+    transform var(--fk-fast) var(--fk-ease);
 
   &:focus-visible {
-    outline: 2px solid var(--fk-fjord-bright);
-    outline-offset: 2px;
+    @include fk-sub-focus;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
   }
 
   &:disabled {
-    background: var(--fk-border-strong);
-    color: var(--fk-text-3);
-
     cursor: not-allowed;
+    opacity: 0.6;
   }
-}
 
-.fk-subscription-button-secondary,
-.fk-subscription-secondary-button,
-.fk-secondary-button,
-.fk-subscriptions-back,
-.fk-subscription-admin-refresh {
-  background: var(--fk-surface) !important;
-  color: var(--fk-text-2) !important;
+  &--primary {
+    background: var(--fk-fjord);
+    color: #ffffff;
 
-  border: 1px solid var(--fk-border) !important;
-
-  &:hover {
-    background: var(--fk-surface-hover) !important;
-    color: var(--fk-text) !important;
-    border-color: var(--fk-border-strong) !important;
-  }
-}
-
-.fk-danger-button {
-  background: var(--fk-surface) !important;
-  color: var(--fk-danger) !important;
-
-  border: 1px solid color-mix(
-    in srgb,
-    var(--fk-danger) 30%,
-    transparent
-  ) !important;
-
-  &:hover {
-    background: color-mix(
-      in srgb,
-      var(--fk-danger) 10%,
-      transparent
-    ) !important;
-
-    border-color: color-mix(
-      in srgb,
-      var(--fk-danger) 40%,
-      transparent
-    ) !important;
-  }
-}
-
-/* ============================================================================
-   STATES
-============================================================================ */
-
-.fk-subscription-error,
-.fk-subscription-admin-error {
-  width: 100%;
-
-  margin-bottom: 18px;
-  padding: 16px 18px;
-
-  color: var(--fk-danger);
-
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.5;
-
-  background: color-mix(
-    in srgb,
-    var(--fk-danger) 10%,
-    transparent
-  );
-
-  border: 1px solid color-mix(
-    in srgb,
-    var(--fk-danger) 30%,
-    transparent
-  );
-
-  border-radius: var(--fk-r-md);
-}
-
-.fk-subscription-loading,
-.fk-subscription-admin-loading {
-  width: 100%;
-  min-height: 120px;
-
-  padding: 32px 20px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  color: var(--fk-text-2);
-
-  font-size: 14px;
-
-  background: var(--fk-surface);
-
-  border: 1px solid var(--fk-border);
-  border-radius: var(--fk-r-lg);
-}
-
-/* ============================================================================
-   BILLING CARD
-============================================================================ */
-
-.fk-subscription-billing-card {
-  width: 100%;
-
-  margin-top: 20px;
-  padding: 22px;
-
-  background: var(--fk-surface);
-
-  border: 1px solid var(--fk-border);
-  border-radius: var(--fk-r-lg);
-
-  box-shadow: var(--fk-shadow-sm);
-}
-
-.fk-subscription-billing-card__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 12px;
-
-  margin-bottom: 14px;
-
-  h2 {
-    margin: 0;
-
-    color: var(--fk-text);
-
-    font-family: var(--fk-font-display);
-    font-size: 19px;
-    font-weight: 800;
-  }
-}
-
-/* ============================================================================
-   CURRENT SUBSCRIPTION
-============================================================================ */
-
-.fk-current-subscription {
-  display: grid;
-
-  grid-template-columns:
-    minmax(220px, 320px)
-    1fr;
-
-  gap: 16px;
-
-  margin-top: 8px;
-}
-
-.fk-current-plan-card {
-  padding: 22px;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 6px;
-
-  background: linear-gradient(
-    145deg,
-    var(--fk-fjord) 0%,
-    var(--fk-fjord-dark) 100%
-  );
-
-  color: var(--fk-text-inverse);
-
-  border-radius: var(--fk-r-lg);
-
-  box-shadow: var(--fk-shadow-md);
-
-  p {
-    margin: 6px 0 0;
-
-    color: rgba(255, 255, 255, 0.85);
-
-    font-size: 13px;
-    line-height: 1.5;
-  }
-}
-
-.fk-current-plan-label {
-  font-size: 10px;
-  font-weight: 800;
-
-  letter-spacing: 0.14em;
-
-  opacity: 0.85;
-}
-
-.fk-current-plan-name {
-  font-family: var(--fk-font-display);
-
-  font-size: 26px;
-  font-weight: 800;
-}
-
-/* ============================================================================
-   DETAIL LIST
-============================================================================ */
-
-.fk-subscription-billing-details,
-.fk-subscription-details {
-  display: grid;
-
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
-
-  gap: 0 24px;
-
-  > div,
-  .fk-detail {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 12px;
-
-    padding: 10px 0;
-
-    border-bottom: 1px solid var(--fk-border);
-
-    span {
-      color: var(--fk-text-2);
-
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    strong {
-      color: var(--fk-text);
-
-      font-size: 13px;
-      font-weight: 700;
-
-      text-align: right;
+    &:hover:not(:disabled) {
+      background: var(--fk-fjord-dark);
     }
   }
-}
 
-/* ============================================================================
-   SECTION
-============================================================================ */
-
-.fk-subscription-section {
-  margin-top: 26px;
-
-  h2 {
-    margin: 0 0 12px;
-
-    color: var(--fk-text);
-
-    font-family: var(--fk-font-display);
-    font-size: 17px;
-    font-weight: 700;
-  }
-}
-
-/* ============================================================================
-   LEVEL LIST
-============================================================================ */
-
-.fk-level-list {
-  display: grid;
-
-  grid-template-columns:
-    repeat(auto-fill, minmax(150px, 1fr));
-
-  gap: 12px;
-
-  > div {
-    padding: 14px 16px;
-
-    display: flex;
-    flex-direction: column;
-
-    gap: 4px;
-
+  &--secondary {
     background: var(--fk-surface);
+    border-color: var(--fk-border-strong);
+    color: var(--fk-text);
 
-    border: 1px solid var(--fk-border);
-    border-radius: var(--fk-r-md);
-
-    strong {
-      color: var(--fk-text);
-
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    span {
-      color: var(--fk-text-2);
-
-      font-size: 12px;
+    &:hover:not(:disabled) {
+      background: var(--fk-surface-hover);
     }
   }
-}
 
-/* ============================================================================
-   BILLING TOGGLE
-============================================================================ */
-
-.fk-billing-switch,
-.fk-billing-selector {
-  display: inline-flex;
-  align-items: center;
-
-  gap: 4px;
-
-  margin: 18px 0;
-  padding: 4px;
-
-  background: var(--fk-sunken);
-
-  border: 1px solid var(--fk-border);
-  border-radius: var(--fk-r-pill);
-
-  button {
-    height: 36px;
-
-    padding: 0 18px;
-
-    border: 0;
-    border-radius: var(--fk-r-pill);
-
+  &--ghost {
     background: transparent;
     color: var(--fk-text-2);
 
-    font-size: 13px;
-    font-weight: 700;
-
-    &.active,
-    &.is-active {
-      background: var(--fk-fjord);
-      color: var(--fk-text-inverse);
-    }
-
-    &:hover:not(.active):not(.is-active) {
+    &:hover:not(:disabled) {
+      background: var(--fk-surface-hover);
       color: var(--fk-text);
+    }
+  }
+
+  &--danger {
+    background: transparent;
+    border-color: var(--fk-danger);
+    color: var(--fk-danger);
+
+    &:hover:not(:disabled) {
+      background: var(--fk-danger);
+      color: #ffffff;
+    }
+  }
+}
+
+.fk-sub-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+
+  &--center {
+    justify-content: center;
+  }
+
+  @media (max-width: #{$fk-sub-bp-sm - 1px}) {
+    > .fk-sub-btn {
+      flex: 1 1 100%;
     }
   }
 }
 
 /* ============================================================================
-   PLANS COMPONENT
+   STATUS BADGE
 ============================================================================ */
 
-.fk-subscription-plans {
-  width: 100%;
+.fk-sub-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--fk-r-pill);
+  background: var(--fk-sunken);
+  color: var(--fk-text-2);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
 
-  margin-top: 8px;
+  &__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  &--active,
+  &--trialing {
+    background: color-mix(in srgb, var(--fk-success) 14%, transparent);
+    color: var(--fk-success);
+  }
+
+  &--past_due {
+    background: color-mix(in srgb, var(--fk-warning) 16%, transparent);
+    color: var(--fk-warning);
+  }
+
+  &--canceled,
+  &--expired {
+    background: color-mix(in srgb, var(--fk-danger) 12%, transparent);
+    color: var(--fk-danger);
+  }
 }
 
 /* ============================================================================
-   BILLING INFORMATION
+   ALERTS
 ============================================================================ */
 
-.fk-subscription-plans__billing {
-  width: 100%;
-
-  margin-bottom: 18px;
-  padding: 12px 16px;
-
+.fk-sub-alert {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  background: var(--fk-surface);
-
+  align-items: flex-start;
+  gap: 10px;
+  margin: 16px 0;
+  padding: 12px 16px;
   border: 1px solid var(--fk-border);
-  border-radius: var(--fk-r-md);
+  border-left-width: 4px;
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+  color: var(--fk-text);
+  font-size: 14px;
+  line-height: 1.5;
 
-  span {
+  > svg {
+    flex: 0 0 auto;
+    margin-top: 1px;
+  }
+
+  &--error {
+    border-color: color-mix(in srgb, var(--fk-danger) 40%, var(--fk-border));
+    border-left-color: var(--fk-danger);
+    background: color-mix(in srgb, var(--fk-danger) 6%, var(--fk-surface));
+
+    > svg {
+      color: var(--fk-danger);
+    }
+  }
+
+  &--warning {
+    border-left-color: var(--fk-warning);
+    background: color-mix(in srgb, var(--fk-warning) 8%, var(--fk-surface));
+
+    > svg {
+      color: var(--fk-warning);
+    }
+  }
+
+  &--success {
+    border-left-color: var(--fk-success);
+    background: color-mix(in srgb, var(--fk-success) 7%, var(--fk-surface));
+  }
+
+  &--info {
+    align-items: center;
+    border-left-color: var(--fk-fjord-bright);
+    background: color-mix(in srgb, var(--fk-fjord-bright) 6%, var(--fk-surface));
+
+    > svg {
+      color: var(--fk-fjord-bright);
+    }
+  }
+
+  &--neutral {
+    border-left-color: var(--fk-text-3);
+  }
+}
+
+/* ============================================================================
+   STATES: loading / empty / error
+============================================================================ */
+
+.fk-sub-state {
+  @include fk-sub-card;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 560px;
+  margin: 32px auto;
+  padding: 40px 24px;
+  text-align: center;
+
+  h1,
+  h2 {
+    margin: 4px 0 0;
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  p {
+    margin: 0;
     color: var(--fk-text-2);
+    line-height: 1.55;
+  }
 
+  &--error > svg {
+    color: var(--fk-danger);
+  }
+}
+
+.fk-sub-empty {
+  @include fk-sub-card;
+  padding: 32px 20px;
+  color: var(--fk-text-2);
+  text-align: center;
+}
+
+.fk-sub-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: fk-sub-spin 0.8s linear infinite;
+  vertical-align: -3px;
+
+  &--lg {
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
+    color: var(--fk-fjord-bright);
+  }
+}
+
+@keyframes fk-sub-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fk-sub-skeleton {
+  border-radius: var(--fk-r-md);
+  background: linear-gradient(
+    90deg,
+    var(--fk-sunken) 0%,
+    var(--fk-surface-hover) 50%,
+    var(--fk-sunken) 100%
+  );
+  background-size: 200% 100%;
+  animation: fk-sub-shimmer 1.4s ease-in-out infinite;
+
+  &--media {
+    aspect-ratio: 266 / 156;
+    border-radius: 0;
+  }
+
+  &--gem {
+    width: 96px;
+    height: 56px;
+  }
+
+  &--line {
+    height: 12px;
+    margin: 8px 0;
+  }
+
+  &--title {
+    width: 60%;
+    height: 22px;
+    margin: 8px 0;
+  }
+
+  &--price {
+    width: 50%;
+    height: 32px;
+    margin: 14px 0;
+  }
+}
+
+@keyframes fk-sub-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ============================================================================
+   CARD SURFACES (panels, membership card, details list)
+============================================================================ */
+
+.fk-sub-panel {
+  @include fk-sub-card;
+  min-width: 0;
+  padding: 22px;
+
+  h2 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  > p {
+    margin: 0;
+    color: var(--fk-text-2);
+    line-height: 1.55;
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--fk-text-2);
+  }
+
+  &__subheading {
+    margin: 18px 0 8px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--fk-text-2) !important;
+  }
+}
+
+.fk-sub-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+
+  @media (min-width: $fk-sub-bp-md) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.fk-sub-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 18px 0 0;
+
+  > div {
+    min-width: 0;
+    padding: 12px 14px;
+    border-radius: var(--fk-r-lg);
+    background: var(--fk-bg);
+  }
+
+  dt {
+    color: var(--fk-text-2);
     font-size: 12px;
     font-weight: 600;
   }
 
-  strong {
+  dd {
+    margin: 4px 0 0;
     color: var(--fk-text);
-
-    font-size: 12px;
-    font-weight: 800;
-
-    text-transform: uppercase;
-  }
-}
-
-/* ============================================================================
-   PLAN GRID
-============================================================================ */
-
-.fk-subscription-plans__grid {
-  width: 100%;
-
-  display: grid;
-
-  grid-template-columns:
-    repeat(5, minmax(0, 1fr));
-
-  gap: 16px;
-
-  align-items: stretch;
-}
-
-/* ============================================================================
-   PLAN CARD
-============================================================================ */
-
-.fk-subscription-plan-card,
-.fk-subscription-plan {
-  position: relative;
-
-  min-width: 0;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 16px;
-
-  padding: 24px 20px;
-
-  background: var(--fk-surface);
-
-  border: 1px solid var(--fk-border);
-  border-radius: var(--fk-r-lg);
-
-  box-shadow: var(--fk-shadow-sm);
-
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease,
-    transform 180ms ease;
-
-  &:hover {
-    box-shadow: var(--fk-shadow-md);
-    transform: translateY(-2px);
-  }
-
-  &.is-current {
-    border-color: var(--fk-fjord);
-
-    box-shadow:
-      0 0 0 2px var(--fk-fjord-soft),
-      var(--fk-shadow-sm);
-  }
-
-  &.is-popular {
-    border-color: var(--fk-fjord-bright);
-
-    transform: translateY(-5px);
-
-    &:hover {
-      transform: translateY(-7px);
-    }
-  }
-}
-
-/* ============================================================================
-   PLAN CARD HEADER
-============================================================================ */
-
-.fk-subscription-plan-card__header {
-  display: flex;
-  flex-direction: column;
-
-  gap: 5px;
-}
-
-.fk-subscription-plan-card__name {
-  color: var(--fk-text);
-
-  font-family: var(--fk-font-display);
-
-  font-size: 20px;
-  font-weight: 800;
-
-  letter-spacing: -0.02em;
-}
-
-.fk-subscription-plan-card__description {
-  min-height: 58px;
-
-  color: var(--fk-text-2);
-
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-/* ============================================================================
-   POPULAR BADGE
-============================================================================ */
-
-.fk-subscription-plan-card__popular {
-  position: absolute;
-
-  top: -12px;
-  left: 18px;
-
-  padding: 5px 12px;
-
-  background: var(--fk-fjord);
-  color: var(--fk-text-inverse);
-
-  border-radius: var(--fk-r-pill);
-
-  font-size: 9px;
-  font-weight: 800;
-
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-/* ============================================================================
-   PRICE
-============================================================================ */
-
-.fk-subscription-plan-card__price {
-  display: flex;
-  align-items: baseline;
-
-  gap: 3px;
-
-  padding: 8px 0;
-
-  white-space: nowrap;
-}
-
-.fk-subscription-plan-card__currency {
-  color: var(--fk-text);
-
-  font-size: 16px;
-  font-weight: 800;
-}
-
-.fk-subscription-plan-card__amount {
-  color: var(--fk-text);
-
-  font-family: var(--fk-font-display);
-
-  font-size: 31px;
-  font-weight: 800;
-
-  line-height: 1;
-  letter-spacing: -0.04em;
-}
-
-.fk-subscription-plan-card__interval {
-  color: var(--fk-text-2);
-
-  font-size: 11px;
-}
-
-/* ============================================================================
-   FREE LABEL
-============================================================================ */
-
-.fk-subscription-plan-card__free {
-  align-self: flex-start;
-
-  padding: 4px 9px;
-
-  background: color-mix(
-    in srgb,
-    var(--fk-success) 12%,
-    transparent
-  );
-
-  color: var(--fk-success);
-
-  border-radius: var(--fk-r-pill);
-
-  font-size: 9px;
-  font-weight: 800;
-
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-/* ============================================================================
-   FEATURES
-============================================================================ */
-
-.fk-subscription-plan-card__features {
-  display: flex;
-  flex-direction: column;
-
-  gap: 9px;
-
-  margin: 2px 0 0;
-  padding: 0;
-
-  list-style: none;
-
-  flex: 1;
-}
-
-.fk-subscription-plan-card__feature {
-  display: flex;
-  align-items: flex-start;
-
-  gap: 8px;
-
-  color: var(--fk-text-2);
-
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.fk-subscription-plan-card__feature-icon {
-  width: 18px;
-  height: 18px;
-
-  flex: 0 0 18px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-
-  background: color-mix(
-    in srgb,
-    var(--fk-success) 14%,
-    transparent
-  );
-
-  color: var(--fk-success);
-
-  font-size: 10px;
-  font-weight: 900;
-}
-
-.fk-subscription-plan-card__feature.is-excluded {
-  color: var(--fk-text-3);
-
-  text-decoration: line-through;
-
-  .fk-subscription-plan-card__feature-icon {
-    background: var(--fk-sunken);
-    color: var(--fk-text-3);
-  }
-}
-
-/* ============================================================================
-   CARD BUTTON
-============================================================================ */
-
-.fk-subscription-plan-card__button {
-  width: 100%;
-
-  min-height: 44px;
-
-  margin-top: auto;
-
-  border: 1px solid var(--fk-fjord);
-  border-radius: var(--fk-r-md);
-
-  background: var(--fk-fjord);
-  color: var(--fk-text-inverse);
-
-  font-size: 13px;
-  font-weight: 800;
-
-  transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    transform 160ms ease;
-
-  &:hover:not(:disabled) {
-    background: var(--fk-fjord-dark);
-    border-color: var(--fk-fjord-dark);
-  }
-
-  &:active:not(:disabled) {
-    transform: scale(0.98);
-  }
-
-  &.is-current {
-    background: var(--fk-sunken);
-    color: var(--fk-text-2);
-
-    border-color: var(--fk-border);
-  }
-
-  &.is-basic {
-    background: var(--fk-surface);
-
-    color: var(--fk-text);
-
-    border-color: var(--fk-border-strong);
-  }
-
-  &.is-downgrade {
-    background: var(--fk-surface);
-
-    color: var(--fk-text-2);
-
-    border-color: var(--fk-border);
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-  }
-}
-
-/* ============================================================================
-   ADMIN
-============================================================================ */
-
-.fk-subscription-admin-grid {
-  display: grid;
-
-  grid-template-columns:
-    repeat(auto-fill, minmax(320px, 1fr));
-
-  gap: 18px;
-
-  margin-top: 20px;
-}
-
-.fk-subscription-admin-card {
-  display: flex;
-  flex-direction: column;
-
-  gap: 14px;
-
-  padding: 20px;
-
-  background: var(--fk-surface);
-
-  border: 1px solid var(--fk-border);
-  border-radius: var(--fk-r-lg);
-
-  box-shadow: var(--fk-shadow-sm);
-}
-
-/* ============================================================================
-   FEATURE GATE
-============================================================================ */
-
-.fk-subscription-gate {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  gap: 8px;
-
-  padding: 28px 20px;
-
-  text-align: center;
-
-  background: var(--fk-bg);
-
-  border: 1px dashed var(--fk-border);
-  border-radius: var(--fk-r-lg);
-
-  strong {
-    color: var(--fk-text);
-
     font-size: 15px;
-    font-weight: 800;
+    font-weight: 700;
+    overflow-wrap: anywhere;
   }
 
-  p {
-    margin: 0;
+  &--compact {
+    margin-top: 14px;
+  }
 
-    max-width: 320px;
+  &--center {
+    max-width: 520px;
+    margin-inline: auto;
+    text-align: center;
+  }
+}
 
+.fk-sub-membership {
+  @include fk-sub-gem-palettes;
+  @include fk-sub-card;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
+  border-color: var(--gem-ring, var(--fk-border));
+
+  @media (min-width: $fk-sub-bp-md) {
+    grid-template-columns: 300px minmax(0, 1fr);
+  }
+
+  &__media {
+    background: var(--gem-soft, var(--fk-bg));
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-height: 220px;
+      object-fit: cover;
+
+      @media (min-width: $fk-sub-bp-md) {
+        max-height: none;
+      }
+    }
+  }
+
+  &__body {
+    min-width: 0;
+    padding: 22px;
+  }
+
+  &__heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin-top: 4px;
+
+    h2 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 30px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+  }
+
+  &__price {
+    margin: 10px 0 0;
     color: var(--fk-text-2);
 
-    font-size: 13px;
-    line-height: 1.5;
-  }
-}
-
-/* ============================================================================
-   RESPONSIVE
-============================================================================ */
-
-@media (max-width: 1100px) {
-  .fk-subscription-plans__grid {
-    grid-template-columns:
-      repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 850px) {
-  .fk-subscription-plans__grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-  }
-
-  .fk-current-subscription {
-    grid-template-columns: 1fr;
-  }
-
-  .fk-subscription-billing-details,
-  .fk-subscription-details {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 600px) {
-  .fk-subscription-page,
-  .fk-subscriptions-page,
-  .fk-subscription-admin-page,
-  .fk-subscription-plans-page {
-    padding: 20px 14px 100px;
-  }
-
-  .fk-subscription-plans-page__header {
-    h1 {
-      font-size: 29px;
+    strong {
+      color: var(--fk-text);
+      font-size: 26px;
+      font-weight: 800;
     }
 
-    p {
+    span {
+      margin-left: 4px;
       font-size: 14px;
     }
   }
+}
 
-  .fk-subscription-plans__grid {
-    grid-template-columns: 1fr;
-  }
+.fk-sub-checklist {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
 
-  .fk-subscription-plan-card {
-    padding: 22px 18px;
-  }
+  li {
+    position: relative;
+    padding-left: 26px;
+    color: var(--fk-text);
+    font-size: 14px;
+    line-height: 1.45;
 
-  .fk-subscription-current-summary {
-    padding: 14px 16px;
-  }
-
-  .fk-subscription-plan-card__description {
-    min-height: auto;
-  }
-
-  .fk-subscription-plan-card.is-popular {
-    transform: none;
-
-    &:hover {
-      transform: translateY(-2px);
+    &::before {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 0;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--fk-success) 16%, transparent);
     }
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 7px;
+      left: 5px;
+      width: 6px;
+      height: 4px;
+      border-left: 2px solid var(--fk-success);
+      border-bottom: 2px solid var(--fk-success);
+      transform: rotate(-45deg);
+    }
+  }
+}
+
+.fk-sub-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 4px 10px;
+    border-radius: var(--fk-r-pill);
+    background: var(--fk-fjord-soft);
+    color: var(--fk-fjord-bright);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
+
+.fk-sub-danger-zone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--fk-border);
+
+  strong {
+    font-size: 14px;
+  }
+
+  p {
+    margin: 2px 0 0;
+    color: var(--fk-text-2);
+    font-size: 13px;
+  }
+}
+
+/* ============================================================================
+   RESULT PAGES (success / checkout canceled)
+============================================================================ */
+
+.fk-sub-result {
+  @include fk-sub-gem-palettes;
+  @include fk-sub-card;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 640px;
+  margin: 24px auto;
+  padding: clamp(28px, 5vw, 48px) clamp(18px, 4vw, 40px);
+  text-align: center;
+
+  h1 {
+    margin: 4px 0 0;
+    font-size: clamp(24px, 4vw, 32px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  > p {
+    max-width: 480px;
+    margin: 0;
+    color: var(--fk-text-2);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  &__gem {
+    width: min(100%, 320px);
+    border-radius: var(--fk-r-xl);
+    box-shadow: 0 18px 40px -18px var(--gem-ring, rgba(0, 0, 0, 0.3));
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--fk-fjord-soft);
+    color: var(--fk-fjord-bright);
+
+    &--neutral {
+      background: var(--fk-sunken);
+      color: var(--fk-text-2);
+    }
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--fk-r-pill);
+    background: color-mix(in srgb, var(--fk-success) 14%, transparent);
+    color: var(--fk-success);
+    font-size: 13px;
+    font-weight: 800;
+  }
+}
+
+/* ============================================================================
+   FORM FIELDS (admin)
+============================================================================ */
+
+.fk-sub-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+
+  label {
+    color: var(--fk-text-2);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 12px;
+    border: 1px solid var(--fk-border-strong);
+    border-radius: var(--fk-r-md);
+    background: var(--fk-surface);
+    color: var(--fk-text);
+    font: inherit;
+    font-size: 14px;
+
+    &:focus-visible {
+      @include fk-sub-focus;
+      outline-offset: 0;
+      border-color: var(--fk-fjord-bright);
+    }
+
+    &:disabled {
+      background: var(--fk-sunken);
+      color: var(--fk-text-2);
+      cursor: not-allowed;
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  small {
+    color: var(--fk-text-3);
+    font-size: 12px;
+  }
+}
+
+.fk-sub-field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.fk-sub-input-affix {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--fk-border-strong);
+  border-radius: var(--fk-r-md);
+  background: var(--fk-surface);
+
+  &:focus-within {
+    @include fk-sub-focus;
+    outline-offset: 0;
+  }
+
+  span {
+    display: grid;
+    place-items: center;
+    padding: 0 10px;
+    border-right: 1px solid var(--fk-border);
+    background: var(--fk-bg);
+    color: var(--fk-text-2);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  input {
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: none !important;
+    min-width: 0;
+  }
+}
+
+.fk-sub-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  color: var(--fk-text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--fk-fjord);
+
+    &:focus-visible {
+      @include fk-sub-focus;
+    }
+  }
+}
+
+/* ============================================================================
+   REDUCED MOTION
+============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-sub-page *,
+  .fk-sub-gate,
+  .fk-sub-gate * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

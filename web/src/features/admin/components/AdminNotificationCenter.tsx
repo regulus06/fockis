@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Bell } from 'lucide-react';
 import { useAdminNotificationStore } from '../store/adminNotificationStore';
 
 function timeAgo(iso: string): string {
@@ -29,14 +30,17 @@ export function AdminNotificationCenter() {
   return (
     <div className="fk-menu-wrap" ref={ref}>
       <button
-        className="fk-icon-btn"
+        type="button"
+        className="fk-icon-btn fk-icon-btn--bell"
+        aria-expanded={open}
+        aria-haspopup="dialog"
         onClick={() => {
           setOpen((o) => !o);
           if (!open) markAllRead();
         }}
-        aria-label="Notifications"
+        aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
       >
-        🔔
+        <Bell size={21} aria-hidden="true" />
         {unread > 0 && <span className="fk-icon-btn__badge">{unread}</span>}
       </button>
       {open && (

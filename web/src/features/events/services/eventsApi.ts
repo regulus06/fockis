@@ -1,1267 +1,451 @@
 import { FOCKIS_API_URL } from "../../../config/fockisConfig";
-
 import type {
   CreateEventInput,
+  EventAttendeesResponse,
+  EventDiscoverQuery,
+  EventPage,
+  EventPerson,
+  EventRsvpStatus,
+  EventSections,
   FockisEvent,
-  OrganizationEventQuery,
   RsvpResponse,
   UpdateEventInput,
+  ViewerLocation,
 } from "../types/event.types";
+import { localDayStartIso, viewerTimeZone } from "../utils/eventTime";
 
 /* ============================================================================
-   API CONFIG
+   EVENTS API
+   Thin client for apps/api/src/events. Every request:
+   - sends the Fockis JWT,
+   - opts out of HTTP caching (the server also sends no-store), so an event
+     that ended or was cancelled is never served from a stale cache,
+   - accepts an AbortSignal so pages can drop superseded requests.
 ============================================================================ */
 
-const API_BASE = (
-  import.meta.env.VITE_API_URL ||
-  FOCKIS_API_URL
-).replace(/\/+$/, "");
-
+const API_BASE = String(import.meta.env.VITE_API_URL || FOCKIS_API_URL).replace(/\/+$/, "");
 const EVENTS_URL = `${API_BASE}/events`;
 
-/* ============================================================================
-   AUTH
-============================================================================ */
-
-function getToken(): string | null {
-  return (
-    localStorage.getItem("token") ??
-    localStorage.getItem("accessToken")
-  );
-}
-
-/* ============================================================================
-   TYPES
-============================================================================ */
-
-type EventPayload = Record<string, unknown>;
-
-/* ============================================================================
-   DATE NORMALIZATION
-============================================================================ */
-
-function normalizeDate(
-  value: unknown,
-): string | undefined {
-  if (
-    value === undefined ||
-    value === null ||
-    value === ""
-  ) {
-    return undefined;
-  }
-
-  if (value instanceof Date) {
-    if (Number.isNaN(value.getTime())) {
-      return undefined;
-    }
-
-    return value.toISOString();
-  }
-
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-
-    if (!trimmed) {
-      return undefined;
-    }
-
-    const parsed = new Date(trimmed);
-
-    if (Number.isNaN(parsed.getTime())) {
-      return trimmed;
-    }
-
-    return parsed.toISOString();
-  }
-
-  return String(value);
-}
-
-/* ============================================================================
-   STRING HELPER
-============================================================================ */
-
-function cleanString(
-  value: unknown,
-): string | undefined {
-  if (typeof value !== "string") {
-    return undefined;
-  }
-
-  const trimmed = value.trim();
-
-  return trimmed || undefined;
-}
-
-/* ============================================================================
-   FILE HELPER
-============================================================================ */
-
-function isFile(
-  value: unknown,
-): value is File {
-  return (
-    typeof File !== "undefined" &&
-    value instanceof File
-  );
-}
-
-/* ============================================================================
-   CREATE EVENT PAYLOAD
-============================================================================ */
-
-function normalizeCreateEventInput(
-  input: CreateEventInput,
-): EventPayload {
-  const source =
-    input as unknown as Record<string, unknown>;
-
-  const payload: EventPayload = {};
-
-  /* --------------------------------------------------------------------------
-     ORGANIZATION
-  -------------------------------------------------------------------------- */
-
-  const organizationId =
-    cleanString(source.organizationId);
-
-  if (organizationId !== undefined) {
-    payload.organizationId =
-      organizationId;
-  }
-
-  /* --------------------------------------------------------------------------
-     BASIC
-  -------------------------------------------------------------------------- */
-
-  const title =
-    cleanString(source.title);
-
-  if (title !== undefined) {
-    payload.title = title;
-  }
-
-  const description =
-    cleanString(source.description);
-
-  if (description !== undefined) {
-    payload.description =
-      description;
-  }
-
-  if (source.category !== undefined) {
-    payload.category =
-      source.category;
-  }
-
-  if (source.visibility !== undefined) {
-    payload.visibility =
-      source.visibility;
-  }
-
-  /* --------------------------------------------------------------------------
-     DATES
-  -------------------------------------------------------------------------- */
-
-  const startDate =
-    normalizeDate(source.startDate);
-
-  const endDate =
-    normalizeDate(source.endDate);
-
-  if (startDate !== undefined) {
-    payload.startDate =
-      startDate;
-  }
-
-  if (endDate !== undefined) {
-    payload.endDate =
-      endDate;
-  }
-
-  /* --------------------------------------------------------------------------
-     LOCATION
-  -------------------------------------------------------------------------- */
-
-  const locationName =
-    cleanString(source.locationName);
-
-  if (locationName !== undefined) {
-    payload.locationName =
-      locationName;
-  }
-
-  const address =
-    cleanString(source.address);
-
-  if (address !== undefined) {
-    payload.address =
-      address;
-  }
-
-  /* --------------------------------------------------------------------------
-     COORDINATES
-  -------------------------------------------------------------------------- */
-
-  if (source.latitude !== undefined) {
-    payload.latitude =
-      source.latitude;
-  }
-
-  if (source.longitude !== undefined) {
-    payload.longitude =
-      source.longitude;
-  }
-
-  /* --------------------------------------------------------------------------
-     ONLINE EVENT
-  -------------------------------------------------------------------------- */
-
-  payload.isOnline =
-    source.isOnline === true;
-
-  const onlineUrl =
-    cleanString(source.onlineUrl);
-
-  if (onlineUrl !== undefined) {
-    payload.onlineUrl =
-      onlineUrl;
-  }
-
-  /* --------------------------------------------------------------------------
-     COVER IMAGE
-  -------------------------------------------------------------------------- */
-
-  const coverImageUrl =
-    cleanString(source.coverImageUrl);
-
-  if (coverImageUrl !== undefined) {
-    payload.coverImageUrl =
-      coverImageUrl;
-  }
-
-  /* --------------------------------------------------------------------------
-     EVENT VIDEO
-  -------------------------------------------------------------------------- */
-
-  const eventVideoUrl =
-    cleanString(
-      source.eventVideoUrl ??
-      source.videoUrl,
-    );
-
-  if (eventVideoUrl !== undefined) {
-    payload.eventVideoUrl =
-      eventVideoUrl;
-  }
-
-  return payload;
-}
-
-/* ============================================================================
-   UPDATE EVENT PAYLOAD
-============================================================================ */
-
-function normalizeUpdateEventInput(
-  input: UpdateEventInput,
-): EventPayload {
-  const source =
-    input as unknown as Record<string, unknown>;
-
-  const payload: EventPayload = {};
-
-  /* --------------------------------------------------------------------------
-     ORGANIZATION
-  -------------------------------------------------------------------------- */
-
-  if (source.organizationId !== undefined) {
-    const organizationId =
-      cleanString(
-        source.organizationId,
-      );
-
-    if (organizationId !== undefined) {
-      payload.organizationId =
-        organizationId;
-    }
-  }
-
-  /* --------------------------------------------------------------------------
-     BASIC
-  -------------------------------------------------------------------------- */
-
-  if (source.title !== undefined) {
-    payload.title =
-      typeof source.title === "string"
-        ? source.title.trim()
-        : source.title;
-  }
-
-  if (source.description !== undefined) {
-    payload.description =
-      typeof source.description === "string"
-        ? source.description.trim()
-        : source.description;
-  }
-
-  if (source.category !== undefined) {
-    payload.category =
-      source.category;
-  }
-
-  if (source.visibility !== undefined) {
-    payload.visibility =
-      source.visibility;
-  }
-
-  /* --------------------------------------------------------------------------
-     DATES
-  -------------------------------------------------------------------------- */
-
-  if (source.startDate !== undefined) {
-    payload.startDate =
-      normalizeDate(
-        source.startDate,
-      );
-  }
-
-  if (source.endDate !== undefined) {
-    payload.endDate =
-      normalizeDate(
-        source.endDate,
-      );
-  }
-
-  /* --------------------------------------------------------------------------
-     LOCATION
-  -------------------------------------------------------------------------- */
-
-  if (source.locationName !== undefined) {
-    payload.locationName =
-      typeof source.locationName === "string"
-        ? source.locationName.trim()
-        : source.locationName;
-  }
-
-  if (source.address !== undefined) {
-    payload.address =
-      typeof source.address === "string"
-        ? source.address.trim()
-        : source.address;
-  }
-
-  /* --------------------------------------------------------------------------
-     COORDINATES
-  -------------------------------------------------------------------------- */
-
-  if (source.latitude !== undefined) {
-    payload.latitude =
-      source.latitude;
-  }
-
-  if (source.longitude !== undefined) {
-    payload.longitude =
-      source.longitude;
-  }
-
-  /* --------------------------------------------------------------------------
-     ONLINE EVENT
-  -------------------------------------------------------------------------- */
-
-  if (source.isOnline !== undefined) {
-    payload.isOnline =
-      source.isOnline === true;
-  }
-
-  if (source.onlineUrl !== undefined) {
-    payload.onlineUrl =
-      typeof source.onlineUrl === "string"
-        ? source.onlineUrl.trim()
-        : source.onlineUrl;
-  }
-
-  /* --------------------------------------------------------------------------
-     COVER IMAGE
-  -------------------------------------------------------------------------- */
-
-  if (source.coverImageUrl !== undefined) {
-    payload.coverImageUrl =
-      typeof source.coverImageUrl === "string"
-        ? source.coverImageUrl.trim()
-        : source.coverImageUrl;
-  }
-
-  /* --------------------------------------------------------------------------
-     EVENT VIDEO
-  -------------------------------------------------------------------------- */
-
-  const eventVideoUrl =
-    source.eventVideoUrl ??
-    source.videoUrl;
-
-  if (eventVideoUrl !== undefined) {
-    payload.eventVideoUrl =
-      typeof eventVideoUrl === "string"
-        ? eventVideoUrl.trim()
-        : eventVideoUrl;
-  }
-
-  return payload;
-}
-
-/* ============================================================================
-   FORM DATA HELPER
-============================================================================ */
-
-function appendFormValue(
-  formData: FormData,
-  key: string,
-  value: unknown,
-): void {
-  if (
-    value === undefined ||
-    value === null
-  ) {
-    return;
-  }
-
-  if (typeof value === "boolean") {
-    formData.append(
-      key,
-      value ? "true" : "false",
-    );
-
-    return;
-  }
-
-  formData.append(
-    key,
-    String(value),
-  );
-}
-
-/* ============================================================================
-   CREATE FORM DATA
-============================================================================ */
-
-function buildCreateEventFormData(
-  input: CreateEventInput,
-): FormData {
-  const source =
-    input as unknown as Record<string, unknown>;
-
-  const payload =
-    normalizeCreateEventInput(input);
-
-  const formData =
-    new FormData();
-
-  Object.entries(payload).forEach(
-    ([key, value]) => {
-      appendFormValue(
-        formData,
-        key,
-        value,
-      );
-    },
-  );
-
-  /* --------------------------------------------------------------------------
-     COVER IMAGE
-  -------------------------------------------------------------------------- */
-
-  if (
-    isFile(
-      source.coverImageFile,
-    )
-  ) {
-    formData.append(
-      "coverImageFile",
-      source.coverImageFile,
-      source.coverImageFile.name,
-    );
-  }
-
-  /* --------------------------------------------------------------------------
-     EVENT VIDEO
-  -------------------------------------------------------------------------- */
-
-  const eventVideoFile =
-    source.eventVideoFile ??
-    source.videoFile;
-
-  if (isFile(eventVideoFile)) {
-    formData.append(
-      "eventVideoFile",
-      eventVideoFile,
-      eventVideoFile.name,
-    );
-  }
-
-  return formData;
-}
-
-/* ============================================================================
-   UPDATE FORM DATA
-============================================================================ */
-
-function buildUpdateEventFormData(
-  input: UpdateEventInput,
-): FormData {
-  const source =
-    input as unknown as Record<string, unknown>;
-
-  const payload =
-    normalizeUpdateEventInput(input);
-
-  const formData =
-    new FormData();
-
-  Object.entries(payload).forEach(
-    ([key, value]) => {
-      appendFormValue(
-        formData,
-        key,
-        value,
-      );
-    },
-  );
-
-  /* --------------------------------------------------------------------------
-     COVER IMAGE
-  -------------------------------------------------------------------------- */
-
-  if (
-    isFile(
-      source.coverImageFile,
-    )
-  ) {
-    formData.append(
-      "coverImageFile",
-      source.coverImageFile,
-      source.coverImageFile.name,
-    );
-  }
-
-  /* --------------------------------------------------------------------------
-     EVENT VIDEO
-  -------------------------------------------------------------------------- */
-
-  const eventVideoFile =
-    source.eventVideoFile ??
-    source.videoFile;
-
-  if (isFile(eventVideoFile)) {
-    formData.append(
-      "eventVideoFile",
-      eventVideoFile,
-      eventVideoFile.name,
-    );
-  }
-
-  return formData;
-}
-
-/* ============================================================================
-   API REQUEST
-============================================================================ */
-
-async function apiRequest<T>(
-  url: string,
-  options: RequestInit = {},
-): Promise<T> {
-  const token =
-    getToken();
-
-  const headers =
-    new Headers(options.headers);
-
-  if (
-    !(options.body instanceof FormData)
-  ) {
-    headers.set(
-      "Content-Type",
-      "application/json",
-    );
-  }
-
-  if (token) {
-    headers.set(
-      "Authorization",
-      `Bearer ${token}`,
-    );
-  }
-
-  console.log(
-    "[eventsApi] REQUEST",
-    {
-      method:
-        options.method ?? "GET",
-      url,
-      hasToken:
-        Boolean(token),
-      isFormData:
-        options.body instanceof FormData,
-    },
-  );
-
-  let response: Response;
+const getToken = () => {
+  if (typeof localStorage === "undefined") return null;
 
   try {
-    response =
-      await fetch(
-        url,
-        {
-          ...options,
-          headers,
-        },
-      );
-  } catch (error) {
-    console.error(
-      "[eventsApi] NETWORK ERROR",
-      error,
+    return (
+      localStorage.getItem("token") ||
+      localStorage.getItem("accessToken") ||
+      localStorage.getItem("access_token")
     );
-
-    throw new Error(
-      `Failed to connect to the Fockis server. Make sure the NestJS backend is running at ${API_BASE}.`,
-    );
-  }
-
-  const contentType =
-    response.headers.get(
-      "content-type",
-    ) ?? "";
-
-  let data: unknown = null;
-
-  try {
-    if (
-      contentType.includes(
-        "application/json",
-      )
-    ) {
-      data =
-        await response.json();
-    } else {
-      data =
-        await response.text();
-    }
   } catch {
-    data = null;
+    return null;
   }
+};
+
+export class EventsApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "EventsApiError";
+    this.status = status;
+  }
+}
+
+async function request<T>(url: string, init: RequestInit = {}): Promise<T> {
+  const isForm = typeof FormData !== "undefined" && init.body instanceof FormData;
+  const token = getToken();
+
+  const response = await fetch(url, {
+    cache: "no-store",
+    ...init,
+    headers: {
+      ...(isForm ? {} : { "Content-Type": "application/json" }),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(init.headers || {}),
+    },
+  });
 
   if (!response.ok) {
-    console.error(
-      "[eventsApi] HTTP ERROR",
-      {
-        status:
-          response.status,
-        statusText:
-          response.statusText,
-        url,
-        response:
-          data,
-      },
-    );
+    let message = `Request failed (${response.status})`;
 
-    let message =
-      `Event request failed (${response.status}).`;
+    try {
+      const body = await response.json();
+      const raw = body?.message ?? body?.error;
 
-    if (
-      typeof data === "object" &&
-      data !== null
-    ) {
-      const objectData =
-        data as Record<string, unknown>;
-
-      const serverMessage =
-        objectData.message;
-
-      if (
-        Array.isArray(
-          serverMessage,
-        )
-      ) {
-        message =
-          serverMessage
-            .map(String)
-            .join(", ");
-      } else if (
-        typeof serverMessage === "string"
-      ) {
-        message =
-          serverMessage;
-      }
-    } else if (
-      typeof data === "string"
-    ) {
-      const text =
-        data.trim();
-
-      if (text) {
-        message = text;
-      }
+      message = Array.isArray(raw) ? raw.join(" ") : raw || message;
+    } catch {
+      // Keep the generic message.
     }
 
-    throw new Error(message);
+    throw new EventsApiError(String(message), response.status);
   }
 
-  return data as T;
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  return response.json() as Promise<T>;
 }
 
 /* ============================================================================
-   BUILD QUERY
+   NORMALIZATION
 ============================================================================ */
 
-function buildQuery(
-  params: Record<
-    string,
-    string | undefined
-  >,
-): string {
-  const searchParams =
-    new URLSearchParams();
+function person(raw: any): EventPerson | null {
+  if (!raw) return null;
 
-  Object.entries(params).forEach(
-    ([key, value]) => {
-      if (
-        value !== undefined &&
-        value !== ""
-      ) {
-        searchParams.set(
-          key,
-          value,
-        );
-      }
-    },
-  );
+  return {
+    id: String(raw.id ?? raw._id ?? ""),
+    username: String(raw.username ?? ""),
+    name: String(raw.name ?? raw.username ?? ""),
+    avatar: String(raw.avatar ?? raw.profilePicture ?? ""),
+    verified: Boolean(raw.verified),
+    ...(raw.isOrganizer !== undefined ? { isOrganizer: Boolean(raw.isOrganizer) } : {}),
+    ...(raw.isFriend !== undefined ? { isFriend: Boolean(raw.isFriend) } : {}),
+  };
+}
 
-  const query =
-    searchParams.toString();
+export function normalizeEvent(raw: any): FockisEvent {
+  const id = String(raw?.id ?? raw?._id ?? "");
 
-  return query
-    ? `?${query}`
-    : "";
+  if (!id) throw new Error("Events API returned an event without an ID.");
+
+  const attendeeCount = Number(raw?.attendeeCount ?? raw?.attendeeIds?.length ?? 0);
+  const capacity = typeof raw?.capacity === "number" && raw.capacity > 0 ? raw.capacity : null;
+  const isGoing = Boolean(raw?.isGoing);
+  const isInterested = Boolean(raw?.isInterested);
+
+  return {
+    id,
+    creatorId: String(raw?.creatorId?._id ?? raw?.creatorId?.id ?? raw?.creatorId ?? ""),
+    organizer: person(raw?.organizer),
+    title: String(raw?.title ?? ""),
+    description: raw?.description ?? "",
+    category: raw?.category ?? "general",
+    visibility: raw?.visibility ?? "public",
+    startDate: String(raw?.startDate ?? ""),
+    endDate: String(raw?.endDate ?? ""),
+    timeZone: String(raw?.timeZone ?? ""),
+    locationName: raw?.locationName ?? "",
+    address: raw?.address ?? "",
+    latitude: typeof raw?.latitude === "number" ? raw.latitude : null,
+    longitude: typeof raw?.longitude === "number" ? raw.longitude : null,
+    isOnline: Boolean(raw?.isOnline),
+    onlineUrl: raw?.onlineUrl ?? "",
+    coverImageUrl: raw?.coverImageUrl ?? "",
+    coverVideoUrl: raw?.coverVideoUrl ?? "",
+    coverMediaType: raw?.coverMediaType ?? "image",
+    attendeeCount,
+    interestedCount: Number(raw?.interestedCount ?? 0),
+    capacity,
+    spotsLeft:
+      typeof raw?.spotsLeft === "number"
+        ? raw.spotsLeft
+        : capacity === null
+          ? null
+          : Math.max(0, capacity - attendeeCount),
+    isFull: Boolean(raw?.isFull),
+    isGoing,
+    isInterested,
+    isInvited: Boolean(raw?.isInvited),
+    viewerRsvp: raw?.viewerRsvp ?? (isGoing ? "going" : isInterested ? "interested" : null),
+    isOwner: Boolean(raw?.isOwner),
+    status: raw?.status ?? (raw?.isCancelled ? "cancelled" : "upcoming"),
+    isCancelled: Boolean(raw?.isCancelled),
+    cancelledAt: raw?.cancelledAt ?? null,
+    cancellationReason: raw?.cancellationReason ?? "",
+    canRsvp: raw?.canRsvp !== undefined ? Boolean(raw.canRsvp) : !raw?.isCancelled,
+    ...(typeof raw?.distanceKm === "number" ? { distanceKm: raw.distanceKm } : {}),
+    createdAt: String(raw?.createdAt ?? ""),
+    updatedAt: String(raw?.updatedAt ?? ""),
+  };
+}
+
+function list(payload: any): FockisEvent[] {
+  const values = Array.isArray(payload) ? payload : payload?.items ?? payload?.events;
+
+  if (!Array.isArray(values)) {
+    throw new Error("Events API returned an unexpected list response.");
+  }
+
+  return values.map(normalizeEvent);
+}
+
+function rsvp(payload: any): RsvpResponse {
+  const going = Boolean(payload?.going);
+  const interested = Boolean(payload?.interested);
+
+  return {
+    success: payload?.success !== false,
+    eventId: payload?.eventId,
+    status: payload?.status ?? (going ? "going" : interested ? "interested" : null),
+    going,
+    interested,
+    attendeeCount: Number(payload?.attendeeCount ?? 0),
+    interestedCount: Number(payload?.interestedCount ?? 0),
+  };
 }
 
 /* ============================================================================
-   GET ALL EVENTS
+   BODIES
 ============================================================================ */
 
-export async function getEvents(
-  organizationId?: string,
-): Promise<FockisEvent[]> {
-  const query =
-    buildQuery({
-      organizationId:
-        cleanString(
-          organizationId,
-        ),
+function serialize(input: CreateEventInput | UpdateEventInput): BodyInit {
+  const values = input as Record<string, unknown>;
+  const image = values.coverImageFile;
+  const video = values.eventVideoFile;
+  const hasImage = typeof File !== "undefined" && image instanceof File;
+  const hasVideo = typeof File !== "undefined" && video instanceof File;
+
+  if (hasImage || hasVideo) {
+    const data = new FormData();
+
+    Object.entries(values).forEach(([key, value]) => {
+      if (value === undefined || key === "coverImageFile" || key === "eventVideoFile") return;
+      if (typeof File !== "undefined" && value instanceof File) return;
+
+      // The API reads the string "null" as an explicit clear.
+      data.append(key, value === null ? "null" : String(value));
     });
 
-  return apiRequest<FockisEvent[]>(
-    `${EVENTS_URL}${query}`,
-  );
+    if (hasImage) data.append("coverImageFile", image as File);
+    if (hasVideo) data.append("eventVideoFile", video as File);
+
+    return data;
+  }
+
+  const json: Record<string, unknown> = {};
+
+  Object.entries(values).forEach(([key, value]) => {
+    if (value === undefined) return;
+    if (key === "coverImageFile" || key === "eventVideoFile") return;
+    if (typeof File !== "undefined" && value instanceof File) return;
+
+    json[key] = value;
+  });
+
+  return JSON.stringify(json);
 }
 
-/* ============================================================================
-   GET ORGANIZATION EVENTS
-============================================================================ */
+function query(params: Record<string, unknown>): string {
+  const search = new URLSearchParams();
 
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "" || value === "any") return;
+    search.set(key, String(value));
+  });
+
+  const text = search.toString();
+
+  return text ? `?${text}` : "";
+}
+
+const path = (id: string) => `${EVENTS_URL}/${encodeURIComponent(id)}`;
+
+/**
+ * Fetch events associated with an organization.
+ *
+ * IMPORTANT:
+ * Confirm that GET /events/organization/:organizationId
+ * is implemented by your NestJS backend. If your controller
+ * uses a different route, update this URL to match it.
+ */
 export async function getOrganizationEvents(
   organizationId: string,
 ): Promise<FockisEvent[]> {
-  if (!organizationId.trim()) {
-    throw new Error(
-      "Organization ID is required.",
-    );
+  if (!organizationId?.trim()) {
+    throw new Error("Organization ID is required.");
   }
 
-  return getEvents(
+  const url = `${EVENTS_URL}/organization/${encodeURIComponent(
     organizationId,
-  );
+  )}`;
+
+  return list(await request<unknown>(url));
 }
 
 /* ============================================================================
-   GET UPCOMING EVENTS
-============================================================================ */
-
-export async function getUpcomingEvents(
-  organizationId?: string,
-): Promise<FockisEvent[]> {
-  const query =
-    buildQuery({
-      organizationId:
-        cleanString(
-          organizationId,
-        ),
-    });
-
-  return apiRequest<FockisEvent[]>(
-    `${EVENTS_URL}/upcoming${query}`,
-  );
-}
-
-/* ============================================================================
-   GET EVENT BY ID
-============================================================================ */
-
-export async function getEventById(
-  id: string,
-): Promise<FockisEvent> {
-  return apiRequest<FockisEvent>(
-    `${EVENTS_URL}/${encodeURIComponent(id)}`,
-  );
-}
-
-/* ============================================================================
-   CREATE EVENT
-============================================================================ */
-
-export async function createEvent(
-  input: CreateEventInput,
-): Promise<FockisEvent> {
-  const source =
-    input as unknown as Record<string, unknown>;
-
-  const hasCoverImageFile =
-    isFile(
-      source.coverImageFile,
-    );
-
-  const hasEventVideoFile =
-    isFile(
-      source.eventVideoFile ??
-      source.videoFile,
-    );
-
-  const hasFile =
-    hasCoverImageFile ||
-    hasEventVideoFile;
-
-  if (hasFile) {
-    const formData =
-      buildCreateEventFormData(
-        input,
-      );
-
-    console.log(
-      "[EVENT CREATE] MULTIPART",
-      {
-        url:
-          EVENTS_URL,
-        organizationId:
-          input.organizationId,
-        fields:
-          Array.from(
-            formData.entries(),
-          ).map(
-            ([key, value]) => [
-              key,
-              value instanceof File
-                ? value.name
-                : value,
-            ],
-          ),
-      },
-    );
-
-    return apiRequest<FockisEvent>(
-      EVENTS_URL,
-      {
-        method: "POST",
-        body: formData,
-      },
-    );
-  }
-
-  const payload =
-    normalizeCreateEventInput(
-      input,
-    );
-
-  console.log(
-    "[EVENT CREATE] JSON",
-    {
-      url:
-        EVENTS_URL,
-      organizationId:
-        input.organizationId,
-      payload,
-    },
-  );
-
-  return apiRequest<FockisEvent>(
-    EVENTS_URL,
-    {
-      method: "POST",
-      body:
-        JSON.stringify(
-          payload,
-        ),
-    },
-  );
-}
-
-/* ============================================================================
-   UPDATE EVENT
-============================================================================ */
-
-export async function updateEvent(
-  id: string,
-  input: UpdateEventInput,
-): Promise<FockisEvent> {
-  const source =
-    input as unknown as Record<string, unknown>;
-
-  const hasCoverImageFile =
-    isFile(
-      source.coverImageFile,
-    );
-
-  const hasEventVideoFile =
-    isFile(
-      source.eventVideoFile ??
-      source.videoFile,
-    );
-
-  const hasFile =
-    hasCoverImageFile ||
-    hasEventVideoFile;
-
-  const url =
-    `${EVENTS_URL}/${encodeURIComponent(id)}`;
-
-  if (hasFile) {
-    const formData =
-      buildUpdateEventFormData(
-        input,
-      );
-
-    return apiRequest<FockisEvent>(
-      url,
-      {
-        method: "PATCH",
-        body: formData,
-      },
-    );
-  }
-
-  const payload =
-    normalizeUpdateEventInput(
-      input,
-    );
-
-  return apiRequest<FockisEvent>(
-    url,
-    {
-      method: "PATCH",
-      body:
-        JSON.stringify(
-          payload,
-        ),
-    },
-  );
-}
-
-/* ============================================================================
-   CANCEL EVENT
-============================================================================ */
-
-export async function cancelEvent(
-  id: string,
-  reason?: string,
-): Promise<FockisEvent> {
-  const cancellationReason =
-    cleanString(reason) ??
-    "This event has been cancelled by the organizer.";
-
-  return apiRequest<FockisEvent>(
-    `${EVENTS_URL}/${encodeURIComponent(id)}/cancel`,
-    {
-      method: "PATCH",
-      body:
-        JSON.stringify({
-          isCancelled: true,
-          status: "cancelled",
-          cancellationReason,
-        }),
-    },
-  );
-}
-
-/* ============================================================================
-   UNCANCEL / REOPEN EVENT
-============================================================================ */
-
-export async function uncancelEvent(
-  id: string,
-): Promise<FockisEvent> {
-  return apiRequest<FockisEvent>(
-    `${EVENTS_URL}/${encodeURIComponent(id)}/uncancel`,
-    {
-      method: "PATCH",
-      body:
-        JSON.stringify({
-          isCancelled: false,
-          status: "upcoming",
-          cancellationReason: null,
-        }),
-    },
-  );
-}
-
-/* ============================================================================
-   DELETE EVENT
-============================================================================ */
-
-export async function deleteEvent(
-  id: string,
-): Promise<{
-  success: boolean;
-  message: string;
-}> {
-  return apiRequest<{
-    success: boolean;
-    message: string;
-  }>(
-    `${EVENTS_URL}/${encodeURIComponent(id)}`,
-    {
-      method: "DELETE",
-    },
-  );
-}
-
-/* ============================================================================
-   RSVP
-============================================================================ */
-
-export async function rsvpEvent(
-  id: string,
-): Promise<RsvpResponse> {
-  return apiRequest<RsvpResponse>(
-    `${EVENTS_URL}/${encodeURIComponent(id)}/rsvp`,
-    {
-      method: "POST",
-      body:
-        JSON.stringify({}),
-    },
-  );
-}
-
-/* ============================================================================
-   CANCEL RSVP
-============================================================================ */
-
-export async function cancelEventRsvp(
-  id: string,
-): Promise<RsvpResponse> {
-  return apiRequest<RsvpResponse>(
-    `${EVENTS_URL}/${encodeURIComponent(id)}/rsvp`,
-    {
-      method: "DELETE",
-    },
-  );
-}
-
-/* ============================================================================
-   GET ATTENDEES
-============================================================================ */
-
-export async function getEventAttendees(
-  id: string,
-): Promise<{
-  eventId: string;
-  attendeeIds: string[];
-  attendeeCount: number;
-}> {
-  return apiRequest<{
-    eventId: string;
-    attendeeIds: string[];
-    attendeeCount: number;
-  }>(
-    `${EVENTS_URL}/${encodeURIComponent(id)}/attendees`,
-  );
-}
-
-/* ============================================================================
-   MY EVENTS
-============================================================================ */
-
-export async function getMyEvents(): Promise<FockisEvent[]> {
-  return apiRequest<FockisEvent[]>(
-    `${EVENTS_URL}/my-events`,
-  );
-}
-
-/* ============================================================================
-   MY RSVPS
-============================================================================ */
-
-export async function getMyRsvps(): Promise<FockisEvent[]> {
-  return apiRequest<FockisEvent[]>(
-    `${EVENTS_URL}/my-rsvps`,
-  );
-}
-
-/* ============================================================================
-   NEARBY EVENTS
-============================================================================ */
-
-export async function getNearbyEvents(
-  latitude: number,
-  longitude: number,
-  radiusKm = 50,
-  organizationId?: string,
-): Promise<FockisEvent[]> {
-  const params =
-    new URLSearchParams({
-      latitude:
-        String(latitude),
-      longitude:
-        String(longitude),
-      radiusKm:
-        String(radiusKm),
-    });
-
-  if (
-    organizationId &&
-    organizationId.trim()
-  ) {
-    params.set(
-      "organizationId",
-      organizationId.trim(),
-    );
-  }
-
-  return apiRequest<FockisEvent[]>(
-    `${EVENTS_URL}/nearby?${params.toString()}`,
-  );
-}
-
-/* ============================================================================
-   FILTER ORGANIZATION EVENTS
-============================================================================ */
-
-export function filterOrganizationEvents(
-  events: FockisEvent[],
-  query: OrganizationEventQuery,
-): FockisEvent[] {
-  const search =
-    query.search
-      ?.trim()
-      .toLowerCase() ?? "";
-
-  return events.filter(
-    (event) => {
-      if (
-        String(
-          event.organizationId ?? "",
-        ) !==
-        String(
-          query.organizationId,
-        )
-      ) {
-        return false;
-      }
-
-      if (
-        query.category &&
-        query.category !== "all" &&
-        event.category !==
-          query.category
-      ) {
-        return false;
-      }
-
-      if (
-        query.status &&
-        query.status !== "all" &&
-        event.status !==
-          query.status
-      ) {
-        return false;
-      }
-
-      if (search) {
-        const searchable = [
-          event.title,
-          event.description,
-          event.locationName,
-          event.address,
-          event.organization
-            ?.name,
-          event.organization
-            ?.displayName,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-
-        if (
-          !searchable.includes(
-            search,
-          )
-        ) {
-          return false;
-        }
-      }
-
-      return true;
-    },
-  );
-}
-
-/* ============================================================================
-   EVENTS API OBJECT
+   API
 ============================================================================ */
 
 export const eventsApi = {
-  getAll:
-    getEvents,
+  /** Active events (ended ones only with includeEnded). */
+  async getAll(options: { includeEnded?: boolean; signal?: AbortSignal } = {}) {
+    return list(
+      await request<any>(
+        `${EVENTS_URL}${options.includeEnded ? "?includeEnded=true" : ""}`,
+        { signal: options.signal },
+      ),
+    );
+  },
 
-  getUpcoming:
-    getUpcomingEvents,
+  async getUpcoming(signal?: AbortSignal) {
+    return list(await request<any>(`${EVENTS_URL}/upcoming`, { signal }));
+  },
 
-  getById:
-    getEventById,
+  async discover(params: EventDiscoverQuery, signal?: AbortSignal): Promise<EventPage> {
+    const payload = await request<any>(
+      `${EVENTS_URL}/discover${query({
+        ...params,
+        dayStart: localDayStartIso(),
+        tz: viewerTimeZone(),
+      })}`,
+      { signal },
+    );
 
-  create:
-    createEvent,
+    return {
+      items: list(payload?.items ?? []),
+      page: Number(payload?.page ?? params.page ?? 1),
+      limit: Number(payload?.limit ?? params.limit ?? 18),
+      total: Number(payload?.total ?? 0),
+      hasMore: Boolean(payload?.hasMore),
+      serverTime: String(payload?.serverTime ?? new Date().toISOString()),
+    };
+  },
 
-  update:
-    updateEvent,
+  async sections(
+    params: { location?: ViewerLocation | null; radiusKm?: number; limit?: number } = {},
+    signal?: AbortSignal,
+  ): Promise<EventSections> {
+    const payload = await request<any>(
+      `${EVENTS_URL}/sections${query({
+        lat: params.location?.latitude,
+        lng: params.location?.longitude,
+        radiusKm: params.radiusKm,
+        limit: params.limit,
+        dayStart: localDayStartIso(),
+      })}`,
+      { signal },
+    );
 
-  cancel:
-    cancelEvent,
+    const section = (key: string) => (Array.isArray(payload?.[key]) ? list(payload[key]) : []);
 
-  uncancel:
-    uncancelEvent,
+    return {
+      happeningNow: section("happeningNow"),
+      today: section("today"),
+      featured: section("featured"),
+      recommended: section("recommended"),
+      nearby: section("nearby"),
+      online: section("online"),
+      upcoming: section("upcoming"),
+      serverTime: String(payload?.serverTime ?? new Date().toISOString()),
+    };
+  },
 
-  remove:
-    deleteEvent,
+  async getById(id: string, signal?: AbortSignal) {
+    return normalizeEvent(await request<any>(path(id), { signal }));
+  },
 
-  delete:
-    deleteEvent,
+  async related(id: string, signal?: AbortSignal) {
+    return list(await request<any>(`${path(id)}/related`, { signal }));
+  },
 
-  rsvp:
-    rsvpEvent,
+  async attendees(
+    id: string,
+    options: { status?: EventRsvpStatus; page?: number; limit?: number; signal?: AbortSignal } = {},
+  ): Promise<EventAttendeesResponse> {
+    const payload = await request<any>(
+      `${path(id)}/attendees${query({
+        status: options.status,
+        page: options.page,
+        limit: options.limit,
+      })}`,
+      { signal: options.signal },
+    );
 
-  cancelRsvp:
-    cancelEventRsvp,
+    return {
+      eventId: String(payload?.eventId ?? id),
+      status: payload?.status === "interested" ? "interested" : "going",
+      attendeeCount: Number(payload?.attendeeCount ?? 0),
+      interestedCount: Number(payload?.interestedCount ?? 0),
+      attendees: (Array.isArray(payload?.attendees) ? payload.attendees : [])
+        .map(person)
+        .filter(Boolean) as EventPerson[],
+      friendsGoingCount: Number(payload?.friendsGoingCount ?? 0),
+      page: Number(payload?.page ?? 1),
+      limit: Number(payload?.limit ?? 30),
+      hasMore: Boolean(payload?.hasMore),
+    };
+  },
 
-  getAttendees:
-    getEventAttendees,
+  async create(input: CreateEventInput) {
+    return normalizeEvent(await request<any>(EVENTS_URL, { method: "POST", body: serialize(input) }));
+  },
 
-  getMyEvents,
+  async update(id: string, input: UpdateEventInput) {
+    return normalizeEvent(await request<any>(path(id), { method: "PATCH", body: serialize(input) }));
+  },
 
-  getMyRsvps,
+  async cancel(id: string, reason?: string) {
+    const payload = await request<any>(`${path(id)}/cancel`, {
+      method: "PATCH",
+      body: JSON.stringify(reason?.trim() ? { reason: reason.trim() } : {}),
+    });
 
-  getNearby:
-    getNearbyEvents,
+    return normalizeEvent(payload?.event ?? payload);
+  },
 
-  getOrganizationEvents,
+  async delete(id: string) {
+    return request<void>(path(id), { method: "DELETE" });
+  },
 
-  filterOrganizationEvents,
+  /** Going or Interested. Idempotent on the server. */
+  async setRsvp(id: string, status: EventRsvpStatus) {
+    return rsvp(
+      await request<any>(`${path(id)}/rsvp`, {
+        method: "POST",
+        body: JSON.stringify({ status }),
+      }),
+    );
+  },
+
+  /** Going (kept for existing callers). */
+  async rsvp(id: string) {
+    return this.setRsvp(id, "going");
+  },
+
+  /** Leaves Going and Interested. */
+  async cancelRsvp(id: string) {
+    return rsvp(await request<any>(`${path(id)}/rsvp`, { method: "DELETE" }));
+  },
+
+  async invite(id: string, userIds: string[]) {
+    return request<{ success: boolean; invitedCount: number; invited: string[] }>(
+      `${path(id)}/invite`,
+      { method: "POST", body: JSON.stringify({ userIds }) },
+    );
+  },
+
+  async getMyEvents(signal?: AbortSignal) {
+    return list(await request<any>(`${EVENTS_URL}/my-events`, { signal }));
+  },
+
+  async getMyRsvps(signal?: AbortSignal) {
+    return list(await request<any>(`${EVENTS_URL}/my-rsvps`, { signal }));
+  },
+
+  async getNearby(latitude: number, longitude: number, radiusKm = 50, signal?: AbortSignal) {
+    if (
+      !Number.isFinite(latitude) ||
+      latitude < -90 ||
+      latitude > 90 ||
+      !Number.isFinite(longitude) ||
+      longitude < -180 ||
+      longitude > 180
+    ) {
+      throw new Error("Valid latitude and longitude are required.");
+    }
+
+    return list(
+      await request<any>(
+        `${EVENTS_URL}/nearby${query({ latitude, longitude, radiusKm })}`,
+        { signal },
+      ),
+    );
+  },
 };
+
+export function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException
+    ? error.name === "AbortError"
+    : (error as { name?: string })?.name === "AbortError";
+}

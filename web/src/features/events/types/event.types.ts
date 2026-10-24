@@ -1,290 +1,169 @@
-// ============================================================================
-// FOCKIS EVENT TYPES
-// ============================================================================
-//
-// Events are universal across Fockis.
-//
-// An event may be:
-//   1. A personal/global Fockis event
-//   2. An organization event
-//
-// Organization events are identified by organizationId.
-//
-// This allows the same Events system to support:
-// - Churches
-// - Ministries
-// - Schools
-// - Colleges / Universities
-// - Businesses
-// - Nonprofits
-// - Civic organizations
-// - Political organizations
-// - Sports organizations
-// - Arts & Culture organizations
-// - Health organizations
-// - Youth organizations
-// - Clubs & Associations
-// - Technology organizations
-// - Environmental organizations
-// - Other organizations
-// ============================================================================
-
-// ============================================================================
-// EVENT CATEGORY
-// ============================================================================
+/* ============================================================================
+   FOCKIS EVENTS — TYPES
+   Mirrors apps/api/src/events (schemas/event.schema.ts, services/events.service.ts).
+============================================================================ */
 
 export type EventCategory =
-  | 'general'
-  | 'music'
-  | 'sports'
-  | 'business'
-  | 'education'
-  | 'food'
-  | 'community'
-  | 'party'
-  | 'conference'
-  | 'religious'
-  | 'school'
-  | 'academic'
-  | 'fundraiser'
-  | 'workshop'
-  | 'meeting'
-  | 'networking'
-  | 'cultural'
-  | 'health'
-  | 'youth'
-  | 'technology'
-  | 'environment'
-  | 'political'
-  | 'civic'
-  | 'other';
+  | "general" | "music" | "sports" | "business" | "education" | "food" | "community"
+  | "party" | "conference" | "religious" | "school" | "academic" | "fundraiser"
+  | "workshop" | "meeting" | "networking" | "cultural" | "health" | "youth"
+  | "technology" | "environment" | "political" | "civic" | "arts" | "other";
 
-// ============================================================================
-// EVENT VISIBILITY
-// ============================================================================
+export type EventVisibility = "public" | "friends" | "private" | "organization";
+export type EventStatus = "upcoming" | "live" | "ended" | "cancelled";
+export type EventCoverMediaType = "image" | "video";
+export type EventRsvpStatus = "going" | "interested";
 
-export type EventVisibility =
-  | 'public'
-  | 'friends'
-  | 'private'
-  | 'organization';
-
-// ============================================================================
-// EVENT STATUS
-// ============================================================================
-
-export type EventStatus =
-  | 'upcoming'
-  | 'live'
-  | 'ended'
-  | 'cancelled';
-
-// ============================================================================
-// EVENT
-// ============================================================================
+export interface EventPerson {
+  id: string;
+  username: string;
+  name: string;
+  avatar: string;
+  verified: boolean;
+  isOrganizer?: boolean;
+  isFriend?: boolean;
+}
 
 export interface FockisEvent {
   id: string;
-
-  /**
-   * User who created/owns the event.
-   */
   creatorId: string;
-
-  /**
-   * Organization that owns the event.
-   *
-   * Undefined/null means this is a normal global/personal
-   * Fockis event.
-   */
-  organizationId?: string | null;
-
-  /**
-   * Optional organization snapshot information.
-   *
-   * Useful when the backend populates organization information.
-   */
-  organization?: {
-    id: string;
-    name?: string;
-    displayName?: string;
-    logoUrl?: string | null;
-    type?: string;
-  } | null;
-
+  organizer: EventPerson | null;
   title: string;
-
-  description: string;
-
+  description?: string;
   category: EventCategory;
-
   visibility: EventVisibility;
-
-  // ==========================================================================
-  // DATE / TIME
-  // ==========================================================================
-
+  /** UTC ISO instants. */
   startDate: string;
-
   endDate: string;
-
-  // ==========================================================================
-  // LOCATION
-  // ==========================================================================
-
-  locationName: string;
-
-  address: string;
-
-  latitude: number | null;
-
-  longitude: number | null;
-
-  // ==========================================================================
-  // ONLINE EVENT
-  // ==========================================================================
-
+  /** IANA zone the organizer scheduled in ("" for older events). */
+  timeZone: string;
+  locationName?: string;
+  address?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   isOnline: boolean;
-
-  onlineUrl: string;
-
-  // ==========================================================================
-  // COVER IMAGE
-  // ==========================================================================
-
-  coverImageUrl: string;
-
-  // ==========================================================================
-  // EVENT VIDEO
-  // ==========================================================================
-
-  eventVideoUrl: string;
-
-  // ==========================================================================
-  // ATTENDEES
-  // ==========================================================================
-
+  /** Empty unless the viewer is the organizer, Going or Interested. */
+  onlineUrl?: string;
+  coverImageUrl?: string;
+  coverVideoUrl?: string;
+  coverMediaType?: EventCoverMediaType;
   attendeeCount: number;
-
-  // ==========================================================================
-  // STATUS
-  // ==========================================================================
-
+  interestedCount: number;
+  capacity: number | null;
+  spotsLeft: number | null;
+  isFull: boolean;
+  isGoing?: boolean;
+  isInterested: boolean;
+  isInvited: boolean;
+  viewerRsvp: EventRsvpStatus | null;
+  isOwner: boolean;
+  /** Server-computed at response time; re-derive with getEventStatus(). */
   status: EventStatus;
-
   isCancelled: boolean;
-
+  cancelledAt: string | null;
   cancellationReason?: string | null;
-
-  // ==========================================================================
-  // TIMESTAMPS
-  // ==========================================================================
-
+  canRsvp: boolean;
+  distanceKm?: number;
   createdAt: string;
-
   updatedAt: string;
 }
 
-// ============================================================================
-// CREATE EVENT
-// ============================================================================
-
 export interface CreateEventInput {
   title: string;
-
   description?: string;
-
   category?: EventCategory;
-
   visibility?: EventVisibility;
-
-  /**
-   * If supplied, the event belongs to this organization.
-   *
-   * The backend MUST verify that the authenticated user has
-   * permission to create an event for this organization.
-   */
-  organizationId?: string;
-
-  // ==========================================================================
-  // DATE / TIME
-  // ==========================================================================
-
   startDate: string;
-
   endDate: string;
-
-  // ==========================================================================
-  // LOCATION
-  // ==========================================================================
-
+  timeZone?: string;
   locationName?: string;
-
   address?: string;
-
-  latitude?: number;
-
-  longitude?: number;
-
-  // ==========================================================================
-  // ONLINE EVENT
-  // ==========================================================================
-
+  latitude?: number | null;
+  longitude?: number | null;
   isOnline?: boolean;
-
   onlineUrl?: string;
-
-  // ==========================================================================
-  // COVER IMAGE
-  // ==========================================================================
-
+  capacity?: number | null;
   coverImageUrl?: string;
-
+  coverVideoUrl?: string;
+  coverMediaType?: EventCoverMediaType;
   coverImageFile?: File;
-
-  // ==========================================================================
-  // EVENT VIDEO
-  // ==========================================================================
-
-  eventVideoUrl?: string;
-
   eventVideoFile?: File;
 }
 
-// ============================================================================
-// UPDATE EVENT
-// ============================================================================
-
-export type UpdateEventInput =
-  Partial<CreateEventInput>;
-
-// ============================================================================
-// RSVP
-// ============================================================================
+export type UpdateEventInput = Partial<CreateEventInput>;
 
 export interface RsvpResponse {
   success: boolean;
-
+  eventId?: string;
+  status: EventRsvpStatus | null;
   going: boolean;
-
+  interested: boolean;
   attendeeCount: number;
+  interestedCount: number;
 }
 
-// ============================================================================
-// ORGANIZATION EVENT QUERY
-// ============================================================================
+export interface EventAttendeesResponse {
+  eventId: string;
+  status: EventRsvpStatus;
+  attendeeCount: number;
+  interestedCount: number;
+  attendees: EventPerson[];
+  friendsGoingCount: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}
 
-export interface OrganizationEventQuery {
-  organizationId: string;
+export type EventWhen =
+  | "any" | "live" | "today" | "tomorrow" | "this-week" | "this-weekend" | "next-30-days";
+export type EventFormat = "any" | "online" | "in-person";
+export type EventAvailability = "any" | "open";
+export type EventSort = "relevance" | "date" | "popularity" | "distance";
 
-  search?: string;
+export interface EventDiscoverQuery {
+  q?: string;
+  category?: EventCategory | "";
+  when?: EventWhen;
+  format?: EventFormat;
+  availability?: EventAvailability;
+  sort?: EventSort;
+  lat?: number;
+  lng?: number;
+  radiusKm?: number;
+  page?: number;
+  limit?: number;
+}
 
-  category?: EventCategory | 'all';
+export interface EventPage {
+  items: FockisEvent[];
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+  serverTime: string;
+}
 
-  status?:
-    | 'all'
-    | 'upcoming'
-    | 'live'
-    | 'ended'
-    | 'cancelled';
+export interface EventSections {
+  happeningNow: FockisEvent[];
+  today: FockisEvent[];
+  featured: FockisEvent[];
+  recommended: FockisEvent[];
+  nearby: FockisEvent[];
+  online: FockisEvent[];
+  upcoming: FockisEvent[];
+  serverTime: string;
+}
+
+/** One event placed between feed posts (GET /feed → events[]). */
+export interface FeedEventSlot {
+  type: "event";
+  key: string;
+  afterPostId: string;
+  afterIndex: number;
+  event: FockisEvent;
+}
+
+export interface ViewerLocation {
+  latitude: number;
+  longitude: number;
 }

@@ -161,7 +161,9 @@ function isAdminUser(
 
   if (
     primaryRole === "admin" ||
-    primaryRole === "administrator"
+    primaryRole === "administrator" ||
+    /* Backend system role for content moderators. */
+    primaryRole === "moderator"
   ) {
     return true;
   }
@@ -222,6 +224,14 @@ function getRealAdminRole(
   for (const candidate of candidates) {
     const normalized =
       normalizeRole(candidate);
+
+    /*
+     * The backend's "moderator" system role maps to the Moderation
+     * administrator role (the backend still enforces every permission).
+     */
+    if (normalized === "moderator") {
+      return "MODERATION_ADMIN";
+    }
 
     const match =
       knownRoles.find(

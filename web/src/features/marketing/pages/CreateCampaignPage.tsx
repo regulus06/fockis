@@ -1,12 +1,21 @@
 import {
+  useLocation,
   useNavigate,
 } from "react-router-dom";
 
-import CampaignForm from "../components/CampaignForm";
+import { useMemo } from "react";
+
+import CampaignForm, {
+  type CampaignFormValues,
+} from "../components/CampaignForm";
 
 import {
   useCreateCampaign,
 } from "../hooks/useCreateCampaign";
+
+import { readPreset } from "../ads/adsPresets";
+
+import { adsErrorMessage } from "../ads/useAdsData";
 
 import "../styles/CreateCampaignPage.scss";
 
@@ -14,12 +23,28 @@ export default function CreateCampaignPage() {
   const navigate =
     useNavigate();
 
+  const location =
+    useLocation();
+
   const {
     submit,
     loading,
     error,
   } =
     useCreateCampaign();
+
+  /*
+   * Templates on the Ads overview link here with
+   * ?objective=&format=&placement=. Unknown values are ignored.
+   */
+  const initialValues =
+    useMemo<CampaignFormValues>(
+      () =>
+        readPreset(
+          location.search,
+        ) as CampaignFormValues,
+      [location.search],
+    );
 
   async function handleSubmit(
     payload: Parameters<
@@ -35,11 +60,11 @@ export default function CreateCampaignPage() {
 
     if (id) {
       navigate(
-        `/marketing/campaigns/${id}`,
+        `/ads/campaigns/${id}`,
       );
     } else {
       navigate(
-        "/marketing/campaigns",
+        "/ads/campaigns",
       );
     }
   }
@@ -57,21 +82,24 @@ export default function CreateCampaignPage() {
           </h1>
 
           <p>
-            Set up your advertising
-            campaign.
+            New campaigns are saved as drafts.
+            Submit a draft for review when it is
+            ready; it can run only after approval.
           </p>
         </div>
       </header>
 
       {error && (
-        <div className="fk-marketing-error">
-          {error}
+        <div className="fk-marketing-error" role="alert">
+          {adsErrorMessage(new Error(error), error)}
         </div>
       )}
 
       <section className="fk-marketing-panel">
         <CampaignForm
+          key={location.search}
           loading={loading}
+          initialValues={initialValues}
           onSubmit={handleSubmit}
         />
       </section>

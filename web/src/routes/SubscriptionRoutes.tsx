@@ -6,7 +6,7 @@ import SubscriptionPage
   from "../features/subscriptions/pages/SubscriptionPage";
 
 import SubscriptionPlansPage
-  from "../features/subscriptions/pages/SubscriptionPlansPage";
+  from "../features/subscriptions/pages/SubscriptionPlans";
 
 import SubscriptionBillingPage
   from "../features/subscriptions/pages/SubscriptionBillingPage";

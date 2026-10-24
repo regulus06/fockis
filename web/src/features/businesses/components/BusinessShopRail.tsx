@@ -1,334 +1,247 @@
 import { useEffect, useState } from "react";
+
 import { Link } from "react-router-dom";
 
-import { listStores } from "../../fockis-shop/services/storeApi";
-import { useProducts } from "../../fockis-shop/hooks/useProducts";
+import { ArrowRight, BadgeCheck, Package, ShoppingBag } from "lucide-react";
 
-import type { Store } from "../../fockis-shop/types/store.types";
+import { listStoreProducts } from "../../fockis-shop/services/productApi";
+import { resolveProductImageUrl } from "../../fockis-shop/utils/productImage";
+
+import type { Product } from "../../fockis-shop/types/product.types";
 import type { Business } from "../types/business.types";
 
+import { businessesApi } from "../services/businessesApi";
+
+import { ErrorState, RailNav, useRailScroll } from "./BusinessUi";
+
+import {
+  getProductRoute,
+  getStoreRoute,
+  getUsableImageUrl,
+} from "../utils/businessUtils";
+
+import "../styles/BusinessUi.scss";
 import "../styles/BusinessShopRail.scss";
 
-interface BusinessShopRailProps {
+
+/* ============================================================================
+   BUSINESS SHOP RAIL
+
+   Shows the Fockis Shop store the owner connected to this business and its
+   active products (GET /fockis-shop/products/store/:storeId).
+
+   Renders nothing when no store is connected. Cart and checkout stay in
+   Fockis Shop; products link to the existing product route.
+============================================================================ */
+
+interface Props {
   business: Business;
+  /*
+   * Number of products to show.
+   */
+  limit?: number;
+  title?: string;
+}
+
+const STOCK_LABELS: Record<string, { label: string; tone: string }> = {
+  in_stock: { label: "In stock", tone: "success" },
+  low_stock: { label: "Low stock", tone: "warning" },
+  out_of_stock: { label: "Out of stock", tone: "danger" },
+  backorder: { label: "Backorder", tone: "neutral" },
+};
+
+function formatPrice(amount: number, currency?: string): string {
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: currency || "USD",
+    }).format(amount);
+  } catch {
+    return `${currency ? `${currency} ` : "$"}${amount.toFixed(2)}`;
+  }
+}
+
+function getProductImage(product: Product): string | undefined {
+  const primary =
+    product.images?.find((image) => image.isPrimary) ?? product.images?.[0];
+
+  return resolveProductImageUrl(product.image || primary?.url);
 }
 
 export default function BusinessShopRail({
   business,
-}: BusinessShopRailProps) {
-  const [store, setStore] = useState<Store | null>(null);
-  const [loading, setLoading] = useState(true);
+  limit = 8,
+  title,
+}: Props) {
+  const store = business.store;
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(Boolean(store));
   const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+
+  const { trackRef, canPrev, canNext, scrollBy } = useRailScroll();
 
   useEffect(() => {
+    if (!store?.id) {
+      setProducts([]);
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
 
-    async function loadStore() {
-      try {
-        setLoading(true);
-        setError(null);
-        setStore(null);
+    setLoading(true);
+    setError(null);
 
-        /*
-         * The existing Fockis Shop API exposes stores through listStores()
-         * and each normalized Store contains businessId.
-         *
-         * We intentionally reuse that existing API instead of creating a
-         * second store/business relationship or changing the backend.
-         */
-        const firstPage = await listStores({
-          page: 1,
-          pageSize: 100,
-        });
-
-        if (cancelled) {
-          return;
+    listStoreProducts(store.id)
+      .then((items) => {
+        if (!cancelled) {
+          setProducts(
+            items.filter((product) => product.status !== "archived" && product.status !== "draft"),
+          );
         }
-
-        const matchingStore =
-          firstPage.items.find(
-            (candidate) =>
-              candidate.businessId === business.id &&
-              candidate.status === "active",
-          ) ?? null;
-
-        setStore(matchingStore);
-      } catch (err) {
-        if (cancelled) {
-          return;
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Products could not be loaded.");
         }
-
-        console.error(
-          "[BusinessShopRail] Failed to load store:",
-          err,
-        );
-
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Unable to load this business shop.",
-        );
-      } finally {
+      })
+      .finally(() => {
         if (!cancelled) {
           setLoading(false);
         }
-      }
-    }
-
-    void loadStore();
+      });
 
     return () => {
       cancelled = true;
     };
-  }, [business.id]);
-
-  if (loading) {
-    return (
-      <section className="business-shop-rail">
-        <div className="business-shop-rail__header">
-          <div>
-            <span className="business-shop-rail__eyebrow">
-              FOCKIS SHOP
-            </span>
-            <h2>🛍️ Shop from {business.name}</h2>
-          </div>
-        </div>
-
-        <div className="business-shop-rail__loading">
-          <div className="business-shop-rail__skeleton business-shop-rail__skeleton--banner" />
-          <div className="business-shop-rail__skeleton business-shop-rail__skeleton--text" />
-          <div className="business-shop-rail__skeleton business-shop-rail__skeleton--products" />
-        </div>
-      </section>
-    );
-  }
-
-  if (error) {
-    return (
-      <section className="business-shop-rail">
-        <div className="business-shop-rail__header">
-          <div>
-            <span className="business-shop-rail__eyebrow">
-              FOCKIS SHOP
-            </span>
-            <h2>🛍️ Fockis Shop</h2>
-          </div>
-        </div>
-
-        <div className="business-shop-rail__error">
-          <strong>Shop unavailable</strong>
-          <span>{error}</span>
-        </div>
-      </section>
-    );
-  }
+  }, [store?.id, attempt]);
 
   if (!store) {
     return null;
   }
 
-  return <BusinessShopStoreContent store={store} />;
-}
-
-function BusinessShopStoreContent({
-  store,
-}: {
-  store: Store;
-}) {
-  const {
-    data: productsData,
-    loading: productsLoading,
-    error: productsError,
-  } = useProducts({
-    storeSlug: store.slug,
-    page: 1,
-    pageSize: 6,
-  });
-
-  const products = productsData?.items ?? [];
+  const storeRoute = getStoreRoute(store.slug);
+  const visible = products.slice(0, limit);
+  const trackStore = () => {
+    void businessesApi.trackStoreClick(business.id);
+  };
 
   return (
-    <section className="business-shop-rail">
-      <div className="business-shop-rail__header">
+    <section className="fkb fkb-shop" aria-labelledby="fkb-shop-title">
+      <div className="fkb-section-head">
         <div>
-          <span className="business-shop-rail__eyebrow">
-            FOCKIS SHOP
-          </span>
-
-          <h2>🛍️ Shop from this business</h2>
-
-          <p>
-            Products and services available from {store.name}.
-          </p>
+          <span className="fkb-eyebrow">Fockis Shop</span>
+          <h2 id="fkb-shop-title">{title ?? `Shop ${store.name}`}</h2>
         </div>
 
-        <Link
-          className="business-shop-rail__view-all"
-          to={`/shop/stores/${encodeURIComponent(store.slug)}`}
-        >
-          View Shop →
-        </Link>
+        <div className="fkb-section-head__actions">
+          <RailNav label="products" canPrev={canPrev} canNext={canNext} onScroll={scrollBy} />
+        </div>
       </div>
 
-      <Link
-        to={`/shop/stores/${encodeURIComponent(store.slug)}`}
-        className="business-shop-rail__store"
-      >
-        <div className="business-shop-rail__banner">
-          {store.bannerUrl ? (
-            <img
-              src={store.bannerUrl}
-              alt=""
-            />
+      <Link to={storeRoute} className="fkb-shop__store" onClick={trackStore}>
+        <span className="fkb-shop__store-logo" aria-hidden="true">
+          {getUsableImageUrl(store.logo) ? (
+            <img src={store.logo} alt="" loading="lazy" />
           ) : (
-            <div className="business-shop-rail__banner-placeholder">
-              {store.emoji || "🛍️"}
-            </div>
+            <ShoppingBag size={22} />
           )}
-        </div>
+        </span>
 
-        <div className="business-shop-rail__store-info">
-          <div className="business-shop-rail__logo">
-            {store.logoUrl ? (
-              <img
-                src={store.logoUrl}
-                alt={store.name}
-              />
-            ) : (
-              <span>{store.emoji || "🛍️"}</span>
+        <span className="fkb-shop__store-text">
+          <strong>
+            {store.name}
+            {store.verified && (
+              <BadgeCheck size={16} aria-label="Verified store" role="img" />
             )}
-          </div>
+          </strong>
+          <span>Official store on Fockis Shop</span>
+        </span>
 
-          <div className="business-shop-rail__store-copy">
-            <div className="business-shop-rail__store-name">
-              <strong>{store.name}</strong>
-
-              {store.verified && (
-                <span
-                  className="business-shop-rail__verified"
-                  aria-label="Verified store"
-                  title="Verified store"
-                >
-                  ✓
-                </span>
-              )}
-            </div>
-
-            <span className="business-shop-rail__location">
-              {[
-                store.location.city,
-                store.location.state,
-                store.location.country,
-              ]
-                .filter(Boolean)
-                .join(", ")}
-            </span>
-
-            <span className="business-shop-rail__stats">
-              {store.productCount}{" "}
-              {store.productCount === 1
-                ? "product"
-                : "products"}
-              {store.rating.totalReviews > 0 && (
-                <>
-                  {" • "}
-                  ⭐ {store.rating.average.toFixed(1)}
-                </>
-              )}
-            </span>
-          </div>
-        </div>
+        <span className="fkb-btn fkb-btn--primary fkb-btn--sm fkb-shop__store-cta">
+          Visit Store
+          <ArrowRight size={15} aria-hidden="true" />
+        </span>
       </Link>
 
-      {productsLoading ? (
-        <div className="business-shop-rail__products-loading">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <div
-              className="business-shop-rail__product-skeleton"
-              key={index}
-            />
-          ))}
+      {loading ? (
+        <div className="fkb-rail" role="status" aria-label="Loading products">
+          <div className="fkb-rail__track fkb-shop__track">
+            {Array.from({ length: 4 }, (_, index) => (
+              <div key={index} className="fkb-product fkb-product--skeleton" aria-hidden="true">
+                <div className="fkb-skeleton fkb-product__image" />
+                <div className="fkb-skeleton" style={{ height: 14, margin: "12px" }} />
+              </div>
+            ))}
+          </div>
         </div>
-      ) : productsError ? (
-        <div className="business-shop-rail__products-message">
-          <span>
-            The shop is available, but products could not be
-            loaded right now.
-          </span>
-        </div>
-      ) : products.length === 0 ? (
-        <div className="business-shop-rail__products-message">
-          <span>
-            This shop is open, but there are no products
-            available right now.
-          </span>
+      ) : error ? (
+        <ErrorState
+          compact
+          title="Products unavailable"
+          message="The store is open, but its products could not be loaded right now."
+          onRetry={() => setAttempt((value) => value + 1)}
+        />
+      ) : visible.length === 0 ? (
+        <div className="fkb-shop__empty">
+          <Package size={20} aria-hidden="true" />
+          <span>This store has no products listed yet.</span>
         </div>
       ) : (
-        <div className="business-shop-rail__products">
-          {products.map((product: any) => {
-            const productId =
-              String(
-                product?.id ??
-                  product?._id ??
-                  "",
-              );
+        <div className="fkb-rail">
+          <div ref={trackRef} role="list" className="fkb-rail__track fkb-shop__track">
+            {visible.map((product) => {
+              const image = getProductImage(product);
+              const onSale =
+                typeof product.salePrice === "number" &&
+                product.salePrice > 0 &&
+                product.salePrice < product.price;
+              const stock = STOCK_LABELS[product.stockStatus];
 
-            const productName =
-              product?.name ||
-              product?.title ||
-              "Product";
+              return (
+                <div key={product.id} role="listitem" className="fkb-product">
+                  <Link to={getProductRoute(product.id)} className="fkb-product__link">
+                    <span className="fkb-product__image">
+                      {image ? (
+                        <img src={image} alt="" loading="lazy" decoding="async" />
+                      ) : (
+                        <Package size={28} aria-hidden="true" />
+                      )}
+                    </span>
 
-            const productImage =
-              product?.imageUrl ||
-              product?.image ||
-              product?.thumbnail ||
-              product?.images?.[0];
+                    <span className="fkb-product__body">
+                      <span className="fkb-product__name">{product.name}</span>
 
-            const price =
-              product?.price ??
-              product?.salePrice ??
-              product?.regularPrice;
-
-            return (
-              <Link
-                key={productId || productName}
-                to={
-                  productId
-                    ? `/shop/products/${encodeURIComponent(
-                        productId,
-                      )}`
-                    : `/shop/stores/${encodeURIComponent(
-                        store.slug,
-                      )}`
-                }
-                className="business-shop-rail__product"
-              >
-                <div className="business-shop-rail__product-image">
-                  {productImage ? (
-                    <img
-                      src={String(productImage)}
-                      alt={productName}
-                    />
-                  ) : (
-                    <span>📦</span>
-                  )}
-                </div>
-
-                <div className="business-shop-rail__product-body">
-                  <strong>{productName}</strong>
-
-                  {price !== undefined &&
-                    price !== null && (
-                      <span>
-                        $
-                        {Number(price).toFixed(2)}
+                      <span className="fkb-product__price">
+                        {onSale ? (
+                          <>
+                            <strong>{formatPrice(product.salePrice as number, product.currency)}</strong>
+                            <s>{formatPrice(product.price, product.currency)}</s>
+                          </>
+                        ) : (
+                          <strong>{formatPrice(product.price, product.currency)}</strong>
+                        )}
                       </span>
-                    )}
+
+                      {stock && (
+                        <span className={`fkb-badge fkb-badge--${stock.tone}`}>{stock.label}</span>
+                      )}
+                    </span>
+                  </Link>
                 </div>
-              </Link>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
+      )}
+
+      {!loading && !error && products.length > limit && (
+        <Link to={storeRoute} className="fkb-link fkb-shop__more" onClick={trackStore}>
+          See all {products.length} products
+          <ArrowRight size={16} aria-hidden="true" />
+        </Link>
       )}
     </section>
   );

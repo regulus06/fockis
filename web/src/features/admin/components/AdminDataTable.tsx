@@ -69,7 +69,15 @@ export function AdminDataTable<T>({
           <thead>
             <tr>
               {columns.map((col) => (
-                <th key={col.key} onClick={() => toggleSort(col)}>
+                <th
+                  key={col.key}
+                  scope="col"
+                  className={col.sortable ? 'is-sortable' : undefined}
+                  onClick={() => toggleSort(col)}
+                  aria-sort={
+                    sortKey === col.key ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined
+                  }
+                >
                   {col.header}
                   {sortKey === col.key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''}
                 </th>

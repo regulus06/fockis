@@ -1,0 +1,495 @@
+/* ============================================================================
+   FOCKIS SELLER CENTER — THEME
+   ============================================================================
+
+   Imported last by layout/SellerLayout.tsx (and SellerCreateStorePage.tsx,
+   which sits outside the layout).
+
+   Why the Seller Center looked broken:
+   - Most Seller Center sheets colour things with the app-wide --fk-* tokens
+     from src/styles/fockis-theme.scss. When the app runs in dark mode
+     (data-theme="dark"), those tokens turn dark, but several components use
+     fixed white panels or dark text — so text became invisible.
+   - The old Shop stylesheets used to leak global rules (h1–h4 fonts,
+     footer colour, .btn, .icon-btn). That leak is now fixed in the Shop.
+
+   This file pins the Seller Center to the same light Fockis look as the
+   Shop: white surfaces, navy text, Fockis orange for actions. It only
+   re-defines tokens and a few base rules, scoped to the Seller Center.
+   ========================================================================== */
+
+$fk-font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+.seller-layout,
+.seller-create-store-page,
+.seller-entry-page {
+  /* --- App tokens, light values with Fockis brand colours --- */
+  --fk-fjord: #0b1d3a;
+  --fk-fjord-bright: #0b63e5;
+  --fk-fjord-dark: #071430;
+  --fk-fjord-soft: rgba(11, 99, 229, 0.1);
+
+  --fk-amber: #c85a00;
+  --fk-amber-bright: #ff7a00;
+  --fk-amber-dark: #c85a00;
+  --fk-amber-soft: rgba(255, 122, 0, 0.14);
+
+  --fk-bg: #f3f4f6;
+  --fk-bg-secondary: #ffffff;
+  --fk-surface: #ffffff;
+  --fk-surface-hover: #f6f7f9;
+  --fk-sunken: #eceef1;
+
+  --fk-border: #e3e6ea;
+  --fk-border-strong: #c9ced5;
+
+  --fk-text: #0f1b2d;
+  --fk-text-2: #5b6472;
+  --fk-text-3: #8a919c;
+  --fk-text-inverse: #ffffff;
+
+  --fk-success: #067d3e;
+  --fk-danger: #cc1f3a;
+  --fk-warning: #b45309;
+  --fk-info: #0b63e5;
+
+  --fk-font-display: #{$fk-font};
+  --fk-font-body: #{$fk-font};
+
+  --fk-r-md: 10px;
+  --fk-r-lg: 12px;
+
+  --fk-shadow-xs: 0 1px 2px rgba(15, 27, 45, 0.06);
+  --fk-shadow-sm: 0 1px 3px rgba(15, 27, 45, 0.08);
+  --fk-shadow-md: 0 2px 6px rgba(15, 27, 45, 0.06), 0 8px 24px -12px rgba(15, 27, 45, 0.18);
+  --fk-gold-rule: linear-gradient(90deg, #ff7a00, #e86a00);
+
+  color-scheme: light;
+  background: #f3f4f6 !important;
+  color: var(--fk-text);
+  text-align: left; /* the app shell centres text globally */
+  font-family: $fk-font;
+}
+
+/* One font for the whole Seller Center (some sheets name fonts that the
+   app never loads, which fell back to serif). */
+.seller-layout *:not(svg):not(path),
+.seller-create-store-page *:not(svg):not(path),
+.seller-entry-page *:not(svg):not(path) {
+  font-family: $fk-font !important;
+}
+
+/* Content canvas */
+.seller-layout .seller-layout__body,
+.seller-layout .seller-layout__main,
+.seller-layout .seller-layout__content {
+  background: #f3f4f6 !important;
+  color: var(--fk-text);
+}
+
+.seller-layout .seller-layout__content {
+  min-height: calc(100vh - 220px);
+}
+
+/* Headings are dark on the light canvas … */
+.seller-layout .seller-layout__content :is(h1, h2, h3, h4, h5) {
+  color: var(--fk-text);
+  letter-spacing: -0.01em;
+}
+
+/* … except on coloured hero panels */
+.seller-layout .welcome-box :is(h1, h2, h3, p),
+.seller-layout .welcome-copy :is(h1, h2, h3) {
+  color: #fff !important;
+}
+
+.seller-layout .welcome-box {
+  background:
+    radial-gradient(420px 200px at 100% 0%, rgba(255, 122, 0, 0.35), transparent 70%),
+    linear-gradient(145deg, #0b1d3a 0%, #14294d 100%) !important;
+}
+
+/* Cards, panels and tables: white with a hairline border */
+.seller-layout :is(
+    .card,
+    .stat-card,
+    .analytics-card,
+    .settings-card,
+    .seller-card,
+    .form-section,
+    .preview-card,
+    .table-wrapper,
+    .inventory-table,
+    .orders-table,
+    .sales-table,
+    .ali-card,
+    .seller-store-card,
+    .tracking-form,
+    .tracking-info
+  ) {
+  background: #fff !important;
+  color: var(--fk-text);
+  border: 1px solid var(--fk-border);
+  border-radius: 12px;
+  box-shadow: var(--fk-shadow-sm);
+}
+
+.seller-layout :is(.empty-state, .ali-empty, .seller-store-empty, .empty-sales) {
+  background: #fff;
+  color: var(--fk-text-2);
+  border: 1px dashed var(--fk-border-strong);
+  border-radius: 12px;
+}
+
+.seller-layout table {
+  color: var(--fk-text);
+
+  th {
+    background: #f6f7f9;
+    color: var(--fk-text-2);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  td,
+  th {
+    border-color: var(--fk-border) !important;
+  }
+
+  tbody tr:hover td {
+    background: #fafbfc;
+  }
+}
+
+/* Forms */
+.seller-layout :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.seller-create-store-page :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
+  background: #fff;
+  color: var(--fk-text);
+  border: 1px solid var(--fk-border-strong);
+  border-radius: 8px;
+
+  &::placeholder { color: var(--fk-text-3); }
+
+  &:focus {
+    outline: none;
+    border-color: #ff7a00;
+    box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.2);
+  }
+}
+
+.seller-layout label,
+.seller-create-store-page label {
+  color: var(--fk-text);
+}
+
+/* Buttons — primary actions in Fockis orange */
+.seller-layout :is(.btn-primary, .create-product-btn, .seller-create-store-submit, .add-product-primary-button),
+.seller-create-store-page :is(.btn-primary, .seller-create-store-submit) {
+  background: #ff7a00 !important;
+  border-color: #ff7a00 !important;
+  color: #fff !important;
+  border-radius: 999px;
+  font-weight: 700;
+
+  &:hover:not(:disabled) {
+    background: #e86a00 !important;
+    border-color: #e86a00 !important;
+  }
+}
+
+.seller-layout .icon-btn {
+  width: auto;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--fk-text);
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.seller-layout .icon-btn-danger {
+  color: var(--fk-danger);
+}
+
+/* Tabs / filter chips (orders, products summary) */
+.seller-layout :is(.order-tabs, .console-tabbar) button {
+  background: #fff;
+  color: var(--fk-text);
+  border: 1px solid var(--fk-border-strong);
+  border-radius: 999px;
+
+  &.active,
+  &[aria-selected="true"] {
+    background: #0b63e5;
+    border-color: #0b63e5;
+    color: #fff;
+  }
+}
+
+.seller-layout :is(.summary-chip, .summary-count) {
+  background: #fff;
+  color: var(--fk-text);
+  border-color: var(--fk-border);
+}
+
+/* Eyebrow labels */
+.seller-layout .eyebrow {
+  color: #c85a00;
+}
+
+/* Skeletons on a light canvas */
+.seller-layout [class*="skeleton"] {
+  background-color: #eceef1;
+}
+
+/* Footer stays on brand navy */
+.seller-layout .seller-footer {
+  background: #0b1d3a !important;
+  text-align: left;
+
+  h3 { color: #fff !important; }
+}
+
+@media (max-width: 760px) {
+  .seller-layout .seller-layout__content {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .seller-layout .table-wrapper {
+    overflow-x: auto;
+  }
+}
+
+/* ============================================================================
+   HEADER — menu scrolls on its own; brand, Add Product and Logout stay put
+   ========================================================================== */
+
+.seller-layout .seller-sidebar {
+  overflow: hidden;
+  gap: 14px;
+  background: #ffffff;
+  box-shadow: 0 1px 0 #e3e6ea;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
+
+  > .sidebar-brand,
+  > .create-product-btn,
+  > .seller-logout-btn { flex: 0 0 auto; }
+}
+
+.seller-layout .sidebar-menu {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(90deg, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, #000 92%, transparent);
+  padding-right: 24px;
+
+  &::-webkit-scrollbar { display: none; }
+
+  button.active {
+    background: #ff7a00;
+    color: #fff;
+  }
+}
+
+.seller-layout .create-product-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.seller-layout .seller-logout-btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .seller-layout .seller-sidebar {
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .seller-layout .brand-text,
+  .seller-layout .create-product-btn span,
+  .seller-layout .seller-logout-btn span {
+    display: none;
+  }
+
+  .seller-layout .create-product-btn {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .seller-layout .seller-logout-btn {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+/* ============================================================================
+   MOBILE — keep every Seller Center page inside the screen
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  /* Orders: the status tabs scroll sideways instead of widening the page */
+  .seller-layout .orders-header > .header-copy {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  .seller-layout .order-tabs {
+    max-width: 100%;
+  }
+
+  /* Messages: conversation list above the chat, not beside it */
+  .seller-layout .seller-messages-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  /* Tables scroll inside their card */
+  .seller-layout :is(.table-wrapper, .inventory-table, .orders-table, .sales-table) {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+
+
+/* Dashboard sections: a heading, then the card(s) underneath */
+.seller-layout .seller-section {
+  margin: 0 0 20px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+
+  > .section-head {
+    margin: 0 0 10px;
+
+    h2 { margin: 0; font-size: 18px; font-weight: 800; }
+  }
+
+  > :not(.section-head) {
+    background: #fff;
+    border: 1px solid var(--fk-border);
+    border-radius: 12px;
+    box-shadow: var(--fk-shadow-sm);
+    padding: 16px;
+  }
+}
+
+/* ============================================================================
+   CREATE STORE — cover photo + profile photo
+   The profile card used to be absolutely positioned on top of the cover,
+   which hid the cover's Upload button. It now sits underneath the cover as
+   its own row: round preview on the left, title and Upload on the right.
+   ========================================================================== */
+
+.seller-create-store-page .seller-store-cover-wrapper {
+  position: static;
+  min-height: 0;
+  padding-bottom: 0;
+  display: grid;
+  gap: 18px;
+}
+
+.seller-create-store-page .seller-image-upload--cover .seller-image-upload__preview {
+  height: clamp(160px, 28vw, 260px);
+  border-radius: 12px;
+}
+
+.seller-create-store-page .seller-image-upload__controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.seller-create-store-page .seller-profile-photo-overlap {
+  position: static;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #e3e6ea;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.seller-create-store-page .seller-image-upload--profile {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  grid-template-areas:
+    "preview header"
+    "preview controls";
+  column-gap: 18px;
+  align-items: center;
+
+  .seller-image-upload__header { grid-area: header; margin: 0; align-self: end; }
+  .seller-image-upload__controls { grid-area: controls; align-self: start; }
+
+  .seller-image-upload__preview {
+    grid-area: preview;
+    width: 112px;
+    height: 112px;
+    aspect-ratio: auto;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 1px #e3e6ea, 0 6px 16px -8px rgba(15, 27, 45, 0.35);
+  }
+
+  .seller-image-upload__placeholder { min-height: 0; border-radius: 50%; }
+
+  .seller-image-upload__profile-icon {
+    width: 64px;
+    height: 64px;
+    font-size: 24px;
+  }
+
+  .seller-image-upload__remove {
+    top: auto;
+    bottom: 6px;
+    right: 50%;
+    transform: translateX(50%);
+    padding: 4px 8px;
+  }
+}
+
+.seller-create-store-page .seller-image-upload__button {
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .seller-create-store-page .seller-image-upload--profile {
+    grid-template-columns: 88px minmax(0, 1fr);
+
+    .seller-image-upload__preview { width: 88px; height: 88px; }
+  }
+}
+
+.seller-create-store-page .seller-image-upload,
+.seller-create-store-page .seller-image-upload__header {
+  text-align: left;
+}
+
+.seller-create-store-page .seller-image-upload__controls {
+  justify-content: flex-start;
+}

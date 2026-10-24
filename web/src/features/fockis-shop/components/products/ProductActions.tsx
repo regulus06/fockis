@@ -1,17 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Heart, Lock, MapPin, Truck } from "lucide-react";
+import { Heart, Lock, Truck } from "lucide-react";
 
 import type { Product } from "../../types/product.types";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../hooks/useWishlist";
 import { useCartToastStore } from "../../store/cartToastStore";
-import { useShop } from "../../hooks/useShop";
 import { effectivePrice } from "../../utils/pricing";
 import { formatPrice } from "../../utils/currency";
-import { shippingBadges } from "../../utils/shipping";
 import {
-  getDeliveryEstimate,
   getPrimaryProductImage,
 } from "../../utils/productMedia";
 
@@ -65,14 +62,22 @@ function resolveSellerId(product: Product): string | null {
 }
 
 /**
- * Buy box: price, delivery, stock, quantity, Add to Cart,
- * Buy Now, and wishlist.
+ * Product buy box.
+ *
+ * The product price is displayed by ProductInfo, so it is
+ * intentionally not repeated here.
+ *
+ * Shipping costs are calculated during checkout. This component
+ * does not assume a buyer's destination or invent delivery details.
  */
-export function ProductActions({ product }: { product: Product }) {
+export function ProductActions({
+  product,
+}: {
+  product: Product;
+}) {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { has, toggle } = useWishlist();
-  const { deliverToCountryLabel } = useShop();
   const showAddedToast = useCartToastStore((state) => state.show);
 
   const [quantity, setQuantity] = useState(1);
@@ -86,7 +91,8 @@ export function ProductActions({ product }: { product: Product }) {
     (typeof product.stockQuantity === "number" &&
       product.stockQuantity <= 0);
 
-  const lowStock = !unavailable && product.stockStatus === "low_stock";
+  const lowStock =
+    !unavailable && product.stockStatus === "low_stock";
 
   const maxQuantity =
     typeof product.stockQuantity === "number" &&
@@ -98,12 +104,6 @@ export function ProductActions({ product }: { product: Product }) {
   const hasPrice = Number(price) > 0;
   const canBuy = !unavailable && hasPrice;
   const saved = has(product.id);
-
-  const delivery = getDeliveryEstimate(product);
-  const options = product.shipping
-    ? shippingBadges(product.shipping)
-    : [];
-  const freeThreshold = product.shipping?.freeDeliveryThreshold;
 
   async function addToCart(): Promise<boolean> {
     if (!canBuy || status === "adding") return false;
@@ -120,7 +120,7 @@ export function ProductActions({ product }: { product: Product }) {
           productId: product.id,
           storeId: product.storeId,
           availableProductFields: Object.keys(
-            (asRecord(product) ?? {}),
+            asRecord(product) ?? {},
           ),
         },
       );
@@ -129,6 +129,7 @@ export function ProductActions({ product }: { product: Product }) {
       setErrorMessage(
         "Seller information is missing for this product. Please refresh the page or contact the store.",
       );
+
       return false;
     }
 
@@ -175,31 +176,17 @@ export function ProductActions({ product }: { product: Product }) {
 
   return (
     <aside className="pdp-buybox" aria-label="Buy options">
-      <div className="pdp-buybox__price">
-        {hasPrice ? formatPrice(price) : "Price unavailable"}
-      </div>
-
       <div className="pdp-buybox__delivery">
         <Truck size={16} aria-hidden="true" />
+
         <span>
-          {delivery ?? "Delivery details unavailable"}
-          {freeThreshold != null && freeThreshold > 0 && (
-            <small>
-              Free delivery from this store on orders over{" "}
-              {formatPrice(freeThreshold)}
-            </small>
-          )}
+          Shipping calculated at checkout
+          <small>
+            Available delivery options and shipping costs are confirmed
+            during checkout.
+          </small>
         </span>
       </div>
-
-      <button
-        type="button"
-        className="pdp-buybox__deliver-to"
-        onClick={() => navigate("/shop/countries")}
-      >
-        <MapPin size={14} aria-hidden="true" />
-        Deliver to {deliverToCountryLabel}
-      </button>
 
       <div
         className={`pdp-buybox__stock${
@@ -216,6 +203,7 @@ export function ProductActions({ product }: { product: Product }) {
       {canBuy && (
         <label className="pdp-buybox__qty">
           <span>Quantity</span>
+
           <select
             className="shop-select"
             value={quantity}
@@ -255,11 +243,13 @@ export function ProductActions({ product }: { product: Product }) {
       >
         {unavailable
           ? "Out of stock"
-          : status === "adding"
-            ? "Adding…"
-            : status === "added"
-              ? "Add again"
-              : "Add to Cart"}
+          : !hasPrice
+            ? "Price unavailable"
+            : status === "adding"
+              ? "Adding…"
+              : status === "added"
+                ? "Add again"
+                : "Add to Cart"}
       </button>
 
       {canBuy && (
@@ -275,7 +265,8 @@ export function ProductActions({ product }: { product: Product }) {
 
       {status === "added" && (
         <p className="pdp-buybox__feedback" role="status">
-          Added to cart. <Link to="/shop/cart">View cart</Link>
+          Added to cart.{" "}
+          <Link to="/shop/cart">View cart</Link>
         </p>
       )}
 
@@ -299,7 +290,7 @@ export function ProductActions({ product }: { product: Product }) {
           <dd>
             {product.storeSlug ? (
               <Link to={`/shop/store/${product.storeSlug}`}>
-                {product.storeName}
+                {product.storeName || "Visit store"}
               </Link>
             ) : (
               "Seller details unavailable"
@@ -316,14 +307,6 @@ export function ProductActions({ product }: { product: Product }) {
         </div>
       </dl>
 
-      {options.length > 0 && (
-        <ul className="pdp-buybox__options">
-          {options.map((option) => (
-            <li key={option}>{option}</li>
-          ))}
-        </ul>
-      )}
-
       <button
         type="button"
         className={`fk-btn fk-btn--outline fk-btn--block${
@@ -337,6 +320,7 @@ export function ProductActions({ product }: { product: Product }) {
           fill={saved ? "currentColor" : "none"}
           aria-hidden="true"
         />
+
         {saved ? "Saved to wishlist" : "Add to wishlist"}
       </button>
     </aside>

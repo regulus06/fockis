@@ -12,6 +12,7 @@ import { sellerApi } from "../services/sellerApi";
 import { useActiveStore } from "../store/activeStore";
 
 import "../styles/SellerCreateStorePage.scss";
+import "../styles/seller-center-theme.scss";
 
 interface CountryOption {
   name: string;

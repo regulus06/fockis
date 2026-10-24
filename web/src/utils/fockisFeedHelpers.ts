@@ -3408,6 +3408,8 @@ export interface BackendPostData {
 
   giftsCount?: number;
 
+  audience?: string;
+
 
 
 
@@ -25886,6 +25888,10 @@ export function mapFeedItemsToPosts(
 
 
         ),
+        audience:
+          typeof p.audience === "string"
+            ? p.audience
+            : undefined,
 
 
 

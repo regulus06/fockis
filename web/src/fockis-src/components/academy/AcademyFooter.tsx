@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 
+import FockisMark from "../../../components/fockis/FockisMark";
 const ACADEMY_LINKS = {
   about: "/academy/about",
   admissions: "/academy/admissions",
@@ -29,6 +30,7 @@ export default function AcademyFooter() {
               }}
               to="/academy"
             >
+              <FockisMark size={30} className="academy-footer-mark" />
               FOCKIS ACADEMY
             </Link>
 

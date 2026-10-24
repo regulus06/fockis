@@ -8,6 +8,8 @@ import {
   orderApi,
 } from "../../orders/services/orderApi";
 
+import { shippingApi } from "../services/shippingApi";
+
 import "../styles/SellerOrdersPage.scss";
 
 /* =========================================================
@@ -88,6 +90,8 @@ type Shipment = {
   lastUpdatedAt?: string;
 
   estimatedDeliveryDate?: string;
+  labelUrl?: string;
+  shippoTransactionId?: string;
 };
 
 type Order = {
@@ -488,6 +492,123 @@ export default function SellerOrdersPage() {
     setTrackingError,
   ] = useState("");
 
+  const [shippoParcel, setShippoParcel] = useState({
+    length: "10",
+    width: "8",
+    height: "4",
+    weight: "2",
+    distanceUnit: "in" as "in" | "cm" | "ft" | "mm" | "m",
+    massUnit: "lb" as "lb" | "oz" | "kg" | "g",
+  });
+  const [shippoRates, setShippoRates] = useState<Array<{
+    rateId: string;
+    carrier: string;
+    service: string;
+    amount: number;
+    currency: string;
+    estimatedDays: number | null;
+  }>>([]);
+  const [selectedShippoRateId, setSelectedShippoRateId] = useState("");
+  const [shippoBusy, setShippoBusy] = useState(false);
+  const [shippoError, setShippoError] = useState("");
+  const [shippoNotice, setShippoNotice] = useState("");
+  const [manualTrackingMode, setManualTrackingMode] = useState(false);
+
+  const [editingAddressOrderId, setEditingAddressOrderId] = useState<string | null>(null);
+  const [addressForm, setAddressForm] = useState<ShippingAddress>({});
+  const [addressError, setAddressError] = useState("");
+  const [addressNotice, setAddressNotice] = useState("");
+  const [addressNoticeOrderId, setAddressNoticeOrderId] = useState<string | null>(null);
+  const [addressSaving, setAddressSaving] = useState(false);
+
+  function openAddressEditor(order: Order) {
+    setEditingAddressOrderId(order._id);
+    setAddressForm({ ...(order.shippingAddress ?? {}) });
+    setAddressError("");
+    setAddressNotice("");
+    setAddressNoticeOrderId(null);
+  }
+
+  function closeAddressEditor() {
+    setEditingAddressOrderId(null);
+    setAddressForm({});
+    setAddressError("");
+  }
+
+  async function saveShippingAddress(order: Order) {
+    if (addressSaving) return;
+
+    const requiredFields: Array<[keyof ShippingAddress, string]> = [
+      ["fullName", "Recipient name"],
+      ["phone", "Phone"],
+      ["houseOrApartmentNumber", "House or apartment number"],
+      ["street", "Street address"],
+      ["city", "City"],
+      ["country", "Country"],
+    ];
+
+    for (const [key, label] of requiredFields) {
+      if (!String(addressForm[key] ?? "").trim()) {
+        setAddressError(`${label} is required.`);
+        return;
+      }
+    }
+
+    const country = String(addressForm.country ?? "").trim().toLowerCase();
+    const isUS = ["us", "usa", "united states", "united states of america"].includes(country);
+    if (isUS && (
+      !String(addressForm.street ?? "").trim() ||
+      !String(addressForm.state ?? "").trim() ||
+      !String(addressForm.zipCode ?? "").trim()
+    )) {
+      setAddressError("For US addresses, street, state, and ZIP code are required.");
+      return;
+    }
+
+    try {
+      setAddressSaving(true);
+      setAddressError("");
+      setAddressNotice("");
+      await orderApi.updateShippingAddress(order._id, {
+        fullName: addressForm.fullName?.trim() ?? "",
+        email: addressForm.email?.trim() || undefined,
+        phone: addressForm.phone?.trim() ?? "",
+        houseOrApartmentNumber:
+          addressForm.houseOrApartmentNumber?.trim() || undefined,
+        neighborhood: addressForm.neighborhood?.trim() || undefined,
+        street: addressForm.street?.trim() ?? "",
+        apartment: addressForm.apartment?.trim() || undefined,
+        address: addressForm.address?.trim() || undefined,
+        city: addressForm.city?.trim() ?? "",
+        state: addressForm.state?.trim() || undefined,
+        zipCode: addressForm.zipCode?.trim() || undefined,
+        country: addressForm.country?.trim() ?? "",
+      });
+      setAddressNotice("Shipping address saved. Request fresh Shippo rates before purchasing a label.");
+      setAddressNoticeOrderId(order._id);
+      setEditingAddressOrderId(null);
+      await loadOrders();
+    } catch (error) {
+      console.error("Update shipping address failed:", error);
+      const err = error as {
+        response?: { data?: { message?: unknown } };
+        message?: unknown;
+      };
+      const message = err.response?.data?.message;
+      setAddressError(
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message.map(String).join(", ")
+            : typeof err.message === "string"
+              ? err.message
+              : "Unable to save the shipping address. Please try again.",
+      );
+    } finally {
+      setAddressSaving(false);
+    }
+  }
+
   /* =======================================================
   LOAD ORDERS
   ======================================================= */
@@ -690,6 +811,11 @@ export default function SellerOrdersPage() {
     );
 
     setTrackingError("");
+    setShippoRates([]);
+    setSelectedShippoRateId("");
+    setShippoError("");
+    setShippoNotice("");
+    setManualTrackingMode(false);
 
     window.setTimeout(() => {
       const element =
@@ -833,6 +959,143 @@ export default function SellerOrdersPage() {
       setUpdatingOrderId(
         null,
       );
+    }
+  }
+
+  async function requestShippoRates(order: Order) {
+    const shipment = getShipment(order);
+    if (!shipment?._id) {
+      setShippoError("This order has no saved shipment record. A shipment ID is required for Shippo rates.");
+      return;
+    }
+
+    const parcel = {
+      length: Number(shippoParcel.length),
+      width: Number(shippoParcel.width),
+      height: Number(shippoParcel.height),
+      weight: Number(shippoParcel.weight),
+    };
+    if (Object.values(parcel).some(value => !Number.isFinite(value) || value <= 0)) {
+      setShippoError("Enter positive numbers for all dimensions and weight.");
+      return;
+    }
+
+    try {
+      setShippoBusy(true);
+      setShippoError("");
+      setShippoNotice("");
+      const result = await shippingApi.getShippoRates({
+        orderId: order._id,
+        shipmentId: shipment._id,
+        parcel: {
+          ...parcel,
+          distanceUnit: shippoParcel.distanceUnit as "in" | "cm",
+          massUnit: shippoParcel.massUnit,
+        },
+      });
+      const rates = Array.isArray(result?.rates)
+        ? result.rates.map(rate => ({
+            rateId: String(rate.rateId ?? ""),
+            carrier: String(rate.carrier ?? "Carrier"),
+            service: String(rate.service ?? "Shipping service"),
+            amount: Number(rate.amount ?? 0),
+            currency: String(rate.currency ?? "USD"),
+            estimatedDays:
+              rate.estimatedDays == null ? null : Number(rate.estimatedDays),
+          })).filter(rate => rate.rateId.length > 0)
+        : [];
+      setShippoRates(rates);
+      setSelectedShippoRateId(rates[0]?.rateId ?? "");
+      if (!rates.length) setShippoError("Shippo returned no rates for this address and package.");
+    } catch (error) {
+      console.error("Shippo rates request failed:", error);
+      const err = error as { response?: { data?: { message?: unknown } }; message?: unknown };
+      const message = err.response?.data?.message;
+      setShippoError(
+        typeof message === "string" ? message :
+        Array.isArray(message) ? message.map(String).join(", ") :
+        typeof err.message === "string" ? err.message :
+        "Unable to retrieve Shippo rates. Check the backend logs."
+      );
+    } finally {
+      setShippoBusy(false);
+    }
+  }
+
+  async function purchaseShippoLabel(order: Order) {
+    const shipment = getShipment(order);
+    if (!shipment?._id || !selectedShippoRateId) {
+      setShippoError("Select a Shippo rate before purchasing a label.");
+      return;
+    }
+    if (!window.confirm("Purchase this shipping label? Use a Shippo test token while testing.")) return;
+
+    try {
+      setShippoBusy(true);
+      setShippoError("");
+      setShippoNotice("");
+      const result = await shippingApi.purchaseShippoLabel({
+        orderId: order._id,
+        shipmentId: shipment._id,
+        rateId: selectedShippoRateId,
+      });
+      setShippoNotice(
+        result?.trackingNumber
+          ? `Label purchased. Tracking number: ${result.trackingNumber}`
+          : "Shipping label purchased successfully.",
+      );
+      await loadOrders();
+    } catch (error) {
+      console.error("Shippo label purchase failed:", error);
+      const err = error as {
+        response?: {
+          data?: {
+            message?: unknown;
+            details?: unknown;
+            error?: unknown;
+          };
+        };
+        message?: unknown;
+      };
+      const data = err.response?.data;
+      const formatDetails = (value: unknown): string => {
+        if (typeof value === "string") return value;
+        if (Array.isArray(value)) {
+          return value
+            .map(item => {
+              if (typeof item === "string") return item;
+              if (item && typeof item === "object") {
+                const entry = item as { text?: unknown; message?: unknown; code?: unknown };
+                const text = typeof entry.text === "string" ? entry.text :
+                  typeof entry.message === "string" ? entry.message : "";
+                const code = typeof entry.code === "string" ? entry.code : "";
+                return [text, code && `(${code})`].filter(Boolean).join(" ");
+              }
+              return String(item);
+            })
+            .filter(Boolean)
+            .join("; ");
+        }
+        if (value && typeof value === "object") {
+          const entry = value as { text?: unknown; message?: unknown; detail?: unknown };
+          const text = typeof entry.text === "string" ? entry.text :
+            typeof entry.message === "string" ? entry.message :
+            typeof entry.detail === "string" ? entry.detail : "";
+          return text;
+        }
+        return "";
+      };
+
+      const message = formatDetails(data?.details) ||
+        formatDetails(data?.message) ||
+        formatDetails(data?.error) ||
+        (typeof err.message === "string" ? err.message : "");
+
+      setShippoError(
+        message || "Unable to purchase the label. Check the backend logs."
+      );
+    } finally {
+      setShippoBusy(false);
     }
   }
 
@@ -1358,6 +1621,88 @@ export default function SellerOrdersPage() {
 
         </div>
 
+        <section className="shippo-label-panel">
+          <div className="tracking-form-header">
+            <div>
+              <strong>Buy a Shippo Label</strong>
+              <span>Get live carrier rates and purchase a shipping label.</span>
+            </div>
+            {getShipment(order)?.labelUrl && (
+              <a className="icon-btn" href={getShipment(order)?.labelUrl} target="_blank" rel="noreferrer">
+                Open Label
+              </a>
+            )}
+          </div>
+
+          {!getShipment(order)?._id ? (
+            <div className="tracking-provider-note">
+              No shipment record is attached to this order. Shippo requires a saved shipment ID.
+            </div>
+          ) : !getShipment(order)?.labelUrl ? (
+            <>
+              <div className="tracking-fields shippo-parcel-fields">
+                {(["length", "width", "height", "weight"] as const).map(field => (
+                  <label className="tracking-field" key={field}>
+                    <span>{field[0].toUpperCase() + field.slice(1)} *</span>
+                    <input
+                      type="number"
+                      min="0.01"
+                      step="any"
+                      value={shippoParcel[field]}
+                      onChange={event => setShippoParcel(current => ({ ...current, [field]: event.target.value }))}
+                    />
+                  </label>
+                ))}
+                <label className="tracking-field">
+                  <span>Dimension unit</span>
+                  <select value={shippoParcel.distanceUnit} onChange={event => setShippoParcel(current => ({ ...current, distanceUnit: event.target.value as typeof current.distanceUnit }))}>
+                    <option value="in">Inches</option><option value="cm">Centimeters</option>
+                    <option value="ft">Feet</option><option value="mm">Millimeters</option><option value="m">Meters</option>
+                  </select>
+                </label>
+                <label className="tracking-field">
+                  <span>Weight unit</span>
+                  <select value={shippoParcel.massUnit} onChange={event => setShippoParcel(current => ({ ...current, massUnit: event.target.value as typeof current.massUnit }))}>
+                    <option value="lb">Pounds</option><option value="oz">Ounces</option>
+                    <option value="kg">Kilograms</option><option value="g">Grams</option>
+                  </select>
+                </label>
+              </div>
+              <button type="button" className="icon-btn" disabled={shippoBusy || isUpdating} onClick={() => void requestShippoRates(order)}>
+                {shippoBusy ? "Loading rates..." : "Get Shippo Rates"}
+              </button>
+              {shippoRates.length > 0 && (
+                <div className="shippo-rates-list">
+                  <strong>Available rates</strong>
+                  {shippoRates.map(rate => (
+                    <label className="shippo-rate-option" key={rate.rateId}>
+                      <input type="radio" name={`shippo-rate-${order._id}`} checked={selectedShippoRateId === rate.rateId} onChange={() => setSelectedShippoRateId(rate.rateId)} />
+                      <span>
+                        <strong>{rate.carrier || "Carrier"} {rate.service}</strong>
+                        <small>
+                          {new Intl.NumberFormat("en-US", { style: "currency", currency: rate.currency || "USD" }).format(Number(rate.amount))}
+                          {rate.estimatedDays != null ? ` · ${rate.estimatedDays} day(s)` : ""}
+                        </small>
+                      </span>
+                    </label>
+                  ))}
+                  <button type="button" className="icon-btn icon-btn-success" disabled={shippoBusy || !selectedShippoRateId} onClick={() => void purchaseShippoLabel(order)}>
+                    {shippoBusy ? "Purchasing..." : "Purchase Shippo Label"}
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="tracking-provider-note">A label has already been purchased for this shipment.</div>
+          )}
+          {shippoError && <div className="tracking-error" role="alert">{shippoError}</div>}
+          {shippoNotice && <div className="tracking-provider-note" role="status">{shippoNotice}</div>}
+          <button type="button" className="tracking-manual-toggle" onClick={() => setManualTrackingMode(current => !current)}>
+            {manualTrackingMode ? "Hide manual tracking" : "Enter tracking manually instead"}
+          </button>
+        </section>
+
+        {manualTrackingMode && (
         <div className="tracking-fields">
 
           <label className="tracking-field">
@@ -1505,8 +1850,9 @@ export default function SellerOrdersPage() {
           </label>
 
         </div>
+        )}
 
-        {trackingCarrier &&
+        {manualTrackingMode && trackingCarrier &&
           trackingCarrier !==
             "other" && (
           <div className="tracking-provider-note">
@@ -1518,7 +1864,7 @@ export default function SellerOrdersPage() {
           </div>
         )}
 
-        {trackingCarrier ===
+        {manualTrackingMode && trackingCarrier ===
           "other" && (
           <div className="tracking-provider-note">
             <IconTruck size={14} />
@@ -1529,13 +1875,13 @@ export default function SellerOrdersPage() {
           </div>
         )}
 
-        {trackingError && (
+        {manualTrackingMode && trackingError && (
           <div className="tracking-error">
             {trackingError}
           </div>
         )}
 
-        <div className="tracking-form-actions">
+        {manualTrackingMode && <div className="tracking-form-actions">
 
           <button
             type="button"
@@ -1569,7 +1915,7 @@ export default function SellerOrdersPage() {
               : "Ship Order"}
           </button>
 
-        </div>
+        </div>}
 
       </div>
     );
@@ -2019,6 +2365,92 @@ export default function SellerOrdersPage() {
                                 </div>
                               )}
 
+                              <div className="shipping-address-editor-actions">
+                                <button
+                                  type="button"
+                                  className="tracking-manual-toggle"
+                                  onClick={() => {
+                                    if (editingAddressOrderId === order._id) {
+                                      closeAddressEditor();
+                                    } else {
+                                      openAddressEditor(order);
+                                    }
+                                  }}
+                                  disabled={addressSaving || Boolean(getShipment(order)?.labelUrl || getShipment(order)?.shippoTransactionId)}
+                                  title={
+                                    getShipment(order)?.labelUrl || getShipment(order)?.shippoTransactionId
+                                      ? "Address editing is disabled after a label is purchased."
+                                      : "Edit the recipient shipping address"
+                                  }
+                                >
+                                  {editingAddressOrderId === order._id ? "Cancel address edit" : "Edit shipping address"}
+                                </button>
+                              </div>
+
+                              {editingAddressOrderId === order._id && (
+                                <div className="tracking-form shipping-address-editor">
+                                  <div className="tracking-form-header">
+                                    <div>
+                                      <strong>Edit shipping address</strong>
+                                      <span>Confirm the customer's complete, deliverable address before requesting new Shippo rates.</span>
+                                    </div>
+                                  </div>
+
+                                  <div className="tracking-fields">
+                                    {([
+                                      ["fullName", "Recipient full name", true],
+                                      ["email", "Email", false],
+                                      ["phone", "Phone number", true],
+                                      ["houseOrApartmentNumber", "House / building number", true],
+                                      ["street", "Street address", false],
+                                      ["apartment", "Apartment / unit", false],
+                                      ["neighborhood", "Neighborhood", false],
+                                      ["city", "City", true],
+                                      ["state", "State / department", false],
+                                      ["zipCode", "ZIP / postal code", false],
+                                      ["country", "Country", true],
+                                    ] as Array<[keyof ShippingAddress, string, boolean]>).map(([key, label, required]) => (
+                                      <label className="tracking-field" key={key}>
+                                        <span>{label}{required ? " *" : ""}</span>
+                                        <input
+                                          type="text"
+                                          value={String(addressForm[key] ?? "")}
+                                          onChange={event => setAddressForm(current => ({
+                                            ...current,
+                                            [key]: event.target.value,
+                                          }))}
+                                          autoComplete="off"
+                                          disabled={addressSaving}
+                                        />
+                                      </label>
+                                    ))}
+                                  </div>
+
+                                  {addressError && <div className="tracking-error" role="alert">{addressError}</div>}
+
+                                  <div className="tracking-form-actions">
+                                    <button
+                                      type="button"
+                                      className="icon-btn"
+                                      onClick={closeAddressEditor}
+                                      disabled={addressSaving}
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="icon-btn icon-btn-success"
+                                      onClick={() => void saveShippingAddress(order)}
+                                      disabled={addressSaving}
+                                    >
+                                      {addressSaving ? "Saving address..." : "Save shipping address"}
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                              {addressNotice && addressNoticeOrderId === order._id && editingAddressOrderId === null && (
+                                <div className="tracking-provider-note" role="status">{addressNotice}</div>
+                              )}
                             </div>
 
                           </td>

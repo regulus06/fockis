@@ -1,13 +1,17 @@
+/* ============================================================================
+   FOCKIS GLOBAL LAYOUT
+============================================================================ */
+
 .fk-app-layout {
   display: flex;
   flex-direction: row;
+  align-items: stretch;
   width: 100%;
   min-height: 100vh;
   margin: 0;
   padding: 0;
   background: var(--fk-bg);
   box-sizing: border-box;
-
   transition: background-color 240ms ease;
 }
 
@@ -26,20 +30,81 @@
   min-height: 100vh;
   padding: 24px;
   box-sizing: border-box;
-  overflow-x: hidden;
-
+  /* clip (not hidden): hidden would turn this area into a second scroll
+     container inside the page, which showed a double scrollbar. */
+  overflow-x: clip;
   background: var(--fk-bg);
-
   transition: background-color 240ms ease;
 }
 
-// ============================================================================
-// MAP — full-bleed, fixed-viewport UI. The default padding + min-height
-// above stacks with FockisMap.scss's own height, overflowing one real
-// viewport and forcing the page to scroll — which clips the map's own
-// floating controls (compass, locate button) under the scrollbar. Locking
-// this to exactly 100vh with no padding and no overflow fixes that.
-// ============================================================================
+/* ============================================================================
+   SHOP HOME — SINGLE NATURAL-HEIGHT PAGE
+============================================================================ */
+
+.fk-app-layout:has(.fk-app-content--shop) {
+  display: block;
+  width: 100%;
+  min-height: 0 !important;
+  height: auto !important;
+  overflow: visible !important;
+  background: #04150f !important;
+}
+
+.fk-app-content--shop {
+  display: block;
+  position: relative;
+  flex: none;
+  width: 100%;
+  min-width: 0;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  background: #04150f !important;
+}
+
+.fk-app-content--shop > .shop-page-root,
+.fk-app-content--shop .shop-page-root.fockis-luxe-shop {
+  display: block;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  flex: none !important;
+  margin: 0 !important;
+  padding-bottom: 0 !important;
+  overflow: visible !important;
+  background: #04150f !important;
+}
+
+.fk-app-content--shop .luxe-shop-main {
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  margin-bottom: 0 !important;
+  overflow: visible !important;
+}
+
+.fk-app-content--shop .shop-page-root > footer,
+.fk-app-content--shop .shop-page-root footer {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  flex: none !important;
+  overflow: visible !important;
+}
+
+/* ============================================================================
+   MAP — FULL-VIEWPORT LAYOUT
+============================================================================ */
 
 .fk-app-content--map {
   padding: 0;
@@ -47,6 +112,10 @@
   height: 100vh;
   overflow: hidden;
 }
+
+/* ============================================================================
+   BOX SIZING
+============================================================================ */
 
 .fk-app-layout *,
 .fk-app-layout *::before,
@@ -61,9 +130,12 @@ body,
   min-height: 100%;
   margin: 0;
   padding: 0;
-
   background: var(--fk-bg);
 }
+
+/* ============================================================================
+   RESPONSIVE LAYOUT
+============================================================================ */
 
 @media (max-width: 1100px) {
   .fk-app-layout > .fk-sidebar {
@@ -75,6 +147,10 @@ body,
 
   .fk-app-content {
     padding: 20px;
+  }
+
+  .fk-app-content--shop {
+    padding: 0 !important;
   }
 }
 
@@ -96,8 +172,31 @@ body,
     padding: 16px;
   }
 
+  .fk-app-content--shop {
+    display: block;
+    width: 100%;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #04150f !important;
+  }
+
   .fk-app-content--map {
     padding: 0;
     height: 100vh;
   }
+}
+/* ============================================================================
+   SELLER CENTER - full-width, light page (no dark frame around it)
+============================================================================ */
+
+.fk-app-layout:has(.seller-layout, .seller-create-store-page, .seller-entry-page) {
+  background: #f3f4f6;
+}
+
+.fk-app-content:has(> .seller-layout, > .seller-create-store-page, > .seller-entry-page) {
+  padding: 0;
+  background: #f3f4f6;
 }

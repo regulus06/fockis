@@ -1,182 +1,169 @@
-import React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState, type RefObject } from "react";
+import { Link } from "react-router-dom";
+import {
+  ArrowLeft,
+  ChevronDown,
+  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
+  X,
+} from "lucide-react";
+
+import { AdminCommandSearch } from "./AdminCommandSearch";
+import { AdminNotificationCenter } from "./AdminNotificationCenter";
+import { roleLabel } from "./AdminRoleBadge";
+import { useAdminSessionStore } from "../store/adminSessionStore";
+import type { AdminRole } from "../types/admin.types";
 
 import "../styles/AdminComponents.scss";
 
+/* ============================================================================
+   ADMIN TOP BAR
+
+   White header: hamburger (mobile/tablet), global search, notifications and
+   the signed-in administrator. Name and role come from the real admin
+   session store — nothing here is hard-coded.
+============================================================================ */
+
 interface AdminTopbarProps {
+  /** Legacy prop kept for compatibility: opens the navigation. */
   onMenuClick?: () => void;
+  menuButtonRef?: RefObject<HTMLButtonElement>;
+  showMenuButton?: boolean;
+  menuOpen?: boolean;
+  showCollapseToggle?: boolean;
+  sidebarCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-const pageTitles: Record<string, string> = {
-  "/admin": "Dashboard",
-  "/admin/dashboard": "Dashboard",
-
-  "/admin/users": "Users",
-  "/admin/administrators": "Administrators",
-
-  "/admin/marketplace": "Marketplace",
-  "/admin/marketplace/products": "Products",
-  "/admin/marketplace/sellers": "Sellers",
-  "/admin/marketplace/stores": "Stores",
-  "/admin/marketplace/orders": "Orders",
-  "/admin/marketplace/reviews": "Marketplace Reviews",
-  "/admin/marketplace/disputes": "Disputes",
-
-  "/admin/categories": "Categories",
-  "/admin/inventory": "Inventory",
-  "/admin/orders": "Orders",
-  "/admin/shipping": "Shipping",
-  "/admin/reviews": "Reviews",
-
-  "/admin/marketing/campaigns": "Marketing Campaigns",
-  "/admin/marketing/ads": "Marketing Ads",
-  "/admin/marketing/analytics": "Marketing Analytics",
-
-  "/admin/analytics": "Analytics",
-
-  "/admin/finance/transactions": "Transactions",
-  "/admin/finance/refunds": "Refunds",
-  "/admin/finance/payouts": "Payouts",
-  "/admin/finance/earnings": "Earnings",
-  "/admin/finance/wallet": "Wallet",
-  "/admin/payments": "Payments",
-
-  "/admin/subscriptions": "Subscriptions",
-  "/admin/gifts": "Gifts",
-
-  "/admin/live": "Live",
-  "/admin/meetings": "Meetings",
-  "/admin/realestate": "Real Estate",
-  "/admin/documents": "Documents",
-  "/admin/design": "Design Studio",
-  "/admin/playlists": "Playlists",
-
-  "/admin/moderation": "Moderation",
-  "/admin/moderation/reports": "Reports",
-  "/admin/moderation/cases": "Moderation Cases",
-
-  "/admin/security": "Security Center",
-  "/admin/security/events": "Security Events",
-  "/admin/security/sessions": "Admin Sessions",
-  "/admin/security/policies": "Security Policies",
-
-  "/admin/audit": "Audit Logs",
-
-  "/admin/system/settings": "System Settings",
-  "/admin/system/features": "Feature Flags",
-  "/admin/system/emergency": "Emergency Center",
-};
-
-function getPageTitle(pathname: string): string {
-  if (pageTitles[pathname]) {
-    return pageTitles[pathname];
-  }
-
-  const parts = pathname
-    .split("/")
-    .filter(Boolean);
-
-  const lastPart = parts[parts.length - 1];
-
-  if (!lastPart) {
-    return "Dashboard";
-  }
-
-  return lastPart
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (letter) =>
-      letter.toUpperCase()
-    );
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "A";
+  if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 export function AdminTopbar({
   onMenuClick,
+  menuButtonRef,
+  showMenuButton = Boolean(onMenuClick),
+  menuOpen = false,
+  showCollapseToggle = false,
+  sidebarCollapsed = false,
+  onToggleCollapse,
 }: AdminTopbarProps) {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const admin = useAdminSessionStore((state) => state.currentAdmin);
 
-  const title = getPageTitle(location.pathname);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!accountOpen) return;
+
+    const onPointerDown = (event: MouseEvent) => {
+      if (accountRef.current && !accountRef.current.contains(event.target as Node)) {
+        setAccountOpen(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setAccountOpen(false);
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [accountOpen]);
+
+  const adminName = admin?.name?.trim() || "Administrator";
+  const adminRole = admin?.adminRoleName || (admin?.role ? roleLabel(admin.role as AdminRole) : "");
 
   return (
-    <header className="admin-topbar">
-
-      {/* LEFT */}
-      <div className="admin-topbar__left">
-
-        {onMenuClick && (
+    <header className="fk-topbar">
+      <div className="fk-topbar__left">
+        {showMenuButton && onMenuClick && (
           <button
+            ref={menuButtonRef}
             type="button"
-            className="admin-topbar__menu-button"
+            className="fk-topbar__menu"
             onClick={onMenuClick}
-            aria-label="Open admin menu"
+            aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={menuOpen}
+            aria-controls="fk-admin-drawer"
           >
-            ☰
+            {menuOpen ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
           </button>
         )}
 
-        <div className="admin-topbar__title-area">
+        {showCollapseToggle && onToggleCollapse && (
+          <button
+            type="button"
+            className="fk-topbar__menu fk-topbar__collapse"
+            onClick={onToggleCollapse}
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-pressed={sidebarCollapsed}
+            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? (
+              <PanelLeftOpen size={20} aria-hidden="true" />
+            ) : (
+              <PanelLeftClose size={20} aria-hidden="true" />
+            )}
+          </button>
+        )}
 
-          <span className="admin-topbar__breadcrumb">
-            Fockis Administration
-          </span>
-
-          <h1 className="admin-topbar__title">
-            {title}
-          </h1>
-
+        <div className="fk-topbar__search">
+          <AdminCommandSearch />
         </div>
-
       </div>
 
-      {/* RIGHT */}
-      <div className="admin-topbar__right">
+      <div className="fk-topbar__right">
+        <AdminNotificationCenter />
 
-        <button
-          type="button"
-          className="admin-topbar__icon-button"
-          aria-label="Notifications"
-          title="Notifications"
-        >
-          🔔
-        </button>
-
-        <button
-          type="button"
-          className="admin-topbar__icon-button"
-          aria-label="Search"
-          title="Search"
-        >
-          🔎
-        </button>
-
-        <div className="admin-topbar__admin">
-
-          <div className="admin-topbar__avatar">
-            A
-          </div>
-
-          <div className="admin-topbar__admin-info">
-            <strong>
-              Administrator
-            </strong>
-
-            <span>
-              Admin
+        <div className="fk-topbar__account" ref={accountRef}>
+          <button
+            type="button"
+            className="fk-topbar__account-button"
+            onClick={() => setAccountOpen((value) => !value)}
+            aria-haspopup="menu"
+            aria-expanded={accountOpen}
+          >
+            <span className="fk-topbar__avatar" aria-hidden="true">
+              {initials(adminName)}
             </span>
-          </div>
 
+            <span className="fk-topbar__identity">
+              <strong>{adminName}</strong>
+              {adminRole && <span>{adminRole}</span>}
+            </span>
+
+            <ChevronDown className="fk-topbar__caret" size={16} aria-hidden="true" />
+          </button>
+
+          {accountOpen && (
+            <div className="fk-menu fk-topbar__account-menu" role="menu">
+              <div className="fk-topbar__account-head">
+                <strong>{adminName}</strong>
+                {admin?.email && <span>{admin.email}</span>}
+              </div>
+
+              <div className="fk-menu__divider" />
+
+              <Link
+                to="/fockis-preview"
+                role="menuitem"
+                className="fk-menu__item"
+                onClick={() => setAccountOpen(false)}
+              >
+                <ArrowLeft size={16} aria-hidden="true" />
+                Back to Fockis
+              </Link>
+            </div>
+          )}
         </div>
-
-        <button
-          type="button"
-          className="admin-topbar__home-button"
-          onClick={() => navigate("/fockis-preview")}
-        >
-          ← Fockis
-        </button>
-
       </div>
-
     </header>
   );
 }

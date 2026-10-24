@@ -450,9 +450,9 @@
     gap: 13px;
     margin: 20px 22px 22px;
     padding: 14px 16px;
-    border: 1px solid rgba(240, 169, 62, 0.28);
+    border: 1px solid rgba(21, 112, 239, 0.28);
     border-radius: $radius-md;
-    background: #fff9ed;
+    background: #f5f9ff;
 
     > svg {
       flex: 0 0 auto;
@@ -660,7 +660,7 @@
     &:hover:not(:disabled) {
       background: $gold-600;
       border-color: $gold-600;
-      box-shadow: 0 6px 18px rgba(240, 169, 62, 0.42);
+      box-shadow: 0 6px 18px rgba(21, 112, 239, 0.42);
     }
 
     &:active:not(:disabled) {
@@ -1035,12 +1035,12 @@
 
   .travel-booking-primary-button {
     border: 1px solid $navy-900;
-    background: $navy-900;
+    background: $gold-500;
     color: #ffffff;
     box-shadow: 0 4px 12px rgba(10, 24, 48, 0.14);
 
     &:hover {
-      background: $navy-800;
+      background: $gold-600;
       border-color: $navy-800;
       transform: translateY(-1px);
     }

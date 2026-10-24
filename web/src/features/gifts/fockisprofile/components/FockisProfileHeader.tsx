@@ -1,118 +1,119 @@
+/* ============================================================================
+   FOCKIS PROFILE HERO
+   Layered identity panel: a wide cover band, then a glass identity panel
+   that overlaps it, with an information column (avatar frame, name, handle,
+   bio, details) and a separate stats + action column.
+============================================================================ */
+
 import {
+  type ChangeEvent,
+  type ReactNode,
   useEffect,
   useRef,
   useState,
-  type ChangeEvent,
 } from "react";
 
-import type {
-  FockisUser,
-} from "../types/fockisprofiletypes";
+import {
+  BadgeCheck,
+  CalendarDays,
+  Camera,
+  Link2,
+  LoaderCircle,
+  Lock,
+  MapPin,
+} from "lucide-react";
+
+import type { FockisUser } from "../types/fockisprofiletypes";
 
 import "../../../../styles/FockisProfileHeader.scss";
+
+export interface FockisProfileHeroStat {
+  label: string;
+  value: number | null;
+  onClick?: () => void;
+}
 
 interface Props {
   user?: FockisUser;
 
-  onAvatarChange?: (
-    file: File
-  ) => void | Promise<void>;
+  onAvatarChange?: (file: File) => void | Promise<void>;
+
+  /** Stats shown in the action column (posts, followers, following, friends). */
+  stats?: FockisProfileHeroStat[];
+
+  /** Relationship / owner actions rendered in the action column. */
+  actions?: ReactNode;
+
+  /** Shown under the actions (follow/friend errors). */
+  notices?: ReactNode;
 }
 
-function IconCamera({
-  size = 16,
-}: {
-  size?: number;
-}) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-      <circle cx="12" cy="13" r="4" />
-    </svg>
-  );
+function formatNumber(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  if (value >= 10_000) return `${Math.round(value / 1000)}K`;
+  if (value >= 1000) return `${(value / 1000).toFixed(1).replace(/\.0$/, "")}K`;
+  return value.toLocaleString();
+}
+
+function websiteHref(website: string): string {
+  const trimmed = website.trim();
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
+function formatJoined(value?: string): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 }
 
 export default function FockisProfileHeader({
   user,
   onAvatarChange,
+  stats,
+  actions,
+  notices,
 }: Props) {
-  const avatarInputRef =
-    useRef<HTMLInputElement | null>(null);
-
-  const [avatarPreview, setAvatarPreview] =
-    useState<string | null>(null);
-
-  const [uploadingAvatar, setUploadingAvatar] =
-    useState(false);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [coverFailed, setCoverFailed] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
 
   useEffect(() => {
     return () => {
-      if (avatarPreview) {
-        URL.revokeObjectURL(avatarPreview);
-      }
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     };
   }, [avatarPreview]);
 
   useEffect(() => {
     setAvatarPreview((previous) => {
-      if (previous) {
-        URL.revokeObjectURL(previous);
-      }
-
+      if (previous) URL.revokeObjectURL(previous);
       return null;
     });
-
     setUploadingAvatar(false);
+    setAvatarFailed(false);
   }, [user?.avatar]);
 
-  function handleAvatarClick() {
-    avatarInputRef.current?.click();
-  }
+  useEffect(() => {
+    setCoverFailed(false);
+  }, [user?.coverImage]);
 
-  async function handleAvatarFileChange(
-    event: ChangeEvent<HTMLInputElement>
-  ) {
-    const file =
-      event.target.files?.[0];
-
+  async function handleAvatarFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
     event.target.value = "";
+    if (!file || !file.type.startsWith("image/")) return;
 
-    if (!file) {
-      return;
-    }
-
-    if (!file.type.startsWith("image/")) {
-      return;
-    }
-
-    const preview =
-      URL.createObjectURL(file);
-
+    const preview = URL.createObjectURL(file);
     setAvatarPreview(preview);
     setUploadingAvatar(true);
 
     try {
       await onAvatarChange?.(file);
     } catch (error) {
-      console.error(
-        "Avatar upload failed:",
-        error
-      );
-
+      console.error("Avatar upload failed:", error);
       setAvatarPreview((previous) => {
-        if (previous) {
-          URL.revokeObjectURL(previous);
-        }
-
+        if (previous) URL.revokeObjectURL(previous);
         return null;
       });
     } finally {
@@ -122,129 +123,147 @@ export default function FockisProfileHeader({
 
   if (!user) {
     return (
-      <section className="fk-profile-header">
-        <p>Loading profile...</p>
+      <section className="fk-profile-hero fk-profile-hero--loading" aria-busy="true">
+        <div className="fk-profile-hero__cover" />
       </section>
     );
   }
 
-  const avatarSrc =
-    avatarPreview || user.avatar;
+  const displayName = user.name || user.fullName || user.username || "Fockis User";
+  const avatarSrc = avatarPreview || (!avatarFailed ? user.avatar : "") || "";
+  const coverSrc = !coverFailed ? user.coverImage || user.coverImageUrl || user.bannerUrl || "" : "";
+  const initial = displayName.trim().charAt(0).toUpperCase() || "F";
+  const verified = Boolean(user.verified || user.isVerified);
+  const joined = formatJoined(user.joinedDate || user.createdAt);
 
-  const initial =
-    user.fullName
-      ?.charAt(0)
-      .toUpperCase() ||
-    user.username
-      ?.charAt(0)
-      .toUpperCase() ||
-    "F";
+  const avatarContent = avatarSrc ? (
+    <img src={avatarSrc} alt="" onError={() => setAvatarFailed(true)} />
+  ) : (
+    <span className="fk-profile-hero__initial" aria-hidden="true">
+      {initial}
+    </span>
+  );
 
   return (
-    <section className="fk-profile-header">
-      <div className="fk-profile-header__cover">
-        {user.coverImage ? (
-          <img
-            src={user.coverImage}
-            alt="Profile cover"
-          />
-        ) : (
-          <div className="fk-profile-header__cover-fallback" />
-        )}
+    <section className="fk-profile-hero" aria-label={`${displayName}'s profile`}>
+      {/* COVER */}
+      <div className={`fk-profile-hero__cover${coverSrc ? "" : " is-empty"}`}>
+        {coverSrc && <img src={coverSrc} alt="" onError={() => setCoverFailed(true)} />}
+        <span className="fk-profile-hero__cover-shade" aria-hidden="true" />
       </div>
 
-      <div className="fk-profile-header__content">
-        {onAvatarChange ? (
-          <button
-            type="button"
-            className="fk-profile-header__avatar fk-profile-header__avatar--editable"
-            onClick={handleAvatarClick}
-            aria-label="Change profile photo"
-          >
-            <span className="fk-profile-header__avatar-clip">
-              {avatarSrc ? (
-                <img
-                  src={avatarSrc}
-                  alt={
-                    user.username ||
-                    "User"
-                  }
-                />
-              ) : (
-                <span className="fk-profile-header__avatar-fallback">
-                  {initial}
-                </span>
-              )}
-            </span>
-
-            <span
-              className="fk-profile-header__avatar-edit"
-              aria-hidden="true"
-            >
-              <IconCamera size={15} />
-            </span>
-
-            {uploadingAvatar && (
-              <span
-                className="fk-profile-header__avatar-uploading"
-                aria-hidden="true"
+      {/* IDENTITY PANEL */}
+      <div className="fk-profile-hero__panel">
+        <div className="fk-profile-hero__identity">
+          <div className="fk-profile-hero__frame">
+            {onAvatarChange ? (
+              <button
+                type="button"
+                className="fk-profile-hero__avatar fk-profile-hero__avatar--editable"
+                onClick={() => avatarInputRef.current?.click()}
+                aria-label="Change profile photo"
+                disabled={uploadingAvatar}
               >
-                Uploading...
-              </span>
+                {avatarContent}
+                <span className="fk-profile-hero__avatar-edit" aria-hidden="true">
+                  {uploadingAvatar ? <LoaderCircle size={15} className="fk-profile-hero__spin" /> : <Camera size={15} />}
+                </span>
+              </button>
+            ) : (
+              <div className="fk-profile-hero__avatar">{avatarContent}</div>
             )}
 
-            <input
-              ref={avatarInputRef}
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={
-                handleAvatarFileChange
-              }
-            />
-          </button>
-        ) : (
-          <div className="fk-profile-header__avatar">
-            {avatarSrc ? (
-              <img
-                src={avatarSrc}
-                alt={
-                  user.username ||
-                  "User"
-                }
+            {onAvatarChange && (
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(event) => void handleAvatarFileChange(event)}
               />
-            ) : (
-              <span>
-                {initial}
-              </span>
             )}
           </div>
-        )}
 
-        <div className="fk-profile-header__info">
-          <h1>
-            {user.fullName ||
-              user.username ||
-              "Fockis User"}
+          <div className="fk-profile-hero__info">
+            <h1 className="fk-profile-hero__name">
+              <span>{displayName}</span>
+              {verified && (
+                <BadgeCheck
+                  className="fk-profile-hero__verified"
+                  size={22}
+                  aria-label="Verified account"
+                  role="img"
+                />
+              )}
+            </h1>
 
-            {user.verified && (
-              <span className="fk-profile-header__verified">
-                ✓
-              </span>
-            )}
-          </h1>
-
-          {user.username && (
-            <p>
-              @{user.username}
+            <p className="fk-profile-hero__handle">
+              {user.username && <span>@{user.username}</span>}
+              {user.isPrivate && (
+                <span className="fk-profile-hero__private">
+                  <Lock size={12} aria-hidden="true" />
+                  Private
+                </span>
+              )}
             </p>
+
+            {user.bio && <p className="fk-profile-hero__bio">{user.bio}</p>}
+
+            {(user.location || user.website || joined) && (
+              <ul className="fk-profile-hero__details">
+                {user.location && (
+                  <li>
+                    <MapPin size={14} aria-hidden="true" />
+                    {user.location}
+                  </li>
+                )}
+                {user.website && (
+                  <li>
+                    <Link2 size={14} aria-hidden="true" />
+                    <a href={websiteHref(user.website)} target="_blank" rel="noopener noreferrer">
+                      {user.website.replace(/^https?:\/\//i, "").replace(/\/$/, "")}
+                    </a>
+                  </li>
+                )}
+                {joined && (
+                  <li>
+                    <CalendarDays size={14} aria-hidden="true" />
+                    Joined {joined}
+                  </li>
+                )}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        <div className="fk-profile-hero__side">
+          {stats && stats.length > 0 && (
+            <ul className="fk-profile-hero__stats" aria-label="Profile statistics">
+              {stats.map((stat) => {
+                const value = stat.value === null ? "—" : formatNumber(stat.value);
+                const content = (
+                  <>
+                    <strong className="fk-profile-hero__stat-value">{value}</strong>
+                    <span className="fk-profile-hero__stat-label">{stat.label}</span>
+                  </>
+                );
+                return (
+                  <li key={stat.label} className="fk-profile-hero__stat">
+                    {stat.onClick ? (
+                      <button type="button" onClick={stat.onClick} aria-label={`${value} ${stat.label}`}>
+                        {content}
+                      </button>
+                    ) : (
+                      <span className="fk-profile-hero__stat-static">{content}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
           )}
 
-          {user.location && (
-            <span>
-              📍 {user.location}
-            </span>
-          )}
+          {actions && <div className="fk-profile-hero__actions">{actions}</div>}
+          {notices}
         </div>
       </div>
     </section>

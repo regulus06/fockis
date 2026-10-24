@@ -9,6 +9,8 @@ import { FOCKIS_API_URL } from "../../../../config/fockisConfig";
 import React, {
   useCallback,
   useEffect,
+  useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -37,6 +39,12 @@ import {
   UserX,
   Ban,
   ShieldBan,
+  MoreHorizontal,
+  Link2,
+  PencilLine,
+  EyeOff,
+  Megaphone,
+  Flag,
 } from "lucide-react";
 
 import {
@@ -53,7 +61,7 @@ import {
 } from "../store/fockisprofileStore";
 
 import FockisProfileHeader from "../components/FockisProfileHeader";
-import FockisProfileCard from "../components/FockisProfileCard";
+import ReportDialog from "../../../reports/components/ReportDialog";
 import FockisProfileTabs from "../components/FockisProfileTabs";
 import FockisProfilePosts from "../components/FockisProfilePosts";
 import FockisProfileFriends from "../components/FockisProfileFriends";
@@ -65,6 +73,9 @@ import {
 } from "../service/fockisFriendsApi";
 
 import "../../../../styles/FockisProfilePage.scss";
+
+/* Fockis social design layer — must load after FockisProfilePage.scss. */
+import "../../../../styles/FockisProfileSocial.scss";
 
 /*
  * ============================================================================
@@ -258,6 +269,17 @@ function FockisProfilePageInner() {
 
   const [avatarUploading, setAvatarUploading] =
     useState(false);
+
+  const [reportOpen, setReportOpen] = useState(false);
+
+  const [optionsOpen, setOptionsOpen] =
+    useState(false);
+
+  const [linkCopied, setLinkCopied] =
+    useState(false);
+
+  const optionsRef =
+    useRef<HTMLDivElement | null>(null);
 
   /*
    * ==========================================================================
@@ -2185,6 +2207,18 @@ function FockisProfilePageInner() {
   }
 
   /*
+   * Open the Fockis Advertising Dashboard.
+   */
+  function goToMarketingDashboard(): void {
+    setAccountMenuOpen(false);
+    setSettingsOpen(false);
+
+    navigate("/ads", {
+      replace: false,
+    });
+  }
+
+  /*
    * ==========================================================================
    * FRIEND BUTTONS
    * ==========================================================================
@@ -2312,20 +2346,6 @@ function FockisProfilePageInner() {
               Unfriend
             </span>
           </button>
-
-          <button
-            type="button"
-            className="fk-profile-friend-button fk-profile-friend-button--danger"
-            onClick={() =>
-              void handleBlockUser()
-            }
-          >
-            <Ban size={18} />
-
-            <span>
-              Block User
-            </span>
-          </button>
         </div>
       );
     }
@@ -2369,20 +2389,6 @@ function FockisProfilePageInner() {
                 Delete
               </span>
             </button>
-
-            <button
-              type="button"
-              className="fk-profile-friend-button fk-profile-friend-button--danger"
-              onClick={() =>
-                void handleBlockUser()
-              }
-            >
-              <Ban size={18} />
-
-              <span>
-                Block User
-              </span>
-            </button>
           </div>
         );
       }
@@ -2400,20 +2406,6 @@ function FockisProfilePageInner() {
 
             <span>
               Requested
-            </span>
-          </button>
-
-          <button
-            type="button"
-            className="fk-profile-friend-button fk-profile-friend-button--danger"
-            onClick={() =>
-              void handleBlockUser()
-            }
-          >
-            <Ban size={18} />
-
-            <span>
-              Block User
             </span>
           </button>
         </div>
@@ -2435,23 +2427,107 @@ function FockisProfilePageInner() {
             Add Friend
           </span>
         </button>
-
-        <button
-          type="button"
-          className="fk-profile-friend-button fk-profile-friend-button--danger"
-          onClick={() =>
-            void handleBlockUser()
-          }
-        >
-          <Ban size={18} />
-
-          <span>
-            Block User
-          </span>
-        </button>
       </div>
     );
   }
+
+  /*
+   * ==========================================================================
+   * PROFILE POSTS — only posts authored by the profile owner
+   *
+   * The backend Post schema stores the author ID in `user`; normalizePost
+   * (fockisprofileApi.ts) copies it to `post.userId`. GET /posts?userId=
+   * already filters on the server; this is a second, client-side check.
+   * ==========================================================================
+   */
+
+  const profileOwnerId = String(
+    profile?.user?.id ||
+      profile?.user?._id ||
+      userId ||
+      "",
+  );
+
+  const ownerPosts = useMemo(
+    () =>
+      (profile?.posts || []).filter(
+        (post) =>
+          Boolean(
+            profileOwnerId &&
+              post.userId &&
+              String(post.userId) === profileOwnerId,
+          ),
+      ),
+    [profile?.posts, profileOwnerId],
+  );
+
+  const postAuthor = profile
+    ? {
+        name:
+          profile.user.name ||
+          profile.user.fullName ||
+          profile.user.username ||
+          "Fockis User",
+        username: profile.user.username,
+        avatar: profile.user.avatar,
+      }
+    : undefined;
+
+  /*
+   * Content restrictions for visitors (owner always sees everything).
+   */
+  const contentRestriction: "blocked" | "private" | null =
+    canEdit || !profile
+      ? null
+      : friendStatus === "blocked"
+        ? "blocked"
+        : profile.user.isPrivate && friendStatus !== "accepted"
+          ? "private"
+          : null;
+
+  function selectTab(tab: typeof activeTab): void {
+    setActiveTab(tab);
+  }
+
+  async function copyProfileLink(): Promise<void> {
+    const id = profileOwnerId;
+    if (!id) return;
+
+    const url = `${window.location.origin}/profile/${encodeURIComponent(id)}`;
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 2200);
+    } catch {
+      window.prompt("Copy this profile link:", url);
+    }
+  }
+
+  /*
+   * Close the options menu on outside click / Escape.
+   */
+  useEffect(() => {
+    if (!optionsOpen) return;
+
+    const handlePointer = (event: MouseEvent) => {
+      if (optionsRef.current && !optionsRef.current.contains(event.target as Node)) {
+        setOptionsOpen(false);
+      }
+    };
+
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOptionsOpen(false);
+    };
+
+    document.addEventListener("mousedown", handlePointer);
+    document.addEventListener("keydown", handleKey);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointer);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [optionsOpen]);
 
   /*
    * ==========================================================================
@@ -2463,9 +2539,10 @@ function FockisProfilePageInner() {
     <div
       className={
         theme === "dark"
-          ? "fk-profile-page-wrapper fk-profile-page-wrapper--dark"
-          : "fk-profile-page-wrapper"
+          ? "fk-profile-page-wrapper fk-profile-page-wrapper--dark fk-social-scope"
+          : "fk-profile-page-wrapper fk-social-scope"
       }
+      data-theme={theme}
     >
       {/* ACCOUNT CONTROLS */}
 
@@ -2599,6 +2676,26 @@ function FockisProfilePageInner() {
             </button>
 
             {/* ============================================================
+                MARKETING DASHBOARD
+                ============================================================ */}
+
+            {canEdit && (
+              <button
+                type="button"
+                className="fk-profile-page__account-menu-item"
+                onClick={goToMarketingDashboard}
+                aria-label="Open Marketing Dashboard"
+                title="Marketing Dashboard"
+              >
+                <Megaphone size={18} />
+
+                <span>
+                  Marketing Dashboard
+                </span>
+              </button>
+            )}
+
+            {/* ============================================================
                 MONETIZATION
                 ============================================================ */}
 
@@ -2674,9 +2771,7 @@ function FockisProfilePageInner() {
               <button
                 type="button"
                 className="fk-profile-page__account-menu-item"
-                onClick={
-                  openSettings
-                }
+                onClick={openSettings}
               >
                 <Settings
                   size={18}
@@ -2869,7 +2964,7 @@ function FockisProfilePageInner() {
                 : "fk-profile-page"
             }
           >
-            {/* PROFILE HEADER */}
+            {/* HERO: cover, identity panel, stats and actions */}
 
             {!settingsOpen && (
               <FockisProfileHeader
@@ -2879,299 +2974,326 @@ function FockisProfilePageInner() {
                     ? handleAvatarChange
                     : undefined
                 }
-              />
-            )}
+                stats={[
+                  {
+                    label: "Posts",
+                    value: ownerPosts.length,
+                    onClick: () => selectTab("posts"),
+                  },
+                  {
+                    label: "Followers",
+                    value: followDataLoading ? null : followersCount,
+                    onClick: profileUserId ? openFollowers : undefined,
+                  },
+                  {
+                    label: "Following",
+                    value: followDataLoading ? null : followingCount,
+                    onClick: profileUserId ? openFollowing : undefined,
+                  },
+                  {
+                    label: "Friends",
+                    value: Number(profile.stats?.friends ?? profile.friends?.length ?? 0),
+                    onClick: () => selectTab("friends"),
+                  },
+                ]}
+                actions={
+                  canEdit ? (
+                    <div className="fk-profile-actions">
+                      <button
+                        type="button"
+                        className="fk-profile-actions__primary"
+                        onClick={openSettings}
+                      >
+                        <PencilLine size={18} />
+                        <span>Edit profile</span>
+                      </button>
 
-            {/* FOLLOW SECTION */}
+                      <button
+                        type="button"
+                        className="fk-profile-actions__secondary"
+                        onClick={() => navigate("/settings")}
+                        aria-label="Open account settings"
+                        title="Account settings"
+                      >
+                        <Settings size={18} />
+                        <span>Account settings</span>
+                      </button>
 
-            {!settingsOpen && (
-              <section
-                className="fk-profile-follow-section"
-                aria-label="Follow information"
-              >
-                <div className="fk-profile-follow-stats">
-                  <button
-                    type="button"
-                    className="fk-profile-follow-stat"
-                    onClick={
-                      openFollowers
-                    }
-                    disabled={
-                      !profileUserId
-                    }
-                  >
-                    <Users
-                      size={18}
-                    />
+                      <button
+                        type="button"
+                        className="fk-profile-actions__secondary"
+                        onClick={() => void copyProfileLink()}
+                      >
+                        <Link2 size={18} />
+                        <span>{linkCopied ? "Link copied" : "Share profile"}</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="fk-profile-actions">
+                      {friendStatus !== "blocked" && (
+                        <button
+                          type="button"
+                          className={
+                            isFollowing
+                              ? "fk-profile-follow-button fk-profile-follow-button--following"
+                              : "fk-profile-follow-button"
+                          }
+                          disabled={followLoading || !profileUserId}
+                          onClick={() => void handleFollowToggle()}
+                          aria-pressed={isFollowing}
+                        >
+                          {followLoading ? (
+                            <>
+                              <Loader2 size={18} className="fk-profile-follow-button__spinner" />
+                              <span>Updating...</span>
+                            </>
+                          ) : isFollowing ? (
+                            <>
+                              <UserCheck size={18} />
+                              <span>Following</span>
+                            </>
+                          ) : (
+                            <>
+                              <UserPlus size={18} />
+                              <span>Follow</span>
+                            </>
+                          )}
+                        </button>
+                      )}
 
-                    <span className="fk-profile-follow-stat__number">
-                      {followDataLoading
-                        ? "—"
-                        : followersCount}
-                    </span>
+                      {friendStatus !== "blocked" && (
+                        <button
+                          type="button"
+                          className="fk-profile-message-button"
+                          disabled={!profileUserId}
+                          onClick={handleMessageUser}
+                        >
+                          <MessageCircle size={18} />
+                          <span>Message</span>
+                        </button>
+                      )}
 
-                    <span className="fk-profile-follow-stat__label">
-                      Followers
-                    </span>
-                  </button>
+                      {renderFriendButton()}
 
-                  <div className="fk-profile-follow-divider" />
+                      <div className="fk-profile-options" ref={optionsRef}>
+                        <button
+                          type="button"
+                          className="fk-profile-options__toggle"
+                          aria-label="More profile options"
+                          aria-haspopup="menu"
+                          aria-expanded={optionsOpen}
+                          onClick={() => setOptionsOpen((value) => !value)}
+                        >
+                          <MoreHorizontal size={20} />
+                        </button>
 
-                  <button
-                    type="button"
-                    className="fk-profile-follow-stat"
-                    onClick={
-                      openFollowing
-                    }
-                    disabled={
-                      !profileUserId
-                    }
-                  >
-                    <UserCheck
-                      size={18}
-                    />
+                        {optionsOpen && (
+                          <div className="fk-profile-options__menu" role="menu">
+                            <button
+                              type="button"
+                              role="menuitem"
+                              onClick={() => {
+                                setOptionsOpen(false);
+                                void copyProfileLink();
+                              }}
+                            >
+                              <Link2 size={17} />
+                              <span>{linkCopied ? "Link copied" : "Copy profile link"}</span>
+                            </button>
 
-                    <span className="fk-profile-follow-stat__number">
-                      {followDataLoading
-                        ? "—"
-                        : followingCount}
-                    </span>
+                            {friendStatus !== "blocked" && (
+                              <button
+                                type="button"
+                                role="menuitem"
+                                className="is-danger"
+                                disabled={blockLoading || friendLoading}
+                                onClick={() => {
+                                  setOptionsOpen(false);
+                                  void handleBlockUser();
+                                }}
+                              >
+                                <Ban size={17} />
+                                <span>Block user</span>
+                              </button>
+                            )}
 
-                    <span className="fk-profile-follow-stat__label">
-                      Following
-                    </span>
-                  </button>
-                </div>
+                            {profileUserId && (
+                              <button
+                                type="button"
+                                role="menuitem"
+                                onClick={() => {
+                                  setOptionsOpen(false);
+                                  setReportOpen(true);
+                                }}
+                              >
+                                <Flag size={17} />
+                                <span>Report account</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
 
-                {!canEdit && (
-                  <button
-                    type="button"
-                    className={
-                      isFollowing
-                        ? "fk-profile-follow-button fk-profile-follow-button--following"
-                        : "fk-profile-follow-button"
-                    }
-                    disabled={
-                      followLoading ||
-                      !profileUserId
-                    }
-                    onClick={() =>
-                      void handleFollowToggle()
-                    }
-                  >
-                    {followLoading ? (
-                      <>
-                        <Loader2
-                          size={18}
-                          className="fk-profile-follow-button__spinner"
-                        />
-
-                        <span>
-                          Updating...
-                        </span>
-                      </>
-                    ) : isFollowing ? (
-                      <>
-                        <UserCheck
-                          size={18}
-                        />
-
-                        <span>
-                          Following
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus
-                          size={18}
-                        />
-
-                        <span>
-                          Follow
-                        </span>
-                      </>
-                    )}
-                  </button>
-                )}
-
-                {followError && (
-                  <div
-                    className="fk-profile-follow-error"
-                    role="alert"
-                  >
-                    {followError}
-                  </div>
-                )}
-              </section>
-            )}
-
-            {/* PROFILE CARD */}
-
-            {!settingsOpen && (
-              <FockisProfileCard
-                profile={profile}
-                canEdit={canEdit}
-                onEditProfile={
-                  canEdit
-                    ? openSettings
-                    : undefined
+                        {profileUserId && (
+                          <ReportDialog
+                            open={reportOpen}
+                            targetType="account"
+                            targetId={profileUserId}
+                            targetName={profile?.user?.username ? `@${profile.user.username}` : undefined}
+                            onClose={() => setReportOpen(false)}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )
+                }
+                notices={
+                  (followError || friendError || blockError) && (
+                    <div className="fk-profile-hero__notices">
+                      {followError && (
+                        <div className="fk-profile-follow-error" role="alert">
+                          {followError}
+                        </div>
+                      )}
+                      {friendError && (
+                        <div className="fk-profile-friend-error" role="alert">
+                          {friendError}
+                        </div>
+                      )}
+                      {blockError && (
+                        <div className="fk-profile-friend-error" role="alert">
+                          {blockError}
+                        </div>
+                      )}
+                    </div>
+                  )
                 }
               />
             )}
-
-            {/* MESSAGE + FRIEND STATUS */}
-
-            {!settingsOpen &&
-              !canEdit && (
-                <>
-                  <section
-                    className="fk-profile-message-section"
-                    aria-label="Messaging"
-                  >
-                    <button
-                      type="button"
-                      className="fk-profile-message-button"
-                      disabled={
-                        !profileUserId ||
-                        friendStatus === "blocked"
-                      }
-                      onClick={
-                        handleMessageUser
-                      }
-                    >
-                      <MessageCircle
-                        size={18}
-                      />
-
-                      <span>
-                        Message
-                      </span>
-                    </button>
-                  </section>
-
-                  <section
-                    className="fk-profile-friend-section"
-                    aria-label="Friendship"
-                  >
-                    {renderFriendButton()}
-
-                    {friendError && (
-                      <div
-                        className="fk-profile-friend-error"
-                        role="alert"
-                      >
-                        {friendError}
-                      </div>
-                    )}
-
-                    {blockError && (
-                      <div
-                        className="fk-profile-friend-error"
-                        role="alert"
-                      >
-                        {blockError}
-                      </div>
-                    )}
-                  </section>
-                </>
-              )}
 
             {/* PROFILE TABS */}
 
             {!settingsOpen && (
               <FockisProfileTabs
-                activeTab={
-                  activeTab
-                }
-                onChange={(tab) => {
-                  if (tab === "friends") {
-                    navigate("/friends");
-                    return;
-                  }
-
-                  setActiveTab(tab);
+                activeTab={activeTab}
+                onChange={selectTab}
+                counts={{
+                  posts: ownerPosts.length,
+                  friends: profile.friends?.length || 0,
                 }}
+                idPrefix="fk-profile"
               />
             )}
 
             {/* TAB CONTENT */}
 
             {!settingsOpen && (
-              <section className="fk-profile-page__content">
-                {activeTab ===
-                  "posts" && (
-                  <div className="fk-profile-page__tab-content">
-                    <FockisProfilePosts
-                      posts={
-                        profile.posts ||
-                        []
-                      }
-                    />
-                  </div>
-                )}
-
-                {activeTab ===
-                  "about" && (
-                  <div className="fk-profile-page__tab-content">
-                    <FockisProfileAbout
-                      user={
-                        profile.user
-                      }
-                    />
-                  </div>
-                )}
-
-                {activeTab ===
-                  "friends" && (
-                  <div className="fk-profile-page__tab-content">
-                    <FockisProfileFriends
-                      friends={
-                        profile.friends ||
-                        []
-                      }
-                    />
-                  </div>
-                )}
-
-                {activeTab ===
-                  "photos" && (
-                  <div className="fk-profile-page__placeholder">
-                    <div className="fk-profile-page__placeholder-icon">
-                      📷
-                    </div>
-
+              <section
+                className="fk-profile-page__content"
+                id="fk-profile-panel"
+                role="tabpanel"
+                aria-labelledby={`fk-profile-tab-${activeTab}`}
+              >
+                {contentRestriction ? (
+                  <div className="fk-profile-page__restricted">
+                    <span className="fk-profile-page__restricted-icon" aria-hidden="true">
+                      {contentRestriction === "blocked" ? <ShieldBan size={26} /> : <EyeOff size={26} />}
+                    </span>
                     <h3>
-                      Photos
+                      {contentRestriction === "blocked"
+                        ? "You blocked this account"
+                        : "This account is private"}
                     </h3>
-
                     <p>
-                      Photos from this profile will
-                      appear here.
+                      {contentRestriction === "blocked"
+                        ? "Unblock them to see their posts and activity again."
+                        : "Posts and activity are only visible to their friends."}
                     </p>
                   </div>
+                ) : (
+                  <>
+                    {activeTab === "posts" && (
+                      <div className="fk-profile-page__tab-content fk-profile-page__posts-layout">
+                        <aside className="fk-profile-page__posts-aside" aria-label="Profile overview">
+                          <FockisProfileAbout user={profile.user} />
+
+                          {ownerPosts.some((post) => (post.images || []).length > 0) && (
+                            <div className="fk-profile-page__aside-card">
+                              <div className="fk-profile-page__aside-head">
+                                <h3>Photos</h3>
+                                <button type="button" onClick={() => selectTab("photos")}>
+                                  See all
+                                </button>
+                              </div>
+                              <FockisProfilePosts posts={ownerPosts} layout="photos" limit={6} />
+                            </div>
+                          )}
+                        </aside>
+
+                        <div className="fk-profile-page__posts-main">
+                          <FockisProfilePosts
+                            posts={ownerPosts}
+                            author={postAuthor}
+                            emptyTitle={canEdit ? "Share your first post" : "No posts yet"}
+                            emptyBody={
+                              canEdit
+                                ? "Your posts will appear here for people who visit your profile."
+                                : "When they post, it will show up here."
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {activeTab === "photos" && (
+                      <div className="fk-profile-page__tab-content">
+                        <FockisProfilePosts posts={ownerPosts} layout="photos" />
+                      </div>
+                    )}
+
+                    {activeTab === "videos" && (
+                      <div className="fk-profile-page__tab-content">
+                        <FockisProfilePosts posts={ownerPosts} layout="videos" />
+                      </div>
+                    )}
+
+                    {activeTab === "friends" && (
+                      <div className="fk-profile-page__tab-content">
+                        <FockisProfileFriends friends={profile.friends || []} />
+
+                        {canEdit && (
+                          <button
+                            type="button"
+                            className="fk-profile-page__manage-link"
+                            onClick={() => navigate("/friends")}
+                          >
+                            <Users size={16} />
+                            Manage friends and requests
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {activeTab === "marketplace" && (
+                      <div className="fk-profile-page__placeholder">
+                        <div className="fk-profile-page__placeholder-icon" aria-hidden="true">
+                          <WalletCards size={26} />
+                        </div>
+                        <h3>Marketplace</h3>
+                        <p>Marketplace items from this profile will appear here.</p>
+                      </div>
+                    )}
+                  </>
                 )}
 
-                {activeTab ===
-                  "marketplace" && (
-                  <div className="fk-profile-page__placeholder">
-                    <div className="fk-profile-page__placeholder-icon">
-                      🛍️
-                    </div>
-
-                    <h3>
-                      Marketplace
-                    </h3>
-
-                    <p>
-                      Marketplace items from this
-                      profile will appear here.
-                    </p>
+                {activeTab === "about" && (
+                  <div className="fk-profile-page__tab-content">
+                    <FockisProfileAbout user={profile.user} />
                   </div>
                 )}
               </section>
             )}
 
-            {/* PROFILE SETTINGS */}
+            {/* PROFILE SETTINGS (existing edit flow) */}
 
             {canEdit &&
               settingsOpen && (

@@ -12,6 +12,8 @@ import {
   useState,
 } from "react";
 
+import { Gift, Link2, Share2, Users } from "lucide-react";
+
 /* ============================================================================
 TYPES
 ============================================================================ */
@@ -364,34 +366,32 @@ export default function FockisPostActions({
 
       {hasStats && (
         <div className="fk-post-stats">
-
-          {/* REACTIONS */}
-
-          {likesCount > 0 && (
+          {likesCount > 0 ? (
             <button
               type="button"
               className="fk-post-stats__item"
               onClick={handleReact}
+              aria-label={`${likesCount} reactions. ${reacted ? "Remove your reaction" : "React"}`}
             >
-              <strong>
-                {formatCount(likesCount)}
-              </strong>{" "}
-              reactions
+              <span className="fk-post-stats__spark" aria-hidden="true">
+                <IconSparkFilled size={12} />
+              </span>
+              <strong>{formatCount(likesCount)}</strong>
             </button>
+          ) : (
+            <span className="fk-post-stats__item" aria-hidden="true" />
           )}
 
-          {/* COMMENTS */}
-
-          <button
-            type="button"
-            className="fk-post-stats__item"
-            onClick={handleComment}
-          >
-            {formatCount(commentsCount)}{" "}
-            comments
-          </button>
-
-          {/* REPOSTS */}
+          {commentsCount > 0 && (
+            <button
+              type="button"
+              className="fk-post-stats__item"
+              onClick={handleComment}
+            >
+              {formatCount(commentsCount)}{" "}
+              {commentsCount === 1 ? "comment" : "comments"}
+            </button>
+          )}
 
           {repostsCount > 0 && (
             <button
@@ -400,34 +400,23 @@ export default function FockisPostActions({
               onClick={handleRepost}
             >
               {formatCount(repostsCount)}{" "}
-              reposts
+              {repostsCount === 1 ? "repost" : "reposts"}
             </button>
           )}
 
-          {/* GIFTS — tapping this opens the "who sent this" list */}
-
+          {/* GIFTS — opens the "who sent this" list */}
           {giftsCount > 0 && (
             <button
               type="button"
               className="fk-post-stats__item fk-post-stats__item--gift"
               onClick={handleViewGiftSenders}
-              disabled={
-                actionLoading ===
-                "viewGiftSenders"
-              }
+              disabled={actionLoading === "viewGiftSenders"}
               title="See who sent gifts on this post"
             >
-              <span aria-hidden="true">
-                🎁
-              </span>{" "}
-              <strong>
-                {formatCount(giftsCount)}
-              </strong>{" "}
+              <strong>{formatCount(giftsCount)}</strong>{" "}
               {giftsCount === 1 ? "gift" : "gifts"}
             </button>
           )}
-
-          {/* SHARES */}
 
           {sharesCount > 0 && (
             <button
@@ -436,303 +425,159 @@ export default function FockisPostActions({
               onClick={handleShare}
             >
               {formatCount(sharesCount)}{" "}
-              shares
+              {sharesCount === 1 ? "share" : "shares"}
             </button>
           )}
-
         </div>
       )}
 
       {/* ====================================================================
-      ACTION DOCK
+      ACTION BAR
       ===================================================================== */}
 
-      <div className="fk-action-dock">
+      <div className="fk-action-dock" role="group" aria-label="Post actions">
 
         {/* LIKE */}
-
         <button
           type="button"
-          className={`fk-action-dock__btn fk-action-dock__btn--spark${
-            reacted ? " is-active" : ""
-          }`}
+          className={`fk-action-dock__btn fk-action-dock__btn--spark${reacted ? " is-active" : ""}`}
           onClick={handleReact}
-          disabled={
-            actionLoading === "react"
-          }
-          aria-label={
-            reacted
-              ? "Unlike post"
-              : "Like post"
-          }
+          disabled={actionLoading === "react"}
+          aria-label={reacted ? "Unlike post" : "Like post"}
           aria-pressed={reacted}
         >
-          {reacted ? (
-            <IconSparkFilled size={18} />
-          ) : (
-            <IconSpark size={18} />
-          )}
-
-          {likesCount > 0 && (
-            <span className="fk-action-dock__count">
-              {formatCount(likesCount)}
-            </span>
-          )}
+          {reacted ? <IconSparkFilled size={19} /> : <IconSpark size={19} />}
+          <span className="fk-action-dock__label">{reacted ? "Liked" : "Like"}</span>
         </button>
 
         {/* COMMENT */}
-
         <button
           type="button"
           className="fk-action-dock__btn"
           onClick={handleComment}
-          disabled={
-            actionLoading === "comment"
-          }
+          disabled={actionLoading === "comment"}
           aria-label="Comment on post"
         >
-          <IconComment size={18} />
-
-          <span className="fk-action-dock__count">
-            {formatCount(commentsCount)}
-          </span>
-        </button>
-
-        {/* REPOST */}
-
-        <button
-          type="button"
-          className={`fk-action-dock__btn fk-action-dock__btn--repost${
-            reposted ? " is-active" : ""
-          }`}
-          onClick={handleRepost}
-          disabled={
-            actionLoading === "repost"
-          }
-          aria-label={
-            reposted
-              ? "Undo repost"
-              : "Repost"
-          }
-          aria-pressed={reposted}
-        >
-          <IconRepost size={18} />
-
-          {repostsCount > 0 && (
-            <span className="fk-action-dock__count">
-              {formatCount(repostsCount)}
-            </span>
-          )}
+          <IconComment size={19} />
+          <span className="fk-action-dock__label">Comment</span>
         </button>
 
         {/* GIFT — send flow */}
-
         {onGift && (
           <button
             type="button"
-            className={`fk-action-dock__btn fk-action-dock__btn--gift${
-              giftsCount > 0
-                ? " has-gifts"
-                : ""
-            }`}
+            className={`fk-action-dock__btn fk-action-dock__btn--gift${giftsCount > 0 ? " has-gifts" : ""}`}
             onClick={handleGift}
-            disabled={
-              actionLoading === "gift"
-            }
-            aria-label={
-              giftsCount > 0
-                ? `Send gift. ${giftsCount} gifts sent`
-                : "Send gift"
-            }
-            title={
-              giftsCount > 0
-                ? `${formatCount(giftsCount)} ${
-                    giftsCount === 1
-                      ? "gift"
-                      : "gifts"
-                  } sent`
-                : "Send gift"
-            }
+            disabled={actionLoading === "gift"}
+            aria-label={giftsCount > 0 ? `Send gift. ${giftsCount} gifts sent` : "Send gift"}
           >
-            <span
-              aria-hidden="true"
-              style={{
-                fontSize: 18,
-                lineHeight: 1,
-              }}
-            >
-              🎁
-            </span>
-
-            {giftsCount > 0 && (
-              <span className="fk-action-dock__count fk-action-dock__count--gift">
-                {formatCount(giftsCount)}
-              </span>
-            )}
+            <Gift size={18} />
+            <span className="fk-action-dock__label">Send Gift</span>
           </button>
         )}
 
+        {/* REPOST */}
+        <button
+          type="button"
+          className={`fk-action-dock__btn fk-action-dock__btn--repost${reposted ? " is-active" : ""}`}
+          onClick={handleRepost}
+          disabled={actionLoading === "repost"}
+          aria-label={reposted ? "Undo repost" : "Repost"}
+          aria-pressed={reposted}
+        >
+          <IconRepost size={19} />
+          <span className="fk-action-dock__label">{reposted ? "Reposted" : "Repost"}</span>
+        </button>
+
         {/* SHARE */}
-
         <div className="fk-action-dock__share">
-
           <button
             type="button"
-            className={`fk-action-dock__btn${
-              shareOpen
-                ? " is-active"
-                : ""
-            }`}
+            className={`fk-action-dock__btn${shareOpen ? " is-active" : ""}`}
             onClick={handleShare}
-            disabled={
-              actionLoading === "share"
-            }
+            disabled={actionLoading === "share"}
             aria-label="Share post"
-            aria-expanded={shareOpen}
+            aria-expanded={onShare ? undefined : shareOpen}
+            aria-haspopup={onShare ? undefined : "menu"}
           >
-            <IconShare size={18} />
-
-            {sharesCount > 0 && (
-              <span className="fk-action-dock__count">
-                {formatCount(sharesCount)}
-              </span>
-            )}
+            <IconShare size={19} />
+            <span className="fk-action-dock__label">Share</span>
           </button>
 
           {shareOpen && (
-            <div
-              className="fk-share-menu"
-              role="menu"
-            >
+            <div className="fk-share-menu" role="menu">
               <button
                 type="button"
                 className="fk-share-menu__item"
                 onClick={handleShareToFockis}
-                disabled={
-                  actionLoading ===
-                  "shareToFockis"
-                }
+                disabled={actionLoading === "shareToFockis"}
                 role="menuitem"
               >
-                <span className="fk-share-menu__icon">
-                  👥
-                </span>
-
-                <span>
-                  Share to Fockis
-                </span>
+                <span className="fk-share-menu__icon"><Users size={15} /></span>
+                <span>Share to Fockis</span>
               </button>
 
               <button
                 type="button"
                 className="fk-share-menu__item"
                 onClick={handleCopyLink}
-                disabled={
-                  actionLoading ===
-                  "copyLink"
-                }
+                disabled={actionLoading === "copyLink"}
                 role="menuitem"
               >
-                <span className="fk-share-menu__icon">
-                  🔗
-                </span>
-
-                <span>
-                  Copy link
-                </span>
+                <span className="fk-share-menu__icon"><Link2 size={15} /></span>
+                <span>Copy link</span>
               </button>
 
               <button
                 type="button"
                 className="fk-share-menu__item"
                 onClick={handleShareFacebook}
-                disabled={
-                  actionLoading ===
-                  "facebook"
-                }
+                disabled={actionLoading === "facebook"}
                 role="menuitem"
               >
-                <span className="fk-share-menu__icon">
-                  f
-                </span>
-
-                <span>
-                  Facebook
-                </span>
+                <span className="fk-share-menu__icon"><Share2 size={15} /></span>
+                <span>Facebook</span>
               </button>
 
               <button
                 type="button"
                 className="fk-share-menu__item"
                 onClick={handleShareWhatsApp}
-                disabled={
-                  actionLoading ===
-                  "whatsapp"
-                }
+                disabled={actionLoading === "whatsapp"}
                 role="menuitem"
               >
-                <span className="fk-share-menu__icon">
-                  W
-                </span>
-
-                <span>
-                  WhatsApp
-                </span>
+                <span className="fk-share-menu__icon"><Share2 size={15} /></span>
+                <span>WhatsApp</span>
               </button>
 
               <button
                 type="button"
                 className="fk-share-menu__item"
                 onClick={handleShareX}
-                disabled={
-                  actionLoading === "x"
-                }
+                disabled={actionLoading === "x"}
                 role="menuitem"
               >
-                <span className="fk-share-menu__icon">
-                  𝕏
-                </span>
-
-                <span>
-                  X
-                </span>
+                <span className="fk-share-menu__icon"><Share2 size={15} /></span>
+                <span>X</span>
               </button>
             </div>
           )}
         </div>
 
-        {/* SPACER */}
-
-        <span
-          className="fk-action-dock__spacer"
-          aria-hidden="true"
-        />
+        <span className="fk-action-dock__spacer" aria-hidden="true" />
 
         {/* SAVE */}
-
         <button
           type="button"
-          className={`fk-action-dock__btn fk-action-dock__btn--save${
-            saved ? " is-active" : ""
-          }`}
+          className={`fk-action-dock__btn fk-action-dock__btn--save${saved ? " is-active" : ""}`}
           onClick={handleSave}
-          disabled={
-            actionLoading === "save"
-          }
-          aria-label={
-            saved
-              ? "Unsave post"
-              : "Save post"
-          }
+          disabled={actionLoading === "save"}
+          aria-label={saved ? "Unsave post" : "Save post"}
           aria-pressed={saved}
         >
-          {saved ? (
-            <IconSaveFilled size={18} />
-          ) : (
-            <IconSave size={18} />
-          )}
+          {saved ? <IconSaveFilled size={19} /> : <IconSave size={19} />}
+          <span className="fk-action-dock__label">{saved ? "Saved" : "Save"}</span>
         </button>
-
       </div>
     </div>
   );

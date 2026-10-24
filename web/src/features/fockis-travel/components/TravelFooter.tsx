@@ -1,150 +1,111 @@
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
+
+import { TravelLogo } from "./TravelHeader";
 import "../styles/TravelFooter.scss";
 
-/** Shared site footer for every Fockis Travel page. */
+/**
+ * Shared site footer for every Fockis Travel page.
+ * Every link points at an existing Travel route.
+ */
+
+const COLUMNS: Array<{ title: string; links: Array<{ to: string; label: string }> }> = [
+  {
+    title: "Explore",
+    links: [
+      { to: "/travel/stays", label: "Stays" },
+      { to: "/travel/explore?type=rental", label: "Vacation Rentals" },
+      { to: "/travel/restaurants", label: "Restaurants" },
+      { to: "/travel/cars", label: "Cars" },
+      { to: "/travel/experiences", label: "Experiences" },
+      { to: "/travel/explore?type=event", label: "Events" },
+    ],
+  },
+  {
+    title: "Travel services",
+    links: [
+      { to: "/travel/meetings", label: "Meetings" },
+      { to: "/travel/transfers", label: "Transfers" },
+      { to: "/travel/destinations", label: "Destinations" },
+      { to: "/travel/trip-planner", label: "Trip Planner" },
+      { to: "/travel/price-alerts", label: "Price Alerts" },
+    ],
+  },
+  {
+    title: "Your trips",
+    links: [
+      { to: "/travel/my-trips", label: "My Trips" },
+      { to: "/travel/wishlist", label: "Favorites" },
+      { to: "/travel/explore", label: "Search" },
+      { to: "/travel/sign-in", label: "Sign in" },
+    ],
+  },
+  {
+    title: "Business",
+    links: [
+      { to: "/travel/partner", label: "Become a partner" },
+      { to: "/travel/partner/dashboard", label: "Partner dashboard" },
+      { to: "/travel/business", label: "Business travel" },
+    ],
+  },
+];
+
 export default function TravelFooter() {
   return (
     <footer className="travel-footer">
-      <div className="wrap">
+      <div className="travel-footer__inner">
         <div className="travel-footer__grid">
-          {/* Brand */}
           <div className="travel-footer__brand">
-            <div className="logo">
-              <span className="logo-mark" aria-hidden="true" />
-              Fockis{' '}
-              <small style={{ color: 'rgba(250,246,238,0.5)' }}>
-                TRAVEL
-              </small>
-            </div>
+            <Link to="/travel" aria-label="Fockis Travel home" className="travel-footer__logo">
+              <TravelLogo />
+            </Link>
 
             <p>Travel anywhere. Book everything.</p>
 
-            {/* Social Links */}
             <div className="travel-footer__social">
               <a
                 href="https://www.facebook.com/"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Fockis Travel on Facebook"
-                title="Facebook"
               >
                 <span aria-hidden="true">f</span>
               </a>
-
               <a
                 href="https://www.instagram.com/"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Fockis Travel on Instagram"
-                title="Instagram"
               >
                 <span aria-hidden="true">◎</span>
               </a>
-
               <a
                 href="https://x.com/"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Fockis Travel on X"
-                title="X"
               >
                 <span aria-hidden="true">𝕏</span>
               </a>
             </div>
           </div>
 
-          {/* Explore */}
-          <div>
-            <h5>Explore</h5>
-
-            <Link to="/travel/stays">
-              Stays
-            </Link>
-
-            <Link to="/travel/cars">
-              Cars
-            </Link>
-
-            <Link to="/travel/restaurants">
-              Restaurants
-            </Link>
-
-            <Link to="/travel/meetings">
-              Meetings
-            </Link>
-
-            <Link to="/travel/experiences">
-              Experiences
-            </Link>
-          </div>
-
-          {/* Travel Services */}
-          <div>
-            <h5>Travel Services</h5>
-
-            <Link to="/travel/transfers">
-              Transfers
-            </Link>
-
-            <Link to="/travel/destinations">
-              Destinations
-            </Link>
-
-            <Link to="/travel/trip-planner">
-              Trip Planner
-            </Link>
-
-            <Link to="/travel/price-alerts">
-              Price Alerts
-            </Link>
-          </div>
-
-          {/* Business */}
-          <div>
-            <h5>Business</h5>
-
-            <Link to="/travel/partner">
-              Become a partner
-            </Link>
-
-            <Link to="/travel/business">
-              Business travel
-            </Link>
-          </div>
-
-          {/* Support */}
-          <div>
-            <h5>Support</h5>
-
-            <Link to="/travel/help">
-              Help center
-            </Link>
-
-            <Link to="/travel/cancellations">
-              Cancellations
-            </Link>
-
-            <Link to="/travel/contact">
-              Contact us
-            </Link>
-
-            <Link to="/travel/legal">
-              Legal
-            </Link>
-          </div>
+          {COLUMNS.map((column) => (
+            <nav key={column.title} aria-label={column.title}>
+              <h5>{column.title}</h5>
+              {column.links.map((link) => (
+                <Link key={link.to} to={link.to}>
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          ))}
         </div>
 
-        {/* Footer Bottom */}
         <div className="travel-footer__bottom">
           <span>
-            © {new Date().getFullYear()} Fockis Travel. Demo mockup — not a
-            live product.
+            © {new Date().getFullYear()} Fockis Travel. Demo mockup — not a live product.
           </span>
-
-          <span>
-            Global marketplace for stays, meetings, dining, cars &amp;
-            experiences.
-          </span>
+          <span>Global marketplace for stays, meetings, dining, cars &amp; experiences.</span>
         </div>
       </div>
     </footer>

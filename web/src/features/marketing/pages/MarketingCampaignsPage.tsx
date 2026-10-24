@@ -302,7 +302,7 @@ export default function MarketingCampaignsPage() {
         >
 
           <Link
-            to="/marketing"
+            to="/ads"
             className="fk-marketing-secondary-button"
           >
 
@@ -312,7 +312,7 @@ export default function MarketingCampaignsPage() {
 
 
           <Link
-            to="/marketing/campaigns/create"
+            to="/ads/campaigns/create"
             className="fk-marketing-primary-button"
           >
 
@@ -356,7 +356,7 @@ export default function MarketingCampaignsPage() {
 
 
           <Link
-            to="/marketing/campaigns/create"
+            to="/ads/campaigns/create"
             className="fk-marketing-link"
           >
 
@@ -469,7 +469,7 @@ export default function MarketingCampaignsPage() {
 
 
             <Link
-              to="/marketing/campaigns/create"
+              to="/ads/campaigns/create"
               className="fk-marketing-primary-button"
             >
 
