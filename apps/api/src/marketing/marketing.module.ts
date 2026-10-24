@@ -82,6 +82,10 @@ import {
   MarketingController,
 } from "./controllers/marketing.controller";
 
+import {
+  VideoAdsController,
+} from "./controllers/video-ads.controller";
+
 /* ============================================================
    SERVICES
 ============================================================ */
@@ -124,50 +128,30 @@ import {
 
 @Module({
   imports: [
-    /*
-     * Business data used by MarketingController:
-     *
-     * GET /marketing/businesses
-     * GET /marketing/businesses/:id
-     */
     BusinessesModule,
-
-    /*
-     * User/viewer data used by MarketingController:
-     *
-     * GET /marketing/me
-     */
     UsersModule,
 
-    /*
-     * Marketing / advertising schemas
-     */
     MongooseModule.forFeature([
       {
         name: Campaign.name,
         schema: CampaignSchema,
       },
-
       {
         name: Advertisement.name,
         schema: AdvertisementSchema,
       },
-
       {
         name: AdTargeting.name,
         schema: AdTargetingSchema,
       },
-
       {
         name: AdBudget.name,
         schema: AdBudgetSchema,
       },
-
       {
         name: AdEvent.name,
         schema: AdEventSchema,
       },
-
       {
         name: AdConversion.name,
         schema: AdConversionSchema,
@@ -177,57 +161,36 @@ import {
 
   controllers: [
     CampaignsController,
-
     MarketingAdminController,
-
     AdsController,
-
     AnalyticsController,
-
     TargetingController,
-
     BillingController,
-
     DeliveryController,
-
     ConversionController,
-
     MarketingController,
+    VideoAdsController,
   ],
 
   providers: [
     CampaignsService,
-
     AdvertisementService,
-
     AnalyticsService,
-
     TargetingService,
-
     BudgetService,
-
     ConversionService,
-
     AdDeliveryService,
-
     MarketingService,
   ],
 
   exports: [
     CampaignsService,
-
     AdvertisementService,
-
     AnalyticsService,
-
     TargetingService,
-
     BudgetService,
-
     ConversionService,
-
     AdDeliveryService,
-
     MarketingService,
   ],
 })

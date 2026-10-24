@@ -25,7 +25,7 @@ function getUserId(req: any): string {
   );
 }
 
-@Controller("marketplace/products")
+@Controller("fockis-shop/products")
 export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,

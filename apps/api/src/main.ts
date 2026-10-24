@@ -26,7 +26,10 @@ async function bootstrap() {
 
   const app =
 
-    await NestFactory.create<NestExpressApplication>(AppModule);
+    await NestFactory.create<NestExpressApplication>(
+      AppModule,
+      { rawBody: true },
+    );
 
 
 
@@ -1146,6 +1149,7 @@ bootstrap().catch((error) => {
   process.exit(1);
 
 });
+
 
 
 

@@ -49,7 +49,7 @@ type AnalyticsMetric = {
 @Injectable()
 export class AnalyticsService {
   constructor(
-    @InjectModel(Campaign.name)
+    @InjectModel('FockisMailCampaign')
     private readonly campaigns: Model<CampaignDocument>,
 
     @InjectModel(Contact.name)

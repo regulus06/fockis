@@ -532,6 +532,76 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
       "Perform moderation actions.",
     module: "moderation",
   },
+  {
+    key: "moderation.review",
+    label: "Review Reports",
+    description:
+      "Open cases, change review status, add internal notes and mark reports invalid.",
+    module: "moderation",
+  },
+  {
+    key: "moderation.assign",
+    label: "Assign Cases",
+    description:
+      "Assign moderation cases to moderators.",
+    module: "moderation",
+  },
+  {
+    key: "moderation.resolve",
+    label: "Resolve Cases",
+    description:
+      "Dismiss reports or confirm a violation.",
+    module: "moderation",
+  },
+  {
+    key: "moderation.content.remove",
+    label: "Remove Reported Content",
+    description:
+      "Remove posts after a confirmed violation.",
+    module: "moderation",
+  },
+  {
+    key: "moderation.warn",
+    label: "Warn Users",
+    description:
+      "Send a moderation warning after a confirmed violation.",
+    module: "moderation",
+  },
+  {
+    key: "moderation.restrict",
+    label: "Restrict Posting",
+    description:
+      "Temporarily restrict an account from posting.",
+    module: "moderation",
+  },
+  {
+    key: "moderation.suspend",
+    label: "Suspend Accounts",
+    description:
+      "Temporarily or permanently suspend accounts after a confirmed violation.",
+    module: "moderation",
+  },
+  {
+    key: "moderation.restore",
+    label: "Restore Content and Accounts",
+    description:
+      "Reverse moderation decisions and lift restrictions.",
+    module: "moderation",
+  },
+  {
+    key: "moderation.appeals",
+    label: "Review Appeals",
+    description:
+      "Review and decide user appeals.",
+    module: "moderation",
+  },
+  {
+    key: "moderation.settings",
+    label: "Moderation Settings",
+    description:
+      "Change report thresholds and alert settings.",
+    module: "moderation",
+  },
 
   // ============================================================
   // SECURITY
@@ -594,4 +664,4 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
       "Manage platform settings.",
     module: "system",
   },
-];
+];

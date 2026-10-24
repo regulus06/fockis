@@ -107,6 +107,7 @@ export class PostsService {
       return this.model
         .find({
           user: userId,
+          moderationStatus: { $ne: 'removed' },
         })
         .sort({
           createdAt: -1,
@@ -123,6 +124,7 @@ export class PostsService {
     const posts = await this.model
       .find({
         audience: 'public',
+        moderationStatus: { $ne: 'removed' },
       })
       .sort({
         createdAt: -1,
@@ -172,7 +174,7 @@ export class PostsService {
     const post =
       await this.model.findById(id).exec();
 
-    if (!post) {
+    if (!post || (post as any).moderationStatus === 'removed') {
       return null;
     }
 
@@ -955,4 +957,4 @@ export class PostsService {
       id,
     );
   }
-}
+}

@@ -1,12 +1,18 @@
 import {
+  ArrayMaxSize,
+  IsArray,
+  IsBoolean,
   IsEmail,
   IsEnum,
+  IsInt,
   IsLatitude,
   IsLongitude,
+  IsMongoId,
   IsOptional,
   IsString,
-  IsUrl,
+  Max,
   MaxLength,
+  Min,
   ValidateNested,
 } from "class-validator";
 
@@ -18,6 +24,16 @@ import {
   BusinessCategory,
 } from "../enums/business-category.enum";
 
+import {
+  BusinessPrimaryAction,
+  BusinessSize,
+} from "../schemas/business.schema";
+
+import {
+  BusinessHoursEntryDto,
+  IsOptionalHttpUrl,
+} from "./business-fields.dto";
+
 
 /* ============================================================================
    SOCIAL LINKS
@@ -25,42 +41,27 @@ import {
 
 export class BusinessSocialLinksDto {
 
-  @IsOptional()
-  @IsUrl({
-    require_protocol: true,
-  })
+  @IsOptionalHttpUrl()
   @MaxLength(500)
   facebook?: string;
 
 
-  @IsOptional()
-  @IsUrl({
-    require_protocol: true,
-  })
+  @IsOptionalHttpUrl()
   @MaxLength(500)
   instagram?: string;
 
 
-  @IsOptional()
-  @IsUrl({
-    require_protocol: true,
-  })
+  @IsOptionalHttpUrl()
   @MaxLength(500)
   tiktok?: string;
 
 
-  @IsOptional()
-  @IsUrl({
-    require_protocol: true,
-  })
+  @IsOptionalHttpUrl()
   @MaxLength(500)
   youtube?: string;
 
 
-  @IsOptional()
-  @IsUrl({
-    require_protocol: true,
-  })
+  @IsOptionalHttpUrl()
   @MaxLength(500)
   linkedin?: string;
 }
@@ -88,25 +89,45 @@ export class CreateBusinessDto {
 
 
   @IsOptional()
-  @IsUrl({
-    require_protocol: true,
-  })
+  @IsString()
+  @MaxLength(160)
+  tagline?: string;
+
+
+  @IsOptional()
+  @IsInt()
+  @Min(1800)
+  @Max(2100)
+  foundedYear?: number;
+
+
+  @IsOptional()
+  @IsEnum(BusinessSize)
+  businessSize?: BusinessSize;
+
+
+  /* ==========================================================================
+     IMAGES
+
+     Uploaded images are attached after creation through
+     POST /businesses/:id/logo and POST /businesses/:id/cover-image.
+  ========================================================================== */
+
+  @IsOptionalHttpUrl()
   @MaxLength(2000)
   logoUrl?: string;
 
 
-  @IsOptional()
-  @IsUrl({
-    require_protocol: true,
-  })
+  @IsOptionalHttpUrl()
   @MaxLength(2000)
   coverImageUrl?: string;
 
 
-  @IsOptional()
-  @IsUrl({
-    require_protocol: true,
-  })
+  /* ==========================================================================
+     CONTACT
+  ========================================================================== */
+
+  @IsOptionalHttpUrl()
   @MaxLength(2000)
   websiteUrl?: string;
 
@@ -122,6 +143,24 @@ export class CreateBusinessDto {
   @MaxLength(254)
   email?: string;
 
+
+  /* ==========================================================================
+     FOCKIS SHOP / BUSINESS CARD LINKS
+  ========================================================================== */
+
+  @IsOptional()
+  @IsMongoId()
+  storeId?: string | null;
+
+
+  @IsOptional()
+  @IsEnum(BusinessPrimaryAction)
+  primaryAction?: BusinessPrimaryAction | null;
+
+
+  /* ==========================================================================
+     ADDRESS
+  ========================================================================== */
 
   @IsOptional()
   @IsString()
@@ -162,6 +201,35 @@ export class CreateBusinessDto {
   @IsLongitude()
   longitude?: number;
 
+
+  /* ==========================================================================
+     OPENING HOURS
+  ========================================================================== */
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(7)
+  @ValidateNested({
+    each: true,
+  })
+  @Type(() => BusinessHoursEntryDto)
+  hours?: BusinessHoursEntryDto[];
+
+
+  @IsOptional()
+  @IsBoolean()
+  byAppointmentOnly?: boolean;
+
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  timeZone?: string;
+
+
+  /* ==========================================================================
+     SOCIAL
+  ========================================================================== */
 
   @IsOptional()
   @ValidateNested()

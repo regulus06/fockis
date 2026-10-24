@@ -27,6 +27,17 @@ export const RolePermissions: Record<Role, Permission[]> = {
   [Role.MODERATOR]: [
     Permission.VIEW_AUDIT,
     Permission.POST_MODERATE,
+
+    // Reports & moderation (account suspension and settings stay with admins)
+    Permission.MODERATION_VIEW,
+    Permission.MODERATION_REVIEW,
+    Permission.MODERATION_ASSIGN,
+    Permission.MODERATION_RESOLVE,
+    Permission.MODERATION_CONTENT_REMOVE,
+    Permission.MODERATION_WARN,
+    Permission.MODERATION_RESTRICT,
+    Permission.MODERATION_RESTORE,
+    Permission.MODERATION_APPEALS,
   ],
 
   // ========================================================================
@@ -107,6 +118,23 @@ export const RolePermissions: Record<Role, Permission[]> = {
     // ----------------------------------------------------------------------
 
     Permission.MARKETING_AUDIT_VIEW,
+
+    // ----------------------------------------------------------------------
+    // Reports & moderation
+    // ----------------------------------------------------------------------
+
+    Permission.MODERATION_VIEW,
+    Permission.MODERATION_MANAGE,
+    Permission.MODERATION_REVIEW,
+    Permission.MODERATION_ASSIGN,
+    Permission.MODERATION_RESOLVE,
+    Permission.MODERATION_CONTENT_REMOVE,
+    Permission.MODERATION_WARN,
+    Permission.MODERATION_RESTRICT,
+    Permission.MODERATION_SUSPEND,
+    Permission.MODERATION_RESTORE,
+    Permission.MODERATION_APPEALS,
+    Permission.MODERATION_SETTINGS,
   ],
 
   // ========================================================================
@@ -114,4 +142,4 @@ export const RolePermissions: Record<Role, Permission[]> = {
   // ========================================================================
 
   [Role.SUPER_ADMIN]: Object.values(Permission),
-};
+};

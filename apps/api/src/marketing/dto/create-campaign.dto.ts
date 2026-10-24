@@ -21,158 +21,108 @@ import {
   CampaignPlacement,
 } from "../schemas/campaign.schema";
 
-
-/* ============================================================
-   CREATE CAMPAIGN DTO
-============================================================ */
+/**
+ * Allow HTTP and HTTPS URLs, including localhost URLs during development.
+ *
+ * Examples:
+ *   http://localhost:3000/uploads/ads/example.jpg
+ *   https://fockis.com/uploads/ads/example.jpg
+ *
+ * Only HTTP and HTTPS protocols are allowed.
+ */
+const HTTP_URL_OPTIONS = {
+  protocols: ["http", "https"],
+  require_protocol: true,
+  require_tld: false,
+};
 
 export class CreateCampaignDto {
-
+  // Campaign information
   @IsString()
   @MaxLength(150)
   name!: string;
 
-
   @IsEnum(CampaignObjective)
   objective!: CampaignObjective;
-
 
   @IsEnum(CampaignAdFormat)
   adFormat!: CampaignAdFormat;
 
-
-  /* ============================================================
-     PLACEMENTS
-  ============================================================ */
-
+  // Placements
   @IsArray()
-  @IsEnum(CampaignPlacement, {
-    each: true,
-  })
+  @IsEnum(CampaignPlacement, { each: true })
   placements!: CampaignPlacement[];
 
-
-  /* ============================================================
-     AD CONTENT
-  ============================================================ */
-
+  // Ad content
   @IsString()
   @MaxLength(100)
   headline!: string;
-
 
   @IsOptional()
   @IsString()
   @MaxLength(500)
   description?: string;
 
-
-  /* ============================================================
-     MEDIA
-  ============================================================ */
-
+  // Media URLs: uploaded media or externally hosted media
   @IsOptional()
-  @IsUrl({
-    protocols: ["http", "https"],
-    require_protocol: true,
-  })
+  @IsUrl(HTTP_URL_OPTIONS)
   mediaUrl?: string;
 
-
   @IsOptional()
-  @IsUrl({
-    protocols: ["http", "https"],
-    require_protocol: true,
-  })
+  @IsUrl(HTTP_URL_OPTIONS)
   thumbnailUrl?: string;
 
-
   @IsOptional()
-  @IsUrl({
-    protocols: ["http", "https"],
-    require_protocol: true,
-  })
+  @IsUrl(HTTP_URL_OPTIONS)
   appIconUrl?: string;
 
-
-  /* ============================================================
-     APP INSTALL
-  ============================================================ */
-
+  // App-install campaign fields
   @ValidateIf(
-    (dto) =>
-      dto.objective ===
-      CampaignObjective.APP_INSTALL,
+    (dto: CreateCampaignDto) =>
+      dto.objective === CampaignObjective.APP_INSTALL,
   )
   @IsString()
   @MaxLength(150)
   appName?: string;
 
-
   @ValidateIf(
-    (dto) =>
-      dto.objective ===
-      CampaignObjective.APP_INSTALL,
+    (dto: CreateCampaignDto) =>
+      dto.objective === CampaignObjective.APP_INSTALL,
   )
-  @IsUrl({
-    protocols: ["http", "https"],
-    require_protocol: true,
-  })
+  @IsUrl(HTTP_URL_OPTIONS)
   appStoreUrl?: string;
 
-
   @ValidateIf(
-    (dto) =>
-      dto.objective ===
-      CampaignObjective.APP_INSTALL,
+    (dto: CreateCampaignDto) =>
+      dto.objective === CampaignObjective.APP_INSTALL,
   )
-  @IsUrl({
-    protocols: ["http", "https"],
-    require_protocol: true,
-  })
+  @IsUrl(HTTP_URL_OPTIONS)
   googlePlayUrl?: string;
-
 
   @IsOptional()
   @IsEnum(CampaignCTA)
   callToAction?: CampaignCTA;
 
-
-  /* ============================================================
-     TARGETING
-  ============================================================ */
-
+  // Audience targeting
   @IsOptional()
   @IsArray()
-  @IsString({
-    each: true,
-  })
+  @IsString({ each: true })
   locations?: string[];
 
-
   @IsOptional()
   @IsArray()
-  @IsString({
-    each: true,
-  })
+  @IsString({ each: true })
   interests?: string[];
 
-
   @IsOptional()
   @IsArray()
-  @IsString({
-    each: true,
-  })
+  @IsString({ each: true })
   categories?: string[];
 
-
   @IsOptional()
   @IsArray()
-  @IsString({
-    each: true,
-  })
+  @IsString({ each: true })
   keywords?: string[];
-
 
   @IsOptional()
   @IsInt()
@@ -180,55 +130,30 @@ export class CreateCampaignDto {
   @Max(100)
   minimumAge?: number;
 
-
   @IsOptional()
   @IsInt()
   @Min(13)
   @Max(100)
   maximumAge?: number;
 
-
-  /* ============================================================
-     BUDGET
-  ============================================================ */
-
+  // Budget
   @IsNumber()
   @Min(0.01)
   dailyBudget!: number;
-
 
   @IsNumber()
   @Min(0.01)
   totalBudget!: number;
 
-
-  /* ============================================================
-     SCHEDULE
-
-     Example:
-
-     startDate:
-       2026-08-16T00:00:00.000Z
-
-     endDate:
-       2026-08-20T23:59:59.999Z
-
-     After endDate, delivery automatically stops.
-  ============================================================ */
-
+  // Schedule
   @IsDateString()
   startDate!: string;
-
 
   @IsOptional()
   @IsDateString()
   endDate?: string;
 
-
-  /* ============================================================
-     SELLER STORE
-  ============================================================ */
-
+  // Optional seller store
   @IsOptional()
   @IsMongoId()
   storeId?: string;

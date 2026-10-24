@@ -1,30 +1,19 @@
-import {
-  IsEnum,
-} from "class-validator";
+
+import { IsEnum, IsIn } from "class-validator";
 
 import {
   BillingInterval,
   SubscriptionPlan,
 } from "../schemas/subscription.schema";
 
-/* ============================================================
-   CREATE CHECKOUT DTO
-
-   FOCKIS ACCOUNT LEVELS
-
-   BASIC   = FREE
-   BRONZE  = PAID
-   SILVER  = PAID
-   GOLDEN  = PAID
-   DIAMOND = PAID
-
-   BASIC does not require Stripe checkout.
-   Only paid plans can be purchased through checkout.
-============================================================ */
-
+/**
+ * Fockis subscription checkout DTO.
+ *
+ * BASIC is free and must not use Stripe checkout.
+ * Only paid plans are allowed.
+ */
 export class CreateCheckoutDto {
-
-  @IsEnum([
+  @IsIn([
     SubscriptionPlan.BRONZE,
     SubscriptionPlan.SILVER,
     SubscriptionPlan.GOLDEN,

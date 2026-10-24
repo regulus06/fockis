@@ -38,6 +38,8 @@ import { PostsService } from './posts.service';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
+import { AccountRestrictionsService } from '../reports/services/account-restrictions.service';
+
 @Controller('posts')
 
 export class PostsController {
@@ -49,6 +51,8 @@ export class PostsController {
   constructor(
 
     private readonly postsService: PostsService,
+
+    private readonly accountRestrictions: AccountRestrictionsService,
 
   ) {
 
@@ -220,6 +224,8 @@ export class PostsController {
 
     @Body() body: any,
 
+    @Req() req?: any,
+
   ) {
 
     if (!body.user) {
@@ -230,6 +236,19 @@ export class PostsController {
 
       );
 
+    }
+
+    // Moderation: accounts with an active posting restriction or
+    // suspension can't create posts (checked for the signed-in user and
+    // the submitted author).
+    const authenticatedUserId = String(
+      req?.user?.id ?? req?.user?._id ?? req?.user?.userId ?? req?.user?.sub ?? '',
+    );
+
+    await this.accountRestrictions.assertCanPost(authenticatedUserId);
+
+    if (String(body.user) !== authenticatedUserId) {
+      await this.accountRestrictions.assertCanPost(String(body.user));
     }
 
     let media =

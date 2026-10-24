@@ -1,27 +1,35 @@
-import { Module } from "@nestjs/common";
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 
-import { FeedController } from "./feed.controller";
-import { FeedService } from "./feed.service";
+import { FeedController } from './feed.controller';
+import { FeedService } from './feed.service';
 
-import { PostsModule } from "../posts/posts.module";
-import { StoriesModule } from "../stories/stories.module";
-import { WavesModule } from "../waves/waves.module";
+import { Post, PostSchema } from '../posts/post.schema';
+import { StoriesModule } from '../stories/stories.module';
+import { FriendsModule } from '../friends/friends.module';
+import { EventsModule } from '../events/events.module';
 
+/**
+ * Fockis Feed Module
+ *
+ * Registers the Post model locally for FeedService, exposes the feed
+ * controller, and imports the modules that provide story retrieval,
+ * block/visibility checks and event recommendations.
+ */
 @Module({
   imports: [
-    PostsModule,
+    MongooseModule.forFeature([
+      {
+        name: Post.name,
+        schema: PostSchema,
+      },
+    ]),
     StoriesModule,
-
-    // Required for the unified feed
-    WavesModule,
+    FriendsModule,
+    EventsModule,
   ],
-
-  controllers: [
-    FeedController,
-  ],
-
-  providers: [
-    FeedService,
-  ],
+  controllers: [FeedController],
+  providers: [FeedService],
+  exports: [FeedService],
 })
 export class FeedModule {}

@@ -49,6 +49,14 @@ import {
   CampaignStatus,
 } from "../schemas/campaign.schema";
 
+import {
+  Advertisement,
+  AdvertisementDocument,
+  AdvertisementPlacement,
+  AdvertisementStatus,
+  AdvertisementType,
+} from "../schemas/advertisement.schema";
+
 /* ============================================================================
    RESPONSE TYPES
 ============================================================================ */
@@ -184,6 +192,9 @@ export class MarketingService {
   constructor(
     @InjectModel(Campaign.name)
     private readonly campaignModel: Model<CampaignDocument>,
+
+    @InjectModel(Advertisement.name)
+    private readonly advertisementModel: Model<AdvertisementDocument>,
   ) {}
 
   /* ==========================================================================
@@ -615,188 +626,111 @@ export class MarketingService {
   async getNextVideoAd(
     params: NextVideoAdParams,
   ) {
-    const now =
-      new Date();
+    const now = new Date();
 
-    const query: Record<
-      string,
-      unknown
-    > = {
-      status:
-        CampaignStatus.ACTIVE,
-
-      isActive: true,
-
-      startDate: {
-        $lte: now,
-      },
-
-      $or: [
-        {
-          endDate: {
-            $exists: false,
+    /*
+     * Ads live in marketing_advertisements, not in the campaigns
+     * collection. Only active video ads assigned to the video-end
+     * placement are eligible for this endpoint.
+     */
+    const ads = await this.advertisementModel
+      .find({
+        type: AdvertisementType.VIDEO,
+        status: AdvertisementStatus.ACTIVE,
+        isActive: true,
+        placements: AdvertisementPlacement.FEED_VIDEO_END,
+        $and: [
+          {
+            $or: [
+              { startDate: null },
+              { startDate: { $exists: false } },
+              { startDate: { $lte: now } },
+            ],
           },
-        },
-
-        {
-          endDate: null,
-        },
-
-        {
-          endDate: {
-            $gt: now,
+          {
+            $or: [
+              { endDate: null },
+              { endDate: { $exists: false } },
+              { endDate: { $gt: now } },
+            ],
           },
-        },
-      ],
-    };
+        ],
+      })
+      .sort({ deliveryScore: -1, createdAt: -1 })
+      .limit(20)
+      .lean()
+      .exec();
 
-    if (params.videoId) {
-      query.$or = [
-        {
-          videoId:
-            params.videoId,
-        },
-
-        {
-          "creative.videoId":
-            params.videoId,
-        },
-
-        {
-          "ad.videoId":
-            params.videoId,
-        },
-
-        {
-          endDate: {
-            $exists: false,
-          },
-        },
-      ];
-    }
-
-    const campaigns =
-      await this.campaignModel
-        .find(query)
-        .sort({
-          createdAt: -1,
-        })
-        .limit(20)
+    for (const ad of ads) {
+      const campaign = await this.campaignModel
+        .findById(ad.campaignId)
+        .select(
+          "_id name objective status isActive startDate endDate spent totalBudget",
+        )
         .lean()
         .exec();
 
-    let campaign:
-      | any
-      | null =
-      null;
-
-    for (const candidate of campaigns) {
-      const spent =
-        this.toNumber(
-          candidate.spent,
-        );
-
-      const totalBudget =
-        this.toNumber(
-          candidate.totalBudget,
-        );
+      if (!campaign) continue;
 
       if (
-        totalBudget <= 0 ||
-        spent < totalBudget
+        campaign.status !== CampaignStatus.ACTIVE ||
+        campaign.isActive !== true
       ) {
-        campaign =
-          candidate;
-        break;
+        continue;
       }
-    }
 
-    if (!campaign) {
+      if (
+        campaign.startDate &&
+        new Date(campaign.startDate).getTime() > now.getTime()
+      ) {
+        continue;
+      }
+
+      if (
+        campaign.endDate &&
+        new Date(campaign.endDate).getTime() <= now.getTime()
+      ) {
+        continue;
+      }
+
+      const spent = this.toNumber(campaign.spent);
+      const totalBudget = this.toNumber(campaign.totalBudget);
+
+      if (totalBudget > 0 && spent >= totalBudget) continue;
+
+      const mediaUrl =
+        typeof ad.mediaUrl === "string" ? ad.mediaUrl.trim() : "";
+
+      if (!mediaUrl) continue;
+
       return {
-        available: false,
-        ad: null,
+        available: true,
+        ad: {
+          id: String(ad._id),
+          campaignId: String(campaign._id),
+          videoId: params.videoId ?? null,
+          name: ad.name,
+          campaignName: campaign.name,
+          objective: campaign.objective,
+          status: ad.status,
+          type: ad.type,
+          headline: ad.headline,
+          description: ad.description ?? null,
+          mediaUrl,
+          videoUrl: mediaUrl,
+          imageUrl: null,
+          thumbnailUrl: ad.thumbnailUrl ?? null,
+          destinationType: ad.destinationType,
+          destinationUrl: ad.destinationUrl ?? null,
+          callToAction: ad.callToAction ?? "Learn More",
+          placement: AdvertisementPlacement.FEED_VIDEO_END,
+        },
       };
     }
 
-    const raw =
-      campaign as any;
-
-    const creative =
-      raw.creative ?? {};
-
-    const ad =
-      raw.ad ?? {};
-
     return {
-      available: true,
-
-      ad: {
-        campaignId:
-          String(
-            raw._id,
-          ),
-
-        videoId:
-          raw.videoId ??
-          creative.videoId ??
-          ad.videoId ??
-          params.videoId ??
-          null,
-
-        campaignName:
-          raw.name ??
-          null,
-
-        objective:
-          raw.objective ??
-          null,
-
-        status:
-          raw.status ??
-          null,
-
-        headline:
-          raw.headline ??
-          creative.headline ??
-          ad.headline ??
-          null,
-
-        description:
-          raw.description ??
-          creative.description ??
-          ad.description ??
-          null,
-
-        destinationUrl:
-          raw.destinationUrl ??
-          creative.destinationUrl ??
-          ad.destinationUrl ??
-          null,
-
-        callToAction:
-          raw.callToAction ??
-          creative.callToAction ??
-          ad.callToAction ??
-          null,
-
-        imageUrl:
-          raw.imageUrl ??
-          creative.imageUrl ??
-          ad.imageUrl ??
-          null,
-
-        videoUrl:
-          raw.videoUrl ??
-          creative.videoUrl ??
-          ad.videoUrl ??
-          null,
-
-        thumbnailUrl:
-          raw.thumbnailUrl ??
-          creative.thumbnailUrl ??
-          ad.thumbnailUrl ??
-          null,
-      },
+      available: false,
+      ad: null,
     };
   }
 

@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsDateString,
   IsOptional,
   IsString,
@@ -37,4 +38,13 @@ export class CreateBusinessDealDto {
 
   @IsDateString()
   expiresAt!: string;
+
+
+  /*
+   * Lets owners pause a deal without deleting it.
+   * Defaults to true in the schema.
+   */
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean;
 }

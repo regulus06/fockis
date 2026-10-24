@@ -10,7 +10,6 @@ import {
   StoreDocument,
 } from "./schemas/store.schema";
 import { SellerService } from "../seller/services/seller.service";
-
 @Injectable()
 export class StoresService {
   constructor(
@@ -18,7 +17,6 @@ export class StoresService {
     private readonly storeModel: Model<StoreDocument>,
     private readonly sellerService: SellerService,
   ) {}
-
   // =====================================================
   // PUBLIC STORE FILTER
   //
@@ -28,18 +26,15 @@ export class StoresService {
   // This also keeps older stores visible when they were
   // created before the active/status fields were added.
   // =====================================================
-
   private publicStoreFilter() {
     return {
       active: { $ne: false },
       status: { $ne: "SUSPENDED" as const },
     };
   }
-
   // =====================================================
   // DOMAIN NORMALIZATION
   // =====================================================
-
   private normalizeDomain(value: string): string {
     return String(value || "")
       .trim()
@@ -51,27 +46,22 @@ export class StoresService {
       .split("#")[0]
       .replace(/\.$/, "");
   }
-
   private normalizeDomainPrefix(value: string): string {
     let domain = this.normalizeDomain(value);
-
     if (domain.endsWith(".fockis.com")) {
       domain = domain.slice(
         0,
         -".fockis.com".length,
       );
     }
-
     if (domain.endsWith(".fockis")) {
       domain = domain.slice(
         0,
         -".fockis".length,
       );
     }
-
     return domain;
   }
-
   private validateDomainPrefix(
     prefix: string,
   ): void {
@@ -83,7 +73,6 @@ export class StoresService {
         "Fockis domain must be between 2 and 63 characters.",
       );
     }
-
     if (
       !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(
         prefix,
@@ -93,7 +82,6 @@ export class StoresService {
         "Fockis domain can contain only lowercase letters, numbers, and hyphens and cannot start or end with a hyphen.",
       );
     }
-
     const reservedDomains = new Set([
       "www",
       "admin",
@@ -123,26 +111,21 @@ export class StoresService {
       "system",
       "fockis",
     ]);
-
     if (reservedDomains.has(prefix)) {
       throw new BadRequestException(
         "This Fockis domain name is reserved.",
       );
     }
   }
-
   // =====================================================
   // FOCKIS STORE ID
   // =====================================================
-
   private generateStoreId(
     countryCode: string,
   ): string {
     const alphabet =
       "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-
     let randomPart = "";
-
     for (
       let index = 0;
       index < 10;
@@ -156,10 +139,8 @@ export class StoresService {
           )
         ];
     }
-
     return `FK${countryCode}ST${randomPart}`;
   }
-
   private async generateUniqueStoreId(
     countryCode: string,
   ): Promise<string> {
@@ -172,26 +153,21 @@ export class StoresService {
         this.generateStoreId(
           countryCode,
         );
-
       const exists =
         await this.storeModel.exists({
           fockisStoreId: storeId,
         });
-
       if (!exists) {
         return storeId;
       }
     }
-
     throw new BadRequestException(
       "Unable to generate a unique Fockis Store ID. Please try again.",
     );
   }
-
   // =====================================================
   // COUNTRY HANDLING
   // =====================================================
-
   private normalizeCountryCode(
     countryCode: string,
   ): string {
@@ -199,16 +175,13 @@ export class StoresService {
       String(countryCode || "")
         .trim()
         .toUpperCase();
-
     if (!/^[A-Z]{2}$/.test(normalized)) {
       throw new BadRequestException(
         "Country code must contain exactly two letters.",
       );
     }
-
     return normalized;
   }
-
   // =====================================================
   // ZIP / POSTAL CODE VALIDATION
   //
@@ -218,7 +191,6 @@ export class StoresService {
   // Every other country:
   //   Required
   // =====================================================
-
   private validateZipCode(
     countryCode: string,
     zipCode: unknown,
@@ -227,22 +199,18 @@ export class StoresService {
       this.normalizeCountryCode(
         countryCode,
       );
-
     const normalizedZipCode =
       String(zipCode ?? "").trim();
-
     if (
       normalizedCountryCode === "HT"
     ) {
       return normalizedZipCode;
     }
-
     if (!normalizedZipCode) {
       throw new BadRequestException(
         "ZIP/postal code is required for this country.",
       );
     }
-
     if (
       normalizedZipCode.length > 20
     ) {
@@ -250,14 +218,11 @@ export class StoresService {
         "ZIP/postal code cannot exceed 20 characters.",
       );
     }
-
     return normalizedZipCode;
   }
-
   // =====================================================
   // DOMAIN AVAILABILITY
   // =====================================================
-
   async checkDomainAvailability(
     domain: string,
   ) {
@@ -265,20 +230,16 @@ export class StoresService {
       this.normalizeDomainPrefix(
         domain,
       );
-
     this.validateDomainPrefix(
       prefix,
     );
-
     const normalizedDomain =
       `${prefix}.fockis.com`;
-
     const existing =
       await this.storeModel.exists({
         domainName:
           normalizedDomain,
       });
-
     return {
       available: !existing,
       domain: normalizedDomain,
@@ -287,11 +248,9 @@ export class StoresService {
         : "This Fockis domain is available.",
     };
   }
-
   // =====================================================
   // CREATE STORE
   // =====================================================
-
   async create(
     data: any,
     userId: string,
@@ -301,12 +260,10 @@ export class StoresService {
         "User required",
       );
     }
-
     const sellerProfile =
       await this.sellerService.getActiveProfile(
         userId,
       );
-
     if (
       !data?.name ||
       String(data.name).trim().length < 3
@@ -315,90 +272,72 @@ export class StoresService {
         "Store name must contain at least 3 characters.",
       );
     }
-
     if (!data.country) {
       throw new BadRequestException(
         "Country is required.",
       );
     }
-
     if (!data.countryCode) {
       throw new BadRequestException(
         "Country code is required.",
       );
     }
-
     if (!data.city) {
       throw new BadRequestException(
         "City is required.",
       );
     }
-
     if (!data.address) {
       throw new BadRequestException(
         "Address is required.",
       );
     }
-
     // ===================================================
     // COUNTRY
     // ===================================================
-
     const countryCode =
       this.normalizeCountryCode(
         data.countryCode,
       );
-
     const country =
       String(data.country).trim();
-
     // ===================================================
     // ZIP / POSTAL CODE
     // ===================================================
-
     const zipCode =
       this.validateZipCode(
         countryCode,
         data.zipCode,
       );
-
     // ===================================================
     // DOMAIN
     // ===================================================
-
     if (!data.domainName) {
       throw new BadRequestException(
         "Fockis domain name is required.",
       );
     }
-
     const domainPrefix =
       this.normalizeDomainPrefix(
         data.domainName,
       );
-
     this.validateDomainPrefix(
       domainPrefix,
     );
-
     const domainName =
       `${domainPrefix}.fockis.com`;
-
     const existingDomain =
       await this.storeModel.exists({
         domainName,
       });
-
     if (existingDomain) {
       throw new BadRequestException(
         "This Fockis domain is already in use.",
       );
     }
-
     // ===================================================
     // SLUG
     // ===================================================
-
     const baseSlug =
       String(
         data.slug ||
@@ -410,12 +349,9 @@ export class StoresService {
         .replace(/\s+/g, "-")
         .replace(/[^a-z0-9-]/g, "")
         .replace(/^-+|-+$/g, "");
-
     let slug =
       baseSlug || domainPrefix;
-
     let count = 1;
-
     while (
       await this.storeModel.findOne({
         slug,
@@ -423,130 +359,90 @@ export class StoresService {
     ) {
       slug =
         `${baseSlug || domainPrefix}-${count}`;
-
       count++;
     }
-
     // ===================================================
     // FOCKIS STORE ID
     //
     // Seller never supplies this.
     // ===================================================
-
     const fockisStoreId =
       await this.generateUniqueStoreId(
         countryCode,
       );
-
     // ===================================================
     // CREATE
     // ===================================================
-
     try {
       const store =
         await this.storeModel.create({
           ownerId:
             new Types.ObjectId(userId),
-
           sellerId:
             sellerProfile?._id,
-
           fockisStoreId,
-
           domainName,
-
           name:
             String(data.name).trim(),
-
           slug,
-
           description:
             String(
               data.description || "",
             ).trim(),
-
           category:
             String(
               data.category || "",
             ).trim(),
-
           logo:
             data.logo ||
             data.profilePhoto ||
             "",
-
           banner:
             data.banner ||
             data.coverPhoto ||
             "",
-
           email:
             data.email ||
             data.businessEmail ||
             "",
-
           phone:
             data.phone || "",
-
           website:
             data.website || "",
-
           country,
-
           countryCode,
-
           city:
             String(data.city).trim(),
-
           state:
             data.state
               ? String(data.state).trim()
               : "",
-
           zipCode,
-
           address:
             String(data.address).trim(),
-
           currency:
             data.currency || "USD",
-
           shippingPolicy:
             data.shippingPolicy || "",
-
           returnPolicy:
             data.returnPolicy || "",
-
           facebook:
             data.facebook || "",
-
           instagram:
             data.instagram || "",
-
           twitter:
             data.twitter || "",
-
           followers: 0,
-
           followersList: [],
-
           rating: 0,
-
           reviewCount: 0,
-
           totalSales: 0,
-
           totalProducts: 0,
-
           totalViews: 0,
-
           status: "ACTIVE",
-
           verified: false,
-
           active: true,
         });
-
       return store;
     } catch (error: any) {
       if (error?.code === 11000) {
@@ -554,7 +450,6 @@ export class StoresService {
           Object.keys(
             error?.keyPattern || {},
           );
-
         if (
           duplicateFields.includes(
             "domainName",
@@ -564,7 +459,6 @@ export class StoresService {
             "This Fockis domain is already in use.",
           );
         }
-
         if (
           duplicateFields.includes(
             "fockisStoreId",
@@ -574,7 +468,6 @@ export class StoresService {
             "A unique Fockis Store ID could not be generated. Please try again.",
           );
         }
-
         if (
           duplicateFields.includes(
             "slug",
@@ -585,15 +478,12 @@ export class StoresService {
           );
         }
       }
-
       throw error;
     }
   }
-
   // =====================================================
   // GET ALL PUBLIC STORES
   // =====================================================
-
   async getAll() {
     return this.storeModel
       .find(
@@ -604,11 +494,9 @@ export class StoresService {
       })
       .lean();
   }
-
   // =====================================================
   // GET PUBLIC STORE BY DOMAIN
   // =====================================================
-
   async getByDomain(
     domain: string,
   ) {
@@ -616,7 +504,6 @@ export class StoresService {
       this.normalizeDomain(
         domain,
       );
-
     const store =
       await this.storeModel
         .findOne({
@@ -625,20 +512,16 @@ export class StoresService {
           ...this.publicStoreFilter(),
         })
         .lean();
-
     if (!store) {
       throw new NotFoundException(
         "Store not found",
       );
     }
-
     return store;
   }
-
   // =====================================================
   // GET PUBLIC STORE BY SLUG
   // =====================================================
-
   async getBySlug(
     slug: string,
   ) {
@@ -646,13 +529,11 @@ export class StoresService {
       String(slug || "")
         .trim()
         .toLowerCase();
-
     if (!normalizedSlug) {
       throw new BadRequestException(
         "Store slug is required.",
       );
     }
-
     const store =
       await this.storeModel
         .findOne({
@@ -660,20 +541,16 @@ export class StoresService {
           ...this.publicStoreFilter(),
         })
         .lean();
-
     if (!store) {
       throw new NotFoundException(
         "Store not found",
       );
     }
-
     return store;
   }
-
   // =====================================================
   // GET USER STORES
   // =====================================================
-
   async getBySeller(
     userId: string,
   ) {
@@ -682,7 +559,6 @@ export class StoresService {
         "User required",
       );
     }
-
     return this.storeModel
       .find({
         ownerId:
@@ -693,11 +569,9 @@ export class StoresService {
       })
       .lean();
   }
-
   // =====================================================
   // UPDATE STORE
   // =====================================================
-
   async update(
     id: string,
     data: any,
@@ -708,13 +582,11 @@ export class StoresService {
         "User required",
       );
     }
-
     if (!id) {
       throw new BadRequestException(
         "Store ID is required.",
       );
     }
-
     const allowedFields = [
       "name",
       "description",
@@ -724,9 +596,11 @@ export class StoresService {
       "profilePhoto",
       "coverPhoto",
       "email",
+      "businessEmail",
       "phone",
       "website",
       "country",
+      "countryCode",
       "city",
       "address",
       "state",
@@ -738,12 +612,10 @@ export class StoresService {
       "instagram",
       "twitter",
     ];
-
     const updateData: Record<
       string,
       any
     > = {};
-
     for (
       const field of allowedFields
     ) {
@@ -755,39 +627,41 @@ export class StoresService {
           data[field];
       }
     }
+    // Keep compatibility with settings forms that submit
+    // businessEmail instead of email.
+    if (
+      updateData.businessEmail !== undefined &&
+      updateData.email === undefined
+    ) {
+      updateData.email = updateData.businessEmail;
+    }
+    delete updateData.businessEmail;
 
     // ===================================================
     // PROFILE PHOTO
     // ===================================================
-
     if (
       updateData.profilePhoto !==
       undefined
     ) {
       updateData.logo =
         updateData.profilePhoto;
-
       delete updateData.profilePhoto;
     }
-
     // ===================================================
     // COVER PHOTO
     // ===================================================
-
     if (
       updateData.coverPhoto !==
       undefined
     ) {
       updateData.banner =
         updateData.coverPhoto;
-
       delete updateData.coverPhoto;
     }
-
     // ===================================================
     // BASIC TEXT VALIDATION
     // ===================================================
-
     if (
       updateData.name !==
       undefined
@@ -796,7 +670,6 @@ export class StoresService {
         String(
           updateData.name,
         ).trim();
-
       if (
         updateData.name.length < 3
       ) {
@@ -805,7 +678,6 @@ export class StoresService {
         );
       }
     }
-
     if (
       updateData.country !==
       undefined
@@ -814,7 +686,6 @@ export class StoresService {
         String(
           updateData.country,
         ).trim();
-
       if (
         updateData.country.length < 2
       ) {
@@ -823,7 +694,6 @@ export class StoresService {
         );
       }
     }
-
     if (
       updateData.city !==
       undefined
@@ -832,7 +702,6 @@ export class StoresService {
         String(
           updateData.city,
         ).trim();
-
       if (
         updateData.city.length < 2
       ) {
@@ -841,7 +710,6 @@ export class StoresService {
         );
       }
     }
-
     if (
       updateData.address !==
       undefined
@@ -850,7 +718,6 @@ export class StoresService {
         String(
           updateData.address,
         ).trim();
-
       if (
         updateData.address.length < 2
       ) {
@@ -859,11 +726,9 @@ export class StoresService {
         );
       }
     }
-
     // ===================================================
     // EXISTING STORE
     // ===================================================
-
     const existingStore =
       await this.storeModel
         .findOne({
@@ -874,10 +739,18 @@ export class StoresService {
             ),
         })
         .lean();
-
     if (!existingStore) {
       throw new NotFoundException(
         "Store not found",
+      );
+    }
+    // ===================================================
+    // COUNTRY CODE
+    // ===================================================
+
+    if (updateData.countryCode !== undefined) {
+      updateData.countryCode = this.normalizeCountryCode(
+        String(updateData.countryCode),
       );
     }
 
@@ -885,24 +758,22 @@ export class StoresService {
     // ZIP / POSTAL CODE
     // ===================================================
 
-    if (
-      updateData.zipCode !==
-      undefined
-    ) {
-      updateData.zipCode =
-        this.validateZipCode(
-          String(
-            (existingStore as any)
-              .countryCode || "",
-          ),
-          updateData.zipCode,
-        );
+    if (updateData.zipCode !== undefined) {
+      const countryCode = String(
+        updateData.countryCode ??
+          (existingStore as any).countryCode ??
+          "",
+      );
+
+      updateData.zipCode = this.validateZipCode(
+        countryCode,
+        updateData.zipCode,
+      );
     }
 
     // ===================================================
     // UPDATE
     // ===================================================
-
     const store =
       await this.storeModel.findOneAndUpdate(
         {
@@ -920,20 +791,16 @@ export class StoresService {
           runValidators: true,
         },
       );
-
     if (!store) {
       throw new NotFoundException(
         "Store not found",
       );
     }
-
     return store;
   }
-
   // =====================================================
   // DELETE
   // =====================================================
-
   async delete(
     id: string,
     userId: string,
@@ -943,29 +810,24 @@ export class StoresService {
         "User required",
       );
     }
-
     const store =
       await this.storeModel.findOneAndDelete({
         _id: id,
         ownerId:
           new Types.ObjectId(userId),
       });
-
     if (!store) {
       throw new NotFoundException(
         "Store not found",
       );
     }
-
     return {
       message: "Store deleted",
     };
   }
-
   // =====================================================
   // FOLLOW / UNFOLLOW
   // =====================================================
-
   async followStore(
     storeId: string,
     userId: string,
@@ -975,31 +837,26 @@ export class StoresService {
         "User required",
       );
     }
-
     const store =
       await this.storeModel.findById(
         storeId,
       );
-
     if (!store) {
       throw new NotFoundException(
         "Store not found",
       );
     }
-
     const isFollowing =
       store.followersList?.some(
         (id: any) =>
           id.toString() === userId,
       );
-
     if (isFollowing) {
       store.followersList =
         store.followersList.filter(
           (id: any) =>
             id.toString() !== userId,
         );
-
       store.followers =
         Math.max(
           0,
@@ -1009,13 +866,10 @@ export class StoresService {
       store.followersList.push(
         new Types.ObjectId(userId),
       );
-
       store.followers =
         store.followers + 1;
     }
-
     await store.save();
-
     return {
       following:
         !isFollowing,

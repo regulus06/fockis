@@ -1,8 +1,9 @@
+
 import {
   Controller,
   Get,
+  NotFoundException,
   Param,
-  Query,
 } from "@nestjs/common";
 
 import {
@@ -21,53 +22,51 @@ import {
    GET /subscription-plans
    GET /subscription-plans/:plan
 
-   Customers can view subscription plans and pricing.
+   Customers can view active subscription plans and pricing.
 
    Admin management is handled separately by:
-
    /admin/subscription-plans
 ============================================================ */
 
 @Controller("subscription-plans")
 export class SubscriptionPlansController {
-
   constructor(
     private readonly planService: SubscriptionPlanService,
   ) {}
 
   /* ============================================================
-     GET ALL PUBLIC PLANS
+     GET ALL ACTIVE PUBLIC PLANS
 
      GET /subscription-plans
-     GET /subscription-plans?includeInactive=false
+
+     Inactive plans are never exposed through this endpoint.
   ============================================================ */
 
   @Get()
-  async getPlans(
-    @Query("includeInactive")
-    includeInactive?: string,
-  ) {
-    const showInactive =
-      includeInactive === "true";
-
-    return this.planService.findAll(
-      showInactive,
-    );
+  async getPlans() {
+    return this.planService.findAll(false);
   }
 
   /* ============================================================
-     GET ONE PUBLIC PLAN
+     GET ONE ACTIVE PUBLIC PLAN
 
      GET /subscription-plans/:plan
   ============================================================ */
 
   @Get(":plan")
   async getPlan(
-    @Param("plan")
-    plan: SubscriptionPlan,
+    @Param("plan") plan: string,
   ) {
-    return this.planService.findByPlan(
-      plan,
+    const allowedPlans = Object.values(SubscriptionPlan);
+
+    if (!allowedPlans.includes(plan as SubscriptionPlan)) {
+      throw new NotFoundException(
+        "Subscription plan not found.",
+      );
+    }
+
+    return this.planService.findActivePlan(
+      plan as SubscriptionPlan,
     );
   }
 }

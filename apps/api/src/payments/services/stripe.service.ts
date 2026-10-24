@@ -18,12 +18,16 @@ export class FockisStripeService {
       );
     }
 
-    if (
-      !key.startsWith('sk_test_') &&
-      !key.startsWith('sk_live_')
-    ) {
+    const validPrefixes = [
+      'sk_test_',
+      'sk_live_',
+      'rk_test_',
+      'rk_live_',
+    ];
+
+    if (!validPrefixes.some((prefix) => key.startsWith(prefix))) {
       throw new InternalServerErrorException(
-        'STRIPE_SECRET_KEY must be a valid Stripe secret key.',
+        'STRIPE_SECRET_KEY must be a valid Stripe secret or restricted key.',
       );
     }
 
