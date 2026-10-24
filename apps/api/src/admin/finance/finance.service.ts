@@ -196,10 +196,137 @@ export class FinanceAdminService {
   async approveRefund(id: string) { return this.updateStatus("refunds", id, "COMPLETED", { approvedAt: new Date() }, "Refund not found").then(this.refundDto.bind(this)); }
   async rejectRefund(id: string, reason?: string) { return this.updateStatus("refunds", id, "CANCELLED", { rejectedAt: new Date(), rejectionReason: reason || "Rejected by admin" }, "Refund not found").then(this.refundDto.bind(this)); }
 
-  async subscriptions(query: Record<string, string> = {}) { const rows = await this.docs("subscriptions", {}, Math.min(500, Number(query.limit || 250))); const users = await this.users(rows.map((x) => this.id(x.userId))); return rows.map((s) => ({ id: this.id(s.id || s._id), userId: this.id(s.userId), userName: s.userName || this.userName(users.get(this.id(s.userId))), plan: s.plan || s.planName || "Subscription", amount: this.money(s.amount ?? s.price, s.currency), status: String(s.status || "ACTIVE").toUpperCase(), renewsAt: s.renewsAt || s.currentPeriodEnd ? this.date(s.renewsAt || s.currentPeriodEnd) : undefined, createdAt: this.date(s.createdAt) })); }
-  async subscription(id: string) { const rows = await this.subscriptions({}); const row = rows.find((x) => x.id === id); if (!row) throw new NotFoundException("Subscription not found"); return row; }
-  async cancelSubscription(id: string) { return this.updateStatus("subscriptions", id, "CANCELLED", { cancelledAt: new Date() }, "Subscription not found").then(() => this.subscription(id)); }
-  async reactivateSubscription(id: string) { return this.updateStatus("subscriptions", id, "ACTIVE", { cancelledAt: null }, "Subscription not found").then(() => this.subscription(id)); }
+  async subscriptions(query: Record<string, string> = {}) {
+    const limit = Math.min(500, Math.max(1, Number(query.limit || 250)));
+    const rows = await this.docs("subscriptions", {}, limit);
+    const users = await this.users(rows.map((x) => this.id(x.userId)));
+    const planFilter = String(query.plan || "").trim().toUpperCase();
+    const statusFilter = String(query.status || "").trim().toUpperCase();
+    const search = String(query.search || query.q || "").trim().toLowerCase();
+
+    const mapped = rows.map((s) => {
+      const user = users.get(this.id(s.userId));
+      return {
+        id: this.id(s.id || s._id),
+        userId: this.id(s.userId),
+        userName: s.userName || this.userName(user),
+        email: user?.email || s.email || "",
+        plan: String(s.plan || s.planName || "BASIC").toUpperCase(),
+        amount: this.money(s.amount ?? s.price, s.currency),
+        billingInterval: s.billingInterval ? String(s.billingInterval).toUpperCase() : undefined,
+        status: String(s.status || "ACTIVE").toUpperCase(),
+        stripeCustomerId: s.stripeCustomerId || undefined,
+        stripeSubscriptionId: s.stripeSubscriptionId || undefined,
+        currentPeriodStart: s.currentPeriodStart ? this.date(s.currentPeriodStart) : undefined,
+        renewsAt: s.renewsAt || s.currentPeriodEnd ? this.date(s.renewsAt || s.currentPeriodEnd) : undefined,
+        trialStart: s.trialStart ? this.date(s.trialStart) : undefined,
+        trialEnd: s.trialEnd || s.trialEndsAt ? this.date(s.trialEnd || s.trialEndsAt) : undefined,
+        canceledAt: s.canceledAt || s.cancelledAt ? this.date(s.canceledAt || s.cancelledAt) : undefined,
+        cancelAtPeriodEnd: Boolean(s.cancelAtPeriodEnd),
+        createdAt: this.date(s.createdAt),
+        updatedAt: s.updatedAt ? this.date(s.updatedAt) : undefined,
+      };
+    });
+
+    return mapped.filter((s) => {
+      if (planFilter && s.plan !== planFilter) return false;
+      if (statusFilter && s.status !== statusFilter) return false;
+      if (search) {
+        const haystack = [s.userName, s.email, s.userId, s.plan, s.id, s.stripeSubscriptionId]
+          .filter(Boolean).join(" ").toLowerCase();
+        if (!haystack.includes(search)) return false;
+      }
+      return true;
+    });
+  }
+
+  async subscription(id: string) {
+    const rows = await this.subscriptions({});
+    const row = rows.find((x) => x.id === id);
+    if (!row) throw new NotFoundException("Subscription not found");
+    return row;
+  }
+
+  async subscriptionHistory(id: string) {
+    const current = await this.subscription(id);
+    const filter: any = { subscriptionId: id };
+    const events = await this.docs("subscription_history", filter, 1000);
+    const history = events.map((event) => ({
+      id: this.id(event._id),
+      subscriptionId: this.id(event.subscriptionId),
+      userId: this.id(event.userId),
+      event: String(event.event || "UPDATED"),
+      fromPlan: event.fromPlan ? String(event.fromPlan) : undefined,
+      toPlan: event.toPlan ? String(event.toPlan) : undefined,
+      fromStatus: event.fromStatus ? String(event.fromStatus) : undefined,
+      toStatus: event.toStatus ? String(event.toStatus) : undefined,
+      amount: event.amount != null ? this.money(event.amount, event.currency) : undefined,
+      billingInterval: event.billingInterval ? String(event.billingInterval) : undefined,
+      note: event.note || undefined,
+      source: event.source || "system",
+      createdAt: this.date(event.createdAt),
+    }));
+
+    // Existing subscriptions predate this history feature. Show their known
+    // creation as a baseline, but do not fabricate earlier plan changes.
+    if (!history.length) {
+      history.push({
+        id: `baseline-${current.id}`,
+        subscriptionId: current.id,
+        userId: current.userId,
+        event: "CURRENT_RECORD_FOUND",
+        fromPlan: undefined,
+        toPlan: current.plan,
+        fromStatus: undefined,
+        toStatus: current.status,
+        amount: current.amount,
+        billingInterval: current.billingInterval,
+        note: "This is the earliest available subscription record. Earlier changes were not recorded in subscription history.",
+        source: "current-record",
+        createdAt: current.createdAt,
+      });
+    }
+    return { subscription: current, history: history.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)) };
+  }
+
+  private async recordSubscriptionEvent(subscriptionId: string, event: string, before: any, after: any, note: string) {
+    const id = this.oid(subscriptionId);
+    const subscription = id
+      ? await this.db.collection("subscriptions").findOne({ _id: id })
+      : null;
+    if (!subscription) return;
+    await this.db.collection("subscription_history").insertOne({
+      subscriptionId: this.id(subscription._id),
+      userId: this.id(subscription.userId),
+      event,
+      fromPlan: before?.plan,
+      toPlan: after?.plan ?? subscription.plan,
+      fromStatus: before?.status,
+      toStatus: after?.status ?? subscription.status,
+      amount: subscription.price ?? subscription.amount ?? 0,
+      currency: subscription.currency || "USD",
+      billingInterval: subscription.billingInterval,
+      note,
+      source: "admin",
+      createdAt: new Date(),
+    });
+  }
+
+  async cancelSubscription(id: string) {
+    const before = await this.subscription(id);
+    await this.updateStatus("subscriptions", id, "CANCELLED", { cancelledAt: new Date(), canceledAt: new Date() }, "Subscription not found");
+    const after = await this.subscription(id);
+    await this.recordSubscriptionEvent(id, "CANCELED_BY_ADMIN", before, after, "Subscription status changed by an administrator.");
+    return after;
+  }
+
+  async reactivateSubscription(id: string) {
+    const before = await this.subscription(id);
+    await this.updateStatus("subscriptions", id, "ACTIVE", { cancelledAt: null, canceledAt: null }, "Subscription not found");
+    const after = await this.subscription(id);
+    await this.recordSubscriptionEvent(id, "REACTIVATED_BY_ADMIN", before, after, "Subscription reactivated by an administrator.");
+    return after;
+  }
 
   async requestPaymentRefund(paymentId: string, amount?: number, reason?: string) {
     const payment = await this.one("payments", paymentId); if (!payment) throw new NotFoundException("Payment not found");

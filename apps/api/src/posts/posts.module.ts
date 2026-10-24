@@ -11,6 +11,7 @@ import {
 } from './post.schema';
 
 import { FriendsModule } from '../friends/friends.module';
+import { ReportsModule } from '../reports/reports.module';
 
 @Module({
   imports: [
@@ -22,6 +23,8 @@ import { FriendsModule } from '../friends/friends.module';
     ]),
 
     FriendsModule,
+
+    ReportsModule,
   ],
 
   controllers: [
@@ -38,4 +41,4 @@ import { FriendsModule } from '../friends/friends.module';
     MongooseModule,
   ],
 })
-export class PostsModule {}
+export class PostsModule {}

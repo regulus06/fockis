@@ -10,7 +10,6 @@ import {
   Types,
 } from "mongoose";
 
-
 /* ============================================================================
    DOCUMENT
 ============================================================================ */
@@ -18,19 +17,19 @@ import {
 export type AdvertisementDocument =
   HydratedDocument<Advertisement>;
 
-
 /* ============================================================================
    AD STATUS
 ============================================================================ */
 
 export enum AdvertisementStatus {
   DRAFT = "DRAFT",
+  PENDING_REVIEW = "PENDING_REVIEW",
+  APPROVED = "APPROVED",
   ACTIVE = "ACTIVE",
   PAUSED = "PAUSED",
   REJECTED = "REJECTED",
   COMPLETED = "COMPLETED",
 }
-
 
 /* ============================================================================
    AD TYPE
@@ -41,7 +40,6 @@ export enum AdvertisementType {
   VIDEO = "VIDEO",
   CAROUSEL = "CAROUSEL",
 }
-
 
 /* ============================================================================
    DESTINATION TYPE
@@ -55,7 +53,6 @@ export enum AdvertisementDestination {
   PROFILE = "PROFILE",
   POST = "POST",
 }
-
 
 /* ============================================================================
    ADVERTISEMENT PLACEMENT
@@ -73,7 +70,6 @@ export enum AdvertisementPlacement {
   PROFILE = "PROFILE",
 }
 
-
 /* ============================================================================
    CAROUSEL ITEM
 ============================================================================ */
@@ -82,24 +78,20 @@ export enum AdvertisementPlacement {
   _id: false,
 })
 export class AdvertisementCarouselItem {
-
   @Prop({
     required: true,
   })
   mediaUrl!: string;
-
 
   @Prop({
     required: false,
   })
   title?: string;
 
-
   @Prop({
     required: false,
   })
   description?: string;
-
 
   @Prop({
     required: false,
@@ -107,12 +99,10 @@ export class AdvertisementCarouselItem {
   destinationUrl?: string;
 }
 
-
 export const AdvertisementCarouselItemSchema =
   SchemaFactory.createForClass(
     AdvertisementCarouselItem,
   );
-
 
 /* ============================================================================
    ADVERTISEMENT
@@ -123,7 +113,6 @@ export const AdvertisementCarouselItemSchema =
   collection: "marketing_advertisements",
 })
 export class Advertisement {
-
   /* ==========================================================================
      OWNERSHIP
   ========================================================================== */
@@ -136,7 +125,6 @@ export class Advertisement {
   })
   advertiserId!: Types.ObjectId;
 
-
   @Prop({
     type: MongooseSchema.Types.ObjectId,
     ref: "Campaign",
@@ -144,7 +132,6 @@ export class Advertisement {
     index: true,
   })
   campaignId!: Types.ObjectId;
-
 
   /* ==========================================================================
      BASIC INFORMATION
@@ -157,13 +144,11 @@ export class Advertisement {
   })
   name!: string;
 
-
   @Prop({
     required: true,
     enum: AdvertisementType,
   })
   type!: AdvertisementType;
-
 
   @Prop({
     required: true,
@@ -172,14 +157,12 @@ export class Advertisement {
   })
   headline!: string;
 
-
   @Prop({
     required: false,
     trim: true,
     maxlength: 500,
   })
   description?: string;
-
 
   /* ==========================================================================
      MEDIA
@@ -190,25 +173,21 @@ export class Advertisement {
   })
   mediaUrl?: string;
 
-
   @Prop({
     required: false,
   })
   thumbnailUrl?: string;
-
 
   @Prop({
     required: false,
   })
   appIconUrl?: string;
 
-
   @Prop({
     type: [AdvertisementCarouselItemSchema],
     default: [],
   })
   carouselItems!: AdvertisementCarouselItem[];
-
 
   /* ==========================================================================
      DESTINATION
@@ -221,19 +200,16 @@ export class Advertisement {
   })
   destinationType!: AdvertisementDestination;
 
-
   @Prop({
     required: false,
   })
   destinationUrl?: string;
-
 
   @Prop({
     type: MongooseSchema.Types.ObjectId,
     required: false,
   })
   destinationId?: Types.ObjectId;
-
 
   /* ==========================================================================
      PLACEMENTS
@@ -249,7 +225,6 @@ export class Advertisement {
   })
   placements!: AdvertisementPlacement[];
 
-
   /* ==========================================================================
      CTA
   ========================================================================== */
@@ -261,14 +236,11 @@ export class Advertisement {
   })
   callToAction?: string;
 
-
   /* ==========================================================================
      AD-LEVEL SCHEDULE
 
      Optional.
-
      If empty, the ad follows the campaign schedule.
-
      If present, the ad must also be inside this date range.
   ========================================================================== */
 
@@ -280,7 +252,6 @@ export class Advertisement {
   })
   startDate?: Date | null;
 
-
   @Prop({
     type: Date,
     required: false,
@@ -288,7 +259,6 @@ export class Advertisement {
     index: true,
   })
   endDate?: Date | null;
-
 
   /* ==========================================================================
      STATUS
@@ -302,14 +272,12 @@ export class Advertisement {
   })
   status!: AdvertisementStatus;
 
-
   @Prop({
     type: Boolean,
     default: false,
     index: true,
   })
   isActive!: boolean;
-
 
   /* ==========================================================================
      PERFORMANCE
@@ -322,14 +290,12 @@ export class Advertisement {
   })
   impressions!: number;
 
-
   @Prop({
     type: Number,
     default: 0,
     min: 0,
   })
   clicks!: number;
-
 
   @Prop({
     type: Number,
@@ -338,14 +304,12 @@ export class Advertisement {
   })
   videoViews!: number;
 
-
   @Prop({
     type: Number,
     default: 0,
     min: 0,
   })
   conversions!: number;
-
 
   @Prop({
     type: Number,
@@ -354,14 +318,12 @@ export class Advertisement {
   })
   spend!: number;
 
-
   @Prop({
     type: Number,
     default: 0,
     min: 0,
   })
   revenue!: number;
-
 
   /* ==========================================================================
      RANKING
@@ -373,13 +335,11 @@ export class Advertisement {
   })
   qualityScore!: number;
 
-
   @Prop({
     type: Number,
     default: 0,
   })
   relevanceScore!: number;
-
 
   @Prop({
     type: Number,
@@ -387,14 +347,12 @@ export class Advertisement {
   })
   deliveryScore!: number;
 
-
   @Prop({
     type: Number,
     default: 0,
   })
   rankingScore!: number;
 }
-
 
 /* ============================================================================
    SCHEMA
@@ -405,7 +363,6 @@ export const AdvertisementSchema =
     Advertisement,
   );
 
-
 /* ============================================================================
    INDEXES
 ============================================================================ */
@@ -415,18 +372,15 @@ AdvertisementSchema.index({
   createdAt: -1,
 });
 
-
 AdvertisementSchema.index({
   campaignId: 1,
   createdAt: -1,
 });
 
-
 AdvertisementSchema.index({
   status: 1,
   isActive: 1,
 });
-
 
 AdvertisementSchema.index({
   isActive: 1,
@@ -434,12 +388,10 @@ AdvertisementSchema.index({
   rankingScore: -1,
 });
 
-
 AdvertisementSchema.index({
   destinationType: 1,
   destinationId: 1,
 });
-
 
 AdvertisementSchema.index({
   placements: 1,
@@ -447,7 +399,6 @@ AdvertisementSchema.index({
   status: 1,
   rankingScore: -1,
 });
-
 
 /* ============================================================================
    SCHEDULE DELIVERY INDEX

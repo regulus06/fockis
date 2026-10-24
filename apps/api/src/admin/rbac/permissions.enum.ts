@@ -283,6 +283,17 @@ export enum Permission {
   MODERATION_MANAGE =
     "moderation.manage",
 
+  MODERATION_REVIEW = "moderation.review",
+  MODERATION_ASSIGN = "moderation.assign",
+  MODERATION_RESOLVE = "moderation.resolve",
+  MODERATION_CONTENT_REMOVE = "moderation.content.remove",
+  MODERATION_WARN = "moderation.warn",
+  MODERATION_RESTRICT = "moderation.restrict",
+  MODERATION_SUSPEND = "moderation.suspend",
+  MODERATION_RESTORE = "moderation.restore",
+  MODERATION_APPEALS = "moderation.appeals",
+  MODERATION_SETTINGS = "moderation.settings",
+
   // ========================================================================
   // SECURITY
   // ========================================================================
@@ -438,4 +449,4 @@ export enum Permission {
 
   MARKETING_AUDIT_VIEW =
     "marketing.audit.view",
-}
+}

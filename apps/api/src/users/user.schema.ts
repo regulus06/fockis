@@ -764,6 +764,44 @@ export class User {
 
   email!: string;
 
+  // ============================================================
+  // EMAIL CHANGE VERIFICATION
+  // ============================================================
+
+  @Prop({
+    type: String,
+    default: null,
+    lowercase: true,
+    trim: true,
+  })
+  pendingEmail!: string | null;
+
+  @Prop({
+    type: String,
+    default: null,
+    select: false,
+  })
+  emailChangeCodeHash!: string | null;
+
+  @Prop({
+    type: Date,
+    default: null,
+  })
+  emailChangeExpiresAt!: Date | null;
+
+  @Prop({
+    type: Date,
+    default: null,
+  })
+  emailChangeLastRequestedAt!: Date | null;
+
+  @Prop({
+    type: Number,
+    default: 0,
+    min: 0,
+  })
+  emailChangeAttempts!: number;
+
 
 
 
@@ -2861,3 +2899,4 @@ UserSchema.index({
 
 
 });
+

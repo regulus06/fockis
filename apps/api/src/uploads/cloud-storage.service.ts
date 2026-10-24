@@ -299,6 +299,13 @@ export class CloudStorageService {
 
   async getSignedUrl(
     objectKey: string,
+    options: {
+      /** Lifetime in seconds. Defaults to 7 days (the existing behaviour). */
+      expiresInSeconds?: number;
+      /** e.g. attachment; filename="video.mp4" — forces a download. */
+      responseDisposition?: string;
+      responseType?: string;
+    } = {},
   ) {
     try {
       const bucket =
@@ -309,6 +316,17 @@ export class CloudStorageService {
       const file =
         bucket.file(objectKey);
 
+      const lifetimeSeconds =
+        Number.isFinite(
+          options.expiresInSeconds,
+        ) &&
+        Number(options.expiresInSeconds) > 0
+          ? Math.min(
+              Number(options.expiresInSeconds),
+              7 * 24 * 60 * 60,
+            )
+          : 7 * 24 * 60 * 60;
+
       const [
         url,
       ] = await file.getSignedUrl({
@@ -318,11 +336,21 @@ export class CloudStorageService {
 
         expires:
           Date.now() +
-          7 *
-            24 *
-            60 *
-            60 *
-            1000,
+          lifetimeSeconds * 1000,
+
+        ...(options.responseDisposition
+          ? {
+              responseDisposition:
+                options.responseDisposition,
+            }
+          : {}),
+
+        ...(options.responseType
+          ? {
+              responseType:
+                options.responseType,
+            }
+          : {}),
       });
 
       return url;
@@ -464,6 +492,114 @@ export class CloudStorageService {
   }
 
   // ==========================================================================
+  // OBJECT EXISTS
+  // ==========================================================================
+
+  async objectExists(
+    objectKey: string,
+  ): Promise<boolean> {
+    if (!objectKey?.trim()) {
+      return false;
+    }
+
+    try {
+      const [exists] =
+        await this.storage
+          .bucket(this.bucketName)
+          .file(objectKey)
+          .exists();
+
+      return Boolean(exists);
+    } catch (error) {
+      console.error(
+        "[GCS] Exists check failed:",
+        {
+          objectKey,
+          error,
+        },
+      );
+
+      return false;
+    }
+  }
+
+  // ==========================================================================
+  // SERVER-SIDE COPY
+  // ==========================================================================
+
+  /**
+   * Copies an object inside the configured bucket without
+   * downloading it to this server (GCS rewrites it internally).
+   */
+  async copyObject(
+    sourceKey: string,
+    destinationKey: string,
+  ): Promise<string> {
+    try {
+      const bucket =
+        this.storage.bucket(
+          this.bucketName,
+        );
+
+      await bucket
+        .file(sourceKey)
+        .copy(
+          bucket.file(
+            destinationKey,
+          ),
+        );
+
+      return destinationKey;
+    } catch (error) {
+      console.error(
+        "[GCS] Copy failed:",
+        {
+          sourceKey,
+          destinationKey,
+          error,
+        },
+      );
+
+      throw new InternalServerErrorException(
+        "Failed to copy media in Google Cloud Storage.",
+      );
+    }
+  }
+
+  // ==========================================================================
+  // DELETE
+  // ==========================================================================
+
+  async deleteObject(
+    objectKey: string,
+  ): Promise<void> {
+    if (!objectKey?.trim()) {
+      return;
+    }
+
+    try {
+      await this.storage
+        .bucket(this.bucketName)
+        .file(objectKey)
+        .delete({
+          ignoreNotFound: true,
+        });
+    } catch (error) {
+      console.error(
+        "[GCS] Delete failed:",
+        {
+          objectKey,
+          error,
+        },
+      );
+
+      throw new InternalServerErrorException(
+        "Failed to delete media from Google Cloud Storage.",
+      );
+    }
+  }
+
+  // ==========================================================================
   // UPLOAD + SIGN
   // ==========================================================================
 
@@ -500,4 +636,4 @@ export class CloudStorageService {
 
     return `${folder}/${Date.now()}-${randomUUID()}${extension}`;
   }
-}
+}

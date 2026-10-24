@@ -33,6 +33,10 @@ import {
   createLiveRoomName,
 } from "../utils/live-room.util";
 
+import {
+  LiveRecordingService,
+} from "./live-recording.service";
+
 // ============================================================================
 // HOST INFO SHAPE
 // ============================================================================
@@ -51,6 +55,8 @@ export class LiveService {
 
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
+
+    private readonly recordingService: LiveRecordingService,
   ) {}
 
   // ===========================================================================
@@ -263,12 +269,60 @@ export class LiveService {
     const hostInfo =
       await this.getHostInfo(userId);
 
-    return streams.map(
-      (stream) =>
-        this.serialize(
+    /*
+     * Settle recordings that are still being finalized so the
+     * Live Manager moves from "processing" to "ready"/"failed"
+     * even when the LiveKit webhook is not configured.
+     */
+    const pending = streams.filter((stream) =>
+      ["starting", "recording", "processing"].includes(
+        String(stream.recording?.status || ""),
+      ),
+    );
+
+    let current = streams;
+
+    if (pending.length) {
+      for (const stream of pending) {
+        await this.recordingService.syncStream(
+          String(stream._id),
+        );
+      }
+
+      current =
+        await this.liveModel
+          .find({
+            hostId: userId,
+          })
+          .sort({
+            createdAt: -1,
+          })
+          .limit(100)
+          .lean();
+    }
+
+    const views =
+      await this.recordingService.countViews(
+        current.map((stream) =>
+          String(stream._id),
+        ),
+      );
+
+    return Promise.all(
+      current.map(async (stream) => ({
+        ...this.serialize(
           stream,
           hostInfo,
         ),
+
+        totalViews:
+          views.get(String(stream._id)) || 0,
+
+        recording:
+          await this.recordingService.summarize(
+            stream,
+          ),
+      })),
     );
   }
 
@@ -317,6 +371,15 @@ export class LiveService {
 
     await stream.save();
 
+    /*
+     * Finalize the LiveKit recording. This runs in the background
+     * so ending the LIVE is never blocked by the recording provider;
+     * the recording moves to "processing" and later "ready"/"failed".
+     */
+    void this.recordingService
+      .stopForStream(streamId)
+      .catch(() => undefined);
+
     return this.serialize(stream);
   }
 
@@ -350,6 +413,12 @@ export class LiveService {
     this.assertHost(
       stream,
       userId,
+    );
+
+    // Stop any running recording and remove its private file.
+    // Feed posts published from it are independent copies and stay.
+    await this.recordingService.cleanupForDeletedStream(
+      stream,
     );
 
     await this.liveModel.deleteOne({
@@ -1173,6 +1242,9 @@ export class LiveService {
       endedAt:
         stream.endedAt || null,
 
+      duration:
+        this.getDurationSeconds(stream),
+
       createdAt:
         stream.createdAt,
 
@@ -1184,6 +1256,32 @@ export class LiveService {
   // ===========================================================================
   // HELPERS
   // ===========================================================================
+
+  private getDurationSeconds(
+    stream: any,
+  ): number {
+    const recorded = Number(
+      stream.recording?.durationSeconds || 0,
+    );
+
+    if (recorded > 0) {
+      return recorded;
+    }
+
+    const start = stream.startedAt
+      ? new Date(stream.startedAt).getTime()
+      : 0;
+
+    const end = stream.endedAt
+      ? new Date(stream.endedAt).getTime()
+      : stream.status === "live"
+        ? Date.now()
+        : 0;
+
+    return start && end && end > start
+      ? Math.round((end - start) / 1000)
+      : 0;
+  }
 
   private assertObjectId(
     value: string,
@@ -1211,4 +1309,4 @@ export class LiveService {
       );
     }
   }
-}
+}

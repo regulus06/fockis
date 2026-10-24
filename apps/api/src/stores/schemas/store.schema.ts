@@ -66,14 +66,6 @@ export class Store {
 
   /*
    * Permanent Fockis Store identifier.
-   *
-   * Example:
-   * FKUSST7K4M9Q2A8B6
-   *
-   * FK  = Fockis
-   * US  = country code
-   * ST  = Store
-   * rest = unique identifier
    */
   @Prop({
     required: true,
@@ -87,9 +79,6 @@ export class Store {
 
   /*
    * Store's Fockis domain.
-   *
-   * Example:
-   * regulusfashion.fockis.com
    */
   @Prop({
     required: true,
@@ -134,26 +123,31 @@ export class Store {
   })
   logo!: string;
 
-  /*
-   * Public store cover/banner image.
-   */
   @Prop({
     default: "",
   })
   banner!: string;
 
+  /*
+   * Contact details. These remain optional for the public store profile,
+   * but live shipping rates require a usable email address.
+   */
   @Prop({
     default: "",
+    trim: true,
+    lowercase: true,
   })
   email!: string;
 
   @Prop({
     default: "",
+    trim: true,
   })
   phone!: string;
 
   @Prop({
     default: "",
+    trim: true,
   })
   website!: string;
 
@@ -167,12 +161,7 @@ export class Store {
   country!: string;
 
   /*
-   * Two-letter country code used by the Fockis Store ID.
-   *
-   * Example:
-   * US
-   * HT
-   * CA
+   * Two-letter ISO country code.
    */
   @Prop({
     required: true,
@@ -190,19 +179,29 @@ export class Store {
   })
   city!: string;
 
+  /*
+   * Store's ship-from street address. Required by live carrier rates.
+   */
   @Prop({
     required: true,
     trim: true,
   })
   address!: string;
 
+  /*
+   * Keep these optional at the schema level so existing stores and store
+   * profile creation remain compatible. ShippingService validates them
+   * before requesting live carrier rates.
+   */
   @Prop({
     default: "",
+    trim: true,
   })
   state!: string;
 
   @Prop({
     default: "",
+    trim: true,
   })
   zipCode!: string;
 
@@ -300,6 +299,28 @@ export class Store {
     index: true,
   })
   active!: boolean;
+
+  /*
+   * Stripe Connect payouts. Set when the seller completes
+   * "Set up payouts" (see src/payouts).
+   */
+  @Prop({
+    default: "",
+    index: true,
+  })
+  stripeAccountId!: string;
+
+  @Prop({ default: false })
+  stripeDetailsSubmitted!: boolean;
+
+  @Prop({ default: false })
+  stripePayoutsEnabled!: boolean;
+
+  @Prop({ default: false })
+  stripeTransfersActive!: boolean;
+
+  @Prop({ type: Date, default: null })
+  stripeAccountUpdatedAt!: Date | null;
 }
 
 export const StoreSchema =

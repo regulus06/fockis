@@ -1,345 +1,128 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
-
-// ============================================================================
-// EVENT DOCUMENT TYPE
-// ============================================================================
-
-export type EventDocument = HydratedDocument<Event> & {
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-// ============================================================================
-// EVENT VISIBILITY
-// ============================================================================
-
-export enum EventVisibility {
-  PUBLIC = 'public',
-  FRIENDS = 'friends',
-  PRIVATE = 'private',
-}
-
-// ============================================================================
-// EVENT CATEGORY
-// ============================================================================
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { HydratedDocument, Schema as MongooseSchema, Types } from "mongoose";
 
 export enum EventCategory {
-  GENERAL = 'general',
-  MUSIC = 'music',
-  SPORTS = 'sports',
-  BUSINESS = 'business',
-  EDUCATION = 'education',
-  FOOD = 'food',
-  COMMUNITY = 'community',
-  PARTY = 'party',
-  CONFERENCE = 'conference',
-  OTHER = 'other',
+  GENERAL = "general", MUSIC = "music", SPORTS = "sports", BUSINESS = "business",
+  EDUCATION = "education", FOOD = "food", COMMUNITY = "community", PARTY = "party",
+  CONFERENCE = "conference", RELIGIOUS = "religious", SCHOOL = "school", ACADEMIC = "academic",
+  FUNDRAISER = "fundraiser", WORKSHOP = "workshop", MEETING = "meeting", NETWORKING = "networking",
+  CULTURAL = "cultural", HEALTH = "health", YOUTH = "youth", TECHNOLOGY = "technology",
+  ENVIRONMENT = "environment", POLITICAL = "political", CIVIC = "civic", ARTS = "arts", OTHER = "other",
 }
+export enum EventVisibility { PUBLIC = "public", FRIENDS = "friends", PRIVATE = "private", ORGANIZATION = "organization" }
+export enum EventCoverMediaType { IMAGE = "image", VIDEO = "video" }
+export enum EventStatus { UPCOMING = "upcoming", LIVE = "live", ENDED = "ended", CANCELLED = "cancelled" }
+export enum EventRsvpStatus { GOING = "going", INTERESTED = "interested" }
+export type EventDocument = HydratedDocument<Event>;
 
-// ============================================================================
-// EVENT STATUS
-// ============================================================================
-
-export enum EventStatus {
-  UPCOMING = 'upcoming',
-  LIVE = 'live',
-  ENDED = 'ended',
-  CANCELLED = 'cancelled',
-};
-
-// ============================================================================
-// EVENT COVER MEDIA TYPE
-// ============================================================================
-//
-// image = image cover
-// video = video cover
-//
-// This allows the frontend to know whether it should render:
-//   <img>
-// or:
-//   <video>
-//
-
-export enum EventCoverMediaType {
-  IMAGE = 'image',
-  VIDEO = 'video',
-}
-
-// ============================================================================
-// EVENT SCHEMA
-// ============================================================================
-
-@Schema({
-  timestamps: true,
-  collection: 'events',
-})
+/*
+ * Schema notes
+ *
+ * - All dates are stored as UTC instants. `endDate` is the source of truth
+ *   for expiry (see utils/event-lifecycle.ts); nothing is deleted when an
+ *   event ends.
+ * - `attendeeIds` = Going. `interestedIds` = Interested. A user is in at
+ *   most one of the two lists; the service enforces that with atomic
+ *   $addToSet/$pull updates. Documents created before `interestedIds`
+ *   existed simply read it as an empty list (default []).
+ * - `timeZone` is the IANA zone the creator scheduled the event in. It is
+ *   used only for display ("8:00 PM EDT"); comparisons always use the
+ *   stored instants.
+ */
+@Schema({ timestamps: true, collection: "events", versionKey: false })
 export class Event {
-  // ==========================================================================
-  // CREATOR
-  // ==========================================================================
-
-  @Prop({
-    type: Types.ObjectId,
-    required: true,
-    index: true,
-  })
+  @Prop({ type: MongooseSchema.Types.ObjectId, required: true, index: true, ref: "User" })
   creatorId!: Types.ObjectId;
 
-  // ==========================================================================
-  // BASIC INFORMATION
-  // ==========================================================================
-
-  @Prop({
-    required: true,
-    trim: true,
-    minlength: 2,
-    maxlength: 150,
-  })
+  @Prop({ required: true, trim: true, minlength: 2, maxlength: 150 })
   title!: string;
 
-  @Prop({
-    required: false,
-    trim: true,
-    maxlength: 5000,
-  })
-  description?: string;
+  @Prop({ default: "", trim: true, maxlength: 5000 })
+  description!: string;
 
-  // ==========================================================================
-  // CATEGORY
-  // ==========================================================================
-
-  @Prop({
-    type: String,
-    enum: Object.values(EventCategory),
-    default: EventCategory.GENERAL,
-    index: true,
-  })
+  @Prop({ type: String, enum: Object.values(EventCategory), default: EventCategory.GENERAL, index: true })
   category!: EventCategory;
 
-  // ==========================================================================
-  // VISIBILITY
-  // ==========================================================================
-
-  @Prop({
-    type: String,
-    enum: Object.values(EventVisibility),
-    default: EventVisibility.PUBLIC,
-    index: true,
-  })
+  @Prop({ type: String, enum: Object.values(EventVisibility), default: EventVisibility.PUBLIC, index: true })
   visibility!: EventVisibility;
 
-  // ==========================================================================
-  // EVENT DATE / TIME
-  // ==========================================================================
-
-  @Prop({
-    type: Date,
-    required: true,
-    index: true,
-  })
+  @Prop({ required: true, type: Date, index: true })
   startDate!: Date;
 
-  @Prop({
-    type: Date,
-    required: true,
-    index: true,
-  })
+  @Prop({ required: true, type: Date, index: true })
   endDate!: Date;
 
-  // ==========================================================================
-  // LOCATION
-  // ==========================================================================
+  @Prop({ default: "", trim: true, maxlength: 64 })
+  timeZone!: string;
 
-  @Prop({
-    required: false,
-    trim: true,
-    maxlength: 250,
-  })
-  locationName?: string;
+  @Prop({ default: "", trim: true, maxlength: 255 })
+  locationName!: string;
 
-  @Prop({
-    required: false,
-    trim: true,
-    maxlength: 1000,
-  })
-  address?: string;
+  @Prop({ default: "", trim: true, maxlength: 500 })
+  address!: string;
 
-  @Prop({
-    type: Number,
-    required: false,
-    min: -90,
-    max: 90,
-  })
+  @Prop({ type: Number, min: -90, max: 90 })
   latitude?: number;
 
-  @Prop({
-    type: Number,
-    required: false,
-    min: -180,
-    max: 180,
-  })
+  @Prop({ type: Number, min: -180, max: 180 })
   longitude?: number;
 
-  // ==========================================================================
-  // ONLINE EVENT
-  // ==========================================================================
-
-  @Prop({
-    type: Boolean,
-    default: false,
-  })
+  @Prop({ type: Boolean, default: false })
   isOnline!: boolean;
 
-  @Prop({
-    required: false,
-    trim: true,
-    maxlength: 2000,
-  })
-  onlineUrl?: string;
+  @Prop({ default: "", trim: true, maxlength: 2000 })
+  onlineUrl!: string;
 
-  // ==========================================================================
-  // COVER IMAGE
-  // ==========================================================================
-  //
-  // Existing image support is preserved.
-  //
-  // Example:
-  //
-  // /uploads/events/abc123.jpg
-  //
-  // or:
-  //
-  // https://example.com/event.jpg
-  //
+  @Prop({ default: "", maxlength: 2000 })
+  coverImageUrl!: string;
 
-  @Prop({
-    required: false,
-    trim: true,
-    maxlength: 2000,
-  })
-  coverImageUrl?: string;
+  @Prop({ default: "", maxlength: 2000 })
+  coverVideoUrl!: string;
 
-  // ==========================================================================
-  // COVER VIDEO
-  // ==========================================================================
-  //
-  // Optional uploaded or externally hosted video.
-  //
-  // Example:
-  //
-  // /uploads/events/abc123.mp4
-  //
-  // or:
-  //
-  // https://example.com/event-video.mp4
-  //
-
-  @Prop({
-    required: false,
-    trim: true,
-    maxlength: 2000,
-  })
-  coverVideoUrl?: string;
-
-  // ==========================================================================
-  // COVER MEDIA TYPE
-  // ==========================================================================
-  //
-  // Determines which cover is active.
-  //
-  // image:
-  //   use coverImageUrl
-  //
-  // video:
-  //   use coverVideoUrl
-  //
-
-  @Prop({
-    type: String,
-    enum: Object.values(EventCoverMediaType),
-    default: EventCoverMediaType.IMAGE,
-  })
+  @Prop({ type: String, enum: Object.values(EventCoverMediaType), default: EventCoverMediaType.IMAGE })
   coverMediaType!: EventCoverMediaType;
 
-  // ==========================================================================
-  // ATTENDEES
-  // ==========================================================================
-
-  @Prop({
-    type: [Types.ObjectId],
-    ref: 'User',
-    default: [],
-    index: true,
-  })
+  /** Going. The creator is added on creation and cannot leave. */
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: "User" }], default: [] })
   attendeeIds!: Types.ObjectId[];
 
-  // ==========================================================================
-  // CANCELLATION
-  // ==========================================================================
+  /** Interested (distinct from Going). */
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: "User" }], default: [] })
+  interestedIds!: Types.ObjectId[];
 
-  @Prop({
-    type: Boolean,
-    default: false,
-    index: true,
-  })
+  /** Invited by the organizer. Grants access to private events. */
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: "User" }], default: [] })
+  invitedIds!: Types.ObjectId[];
+
+  /** Optional maximum number of Going attendees. Null = unlimited. */
+  @Prop({ type: Number, min: 1, max: 1_000_000, default: null })
+  capacity?: number | null;
+
+  @Prop({ type: Boolean, default: false, index: true })
   isCancelled!: boolean;
 
-  @Prop({
-    type: Date,
-    required: false,
-  })
-  cancelledAt?: Date;
+  @Prop({ type: Date, default: null })
+  cancelledAt?: Date | null;
+
+  @Prop({ default: "", maxlength: 1000 })
+  cancellationReason!: string;
 }
 
-// ============================================================================
-// CREATE MONGOOSE SCHEMA
-// ============================================================================
+export const EventSchema = SchemaFactory.createForClass(Event);
 
-export const EventSchema =
-  SchemaFactory.createForClass(Event);
-
-// ============================================================================
-// INDEXES
-// ============================================================================
-
-// Event date range
-EventSchema.index({
-  startDate: 1,
-  endDate: 1,
-});
-
-// Creator's events
-EventSchema.index({
-  creatorId: 1,
-  startDate: -1,
-});
-
-// Public/friends/private events ordered by start date
-EventSchema.index({
-  visibility: 1,
-  startDate: 1,
-});
-
-// Category + date
-EventSchema.index({
-  category: 1,
-  startDate: 1,
-});
-
-// Upcoming active events
-EventSchema.index({
-  isCancelled: 1,
-  endDate: 1,
-});
-
-// Online events
-EventSchema.index({
-  isOnline: 1,
-  startDate: 1,
-});
-
-// Cover media
-EventSchema.index({
-  coverMediaType: 1,
-});
+/*
+ * Indexes
+ *
+ * Active discovery always filters on { isCancelled, endDate > now } and
+ * usually sorts by startDate, so those lead the compound indexes.
+ */
+EventSchema.index({ visibility: 1, isCancelled: 1, startDate: 1 });
+EventSchema.index({ isCancelled: 1, endDate: 1, startDate: 1 });
+EventSchema.index({ category: 1, isCancelled: 1, endDate: 1, startDate: 1 });
+EventSchema.index({ isOnline: 1, isCancelled: 1, endDate: 1, startDate: 1 });
+EventSchema.index({ latitude: 1, longitude: 1, endDate: 1 });
+EventSchema.index({ creatorId: 1, startDate: -1 });
+EventSchema.index({ attendeeIds: 1, startDate: 1 });
+EventSchema.index({ interestedIds: 1, startDate: 1 });
+EventSchema.index({ invitedIds: 1, startDate: 1 });
+EventSchema.index({ title: "text", description: "text", locationName: "text", address: "text" });

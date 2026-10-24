@@ -1,3 +1,4 @@
+
 import {
   Prop,
   Schema,
@@ -9,21 +10,13 @@ import {
   Document,
 } from "mongoose";
 
-export type ProductDocument =
-  Product & Document;
-
-/* ============================================================================
-   PRODUCT
-============================================================================ */
+export type ProductDocument = Product & Document;
 
 @Schema({
   timestamps: true,
 })
 export class Product {
-
-  /* ==========================================================================
-     BASIC INFO
-  ========================================================================== */
+  // BASIC INFO
 
   @Prop({
     required: true,
@@ -37,36 +30,13 @@ export class Product {
   })
   description!: string;
 
-
-  /* ==========================================================================
-     PRICING
-  ========================================================================== */
-
-  /*
-   * Original product price.
-   *
-   * Example:
-   * price = 100
-   */
+  // PRICING
 
   @Prop({
     required: true,
     min: 0,
   })
   price!: number;
-
-
-  /*
-   * Discount percentage.
-   *
-   * Examples:
-   *
-   * 0   = no discount
-   * 10  = 10% discount
-   * 25  = 25% discount
-   * 50  = 50% discount
-   * 100 = free
-   */
 
   @Prop({
     default: 0,
@@ -75,103 +45,36 @@ export class Product {
   })
   discount!: number;
 
-
-  /* ==========================================================================
-     BACKEND DISCOUNT CALCULATION
-  ========================================================================== */
-
-  /*
-   * Calculates the final price after discount.
-   *
-   * IMPORTANT:
-   *
-   * This is NOT stored in MongoDB.
-   *
-   * The backend calculates it whenever needed.
-   *
-   * Example:
-   *
-   * price = 100
-   * discount = 20
-   *
-   * final price = 80
-   */
-
   getDiscountedPrice(): number {
-    const originalPrice =
-      Number(this.price ?? 0);
+    const originalPrice = Number(this.price ?? 0);
+    const discountPercent = Number(this.discount ?? 0);
 
-    const discountPercent =
-      Number(this.discount ?? 0);
-
-    if (
-      originalPrice <= 0
-    ) {
-      return 0;
+    if (originalPrice <= 0) return 0;
+    if (discountPercent <= 0) {
+      return Number(originalPrice.toFixed(2));
     }
-
-    if (
-      discountPercent <= 0
-    ) {
-      return Number(
-        originalPrice.toFixed(2),
-      );
-    }
-
-    if (
-      discountPercent >= 100
-    ) {
-      return 0;
-    }
-
-    const discountedPrice =
-      originalPrice -
-      (
-        originalPrice *
-        discountPercent
-      ) /
-      100;
-
-    return Number(
-      Math.max(
-        0,
-        discountedPrice,
-      ).toFixed(2),
-    );
-  }
-
-
-  /*
-   * Returns the amount saved by the customer.
-   *
-   * Example:
-   *
-   * price = 100
-   * discount = 20
-   *
-   * savings = 20
-   */
-
-  getDiscountAmount(): number {
-    const originalPrice =
-      Number(this.price ?? 0);
-
-    const discountedPrice =
-      this.getDiscountedPrice();
+    if (discountPercent >= 100) return 0;
 
     return Number(
       Math.max(
         0,
         originalPrice -
-          discountedPrice,
+          (originalPrice * discountPercent) / 100,
       ).toFixed(2),
     );
   }
 
+  getDiscountAmount(): number {
+    return Number(
+      Math.max(
+        0,
+        Number(this.price ?? 0) -
+          this.getDiscountedPrice(),
+      ).toFixed(2),
+    );
+  }
 
-  /* ==========================================================================
-     INVENTORY
-  ========================================================================== */
+  // INVENTORY
 
   @Prop({
     default: 0,
@@ -179,10 +82,7 @@ export class Product {
   })
   stock!: number;
 
-
-  /* ==========================================================================
-     MEDIA
-  ========================================================================== */
+  // MEDIA
 
   @Prop({
     type: [String],
@@ -190,10 +90,7 @@ export class Product {
   })
   images!: string[];
 
-
-  /* ==========================================================================
-     CATEGORY
-  ========================================================================== */
+  // CATEGORY
 
   @Prop({
     required: true,
@@ -202,10 +99,7 @@ export class Product {
   })
   category!: string;
 
-
-  /* ==========================================================================
-     SELLER OWNER
-  ========================================================================== */
+  // SELLER AND STORE
 
   @Prop({
     type: Types.ObjectId,
@@ -215,11 +109,6 @@ export class Product {
   })
   seller!: Types.ObjectId;
 
-
-  /* ==========================================================================
-     STORE OWNER
-  ========================================================================== */
-
   @Prop({
     type: Types.ObjectId,
     ref: "Store",
@@ -228,24 +117,58 @@ export class Product {
   })
   storeId!: Types.ObjectId;
 
+  // SHIPPING PACKAGE
 
-  /* ==========================================================================
-     MARKETPLACE DISPLAY
-  ========================================================================== */
+  @Prop({
+    type: Number,
+    min: 0.000001,
+    default: undefined,
+  })
+  shippingWeight?: number;
+
+  @Prop({
+    type: String,
+    enum: ["lb", "oz", "kg", "g"],
+    default: "lb",
+  })
+  shippingWeightUnit!: "lb" | "oz" | "kg" | "g";
+
+  @Prop({
+    type: Number,
+    min: 0.000001,
+    default: undefined,
+  })
+  shippingLength?: number;
+
+  @Prop({
+    type: Number,
+    min: 0.000001,
+    default: undefined,
+  })
+  shippingWidth?: number;
+
+  @Prop({
+    type: Number,
+    min: 0.000001,
+    default: undefined,
+  })
+  shippingHeight?: number;
+
+  @Prop({
+    type: String,
+    enum: ["in", "cm", "ft", "mm", "m"],
+    default: "in",
+  })
+  shippingDimensionUnit!: "in" | "cm" | "ft" | "mm" | "m";
+
+  // MARKETPLACE DISPLAY
 
   @Prop({
     type: [String],
-    enum: [
-      "marketplace",
-      "feed",
-      "story",
-    ],
-    default: [
-      "marketplace",
-    ],
+    enum: ["marketplace", "feed", "story"],
+    default: ["marketplace"],
   })
   displayLocations!: string[];
-
 
   @Prop({
     type: Date,
@@ -253,17 +176,13 @@ export class Product {
   })
   feedExpiresAt?: Date | null;
 
-
   @Prop({
     type: Date,
     default: null,
   })
   storyExpiresAt?: Date | null;
 
-
-  /* ==========================================================================
-     STATUS
-  ========================================================================== */
+  // STATUS
 
   @Prop({
     default: true,
@@ -271,10 +190,7 @@ export class Product {
   })
   isActive!: boolean;
 
-
-  /* ==========================================================================
-     MARKETPLACE FILTER DATA
-  ========================================================================== */
+  // MARKETPLACE FILTER DATA
 
   @Prop({
     default: "",
@@ -283,59 +199,41 @@ export class Product {
   })
   brand!: string;
 
-
   @Prop({
     default: "",
     trim: true,
   })
   location!: string;
 
-
-  /* ==========================================================================
-     REVIEWS
-  ========================================================================== */
+  // REVIEWS
 
   @Prop({
     default: 0,
   })
   rating!: number;
 
-
   @Prop({
     default: 0,
   })
   totalReviews!: number;
 
-
-  /* ==========================================================================
-     ANALYTICS
-  ========================================================================== */
+  // ANALYTICS
 
   @Prop({
     default: 0,
   })
   views!: number;
 
-
   @Prop({
     default: 0,
   })
   salesCount!: number;
-
 }
-
-
-/* ============================================================================
-   SCHEMA
-============================================================================ */
 
 export const ProductSchema =
   SchemaFactory.createForClass(Product);
 
-
-/* ============================================================================
-   SEARCH INDEXES
-============================================================================ */
+// SEARCH INDEXES
 
 ProductSchema.index({
   category: 1,
@@ -343,12 +241,10 @@ ProductSchema.index({
   isActive: 1,
 });
 
-
 ProductSchema.index({
   storeId: 1,
   createdAt: -1,
 });
-
 
 ProductSchema.index({
   name: "text",

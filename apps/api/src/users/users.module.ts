@@ -14,21 +14,11 @@ import {
   FockisIdSettingsSchema,
 } from "../message-admin/schemas/fockis-id-settings.schema";
 
-import {
-  FockisIdService,
-} from "./services/fockis-id.service";
-
-import {
-  UserSecurityService,
-} from "./services/user-security.service";
-
-import {
-  UserSearchService,
-} from "./services/user-search.service";
-
-import {
-  UserProfileService,
-} from "./services/user-profile.service";
+import { FockisIdService } from "./services/fockis-id.service";
+import { UserSecurityService } from "./services/user-security.service";
+import { UserSearchService } from "./services/user-search.service";
+import { UserProfileService } from "./services/user-profile.service";
+import { EmailChangeService } from "./services/email-change.service";
 
 import { FriendsModule } from "../friends/friends.module";
 
@@ -54,27 +44,20 @@ import { FriendsModule } from "../friends/friends.module";
 
   providers: [
     UsersService,
-
     FockisIdService,
-
     UserSecurityService,
-
     UserSearchService,
-
     UserProfileService,
+    EmailChangeService,
   ],
 
   exports: [
     UsersService,
-
     FockisIdService,
-
     UserSecurityService,
-
     UserSearchService,
-
     UserProfileService,
-
+    EmailChangeService,
     MongooseModule,
   ],
 })

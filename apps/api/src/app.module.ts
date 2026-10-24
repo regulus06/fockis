@@ -38,6 +38,7 @@ import { GroupsModule } from "./groups/groups.module";
 import { RepostsModule } from "./reposts/reposts.module";
 import { WavesModule } from "./waves/waves.module";
 import { EventsModule } from "./events/events.module";
+import { ReportsModule } from "./reports/reports.module";
 import { MessagesModule } from "./messages/messages.module";
 import { MessageAdminModule } from "./message-admin/message-admin.module";
 
@@ -66,6 +67,7 @@ import { CareersModule } from "./careers/careers.module";
 // ============================================================================
 
 import { PaymentsModule } from "./payments/payments.module";
+import { PayoutsModule } from "./payouts/payouts.module";
 import { SubscriptionsModule } from "./subscriptions/subscriptions.module";
 import { ContentMonetizationModule } from "./content-monetization/content-monetization.module";
 
@@ -363,6 +365,7 @@ import {
     RepostsModule,
     WavesModule,
     EventsModule,
+    ReportsModule,
     MessagesModule,
     MessageAdminModule,
 
@@ -391,6 +394,7 @@ import {
     // ========================================================================
 
     PaymentsModule,
+    PayoutsModule,
     SubscriptionsModule,
     ContentMonetizationModule,
 
@@ -522,4 +526,4 @@ import {
     },
   ],
 })
-export class AppModule {}
+export class AppModule {}

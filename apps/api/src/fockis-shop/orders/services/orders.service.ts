@@ -1709,4 +1709,151 @@ export class OrdersService {
 
     return order;
   }
+
+  /**
+   * Updates a seller-owned order's destination before a shipping label is purchased.
+   * Cached rates are cleared so the seller must request fresh rates for the new address.
+   */
+  async updateShippingAddress(
+    orderId: string,
+    sellerId: string,
+    input: {
+      fullName?: string;
+      email?: string;
+      phone?: string;
+      houseOrApartmentNumber?: string;
+      neighborhood?: string;
+      street?: string;
+      apartment?: string;
+      city?: string;
+      state?: string;
+      zipCode?: string;
+      country?: string;
+    },
+  ) {
+    const normalizedOrderId = this.requireValidObjectId(orderId, "order ID");
+    const normalizedSellerId = this.requireValidObjectId(sellerId, "seller ID");
+
+    const order = await this.orderModel.findById(normalizedOrderId);
+
+    if (!order) {
+      throw new NotFoundException("Order not found");
+    }
+
+    const sellerOwnsOrder = order.items.some(
+      (item: any) =>
+        this.normalizeId(item.seller?._id ?? item.seller) === normalizedSellerId,
+    );
+
+    if (!sellerOwnsOrder) {
+      throw new BadRequestException(
+        "You are not authorized to edit this order's shipping address.",
+      );
+    }
+
+    const shippedStatuses = [
+      OrderStatus.SHIPPED,
+      OrderStatus.IN_TRANSIT,
+      OrderStatus.OUT_FOR_DELIVERY,
+      OrderStatus.DELIVERED,
+    ];
+
+    if (shippedStatuses.includes(order.status)) {
+      throw new BadRequestException(
+        "The shipping address cannot be changed after the order has shipped.",
+      );
+    }
+
+    const shipments: any[] = (order.shipments ?? []) as any[];
+    const labelAlreadyPurchased = shipments.some(
+      (shipment: any) =>
+        Boolean(
+          shipment.shippoTransactionId ||
+          shipment.shippoLabelUrl ||
+          shipment.labelUrl ||
+          shipment.trackingNumber,
+        ),
+    );
+
+    if (labelAlreadyPurchased) {
+      throw new BadRequestException(
+        "The shipping address cannot be changed after a shipping label or tracking number has been created.",
+      );
+    }
+
+    const current: any = order.shippingAddress ?? {};
+    const field = (key: keyof typeof input) => {
+      const supplied = input[key];
+      return typeof supplied === "string"
+        ? supplied.trim()
+        : String(current[key] ?? "").trim();
+    };
+
+    const updated = {
+      fullName: field("fullName"),
+      email: field("email"),
+      phone: field("phone"),
+      houseOrApartmentNumber: field("houseOrApartmentNumber"),
+      neighborhood: field("neighborhood"),
+      street: field("street"),
+      apartment: field("apartment"),
+      city: field("city"),
+      state: field("state"),
+      zipCode: field("zipCode"),
+      country: field("country"),
+    };
+
+    if (
+      !updated.fullName ||
+      !updated.phone ||
+      !updated.houseOrApartmentNumber ||
+      !updated.city ||
+      !updated.country
+    ) {
+      throw new BadRequestException(
+        "Recipient name, phone, house or apartment number, city, and country are required.",
+      );
+    }
+
+    const country = updated.country.toLowerCase();
+    const isUnitedStates = [
+      "us",
+      "usa",
+      "united states",
+      "united states of america",
+    ].includes(country);
+
+    if (
+      isUnitedStates &&
+      (!updated.street || !updated.state || !updated.zipCode)
+    ) {
+      throw new BadRequestException(
+        "A United States shipping address requires a street address, state, and ZIP code.",
+      );
+    }
+
+    order.shippingAddress = updated as any;
+
+    // Clear cached rates only. Do not change payment, inventory, or order totals.
+    for (const shipment of shipments) {
+      if ("shippoShipmentObjectId" in shipment) shipment.shippoShipmentObjectId = "";
+      if ("shippoRates" in shipment) shipment.shippoRates = [];
+      if ("shippoRatesRetrievedAt" in shipment) shipment.shippoRatesRetrievedAt = null;
+      if ("shippoSelectedRateId" in shipment) shipment.shippoSelectedRateId = "";
+      if ("shippoSelectedProvider" in shipment) shipment.shippoSelectedProvider = "";
+      if ("shippoSelectedService" in shipment) shipment.shippoSelectedService = "";
+      if ("shippoLabelAmount" in shipment) shipment.shippoLabelAmount = null;
+      if ("shippoLabelCurrency" in shipment) shipment.shippoLabelCurrency = "";
+      if ("shippoTransactionStatus" in shipment) shipment.shippoTransactionStatus = "";
+    }
+
+    await order.save();
+
+    return {
+      success: true,
+      message:
+        "Shipping address updated. Request new Shippo rates before purchasing a label.",
+      order,
+    };
+  }
 }

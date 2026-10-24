@@ -403,18 +403,33 @@ export class AdvertisementService {
 
 
     /*
-     * Active ads must be paused before editing.
+     * Safety rule:
+     * Active ads remain protected from content edits. For troubleshooting
+     * delivery, allow an active ad's placements array to be updated by itself.
+     * If any other field is included in the request, the ad must be paused first.
      */
+    const placementOnlyUpdate =
+      dto.placements !== undefined &&
+      dto.name === undefined &&
+      dto.type === undefined &&
+      dto.headline === undefined &&
+      dto.description === undefined &&
+      dto.mediaUrl === undefined &&
+      dto.thumbnailUrl === undefined &&
+      dto.appIconUrl === undefined &&
+      dto.carouselItems === undefined &&
+      dto.destinationType === undefined &&
+      dto.destinationUrl === undefined &&
+      dto.destinationId === undefined &&
+      dto.callToAction === undefined;
 
     if (
-      ad.status ===
-      AdvertisementStatus.ACTIVE
+      ad.status === AdvertisementStatus.ACTIVE &&
+      !placementOnlyUpdate
     ) {
-
       throw new BadRequestException(
-        "Active ads cannot be edited. Pause the ad first.",
+        "Active ads cannot be edited except for placements. Pause the ad before changing other fields.",
       );
-
     }
 
 
@@ -574,6 +589,76 @@ export class AdvertisementService {
 
     return ad.save();
 
+  }
+
+
+  /* ==========================================================================
+     SUBMIT FOR ADMIN REVIEW
+  ========================================================================== */
+
+  async submitForReview(
+    advertiserId: string,
+    adId: string,
+  ): Promise<AdvertisementDocument> {
+    const ad = await this.findOne(advertiserId, adId);
+
+    if (
+      ad.status !== AdvertisementStatus.DRAFT &&
+      ad.status !== AdvertisementStatus.REJECTED
+    ) {
+      throw new BadRequestException(
+        "Only draft or rejected advertisements can be submitted for review.",
+      );
+    }
+
+    const campaign = await this.campaignModel
+      .findById(ad.campaignId)
+      .exec();
+
+    if (!campaign) {
+      throw new NotFoundException("Campaign not found.");
+    }
+
+    this.verifyCampaignOwnership(campaign, advertiserId);
+
+    if (
+      ["BLOCKED", "ARCHIVED", "REJECTED"].includes(
+        String(campaign.status),
+      )
+    ) {
+      throw new BadRequestException(
+        "This campaign cannot accept ad submissions in its current status.",
+      );
+    }
+
+    if (!ad.headline?.trim()) {
+      throw new BadRequestException(
+        "Add a headline before submitting this advertisement.",
+      );
+    }
+
+    if (
+      ad.type !== "CAROUSEL" &&
+      !ad.mediaUrl?.trim()
+    ) {
+      throw new BadRequestException(
+        "Add advertisement media before submitting for review.",
+      );
+    }
+
+    if (
+      ad.type === "CAROUSEL" &&
+      (!Array.isArray(ad.carouselItems) || ad.carouselItems.length === 0)
+    ) {
+      throw new BadRequestException(
+        "Add at least one carousel item before submitting for review.",
+      );
+    }
+
+    ad.status = AdvertisementStatus.PENDING_REVIEW;
+    ad.isActive = false;
+
+    return ad.save();
   }
 
 
