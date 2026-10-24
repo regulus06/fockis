@@ -57,6 +57,104 @@ export class LiveProduct {
   salePrice?: number;
 }
 
+export type LiveRecordingStatus =
+  | "none"
+  | "starting"
+  | "recording"
+  | "processing"
+  | "ready"
+  | "failed"
+  | "deleted";
+
+/**
+ * Persistent recording metadata for a LIVE.
+ *
+ * The recording itself is produced by LiveKit Egress (room composite)
+ * and written straight to the project's Google Cloud Storage bucket.
+ * Only the private object key is stored here — never a public URL —
+ * and playback/download URLs are signed on demand for the owner.
+ */
+@Schema({
+  _id: false,
+})
+export class LiveRecording {
+  @Prop({
+    type: String,
+    enum: [
+      "none",
+      "starting",
+      "recording",
+      "processing",
+      "ready",
+      "failed",
+      "deleted",
+    ],
+    default: "none",
+  })
+  status!: LiveRecordingStatus;
+
+  @Prop({ default: "" })
+  provider!: string;
+
+  @Prop({ default: "" })
+  egressId!: string;
+
+  /** Private GCS object key, e.g. live-recordings/<streamId>/<file>.mp4 */
+  @Prop({ default: "" })
+  objectKey!: string;
+
+  @Prop({ default: "video/mp4" })
+  contentType!: string;
+
+  @Prop({ default: 0, min: 0 })
+  sizeBytes!: number;
+
+  @Prop({ default: 0, min: 0 })
+  durationSeconds!: number;
+
+  @Prop()
+  startedAt?: Date;
+
+  @Prop()
+  endedAt?: Date;
+
+  @Prop()
+  readyAt?: Date;
+
+  @Prop()
+  processingSince?: Date;
+
+  @Prop({ default: "", maxlength: 1000 })
+  error!: string;
+
+  @Prop({ default: 0, min: 0 })
+  startAttempts!: number;
+
+  /* ------------------------------------------------------------------
+   * Feed publishing (idempotency)
+   * ------------------------------------------------------------------ */
+
+  @Prop({ default: "" })
+  publishedPostId!: string;
+
+  @Prop()
+  publishedAt?: Date;
+
+  @Prop({ default: false })
+  publishing!: boolean;
+
+  @Prop()
+  publishLockAt?: Date;
+
+  @Prop()
+  deletedAt?: Date;
+}
+
+export const LiveRecordingSchema =
+  SchemaFactory.createForClass(
+    LiveRecording,
+  );
+
 @Schema({
   timestamps: true,
   collection: "live_streams",
@@ -160,6 +258,12 @@ export class LiveStream {
 
   @Prop()
   endedAt?: Date;
+
+  @Prop({
+    type: LiveRecordingSchema,
+    default: () => ({}),
+  })
+  recording?: LiveRecording;
 }
 
 export const LiveStreamSchema =
@@ -198,3 +302,7 @@ LiveStreamSchema.index({
   status: 1,
   startedAt: -1,
 });
+
+LiveStreamSchema.index({
+  "recording.egressId": 1,
+});

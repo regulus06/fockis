@@ -1,3 +1,4 @@
+
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
@@ -5,6 +6,16 @@ import {
   Shipment,
   ShipmentSchema,
 } from "./schemas/shipment.schema";
+
+import {
+  Order,
+  OrderSchema,
+} from "../orders/schemas/order.schema";
+
+import {
+  Store,
+  StoreSchema,
+} from "../../stores/schemas/store.schema";
 
 import { ShippingService } from "./services/shipping.service";
 import { ShippingSyncService } from "./services/shipping-sync.service";
@@ -18,6 +29,8 @@ import { UspsProvider } from "./providers/usps.provider";
 import { FedexProvider } from "./providers/fedex.provider";
 import { DhlProvider } from "./providers/dhl.provider";
 
+import { PayoutsModule } from "../../payouts/payouts.module";
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -25,33 +38,28 @@ import { DhlProvider } from "./providers/dhl.provider";
         name: Shipment.name,
         schema: ShipmentSchema,
       },
+      {
+        name: Order.name,
+        schema: OrderSchema,
+      },
+      {
+        name: Store.name,
+        schema: StoreSchema,
+      },
     ]),
+    PayoutsModule,
   ],
-
-  controllers: [
-    ShippingController,
-  ],
-
+  controllers: [ShippingController],
   providers: [
-    // ==========================================================
-    // SHIPPING
-    // ==========================================================
-
     ShippingService,
     ShippingSyncService,
     TrackingService,
     CarrierService,
-
-    // ==========================================================
-    // CARRIERS
-    // ==========================================================
-
     UpsProvider,
     UspsProvider,
     FedexProvider,
     DhlProvider,
   ],
-
   exports: [
     ShippingService,
     TrackingService,

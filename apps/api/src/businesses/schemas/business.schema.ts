@@ -46,6 +46,49 @@ export enum BusinessImageSource {
 
 
 /* ============================================================================
+   PRIMARY BUSINESS CARD ACTION
+
+   Which destination button is emphasised on business cards and the
+   business profile. Both destinations are always kept when configured;
+   this only controls the button hierarchy.
+============================================================================ */
+
+export enum BusinessPrimaryAction {
+  WEBSITE = "WEBSITE",
+  STORE = "STORE",
+}
+
+
+/* ============================================================================
+   BUSINESS SIZE
+============================================================================ */
+
+export enum BusinessSize {
+  SOLO = "SOLO",
+  SMALL = "SMALL", //    2 - 10
+  MEDIUM = "MEDIUM", //  11 - 50
+  LARGE = "LARGE", //    51 - 200
+  ENTERPRISE = "ENTERPRISE", // 200+
+}
+
+
+/* ============================================================================
+   OPENING HOURS
+
+   day:   0 = Sunday ... 6 = Saturday
+   open:  "HH:mm" (24h)
+   close: "HH:mm" (24h)
+============================================================================ */
+
+export interface BusinessHoursEntry {
+  day: number;
+  open?: string;
+  close?: string;
+  closed: boolean;
+}
+
+
+/* ============================================================================
    BUSINESS SCHEMA
 ============================================================================ */
 
@@ -92,6 +135,31 @@ export class Business {
     index: true,
   })
   category!: BusinessCategory;
+
+
+  /*
+   * Optional short one-line pitch shown in the business hero.
+   */
+  @Prop({
+    trim: true,
+    maxlength: 160,
+  })
+  tagline?: string;
+
+
+  @Prop({
+    type: Number,
+    min: 1800,
+    max: 2100,
+  })
+  foundedYear?: number;
+
+
+  @Prop({
+    type: String,
+    enum: Object.values(BusinessSize),
+  })
+  businessSize?: BusinessSize;
 
 
   /* ==========================================================================
@@ -149,6 +217,28 @@ export class Business {
     lowercase: true,
   })
   email?: string;
+
+
+  /* ==========================================================================
+     FOCKIS SHOP CONNECTION
+
+     storeId points at a Fockis Shop Store owned by the same user. Ownership
+     is verified by BusinessesService before it is saved.
+  ========================================================================== */
+
+  @Prop({
+    type: Types.ObjectId,
+    ref: "Store",
+    index: true,
+  })
+  storeId?: Types.ObjectId;
+
+
+  @Prop({
+    type: String,
+    enum: Object.values(BusinessPrimaryAction),
+  })
+  primaryAction?: BusinessPrimaryAction;
 
 
   /* ==========================================================================
@@ -210,6 +300,52 @@ export class Business {
 
 
   /* ==========================================================================
+     OPENING HOURS
+  ========================================================================== */
+
+  @Prop({
+    type: [
+      {
+        _id: false,
+        day: {
+          type: Number,
+          min: 0,
+          max: 6,
+          required: true,
+        },
+        open: {
+          type: String,
+          trim: true,
+        },
+        close: {
+          type: String,
+          trim: true,
+        },
+        closed: {
+          type: Boolean,
+          default: false,
+        },
+      },
+    ],
+    default: undefined,
+  })
+  hours?: BusinessHoursEntry[];
+
+
+  @Prop({
+    default: false,
+  })
+  byAppointmentOnly?: boolean;
+
+
+  @Prop({
+    trim: true,
+    maxlength: 64,
+  })
+  timeZone?: string;
+
+
+  /* ==========================================================================
      SOCIAL LINKS
   ========================================================================== */
 
@@ -260,6 +396,9 @@ export class Business {
   spotlightEnabled!: boolean;
 
 
+  /*
+   * Only super admins may change the priority (see BusinessesService).
+   */
   @Prop({
     default: 0,
   })
@@ -280,6 +419,12 @@ export class Business {
     default: 0,
   })
   websiteClicks!: number;
+
+
+  @Prop({
+    default: 0,
+  })
+  storeClicks!: number;
 
 
   /* ==========================================================================

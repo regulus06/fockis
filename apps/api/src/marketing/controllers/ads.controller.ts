@@ -498,6 +498,24 @@ export class AdsController {
 
 
   /* ==========================================================
+     SUBMIT ADVERTISEMENT FOR ADMIN REVIEW
+
+     POST /marketing/ads/:id/submit-for-review
+  ========================================================== */
+
+  @Post(":id/submit-for-review")
+  async submitForReview(
+    @Req() req: Request,
+    @Param("id") adId: string,
+  ) {
+    return this.advertisementService.submitForReview(
+      this.getUserId(req),
+      adId,
+    );
+  }
+
+
+  /* ==========================================================
      ACTIVATE ADVERTISEMENT
 
      POST /marketing/ads/:id/activate

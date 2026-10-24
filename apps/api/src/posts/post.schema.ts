@@ -276,7 +276,45 @@ export class Post {
 
   @Prop({ default: null })
   groupId?: string;
+
+  /*
+  |--------------------------------------------------------------------------
+  | MODERATION
+  |--------------------------------------------------------------------------
+  |
+  | Set to "removed" when a moderator confirms a violation. This is a
+  | reversible soft flag: the document is kept so the decision can be
+  | appealed and restored. Removed posts are excluded from feeds,
+  | profiles and single-post views.
+  |
+  */
+
+  @Prop({ type: String, default: null })
+  moderationStatus?: string | null;
+
+  @Prop({ type: Date, default: null })
+  moderationRemovedAt?: Date | null;
+
+  @Prop({ type: String, default: null })
+  moderationCaseId?: string | null;
 }
 
 export const PostSchema =
   SchemaFactory.createForClass(Post);
+
+/*
+|--------------------------------------------------------------------------
+| FEED INDEXES
+|--------------------------------------------------------------------------
+|
+| Used by FeedService:
+|   - newest-first pages and the For You candidate pool
+|     (sort createdAt, _id; keyset cursor)
+|   - Following / Friends pages filtered by author
+|   - the evergreen candidate query (sort by stored score)
+|
+*/
+
+PostSchema.index({ createdAt: -1, _id: -1 });
+PostSchema.index({ user: 1, createdAt: -1, _id: -1 });
+PostSchema.index({ score: -1, _id: -1 });

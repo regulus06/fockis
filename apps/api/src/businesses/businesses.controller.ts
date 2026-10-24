@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -6,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UploadedFile,
   UseGuards,
@@ -32,6 +34,7 @@ import {
 
 import {
   BusinessesService,
+  type BusinessViewer,
 } from "./businesses.service";
 
 import {
@@ -53,6 +56,10 @@ import {
 import {
   JwtAuthGuard,
 } from "../auth/jwt-auth.guard";
+
+import {
+  OptionalJwtAuthGuard,
+} from "../auth/optional-jwt-auth.guard";
 
 import {
   Public,
@@ -89,6 +96,172 @@ if (
 }
 
 
+const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+];
+
+const ALLOWED_IMAGE_EXTENSIONS = [
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".webp",
+  ".gif",
+];
+
+
+/*
+ * Shared multer configuration for business logo and cover uploads.
+ */
+function businessImageUpload(
+  prefix: "logo" | "cover",
+) {
+  return FileInterceptor(
+    "file",
+    {
+      storage: diskStorage({
+        destination:
+          businessUploadDirectory,
+
+        filename: (
+          _request,
+          file,
+          callback,
+        ) => {
+
+          const extension =
+            extname(
+              file.originalname,
+            ).toLowerCase();
+
+          const safeExtension =
+            ALLOWED_IMAGE_EXTENSIONS.includes(
+              extension,
+            )
+              ? extension
+              : ".jpg";
+
+          callback(
+            null,
+            `${prefix}-${Date.now()}-${Math.round(
+              Math.random() *
+                1_000_000,
+            )}${safeExtension}`,
+          );
+        },
+      }),
+
+      limits: {
+        fileSize:
+          10 *
+          1024 *
+          1024,
+      },
+
+      fileFilter: (
+        _request,
+        file,
+        callback,
+      ) => {
+
+        if (
+          ALLOWED_IMAGE_TYPES.includes(
+            file.mimetype,
+          )
+        ) {
+          callback(
+            null,
+            true,
+          );
+
+          return;
+        }
+
+        callback(
+          new BadRequestException(
+            "Only JPG, PNG, WEBP, and GIF images are allowed.",
+          ),
+          false,
+        );
+      },
+    },
+  );
+}
+
+
+/* ============================================================================
+   REQUEST USER
+============================================================================ */
+
+function normalizeRole(
+  value: unknown,
+): string {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+}
+
+
+/*
+ * Mirrors the super admin rule in admin/safety/super-admin.guard.ts.
+ */
+function isAdminUser(
+  user: any,
+): boolean {
+  if (!user) {
+    return false;
+  }
+
+  if (user.isSuperAdmin === true) {
+    return true;
+  }
+
+  if (
+    normalizeRole(user.role) ===
+    "super_admin"
+  ) {
+    return true;
+  }
+
+  return (
+    Array.isArray(user.roles) &&
+    user.roles.some(
+      (role: unknown) =>
+        normalizeRole(role) ===
+        "super_admin",
+    )
+  );
+}
+
+
+function toViewer(
+  req: any,
+): BusinessViewer | undefined {
+  const user = req?.user;
+
+  if (!user) {
+    return undefined;
+  }
+
+  const id =
+    user.id ??
+    user._id ??
+    user.userId ??
+    user.sub;
+
+  return {
+    id:
+      id ? String(id) : undefined,
+
+    isAdmin:
+      isAdminUser(user),
+  };
+}
+
+
 /* ============================================================================
    CONTROLLER
 ============================================================================ */
@@ -103,12 +276,32 @@ export class BusinessesController {
 
   /* ==========================================================================
      PUBLIC BUSINESSES
+
+     GET /businesses
+     Optional query: q, category, city, sort (featured|newest|name),
+     page, limit (max 100).
   ========================================================================== */
 
   @Public()
   @Get()
-  getAll() {
-    return this.businessesService.findPublic();
+  getAll(
+    @Query("q") q?: string,
+    @Query("category") category?: string,
+    @Query("city") city?: string,
+    @Query("sort") sort?: string,
+    @Query("page") page?: string,
+    @Query("limit") limit?: string,
+  ) {
+    return this.businessesService.findPublic({
+      q,
+      category,
+      city,
+      sort,
+      page:
+        page ? Number(page) : undefined,
+      limit:
+        limit ? Number(limit) : undefined,
+    });
   }
 
 
@@ -136,15 +329,21 @@ export class BusinessesController {
 
   /* ==========================================================================
      GET ONE
+
+     Public for published businesses. When a token is sent, the owner can
+     also preview an unpublished business.
   ========================================================================== */
 
   @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Get(":id")
   getOne(
+    @Req() req: any,
     @Param("id") id: string,
   ) {
     return this.businessesService.findOne(
       id,
+      toViewer(req),
     );
   }
 
@@ -181,6 +380,7 @@ export class BusinessesController {
       req.user.id,
       id,
       dto,
+      toViewer(req),
     );
   }
 
@@ -190,13 +390,6 @@ export class BusinessesController {
 
      POST:
        /businesses/:id/publish
-
-     Publishes the selected business.
-
-     No request body is required.
-
-     The service receives:
-       published = true
   ========================================================================== */
 
   @Post(":id/publish")
@@ -218,13 +411,6 @@ export class BusinessesController {
 
      DELETE:
        /businesses/:id/publish
-
-     Removes the selected business from the public/Feed publishing state.
-
-     No request body is required.
-
-     The service receives:
-       published = false
   ========================================================================== */
 
   @Delete(":id/publish")
@@ -248,83 +434,7 @@ export class BusinessesController {
   @Post(":id/cover-image")
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
-    FileInterceptor(
-      "file",
-      {
-        storage: diskStorage({
-          destination:
-            businessUploadDirectory,
-
-          filename: (
-            _request,
-            file,
-            callback,
-          ) => {
-
-            const extension =
-              extname(
-                file.originalname,
-              ).toLowerCase();
-
-            const safeExtension =
-              extension ||
-              ".jpg";
-
-            const filename =
-              `cover-${Date.now()}-${Math.round(
-                Math.random() *
-                  1_000_000,
-              )}${safeExtension}`;
-
-            callback(
-              null,
-              filename,
-            );
-          },
-        }),
-
-        limits: {
-          fileSize:
-            10 *
-            1024 *
-            1024,
-        },
-
-        fileFilter: (
-          _request,
-          file,
-          callback,
-        ) => {
-
-          const allowedTypes = [
-            "image/jpeg",
-            "image/png",
-            "image/webp",
-            "image/gif",
-          ];
-
-          if (
-            allowedTypes.includes(
-              file.mimetype,
-            )
-          ) {
-            callback(
-              null,
-              true,
-            );
-
-            return;
-          }
-
-          callback(
-            new Error(
-              "Only JPG, PNG, WEBP, and GIF images are allowed.",
-            ),
-            false,
-          );
-        },
-      },
-    ),
+    businessImageUpload("cover"),
   )
   async uploadCoverImage(
     @Req() req: any,
@@ -334,16 +444,52 @@ export class BusinessesController {
   ) {
 
     if (!file) {
-      return {
-        success: false,
-        message:
-          "Please select an image.",
-      };
+      throw new BadRequestException(
+        "Please select an image.",
+      );
     }
 
-    return this.businessesService.setCoverImage(
+    return this.businessesService.setImage(
       req.user.id,
       businessId,
+      "cover",
+      {
+        url:
+          `/uploads/businesses/${file.filename}`,
+
+        source:
+          BusinessImageSource.UPLOAD,
+      },
+    );
+  }
+
+
+  /* ==========================================================================
+     LOGO UPLOAD
+  ========================================================================== */
+
+  @Post(":id/logo")
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    businessImageUpload("logo"),
+  )
+  async uploadLogo(
+    @Req() req: any,
+    @Param("id") businessId: string,
+    @UploadedFile()
+    file: Express.Multer.File,
+  ) {
+
+    if (!file) {
+      throw new BadRequestException(
+        "Please select an image.",
+      );
+    }
+
+    return this.businessesService.setImage(
+      req.user.id,
+      businessId,
+      "logo",
       {
         url:
           `/uploads/businesses/${file.filename}`,
@@ -396,9 +542,6 @@ export class BusinessesController {
 
      PATCH:
        /businesses/:id/deals/:dealId
-
-     The business ID is included in the route so the frontend can update
-     a deal belonging to the selected business.
   ========================================================================== */
 
   @Patch(":id/deals/:dealId")
@@ -413,6 +556,7 @@ export class BusinessesController {
       req.user.id,
       dealId,
       dto,
+      businessId,
     );
   }
 
@@ -434,14 +578,19 @@ export class BusinessesController {
     return this.businessesService.deleteDeal(
       req.user.id,
       dealId,
+      businessId,
     );
   }
 
 
   /* ==========================================================================
-     TRACK BUSINESS VIEW
+     ANALYTICS
+
+     Public so visitors who are not signed in are counted too. Each call
+     only increments a counter on a published business.
   ========================================================================== */
 
+  @Public()
   @Post(":id/view")
   trackView(
     @Param("id") id: string,
@@ -452,15 +601,23 @@ export class BusinessesController {
   }
 
 
-  /* ==========================================================================
-     TRACK WEBSITE CLICK
-  ========================================================================== */
-
+  @Public()
   @Post(":id/website-click")
   trackWebsiteClick(
     @Param("id") id: string,
   ) {
     return this.businessesService.trackWebsiteClick(
+      id,
+    );
+  }
+
+
+  @Public()
+  @Post(":id/store-click")
+  trackStoreClick(
+    @Param("id") id: string,
+  ) {
+    return this.businessesService.trackStoreClick(
       id,
     );
   }

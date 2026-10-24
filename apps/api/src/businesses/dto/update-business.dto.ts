@@ -1,44 +1,71 @@
+
 import {
+  ArrayMaxSize,
+  IsArray,
+  IsBoolean,
+  IsEmail,
   IsEnum,
+  IsInt,
+  IsLatitude,
+  IsLongitude,
+  IsMongoId,
+  IsNumber,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
+  Min,
+  ValidateIf,
   ValidateNested,
 } from "class-validator";
 
 import { Type } from "class-transformer";
 
+import { BusinessCategory } from "../enums/business-category.enum";
+
 import {
-  BusinessCategory,
-} from "../enums/business-category.enum";
+  BusinessPrimaryAction,
+  BusinessSize,
+} from "../schemas/business.schema";
+
+import {
+  BusinessHoursEntryDto,
+  IsOptionalHttpUrl,
+} from "./business-fields.dto";
+
+/*
+ * "" and null mean "clear this value" for optional fields.
+ */
+const hasValue = (
+  _object: unknown,
+  value: unknown,
+) =>
+  value !== "" &&
+  value !== null &&
+  value !== undefined;
 
 /* ============================================================================
    SOCIAL LINKS
 ============================================================================ */
 
 export class UpdateBusinessSocialLinksDto {
-  @IsOptional()
-  @IsString()
+  @IsOptionalHttpUrl()
   @MaxLength(500)
   facebook?: string;
 
-  @IsOptional()
-  @IsString()
+  @IsOptionalHttpUrl()
   @MaxLength(500)
   instagram?: string;
 
-  @IsOptional()
-  @IsString()
+  @IsOptionalHttpUrl()
   @MaxLength(500)
   tiktok?: string;
 
-  @IsOptional()
-  @IsString()
+  @IsOptionalHttpUrl()
   @MaxLength(500)
   youtube?: string;
 
-  @IsOptional()
-  @IsString()
+  @IsOptionalHttpUrl()
   @MaxLength(500)
   linkedin?: string;
 }
@@ -62,9 +89,24 @@ export class UpdateBusinessDto {
   @IsEnum(BusinessCategory)
   category?: BusinessCategory;
 
-  // ==========================================================================
+  @IsOptional()
+  @IsString()
+  @MaxLength(160)
+  tagline?: string;
+
+  @IsOptional()
+  @ValidateIf(hasValue)
+  @IsInt()
+  @Min(1800)
+  @Max(2100)
+  foundedYear?: number | null;
+
+  @IsOptional()
+  @ValidateIf(hasValue)
+  @IsEnum(BusinessSize)
+  businessSize?: BusinessSize | "" | null;
+
   // IMAGES
-  // ==========================================================================
 
   @IsOptional()
   @IsString()
@@ -76,12 +118,9 @@ export class UpdateBusinessDto {
   @MaxLength(2000)
   coverImageUrl?: string;
 
-  // ==========================================================================
   // WEBSITE / CONTACT
-  // ==========================================================================
 
-  @IsOptional()
-  @IsString()
+  @IsOptionalHttpUrl()
   @MaxLength(2000)
   websiteUrl?: string;
 
@@ -91,13 +130,24 @@ export class UpdateBusinessDto {
   phone?: string;
 
   @IsOptional()
-  @IsString()
+  @ValidateIf(hasValue)
+  @IsEmail()
   @MaxLength(255)
   email?: string;
 
-  // ==========================================================================
+  // FOCKIS SHOP / BUSINESS CARD LINKS
+
+  @IsOptional()
+  @ValidateIf(hasValue)
+  @IsMongoId()
+  storeId?: string | null;
+
+  @IsOptional()
+  @ValidateIf(hasValue)
+  @IsEnum(BusinessPrimaryAction)
+  primaryAction?: BusinessPrimaryAction | "" | null;
+
   // ADDRESS
-  // ==========================================================================
 
   @IsOptional()
   @IsString()
@@ -124,32 +174,58 @@ export class UpdateBusinessDto {
   @MaxLength(100)
   country?: string;
 
-  // ==========================================================================
   // LOCATION
-  // ==========================================================================
 
   @IsOptional()
-  latitude?: number;
+  @ValidateIf(hasValue)
+  @IsLatitude()
+  latitude?: number | null;
 
   @IsOptional()
-  longitude?: number;
+  @ValidateIf(hasValue)
+  @IsLongitude()
+  longitude?: number | null;
 
-  // ==========================================================================
+  // OPENING HOURS
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(7)
+  @ValidateNested({ each: true })
+  @Type(() => BusinessHoursEntryDto)
+  hours?: BusinessHoursEntryDto[];
+
+  @IsOptional()
+  @IsBoolean()
+  byAppointmentOnly?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  timeZone?: string;
+
   // SOCIAL LINKS
-  // ==========================================================================
 
   @IsOptional()
   @ValidateNested()
   @Type(() => UpdateBusinessSocialLinksDto)
   socialLinks?: UpdateBusinessSocialLinksDto;
 
-  // ==========================================================================
-  // SPOTLIGHT
-  // ==========================================================================
+  // MAIN FOCKIS FEED
 
   @IsOptional()
+  @IsBoolean()
+  feedEnabled?: boolean;
+
+  // SPOTLIGHT — INDEPENDENT OF THE MAIN FEED
+
+  @IsOptional()
+  @IsBoolean()
   spotlightEnabled?: boolean;
 
   @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(1000)
   spotlightPriority?: number;
 }

@@ -41,6 +41,23 @@ export class AuthController {
 
   @Public()
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post("forgot-password")
+  forgotPassword(@Body("email") email: string) {
+    return this.authService.forgotPassword(email);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post("reset-password")
+  resetPassword(
+    @Body("token") token: string,
+    @Body("password") password: string,
+  ) {
+    return this.authService.resetPassword(token, password);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post("mfa/setup")
   beginMfaSetup(@Body("setupToken") setupToken: string) {
     return this.authService.beginMfaSetup(setupToken);

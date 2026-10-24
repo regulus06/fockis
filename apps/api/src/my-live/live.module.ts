@@ -71,11 +71,38 @@ import {
   AuthModule,
 } from "../auth/auth.module";
 
+import {
+  LiveRecordingController,
+} from "./controllers/live-recording.controller";
+
+import {
+  LiveRecordingService,
+} from "./services/live-recording.service";
+
+import {
+  UploadsModule,
+} from "../uploads/uploads.module";
+
+import {
+  PostsModule,
+} from "../posts/posts.module";
+
+import {
+  ReportsModule,
+} from "../reports/reports.module";
+
 
 @Module({
   imports: [
 
     AuthModule,
+
+    // Recording storage (GCS), feed publishing and posting restrictions.
+    UploadsModule,
+
+    PostsModule,
+
+    ReportsModule,
 
     MongooseModule.forFeature([
       {
@@ -107,6 +134,7 @@ import {
   ],
 
   controllers: [
+    LiveRecordingController,
     LiveController,
   ],
 
@@ -120,6 +148,8 @@ import {
 
     LiveGuestService,
 
+    LiveRecordingService,
+
     LiveGateway,
   ],
 
@@ -129,6 +159,7 @@ import {
     LiveLikeService,
     LiveViewerService,
     LiveGuestService,
+    LiveRecordingService,
   ],
 })
-export class LiveModule {}
+export class LiveModule {}

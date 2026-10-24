@@ -83,8 +83,10 @@ import { TagsController } from './controllers/tags.controller';
 @Module({
   imports: [
     MongooseModule.forFeature([
+      // Email campaigns: use a unique model name to avoid
+      // colliding with the advertising Campaign model.
       {
-        name: Campaign.name,
+        name: 'FockisMailCampaign',
         schema: CampaignSchema,
       },
       {
@@ -123,8 +125,6 @@ import { TagsController } from './controllers/tags.controller';
         name: SignupForm.name,
         schema: SignupFormSchema,
       },
-
-      // Fockis Mail Tags
       {
         name: MailTag.name,
         schema: TagSchema,

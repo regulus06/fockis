@@ -1,3 +1,4 @@
+
 import {
   Injectable,
 } from "@nestjs/common";
@@ -16,24 +17,27 @@ import {
   FriendshipDocument,
 } from "../schemas/friendship.schema";
 
+import {
+  User,
+  UserDocument,
+} from "../../users/user.schema";
+
 @Injectable()
 export class BlockVisibilityService {
   constructor(
     @InjectModel(Friendship.name)
     private readonly friendshipModel: Model<FriendshipDocument>,
+
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
   ) {}
 
-  private normalizeId(
-    value: unknown,
-  ): string {
+  private normalizeId(value: unknown): string {
     if (value === null || value === undefined) {
       return "";
     }
 
-    if (
-      typeof value === "object" &&
-      value !== null
-    ) {
+    if (typeof value === "object") {
       const objectValue = value as any;
 
       if (objectValue._id) {
@@ -48,17 +52,12 @@ export class BlockVisibilityService {
     return String(value);
   }
 
+  private isValidId(value: string): boolean {
+    return Types.ObjectId.isValid(value);
+  }
+
   /**
-   * Returns true when either user has a blocking relationship
-   * with the other user.
-   *
-   * IMPORTANT:
-   * A user can ALWAYS view their own profile.
-   *
-   * Example:
-   *   currentUser = Elince
-   *   targetUser  = Elince
-   *   => true, even if Elince has blocked Regulus.
+   * Returns true if either user has blocked the other.
    */
   async isBlocked(
     firstUserId: string,
@@ -67,39 +66,33 @@ export class BlockVisibilityService {
     const first = this.normalizeId(firstUserId);
     const second = this.normalizeId(secondUserId);
 
-    if (!first || !second) {
-      return false;
-    }
-
-    if (first === second) {
-      return false;
-    }
-
     if (
-      !Types.ObjectId.isValid(first) ||
-      !Types.ObjectId.isValid(second)
+      !first ||
+      !second ||
+      first === second ||
+      !this.isValidId(first) ||
+      !this.isValidId(second)
     ) {
       return false;
     }
 
-    const relationship =
-      await this.friendshipModel
-        .findOne({
-          status: "blocked",
-          $or: [
-            {
-              requester: new Types.ObjectId(first),
-              receiver: new Types.ObjectId(second),
-            },
-            {
-              requester: new Types.ObjectId(second),
-              receiver: new Types.ObjectId(first),
-            },
-          ],
-        })
-        .select("_id requester receiver blockedBy status")
-        .lean()
-        .exec();
+    const relationship = await this.friendshipModel
+      .findOne({
+        status: "blocked",
+        $or: [
+          {
+            requester: new Types.ObjectId(first),
+            receiver: new Types.ObjectId(second),
+          },
+          {
+            requester: new Types.ObjectId(second),
+            receiver: new Types.ObjectId(first),
+          },
+        ],
+      })
+      .select("_id requester receiver blockedBy status")
+      .lean()
+      .exec();
 
     return Boolean(relationship);
   }
@@ -114,13 +107,12 @@ export class BlockVisibilityService {
     const first = this.normalizeId(firstUserId);
     const second = this.normalizeId(secondUserId);
 
-    if (!first || !second || first === second) {
-      return null;
-    }
-
     if (
-      !Types.ObjectId.isValid(first) ||
-      !Types.ObjectId.isValid(second)
+      !first ||
+      !second ||
+      first === second ||
+      !this.isValidId(first) ||
+      !this.isValidId(second)
     ) {
       return null;
     }
@@ -139,104 +131,108 @@ export class BlockVisibilityService {
           },
         ],
       })
-      .select(
-        "_id requester receiver blockedBy status",
-      )
+      .select("_id requester receiver blockedBy status")
       .lean()
       .exec();
   }
 
   /**
-   * Determines whether the current user may unblock the other user.
-   *
    * Only the user who created the block may remove it.
    */
   async canUnblock(
     currentUserId: string,
     otherUserId: string,
   ): Promise<boolean> {
-    const current = this.normalizeId(
-      currentUserId,
-    );
-    const other = this.normalizeId(
-      otherUserId,
-    );
+    const current = this.normalizeId(currentUserId);
+    const other = this.normalizeId(otherUserId);
 
-    if (
-      !current ||
-      !other ||
-      current === other
-    ) {
+    if (!current || !other || current === other) {
       return false;
     }
 
-    const block = await this.getBlock(
-      current,
-      other,
-    );
+    const block = await this.getBlock(current, other);
 
     if (!block) {
       return false;
     }
 
     return (
-      this.normalizeId(
-        (block as any).blockedBy,
-      ) === current
+      this.normalizeId((block as any).blockedBy) === current
     );
   }
 
   /**
-   * Determines whether currentUserId may view targetUserId.
+   * Checks whether the authenticated viewer can view a profile.
    *
    * Rules:
-   *
-   * 1. Your own profile is ALWAYS visible to you.
-   * 2. If neither user has blocked the other, viewing is allowed.
-   * 3. If a block exists between different users, viewing is denied.
-   *
-   * This means:
-   *
-   * Elince -> Elince   ALLOWED
-   * Elince -> Regulus  DENIED if blocked
-   * Regulus -> Elince  DENIED if blocked
-   * Regulus -> Regulus  ALLOWED
+   * - The owner can view their own profile.
+   * - Invalid or missing viewer IDs are denied.
+   * - Either user blocking the other denies access.
+   * - Public profiles are viewable by authenticated, non-blocked users.
+   * - Private profiles require an accepted friendship.
    */
   async canView(
     currentUserId: string,
     targetUserId: string,
   ): Promise<boolean> {
-    const current = this.normalizeId(
-      currentUserId,
-    );
-    const target = this.normalizeId(
-      targetUserId,
-    );
+    const current = this.normalizeId(currentUserId);
+    const target = this.normalizeId(targetUserId);
 
-    if (!target) {
+    if (!target || !this.isValidId(target)) {
       return false;
     }
 
-    // CRITICAL: never block access to your own profile.
     if (
-      current &&
-      current === target
+      !current ||
+      !this.isValidId(current)
     ) {
+      return false;
+    }
+
+    // The owner can view their own profile.
+    if (current === target) {
       return true;
     }
 
-    // If there is no authenticated viewer, preserve
-    // the safe behavior used by the visibility layer.
-    if (!current) {
+    // Blocking takes precedence over friendship or privacy settings.
+    if (await this.isBlocked(current, target)) {
+      return false;
+    }
+
+    const targetUser = await this.userModel
+      .findById(target)
+      .select("_id isPrivate")
+      .lean()
+      .exec();
+
+    if (!targetUser) {
+      return false;
+    }
+
+    // Public profiles are available to authenticated, non-blocked users.
+    if (targetUser.isPrivate !== true) {
       return true;
     }
 
-    const blocked =
-      await this.isBlocked(
-        current,
-        target,
-      );
+    // Private profiles require an accepted friendship.
+    const acceptedFriendship = await this.friendshipModel
+      .findOne({
+        status: "accepted",
+        $or: [
+          {
+            requester: new Types.ObjectId(current),
+            receiver: new Types.ObjectId(target),
+          },
+          {
+            requester: new Types.ObjectId(target),
+            receiver: new Types.ObjectId(current),
+          },
+        ],
+      })
+      .select("_id")
+      .lean()
+      .exec();
 
-    return !blocked;
+    return Boolean(acceptedFriendship);
   }
 }

@@ -18,6 +18,7 @@ import { LiveTokenService } from "../services/live-token.service";
 import { LiveCommentService } from "../services/live-comment.service";
 import { LiveDiscoveryService } from "../services/live-discovery.service";
 import { LiveGuestService } from "../services/live-guest.service";
+import { LiveRecordingService } from "../services/live-recording.service";
 
 import {
   CreateLiveDto,
@@ -39,6 +40,7 @@ export class LiveController {
     private readonly commentService: LiveCommentService,
     private readonly discoveryService: LiveDiscoveryService,
     private readonly liveGuestService: LiveGuestService,
+    private readonly recordingService: LiveRecordingService,
   ) {}
 
   @UseGuards(LiveJwtGuard)
@@ -435,15 +437,23 @@ export class LiveController {
       );
     }
 
-    const updated =
-      isHost || isGuest
-        ? stream
-        : await this.liveService.incrementViewer(
-            id,
-          );
+    /*
+     * Start the cloud recording once the host's client has had a
+     * moment to connect to the LiveKit room. Idempotent: reconnects
+     * never start a second recording.
+     */
+    if (isHost) {
+      this.recordingService.scheduleStart(id);
+    }
 
+    /*
+     * Viewer counts are owned by LiveGateway + LiveViewerService,
+     * which deduplicates users across sockets/tabs and handles disconnects.
+     * Do not increment here: the same client may also emit live:join,
+     * which would count that viewer twice.
+     */
     return {
-      stream: updated,
+      stream,
       token,
       serverUrl:
         process.env.LIVEKIT_URL || "",
@@ -508,9 +518,15 @@ export class LiveController {
       );
     }
 
-    return this.liveService.decrementViewer(
-      id,
-    );
+    /*
+     * Do not decrement from REST. The Socket.IO live:leave event
+     * and disconnect cleanup are the single source of truth for viewer
+     * counts; decrementing here as well can subtract a different viewer.
+     */
+    return {
+      viewerCount: Math.max(0, Number(stream.viewerCount || 0)),
+      peakViewerCount: Math.max(0, Number(stream.peakViewerCount || 0)),
+    };
   }
 
   @UseGuards(LiveJwtGuard)
