@@ -16,6 +16,7 @@ import {
 } from "livekit-client";
 
 import { api } from "../api";
+import { createSocket } from "../../socket/events/createSocket";
 
 export interface LiveViewerStream {
   id: string;
@@ -1262,6 +1263,98 @@ export function useLiveViewer({
         // User cancelled.
       }
     }, [stream]);
+
+  // ==========================================================================
+  // VIEWER PRESENCE
+  //
+  // The backend counts viewers on the /live socket ("live:join"), not on the
+  // HTTP join. Joining here makes this viewer count, and "live:viewer-count"
+  // keeps the number on screen up to date. Leaving the page (or closing the
+  // tab, which drops the socket) removes the viewer again.
+  // ==========================================================================
+
+  const isLiveNow =
+    stream?.status === "live";
+
+  useEffect(() => {
+    const id = String(streamId || "").trim();
+
+    if (!id || !isLiveNow) {
+      return;
+    }
+
+    const token = (
+      localStorage.getItem("accessToken") ||
+      localStorage.getItem("access_token") ||
+      localStorage.getItem("token") ||
+      localStorage.getItem("jwt") ||
+      localStorage.getItem("authToken") ||
+      ""
+    )
+      .replace(/^Bearer\s+/i, "")
+      .trim();
+
+    // The /live gateway requires a login.
+    if (!token) {
+      return;
+    }
+
+    const socket = createSocket("/live");
+
+    socket.auth = {
+      userId: localStorage.getItem("userId") || "",
+      token,
+    };
+
+    const applyCount = (payload: unknown) => {
+      if (!payload || typeof payload !== "object") {
+        return;
+      }
+
+      const data = payload as {
+        streamId?: unknown;
+        viewerCount?: unknown;
+      };
+
+      if (data.streamId && String(data.streamId) !== id) {
+        return;
+      }
+
+      const count = Number(data.viewerCount);
+
+      if (!Number.isFinite(count) || count < 0) {
+        return;
+      }
+
+      setStream((current) =>
+        current && current.viewers !== count
+          ? { ...current, viewers: count }
+          : current,
+      );
+    };
+
+    // Also runs after every reconnect, so the viewer is counted again.
+    const handleConnect = () => {
+      socket.emit("live:join", { streamId: id });
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("live:joined", applyCount);
+    socket.on("live:viewer-count", applyCount);
+    socket.connect();
+
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("live:joined", applyCount);
+      socket.off("live:viewer-count", applyCount);
+
+      if (socket.connected) {
+        socket.emit("live:leave", { streamId: id });
+      }
+
+      socket.disconnect();
+    };
+  }, [streamId, isLiveNow]);
 
   return {
     stream,
