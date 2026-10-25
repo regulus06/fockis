@@ -21,11 +21,15 @@ interface RegistrationConsent {
   policyAcceptedAt?: Date;
 }
 
+// Every policy on the sign-up checkbox must be accepted. Must match the policies listed on the sign-up checkbox (web/src/pages/Register.tsx).
 const REQUIRED_POLICIES = [
   "terms",
   "privacy",
-  "community_guidelines",
-  "cookie_policy",
+  "community-guidelines",
+  "child-safety",
+  "payments",
+  "shop-advertising",
+  "copyright",
 ] as const;
 
 @Injectable()
