@@ -1986,6 +1986,15 @@ export const api = {
       }>(`/live/${encodeId(id)}/recording`);
     },
 
+    /** Studio camera snapshot shown as the LIVE's card preview. */
+    uploadLiveThumbnail: async (streamId: string, image: string) => {
+      const id = requireId(streamId);
+      return request<{ thumbnailUrl: string }>(
+        `/live/${encodeId(id)}/thumbnail`,
+        { method: "POST", body: JSON.stringify({ image }) },
+      );
+    },
+
     publishRecording: async (streamId: string, caption: string) => {
       const id = requireId(streamId);
       return request<{ postId: string; alreadyPublished: boolean }>(
