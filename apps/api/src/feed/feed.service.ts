@@ -120,6 +120,27 @@ interface FeedPage {
   nextCursor?: string;
 }
 
+/*
+ * Fockis Shop products mixed into the feed.
+ *
+ * Every eligible product (active, configured for the feed, not expired)
+ * from every shop is a candidate. Each feed page carries a small batch,
+ * picked round-robin across shops so one seller cannot fill the feed:
+ * every shop's newest product first, then every shop's second product,
+ * and so on. The shop order is shuffled per viewer + session, so different
+ * people (and each fresh session) see shops in a different order.
+ *
+ * For You remembers which products it already served in the session, so
+ * scrolling keeps bringing new products. Latest has no session, so its
+ * pages walk the same rotation by page number.
+ */
+const FEED_PRODUCTS_PER_PAGE = 2;
+const FEED_PRODUCT_POOL_SIZE = 300;
+/** For You: at most this many products from one shop per session. */
+const FEED_PRODUCTS_PER_SHOP_PER_SESSION = 3;
+const FEED_PRODUCT_MODES = new Set<FeedMode>(['for-you', 'latest']);
+const STORE_MODEL_NAME = 'Store';
+
 const MAX_PAGE_SIZE = 50;
 const HISTORY_SAMPLE_SIZE = 500;
 const MAX_SESSION_LENGTH = 100;
@@ -343,6 +364,18 @@ function and(...filters: Filter[]): Filter {
   return { $and: parts };
 }
 
+/** FNV-1a: a stable pseudo-random number for seeded ordering. */
+function hashString(value: string): number {
+  let hash = 0x811c9dc5;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+
+  return hash >>> 0;
+}
+
 function toObjectIds(ids: string[]): Types.ObjectId[] {
   return ids
     .filter((id) => Types.ObjectId.isValid(id))
@@ -400,6 +433,9 @@ export class FeedService {
   );
 
   private readonly servedEvents = new ServedEventsStore();
+
+  /** Products already served per (viewer, For You session). */
+  private readonly servedProducts = new ServedEventsStore();
 
   constructor(
     @InjectModel(Post.name)
@@ -462,7 +498,7 @@ export class FeedService {
       result.posts,
     );
 
-    const [stories, events] = await Promise.all([
+    const [stories, events, products] = await Promise.all([
       this.storiesService.findAll(),
       this.loadFeedEvents({
         viewerId,
@@ -474,6 +510,7 @@ export class FeedService {
         latitude: options.latitude,
         longitude: options.longitude,
       }),
+      this.loadFeedProducts({ viewerId, mode, session, page }),
     ]);
 
     return {
@@ -497,7 +534,7 @@ export class FeedService {
         };
       }),
 
-      products: [],
+      products,
 
       page,
 
@@ -514,6 +551,251 @@ export class FeedService {
 
       session: mode === 'for-you' ? session : undefined,
     };
+  }
+
+  /**
+   * Fockis Shop products for this feed page.
+   *
+   * Never fails the feed: if anything goes wrong the page is served with no
+   * products. The product and store models are read from the shared
+   * Mongoose connection so FeedModule does not register second copies.
+   */
+  private async loadFeedProducts(input: {
+    viewerId?: string;
+    mode: FeedMode;
+    session?: string;
+    page: number;
+  }): Promise<Record<string, any>[]> {
+    // Following and Friends only show people the viewer chose.
+    if (!FEED_PRODUCT_MODES.has(input.mode)) {
+      return [];
+    }
+
+    const productModel = this.connection.models['Product'];
+
+    if (!productModel) {
+      this.logger.warn(
+        'Product model is not registered on the shared Mongoose connection; feed products are unavailable.',
+      );
+      return [];
+    }
+
+    const now = new Date();
+
+    let pool: Record<string, any>[];
+
+    try {
+      pool = (await productModel
+        .find({
+          isActive: true,
+          displayLocations: 'feed',
+          $or: [
+            { feedExpiresAt: null },
+            { feedExpiresAt: { $exists: false } },
+            { feedExpiresAt: { $gt: now } },
+          ],
+        })
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(FEED_PRODUCT_POOL_SIZE)
+        .lean()
+        .exec()) as Record<string, any>[];
+    } catch (error) {
+      // Product discovery must never take down the main social feed.
+      this.logger.warn(`Could not load feed products: ${String(error)}`);
+      return [];
+    }
+
+    if (pool.length === 0) {
+      return [];
+    }
+
+    const memoryKey =
+      input.mode === 'for-you' && input.session
+        ? `${input.viewerId ?? 'anonymous'}:${input.session}`
+        : undefined;
+
+    const seed =
+      memoryKey ??
+      `${input.viewerId ?? 'anonymous'}:h${Math.floor(now.getTime() / 3_600_000)}`;
+
+    const rotation = this.buildProductRotation(pool, seed);
+
+    let picked: Record<string, any>[];
+
+    if (memoryKey) {
+      const served = new Set(this.servedProducts.get(memoryKey));
+      const servedPerShop = new Map<string, number>();
+
+      for (const product of pool) {
+        if (served.has(idOf(product._id))) {
+          const shopId = this.shopIdOf(product);
+          servedPerShop.set(shopId, (servedPerShop.get(shopId) ?? 0) + 1);
+        }
+      }
+
+      picked = this.pickOnePerShop(
+        rotation.filter(
+          (product) =>
+            !served.has(idOf(product._id)) &&
+            (servedPerShop.get(this.shopIdOf(product)) ?? 0) <
+              FEED_PRODUCTS_PER_SHOP_PER_SESSION,
+        ),
+        FEED_PRODUCTS_PER_PAGE,
+      );
+      this.servedProducts.add(
+        memoryKey,
+        picked.map((product) => idOf(product._id)),
+      );
+    } else {
+      // No session (Latest, background checks): walk the rotation by page.
+      const start =
+        ((input.page - 1) * FEED_PRODUCTS_PER_PAGE) % rotation.length;
+      picked = this.pickOnePerShop(
+        [...rotation.slice(start), ...rotation.slice(0, start)],
+        FEED_PRODUCTS_PER_PAGE,
+      );
+    }
+
+    const withStores = await this.attachStores(picked);
+
+    return withStores.map((product) => ({
+      ...product,
+      _id: idOf(product._id),
+      id: idOf(product._id),
+    }));
+  }
+
+  private shopIdOf(product: Record<string, any>): string {
+    return (
+      idOf(product.storeId) ||
+      idOf(product.seller) ||
+      `product:${idOf(product._id)}`
+    );
+  }
+
+  /**
+   * Round-robin across shops: every shop's newest product, then every
+   * shop's second product, and so on. Shop order is shuffled by `seed`.
+   */
+  private buildProductRotation(
+    products: Record<string, any>[],
+    seed: string,
+  ): Record<string, any>[] {
+    const byShop = new Map<string, Record<string, any>[]>();
+
+    // `products` is newest first, so each shop's list is newest first too.
+    for (const product of products) {
+      const shopId = this.shopIdOf(product);
+      const list = byShop.get(shopId);
+
+      if (list) {
+        list.push(product);
+      } else {
+        byShop.set(shopId, [product]);
+      }
+    }
+
+    const shops = Array.from(byShop.keys()).sort(
+      (a, b) =>
+        hashString(`${seed}:${a}`) - hashString(`${seed}:${b}`) ||
+        a.localeCompare(b),
+    );
+
+    const rotation: Record<string, any>[] = [];
+
+    for (let round = 0; rotation.length < products.length; round += 1) {
+      for (const shopId of shops) {
+        const product = byShop.get(shopId)?.[round];
+
+        if (product) {
+          rotation.push(product);
+        }
+      }
+    }
+
+    return rotation;
+  }
+
+  /** Up to `count` products, never two from the same shop on one page. */
+  private pickOnePerShop(
+    candidates: Record<string, any>[],
+    count: number,
+  ): Record<string, any>[] {
+    const picked: Record<string, any>[] = [];
+    const shops = new Set<string>();
+
+    for (const product of candidates) {
+      const shopId = this.shopIdOf(product);
+
+      if (shops.has(shopId)) {
+        continue;
+      }
+
+      shops.add(shopId);
+      picked.push(product);
+
+      if (picked.length >= count) {
+        break;
+      }
+    }
+
+    return picked;
+  }
+
+  /**
+   * Adds `store: { id, name, logo, slug }` so the feed card can show the
+   * shop instead of a generic label. Optional: products are returned
+   * unchanged if the Store model is missing or the lookup fails.
+   */
+  private async attachStores(
+    products: Record<string, any>[],
+  ): Promise<Record<string, any>[]> {
+    const storeModel = this.connection.models[STORE_MODEL_NAME];
+
+    const storeIds = toObjectIds(
+      Array.from(
+        new Set(products.map((product) => idOf(product.storeId)).filter(Boolean)),
+      ),
+    );
+
+    if (!storeModel || storeIds.length === 0) {
+      return products;
+    }
+
+    try {
+      const stores = (await storeModel
+        .find({ _id: { $in: storeIds } })
+        .lean()
+        .exec()) as Record<string, any>[];
+
+      const byId = new Map(stores.map((store) => [idOf(store._id), store]));
+
+      return products.map((product) => {
+        const store = byId.get(idOf(product.storeId));
+
+        if (!store) {
+          return product;
+        }
+
+        return {
+          ...product,
+          store: {
+            id: idOf(store._id),
+            name: store.name ?? store.storeName ?? store.title ?? undefined,
+            logo:
+              store.logo ??
+              store.logoUrl ??
+              store.avatar ??
+              store.image ??
+              undefined,
+            slug: store.slug ?? undefined,
+          },
+        };
+      });
+    } catch (error) {
+      this.logger.warn(`Could not load feed product stores: ${String(error)}`);
+      return products;
+    }
   }
 
   /* ==========================================================================
