@@ -14,11 +14,15 @@ import {
   MinLength,
 } from "class-validator";
 
+// Must match the policies listed on the sign-up checkbox (web/src/pages/Register.tsx).
 const ALLOWED_POLICIES = [
   "terms",
   "privacy",
-  "community_guidelines",
-  "cookie_policy",
+  "community-guidelines",
+  "child-safety",
+  "payments",
+  "shop-advertising",
+  "copyright",
 ] as const;
 
 export class CreateUserDto {
@@ -71,7 +75,7 @@ export class CreateUserDto {
   @ArrayMinSize(1, {
     message: "You must accept the required policies.",
   })
-  @ArrayMaxSize(4, {
+  @ArrayMaxSize(ALLOWED_POLICIES.length, {
     message: "Too many policies were submitted.",
   })
   @IsString({ each: true })
