@@ -1,4 +1,6 @@
+
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -22,6 +24,27 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post("register")
   register(@Body() body: CreateUserDto) {
+    if (body.termsAccepted !== true) {
+      throw new BadRequestException(
+        "You must accept the terms and policies to register.",
+      );
+    }
+
+    if (
+      !Array.isArray(body.acceptedPolicies) ||
+      body.acceptedPolicies.length === 0
+    ) {
+      throw new BadRequestException(
+        "You must accept the required policies.",
+      );
+    }
+
+    if (!body.policyAcceptanceVersion?.trim()) {
+      throw new BadRequestException(
+        "Policy acceptance version is required.",
+      );
+    }
+
     return this.authService.register(
       body.username,
       body.email,
@@ -29,6 +52,12 @@ export class AuthController {
       body.firstName,
       body.lastName,
       body.countryCode,
+      {
+        termsAccepted: true,
+        acceptedPolicies: body.acceptedPolicies,
+        policyAcceptanceVersion: body.policyAcceptanceVersion,
+        policyAcceptedAt: new Date(),
+      },
     );
   }
 

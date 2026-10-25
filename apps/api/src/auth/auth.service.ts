@@ -94,6 +94,18 @@ export class AuthService {
 
     countryCode?: string,
 
+    consent?: {
+
+      termsAccepted: boolean;
+
+      acceptedPolicies: string[];
+
+      policyAcceptanceVersion: string;
+
+      policyAcceptedAt?: Date;
+
+    },
+
   ) {
 
     return this.registrationService.register(
@@ -109,6 +121,8 @@ export class AuthService {
       lastName,
 
       countryCode,
+
+      consent,
 
     );
 
@@ -166,7 +180,7 @@ export class AuthService {
 
       email.length > 254 ||
 
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
     ) {
 
@@ -341,41 +355,71 @@ export class AuthService {
       });
 
     } catch (error) {
+
       const mailError = error as Error & {
+
         code?: string;
+
         command?: string;
+
         responseCode?: number;
+
       };
 
       console.error("[PasswordReset] Email delivery failed:", {
+
         message: mailError.message,
+
         code: mailError.code,
+
         command: mailError.command,
+
         responseCode: mailError.responseCode,
+
       });
 
       try {
+
         await this.userModel.updateOne(
+
           { _id: user._id, resetPasswordToken: tokenHash },
+
           {
+
             $set: {
+
               resetPasswordToken: null,
+
               resetPasswordExpires: null,
+
             },
+
           },
+
         );
+
       } catch (cleanupError) {
+
         console.error(
+
           "[PasswordReset] Failed to clear reset token after email failure:",
+
           cleanupError instanceof Error
+
             ? cleanupError.message
+
             : "Unknown cleanup error",
+
         );
+
       }
 
       throw new ServiceUnavailableException(
+
         "Password reset email could not be sent. Check the server email configuration and try again.",
+
       );
+
     }
 
     return response;
@@ -425,133 +469,235 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(password, 12);
 
     // Load the account while the reset token is still valid so the confirmation
+
     // email can address the user by their saved name.
+
     const user = await this.userModel
+
       .findOne({
+
         resetPasswordToken: tokenHash,
+
         resetPasswordExpires: { $gt: new Date() },
+
       })
+
       .exec();
 
     if (!user) {
+
       throw new BadRequestException(
+
         "This password reset link is invalid or has expired. Request a new one.",
+
       );
+
     }
 
     // Keep the update atomic so an expired or already-used token cannot reset
+
     // the password a second time.
+
     const result = await this.userModel.updateOne(
+
       {
+
         _id: user._id,
+
         resetPasswordToken: tokenHash,
+
         resetPasswordExpires: { $gt: new Date() },
+
       },
+
       {
+
         $set: {
+
           password: passwordHash,
+
           resetPasswordToken: null,
+
           resetPasswordExpires: null,
+
         },
+
       },
+
     );
 
     if (result.modifiedCount !== 1) {
+
       throw new BadRequestException(
+
         "This password reset link is invalid or has expired. Request a new one.",
+
       );
+
     }
 
     // Email delivery is best-effort: a mail server problem must not undo or
+
     // misreport the password change after the database update has succeeded.
+
     try {
+
       const host = this.configService.get<string>("SMTP_HOST");
+
       const port = Number(this.configService.get("SMTP_PORT") || 465);
+
       const smtpUser = this.configService.get<string>("SMTP_USER");
+
       const smtpPass = this.configService.get<string>("SMTP_PASS");
+
       const from = this.configService.get<string>("MAIL_FROM");
 
       if (!host || !smtpUser || !smtpPass || !from ||
+
           !Number.isInteger(port) || port < 1 || port > 65535) {
+
         throw new Error("SMTP configuration is incomplete.");
+
       }
 
       const secureSetting = String(
+
         this.configService.get("SMTP_SECURE") ?? (port === 465 ? "true" : "false"),
+
       ).toLowerCase();
 
       const transporter = nodemailer.createTransport({
+
         host,
+
         port,
+
         secure: secureSetting === "true",
+
         auth: {
+
           user: smtpUser,
+
           pass: smtpPass,
+
         },
+
       });
 
       const nameParts = [
+
         (user as any).firstName,
+
         (user as any).lastName,
+
       ]
+
         .map((part) => String(part || "").trim())
+
         .filter(Boolean);
 
       const savedName =
+
         nameParts.join(" ") ||
+
         String((user as any).displayName || "").trim() ||
+
         String((user as any).fullName || "").trim() ||
+
         String((user as any).username || "").trim();
 
       const greetingName = savedName || "there";
+
       const safeGreetingName = greetingName
+
         .replace(/&/g, "&amp;")
+
         .replace(/</g, "&lt;")
+
         .replace(/>/g, "&gt;")
+
         .replace(/"/g, "&quot;")
+
         .replace(/'/g, "&#39;");
 
       await transporter.sendMail({
+
         from,
+
         to: user.email,
+
         subject: "Your Fockis password has been changed",
+
         text:
+
           `Hi ${greetingName},\n\n` +
+
           "Your Fockis account password has been changed successfully.\n\n" +
+
           "If you made this change, no further action is required. If you did not " +
+
           "change your password, please secure your account and contact Fockis support.\n\n" +
+
           "For your security, this email will never contain your password.\n\n" +
+
           "The Fockis Security Team",
+
         html: `
+
           <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#172033;line-height:1.6">
+
             <h2 style="color:#1877f2">Your Fockis password has been changed</h2>
+
             <p>Hi ${safeGreetingName},</p>
+
             <p>Your Fockis account password has been changed successfully.</p>
+
             <p>If you made this change, no further action is required.</p>
+
             <p><strong>If you did not change your password</strong>, please secure your account immediately and contact Fockis support.</p>
+
             <p>For your security, this email will never contain your password.</p>
+
             <p>The Fockis Security Team</p>
+
           </div>
+
         `,
+
       });
+
     } catch (emailError) {
+
       const mailError = emailError as Error & {
+
         code?: string;
+
         command?: string;
+
         responseCode?: number;
+
       };
 
       console.error("[PasswordReset] Password changed, but confirmation email failed:", {
+
         message: mailError.message,
+
         code: mailError.code,
+
         command: mailError.command,
+
         responseCode: mailError.responseCode,
+
       });
+
     }
 
     return {
+
       message:
+
         "Your password has been changed successfully. You can now sign in.",
+
     };
 
   }
