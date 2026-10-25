@@ -1283,6 +1283,127 @@ export class LiveService {
       : 0;
   }
 
+  // ===========================================================================
+  // LIVE THUMBNAIL (camera snapshot from the host's Studio)
+  // ===========================================================================
+
+  /**
+   * Stores the host's latest camera snapshot and points thumbnailUrl at
+   * GET /live/:id/thumbnail, so every LIVE card shows a real preview.
+   */
+  async saveThumbnail(
+    userId: string,
+    streamId: string,
+    image: string,
+    publicBaseUrl: string,
+  ) {
+    if (!userId) {
+      throw new ForbiddenException(
+        "Authentication required.",
+      );
+    }
+
+    this.assertObjectId(streamId);
+
+    const match =
+      /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(
+        String(image || "").trim(),
+      );
+
+    if (!match) {
+      throw new BadRequestException(
+        "The thumbnail must be a JPEG image.",
+      );
+    }
+
+    const bytes = Buffer.from(match[1], "base64");
+
+    if (
+      bytes.length < 200 ||
+      bytes.length > 200 * 1024 ||
+      bytes[0] !== 0xff ||
+      bytes[1] !== 0xd8
+    ) {
+      throw new BadRequestException(
+        "The thumbnail must be a JPEG image under 200 KB.",
+      );
+    }
+
+    const stream =
+      await this.liveModel
+        .findById(streamId)
+        .select("hostId status");
+
+    if (!stream) {
+      throw new NotFoundException(
+        "LIVE stream not found.",
+      );
+    }
+
+    this.assertHost(stream, userId);
+
+    if (stream.status !== "live") {
+      throw new BadRequestException(
+        "Only a running LIVE can update its thumbnail.",
+      );
+    }
+
+    const now = new Date();
+
+    const thumbnailUrl =
+      `${publicBaseUrl.replace(/\/+$/, "")}/live/${streamId}/thumbnail?v=${now.getTime()}`;
+
+    await this.liveModel.updateOne(
+      { _id: stream._id },
+      {
+        $set: {
+          thumbnailData: bytes,
+          thumbnailUpdatedAt: now,
+          thumbnailUrl,
+        },
+      },
+    );
+
+    return { thumbnailUrl };
+  }
+
+  /**
+   * JPEG bytes of a public stream's snapshot, or null.
+   */
+  async getThumbnail(
+    streamId: string,
+  ): Promise<Buffer | null> {
+    if (!/^[a-fA-F0-9]{24}$/.test(String(streamId || ""))) {
+      return null;
+    }
+
+    const stream: any =
+      await this.liveModel
+        .findById(streamId)
+        .select("+thumbnailData visibility")
+        .lean();
+
+    if (!stream?.thumbnailData) {
+      return null;
+    }
+
+    if (
+      String(stream.visibility ?? "public").toLowerCase() !==
+      "public"
+    ) {
+      return null;
+    }
+
+    const raw = stream.thumbnailData;
+
+    if (Buffer.isBuffer(raw)) {
+      return raw;
+    }
+
+    // .lean() returns a BSON Binary.
+    return Buffer.from(raw.buffer ?? raw);
+  }
+
   private assertObjectId(
     value: string,
   ): void {

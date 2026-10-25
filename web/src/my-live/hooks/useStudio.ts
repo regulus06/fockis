@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import { api } from "../api";
+import { useLiveThumbnail } from "./useLiveThumbnail";
 
 import {
   initialScenes,
@@ -2743,6 +2744,15 @@ export function useStudio() {
   // FOLLOWERS
   // ==========================================================================
 
+
+  // ==========================================================================
+  // LIVE THUMBNAIL (camera snapshot for the LIVE cards)
+  // ==========================================================================
+
+  useLiveThumbnail(
+    phase === "live" ? sessionId : null,
+    cameraStream ?? screenStreamRef.current,
+  );
 
   // ==========================================================================
   // RETURN

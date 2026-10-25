@@ -144,6 +144,10 @@ export default function LiveManagerCard({
   const [menuOpen, setMenuOpen] =
     useState(false);
 
+  /** The recording preview could not load (expired link, no access...). */
+  const [previewFailed, setPreviewFailed] =
+    useState(false);
+
   // ==========================================================================
   // SAFETY GUARD
   // ==========================================================================
@@ -186,6 +190,26 @@ export default function LiveManagerCard({
   const thumbnail = String(
     live.thumbnailUrl ?? "",
   );
+
+  /*
+   * Without a thumbnail, show the first frames of the saved recording
+   * (signed playback URL from /live/mine) instead of an empty dark box.
+   */
+  const recordingInfo =
+    live.recording && typeof live.recording === "object"
+      ? (live.recording as {
+          status?: unknown;
+          playbackUrl?: unknown;
+        })
+      : null;
+
+  const previewUrl =
+    !thumbnail &&
+    !previewFailed &&
+    recordingInfo?.status === "ready" &&
+    typeof recordingInfo.playbackUrl === "string"
+      ? recordingInfo.playbackUrl
+      : "";
 
   const viewers = Number(
     live.currentViewers ??
@@ -251,6 +275,24 @@ export default function LiveManagerCard({
             src={thumbnail}
             alt={title}
             className="live-card__thumbnail"
+          />
+        ) : previewUrl ? (
+          <video
+            // "#t=1" shows a frame from 1s in rather than a black first frame.
+            src={`${previewUrl}#t=1`}
+            className="live-card__thumbnail"
+            preload="metadata"
+            muted
+            playsInline
+            loop
+            aria-label={title}
+            onError={() => setPreviewFailed(true)}
+            onMouseEnter={(event) => {
+              void event.currentTarget.play().catch(() => {});
+            }}
+            onMouseLeave={(event) => {
+              event.currentTarget.pause();
+            }}
           />
         ) : (
           <div className="live-card__placeholder">
