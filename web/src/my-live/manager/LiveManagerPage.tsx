@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 
 import LiveManagerCard from "./LiveManagerCard";
+import LiveRecordingView from "./LiveRecordingView";
 
 import "./liveManager.scss";
 
@@ -116,6 +117,10 @@ export default function LiveManagerPage() {
     useState("");
 
   const [deletingId, setDeletingId] =
+    useState<string | null>(null);
+
+  /** Ended live whose recording is open (null = show the list). */
+  const [viewingId, setViewingId] =
     useState<string | null>(null);
 
   const getId = useCallback(
@@ -437,12 +442,37 @@ export default function LiveManagerPage() {
         return;
       }
 
-      navigate(
-        `/my-live/${encodeURIComponent(id)}`,
-      );
+      // A live that is still running opens the Studio; an ended live
+      // opens its recording (player, download, publish).
+      if (isActive(live)) {
+        navigate(
+          `/my-live/${encodeURIComponent(id)}`,
+        );
+        return;
+      }
+
+      setViewingId(id);
     },
-    [getId, navigate],
+    [getId, isActive, navigate],
   );
+
+  if (viewingId) {
+    const viewingLive =
+      lives.find(
+        (item) => getId(item) === viewingId,
+      ) ?? null;
+
+    return (
+      <div className="live-manager">
+        <LiveRecordingView
+          streamId={viewingId}
+          live={viewingLive}
+          onBack={() => setViewingId(null)}
+          onChanged={() => void loadLives(true)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="live-manager">
