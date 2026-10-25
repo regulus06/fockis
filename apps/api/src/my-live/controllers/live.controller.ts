@@ -14,6 +14,7 @@ import {
 import type { Response } from "express";
 
 import { LiveJwtGuard } from "../guards/live-jwt.guard";
+import { Public } from "../../auth/public.decorator";
 
 import { LiveService } from "../services/live.service";
 import { LiveTokenService } from "../services/live-token.service";
@@ -132,7 +133,9 @@ export class LiveController {
 
   /**
    * Public JPEG preview of a LIVE (used as <img src> by every card).
+   * @Public(): an <img> request carries no login token.
    */
+  @Public()
   @Get(":id/thumbnail")
   async thumbnail(
     @Param("id") id: string,
