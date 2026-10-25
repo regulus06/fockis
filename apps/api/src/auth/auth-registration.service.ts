@@ -1,3 +1,4 @@
+
 import {
   BadRequestException,
   Injectable,
@@ -12,6 +13,20 @@ import {
 } from "../users/constants/fockis-country.constants";
 
 import { AuthSecurityService } from "./auth-security.service";
+
+interface RegistrationConsent {
+  termsAccepted: boolean;
+  acceptedPolicies: string[];
+  policyAcceptanceVersion: string;
+  policyAcceptedAt?: Date;
+}
+
+const REQUIRED_POLICIES = [
+  "terms",
+  "privacy",
+  "community_guidelines",
+  "cookie_policy",
+] as const;
 
 @Injectable()
 export class AuthRegistrationService {
@@ -29,48 +44,27 @@ export class AuthRegistrationService {
     firstName?: string,
     lastName?: string,
     countryCode?: string,
+    consent?: RegistrationConsent,
   ) {
-    // ============================================================
-    // NORMALIZE
-    // ============================================================
-
-    const normalizedEmail = String(
-      email || "",
-    )
+    const normalizedEmail = String(email || "")
       .toLowerCase()
       .trim();
 
-    const normalizedUsername = String(
-      username || "",
-    )
+    const normalizedUsername = String(username || "")
       .trim()
       .toLowerCase();
 
-    const normalizedFirstName = String(
-      firstName || "",
-    ).trim();
+    const normalizedFirstName = String(firstName || "").trim();
+    const normalizedLastName = String(lastName || "").trim();
 
-    const normalizedLastName = String(
-      lastName || "",
-    ).trim();
-
-    const normalizedCountryCode =
-      String(countryCode || "")
-        .trim()
-        .toUpperCase();
-
-    // ============================================================
-    // BASIC VALIDATION
-    // ============================================================
+    const normalizedCountryCode = String(countryCode || "")
+      .trim()
+      .toUpperCase();
 
     if (!normalizedUsername) {
-      throw new BadRequestException(
-        "Username is required.",
-      );
+      throw new BadRequestException("Username is required.");
     }
 
-    // Usernames are public (@handle), so they must never be an email
-    // address or anything else that exposes private contact details.
     if (!/^[a-z0-9._]{3,30}$/.test(normalizedUsername)) {
       throw new BadRequestException(
         "Username can only use letters, numbers, dots and underscores (3-30 characters). Do not use your email address.",
@@ -78,142 +72,99 @@ export class AuthRegistrationService {
     }
 
     if (!normalizedEmail) {
+      throw new BadRequestException("Email is required.");
+    }
+
+    if (
+      normalizedEmail.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
+    ) {
       throw new BadRequestException(
-        "Email is required.",
+        "Please provide a valid email address.",
       );
     }
 
     if (!password) {
+      throw new BadRequestException("Password is required.");
+    }
+
+    if (!/^[A-Z]{2}$/.test(normalizedCountryCode)) {
       throw new BadRequestException(
-        "Password is required.",
+        "A valid two-letter country code is required.",
       );
     }
 
-    // ============================================================
-    // COUNTRY VALIDATION
-    // ============================================================
-
-    if (!normalizedCountryCode) {
+    if (!consent || consent.termsAccepted !== true) {
       throw new BadRequestException(
-        "Country is required.",
+        "You must accept the terms and policies to create an account.",
       );
     }
 
     if (
-      !/^[A-Z]{2}$/.test(
-        normalizedCountryCode,
+      !Array.isArray(consent.acceptedPolicies) ||
+      !REQUIRED_POLICIES.every((policy) =>
+        consent.acceptedPolicies.includes(policy),
       )
     ) {
       throw new BadRequestException(
-        "Invalid country code.",
+        "You must accept all required policies to create an account.",
       );
     }
 
-    // ============================================================
-    // CHECK EMAIL
-    // ============================================================
-
-    const existing =
-      await this.usersService.findByEmail(
-        normalizedEmail,
-      );
-
-    if (existing) {
+    if (
+      typeof consent.policyAcceptanceVersion !== "string" ||
+      !consent.policyAcceptanceVersion.trim() ||
+      consent.policyAcceptanceVersion.trim().length > 50
+    ) {
       throw new BadRequestException(
-        "Email already exists.",
+        "A valid policy acceptance version is required.",
       );
     }
 
-    // ============================================================
-    // PASSWORD SECURITY
-    // ============================================================
-
-    this.securityService.validatePassword(
-      password,
+    const existing = await this.usersService.findByEmail(
+      normalizedEmail,
     );
 
-    // ============================================================
-    // HASH PASSWORD
-    // ============================================================
+    if (existing) {
+      throw new BadRequestException("Email already exists.");
+    }
 
-    const hash =
-      await bcrypt.hash(
-        password,
-        this.PASSWORD_BCRYPT_ROUNDS,
-      );
+    this.securityService.validatePassword(password);
 
-    // ============================================================
-    // CREATE USER
-    //
-    // UsersService is responsible for generating:
-    // - callingCode
-    // - fockisId
-    //
-    // We only provide countryCode.
-    // ============================================================
+    const hash = await bcrypt.hash(
+      password,
+      this.PASSWORD_BCRYPT_ROUNDS,
+    );
 
-    const user =
-      await this.usersService.create({
-        username:
-          normalizedUsername,
+    const user = await this.usersService.create({
+      username: normalizedUsername,
+      email: normalizedEmail,
+      password: hash,
+      firstName: normalizedFirstName,
+      lastName: normalizedLastName,
+      countryCode: normalizedCountryCode,
 
-        email:
-          normalizedEmail,
+      termsAccepted: true,
+      acceptedPolicies: [...REQUIRED_POLICIES],
+      policyAcceptanceVersion:
+        consent.policyAcceptanceVersion.trim(),
+      policyAcceptedAt: new Date(),
 
-        password:
-          hash,
-
-        firstName:
-          normalizedFirstName,
-
-        lastName:
-          normalizedLastName,
-
-        countryCode:
-          normalizedCountryCode,
-
-        mustChangePassword:
-          false,
-
-        passwordHistory:
-          [],
-
-        passwordChangedAt:
-          new Date(),
-
-        passwordResetByAdmin:
-          false,
-
-        failedLoginAttempts:
-          0,
-
-        lastFailedLoginAt:
-          null,
-
-        lockedUntil:
-          null,
-
-        lockoutCount:
-          0,
-
-        lastLoginAt:
-          null,
-
-        lastLoginIp:
-          null,
-
-        lastLoginUserAgent:
-          null,
-
-        lastActiveAt:
-          null,
-
-        online:
-          false,
-
-        lastSeen:
-          null,
-      } as any);
+      mustChangePassword: false,
+      passwordHistory: [],
+      passwordChangedAt: new Date(),
+      passwordResetByAdmin: false,
+      failedLoginAttempts: 0,
+      lastFailedLoginAt: null,
+      lockedUntil: null,
+      lockoutCount: 0,
+      lastLoginAt: null,
+      lastLoginIp: null,
+      lastLoginUserAgent: null,
+      lastActiveAt: null,
+      online: false,
+      lastSeen: null,
+    } as any);
 
     if (!user) {
       throw new BadRequestException(
@@ -221,71 +172,32 @@ export class AuthRegistrationService {
       );
     }
 
-    // ============================================================
-    // PUBLIC FOCKIS ID
-    // ============================================================
-
     const publicFockisId =
-      user.fockisId &&
-      user.callingCode
+      user.fockisId && user.callingCode
         ? formatPublicFockisId(
             user.fockisId,
             user.callingCode,
           )
         : null;
 
-    // ============================================================
-    // RESPONSE
-    // ============================================================
-
     return {
-      message:
-        "User created successfully.",
-
+      message: "User created successfully.",
       user: {
-        _id:
-          user._id,
-
-        id:
-          user._id,
-
-        username:
-          user.username,
-
-        email:
-          user.email,
-
-        firstName:
-          user.firstName || "",
-
-        lastName:
-          user.lastName || "",
-
-        // Internal Fockis identity.
-        fockisId:
-          user.fockisId,
-
-        // Country selected by user.
-        countryCode:
-          user.countryCode,
-
-        // Generated by UsersService.
-        callingCode:
-          user.callingCode,
-
-        // Public Fockis identity.
+        _id: user._id,
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        fockisId: user.fockisId,
+        countryCode: user.countryCode,
+        callingCode: user.callingCode,
         publicFockisId,
-
-        role:
-          user.role || "user",
-
-        isActive:
-          user.isActive,
-
-        mustChangePassword:
-          Boolean(
-            user.mustChangePassword,
-          ),
+        role: user.role || "user",
+        isActive: user.isActive,
+        mustChangePassword: Boolean(
+          user.mustChangePassword,
+        ),
       },
     };
   }
