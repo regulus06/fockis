@@ -1,10 +1,14 @@
+
 import type { Category } from "../types/category.types";
 import { CATEGORIES } from "../data/categoryData";
 
 const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_URL ||
-  "http://localhost:3000"
+  import.meta.env.VITE_API_BASE_URL ||
+  (typeof window !== "undefined" &&
+  ["localhost", "127.0.0.1"].includes(window.location.hostname)
+    ? "http://localhost:3000"
+    : "https://fockis.onrender.com")
 ).replace(/\/+$/, "");
 
 function buildUrl(path: string): string {
@@ -19,6 +23,7 @@ async function request<T>(path: string): Promise<T> {
   });
 
   const contentType = response.headers.get("content-type") ?? "";
+
   const data: unknown = contentType.includes("application/json")
     ? await response.json()
     : await response.text();
@@ -39,9 +44,13 @@ function normalizeCategories(data: unknown): Category[] {
 
   for (let depth = 0; depth < 4; depth++) {
     if (Array.isArray(rows)) break;
-    if (!rows || typeof rows !== "object") return [];
+
+    if (!rows || typeof rows !== "object") {
+      return [];
+    }
 
     const object = rows as Record<string, unknown>;
+
     rows =
       object.categories ??
       object.data ??
@@ -49,7 +58,9 @@ function normalizeCategories(data: unknown): Category[] {
       object.results;
   }
 
-  if (!Array.isArray(rows)) return [];
+  if (!Array.isArray(rows)) {
+    return [];
+  }
 
   return rows.filter(
     (item): item is Category =>
@@ -60,8 +71,7 @@ function normalizeCategories(data: unknown): Category[] {
 }
 
 export async function listCategories(): Promise<Category[]> {
-  // The current Fockis Shop category catalogue.
-  // Use this when the backend catalogue is not yet implemented.
+  // Prefer the existing local Fockis Shop category catalogue.
   const localCategories = Array.isArray(CATEGORIES)
     ? CATEGORIES
     : [];
@@ -70,13 +80,17 @@ export async function listCategories(): Promise<Category[]> {
     return localCategories;
   }
 
-  // Fallback if the local catalogue is empty.
+  // Fall back to the backend if the local catalogue is empty.
   try {
     return normalizeCategories(
       await request<unknown>("/marketplace/categories"),
     );
   } catch (error) {
-    console.error("[Fockis Shop] Failed to load categories:", error);
+    console.error(
+      "[Fockis Shop] Failed to load categories:",
+      error,
+    );
+
     return [];
   }
 }
@@ -96,7 +110,9 @@ function createCategorySlug(category: Category): string {
 export async function getCategoryBySlug(
   slug: string,
 ): Promise<Category | null> {
-  if (!slug) return null;
+  if (!slug) {
+    return null;
+  }
 
   const normalizedSlug = slug
     .trim()

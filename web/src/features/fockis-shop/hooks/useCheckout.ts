@@ -1,28 +1,28 @@
 import {
 
-  FormEvent,
+FormEvent,
 
-  useCallback,
+useCallback,
 
-  useEffect,
+useEffect,
 
-  useMemo,
+useMemo,
 
-  useState,
+useState,
 
-  type Dispatch,
+type Dispatch,
 
-  type SetStateAction,
+type SetStateAction,
 
 } from "react";
 
 import {
 
-  CardElement,
+CardElement,
 
-  useElements,
+useElements,
 
-  useStripe,
+useStripe,
 
 } from "@stripe/react-stripe-js";
 
@@ -36,13 +36,13 @@ import type { CartLineItem } from "../types/cart.types";
 
 import type {
 
-  CheckoutCartItem,
+CheckoutCartItem,
 
-  CheckoutSellerGroup,
+CheckoutSellerGroup,
 
-  PaymentMethod,
+PaymentMethod,
 
-  TipOption,
+TipOption,
 
 } from "../types/checkout.types";
 
@@ -52,1217 +52,1213 @@ import type { ShippingEstimate } from "../types/shipping.types";
 
 import {
 
-  getShippingEstimates,
+getShippingEstimates,
 
-  type PlaceOrderRequest,
+type PlaceOrderRequest,
 
 } from "../services/checkoutApi";
 
 export interface CheckoutAddress extends OrderShippingAddress {
 
-  fullName: string;
+fullName: string;
 
-  email: string;
+email: string;
 
-  line1: string;
+line1: string;
 
-  line2: string;
+line2: string;
 
-  city: string;
+city: string;
 
-  state: string;
+state: string;
 
-  postalCode: string;
+postalCode: string;
 
-  country: string;
+country: string;
 
-  countryCode: string;
+countryCode: string;
 
-  phone: string;
+phone: string;
 
 }
 
 export type BackendPaymentMethod =
 
-  | "card"
+| "card"
 
-  | "moncash"
+| "moncash"
 
-  | "natcash"
+| "natcash"
 
-  | "cod";
+| "cod";
 
 export interface CountryConfig {
 
-  code: string;
+code: string;
 
-  currency: string;
+currency: string;
 
-  currencySymbol: string;
+currencySymbol: string;
 
-  name: string;
+name: string;
 
-  addressStateLabel: string;
+addressStateLabel: string;
 
-  cityLabel: string;
+cityLabel: string;
 
-  postalLabel: string;
+postalLabel: string;
 
-  postalRequired: boolean;
+postalRequired: boolean;
 
-  phoneRequired: boolean;
+phoneRequired: boolean;
 
-  requiresPostalCode: boolean;
+requiresPostalCode: boolean;
 
-  requiresPhone: boolean;
+requiresPhone: boolean;
 
-  paymentMethods: BackendPaymentMethod[];
+paymentMethods: BackendPaymentMethod[];
 
 }
 
 export interface CheckoutTotals {
 
-  subtotal: number;
+subtotal: number;
 
-  estimatedShipping: number;
+estimatedShipping: number;
 
-  estimatedTax: number;
+estimatedTax: number;
 
-  tip: number;
+tip: number;
 
-  total: number;
+total: number;
 
-  itemCount: number;
+itemCount: number;
 
 }
 
 export interface StripePaymentResult {
 
-  paymentIntentId: string;
+paymentIntentId: string;
 
-  clientSecret: string;
+clientSecret: string;
 
-  status?: string;
+status?: string;
 
 }
 
 /**
 
- * Exact item DTO accepted by the Fockis Shop backend.
+ * Exact item DTO accepted by the Fockis Shop backend.
 
- *
+ *
 
- * IMPORTANT:
+ * IMPORTANT:
 
- * Do NOT add totalPrice.
+ * Do NOT add totalPrice.
 
- *
+ *
 
- * The backend calculates totals from:
+ * The backend calculates totals from:
 
- * quantity * unitPrice
+ * quantity * unitPrice
 
- */
+*/
 
 export interface BackendOrderItem {
 
-  productId: string;
+productId: string;
 
-  sellerId?: string;
+sellerId?: string;
 
-  storeId?: string;
+storeId?: string;
 
-  productName: string;
+productName: string;
 
-  quantity: number;
+quantity: number;
 
-  unitPrice: number;
+unitPrice: number;
 
 }
 
 /**
 
- * Public checkout controller type.
+ * Public checkout controller type.
 
- *
+ *
 
- * CheckoutForm imports this type directly:
+ * CheckoutForm imports this type directly:
 
- *
+ *
 
- * import type { CheckoutController } from "../../hooks/useCheckout";
+ * import type { CheckoutController } from "../../hooks/useCheckout";
 
- */
+*/
 
 export interface CheckoutController {
 
-  items: CartLineItem[];
+items: CartLineItem[];
 
-  checkoutItems: CheckoutCartItem[];
+checkoutItems: CheckoutCartItem[];
 
-  checkoutSellerGroups: CheckoutSellerGroup[];
+checkoutSellerGroups: CheckoutSellerGroup[];
 
-  address: CheckoutAddress;
+address: CheckoutAddress;
 
-  setAddress: Dispatch<SetStateAction<CheckoutAddress>>;
+setAddress: Dispatch<SetStateAction<CheckoutAddress>>;
 
-  updateAddress: (
+updateAddress: (
 
-    field: keyof CheckoutAddress,
+field: keyof CheckoutAddress,
 
-    value: string,
+value: string,
 
-  ) => void;
+) => void;
 
-  handleCountryChange: (
+handleCountryChange: (
 
-    countryCode: string,
+countryCode: string,
 
-  ) => void;
+) => void;
 
-  countryCode: string;
+countryCode: string;
 
-  countryConfig: CountryConfig;
+countryConfig: CountryConfig;
 
-  countries: CountryConfig[];
+countries: CountryConfig[];
 
-  isHaiti: boolean;
+isHaiti: boolean;
 
-  paymentMethod: PaymentMethod;
+paymentMethod: PaymentMethod;
 
-  setPaymentMethod: Dispatch<
+setPaymentMethod: Dispatch<
 
-    SetStateAction<PaymentMethod>
+SetStateAction<PaymentMethod>
 
-  >;
+>;
 
-  selectPaymentMethod: (
+selectPaymentMethod: (
 
-    method: PaymentMethod,
+method: PaymentMethod,
 
-  ) => void;
+) => void;
 
-  supportedPaymentMethods: PaymentMethod[];
+supportedPaymentMethods: PaymentMethod[];
 
-  cardComplete: boolean;
+cardComplete: boolean;
 
-  setCardComplete: Dispatch<
+setCardComplete: Dispatch<
 
-    SetStateAction<boolean>
+SetStateAction<boolean>
 
-  >;
+>;
 
-  estimates: ShippingEstimate[];
+estimates: ShippingEstimate[];
 
-  shippingEstimates: ShippingEstimate[];
+shippingEstimates: ShippingEstimate[];
 
-  shippingSelections: Record<string, string>;
+shippingSelections: Record<string, string>;
 
-  setShippingSelections: Dispatch<
+setShippingSelections: Dispatch<
 
-    SetStateAction<Record<string, string>>
+SetStateAction<Record<string, string>>
 
-  >;
+>;
 
-  selectShippingMethod: (
+selectShippingMethod: (
 
-    storeId: string,
+storeId: string,
 
-    optionId: string,
+optionId: string,
 
-  ) => void;
+) => void;
 
-  selectShipping: (
+selectShipping: (
 
-    storeId: string,
+storeId: string,
 
-    optionId: string,
+optionId: string,
 
-  ) => void;
+) => void;
 
-  loadShippingEstimates: () => Promise<void>;
+loadShippingEstimates: () => Promise<void>;
 
-  storeNameById: Record<string, string>;
+storeNameById: Record<string, string>;
 
-  subtotal: number;
+subtotal: number;
 
-  shipping: number;
+shipping: number;
 
-  tax: number;
+tax: number;
 
-  tip: number;
+tip: number;
 
-  total: number;
+total: number;
 
-  totals: CheckoutTotals;
+totals: CheckoutTotals;
 
-  cartTotals: CheckoutTotals;
+cartTotals: CheckoutTotals;
 
-  tipOption: TipOption;
+tipOption: TipOption;
 
-  setTipOption: Dispatch<
+setTipOption: Dispatch<
 
-    SetStateAction<TipOption>
+SetStateAction<TipOption>
 
-  >;
+>;
 
-  customTip: string;
+customTip: string;
 
-  setCustomTip: Dispatch<
+setCustomTip: Dispatch<
 
-    SetStateAction<string>
+SetStateAction<string>
 
-  >;
+>;
 
-  tipAmount: number;
+tipAmount: number;
 
-  orderTotal: number;
+orderTotal: number;
 
-  formatCheckoutPrice: (
+formatCheckoutPrice: (
 
-    value: number,
+value: number,
 
-  ) => string;
+) => string;
 
-  placing: boolean;
+placing: boolean;
 
-  isPlacing: boolean;
+isPlacing: boolean;
 
-  shippingError: string;
+shippingError: string;
 
-  checkoutError: string;
+checkoutError: string;
 
-  setCheckoutError: Dispatch<
+setCheckoutError: Dispatch<
 
-    SetStateAction<string>
+SetStateAction<string>
 
-  >;
+>;
 
-  addressComplete: boolean;
+addressComplete: boolean;
 
-  shippingComplete: boolean;
+shippingComplete: boolean;
 
-  canPlaceOrder: boolean;
+canPlaceOrder: boolean;
 
-  validateAddress: () => string;
+validateAddress: () => string;
 
-  stripe: ReturnType<typeof useStripe>;
+stripe: ReturnType<typeof useStripe>;
 
-  elements: ReturnType<typeof useElements>;
+elements: ReturnType<typeof useElements>;
 
-  submitOrder: () => Promise<void>;
+submitOrder: () => Promise<void>;
 
-  handleSubmit: (
+handleSubmit: (
 
-    event: FormEvent<HTMLFormElement>,
+event: FormEvent<HTMLFormElement>,
 
-  ) => Promise<void>;
+) => Promise<void>;
 
-  handlePlaceOrder: () => Promise<void>;
+handlePlaceOrder: () => Promise<void>;
 
-  placeOrder: () => Promise<void>;
+placeOrder: () => Promise<void>;
 
 }
 
 const EMPTY_ADDRESS: CheckoutAddress = {
 
-  fullName: "",
+fullName: "",
 
-  email: "",
+email: "",
 
-  line1: "",
+line1: "",
 
-  line2: "",
+line2: "",
 
-  city: "",
+city: "",
 
-  state: "",
+state: "",
 
-  postalCode: "",
+postalCode: "",
 
-  country: "United States",
+country: "United States",
 
-  countryCode: "US",
+countryCode: "US",
 
-  phone: "",
+phone: "",
 
 };
 
 const COUNTRY_CONFIGS: CountryConfig[] = [
 
-  {
+{
 
-    code: "US",
+code: "US",
 
-    currency: "USD",
+currency: "USD",
 
-    currencySymbol: "$",
+currencySymbol: "$",
 
-    name: "United States",
+name: "United States",
 
-    addressStateLabel: "State",
+addressStateLabel: "State",
 
-    cityLabel: "City",
+cityLabel: "City",
 
-    postalLabel: "ZIP code",
+postalLabel: "ZIP code",
 
-    postalRequired: true,
+postalRequired: true,
 
-    phoneRequired: true,
+phoneRequired: true,
 
-    requiresPostalCode: true,
+requiresPostalCode: true,
 
-    requiresPhone: true,
+requiresPhone: true,
 
-    paymentMethods: ["card"],
+paymentMethods: ["card"],
 
-  },
+},
 
-  {
+{
 
-    code: "CA",
+code: "CA",
 
-    currency: "CAD",
+currency: "CAD",
 
-    currencySymbol: "C$",
+currencySymbol: "C$",
 
-    name: "Canada",
+name: "Canada",
 
-    addressStateLabel: "Province",
+addressStateLabel: "Province",
 
-    cityLabel: "City",
+cityLabel: "City",
 
-    postalLabel: "Postal code",
+postalLabel: "Postal code",
 
-    postalRequired: true,
+postalRequired: true,
 
-    phoneRequired: true,
+phoneRequired: true,
 
-    requiresPostalCode: true,
+requiresPostalCode: true,
 
-    requiresPhone: true,
+requiresPhone: true,
 
-    paymentMethods: ["card"],
+paymentMethods: ["card"],
 
-  },
+},
 
-  {
+{
 
-    code: "GB",
+code: "GB",
 
-    currency: "GBP",
+currency: "GBP",
 
-    currencySymbol: "£",
+currencySymbol: "£",
 
-    name: "United Kingdom",
+name: "United Kingdom",
 
-    addressStateLabel: "County",
+addressStateLabel: "County",
 
-    cityLabel: "Town / City",
+cityLabel: "Town / City",
 
-    postalLabel: "Postcode",
+postalLabel: "Postcode",
 
-    postalRequired: true,
+postalRequired: true,
 
-    phoneRequired: true,
+phoneRequired: true,
 
-    requiresPostalCode: true,
+requiresPostalCode: true,
 
-    requiresPhone: true,
+requiresPhone: true,
 
-    paymentMethods: ["card"],
+paymentMethods: ["card"],
 
-  },
+},
 
-  {
+{
 
-    code: "FR",
+code: "FR",
 
-    currency: "EUR",
+currency: "EUR",
 
-    currencySymbol: "€",
+currencySymbol: "€",
 
-    name: "France",
+name: "France",
 
-    addressStateLabel: "Region",
+addressStateLabel: "Region",
 
-    cityLabel: "City",
+cityLabel: "City",
 
-    postalLabel: "Postal code",
+postalLabel: "Postal code",
 
-    postalRequired: true,
+postalRequired: true,
 
-    phoneRequired: true,
+phoneRequired: true,
 
-    requiresPostalCode: true,
+requiresPostalCode: true,
 
-    requiresPhone: true,
+requiresPhone: true,
 
-    paymentMethods: ["card"],
+paymentMethods: ["card"],
 
-  },
+},
 
-  {
+{
 
-    code: "HT",
+code: "HT",
 
-    currency: "HTG",
+currency: "HTG",
 
-    currencySymbol: "G",
+currencySymbol: "G",
 
-    name: "Haiti",
+name: "Haiti",
 
-    addressStateLabel: "Department",
+addressStateLabel: "Department",
 
-    cityLabel: "City",
+cityLabel: "City",
 
-    postalLabel: "Postal code",
+postalLabel: "Postal code",
 
-    postalRequired: false,
+postalRequired: false,
 
-    phoneRequired: true,
+phoneRequired: true,
 
-    requiresPostalCode: false,
+requiresPostalCode: false,
 
-    requiresPhone: true,
+requiresPhone: true,
 
-    paymentMethods: [
+paymentMethods: [
 
-      "card",
+"card",
 
-      "moncash",
+"moncash",
 
-      "natcash",
+"natcash",
 
-      "cod",
+"cod",
 
-    ],
+],
 
-  },
+},
 
 ];
 
 function numberValue(value: unknown): number {
 
-  const parsed = Number(value);
+const parsed = Number(value);
 
-  return Number.isFinite(parsed)
+return Number.isFinite(parsed)
 
-    ? parsed
+? parsed
 
-    : 0;
+: 0;
 
 }
 
 function money(value: unknown): number {
 
-  return Number(
+return Number(
 
-    numberValue(value).toFixed(2),
+numberValue(value).toFixed(2),
 
-  );
+);
 
 }
 
 function normalizeCountryCode(
 
-  value: unknown,
+value: unknown,
 
 ): string {
 
-  return (
+return (
 
-    String(value ?? "")
+String(value ?? "")
 
-      .trim()
+.trim()
 
-      .toUpperCase() || "US"
+.toUpperCase() || "US"
 
-  );
+);
 
 }
 
 function getCountryCode(
 
-  address: CheckoutAddress,
+address: CheckoutAddress,
 
 ): string {
 
-  return normalizeCountryCode(
+return normalizeCountryCode(
 
-    address.countryCode,
+address.countryCode,
 
-  );
+);
 
 }
 
 function normalizePaymentMethod(
 
-  method: PaymentMethod,
+method: PaymentMethod,
 
 ): BackendPaymentMethod {
 
-  if (method === "cash_on_delivery") {
+if (method === "cash_on_delivery") {
 
-    return "cod";
+return "cod";
 
-  }
+}
 
-  if (
+if (
 
-    method === "card" ||
+method === "card" ||
 
-    method === "moncash" ||
+method === "moncash" ||
 
-    method === "natcash" ||
+method === "natcash" ||
 
-    method === "paypal"
+method === "paypal"
 
-  ) {
+) {
 
-    return method === "paypal"
+return method === "paypal"
 
-      ? "card"
+? "card"
 
-      : method;
+: method;
 
-  }
+}
 
-  return "card";
+return "card";
 
 }
 
 function getCountryConfig(
 
-  countryCode: string,
+countryCode: string,
 
 ): CountryConfig {
 
-  return (
+return (
 
-    COUNTRY_CONFIGS.find(
+COUNTRY_CONFIGS.find(
 
-      (country) =>
+(country) =>
 
-        country.code === countryCode,
+country.code === countryCode,
 
-    ) ?? COUNTRY_CONFIGS[0]
+) ?? COUNTRY_CONFIGS[0]
 
-  );
+);
 
 }
 
 function getAddressStreet(
 
-  address: CheckoutAddress,
+address: CheckoutAddress,
 
 ): string {
 
-  return [
+return [
 
-    address.line1,
+address.line1,
 
-    address.line2,
+address.line2,
 
-  ]
+]
 
-    .map((value) =>
+.map((value) =>
 
-      String(value || "").trim(),
+String(value || "").trim(),
 
-    )
+)
 
-    .filter(Boolean)
+.filter(Boolean)
 
-    .join(", ");
+.join(", ");
 
 }
 
 function getHouseOrApartmentNumber(
 
-  address: CheckoutAddress,
+address: CheckoutAddress,
 
 ): string {
 
-  const line = String(
+const line = String(
 
-    address.line1 || "",
+address.line1 || "",
 
-  ).trim();
+).trim();
 
-  const match = line.match(
+  const match = line.match(/^\s*([0-9]+[A-Za-z0-9-]*)/);
 
-    /^\s*([0-9]+[A-Za-z0-9-]*)/,
+return (
 
-  );
+match?.[1] ||
 
-  return (
+line ||
 
-    match?.[1] ||
+"N/A"
 
-    line ||
-
-    "N/A"
-
-  );
+);
 
 }
 
 function buildBackendShippingAddress(
 
-  address: CheckoutAddress,
+address: CheckoutAddress,
 
 ): PlaceOrderRequest["shippingAddress"] {
 
-  const fullName =
+const fullName =
 
-    address.fullName.trim();
+address.fullName.trim();
 
-  const line1 =
+const line1 =
 
-    address.line1.trim();
+address.line1.trim();
 
-  const line2 =
+const line2 =
 
-    address.line2.trim();
+address.line2.trim();
 
-  const city =
+const city =
 
-    address.city.trim();
+address.city.trim();
 
-  const state =
+const state =
 
-    address.state.trim();
+address.state.trim();
 
-  const postalCode =
+const postalCode =
 
-    address.postalCode.trim();
+address.postalCode.trim();
 
-  const countryCode =
+const countryCode =
 
-    getCountryCode(address);
+getCountryCode(address);
 
-  const country =
+const country =
 
-    address.country.trim() ||
+address.country.trim() ||
 
-    "United States";
+"United States";
 
-  const phone =
+const phone =
 
-    address.phone.trim();
+address.phone.trim();
 
-  const street =
+const street =
 
-    getAddressStreet(address);
+getAddressStreet(address);
 
-  const houseOrApartmentNumber =
+const houseOrApartmentNumber =
 
-    getHouseOrApartmentNumber(
+getHouseOrApartmentNumber(
 
-      address,
+address,
 
-    );
+);
 
-  return {
+return {
 
-    fullName,
+fullName,
 
-    line1,
+line1,
 
-    line2: line2 || undefined,
+line2: line2 || undefined,
 
-    city,
+city,
 
-    state: state || undefined,
+state: state || undefined,
 
-    postalCode,
+postalCode,
 
-    country,
+country,
 
-    countryCode,
+countryCode,
 
-    phone: phone || undefined,
+phone: phone || undefined,
 
-    ...({
+...({
 
-      houseOrApartmentNumber,
+houseOrApartmentNumber,
 
-      neighborhood: "",
+neighborhood: "",
 
-      street,
+street,
 
-      apartment: line2,
+apartment: line2,
 
-      zipCode: postalCode,
+zipCode: postalCode,
 
-    } as Record<string, string>),
+} as Record<string, string>),
 
-  };
+};
 
 }
 
 function toCheckoutCartItem(
 
-  item: CartLineItem,
+item: CartLineItem,
 
 ): CheckoutCartItem {
 
-  return {
+return {
 
-    id: item.id,
+id: item.id,
 
-    productId:
+productId:
 
-      item.productId,
+item.productId,
 
-    productName:
+productName:
 
-      item.productName ||
+item.productName ||
 
-      item.name ||
+item.name ||
 
-      item.title ||
+item.title ||
 
-      "Product",
+"Product",
 
-    productEmoji:
+productEmoji:
 
-      item.productEmoji,
+item.productEmoji,
 
-    productImageUrl:
+productImageUrl:
 
-      item.productImageUrl,
+item.productImageUrl,
 
-    quantity: Math.max(
+quantity: Math.max(
 
-      1,
+1,
 
-      Math.floor(
+Math.floor(
 
-        numberValue(
+numberValue(
 
-          item.quantity,
+item.quantity,
 
-        ),
+),
 
-      ),
+),
 
-    ),
+),
 
-    unitPrice:
+unitPrice:
 
-      money(item.unitPrice),
+money(item.unitPrice),
 
-    storeId:
+storeId:
 
-      item.storeId,
+item.storeId,
 
-    storeName:
+storeName:
 
-      item.storeName ||
+item.storeName ||
 
-      "Fockis Shop",
+"Fockis Shop",
 
-    productSlug:
+productSlug:
 
-      item.productSlug,
+item.productSlug,
 
-    storeSlug:
+storeSlug:
 
-      item.storeSlug,
+item.storeSlug,
 
-    maxQuantity:
+maxQuantity:
 
-      item.maxQuantity,
+item.maxQuantity,
 
-    addedAt:
+addedAt:
 
-      item.addedAt,
+item.addedAt,
 
-    variant:
+variant:
 
-      item.variant ?? null,
+item.variant ?? null,
 
-  };
+};
 
 }
 
 function buildOrderItems(
 
-  items: CartLineItem[],
+items: CartLineItem[],
 
 ): BackendOrderItem[] {
 
-  return items.map((item) => {
+return items.map((item) => {
 
-    const quantity = Math.max(
+const quantity = Math.max(
 
-      1,
+1,
 
-      Math.floor(
+Math.floor(
 
-        numberValue(
+numberValue(
 
-          item.quantity,
+item.quantity,
 
-        ),
+),
 
-      ),
+),
 
-    );
+);
 
-    const unitPrice =
+const unitPrice =
 
-      money(item.unitPrice);
+money(item.unitPrice);
 
-    const result: BackendOrderItem = {
+const result: BackendOrderItem = {
 
-      productId:
+productId:
 
-        String(item.productId),
+String(item.productId),
 
-      productName:
+productName:
 
-        String(
+String(
 
-          item.productName ||
+item.productName ||
 
-          item.name ||
+item.name ||
 
-          item.title ||
+item.title ||
 
-          "Product",
+"Product",
 
-        ),
+),
 
-      quantity,
+quantity,
 
-      unitPrice,
+unitPrice,
 
-    };
+};
 
-    if (
+if (
 
-      item.sellerId !== undefined &&
+item.sellerId !== undefined &&
 
-      item.sellerId !== null &&
+item.sellerId !== null &&
 
-      String(
+String(
 
-        item.sellerId,
+item.sellerId,
 
-      ).trim()
+).trim()
 
-    ) {
+) {
 
-      result.sellerId =
+result.sellerId =
 
-        String(
+String(
 
-          item.sellerId,
+item.sellerId,
 
-        );
+);
 
-    }
+}
 
-    if (
+if (
 
-      item.storeId !== undefined &&
+item.storeId !== undefined &&
 
-      item.storeId !== null &&
+item.storeId !== null &&
 
-      String(
+String(
 
-        item.storeId,
+item.storeId,
 
-      ).trim()
+).trim()
 
-    ) {
+) {
 
-      result.storeId =
+result.storeId =
 
-        String(
+String(
 
-          item.storeId,
+item.storeId,
 
-        );
+);
 
-    }
+}
 
-    return result;
+return result;
 
-  });
+});
 
 }
 
 function sanitizeOrderItems(
 
-  items: BackendOrderItem[],
+items: BackendOrderItem[],
 
 ): BackendOrderItem[] {
 
-  return items.map((item) => ({
+return items.map((item) => ({
 
-    productId:
+productId:
 
-      String(item.productId),
+String(item.productId),
 
-    ...(item.sellerId
+...(item.sellerId
 
-      ? {
+? {
 
-          sellerId:
+sellerId:
 
-            String(item.sellerId),
+String(item.sellerId),
 
-        }
+}
 
-      : {}),
+: {}),
 
-    ...(item.storeId
+...(item.storeId
 
-      ? {
+? {
 
-          storeId:
+storeId:
 
-            String(item.storeId),
+String(item.storeId),
 
-        }
+}
 
-      : {}),
+: {}),
 
-    productName:
+productName:
 
-      String(
+String(
 
-        item.productName ||
+item.productName ||
 
-        "Product",
+"Product",
 
-      ),
+),
 
-    quantity: Math.max(
+quantity: Math.max(
 
-      1,
+1,
 
-      Math.floor(
+Math.floor(
 
-        numberValue(
+numberValue(
 
-          item.quantity,
+item.quantity,
 
-        ),
+),
 
-      ),
+),
 
-    ),
+),
 
-    unitPrice:
+unitPrice:
 
-      money(item.unitPrice),
+money(item.unitPrice),
 
-  }));
+}));
 
 }
 
 function getDefaultShippingOption(
 
-  estimate: ShippingEstimate,
+estimate: ShippingEstimate,
 
 ): string {
 
-  if (
+if (
 
-    estimate.selectedOptionId &&
+estimate.selectedOptionId &&
 
-    estimate.options.some(
+estimate.options.some(
 
-      (option) =>
+(option) =>
 
-        option.id ===
+option.id ===
 
-        estimate.selectedOptionId,
+estimate.selectedOptionId,
 
-    )
+)
 
-  ) {
+) {
 
-    return estimate.selectedOptionId;
+return estimate.selectedOptionId;
 
-  }
+}
 
-  return (
+return (
 
-    estimate.options[0]?.id ||
+estimate.options[0]?.id ||
 
-    ""
+""
 
-  );
+);
 
 }
 
 function buildShippingSelections(
 
-  estimates: ShippingEstimate[],
+estimates: ShippingEstimate[],
 
-  previous: Record<string, string>,
+previous: Record<string, string>,
 
 ): Record<string, string> {
 
-  const next: Record<string, string> = {};
+const next: Record<string, string> = {};
 
-  for (const estimate of estimates) {
+for (const estimate of estimates) {
 
-    const existing =
+const existing =
 
-      previous[
+previous[
 
-        estimate.storeId
+estimate.storeId
 
-      ];
+];
 
-    const existingIsValid =
+const existingIsValid =
 
-      Boolean(
+Boolean(
 
-        existing &&
+existing &&
 
-        estimate.options.some(
+estimate.options.some(
 
-          (option) =>
+(option) =>
 
-            option.id === existing,
+option.id === existing,
 
-        ),
+),
 
-      );
+);
 
-    if (existingIsValid) {
+if (existingIsValid) {
 
-      next[
+next[
 
-        estimate.storeId
+estimate.storeId
 
-      ] = existing as string;
+] = existing as string;
 
-      continue;
+continue;
 
-    }
+}
 
-    const fallback =
+const fallback =
 
-      getDefaultShippingOption(
+getDefaultShippingOption(
 
-        estimate,
+estimate,
 
-      );
+);
 
-    if (fallback) {
+if (fallback) {
 
-      next[
+next[
 
-        estimate.storeId
+estimate.storeId
 
-      ] = fallback;
+] = fallback;
 
-    }
+}
 
-  }
+}
 
-  return next;
+return next;
 
 }
 
 function validateShippingSelections(
 
-  groups: CheckoutSellerGroup[],
+groups: CheckoutSellerGroup[],
 
-  estimates: ShippingEstimate[],
+estimates: ShippingEstimate[],
 
-  selections: Record<string, string>,
+selections: Record<string, string>,
 
 ): string {
 
-  if (groups.length === 0) {
+if (groups.length === 0) {
 
-    return "Your cart is empty.";
+return "Your cart is empty.";
 
-  }
+}
 
-  if (estimates.length === 0) {
+if (estimates.length === 0) {
 
-    return "";
+return "";
 
-  }
+}
 
-  for (const group of groups) {
+for (const group of groups) {
 
-    const estimate =
+const estimate =
 
-      estimates.find(
+estimates.find(
 
-        (candidate) =>
+(candidate) =>
 
-          candidate.storeId ===
+candidate.storeId ===
 
-          group.storeId,
+group.storeId,
 
-      );
+);
 
-    if (!estimate) {
+if (!estimate) {
 
-      return `Shipping is unavailable for ${group.storeName}.`;
+return `Shipping is unavailable for ${group.storeName}.`;
 
-    }
+}
 
-    if (
+if (
 
-      !estimate.options ||
+!estimate.options ||
 
-      estimate.options.length === 0
+estimate.options.length === 0
 
-    ) {
+) {
 
-      return `No delivery methods are available for ${group.storeName}.`;
+return `No delivery methods are available for ${group.storeName}.`;
 
-    }
+}
 
-    const selectedId =
+const selectedId =
 
-      selections[group.storeId] ??
+selections[group.storeId] ??
 
-      estimate.selectedOptionId ??
+estimate.selectedOptionId ??
 
-      estimate.options[0]?.id ??
+estimate.options[0]?.id ??
 
-      "";
+"";
 
-    if (!selectedId) {
+if (!selectedId) {
 
-      return `Please select a delivery method for ${group.storeName}.`;
+return `Please select a delivery method for ${group.storeName}.`;
 
-    }
+}
 
-    const valid =
+const valid =
 
-      estimate.options.some(
+estimate.options.some(
 
-        (option) =>
+(option) =>
 
-          option.id === selectedId,
+option.id === selectedId,
 
-      );
+);
 
-    if (!valid) {
+if (!valid) {
 
-      return `Please select a valid delivery method for ${group.storeName}.`;
+return `Please select a valid delivery method for ${group.storeName}.`;
 
-    }
+}
 
-  }
+}
 
-  return "";
+return "";
 
 }
 
@@ -1274,3609 +1270,3605 @@ function getApiBaseUrl(): string {
 
 function getAuthToken(): string {
 
-  return (
+return (
 
-    localStorage.getItem(
+localStorage.getItem(
 
-      "access_token",
+"access_token",
 
-    ) ||
+) ||
 
-    localStorage.getItem(
+localStorage.getItem(
 
-      "accessToken",
+"accessToken",
 
-    ) ||
+) ||
 
-    localStorage.getItem(
+localStorage.getItem(
 
-      "token",
+"token",
 
-    ) ||
+) ||
 
-    localStorage.getItem(
+localStorage.getItem(
 
-      "jwt",
+"jwt",
 
-    ) ||
+) ||
 
-    localStorage.getItem(
+localStorage.getItem(
 
-      "authToken",
+"authToken",
 
-    ) ||
+) ||
 
-    localStorage.getItem(
+localStorage.getItem(
 
-      "fockis_token",
+"fockis_token",
 
-    ) ||
+) ||
 
-    localStorage.getItem(
+localStorage.getItem(
 
-      "fockis_auth_token",
+"fockis_auth_token",
 
-    ) ||
+) ||
 
-    ""
+""
 
-  );
+);
 
 }
 
 function extractResponseObject(
 
-  value: unknown,
+value: unknown,
 
 ): Record<string, unknown> {
 
-  if (
+if (
 
-    !value ||
+!value ||
 
-    typeof value !== "object"
+typeof value !== "object"
 
-  ) {
+) {
 
-    return {};
+return {};
 
-  }
+}
 
-  const root =
+const root =
 
-    value as Record<
+value as Record<
 
-      string,
+string,
 
-      unknown
+unknown
 
-    >;
+>;
 
-  if (
+if (
 
-    root.data &&
+root.data &&
 
-    typeof root.data === "object"
+typeof root.data === "object"
 
-  ) {
+) {
 
-    return root.data as Record<
+return root.data as Record<
 
-      string,
+string,
 
-      unknown
+unknown
 
-    >;
+>;
 
-  }
+}
 
-  return root;
+return root;
 
 }
 
 async function parseJsonResponse(
 
-  response: Response,
+response: Response,
 
 ): Promise<unknown> {
 
-  const text =
+const text =
 
-    await response.text();
+await response.text();
 
-  if (!text) {
+if (!text) {
 
-    return null;
+return null;
 
-  }
+}
 
-  try {
+try {
 
-    return JSON.parse(text);
+return JSON.parse(text);
 
-  } catch {
+} catch {
 
-    return text;
+return text;
 
-  }
+}
 
 }
 
 async function submitSanitizedOrder(
 
-  request: PlaceOrderRequest,
+request: PlaceOrderRequest,
 
 ): Promise<unknown> {
 
-  const apiBase =
+const apiBase =
 
-    getApiBaseUrl();
+getApiBaseUrl();
 
-  const authToken =
+const authToken =
 
-    getAuthToken();
+getAuthToken();
 
-  /*
+/**
 
-   * Rebuild the item array from scratch.
+ * Rebuild the item array from scratch.
 
-   *
+ *
 
-   * This guarantees that totalPrice or any other
+ * This guarantees that totalPrice or any other
 
-   * frontend-only property cannot reach the backend.
+ * frontend-only property cannot reach the backend.
 
-   */
+*/
 
-  const rawRequest =
+const rawRequest =
 
-    request as unknown as Record<
+request as unknown as Record<
 
-      string,
+string,
 
-      unknown
+unknown
 
-    >;
+>;
 
-  const rawItems =
+const rawItems =
 
-    Array.isArray(
+Array.isArray(
 
-      rawRequest.items,
+rawRequest.items,
 
-    )
+)
 
-      ? rawRequest.items
+? rawRequest.items
 
-      : [];
+: [];
 
-  const sanitizedItems =
+const sanitizedItems =
 
-    rawItems.map((item) => {
+rawItems.map((item) => {
 
-      const source =
+const source =
 
-        (item || {}) as Record<
+(item || {}) as Record<
 
-          string,
+string,
 
-          unknown
+unknown
 
-        >;
+>;
 
-      return {
+return {
 
-        productId:
+productId:
 
-          String(
+String(
 
-            source.productId ??
+source.productId ??
 
-              "",
+"",
 
-          ),
+),
 
-        ...(source.sellerId !==
+...(source.sellerId !==
 
-          undefined &&
+undefined &&
 
-        source.sellerId !==
+source.sellerId !==
 
-          null &&
+null &&
 
-        String(
+String(
 
-          source.sellerId,
+source.sellerId,
 
-        ).trim()
+).trim()
 
-          ? {
+? {
 
-              sellerId:
+sellerId:
 
-                String(
+String(
 
-                  source.sellerId,
+source.sellerId,
 
-                ),
+),
 
-            }
+}
 
-          : {}),
+: {}),
 
-        ...(source.storeId !==
+...(source.storeId !==
 
-          undefined &&
+undefined &&
 
-        source.storeId !==
+source.storeId !==
 
-          null &&
+null &&
 
-        String(
+String(
 
-          source.storeId,
+source.storeId,
 
-        ).trim()
+).trim()
 
-          ? {
+? {
 
-              storeId:
+storeId:
 
-                String(
+String(
 
-                  source.storeId,
+source.storeId,
 
-                ),
+),
 
-            }
+}
 
-          : {}),
+: {}),
 
-        productName:
+productName:
 
-          String(
+String(
 
-            source.productName ??
+source.productName ??
 
-              "Product",
+"Product",
 
-          ),
+),
 
-        quantity:
+quantity:
 
-          Math.max(
+Math.max(
 
-            1,
+1,
 
-            Math.floor(
+Math.floor(
 
-              numberValue(
+numberValue(
 
-                source.quantity,
+source.quantity,
 
-              ),
+),
 
-            ),
+),
 
-          ),
+),
 
-        unitPrice:
+unitPrice:
 
-          money(
+money(
 
-            source.unitPrice,
+source.unitPrice,
 
-          ),
+),
 
-      };
+};
 
-    });
+});
 
-  const payload: Record<
+const payload: Record<
 
-    string,
+string,
 
-    unknown
+unknown
 
-  > = {
+> = {
 
-    ...rawRequest,
+...rawRequest,
 
-    items: sanitizedItems,
+items: sanitizedItems,
 
-  };
+};
 
-  delete payload.totalPrice;
+delete payload.totalPrice;
 
-  console.log(
+console.log(
 
-    "[CHECKOUT API] FINAL SANITIZED ORDER BODY:",
+"[CHECKOUT API] FINAL SANITIZED ORDER BODY:",
 
-    JSON.stringify(payload),
+JSON.stringify(payload),
 
-  );
+);
 
-  const response =
+const response =
 
-    await fetch(
+await fetch(
 
-      `${apiBase}/fockis-shop/orders`,
+`${apiBase}/fockis-shop/orders`,
 
-      {
+{
 
-        method: "POST",
+method: "POST",
 
-        headers: {
+headers: {
 
-          Accept:
+Accept:
 
-            "application/json",
+"application/json",
 
-          "Content-Type":
+"Content-Type":
 
-            "application/json",
+"application/json",
 
-          ...(authToken
+...(authToken
 
-            ? {
+? {
 
-                Authorization:
+Authorization:
 
-                  `Bearer ${authToken}`,
+`Bearer ${authToken}`,
 
-              }
+}
 
-            : {}),
+: {}),
 
-        },
+},
 
-        credentials: "include",
+credentials: "include",
 
-        body:
+body:
 
-          JSON.stringify(
+JSON.stringify(
 
-            payload,
+payload,
 
-          ),
+),
 
-      },
+},
 
-    );
+);
 
-  const data =
+const data =
 
-    await parseJsonResponse(
+await parseJsonResponse(
 
-      response,
+response,
 
-    );
+);
 
-  console.log(
+console.log(
 
-    "[CHECKOUT API] Direct order response:",
+"[CHECKOUT API] Direct order response:",
 
-    {
+{
 
-      status:
+status:
 
-        response.status,
+response.status,
 
-      ok:
+ok:
 
-        response.ok,
+response.ok,
 
-      data,
+data,
 
-    },
+},
 
-  );
+);
 
-  if (!response.ok) {
+if (!response.ok) {
 
-    const errorObject =
+const errorObject =
 
-      extractResponseObject(
+extractResponseObject(
 
-        data,
+data,
 
-      );
+);
 
-    const backendMessage =
+const backendMessage =
 
-      errorObject.message;
+errorObject.message;
 
-    const message =
+const message =
 
-      Array.isArray(
+Array.isArray(
 
-        backendMessage,
+backendMessage,
 
-      )
+)
 
-        ? backendMessage.join(
+? backendMessage.join(
 
-            ", ",
+", ",
 
-          )
+)
 
-        : String(
+: String(
 
-            backendMessage ||
+backendMessage ||
 
-              `Order creation failed with status ${response.status}.`,
+`Order creation failed with status ${response.status}.`,
 
-          );
+);
 
-    throw new Error(
+throw new Error(
 
-      message,
+message,
 
-    );
+);
 
-  }
+}
 
-  return data;
+return data;
 
 }
 
 export function useCheckout(): CheckoutController {
 
-  const navigate =
+const navigate =
 
-    useNavigate();
+useNavigate();
 
-  const stripe =
+const stripe =
 
-    useStripe();
+useStripe();
 
-  const elements =
+const elements =
 
-    useElements();
+useElements();
 
-  const cart =
+const cart =
 
-    useCart();
+useCart();
 
-  const {
+const {
 
-    items,
+items,
 
-    totals:
+selectedItems,
 
-      cartTotalsFromHook,
+selectedTotals,
 
-    clear,
+clearSelected,
 
-  } = cart;
+} = cart;
 
-  const cartTotals =
+const cartTotals =
 
-    useMemo<CheckoutTotals>(
+useMemo<CheckoutTotals>(
 
-      () => {
+() => {
 
-        const source =
+const source =
 
-          cartTotalsFromHook as
+selectedTotals as
 
-            | Partial<CheckoutTotals>
+| Partial<CheckoutTotals>
 
-            | undefined;
+| undefined;
 
-        const subtotal =
+const subtotal =
 
-          money(
+money(
 
-            source?.subtotal,
+source?.subtotal,
 
-          );
+);
 
-        const estimatedShipping =
+const estimatedShipping =
 
-          money(
+money(
 
-            source?.estimatedShipping,
+source?.estimatedShipping,
 
-          );
+);
 
-        const estimatedTax =
+const estimatedTax =
 
-          money(
+money(
 
-            source?.estimatedTax,
+source?.estimatedTax,
 
-          );
+);
 
-        const calculatedItemCount =
+const calculatedItemCount =
 
-          items.reduce(
+selectedItems.reduce(
 
-            (
+(
 
-              sum,
+sum,
 
-              item,
+item,
 
-            ) =>
+) =>
 
-              sum +
+sum +
 
-              Math.max(
+Math.max(
 
-                1,
+1,
 
-                Math.floor(
+Math.floor(
 
-                  numberValue(
+numberValue(
 
-                    item.quantity,
+item.quantity,
 
-                  ),
+),
 
-                ),
+),
 
-              ),
+),
 
-            0,
+0,
 
-          );
+);
 
-        const itemCount =
+const itemCount =
 
-          numberValue(
+numberValue(
 
-            source?.itemCount,
+source?.itemCount,
 
-          ) ||
+) ||
 
-          calculatedItemCount;
+calculatedItemCount;
 
-        return {
+return {
 
-          subtotal,
+subtotal,
 
-          estimatedShipping,
+estimatedShipping,
 
-          estimatedTax,
+estimatedTax,
 
-          /*
+/**
 
-           * The cart does not contain a checkout tip.
+ * The cart does not contain a checkout tip.
 
-           * Tips are selected later during checkout.
+ * Tips are selected later during checkout.
 
-           */
+*/
 
-          tip: 0,
+tip: 0,
 
-          total: money(
+total: money(
 
-            source?.total ??
+source?.total ??
 
-              subtotal +
+subtotal +
 
-                estimatedShipping +
+estimatedShipping +
 
-                estimatedTax,
+estimatedTax,
 
-          ),
+),
 
-          itemCount,
+itemCount,
 
-        };
+};
 
-      },
+},
 
-      [
+[
 
-        cartTotalsFromHook,
+selectedTotals,
 
-        items,
+selectedItems,
 
-      ],
+],
 
-    );
+);
 
-  const [
+const [
 
-    address,
+address,
 
-    setAddress,
+setAddress,
 
-  ] =
+] =
 
-    useState<CheckoutAddress>(
+useState<CheckoutAddress>(
 
-      EMPTY_ADDRESS,
+EMPTY_ADDRESS,
 
-    );
+);
 
-  const [
+const [
 
-    paymentMethod,
+paymentMethod,
 
-    setPaymentMethod,
+setPaymentMethod,
 
-  ] =
+] =
 
-    useState<PaymentMethod>(
+useState<PaymentMethod>(
 
-      "card",
+"card",
 
-    );
+);
 
-  const [
+const [
 
-    shippingEstimates,
+shippingEstimates,
 
-    setShippingEstimates,
+setShippingEstimates,
 
-  ] =
+] =
 
-    useState<ShippingEstimate[]>(
+useState<ShippingEstimate[]>(
 
-      [],
+[],
 
-    );
+);
 
-  const [
+const [
 
-    shippingSelections,
+shippingSelections,
 
-    setShippingSelections,
+setShippingSelections,
 
-  ] =
+] =
 
-    useState<
+useState<
 
-      Record<string, string>
+Record<string, string>
 
-    >({});
+>({});
 
-  const [
+const [
 
-    placing,
+placing,
 
-    setPlacing,
+setPlacing,
 
-  ] =
+] =
 
-    useState(false);
+useState(false);
 
-  const [
+const [
 
-    shippingError,
+shippingError,
 
-    setShippingError,
+setShippingError,
 
-  ] =
+] =
 
-    useState("");
+useState("");
 
-  const [
+const [
 
-    checkoutError,
+checkoutError,
 
-    setCheckoutError,
+setCheckoutError,
 
-  ] =
+] =
 
-    useState("");
+useState("");
 
-  const [
+const [
 
-    cardComplete,
+cardComplete,
 
-    setCardComplete,
+setCardComplete,
 
-  ] =
+] =
 
-    useState(false);
+useState(false);
 
-  const [
+const [
 
-    tipOption,
+tipOption,
 
-    setTipOption,
+setTipOption,
 
-  ] =
+] =
 
-    useState<TipOption>(
+useState<TipOption>(
 
-      "none",
+"none",
 
-    );
+);
 
-  const [
+const [
 
-    customTip,
+customTip,
 
-    setCustomTip,
+setCustomTip,
 
-  ] =
+] =
 
-    useState("");
+useState("");
 
-  const checkoutItems =
+const checkoutItems =
 
-    useMemo(
+useMemo(
 
-      () =>
+() =>
 
-        items.map(
+selectedItems.map(
 
-          toCheckoutCartItem,
+toCheckoutCartItem,
 
-        ),
+),
 
-      [items],
+[selectedItems],
 
-    );
+);
 
-  const checkoutSellerGroups =
+const checkoutSellerGroups =
 
-    useMemo<CheckoutSellerGroup[]>(
+useMemo<CheckoutSellerGroup[]>(
 
-      () => {
+() => {
 
-        const groups =
+const groups =
 
-          new Map<
+new Map<
 
-            string,
+string,
 
-            CheckoutSellerGroup
+CheckoutSellerGroup
 
-          >();
+>();
 
-        for (
+for (
 
-          const item of checkoutItems
+const item of checkoutItems
 
-        ) {
+) {
 
-          const storeId =
+const storeId =
 
-            String(
+String(
 
-              item.storeId ||
+item.storeId ||
 
-                "",
+"",
 
-            ).trim() ||
+).trim() ||
 
-            "default";
+"fockis-shop";
 
-          const storeName =
+const storeName =
 
-            item.storeName ||
+item.storeName ||
 
-            "Fockis Shop";
+"Fockis Shop";
 
-          const quantity =
+const quantity =
 
-            Math.max(
+Math.max(
 
-              1,
+1,
 
-              Math.floor(
+Math.floor(
 
-                numberValue(
+numberValue(
 
-                  item.quantity,
+item.quantity,
 
-                ),
+),
 
-              ),
+),
 
-            );
+);
 
-          const unitPrice =
+const unitPrice =
 
-            money(
+money(
 
-              item.unitPrice,
+item.unitPrice,
 
-            );
+);
 
-          const existing =
+const existing =
 
-            groups.get(
+groups.get(
 
-              storeId,
+storeId,
 
-            );
+);
 
-          if (existing) {
+if (existing) {
 
-            existing.items.push(
+existing.items.push(
 
-              item,
+item,
 
-            );
+);
 
-            existing.subtotal =
+existing.subtotal =
 
-              money(
+money(
 
-                existing.subtotal +
+existing.subtotal +
 
-                  unitPrice *
+unitPrice *
 
-                    quantity,
+quantity,
 
-              );
+);
 
-          } else {
+} else {
 
-            groups.set(
+groups.set(
 
-              storeId,
+storeId,
 
-              {
+{
 
-                storeId,
+storeId,
 
-                storeName,
+storeName,
 
-                items: [item],
+items: [item],
 
-                subtotal:
+subtotal:
 
-                  money(
+money(
 
-                    unitPrice *
+unitPrice *
 
-                      quantity,
+quantity,
 
-                  ),
+),
 
-              },
+},
 
-            );
+);
 
-          }
+}
 
-        }
+}
 
-        return Array.from(
+return Array.from(
 
-          groups.values(),
+groups.values(),
 
-        );
+);
 
-      },
+},
 
-      [checkoutItems],
+[checkoutItems],
 
-    );
+);
 
-  const countryCode =
+const countryCode =
 
-    useMemo(
+useMemo(
 
-      () =>
+() =>
 
-        getCountryCode(
+getCountryCode(
 
-          address,
+address,
 
-        ),
+),
 
-      [address],
+[address],
 
-    );
+);
 
-  const countryConfig =
+const countryConfig =
 
-    useMemo(
+useMemo(
 
-      () =>
+() =>
 
-        getCountryConfig(
+getCountryConfig(
 
-          countryCode,
+countryCode,
 
-        ),
+),
 
-      [countryCode],
+[countryCode],
 
-    );
+);
 
-  const countries =
+const countries =
 
-    COUNTRY_CONFIGS;
+COUNTRY_CONFIGS;
 
-  const isHaiti =
+const isHaiti =
 
-    countryCode === "HT";
+countryCode === "HT";
 
-  const supportedPaymentMethods =
+const supportedPaymentMethods =
 
-    useMemo<PaymentMethod[]>(
+useMemo<PaymentMethod[]>(
 
-      () =>
+() =>
 
-        countryConfig.paymentMethods.map(
+countryConfig.paymentMethods.map(
 
-          (method) =>
+(method) =>
 
-            method === "cod"
+method === "cod"
 
-              ? "cash_on_delivery"
+? "cash_on_delivery"
 
-              : (method as PaymentMethod),
+: (method as PaymentMethod),
 
-        ),
+),
 
-      [countryConfig],
+[countryConfig],
 
-    );
+);
 
-  const storeNameById =
+const storeNameById =
 
-    useMemo(() => {
+useMemo(() => {
 
-      const result: Record<
+const result: Record<
 
-        string,
+string,
 
-        string
+string
 
-      > = {};
+> = {};
 
-      for (
+for (
 
-        const group of
+const group of
 
-          checkoutSellerGroups
+checkoutSellerGroups
 
-      ) {
+) {
 
-        result[
+result[
 
-          group.storeId
+group.storeId
 
-        ] =
+] =
 
-          group.storeName;
+group.storeName;
 
-      }
+}
 
-      return result;
+return result;
 
-    }, [
+}, [
 
-      checkoutSellerGroups,
+checkoutSellerGroups,
 
-    ]);
+]);
 
-  const tipAmount =
+const tipAmount =
 
-    useMemo(() => {
+useMemo(() => {
 
-      if (
+if (
 
-        tipOption === "none"
+tipOption === "none"
 
-      ) {
+) {
 
-        return 0;
+return 0;
 
-      }
+}
 
-      if (
+if (
 
-        tipOption === "custom"
+tipOption === "custom"
 
-      ) {
+) {
 
-        return money(
+return money(
 
-          customTip,
+customTip,
 
-        );
+);
 
-      }
+}
 
-      const percentageMap: Record<
+const percentageMap: Record<
 
-        string,
+string,
 
-        number
+number
 
-      > = {
+> = {
 
-        "5": 0.05,
+"5": 0.05,
 
-        "10": 0.1,
+"10": 0.1,
 
-        "15": 0.15,
+"15": 0.15,
 
-        "20": 0.2,
+"20": 0.2,
 
-      };
+};
 
-      const percentage =
+const percentage =
 
-        percentageMap[
+percentageMap[
 
-          String(tipOption)
+String(tipOption)
 
-        ] ?? 0;
+] ?? 0;
 
-      return money(
+return money(
 
-        cartTotals.subtotal *
+cartTotals.subtotal *
 
-          percentage,
+percentage,
 
-      );
+);
 
-    }, [
+}, [
 
-      tipOption,
+tipOption,
 
-      customTip,
+customTip,
 
-      cartTotals.subtotal,
+cartTotals.subtotal,
 
-    ]);
+]);
 
-  const shippingCost =
+const shippingCost =
 
-    useMemo(() => {
+useMemo(() => {
 
-      if (
+if (
 
-        shippingEstimates.length ===
+shippingEstimates.length ===
 
-        0
+0
 
-      ) {
+) {
 
-        return money(
+return money(
 
-          cartTotals.estimatedShipping,
+cartTotals.estimatedShipping,
 
-        );
+);
 
-      }
+}
 
-      return money(
+return money(
 
-        shippingEstimates.reduce(
+shippingEstimates.reduce(
 
-          (
+(
 
-            total,
+total,
 
-            estimate,
+estimate,
 
-          ) => {
+) => {
 
-            const selectedId =
+const selectedId =
 
-              shippingSelections[
+shippingSelections[
 
-                estimate.storeId
+estimate.storeId
 
-              ] ??
+] ??
 
-              estimate.selectedOptionId ??
+estimate.selectedOptionId ??
 
-              estimate.options[0]?.id ??
+estimate.options[0]?.id ??
 
-              "";
+"";
 
-            const option =
+const option =
 
-              estimate.options.find(
+estimate.options.find(
 
-                (candidate) =>
+(candidate) =>
 
-                  candidate.id ===
+candidate.id ===
 
-                  selectedId,
+selectedId,
 
-              );
+);
 
-            return (
+return (
 
-              total +
+total +
 
-              money(
+money(
 
-                option?.price,
+option?.price,
 
-              )
+)
 
-            );
+);
 
-          },
+},
 
-          0,
+0,
 
-        ),
+),
 
-      );
+);
 
-    }, [
+}, [
 
-      shippingEstimates,
+shippingEstimates,
 
-      shippingSelections,
+shippingSelections,
 
-      cartTotals.estimatedShipping,
+cartTotals.estimatedShipping,
 
-    ]);
+]);
 
-  const subtotal =
+const subtotal =
 
-    money(
+money(
 
-      cartTotals.subtotal,
+cartTotals.subtotal,
 
-    );
+);
 
-  const shipping =
+const shipping =
 
-    money(shippingCost);
+money(shippingCost);
 
-  const tax =
+const tax =
 
-    money(
+money(
 
-      cartTotals.estimatedTax,
+cartTotals.estimatedTax,
 
-    );
+);
 
-  const orderTotal =
+const orderTotal =
 
-    money(
+money(
 
-      subtotal +
+subtotal +
 
-        shipping +
+shipping +
 
-        tax +
+tax +
 
-        tipAmount,
+tipAmount,
 
-    );
+);
 
-  const checkoutTotals =
+const checkoutTotals =
 
-    useMemo<CheckoutTotals>(
+useMemo<CheckoutTotals>(
 
-      () => ({
+() => ({
 
-        subtotal,
+subtotal,
 
-        estimatedShipping:
+estimatedShipping:
 
-          shipping,
+shipping,
 
-        estimatedTax:
+estimatedTax:
 
-          tax,
+tax,
 
-        /*
+/**
 
-         * Tip is intentionally separate from tax.
+ * Tip is intentionally separate from tax.
 
-         */
+*/
 
-        tip:
+tip:
 
-          tipAmount,
+tipAmount,
 
-        total:
+total:
 
-          orderTotal,
+orderTotal,
 
-        itemCount:
+itemCount:
 
-          checkoutItems.reduce(
+checkoutItems.reduce(
 
-            (
+(
 
-              sum,
+sum,
 
-              item,
+item,
 
-            ) =>
+) =>
 
-              sum +
+sum +
 
-              Math.max(
+Math.max(
 
-                1,
+1,
 
-                Math.floor(
+Math.floor(
 
-                  numberValue(
+numberValue(
 
-                    item.quantity,
+item.quantity,
 
-                  ),
+),
 
-                ),
+),
 
-              ),
+),
 
-            0,
+0,
 
-          ),
+),
 
-      }),
+}),
 
-      [
+[
 
-        subtotal,
+subtotal,
 
-        shipping,
+shipping,
 
-        tax,
+tax,
 
-        tipAmount,
+tipAmount,
 
-        orderTotal,
+orderTotal,
 
-        checkoutItems,
+checkoutItems,
 
-      ],
+],
 
-    );
+);
 
-  const totals =
+const totals =
 
-    checkoutTotals;
+checkoutTotals;
 
-  const formatCheckoutPrice =
+const formatCheckoutPrice =
 
-    useCallback(
+useCallback(
 
-      (value: number) => {
+(value: number) => {
 
-        try {
+try {
 
-          return new Intl.NumberFormat(
+return new Intl.NumberFormat(
 
-            undefined,
+undefined,
 
-            {
+{
 
-              style:
+style:
 
-                "currency",
+"currency",
 
-              currency:
+currency:
 
-                countryConfig.currency,
+countryConfig.currency,
 
-              minimumFractionDigits:
+minimumFractionDigits:
 
-                2,
+2,
 
-              maximumFractionDigits:
+maximumFractionDigits:
 
-                2,
+2,
 
-            },
+},
 
-          ).format(
+).format(
 
-            numberValue(value),
+numberValue(value),
 
-          );
+);
 
-        } catch {
+} catch {
 
-          return `${countryConfig.currencySymbol}${money(
+return `${countryConfig.currencySymbol}${money(
 
-            value,
+value,
 
-          ).toFixed(2)}`;
+).toFixed(2)}`;
 
-        }
+}
 
-      },
+},
 
-      [countryConfig],
+[countryConfig],
 
-    );
+);
 
-  const loadShippingEstimates =
+const loadShippingEstimates =
 
-    useCallback(
+  useCallback(
 
-      async () => {
+    async (): Promise<void> => {
 
-        if (
+      if (selectedItems.length === 0) {
 
-          items.length ===
+        setShippingEstimates([]);
 
-          0
+        setShippingSelections({});
 
-        ) {
+        setShippingError("");
 
-          setShippingEstimates(
+        return;
 
-            [],
+      }
 
-          );
 
-          setShippingSelections(
 
-            {},
+      const destination = {
 
-          );
+        fullName: address.fullName.trim(),
 
-          setShippingError(
+        street: address.line1.trim(),
 
-            "",
+        apartment: address.line2.trim() || undefined,
 
-          );
+        city: address.city.trim(),
 
-          return;
+        state: address.state.trim(),
 
-        }
+        zipCode: address.postalCode.trim(),
 
-        try {
+        country: (address.countryCode || address.country).trim(),
 
-          setShippingError(
+        email: address.email.trim(),
 
-            "",
+        phone: address.phone.trim() || undefined,
 
-          );
+      };
 
-          const result =
 
-            await getShippingEstimates(
 
-              items,
+      // Wait until the destination has enough information for a carrier quote.
 
-            );
+      if (
 
-          const normalized =
+        !destination.fullName ||
 
-            Array.isArray(
+        !destination.street ||
 
-              result,
+        !destination.city ||
 
-            )
+        !destination.state ||
 
-              ? result
+        !destination.country ||
 
-              : [];
+        !destination.email ||
 
-          setShippingEstimates(
+        (countryConfig.requiresPostalCode && !destination.zipCode) ||
 
-            normalized,
+        (countryConfig.requiresPhone && !destination.phone) ||
 
-          );
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(destination.email)
 
-          setShippingSelections(
+      ) {
 
-            (previous) =>
+        setShippingEstimates([]);
 
-              buildShippingSelections(
+        setShippingSelections({});
 
-                normalized,
+        setShippingError("");
 
-                previous,
+        return;
 
-              ),
+      }
 
-          );
 
-        } catch (error) {
 
-          console.error(
+      try {
 
-            "[CHECKOUT SHIPPING] Failed to load estimates:",
+        setShippingError("");
 
-            error,
 
-          );
 
-          setShippingEstimates(
+        const result = await getShippingEstimates(
 
-            [],
+          selectedItems,
 
-          );
+          destination,
 
-          setShippingError(
+        );
 
-            error instanceof Error
 
-              ? error.message
 
-              : "Unable to calculate shipping.",
+        const normalized = Array.isArray(result) ? result : [];
 
-          );
+        setShippingEstimates(normalized);
 
-        }
+        setShippingSelections((previous) =>
 
-      },
+          buildShippingSelections(normalized, previous),
 
-      [items],
+        );
 
-    );
 
-  useEffect(() => {
 
-    void loadShippingEstimates();
+        if (normalized.length === 0) {
 
-  }, [
+          setShippingError(
 
-    loadShippingEstimates,
+            "No shipping rates are available for this address. Check the address and seller shipping settings, then try again.",
 
-  ]);
+          );
 
-  const updateAddress =
+        }
 
-    useCallback(
+      } catch (error) {
 
-      (
+        console.error(
 
-        field: keyof CheckoutAddress,
+          "[CHECKOUT SHIPPING] Failed to load Shippo rates:",
 
-        value: string,
+          error,
 
-      ) => {
+        );
 
-        setAddress(
 
-          (previous) => ({
 
-            ...previous,
+        setShippingEstimates([]);
 
-            [field]:
+        setShippingSelections({});
 
-              value,
+        setShippingError(
 
-          }),
+          error instanceof Error
 
-        );
+            ? error.message
 
-      },
+            : "Unable to calculate shipping. Please verify your address and try again.",
 
-      [],
+        );
 
-    );
+      }
 
-  const handleCountryChange =
+    },
 
-    useCallback(
+    [selectedItems, address, countryConfig],
 
-      (
+  );
 
-        nextCountryCode: string,
 
-      ) => {
 
-        const normalized =
+useEffect(() => {
 
-          normalizeCountryCode(
+  void loadShippingEstimates();
 
-            nextCountryCode,
+}, [loadShippingEstimates]);
 
-          );
 
-        const config =
 
-          getCountryConfig(
+const updateAddress =
 
-            normalized,
+useCallback(
 
-          );
+(
 
-        setAddress(
+field: keyof CheckoutAddress,
 
-          (previous) => ({
+value: string,
 
-            ...previous,
+) => {
 
-            countryCode:
+setAddress(
 
-              config.code,
+(previous) => ({
 
-            country:
+...previous,
 
-              config.name,
+[field]:
 
-            state: "",
+value,
 
-            postalCode: "",
+}),
 
-          }),
+);
 
-        );
+},
 
-        setPaymentMethod(
+[],
 
-          config.paymentMethods.includes(
+);
 
-            "card",
+const handleCountryChange =
 
-          )
+useCallback(
 
-            ? "card"
+(
 
-            : "cash_on_delivery",
+nextCountryCode: string,
 
-        );
+) => {
 
-        setCheckoutError(
+const normalized =
 
-          "",
+normalizeCountryCode(
 
-        );
+nextCountryCode,
 
-      },
+);
 
-      [],
+const config =
 
-    );
+getCountryConfig(
 
-  const selectPaymentMethod =
+normalized,
 
-    useCallback(
+);
 
-      (
+setAddress(
 
-        method: PaymentMethod,
+(previous) => ({
 
-      ) => {
+...previous,
 
-        setPaymentMethod(
+countryCode:
 
-          method,
+config.code,
 
-        );
+country:
 
-        setCheckoutError(
+config.name,
 
-          "",
+state: "",
 
-        );
+postalCode: "",
 
-      },
+}),
 
-      [],
+);
 
-    );
+setPaymentMethod(
 
-  const selectShippingMethod =
+config.paymentMethods.includes(
 
-    useCallback(
+"card",
 
-      (
+)
 
-        storeId: string,
+? "card"
 
-        optionId: string,
+: "cash_on_delivery",
 
-      ) => {
+);
 
-        setShippingSelections(
+setCheckoutError(
 
-          (previous) => ({
+"",
 
-            ...previous,
+);
 
-            [storeId]:
+},
 
-              optionId,
+[],
 
-          }),
+);
 
-        );
+const selectPaymentMethod =
 
-        setShippingError(
+useCallback(
 
-          "",
+(
 
-        );
+method: PaymentMethod,
 
-        setCheckoutError(
+) => {
 
-          "",
+setPaymentMethod(
 
-        );
+method,
 
-      },
+);
 
-      [],
+setCheckoutError(
 
-    );
+"",
 
-  const selectShipping =
+);
 
-    selectShippingMethod;
+},
 
-  const validateAddress =
+[],
 
-    useCallback(() => {
+);
 
-      if (
+const selectShippingMethod =
 
-        !address.fullName.trim()
+useCallback(
 
-      ) {
+(
 
-        return "Please enter your full name.";
+storeId: string,
 
-      }
+optionId: string,
 
-      if (
+) => {
 
-        !address.email.trim()
+setShippingSelections(
 
-      ) {
+(previous) => ({
 
-        return "Please enter your email address.";
+...previous,
 
-      }
+[storeId]:
 
-      if (
+optionId,
 
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+}),
 
-          address.email.trim(),
+);
 
-        )
+setShippingError(
 
-      ) {
+"",
 
-        return "Please enter a valid email address.";
+);
 
-      }
+setCheckoutError(
 
-      if (
+"",
 
-        !address.line1.trim()
+);
 
-      ) {
+},
 
-        return "Please enter your street address.";
+[],
 
-      }
+);
 
-      if (
+const selectShipping =
 
-        !address.city.trim()
+selectShippingMethod;
 
-      ) {
+const validateAddress =
 
-        return "Please enter your city.";
+useCallback(() => {
 
-      }
+if (
 
-      if (
+!address.fullName.trim()
 
-        countryConfig.addressStateLabel &&
+) {
 
-        !address.state.trim()
+return "Please enter your full name.";
 
-      ) {
+}
 
-        return `Please enter your ${countryConfig.addressStateLabel.toLowerCase()}.`;
+if (
 
-      }
+!address.email.trim()
 
-      if (
+) {
 
-        countryConfig.requiresPostalCode &&
+return "Please enter your email address.";
 
-        !address.postalCode.trim()
+}
 
-      ) {
+if (
 
-        return `Please enter your ${countryConfig.postalLabel.toLowerCase()}.`;
+!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
 
-      }
+address.email.trim(),
 
-      if (
+)
 
-        countryConfig.requiresPhone &&
+) {
 
-        !address.phone.trim()
+return "Please enter a valid email address.";
 
-      ) {
+}
 
-        return "Please enter your phone number.";
+if (
 
-      }
+!address.line1.trim()
 
-      return "";
+) {
 
-    }, [
+return "Please enter your street address.";
 
-      address,
+}
 
-      countryConfig,
+if (
 
-    ]);
+!address.city.trim()
 
-  const addressComplete =
+) {
 
-    useMemo(() => {
+return "Please enter your city.";
 
-      return (
+}
 
-        Boolean(
+if (
 
-          address.fullName.trim(),
+countryConfig.addressStateLabel &&
 
-        ) &&
+!address.state.trim()
 
-        Boolean(
+) {
 
-          address.email.trim(),
+return `Please enter your ${countryConfig.addressStateLabel.toLowerCase()}.`;
 
-        ) &&
+}
 
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+if (
 
-          address.email.trim(),
+countryConfig.requiresPostalCode &&
 
-        ) &&
+!address.postalCode.trim()
 
-        Boolean(
+) {
 
-          address.line1.trim(),
+return `Please enter your ${countryConfig.postalLabel.toLowerCase()}.`;
 
-        ) &&
+}
 
-        Boolean(
+if (
 
-          address.city.trim(),
+countryConfig.requiresPhone &&
 
-        ) &&
+!address.phone.trim()
 
-        Boolean(
+) {
 
-          address.state.trim(),
+return "Please enter your phone number.";
 
-        ) &&
+}
 
-        (!countryConfig.requiresPostalCode ||
+return "";
 
-          Boolean(
+}, [
 
-            address.postalCode.trim(),
+address,
 
-          )) &&
+countryConfig,
 
-        (!countryConfig.requiresPhone ||
+]);
 
-          Boolean(
+const addressComplete =
 
-            address.phone.trim(),
+useMemo(() => {
 
-          ))
+return (
 
-      );
+Boolean(
 
-    }, [
+address.fullName.trim(),
 
-      address,
+) &&
 
-      countryConfig,
+Boolean(
 
-    ]);
+address.email.trim(),
 
-  const shippingComplete =
+) &&
 
-    useMemo(() => {
+/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
 
-      if (
+address.email.trim(),
 
-        checkoutSellerGroups.length ===
+) &&
 
-        0
+Boolean(
 
-      ) {
+address.line1.trim(),
 
-        return false;
+) &&
 
-      }
+Boolean(
 
-      if (shippingError) {
+address.city.trim(),
 
-        return false;
+) &&
 
-      }
+Boolean(
 
-      if (
+address.state.trim(),
 
-        shippingEstimates.length ===
+) &&
 
-        0
+(!countryConfig.requiresPostalCode ||
 
-      ) {
+Boolean(
 
-        return (
+address.postalCode.trim(),
 
-          money(
+)) &&
 
-            cartTotals.estimatedShipping,
+(!countryConfig.requiresPhone ||
 
-          ) === 0
+Boolean(
 
-        );
+address.phone.trim(),
 
-      }
+))
 
-      return (
+);
 
-        validateShippingSelections(
+}, [
 
-          checkoutSellerGroups,
+address,
 
-          shippingEstimates,
+countryConfig,
 
-          shippingSelections,
+]);
 
-        ) === ""
+const shippingComplete =
 
-      );
+useMemo(() => {
 
-    }, [
+if (
 
-      checkoutSellerGroups,
+checkoutSellerGroups.length ===
 
-      shippingError,
+0
 
-      shippingEstimates,
+) {
 
-      shippingSelections,
+return false;
 
-      cartTotals.estimatedShipping,
+}
 
-    ]);
+if (shippingError) {
 
-  const canPlaceOrder =
+return false;
 
-    !placing &&
+}
 
-    checkoutItems.length > 0 &&
+if (shippingEstimates.length === 0) {
 
-    addressComplete &&
+return false;
 
-    shippingComplete &&
+}
 
-    supportedPaymentMethods.includes(
+return (
 
-      paymentMethod,
+validateShippingSelections(
 
-    ) &&
+checkoutSellerGroups,
 
-    (
+shippingEstimates,
 
-      paymentMethod !== "card" ||
+shippingSelections,
 
-      cardComplete
+) === ""
 
-    );
+);
 
-  const createStripePayment =
+}, [
 
-    useCallback(
+checkoutSellerGroups,
 
-      async (): Promise<StripePaymentResult> => {
+shippingError,
 
-        console.log(
+shippingEstimates,
 
-          "[CHECKOUT PAYMENT] Starting Stripe payment...",
+shippingSelections,
 
-        );
+cartTotals.estimatedShipping,
 
-        if (!stripe) {
+]);
 
-          throw new Error(
+const canPlaceOrder =
 
-            "Stripe is not ready. Please wait a moment and try again.",
+!placing &&
 
-          );
+checkoutItems.length > 0 &&
 
-        }
+addressComplete &&
 
-        if (!elements) {
+shippingComplete &&
 
-          throw new Error(
+supportedPaymentMethods.includes(
 
-            "Stripe payment elements are not ready. Please refresh and try again.",
+paymentMethod,
 
-          );
+) &&
 
-        }
+(
 
-        const cardElement =
+paymentMethod !== "card" ||
 
-          elements.getElement(
+cardComplete
 
-            CardElement,
+);
 
-          );
+const createStripePayment =
 
-        if (!cardElement) {
+useCallback(
 
-          throw new Error(
+async (): Promise<StripePaymentResult> => {
 
-            "Card payment form is not available.",
+console.log(
 
-          );
+"[CHECKOUT PAYMENT] Starting Stripe payment...",
 
-        }
+);
 
-        if (!cardComplete) {
+if (!stripe) {
 
-          throw new Error(
+throw new Error(
 
-            "Please complete your card information.",
+"Stripe is not ready. Please wait a moment and try again.",
 
-          );
+);
 
-        }
+}
 
-        const paymentMethodResult =
+if (!elements) {
 
-          await stripe.createPaymentMethod(
+throw new Error(
 
-            {
+"Stripe payment elements are not ready. Please refresh and try again.",
 
-              type: "card",
+);
 
-              card:
+}
 
-                cardElement,
+const cardElement =
 
-              billing_details: {
+elements.getElement(
 
-                name:
+CardElement,
 
-                  address.fullName.trim() ||
+);
 
-                  undefined,
+if (!cardElement) {
 
-                email:
+throw new Error(
 
-                  address.email.trim() ||
+"Card payment form is not available.",
 
-                  undefined,
+);
 
-                phone:
+}
 
-                  address.phone.trim() ||
+if (!cardComplete) {
 
-                  undefined,
+throw new Error(
 
-                address: {
+"Please complete your card information.",
 
-                  line1:
+);
 
-                    address.line1.trim() ||
+}
 
-                    undefined,
+const paymentMethodResult =
 
-                  line2:
+await stripe.createPaymentMethod(
 
-                    address.line2.trim() ||
+{
 
-                    undefined,
+type: "card",
 
-                  city:
+card:
 
-                    address.city.trim() ||
+cardElement,
 
-                    undefined,
+billing_details: {
 
-                  state:
+name:
 
-                    address.state.trim() ||
+address.fullName.trim() ||
 
-                    undefined,
+undefined,
 
-                  postal_code:
+email:
 
-                    address.postalCode.trim() ||
+address.email.trim() ||
 
-                    undefined,
+undefined,
 
-                  country:
+phone:
 
-                    countryCode ||
+address.phone.trim() ||
 
-                    undefined,
+undefined,
 
-                },
+address: {
 
-              },
+line1:
 
-            },
+address.line1.trim() ||
 
-          );
+undefined,
 
-        if (
+line2:
 
-          paymentMethodResult.error ||
+address.line2.trim() ||
 
-          !paymentMethodResult.paymentMethod
+undefined,
 
-        ) {
+city:
 
-          throw new Error(
+address.city.trim() ||
 
-            paymentMethodResult.error
+undefined,
 
-              ?.message ||
+state:
 
-              "Unable to create the Stripe payment method.",
+address.state.trim() ||
 
-          );
+undefined,
 
-        }
+postal_code:
 
-        const stripePaymentMethod =
+address.postalCode.trim() ||
 
-          paymentMethodResult.paymentMethod;
+undefined,
 
-        console.log(
+country:
 
-          "[CHECKOUT PAYMENT] Stripe PaymentMethod created:",
+countryCode ||
 
-          stripePaymentMethod.id,
+undefined,
 
-        );
+},
 
-        const checkoutId =
+},
 
-          `checkout_${Date.now()}_${Math.random()
+},
 
-            .toString(36)
+);
 
-            .slice(2, 10)}`;
+if (
 
-        const referenceId =
+paymentMethodResult.error ||
 
-          checkoutId;
+!paymentMethodResult.paymentMethod
 
-        const idempotencyKey =
+) {
 
-          `shop_${referenceId}`;
+throw new Error(
 
-        const apiBase =
+paymentMethodResult.error
 
-          getApiBaseUrl();
+?.message ||
 
-        const payload = {
+"Unable to create the Stripe payment method.",
 
-          purpose:
+);
 
-            "marketplace_order",
+}
 
-          referenceId,
+const stripePaymentMethod =
 
-          baseAmount:
+paymentMethodResult.paymentMethod;
 
-            money(orderTotal),
+console.log(
 
-          baseCurrency:
+"[CHECKOUT PAYMENT] Stripe PaymentMethod created:",
 
-            countryConfig.currency,
+stripePaymentMethod.id,
 
-          country:
+);
 
-            countryCode,
+const checkoutId =
 
-          idempotencyKey,
+`checkout_${Date.now()}_${Math.random()
 
-          metadata: {
+.toString(36)
 
-            source:
+.slice(2, 10)}`;
 
-              "fockis_shop_checkout",
+const referenceId =
 
-            checkoutId,
+checkoutId;
 
-            paymentMethodId:
+const idempotencyKey =
 
-              stripePaymentMethod.id,
+`shop_${referenceId}`;
 
-          },
+const apiBase =
 
-        };
+getApiBaseUrl();
 
-        const authToken =
+const payload = {
 
-          getAuthToken();
+purpose:
 
-        const createResponse =
+"marketplace_order",
 
-          await fetch(
+referenceId,
 
-            `${apiBase}/payments/create`,
+baseAmount:
 
-            {
+money(orderTotal),
 
-              method: "POST",
+baseCurrency:
 
-              headers: {
+countryConfig.currency,
 
-                Accept:
+country:
 
-                  "application/json",
+countryCode,
 
-                "Content-Type":
+idempotencyKey,
 
-                  "application/json",
+metadata: {
 
-                ...(authToken
+source:
 
-                  ? {
+"fockis_shop_checkout",
 
-                      Authorization:
+checkoutId,
 
-                        `Bearer ${authToken}`,
+paymentMethodId:
 
-                    }
+stripePaymentMethod.id,
 
-                  : {}),
+},
 
-              },
+};
 
-              credentials: "include",
+const authToken =
 
-              body:
+getAuthToken();
 
-                JSON.stringify(
+const createResponse =
 
-                  payload,
+await fetch(
 
-                ),
+`${apiBase}/payments/create`,
 
-            },
+{
 
-          );
+method: "POST",
 
-        const createData =
+headers: {
 
-          await parseJsonResponse(
+Accept:
 
-            createResponse,
+"application/json",
 
-          );
+"Content-Type":
 
-        if (
+"application/json",
 
-          !createResponse.ok
+...(authToken
 
-        ) {
+? {
 
-          const errorObject =
+Authorization:
 
-            extractResponseObject(
+`Bearer ${authToken}`,
 
-              createData,
+}
 
-            );
+: {}),
 
-          const backendMessage =
+},
 
-            errorObject.message;
+credentials: "include",
 
-          const message =
+body:
 
-            Array.isArray(
+JSON.stringify(
 
-              backendMessage,
+payload,
 
-            )
+),
 
-              ? backendMessage.join(
+},
 
-                  ", ",
+);
 
-                )
+const createData =
 
-              : String(
+await parseJsonResponse(
 
-                  backendMessage ||
+createResponse,
 
-                    "Unable to create payment.",
+);
 
-                );
+if (
 
-          throw new Error(
+!createResponse.ok
 
-            message,
+) {
 
-          );
+const errorObject =
 
-        }
+extractResponseObject(
 
-        const paymentObject =
+createData,
 
-          extractResponseObject(
+);
 
-            createData,
+const backendMessage =
 
-          );
+errorObject.message;
 
-        const clientSecret =
+const message =
 
-          String(
+Array.isArray(
 
-            paymentObject.clientSecret ||
+backendMessage,
 
-              paymentObject.client_secret ||
+)
 
-              "",
+? backendMessage.join(
 
-          ).trim();
+", ",
 
-        const paymentIntentId =
+)
 
-          String(
+: String(
 
-            paymentObject.stripePaymentIntentId ||
+backendMessage ||
 
-              paymentObject.paymentIntentId ||
+"Unable to create payment.",
 
-              paymentObject.id ||
+);
 
-              "",
+throw new Error(
 
-          ).trim();
+message,
 
-        if (!clientSecret) {
+);
 
-          throw new Error(
+}
 
-            "The payment service did not return a Stripe client secret.",
+const paymentObject =
 
-          );
+extractResponseObject(
 
-        }
+createData,
 
-        const confirmation =
+);
 
-          await stripe.confirmCardPayment(
+const clientSecret =
 
-            clientSecret,
+String(
 
-            {
+paymentObject.clientSecret ||
 
-              payment_method:
+paymentObject.client_secret ||
 
-                stripePaymentMethod.id,
+"",
 
-            },
+).trim();
 
-          );
+const paymentIntentId =
 
-        if (
+String(
 
-          confirmation.error
+paymentObject.stripePaymentIntentId ||
 
-        ) {
+paymentObject.paymentIntentId ||
 
-          throw new Error(
+paymentObject.id ||
 
-            confirmation.error
+"",
 
-              .message ||
+).trim();
 
-              "Stripe could not confirm the payment.",
+if (!clientSecret) {
 
-          );
+throw new Error(
 
-        }
+"The payment service did not return a Stripe client secret.",
 
-        const paymentIntent =
+);
 
-          confirmation.paymentIntent;
+}
 
-        if (!paymentIntent) {
+const confirmation =
 
-          throw new Error(
+await stripe.confirmCardPayment(
 
-            "Stripe did not return a payment intent.",
+clientSecret,
 
-          );
+{
 
-        }
+payment_method:
 
-        console.log(
+stripePaymentMethod.id,
 
-          "[CHECKOUT PAYMENT] Stripe PaymentIntent result:",
+},
 
-          {
+);
 
-            id:
+if (
 
-              paymentIntent.id,
+confirmation.error
 
-            status:
+) {
 
-              paymentIntent.status,
+throw new Error(
 
-          },
+confirmation.error
 
-        );
+.message ||
 
-        if (
+"Stripe could not confirm the payment.",
 
-          paymentIntent.status !==
+);
 
-          "succeeded"
+}
 
-        ) {
+const paymentIntent =
 
-          if (
+confirmation.paymentIntent;
 
-            paymentIntent.status ===
+if (!paymentIntent) {
 
-            "processing"
+throw new Error(
 
-          ) {
+"Stripe did not return a payment intent.",
 
-            throw new Error(
+);
 
-              "Your payment is still processing. Please wait before trying again.",
+}
 
-            );
+console.log(
 
-          }
+"[CHECKOUT PAYMENT] Stripe PaymentIntent result:",
 
-          if (
+{
 
-            paymentIntent.status ===
+id:
 
-              "requires_action" ||
+paymentIntent.id,
 
-            paymentIntent.status ===
+status:
 
-              "requires_confirmation"
+paymentIntent.status,
 
-          ) {
+},
 
-            throw new Error(
+);
 
-              "Your bank requires additional payment confirmation.",
+if (
 
-            );
+paymentIntent.status !==
 
-          }
+"succeeded"
 
-          if (
+) {
 
-            paymentIntent.status ===
+if (
 
-            "requires_payment_method"
+paymentIntent.status ===
 
-          ) {
+"processing"
 
-            throw new Error(
+) {
 
-              "The payment method was declined. Please check your card details and try again.",
+throw new Error(
 
-            );
+"Your payment is still processing. Please wait before trying again.",
 
-          }
+);
 
-          throw new Error(
+}
 
-            `Payment was not completed. Stripe status: ${paymentIntent.status}.`,
+if (
 
-          );
+paymentIntent.status ===
 
-        }
+"requires_action" ||
 
-        console.log(
+paymentIntent.status ===
 
-          "[CHECKOUT PAYMENT] PAYMENT SUCCESSFUL:",
+"requires_confirmation"
 
-          paymentIntent.id,
+) {
 
-        );
+throw new Error(
 
-        const confirmAuthToken =
+"Your bank requires additional payment confirmation.",
 
-          getAuthToken();
+);
 
-        const confirmResponse =
+}
 
-          await fetch(
+if (
 
-            `${apiBase}/payments/confirm`,
+paymentIntent.status ===
 
-            {
+"requires_payment_method"
 
-              method: "POST",
+) {
 
-              headers: {
+throw new Error(
 
-                Accept:
+"The payment method was declined. Please check your card details and try again.",
 
-                  "application/json",
+);
 
-                "Content-Type":
+}
 
-                  "application/json",
+throw new Error(
 
-                ...(confirmAuthToken
+`Payment was not completed. Stripe status: ${paymentIntent.status}.`,
 
-                  ? {
+);
 
-                      Authorization:
+}
 
-                        `Bearer ${confirmAuthToken}`,
+console.log(
 
-                    }
+"[CHECKOUT PAYMENT] PAYMENT SUCCESSFUL:",
 
-                  : {}),
+paymentIntent.id,
 
-              },
+);
 
-              credentials: "include",
+const confirmAuthToken =
 
-              body:
+getAuthToken();
 
-                JSON.stringify({
+const confirmResponse =
 
-                  paymentIntentId:
+await fetch(
 
-                    paymentIntent.id,
+`${apiBase}/payments/confirm`,
 
-                }),
+{
 
-            },
+method: "POST",
 
-          );
+headers: {
 
-        const confirmData =
+Accept:
 
-          await parseJsonResponse(
+"application/json",
 
-            confirmResponse,
+"Content-Type":
 
-          );
+"application/json",
 
-        if (
+...(confirmAuthToken
 
-          !confirmResponse.ok
+? {
 
-        ) {
+Authorization:
 
-          const errorObject =
+`Bearer ${confirmAuthToken}`,
 
-            extractResponseObject(
+}
 
-              confirmData,
+: {}),
 
-            );
+},
 
-          const backendMessage =
+credentials: "include",
 
-            errorObject.message;
+body:
 
-          const message =
+JSON.stringify({
 
-            Array.isArray(
+paymentIntentId:
 
-              backendMessage,
+paymentIntent.id,
 
-            )
+}),
 
-              ? backendMessage.join(
+},
 
-                  ", ",
+);
 
-                )
+const confirmData =
 
-              : String(
+await parseJsonResponse(
 
-                  backendMessage ||
+confirmResponse,
 
-                    "The payment was successful, but Fockis could not verify it.",
+);
 
-                );
+if (
 
-          throw new Error(
+!confirmResponse.ok
 
-            message,
+) {
 
-          );
+const errorObject =
 
-        }
+extractResponseObject(
 
-        console.log(
+confirmData,
 
-          "[CHECKOUT PAYMENT] FOCKIS PAYMENT VERIFIED:",
+);
 
-          paymentIntent.id,
+const backendMessage =
 
-        );
+errorObject.message;
 
-        return {
+const message =
 
-          paymentIntentId:
+Array.isArray(
 
-            paymentIntent.id,
+backendMessage,
 
-          clientSecret,
+)
 
-          status:
+? backendMessage.join(
 
-            paymentIntent.status,
+", ",
 
-        };
+)
 
-      },
+: String(
 
-      [
+backendMessage ||
 
-        stripe,
+"The payment was successful, but Fockis could not verify it.",
 
-        elements,
+);
 
-        cardComplete,
+throw new Error(
 
-        address,
+message,
 
-        countryCode,
+);
 
-        countryConfig,
+}
 
-        orderTotal,
+console.log(
 
-      ],
+"[CHECKOUT PAYMENT] FOCKIS PAYMENT VERIFIED:",
 
-    );
+paymentIntent.id,
 
-  const resetCheckoutAfterSuccess =
+);
 
-    useCallback(() => {
+return {
 
-      console.log(
+paymentIntentId:
 
-        "[CHECKOUT] Resetting checkout state after successful order.",
+paymentIntent.id,
 
-      );
+clientSecret,
 
-      setAddress(
+status:
 
-        EMPTY_ADDRESS,
+paymentIntent.status,
 
-      );
+};
 
-      setPaymentMethod(
+},
 
-        "card",
+[
 
-      );
+stripe,
 
-      setShippingEstimates(
+elements,
 
-        [],
+cardComplete,
 
-      );
+address,
 
-      setShippingSelections(
+countryCode,
 
-        {},
+countryConfig,
 
-      );
+orderTotal,
 
-      setShippingError(
+],
 
-        "",
+);
 
-      );
+const resetCheckoutAfterSuccess =
 
-      setCheckoutError(
+useCallback(() => {
 
-        "",
+console.log(
 
-      );
+"[CHECKOUT] Resetting checkout state after successful order.",
 
-      setCardComplete(
+);
 
-        false,
+setAddress(
 
-      );
+EMPTY_ADDRESS,
 
-      setTipOption(
+);
 
-        "none",
+setPaymentMethod(
 
-      );
+"card",
 
-      setCustomTip(
+);
 
-        "",
+setShippingEstimates(
 
-      );
+[],
 
-    }, []);
+);
 
-  const submitOrder =
+setShippingSelections(
 
-    useCallback(
+{},
 
-      async () => {
+);
 
-        console.log(
+setShippingError(
 
-          "[CHECKOUT] submitOrder() started",
+"",
 
-        );
+);
 
-        setCheckoutError(
+setCheckoutError(
 
-          "",
+"",
 
-        );
+);
 
-        if (
+setCardComplete(
 
-          items.length ===
+false,
 
-          0
+);
 
-        ) {
+setTipOption(
 
-          setCheckoutError(
+"none",
 
-            "Your cart is empty.",
+);
 
-          );
+setCustomTip(
 
-          return;
+"",
 
-        }
+);
 
-        const addressError =
+}, []);
 
-          validateAddress();
+const submitOrder =
 
-        console.log(
+useCallback(
 
-          "[CHECKOUT DEBUG] Address validation:",
+async () => {
 
-          addressError,
+console.log(
 
-        );
+"[CHECKOUT] submitOrder() started",
 
-        if (addressError) {
+);
 
-          setCheckoutError(
+setCheckoutError(
 
-            addressError,
+"",
 
-          );
+);
 
-          return;
+if (
 
-        }
+selectedItems.length ===
 
-        let currentEstimates =
+0
 
-          shippingEstimates;
+) {
 
-        let currentSelections =
+setCheckoutError(
 
-          shippingSelections;
+"Please select at least one item to checkout.",
 
-        const shippingValidation =
+);
 
-          validateShippingSelections(
+return;
 
-            checkoutSellerGroups,
+}
 
-            currentEstimates,
+const addressError =
 
-            currentSelections,
+validateAddress();
 
-          );
+console.log(
 
-        if (
+"[CHECKOUT DEBUG] Address validation:",
 
-          shippingValidation &&
+addressError,
 
-          currentEstimates.length >
+);
 
-            0
+if (addressError) {
 
-        ) {
+setCheckoutError(
 
-          try {
+addressError,
 
-            await loadShippingEstimates();
+);
 
-            const refreshed =
+return;
 
-              await getShippingEstimates(
+}
 
-                items,
+let currentEstimates = shippingEstimates;
 
-              );
+let currentSelections = shippingSelections;
 
-            currentEstimates =
 
-              Array.isArray(
 
-                refreshed,
+const shippingValidation = validateShippingSelections(
 
-              )
+  checkoutSellerGroups,
 
-                ? refreshed
+  currentEstimates,
 
-                : [];
+  currentSelections,
 
-            currentSelections =
+);
 
-              buildShippingSelections(
 
-                currentEstimates,
 
-                currentSelections,
+if (shippingValidation) {
 
-              );
+  try {
 
-            setShippingEstimates(
+    const refreshed = await getShippingEstimates(
 
-              currentEstimates,
+      selectedItems,
 
-            );
+      {
 
-            setShippingSelections(
+        fullName: address.fullName.trim(),
 
-              currentSelections,
+        street: address.line1.trim(),
 
-            );
+        apartment: address.line2.trim() || undefined,
 
-          } catch (error) {
+        city: address.city.trim(),
 
-            const message =
+        state: address.state.trim(),
 
-              error instanceof Error
+        zipCode: address.postalCode.trim(),
 
-                ? error.message
+        country: (address.countryCode || address.country).trim(),
 
-                : "Unable to calculate shipping.";
+        email: address.email.trim(),
 
-            setShippingError(
+        phone: address.phone.trim() || undefined,
 
-              message,
+      },
 
-            );
+    );
 
-            setCheckoutError(
 
-              message,
 
-            );
+    currentEstimates = Array.isArray(refreshed) ? refreshed : [];
 
-            return;
+    currentSelections = buildShippingSelections(
 
-          }
+      currentEstimates,
 
-        }
+      currentSelections,
 
-        const finalShippingValidation =
+    );
 
-          validateShippingSelections(
 
-            checkoutSellerGroups,
 
-            currentEstimates,
+    setShippingEstimates(currentEstimates);
 
-            currentSelections,
+    setShippingSelections(currentSelections);
 
-          );
+    setShippingError("");
 
-        console.log(
 
-          "[CHECKOUT DEBUG] Shipping validation:",
 
-          finalShippingValidation,
+    if (currentEstimates.length === 0) {
 
-        );
+      const message =
 
-        if (
+        "No shipping rates are available. Please verify your address and seller shipping settings before placing your order.";
 
-          finalShippingValidation
+      setShippingError(message);
 
-        ) {
+      setCheckoutError(message);
 
-          const canUseZeroShippingFallback =
+      return;
 
-            currentEstimates.length ===
+    }
 
-              0 &&
+  } catch (error) {
 
-            money(
+    const message =
 
-              cartTotals.estimatedShipping,
+      error instanceof Error
 
-            ) === 0 &&
+        ? error.message
 
-            !shippingError;
+        : "Unable to calculate shipping. Please try again.";
 
-          if (
 
-            !canUseZeroShippingFallback
 
-          ) {
+    setShippingEstimates([]);
 
-            setCheckoutError(
+    setShippingSelections({});
 
-              finalShippingValidation,
+    setShippingError(message);
 
-            );
+    setCheckoutError(message);
 
-            return;
+    return;
 
-          }
+  }
 
-        }
+}
 
-        if (
+const finalShippingValidation =
 
-          paymentMethod ===
+validateShippingSelections(
 
-            "card" &&
+checkoutSellerGroups,
 
-          !cardComplete
+currentEstimates,
 
-        ) {
+currentSelections,
 
-          setCheckoutError(
+);
 
-            "Please complete your card information.",
+console.log(
 
-          );
+"[CHECKOUT DEBUG] Shipping validation:",
 
-          return;
+finalShippingValidation,
 
-        }
+);
 
-        if (
+if (finalShippingValidation) {
 
-          !supportedPaymentMethods.includes(
+  setCheckoutError(finalShippingValidation);
 
-            paymentMethod,
+  return;
 
-          )
+}
 
-        ) {
+if (
 
-          setCheckoutError(
+paymentMethod ===
 
-            "The selected payment method is not available for this country.",
+"card" &&
 
-          );
+!cardComplete
 
-          return;
+) {
 
-        }
+setCheckoutError(
 
-        setPlacing(true);
+"Please complete your card information.",
 
-        try {
+);
 
-          const backendPaymentMethod =
+return;
 
-            normalizePaymentMethod(
+}
 
-              paymentMethod,
+if (
 
-            );
+!supportedPaymentMethods.includes(
 
-          let paymentIntentId:
+paymentMethod,
 
-            | string
+)
 
-            | undefined;
+) {
 
-          if (
+setCheckoutError(
 
-            backendPaymentMethod ===
+"The selected payment method is not available for this country.",
 
-            "card"
+);
 
-          ) {
+return;
 
-            const paymentResult =
+}
 
-              await createStripePayment();
+setPlacing(true);
 
-            paymentIntentId =
+try {
 
-              paymentResult.paymentIntentId;
+const backendPaymentMethod =
 
-            if (
+normalizePaymentMethod(
 
-              !paymentIntentId
+paymentMethod,
 
-            ) {
+);
 
-              throw new Error(
+let paymentIntentId:
 
-                "Payment succeeded but no payment intent ID was returned.",
+| string
 
-              );
+| undefined;
 
-            }
+if (
 
-            if (
+backendPaymentMethod ===
 
-              paymentResult.status &&
+"card"
 
-              paymentResult.status !==
+) {
 
-                "succeeded"
+const paymentResult =
 
-            ) {
+await createStripePayment();
 
-              throw new Error(
+paymentIntentId =
 
-                "Payment was not successfully confirmed.",
+paymentResult.paymentIntentId;
 
-              );
+if (
 
-            }
+!paymentIntentId
 
-          }
+) {
 
-          const rawOrderItems =
+throw new Error(
 
-            buildOrderItems(
+"Payment succeeded but no payment intent ID was returned.",
 
-              items,
+);
 
-            );
+}
 
-          const orderItems =
+if (
 
-            sanitizeOrderItems(
+paymentResult.status &&
 
-              rawOrderItems,
+paymentResult.status !==
 
-            );
+"succeeded"
 
-          const selectedShippingMethods =
+) {
 
-            checkoutSellerGroups
+throw new Error(
 
-              .map((group) => {
+"Payment was not successfully confirmed.",
 
-                const estimate =
+);
 
-                  currentEstimates.find(
+}
 
-                    (candidate) =>
+}
 
-                      candidate.storeId ===
+const rawOrderItems =
 
-                      group.storeId,
+buildOrderItems(
 
-                  );
+selectedItems,
 
-                const optionId =
+);
 
-                  currentSelections[
+const orderItems =
 
-                    group.storeId
+sanitizeOrderItems(
 
-                  ] ??
+rawOrderItems,
 
-                  estimate?.selectedOptionId ??
+);
 
-                  estimate?.options[0]?.id ??
+const selectedShippingMethods =
 
-                  "";
+checkoutSellerGroups
 
-                const option =
+.map((group) => {
 
-                  estimate?.options.find(
+const estimate =
 
-                    (candidate) =>
+currentEstimates.find(
 
-                      candidate.id ===
+(candidate) =>
 
-                      optionId,
+candidate.storeId ===
 
-                  );
+group.storeId,
 
-                return {
+);
 
-                  storeId:
+const optionId =
 
-                    group.storeId,
+currentSelections[
 
-                  storeName:
+group.storeId
 
-                    group.storeName,
+] ??
 
-                  optionId,
+estimate?.selectedOptionId ??
 
-                  optionName:
+estimate?.options[0]?.id ??
 
-                    option?.label ||
+"";
 
-                    optionId,
+const option =
 
-                  price:
+estimate?.options.find(
 
-                    money(
+(candidate) =>
 
-                      option?.price,
+candidate.id ===
 
-                    ),
+optionId,
 
-                };
+);
 
-              })
+return {
 
-              .filter(
+storeId:
 
-                (selection) =>
+group.storeId,
 
-                  Boolean(
+storeName:
 
-                    selection.optionId,
+group.storeName,
 
-                  ),
+optionId,
 
-              );
+optionName:
 
-          /*
+option?.label ||
 
-           * IMPORTANT:
+optionId,
 
-           *
+price:
 
-           * Tip is calculated separately from tax.
+money(
 
-           *
+option?.price,
 
-           * The frontend totals are:
+),
 
-           * subtotal + shipping + tax + tip
+};
 
-           *
+})
 
-           * If the current backend PlaceOrderRequest does not yet
+.filter(
 
-           * expose a dedicated tip field, we keep the request
+(selection) =>
 
-           * compatible with the existing backend by sending the
+Boolean(
 
-           * existing tax field as the actual tax amount.
+selection.optionId,
 
-           */
+),
 
-          const request = {
+);
 
-            items:
+/**
 
-              orderItems,
+ * IMPORTANT:
 
-            subtotal:
+ *
 
-              checkoutTotals.subtotal,
+ * Tip is calculated separately from tax.
 
-            shippingCost:
+ *
 
-              checkoutTotals.estimatedShipping,
+ * The frontend totals are:
 
-            tax:
+ * subtotal + shipping + tax + tip
 
-              checkoutTotals.estimatedTax,
+ *
 
-            totalAmount:
+ * If the current backend PlaceOrderRequest does not yet
 
-              checkoutTotals.total,
+ * expose a dedicated tip field, we keep the request
 
-            shippingAddress:
+ * compatible with the existing backend by sending the
 
-              buildBackendShippingAddress(
+ * existing tax field as the actual tax amount.
 
-                address,
+*/
 
-              ),
+const request = {
 
-            paymentMethod:
+items:
 
-              backendPaymentMethod,
+orderItems,
 
-            currency:
+subtotal:
 
-              countryConfig.currency,
+checkoutTotals.subtotal,
 
-            deliveryMethod:
+shippingCost:
 
-              selectedShippingMethods
+checkoutTotals.estimatedShipping,
 
-                .map(
+tax:
 
-                  (
+checkoutTotals.estimatedTax,
 
-                    selection,
+totalAmount:
 
-                  ) =>
+checkoutTotals.total,
 
-                    selection.optionId,
+shippingAddress:
 
-                )
+buildBackendShippingAddress(
 
-                .filter(Boolean)
+address,
 
-                .join(","),
+),
 
-            paymentStatus:
+paymentMethod:
 
-              backendPaymentMethod ===
+backendPaymentMethod,
 
-              "card"
+currency:
 
-                ? "paid"
+countryConfig.currency,
 
-                : "pending",
+deliveryMethod:
 
-            ...(paymentIntentId
+selectedShippingMethods
 
-              ? {
+.map(
 
-                  paymentIntentId,
+(
 
-                }
+selection,
 
-              : {}),
+) =>
 
-            /*
+selection.optionId,
 
-             * Include the tip for newer backends that support it.
+)
 
-             * The request is cast below so older PlaceOrderRequest
+.filter(Boolean)
 
-             * definitions do not break the frontend build.
+.join(","),
 
-             */
+paymentStatus:
 
-            ...(tipAmount > 0
+backendPaymentMethod ===
 
-              ? {
+"card"
 
-                  tip:
+? "paid"
 
-                    tipAmount,
+: "pending",
 
-                }
+...(paymentIntentId
 
-              : {}),
+? {
 
-          } as unknown as PlaceOrderRequest;
+paymentIntentId,
 
-          const serializedRequest =
+}
 
-            JSON.stringify(
+: {}),
 
-              request,
+/**
 
-            );
+ * Include the tip for newer backends that support it.
 
-          console.log(
+ * The request is cast below so older PlaceOrderRequest
 
-            "[CHECKOUT] FINAL serialized order payload:",
+ * definitions do not break the frontend build.
 
-            serializedRequest,
+*/
 
-          );
+...(tipAmount > 0
 
-          if (
+? {
 
-            serializedRequest.includes(
+tip:
 
-              '"totalPrice"',
+tipAmount,
 
-            )
+}
 
-          ) {
+: {}),
 
-            throw new Error(
+} as unknown as PlaceOrderRequest;
 
-              "Checkout safety check failed: totalPrice is still present in the order payload.",
+const serializedRequest =
 
-            );
+JSON.stringify(
 
-          }
+request,
 
-          console.log(
+);
 
-            "[CHECKOUT] Creating Shop order...",
+console.log(
 
-          );
+"[CHECKOUT] FINAL serialized order payload:",
 
-          const orderResponse =
+serializedRequest,
 
-            await submitSanitizedOrder(
+);
 
-              request,
+if (
 
-            );
+serializedRequest.includes(
 
-          console.log(
+'"totalPrice"',
 
-            "[CHECKOUT] Shop order created:",
+)
 
-            orderResponse,
+) {
 
-          );
+throw new Error(
 
-          const responseObject =
+"Checkout safety check failed: totalPrice is still present in the order payload.",
 
-            extractResponseObject(
+);
 
-              orderResponse,
+}
 
-            );
+console.log(
 
-          const orderId =
+"[CHECKOUT] Creating Shop order...",
 
-            String(
+);
 
-              responseObject.orderId ||
+const orderResponse =
 
-                responseObject.id ||
+await submitSanitizedOrder(
 
-                responseObject._id ||
+request,
 
-                "",
+);
 
-            ).trim();
+console.log(
 
-          /*
+"[CHECKOUT] Shop order created:",
 
-           * IMPORTANT:
+orderResponse,
 
-           *
+);
 
-           * Stripe payment succeeded.
+const responseObject =
 
-           * Fockis payment verification succeeded.
+extractResponseObject(
 
-           * Shop order creation succeeded.
+orderResponse,
 
-           *
+);
 
-           * ONLY NOW do we clear the cart.
+const orderId =
 
-           */
+String(
 
-          console.log(
+responseObject.orderId ||
 
-            "[CHECKOUT] Clearing Zustand/server cart...",
+responseObject.id ||
 
-          );
+responseObject._id ||
 
-          await clear();
+"",
 
-          console.log(
+).trim();
 
-            "[CHECKOUT] CART CLEARED SUCCESSFULLY.",
+/**
 
-          );
+ * IMPORTANT:
 
-          resetCheckoutAfterSuccess();
+ *
 
-          if (orderId) {
+ * Stripe payment succeeded.
 
-            navigate(
+ * Fockis payment verification succeeded.
 
-              `/shop/orders/${encodeURIComponent(
+ * Shop order creation succeeded.
 
-                orderId,
+ *
 
-              )}`,
+ * ONLY NOW do we clear the cart.
 
-              {
+*/
 
-                replace: true,
+console.log(
 
-              },
+"[CHECKOUT] Clearing Zustand/server cart...",
 
-            );
+);
 
-          } else {
+await clearSelected();
 
-            navigate(
+console.log(
 
-              "/shop/orders",
+"[CHECKOUT] CART CLEARED SUCCESSFULLY.",
 
-              {
+);
 
-                replace: true,
+resetCheckoutAfterSuccess();
 
-              },
+if (orderId) {
 
-            );
+navigate(
 
-          }
+`/shop/orders/${encodeURIComponent(
 
-        } catch (error) {
+orderId,
 
-          console.error(
+)}`,
 
-            "[CHECKOUT] Checkout failed:",
+{
 
-            error,
+replace: true,
 
-          );
+},
 
-          setCheckoutError(
+);
 
-            error instanceof Error
+} else {
 
-              ? error.message
+navigate(
 
-              : "Checkout failed. Please try again.",
+"/shop/orders",
 
-          );
+{
 
-        } finally {
+replace: true,
 
-          setPlacing(false);
+},
 
-        }
+);
 
-      },
+}
 
-      [
+} catch (error) {
 
-        items,
+console.error(
 
-        validateAddress,
+"[CHECKOUT] Checkout failed:",
 
-        shippingEstimates,
+error,
 
-        shippingSelections,
+);
 
-        checkoutSellerGroups,
+setCheckoutError(
 
-        loadShippingEstimates,
+error instanceof Error
 
-        cartTotals.estimatedShipping,
+? error.message
 
-        shippingError,
+: "Checkout failed. Please try again.",
 
-        paymentMethod,
+);
 
-        cardComplete,
+} finally {
 
-        supportedPaymentMethods,
+setPlacing(false);
 
-        createStripePayment,
+}
 
-        checkoutTotals,
+},
 
-        tipAmount,
+[
 
-        address,
+selectedItems,
 
-        countryConfig.currency,
+validateAddress,
 
-        clear,
+shippingEstimates,
 
-        resetCheckoutAfterSuccess,
+shippingSelections,
 
-      ],
+checkoutSellerGroups,
 
-    );
+loadShippingEstimates,
 
-  const handleSubmit =
+cartTotals.estimatedShipping,
 
-    useCallback(
+shippingError,
 
-      async (
+paymentMethod,
 
-        event: FormEvent<HTMLFormElement>,
+cardComplete,
 
-      ) => {
+supportedPaymentMethods,
 
-        event.preventDefault();
+createStripePayment,
 
-        if (placing) {
+checkoutTotals,
 
-          return;
+tipAmount,
 
-        }
+address,
 
-        await submitOrder();
+countryConfig.currency,
 
-      },
+clearSelected,
 
-      [
+resetCheckoutAfterSuccess,
 
-        placing,
+],
 
-        submitOrder,
+);
 
-      ],
+const handleSubmit =
 
-    );
+useCallback(
 
-  const handlePlaceOrder =
+async (
 
-    useCallback(
+event: FormEvent<HTMLFormElement>,
 
-      async () => {
+) => {
 
-        await submitOrder();
+event.preventDefault();
 
-      },
+if (placing) {
 
-      [submitOrder],
+return;
 
-    );
+}
 
-  const placeOrderHandler =
+await submitOrder();
 
-    useCallback(
+},
 
-      async () => {
+[
 
-        await submitOrder();
+placing,
 
-      },
+submitOrder,
 
-      [submitOrder],
+],
 
-    );
+);
 
-  return {
+const handlePlaceOrder =
 
-    items,
+useCallback(
 
-    checkoutItems,
+async () => {
 
-    checkoutSellerGroups,
+await submitOrder();
 
-    address,
+},
 
-    setAddress,
+[submitOrder],
 
-    updateAddress,
+);
 
-    handleCountryChange,
+const placeOrderHandler =
 
-    countryCode,
+useCallback(
 
-    countryConfig,
+async () => {
 
-    countries,
+await submitOrder();
 
-    isHaiti,
+},
 
-    paymentMethod,
+[submitOrder],
 
-    setPaymentMethod,
+);
 
-    selectPaymentMethod,
+return {
 
-    supportedPaymentMethods,
+items,
 
-    cardComplete,
+checkoutItems,
 
-    setCardComplete,
+checkoutSellerGroups,
 
-    estimates:
+address,
 
-      shippingEstimates,
+setAddress,
 
-    shippingEstimates,
+updateAddress,
 
-    shippingSelections,
+handleCountryChange,
 
-    setShippingSelections,
+countryCode,
 
-    selectShippingMethod,
+countryConfig,
 
-    selectShipping,
+countries,
 
-    loadShippingEstimates,
+isHaiti,
 
-    storeNameById,
+paymentMethod,
 
-    subtotal,
+setPaymentMethod,
 
-    shipping,
+selectPaymentMethod,
 
-    tax,
+supportedPaymentMethods,
 
-    /*
+cardComplete,
 
-     * IMPORTANT FIX:
+setCardComplete,
 
-     *
+estimates: shippingEstimates,
 
-     * The CheckoutController requires a `tip` property.
+shippingEstimates,
 
-     * Previously this was incorrectly returned as `tax:
+shippingSelections,
 
-     * tipAmount`, which caused the TypeScript error.
+setShippingSelections,
 
-     */
+selectShippingMethod,
 
-    tip:
+selectShipping,
 
-      tipAmount,
+loadShippingEstimates,
 
-    total:
+storeNameById,
 
-      orderTotal,
+subtotal,
 
-    totals,
+shipping,
 
-    cartTotals,
+tax,
 
-    tipOption,
+/**
 
-    setTipOption,
+ * IMPORTANT FIX:
 
-    customTip,
+ *
 
-    setCustomTip,
+ * The CheckoutController requires a `tip` property.
 
-    tipAmount,
+ * Previously this was incorrectly returned as `tax:
 
-    orderTotal,
+ * tipAmount`, which caused the TypeScript error.
 
-    formatCheckoutPrice,
+*/
 
-    placing,
+tip:
 
-    isPlacing:
+tipAmount,
 
-      placing,
+total:
 
-    shippingError,
+orderTotal,
 
-    checkoutError,
+totals,
 
-    setCheckoutError,
+cartTotals,
 
-    addressComplete,
+tipOption,
 
-    shippingComplete,
+setTipOption,
 
-    canPlaceOrder,
+customTip,
 
-    validateAddress,
+setCustomTip,
 
-    stripe,
+tipAmount,
 
-    elements,
+orderTotal,
 
-    submitOrder,
+formatCheckoutPrice,
 
-    handleSubmit,
+placing,
 
-    handlePlaceOrder,
+isPlacing:
 
-    placeOrder:
+placing,
 
-      placeOrderHandler,
+shippingError,
 
-  };
+checkoutError,
+
+setCheckoutError,
+
+addressComplete,
+
+shippingComplete,
+
+canPlaceOrder,
+
+validateAddress,
+
+stripe,
+
+elements,
+
+submitOrder,
+
+handleSubmit,
+
+handlePlaceOrder,
+
+placeOrder:
+
+placeOrderHandler,
+
+};
 
 }
 

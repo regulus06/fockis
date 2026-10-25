@@ -23,6 +23,14 @@ interface RoomState {
 
   secretaryStatus: SecretaryStatus;
 
+  /**
+   * Devices chosen in the in-room Settings tab. Empty string means the
+   * browser default. VideoGrid applies these to the live LiveKit room.
+   */
+  audioInputId: string;
+  videoInputId: string;
+  audioOutputId: string;
+
   recording: boolean;
 
   connectionState:
@@ -90,6 +98,11 @@ interface RoomState {
   setSecretaryStatus: (
     status: SecretaryStatus,
   ) => void;
+
+  setMediaDevice: (
+    kind: "audioinput" | "videoinput" | "audiooutput",
+    deviceId: string,
+  ) => void;
 }
 
 export const useRoomStore =
@@ -106,6 +119,10 @@ export const useRoomStore =
     screenSharing: false,
 
     secretaryStatus: "off",
+
+    audioInputId: "",
+    videoInputId: "",
+    audioOutputId: "",
 
     recording: false,
 
@@ -288,4 +305,13 @@ export const useRoomStore =
       set({
         secretaryStatus,
       }),
+
+    setMediaDevice: (kind, deviceId) =>
+      set(
+        kind === "audioinput"
+          ? { audioInputId: deviceId }
+          : kind === "videoinput"
+            ? { videoInputId: deviceId }
+            : { audioOutputId: deviceId },
+      ),
   }));

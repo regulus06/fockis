@@ -1,13 +1,64 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import { useAdminSessionStore } from "../../../../features/admin/store/adminSessionStore";
 
 interface SidebarMainSectionProps {
   onNavigate?: () => void;
 }
 
+interface SidebarUser {
+  role?: string | null;
+  roles?: string[] | null;
+  isSuperAdmin?: boolean | null;
+  is_super_admin?: boolean | null;
+}
+
+function normalizeRole(value: unknown): string {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+}
+
+function isSuperAdmin(user: SidebarUser | null): boolean {
+  if (!user) return false;
+
+  if (
+    user.isSuperAdmin === true ||
+    user.is_super_admin === true
+  ) {
+    return true;
+  }
+
+  const allowedRoles = new Set([
+    "super_admin",
+    "superadmin",
+    "super_admin_user",
+  ]);
+
+  if (allowedRoles.has(normalizeRole(user.role))) {
+    return true;
+  }
+
+  return (
+    Array.isArray(user.roles) &&
+    user.roles.some((role) =>
+      allowedRoles.has(normalizeRole(role))
+    )
+  );
+}
+
 export default function SidebarMainSection({
   onNavigate,
 }: SidebarMainSectionProps) {
+  const currentAdmin = useAdminSessionStore(
+    (state) => state.currentAdmin
+  );
+
+  const showAdminDashboard = isSuperAdmin(
+    currentAdmin as SidebarUser | null
+  );
+
   const handleNavigation = () => {
     onNavigate?.();
   };
@@ -24,283 +75,72 @@ export default function SidebarMainSection({
       .filter(Boolean)
       .join(" ");
 
+  // Ads Manager, Marketing, Create, AI Studio, and Fockis Academy
+  // are intentionally excluded from this sidebar.
+  const navigationItems = [
+    { to: "/fockis-preview", label: "Feed", icon: "🏠" },
+    { to: "/settings", label: "Account Settings", icon: "⚙️" },
+    { to: "/music", label: "Fockis Music", icon: "🎵" },
+    { to: "/meetings", label: "Meetings", icon: "🎥" },
+    { to: "/my-live", label: "My Live", icon: "🔴" },
+    { to: "/events", label: "Events", icon: "📅" },
+    { to: "/businesses", label: "Businesses", icon: "🏢" },
+    { to: "/shop", label: "Fockis Shop", icon: "🛍️" },
+    { to: "/seller", label: "Seller Center", icon: "🏪" },
+    { to: "/travel", label: "Fockis Travel", icon: "✈️" },
+    { to: "/subscriptions", label: "Subscriptions", icon: "💳" },
+    { to: "/map", label: "Map", icon: "🗺️" },
+    { to: "/fockis-ai", label: "Fockis AI", icon: "✦" },
+    { to: "/church", label: "Fockis Org", icon: "🏛️" },
+  ];
+
   return (
     <div className="fk-sidebar__nav-group">
       <span className="fk-sidebar__section-label">
         Main
       </span>
 
-      {/* Feed */}
-      <NavLink
-        to="/fockis-preview"
-        end
-        className={navClass}
-        onClick={handleNavigation}
-        aria-label="Feed"
-      >
-        <span className="fk-sidebar__nav-icon" aria-hidden="true">
-          🏠
-        </span>
-        <span className="fk-sidebar__nav-label">
-          Feed
-        </span>
-      </NavLink>
+      {navigationItems.map(({ to, label, icon }) => (
+        <NavLink
+          key={to}
+          to={to}
+          end
+          className={navClass}
+          onClick={handleNavigation}
+          aria-label={label}
+        >
+          <span
+            className="fk-sidebar__nav-icon"
+            aria-hidden="true"
+          >
+            {icon}
+          </span>
 
-      {/* Fockis Music */}
-      <NavLink
-        to="/music"
-        end
-        className={navClass}
-        onClick={handleNavigation}
-        aria-label="Fockis Music"
-      >
-        <span className="fk-sidebar__nav-icon" aria-hidden="true">
-          🎵
-        </span>
-        <span className="fk-sidebar__nav-label">
-          Fockis Music
-        </span>
-      </NavLink>
+          <span className="fk-sidebar__nav-label">
+            {label}
+          </span>
+        </NavLink>
+      ))}
 
-      {/* Meetings */}
-      <NavLink
-        to="/meetings"
-        end
-        className={navClass}
-        onClick={handleNavigation}
-        aria-label="Meetings"
-      >
-        <span className="fk-sidebar__nav-icon" aria-hidden="true">
-          🎥
-        </span>
-        <span className="fk-sidebar__nav-label">
-          Meetings
-        </span>
-      </NavLink>
+      {showAdminDashboard && (
+        <NavLink
+          to="/admin/dashboard"
+          className={navClass}
+          onClick={handleNavigation}
+          aria-label="Admin Dashboard"
+        >
+          <span
+            className="fk-sidebar__nav-icon"
+            aria-hidden="true"
+          >
+            🛡️
+          </span>
 
-      {/* My Live */}
-      <NavLink
-        to="/my-live"
-        end
-        className={navClass}
-        onClick={handleNavigation}
-        aria-label="My Live"
-      >
-        <span className="fk-sidebar__nav-icon" aria-hidden="true">
-          🔴
-        </span>
-        <span className="fk-sidebar__nav-label">
-          My Live
-        </span>
-      </NavLink>
-
-      {/* Events */}
-      <NavLink
-        to="/events"
-        end
-        className={navClass}
-        onClick={handleNavigation}
-        aria-label="Events"
-      >
-        <span className="fk-sidebar__nav-icon" aria-hidden="true">
-          📅
-        </span>
-        <span className="fk-sidebar__nav-label">
-          Events
-        </span>
-      </NavLink>
-
-      {/* Businesses */}
-      <NavLink
-        to="/businesses"
-        end
-        className={navClass}
-        onClick={handleNavigation}
-        aria-label="Businesses"
-      >
-        <span className="fk-sidebar__nav-icon" aria-hidden="true">
-          🏢
-        </span>
-        <span className="fk-sidebar__nav-label">
-          Businesses
-        </span>
-      </NavLink>
-
-      {/* Fockis Shop */}
-      <NavLink
-        to="/shop"
-        end
-        className={navClass}
-        onClick={handleNavigation}
-        aria-label="Fockis Shop"
-      >
-        <span className="fk-sidebar__nav-icon" aria-hidden="true">
-          🛍️
-        </span>
-        <span className="fk-sidebar__nav-label">
-          Fockis Shop
-        </span>
-      </NavLink>
-
-      {/* Fockis Travel */}
-      <NavLink
-        to="/travel"
-        end
-        className={navClass}
-        onClick={handleNavigation}
-        aria-label="Fockis Travel"
-      >
-        <span className="fk-sidebar__nav-icon" aria-hidden="true">
-          ✈️
-        </span>
-        <span className="fk-sidebar__nav-label">
-          Fockis Travel
-        </span>
-      </NavLink>
-
-      {/* Manage Business */}
-      <NavLink
-        to="/business/manager"
-        end
-        className={navClass}
-        onClick={handleNavigation}
-        aria-label="Manage Business"
-      >
-        <span className="fk-sidebar__nav-icon" aria-hidden="true">
-          ⚙️
-        </span>
-        <span className="fk-sidebar__nav-label">
-          Manage Business
-        </span>
-      </NavLink>
-
-      {/* Marketing */}
-      <NavLink
-        to="/marketing"
-        end
-        className={navClass}
-        onClick={handleNavigation}
-        aria-label="Marketing"
-      >
-        <span className="fk-sidebar__nav-icon" aria-hidden="true">
-          📣
-        </span>
-        <span className="fk-sidebar__nav-label">
-          Marketing
-        </span>
-      </NavLink>
-
-      {/* Subscriptions */}
-      <NavLink
-        to="/subscriptions"
-        end
-        className={navClass}
-        onClick={handleNavigation}
-        aria-label="Subscriptions"
-      >
-        <span className="fk-sidebar__nav-icon" aria-hidden="true">
-          💳
-        </span>
-        <span className="fk-sidebar__nav-label">
-          Subscriptions
-        </span>
-      </NavLink>
-
-      {/* Map */}
-      <NavLink
-        to="/map"
-        end
-        className={navClass}
-        onClick={handleNavigation}
-        aria-label="Map"
-      >
-        <span className="fk-sidebar__nav-icon" aria-hidden="true">
-          🗺️
-        </span>
-        <span className="fk-sidebar__nav-label">
-          Map
-        </span>
-      </NavLink>
-
-      {/* Create */}
-      <NavLink
-        to="/create"
-        end
-        className={navClass}
-        onClick={handleNavigation}
-        aria-label="Fockis Create"
-      >
-        <span className="fk-sidebar__nav-icon" aria-hidden="true">
-          ✨
-        </span>
-        <span className="fk-sidebar__nav-label">
-          Create
-        </span>
-      </NavLink>
-
-      {/* AI Studio */}
-      <NavLink
-        to="/create/ai"
-        end
-        className={navClass}
-        onClick={handleNavigation}
-        aria-label="Fockis AI Studio"
-      >
-        <span className="fk-sidebar__nav-icon" aria-hidden="true">
-          🤖
-        </span>
-        <span className="fk-sidebar__nav-label">
-          AI Studio
-        </span>
-      </NavLink>
-
-      {/* Fockis AI */}
-      <NavLink
-        to="/fockis-ai"
-        end
-        className={navClass}
-        onClick={handleNavigation}
-        aria-label="Fockis AI"
-      >
-        <span className="fk-sidebar__nav-icon" aria-hidden="true">
-          ✦
-        </span>
-        <span className="fk-sidebar__nav-label">
-          Fockis AI
-        </span>
-      </NavLink>
-
-      {/* Fockis Academy */}
-      <NavLink
-        to="/academy"
-        end
-        className={navClass}
-        onClick={handleNavigation}
-        aria-label="Fockis Academy"
-      >
-        <span className="fk-sidebar__nav-icon" aria-hidden="true">
-          🎓
-        </span>
-        <span className="fk-sidebar__nav-label">
-          Fockis Academy
-        </span>
-      </NavLink>
-
-      {/* Fockis Org */}
-      <NavLink
-        to="/church"
-        end
-        className={navClass}
-        onClick={handleNavigation}
-        aria-label="Fockis Org"
-      >
-        <span className="fk-sidebar__nav-icon" aria-hidden="true">
-          🏛️
-        </span>
-        <span className="fk-sidebar__nav-label">
-          Fockis Org
-        </span>
-      </NavLink>
+          <span className="fk-sidebar__nav-label">
+            Admin Dashboard
+          </span>
+        </NavLink>
+      )}
     </div>
   );
 }

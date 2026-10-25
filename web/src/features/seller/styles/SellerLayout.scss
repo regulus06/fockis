@@ -3,17 +3,18 @@
    ========================================================================== */
 
 :root {
-  --seller-green: #1D7A3E;
-  --seller-green-dark: #145C2E;
-  --seller-gold: #B8862E;
-  --seller-gold-light: #E2A63B;
+  /* Fockis brand palette (shared with Fockis Shop: orange actions, navy chrome) */
+  --seller-green: #FF7A00;       /* primary action (name kept for compatibility) */
+  --seller-green-dark: #E86A00;
+  --seller-gold: #FF7A00;
+  --seller-gold-light: #FFB347;
   --seller-paper: #FFFFFF;
-  --seller-paper-2: #F6F7F4;
-  --seller-paper-3: #ECECE6;
-  --seller-ink: #0D2740;
-  --seller-slate: #5C655F;
-  --seller-line: #E7E7E1;
-  --seller-footer: #14304D;
+  --seller-paper-2: #F3F4F6;
+  --seller-paper-3: #ECEEF1;
+  --seller-ink: #0F1B2D;
+  --seller-slate: #5B6472;
+  --seller-line: #E3E6EA;
+  --seller-footer: #0B1D3A;
   --seller-max-width: 1440px;
 }
 

@@ -1,157 +1,84 @@
-import React, { useState } from 'react';
+import { Clock, Globe, MapPin } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-import type { FockisEvent } from '../types/event.types';
-import EventRsvpButton from './EventRsvpButton';
+import { categoryMeta } from "../constants/eventCategories";
+import { useSyncedEvent } from "../hooks/eventSync";
+import type { FockisEvent } from "../types/event.types";
+import { eventPlace, eventUrl } from "../utils/eventMedia";
+import { isEventActive, shortWhen } from "../utils/eventTime";
+import EventCover from "./EventCover";
+import EventDateBadge from "./EventDateBadge";
+import EventRsvpActions from "./EventRsvpActions";
+import EventSocialProof from "./EventSocialProof";
+import EventStatusBadge from "./EventStatusBadge";
 
 interface Props {
   event: FockisEvent;
-  onOpen: (event: FockisEvent) => void;
-  onRsvp?: (event: FockisEvent) => void;
+  /** Legacy: called instead of navigating. */
+  onOpen?: (event: FockisEvent) => void;
+  variant?: "grid" | "rail";
+  now?: number;
+  /** Management row for My Events. */
+  footer?: React.ReactNode;
 }
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(new Date(value));
-}
+/**
+ * Event card for grids and horizontal rails. The whole card opens the
+ * details page; RSVP buttons stop propagation.
+ */
+export default function EventCard({ event: source, onOpen, variant = "grid", now = Date.now(), footer }: Props) {
+  const navigate = useNavigate();
+  const event = useSyncedEvent(source);
+  const category = categoryMeta(event.category);
+  const active = isEventActive(event, now);
 
-export default function EventCard({
-  event,
-  onOpen,
-}: Props) {
-  /*
-   * Keep the attendee count locally so the card immediately changes:
-   *
-   * 1 attendee
-   *      ↓
-   * I’m Going
-   *      ↓
-   * 2 attendees
-   */
-  const [attendeeCount, setAttendeeCount] = useState(
-    event.attendeeCount ?? 0,
-  );
-
-  /*
-   * If the parent refreshes/reloads the event with a new attendee count,
-   * you can still use the latest event value when the component mounts.
-   */
+  const open = () => (onOpen ? onOpen(event) : navigate(eventUrl(event.id)));
 
   return (
-    <article
-      className="fk-event-card"
-      onClick={() => onOpen(event)}
-    >
-      {/* ================================================================
-          EVENT IMAGE
-      ================================================================ */}
-
-      <div className="fk-event-card-image">
-        {event.coverImageUrl ? (
-          <img
-            src={event.coverImageUrl}
-            alt={event.title}
-          />
-        ) : (
-          <div className="fk-event-card-placeholder">
-            <span>📅</span>
-          </div>
-        )}
-
-        <div
-          className={`fk-event-status ${event.status}`}
-        >
-          {event.status === 'upcoming' &&
-            'Upcoming'}
-
-          {event.status === 'live' &&
-            'Live now'}
-
-          {event.status === 'ended' &&
-            'Ended'}
-
-          {event.status === 'cancelled' &&
-            'Cancelled'}
-        </div>
-      </div>
-
-      {/* ================================================================
-          EVENT BODY
-      ================================================================ */}
-
-      <div className="fk-event-card-body">
-
-        <div className="fk-event-category">
-          {event.category}
+    <article className={`fke-card fke-card--${variant} ${active ? "" : "is-inactive"}`}>
+      <button
+        type="button"
+        className="fke-card__open"
+        onClick={open}
+        aria-label={`${event.title}, ${shortWhen(event, now)}, ${eventPlace(event)}`}
+      >
+        <div className="fke-card__media">
+          <EventCover event={event} />
+          <EventDateBadge date={event.startDate} size="sm" className="fke-card__date" />
+          <span className="fke-card__status">
+            <EventStatusBadge event={event} now={now} />
+          </span>
         </div>
 
-        <h3>{event.title}</h3>
+        <div className="fke-card__body">
+          <span className="fke-card__category">
+            <category.icon size={13} strokeWidth={2} aria-hidden="true" />
+            {category.label}
+          </span>
+          <h3 className="fke-card__title">{event.title}</h3>
 
-        <div className="fk-event-date">
-          🗓 {formatDate(event.startDate)}
-        </div>
-
-        <div className="fk-event-end">
-          Ends: {formatDate(event.endDate)}
-        </div>
-
-        <div className="fk-event-location">
-          {event.isOnline
-            ? '🌐 Online event'
-            : `📍 ${
-                event.locationName ||
-                event.address ||
-                'Location not specified'
-              }`}
-        </div>
-
-        {/* ==============================================================
-            FOOTER
-        ============================================================== */}
-
-        <div className="fk-event-card-footer">
-
-          <span>
-            {attendeeCount}{' '}
-            {attendeeCount === 1
-              ? 'person'
-              : 'people'}{' '}
-            going
+          <span className="fke-card__line">
+            <Clock size={14} aria-hidden="true" />
+            {shortWhen(event, now)}
+          </span>
+          <span className="fke-card__line">
+            {event.isOnline ? <Globe size={14} aria-hidden="true" /> : <MapPin size={14} aria-hidden="true" />}
+            <span className="fke-truncate">
+              {eventPlace(event)}
+              {typeof event.distanceKm === "number" && !event.isOnline ? ` · ${event.distanceKm} km` : ""}
+            </span>
           </span>
 
-          {/* ============================================================
-              RSVP BUTTON
-          ============================================================ */}
-
-          {event.status !== 'ended' &&
-            event.status !== 'cancelled' && (
-
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-            >
-              <EventRsvpButton
-                eventId={event.id}
-                onChanged={(
-                  _going,
-                  newAttendeeCount,
-                ) => {
-                  setAttendeeCount(
-                    newAttendeeCount,
-                  );
-                }}
-              />
-            </div>
-
+          {event.organizer && (
+            <span className="fke-card__organizer fke-truncate">by {event.organizer.name || event.organizer.username}</span>
           )}
-
         </div>
-      </div>
+      </button>
+
+      <footer className="fke-card__footer">
+        <EventSocialProof event={event} />
+        {footer ?? <EventRsvpActions event={event} now={now} size="sm" only={variant === "rail" ? "going" : undefined} />}
+      </footer>
     </article>
   );
 }

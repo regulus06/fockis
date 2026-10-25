@@ -40,6 +40,8 @@ interface FeedRailInsertionsProps {
   /** Zero-based index of the post this insertion follows. */
   index: number;
   events: FockisEvent[];
+  /** "Events You Might Like", "Happening Today", "Upcoming Near You"… */
+  eventsTitle?: string;
   eventsLoading: boolean;
   onCreateEvent: () => void;
 }
@@ -54,6 +56,7 @@ interface FeedRailInsertionsProps {
 export default function FeedRailInsertions({
   index,
   events,
+  eventsTitle = "Upcoming Events",
   eventsLoading,
   onCreateEvent,
 }: FeedRailInsertionsProps) {
@@ -85,30 +88,21 @@ export default function FeedRailInsertions({
           className="fk-feed-section fk-feed-section--events"
           aria-label="Events"
         >
-          {!eventsLoading &&
-            events.length > 0 && (
-              <EventRail
-                events={events}
-                title="Upcoming Events"
-                maxEvents={10}
-              />
-            )}
-
-          {!eventsLoading &&
-            events.length === 0 && (
+          {/*
+            The rail drops events that end while it is on screen and
+            falls back to the create prompt when none are left.
+          */}
+          <EventRail
+            events={events}
+            title={eventsTitle}
+            maxEvents={10}
+            loading={eventsLoading}
+            empty={
               <CreateEventPrompt
                 onCreate={onCreateEvent}
               />
-            )}
-
-          {eventsLoading && (
-            <div
-              className="fk-feed-events-loading"
-              aria-live="polite"
-            >
-              Loading events...
-            </div>
-          )}
+            }
+          />
         </section>
       )}
 

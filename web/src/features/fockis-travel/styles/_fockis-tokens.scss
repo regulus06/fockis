@@ -1,22 +1,26 @@
+// Fockis Travel tokens. Re-pointed (Oct 2026) from the original navy/gold/cream
+// palette to the white + Fockis blue redesign so every page that compiles
+// against these tokens follows the new look. Names are kept for compatibility:
+// "gold" now means the blue accent, "cream" the white/light-gray surfaces.
 @use "sass:map";
 
-$navy-950: #07111f;
-$navy-900: #0e1a2b;
-$navy-800: #14243a;
-$navy-700: #1b304a;
+$navy-950: #081630;
+$navy-900: #0b1d3a;
+$navy-800: #12305e;
+$navy-700: #1d4a8a;
 
-$teal-500: #0f8b8d;
-$teal-400: #22a6a8;
-$teal-100: #dff6f5;
+$teal-500: #1570ef;
+$teal-400: #3a8bff;
+$teal-100: #eaf2ff;
 
-$gold-500: #c89b3c;
-$gold-600: #a67c2f;
-$gold-100: #f7efd9;
+$gold-500: #1570ef;
+$gold-600: #0b5bd3;
+$gold-100: #eaf2ff;
 
-$cream-50: #faf9f5;
-$cream-100: #f4f1e8;
+$cream-50: #ffffff;
+$cream-100: #f7f8fa;
 
-$text-on-light: #182333;
+$text-on-light: #101828;
 $text-on-light-muted: #667085;
 $text-on-dark: #ffffff;
 
@@ -85,7 +89,7 @@ $shadow-card: 0 10px 30px rgba(0, 0, 0, 0.08);
 
 
 
-$blue-600: #2563eb;
+$blue-600: #1570ef;
 
 $shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.12);
 $shadow-cta: 0 8px 24px rgba(37, 99, 235, 0.22);
@@ -120,11 +124,11 @@ $text-on-dark-muted: rgba(255, 255, 255, 0.72);
 @mixin btn-amber {
   @include btn-base;
   background: $gold-500;
-  color: #182333;
+  color: #ffffff;
 }
 
 @function gradient-hero() {
-  @return linear-gradient(135deg, #182333 0%, #2563eb 100%);
+  @return linear-gradient(135deg, #0b3a8c 0%, #1570ef 100%);
 }
 
 $success: #16a34a;
@@ -138,5 +142,5 @@ $danger: #dc2626;
 }
 
 @function gradient-panel() {
-  @return linear-gradient(135deg, #ffffff 0%, #f4f1e8 100%);
+  @return linear-gradient(135deg, #ffffff 0%, #f7f8fa 100%);
 }

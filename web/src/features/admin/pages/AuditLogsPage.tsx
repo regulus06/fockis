@@ -63,7 +63,25 @@ export function AuditLogsPage() {
           );
         }
 
-        setEvents(items);
+        /*
+         * The NestJS audit endpoint returns AuditLog documents
+         * ({ _id, userId, action, module, targetId, createdAt }).
+         * Map them onto the AuditEvent fields this table reads so
+         * timestamps and resources display instead of "Invalid Date".
+         */
+        setEvents(
+          items.map((item) => {
+            const raw = item as AuditEvent & Record<string, unknown>;
+            return {
+              ...raw,
+              id: String(raw.id ?? raw._id ?? ""),
+              timestamp: String(raw.timestamp ?? raw.createdAt ?? ""),
+              actor: String(raw.actor ?? raw.userId ?? ""),
+              resource: String(raw.resource ?? raw.module ?? ""),
+              target: String(raw.target ?? raw.targetId ?? ""),
+            } as AuditEvent;
+          }),
+        );
       })
       .catch((e: unknown) => {
         if (cancelled) return;
@@ -187,7 +205,7 @@ export function AuditLogsPage() {
     {
       key: "result",
       header: "Result",
-      render: (event) => (
+      render: (event) => !event.result ? "—" : (
         <span
           className={`fk-badge fk-badge--${
             event.result === "SUCCESS"
@@ -203,7 +221,7 @@ export function AuditLogsPage() {
     {
       key: "risk",
       header: "Risk",
-      render: (event) => (
+      render: (event) => !event.risk ? "—" : (
         <span
           className={`fk-badge fk-badge--${
             RISK_VARIANT[event.risk] ??

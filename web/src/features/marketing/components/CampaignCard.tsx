@@ -190,7 +190,7 @@ export default function CampaignCard({
 
 
     navigate(
-      `/marketing/campaigns/${id}`,
+      `/ads/campaigns/${id}`,
     );
 
   }
@@ -210,7 +210,7 @@ export default function CampaignCard({
     ) {
 
       navigate(
-        `/marketing/campaigns/${id}`,
+        `/ads/campaigns/${id}`,
       );
 
     }
@@ -343,7 +343,7 @@ export default function CampaignCard({
       >
 
         <Link
-          to={`/marketing/campaigns/${id}`}
+          to={`/ads/campaigns/${id}`}
           className="fk-campaign-card-view"
         >
           View campaign

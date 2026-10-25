@@ -123,12 +123,12 @@
 
   .btn-primary {
     border-color: fockis.$navy-900;
-    background: fockis.$navy-900;
+    background: fockis.$gold-500;
     color: #ffffff;
 
     &:hover {
       border-color: fockis.$navy-800;
-      background: fockis.$navy-800;
+      background: fockis.$gold-600;
       color: #ffffff;
     }
   }
@@ -222,7 +222,7 @@
     select:focus,
     textarea:focus {
       border-color: fockis.$gold-500;
-      box-shadow: 0 0 0 3px rgba(240, 169, 62, 0.15);
+      box-shadow: 0 0 0 3px rgba(21, 112, 239, 0.15);
     }
   }
 

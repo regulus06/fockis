@@ -1,8 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Link } from "react-router-dom";
 
@@ -14,516 +10,245 @@ import {
   Tag,
 } from "lucide-react";
 
-import {
-  businessesApi,
-} from "../services/businessesApi";
+import { businessesApi } from "../services/businessesApi";
 
 import type {
   Business,
   BusinessDeal,
 } from "../types/business.types";
 
+import {
+  BusinessLogo,
+  CouponCode,
+  RailNav,
+  VerifiedBadge,
+  useRailScroll,
+} from "./BusinessUi";
+
+import {
+  dedupeById,
+  formatDealExpiry,
+  formatLocation,
+  getActiveDeals,
+  getBusinessRoute,
+  isBusinessVerified,
+} from "../utils/businessUtils";
+
+import "../styles/BusinessUi.scss";
 import "../styles/SpotlightDealsRail.scss";
 
+
 /* ============================================================================
-   FOCKIS BUSINESS SPOTLIGHT DEALS RAIL
-   ---------------------------------------------------------------------------
-   Uses the existing Business Spotlight endpoint.
+   SPOTLIGHT DEALS RAIL
 
-   Flow:
-     published business
-        -> spotlightEnabled
-        -> business.deals
-        -> active + non-expired deals
-        -> Spotlight rail
+   Uses GET /businesses/spotlight. Shows Spotlight businesses with their
+   active, unexpired deals first. Expired or paused deals are never shown.
 
-   This replacement also keeps a Spotlight business visible when it has no
-   active deal, so Spotlight itself does not disappear just because a deal
-   expired.
+   Kept class names: .spotlight-deals-rail and .spotlight-deals-list are
+   targeted by the feed page styles.
 ============================================================================ */
 
-interface SpotlightDeal extends BusinessDeal {
-  businessName: string;
-  businessLogo?: string;
-  businessCity?: string;
-  businessState?: string;
+interface Props {
+  /*
+   * Reuse Spotlight data the parent already loaded.
+   */
+  businesses?: Business[];
+  title?: string;
+  eyebrow?: string;
+  /*
+   * Only show businesses that have at least one active deal.
+   */
+  dealsOnly?: boolean;
 }
 
-interface SpotlightBusiness {
-  business: Business;
-  activeDeals: SpotlightDeal[];
-}
+export default function SpotlightDealsRail({
+  businesses: providedBusinesses,
+  title = "Deals & promotions",
+  eyebrow = "Spotlight",
+  dealsOnly = false,
+}: Props) {
+  const controlled = providedBusinesses !== undefined;
 
-function isDealCurrentlyActive(
-  deal: BusinessDeal,
-): boolean {
-  if (deal.active === false) {
-    return false;
-  }
+  const [loaded, setLoaded] = useState<Business[]>([]);
+  const [loading, setLoading] = useState(!controlled);
+  const [failed, setFailed] = useState(false);
 
-  if (deal.isActive === false) {
-    return false;
-  }
-
-  if (!deal.expiresAt) {
-    return true;
-  }
-
-  const expiration = new Date(
-    deal.expiresAt,
-  ).getTime();
-
-  if (!Number.isFinite(expiration)) {
-    return true;
-  }
-
-  return expiration > Date.now();
-}
-
-function formatExpiration(
-  expiresAt?: string,
-): string {
-  if (!expiresAt) {
-    return "No expiration";
-  }
-
-  const timestamp = new Date(
-    expiresAt,
-  ).getTime();
-
-  if (!Number.isFinite(timestamp)) {
-    return "Special offer";
-  }
-
-  const remaining =
-    timestamp - Date.now();
-
-  if (remaining <= 0) {
-    return "Expired";
-  }
-
-  const minutes = Math.floor(
-    remaining / 60000,
-  );
-
-  if (minutes < 60) {
-    return `${Math.max(minutes, 1)}m left`;
-  }
-
-  const hours = Math.floor(
-    minutes / 60,
-  );
-
-  if (hours < 24) {
-    return `${hours}h left`;
-  }
-
-  const days = Math.floor(
-    hours / 24,
-  );
-
-  return `${days}d left`;
-}
-
-function getBusinessLocation(
-  business: Business,
-): string {
-  return [
-    business.city,
-    business.state,
-  ]
-    .filter(Boolean)
-    .join(", ");
-}
-
-export default function SpotlightDealsRail() {
-  const [
-    businesses,
-    setBusinesses,
-  ] = useState<Business[]>([]);
-
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
-
-  const [
-    error,
-    setError,
-  ] = useState<string | null>(null);
+  const { trackRef, canPrev, canNext, scrollBy } = useRailScroll();
 
   useEffect(() => {
+    if (controlled) {
+      return;
+    }
+
     let cancelled = false;
 
-    async function loadSpotlight() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const result =
-          await businessesApi.getSpotlight();
-
+    businessesApi
+      .getSpotlight()
+      .then((result) => {
         if (!cancelled) {
-          setBusinesses(
-            Array.isArray(result)
-              ? result
-              : [],
-          );
+          setLoaded(result);
         }
-      } catch (err) {
-        console.error(
-          "[SpotlightDealsRail] Failed to load Spotlight",
-          err,
-        );
-
+      })
+      .catch(() => {
         if (!cancelled) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : "Unable to load Spotlight.",
-          );
+          setFailed(true);
         }
-      } finally {
+      })
+      .finally(() => {
         if (!cancelled) {
           setLoading(false);
         }
-      }
-    }
-
-    loadSpotlight();
+      });
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [controlled]);
 
-  const spotlightBusinesses =
-    useMemo<SpotlightBusiness[]>(() => {
-      return businesses
-        .filter(
-          (business) =>
-            business.spotlightEnabled &&
-            business.feedEnabled,
-        )
-        .sort(
-          (a, b) =>
-            Number(b.spotlightPriority || 0) -
-            Number(a.spotlightPriority || 0),
-        )
-        .map((business) => {
-          const activeDeals =
-            (business.deals || [])
-              .filter(isDealCurrentlyActive)
-              .map((deal) => ({
-                ...deal,
-                businessName:
-                  business.name,
-                businessLogo:
-                  business.logoUrl,
-                businessCity:
-                  business.city,
-                businessState:
-                  business.state,
-              }));
+  const items = useMemo(() => {
+    const source = controlled ? providedBusinesses ?? [] : loaded;
 
-          return {
-            business,
-            activeDeals,
-          };
-        });
-    }, [businesses]);
+    return dedupeById(source)
+      .map((business) => ({
+        business,
+        deals: getActiveDeals(business),
+      }))
+      .filter((item) => !dealsOnly || item.deals.length > 0)
+      // Businesses with live deals first; backend priority order otherwise.
+      .sort((a, b) => Number(b.deals.length > 0) - Number(a.deals.length > 0));
+  }, [controlled, providedBusinesses, loaded, dealsOnly]);
 
-  const totalDeals =
-    spotlightBusinesses.reduce(
-      (total, item) =>
-        total + item.activeDeals.length,
-      0,
-    );
+  const totalDeals = items.reduce((total, item) => total + item.deals.length, 0);
 
-  if (loading) {
-    return (
-      <section
-        className="spotlight-deals-rail spotlight-deals-rail--loading"
-        aria-label="Fockis Spotlight"
-      >
-        <div className="spotlight-deals-header">
-          <div>
-            <span className="spotlight-deals-kicker">
-              FOCKIS
-            </span>
-            <h3>
-              <Flame size={20} />
-              Spotlight
-            </h3>
-          </div>
-        </div>
-
-        <div className="spotlight-deals-loading">
-          <div className="spotlight-skeleton" />
-          <div className="spotlight-skeleton" />
-          <div className="spotlight-skeleton" />
-        </div>
-      </section>
-    );
-  }
-
-  if (error) {
-    return (
-      <section
-        className="spotlight-deals-rail"
-        aria-label="Fockis Spotlight"
-      >
-        <div className="spotlight-deals-header">
-          <div>
-            <span className="spotlight-deals-kicker">
-              FOCKIS
-            </span>
-            <h3>
-              <Flame size={20} />
-              Spotlight
-            </h3>
-          </div>
-        </div>
-
-        <div className="spotlight-deals-error">
-          <strong>
-            Spotlight is temporarily unavailable.
-          </strong>
-          <span>
-            {error}
-          </span>
-        </div>
-      </section>
-    );
-  }
-
-  if (!spotlightBusinesses.length) {
-    return (
-      <section
-        className="spotlight-deals-rail spotlight-deals-rail--empty"
-        aria-label="Fockis Spotlight"
-      >
-        <div className="spotlight-deals-header">
-          <div>
-            <span className="spotlight-deals-kicker">
-              FOCKIS
-            </span>
-            <h3>
-              <Flame size={20} />
-              Spotlight
-            </h3>
-            <p>
-              Featured businesses and special offers.
-            </p>
-          </div>
-
-          <Link
-            to="/businesses/spotlight"
-            className="spotlight-deals-view-all"
-          >
-            View all
-            <ArrowRight size={16} />
-          </Link>
-        </div>
-
-        <div className="spotlight-deals-empty">
-          <div className="spotlight-deals-empty-icon">
-            🔥
-          </div>
-
-          <strong>
-            No businesses are in Spotlight yet.
-          </strong>
-
-          <span>
-            Publish a business and add it to Spotlight
-            from Business Manager.
-          </span>
-        </div>
-      </section>
-    );
+  if (!loading && (failed || items.length === 0)) {
+    // Nothing real to promote: render nothing rather than an empty banner.
+    return null;
   }
 
   return (
     <section
-      className="spotlight-deals-rail"
-      aria-label="Fockis Spotlight"
+      className="fkb spotlight-deals-rail fkb-deals"
+      aria-labelledby="fkb-deals-title"
     >
-      <div className="spotlight-deals-header">
+      <div className="fkb-section-head">
         <div>
-          <span className="spotlight-deals-kicker">
-            FOCKIS
+          <span className="fkb-eyebrow fkb-deals__eyebrow">
+            <Flame size={14} aria-hidden="true" />
+            {eyebrow}
           </span>
-
-          <h3>
-            <Flame size={20} />
-            Spotlight
-          </h3>
-
-          <p>
-            Featured businesses and special offers.
-          </p>
+          <h2 id="fkb-deals-title">{title}</h2>
+          {!loading && (
+            <p>
+              {totalDeals > 0
+                ? `${totalDeals} active ${totalDeals === 1 ? "offer" : "offers"} from featured businesses`
+                : "Featured businesses on Fockis"}
+            </p>
+          )}
         </div>
 
-        <div className="spotlight-deals-header-actions">
-          <span className="spotlight-deals-count">
-            {spotlightBusinesses.length}{" "}
-            {spotlightBusinesses.length === 1
-              ? "business"
-              : "businesses"}
-            {totalDeals > 0
-              ? ` · ${totalDeals} ${
-                  totalDeals === 1
-                    ? "deal"
-                    : "deals"
-                }`
-              : ""}
-          </span>
-
-          <Link
-            to="/businesses/spotlight"
-            className="spotlight-deals-view-all"
-          >
-            View all
-            <ArrowRight size={16} />
-          </Link>
+        <div className="fkb-section-head__actions">
+          <RailNav
+            label={title}
+            canPrev={canPrev}
+            canNext={canNext}
+            onScroll={scrollBy}
+          />
         </div>
       </div>
 
-      <div className="spotlight-deals-list">
-        {spotlightBusinesses.map(
-          ({
-            business,
-            activeDeals,
-          }) => {
-            const location =
-              getBusinessLocation(
-                business,
-              );
-
-            return (
-              <article
-                key={business.id}
-                className="spotlight-deal-card"
-              >
-                <Link
-                  to={`/businesses/${business.id}`}
-                  className="spotlight-deal-business-link"
-                  aria-label={`View ${business.name}`}
-                >
-                  <div className="spotlight-deal-image-wrap">
-                    {business.logoUrl ? (
-                      <img
-                        src={
-                          business.logoUrl
-                        }
-                        alt=""
-                        className="spotlight-deal-image"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="spotlight-deal-placeholder">
-                        🏢
-                      </div>
-                    )}
-
-                    <span className="spotlight-deal-badge">
-                      <Flame size={13} />
-                      Spotlight
-                    </span>
-                  </div>
-
-                  <div className="spotlight-deal-content">
-                    <div className="spotlight-deal-business">
-                      <strong>
-                        {business.name}
-                      </strong>
-
-                      {business.verified && (
-                        <span
-                          className="spotlight-verified"
-                          title="Verified business"
-                          aria-label="Verified business"
-                        >
-                          ✓
-                        </span>
-                      )}
-                    </div>
-
-                    {location && (
-                      <span className="spotlight-deal-location">
-                        <MapPin size={13} />
-                        {location}
-                      </span>
-                    )}
-
-                    {activeDeals.length > 0 ? (
-                      <div className="spotlight-deal-offers">
-                        {activeDeals
-                          .slice(0, 2)
-                          .map((deal) => (
-                            <div
-                              key={deal.id}
-                              className="spotlight-offer"
-                            >
-                              <div className="spotlight-offer-top">
-                                <span className="spotlight-offer-tag">
-                                  <Tag size={13} />
-                                  Deal
-                                </span>
-
-                                <span className="spotlight-offer-time">
-                                  <Clock3 size={12} />
-                                  {formatExpiration(
-                                    deal.expiresAt,
-                                  )}
-                                </span>
-                              </div>
-
-                              <h4>
-                                {deal.title}
-                              </h4>
-
-                              {deal.discount && (
-                                <strong className="spotlight-offer-discount">
-                                  {deal.discount}
-                                </strong>
-                              )}
-
-                              {deal.description && (
-                                <p>
-                                  {deal.description}
-                                </p>
-                              )}
-
-                              {deal.couponCode && (
-                                <span className="spotlight-offer-coupon">
-                                  Code:{" "}
-                                  {deal.couponCode}
-                                </span>
-                              )}
-                            </div>
-                          ))}
-                      </div>
-                    ) : (
-                      <div className="spotlight-no-deal">
-                        <span>
-                          Featured business
-                        </span>
-
-                        <span>
-                          View business
-                          <ArrowRight size={14} />
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              </article>
-            );
-          },
-        )}
+      <div className="fkb-rail">
+        <div
+          ref={trackRef}
+          className="fkb-rail__track spotlight-deals-list"
+          role={loading ? "status" : undefined}
+          aria-label={loading ? "Loading deals" : undefined}
+        >
+          {loading
+            ? Array.from({ length: 3 }, (_, index) => (
+                <div key={index} className="fkb-deal-card fkb-deal-card--skeleton" aria-hidden="true">
+                  <div className="fkb-skeleton" style={{ height: 44, width: "60%" }} />
+                  <div className="fkb-skeleton" style={{ height: 70 }} />
+                  <div className="fkb-skeleton" style={{ height: 14, width: "40%" }} />
+                </div>
+              ))
+            : items.map(({ business, deals }) => (
+                <DealCard key={business.id} business={business} deals={deals} />
+              ))}
+        </div>
       </div>
     </section>
+  );
+}
+
+
+function DealCard({
+  business,
+  deals,
+}: {
+  business: Business;
+  deals: BusinessDeal[];
+}) {
+  const location = formatLocation(business);
+  const route = getBusinessRoute(business.id);
+
+  return (
+    <article className="fkb-deal-card">
+      <div className="fkb-deal-card__business">
+        <BusinessLogo business={business} size={44} />
+
+        <div className="fkb-deal-card__business-text">
+          <h3>
+            <Link to={route}>{business.name}</Link>
+            {isBusinessVerified(business) && <VerifiedBadge compact />}
+          </h3>
+
+          {location && (
+            <span>
+              <MapPin size={13} aria-hidden="true" />
+              {location}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {deals.length > 0 ? (
+        <ul className="fkb-deal-card__offers">
+          {deals.slice(0, 2).map((deal) => (
+            <li key={deal.id} className="fkb-offer">
+              {deal.discount && (
+                <strong className="fkb-offer__discount">{deal.discount}</strong>
+              )}
+
+              <span className="fkb-offer__title">{deal.title}</span>
+
+              {deal.description && (
+                <p className="fkb-offer__description">{deal.description}</p>
+              )}
+
+              <div className="fkb-offer__footer">
+                {formatDealExpiry(deal.expiresAt) && (
+                  <span className="fkb-offer__expiry">
+                    <Clock3 size={13} aria-hidden="true" />
+                    {formatDealExpiry(deal.expiresAt)}
+                  </span>
+                )}
+
+                {deal.couponCode && <CouponCode code={deal.couponCode} />}
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="fkb-deal-card__featured">
+          <Tag size={14} aria-hidden="true" />
+          {business.tagline || "Featured business"}
+        </p>
+      )}
+
+      <Link to={route} className="fkb-btn fkb-btn--secondary fkb-btn--sm fkb-deal-card__cta">
+        View business
+        <ArrowRight size={15} aria-hidden="true" />
+      </Link>
+    </article>
   );
 }

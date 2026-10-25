@@ -1,539 +1,227 @@
-import React from "react";
-
-import {
-  useNavigate,
-} from "react-router-dom";
+import { useCallback, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Lock, RefreshCw, ShieldCheck } from "lucide-react";
 
 import useSubscription from "../hooks/useSubscription";
+import useSubscriptionPlans from "../hooks/useSubscriptionPlans";
+import { createCheckout } from "../services/subscriptionApi";
 
-import "../styles/SubscriptionPage.scss";
+import type {
+  BillingInterval,
+  CreateCheckoutPayload,
+  SubscriptionPlan,
+  SubscriptionPlanConfig,
+} from "../types/subscriptionTypes";
+
+import {
+  assertStripeCheckoutUrl,
+  getMaxYearlySavingsPercent,
+  getPlanCardAction,
+  getPlanPrice,
+} from "../utils/subscriptionPlanUtils";
+
+import BillingIntervalSelector from "../components/BillingIntervalSelector";
+import CurrentSubscription from "../components/CurrentSubscription";
+import SubscriptionPlans from "../components/SubscriptionPlans";
+
+import "../styles/SubscriptionPlans.scss";
 
 /* ============================================================================
-   FOCKIS SUBSCRIPTION PAGE
+   FOCKIS — CHOOSE YOUR PLAN
+
+   Data sources (no mock data, no fallback prices):
+   - GET  /subscription-plans       → plans, prices, features
+   - GET  /subscriptions/current    → current plan & status
+   - POST /subscriptions/checkout   → { plan, billingInterval } → Stripe URL
 ============================================================================ */
 
-export default function SubscriptionPage() {
+const PLANS_ANCHOR = "fk-sub-plans";
+
+export default function SubscriptionPlansPage() {
   const navigate = useNavigate();
 
   const {
     subscription,
-
-    plan,
-
-    status,
-
-    loading,
-
-    actionLoading,
-
-    error,
-
-    cancel,
-
-    resume,
-
-    resetBasic,
+    loading: subscriptionLoading,
+    error: subscriptionError,
+    refresh: refreshSubscription,
   } = useSubscription();
 
-  /* --------------------------------------------------------------------------
-     LOADING
-  -------------------------------------------------------------------------- */
+  const { plans, loading: plansLoading, error: plansError, reload: reloadPlans } = useSubscriptionPlans();
 
-  if (loading) {
-    return (
-      <div className="fk-subscription-loading">
-        Loading your subscription...
-      </div>
-    );
+  const [billingInterval, setBillingInterval] = useState<BillingInterval>("MONTHLY");
+  const [pendingPlan, setPendingPlan] = useState<SubscriptionPlan | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  const subscriptionKnown = !subscriptionLoading && Boolean(subscription);
+  const currentPlan: SubscriptionPlan = subscription?.plan ?? "BASIC";
+  const yearlySavings = useMemo(() => getMaxYearlySavingsPercent(plans), [plans]);
+
+  const getAction = useCallback(
+    (config: SubscriptionPlanConfig) =>
+      getPlanCardAction({ config, interval: billingInterval, subscription, subscriptionKnown }),
+    [billingInterval, subscription, subscriptionKnown],
+  );
+
+  async function handleSelect(selectedPlan: SubscriptionPlan) {
+    if (pendingPlan) return;
+
+    const config = plans.find((item) => item.plan === selectedPlan);
+    if (!config) {
+      setCheckoutError("This subscription plan is currently unavailable.");
+      return;
+    }
+
+    const action = getAction(config);
+
+    if (action.kind === "manage" || action.kind === "included") {
+      navigate("/subscriptions");
+      return;
+    }
+
+    if (action.kind !== "checkout" || action.disabled || selectedPlan === "BASIC") return;
+
+    const price = getPlanPrice(config, billingInterval);
+    if (price === null || price <= 0) {
+      setCheckoutError("This plan does not have a valid price for the selected billing interval.");
+      return;
+    }
+
+    const payload: CreateCheckoutPayload = {
+      plan: selectedPlan,
+      billingInterval,
+    };
+
+    try {
+      setPendingPlan(selectedPlan);
+      setCheckoutError(null);
+
+      const result = await createCheckout(payload);
+      const checkoutUrl = assertStripeCheckoutUrl(result.checkoutUrl);
+
+      // Keep the pending state: the browser is leaving for Stripe.
+      window.location.assign(checkoutUrl.toString());
+    } catch (err) {
+      setCheckoutError(err instanceof Error ? err.message : "Unable to start subscription checkout.");
+      setPendingPlan(null);
+    }
   }
 
-  /* --------------------------------------------------------------------------
-     DATA
-  -------------------------------------------------------------------------- */
-
-  const isBasic =
-    plan === "BASIC";
-
-  const isCanceled =
-    subscription?.cancelAtPeriodEnd ===
-    true;
-
-  const isPaid =
-    !isBasic;
-
-  /* --------------------------------------------------------------------------
-     GO TO PLANS
-  -------------------------------------------------------------------------- */
-
-  const handleViewPlans = () => {
-    navigate(
-      "/subscriptions/plans",
-    );
-  };
-
-  /* --------------------------------------------------------------------------
-     CANCEL
-  -------------------------------------------------------------------------- */
-
-  const handleCancel = async () => {
-    const confirmed =
-      window.confirm(
-        "Cancel this subscription at the end of the current billing period?",
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      await cancel();
-    } catch {
-      // Error handled by hook.
-    }
-  };
-
-  /* --------------------------------------------------------------------------
-     RESUME
-  -------------------------------------------------------------------------- */
-
-  const handleResume = async () => {
-    try {
-      await resume();
-    } catch {
-      // Error handled by hook.
-    }
-  };
-
-  /* --------------------------------------------------------------------------
-     RESET TO BASIC
-  -------------------------------------------------------------------------- */
-
-  const handleReset = async () => {
-    const confirmed =
-      window.confirm(
-        "Return this account to the free BASIC plan?",
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      await resetBasic();
-    } catch {
-      // Error handled by hook.
-    }
-  };
-
-  /* --------------------------------------------------------------------------
-     RENDER
-  -------------------------------------------------------------------------- */
+  const showGrid = !plansLoading && !plansError;
 
   return (
-    <div className="fk-subscription-page">
-
-      {/* ======================================================================
-          HEADER
-      ====================================================================== */}
-
-      <header className="fk-account-header">
-
-        <div>
-
-          <span className="fk-subscriptions-eyebrow">
-            FOCKIS ACCOUNT
-          </span>
-
-          <h1>
-            My Subscription
-          </h1>
-
-          <p>
-            Manage your Fockis account level
-            and billing settings.
-          </p>
-
+    <main className="fk-sub-page fk-sub-plans-page">
+      <header className="fk-sub-hero">
+        <div className="fk-sub-hero__brand">
+          <img src="/brand/fockis-icon-96.png" alt="" width={40} height={40} />
+          <span className="fk-sub-eyebrow">Fockis Membership</span>
         </div>
 
-        <button
-          type="button"
-          onClick={handleViewPlans}
-          className="fk-primary-button"
-        >
-          {isBasic
-            ? "Subscribe Now"
-            : "View Plans"}
-        </button>
+        <h1 className="fk-sub-hero__title">Choose Your Fockis Plan</h1>
 
+        <p className="fk-sub-hero__subtitle">
+          Unlock more ways to connect, create, discover, and grow with Fockis.
+        </p>
       </header>
 
-      {/* ======================================================================
-          ERROR
-      ====================================================================== */}
+      <CurrentSubscription
+        subscription={subscription}
+        loading={subscriptionLoading}
+        error={subscriptionError}
+        plans={plans}
+        onRetry={() => void refreshSubscription()}
+        plansAnchorId={PLANS_ANCHOR}
+      />
 
-      {error && (
-        <div className="fk-subscription-error">
-          {error}
-        </div>
-      )}
-
-      {/* ======================================================================
-          BASIC USER CALL TO ACTION
-      ====================================================================== */}
-
-      {isBasic && (
-        <section className="fk-subscription-section">
-
-          <div className="fk-subscribe-card">
-
-            <div>
-
-              <span className="fk-subscriptions-eyebrow">
-                UPGRADE YOUR FOCKIS ACCOUNT
-              </span>
-
-              <h2>
-                Get more from Fockis
-              </h2>
-
-              <p>
-                Upgrade from BASIC to BRONZE,
-                SILVER, GOLDEN, or DIAMOND.
-                Choose monthly or yearly billing
-                and complete your payment securely
-                through Stripe.
-              </p>
-
-            </div>
-
-            <button
-              type="button"
-              className="fk-primary-button"
-              onClick={handleViewPlans}
-            >
-              View Subscription Plans
-            </button>
-
-          </div>
-
-        </section>
-      )}
-
-      {/* ======================================================================
-          CURRENT PLAN
-      ====================================================================== */}
-
-      <section className="fk-current-subscription">
-
-        <div className="fk-current-plan-card">
-
-          <div className="fk-current-plan-label">
-            CURRENT ACCOUNT
-          </div>
-
-          <div className="fk-current-plan-name">
-            {plan}
-          </div>
-
-          <div
-            className={`fk-status fk-status-${status.toLowerCase()}`}
-          >
-            {status}
-          </div>
-
+      <section className="fk-sub-toolbar" aria-labelledby="fk-sub-billing-heading">
+        <div className="fk-sub-toolbar__copy">
+          <h2 id="fk-sub-billing-heading">Billing schedule</h2>
           <p>
-            {isBasic
-              ? "You are using the free BASIC account."
-              : `You are currently using the ${plan} account.`}
+            {billingInterval === "YEARLY"
+              ? "One payment each year. Prices below are per year."
+              : "One payment each month. Prices below are per month."}
           </p>
-
         </div>
 
-        <div className="fk-subscription-details">
-
-          {/* BILLING */}
-
-          <div className="fk-detail">
-
-            <span>
-              Billing
-            </span>
-
-            <strong>
-              {subscription?.billingInterval ??
-                "FREE"}
-            </strong>
-
-          </div>
-
-          {/* PRICE */}
-
-          <div className="fk-detail">
-
-            <span>
-              Price
-            </span>
-
-            <strong>
-              $
-              {Number(
-                subscription?.price ?? 0,
-              ).toFixed(2)}
-            </strong>
-
-          </div>
-
-          {/* CURRENCY */}
-
-          <div className="fk-detail">
-
-            <span>
-              Currency
-            </span>
-
-            <strong>
-              {subscription?.currency ??
-                "USD"}
-            </strong>
-
-          </div>
-
-          {/* STATUS */}
-
-          <div className="fk-detail">
-
-            <span>
-              Status
-            </span>
-
-            <strong>
-              {status}
-            </strong>
-
-          </div>
-
-        </div>
-
+        <BillingIntervalSelector
+          value={billingInterval}
+          disabled={Boolean(pendingPlan)}
+          yearlySavingsPercent={yearlySavings}
+          onChange={(value) => {
+            setBillingInterval(value);
+            setCheckoutError(null);
+          }}
+        />
       </section>
 
-      {/* ======================================================================
-          BILLING PERIOD
-      ====================================================================== */}
-
-      {subscription?.currentPeriodEnd && (
-        <section className="fk-subscription-section">
-
-          <h2>
-            Billing Period
-          </h2>
-
-          <div className="fk-period-card">
-
-            <div>
-
-              <span>
-                Current period ends
-              </span>
-
-              <strong>
-                {new Date(
-                  subscription.currentPeriodEnd,
-                ).toLocaleDateString()}
-              </strong>
-
-            </div>
-
-            {isCanceled && (
-              <div className="fk-cancel-warning">
-                Your subscription is scheduled
-                to end at the period end.
-              </div>
-            )}
-
-          </div>
-
-        </section>
+      {checkoutError && (
+        <div className="fk-sub-alert fk-sub-alert--error" role="alert">
+          <strong>Checkout couldn't start.</strong> {checkoutError}
+        </div>
       )}
 
-      {/* ======================================================================
-          MANAGE ACCOUNT
-      ====================================================================== */}
+      {pendingPlan && (
+        <div className="fk-sub-alert fk-sub-alert--info" role="status" aria-live="polite">
+          <span className="fk-sub-spinner" aria-hidden="true" />
+          Preparing your secure Stripe checkout…
+        </div>
+      )}
 
-      <section className="fk-subscription-section">
+      {plansLoading && (
+        <div className="fk-sub-grid" aria-busy="true" aria-label="Loading plans">
+          {Array.from({ length: 5 }, (_, index) => (
+            <div key={index} className="fk-sub-plan fk-sub-plan--skeleton" aria-hidden="true">
+              <div className="fk-sub-skeleton fk-sub-skeleton--media" />
+              <div className="fk-sub-plan__body">
+                <div className="fk-sub-skeleton fk-sub-skeleton--line" />
+                <div className="fk-sub-skeleton fk-sub-skeleton--title" />
+                <div className="fk-sub-skeleton fk-sub-skeleton--price" />
+                <div className="fk-sub-skeleton fk-sub-skeleton--line" />
+                <div className="fk-sub-skeleton fk-sub-skeleton--line" />
+                <div className="fk-sub-skeleton fk-sub-skeleton--line" />
+              </div>
+            </div>
+          ))}
+          <span className="fk-sub-sr-only" role="status">
+            Loading Fockis plans…
+          </span>
+        </div>
+      )}
 
-        <h2>
-          Manage Account
-        </h2>
-
-        <div className="fk-subscription-actions">
-
-          {/* --------------------------------------------------------------
-              BASIC USER
-          -------------------------------------------------------------- */}
-
-          {isBasic && (
-            <button
-              type="button"
-              className="fk-primary-button"
-              onClick={handleViewPlans}
-            >
-              Subscribe to a Paid Plan
-            </button>
-          )}
-
-          {/* --------------------------------------------------------------
-              CANCEL
-          -------------------------------------------------------------- */}
-
-          {isPaid && !isCanceled && (
-            <button
-              type="button"
-              className="fk-danger-button"
-              disabled={actionLoading}
-              onClick={handleCancel}
-            >
-              {actionLoading
-                ? "Processing..."
-                : "Cancel Subscription"}
-            </button>
-          )}
-
-          {/* --------------------------------------------------------------
-              RESUME
-          -------------------------------------------------------------- */}
-
-          {isPaid && isCanceled && (
-            <button
-              type="button"
-              className="fk-primary-button"
-              disabled={actionLoading}
-              onClick={handleResume}
-            >
-              {actionLoading
-                ? "Processing..."
-                : "Resume Subscription"}
-            </button>
-          )}
-
-          {/* --------------------------------------------------------------
-              RETURN TO BASIC
-          -------------------------------------------------------------- */}
-
-          {isPaid && (
-            <button
-              type="button"
-              className="fk-secondary-button"
-              disabled={actionLoading}
-              onClick={handleReset}
-            >
-              {actionLoading
-                ? "Processing..."
-                : "Return to BASIC"}
-            </button>
-          )}
-
-          {/* --------------------------------------------------------------
-              COMPARE PLANS
-          -------------------------------------------------------------- */}
-
-          <button
-            type="button"
-            className="fk-secondary-button"
-            onClick={handleViewPlans}
-          >
-            Compare Plans
+      {plansError && (
+        <div className="fk-sub-state fk-sub-state--error" role="alert">
+          <h2>We couldn't load the plans</h2>
+          <p>{plansError}</p>
+          <button type="button" className="fk-sub-btn fk-sub-btn--primary" onClick={() => void reloadPlans()}>
+            <RefreshCw size={16} aria-hidden="true" />
+            Try again
           </button>
-
         </div>
+      )}
 
-      </section>
+      {showGrid && (
+        <SubscriptionPlans
+          id={PLANS_ANCHOR}
+          plans={plans}
+          currentPlan={currentPlan}
+          billingInterval={billingInterval}
+          loading={Boolean(pendingPlan)}
+          pendingPlan={pendingPlan}
+          getAction={getAction}
+          onSelect={(plan) => void handleSelect(plan)}
+        />
+      )}
 
-      {/* ======================================================================
-          ACCOUNT LEVELS
-      ====================================================================== */}
-
-      <section className="fk-subscription-section">
-
-        <h2>
-          Fockis Account Levels
-        </h2>
-
-        <div className="fk-level-list">
-
-          {/* BASIC */}
-
-          <div>
-
-            <strong>
-              BASIC
-            </strong>
-
-            <span>
-              Free account
-            </span>
-
-          </div>
-
-          {/* BRONZE */}
-
-          <div>
-
-            <strong>
-              BRONZE
-            </strong>
-
-            <span>
-              Enhanced account
-            </span>
-
-          </div>
-
-          {/* SILVER */}
-
-          <div>
-
-            <strong>
-              SILVER
-            </strong>
-
-            <span>
-              Advanced account
-            </span>
-
-          </div>
-
-          {/* GOLDEN */}
-
-          <div>
-
-            <strong>
-              GOLDEN
-            </strong>
-
-            <span>
-              Premium account
-            </span>
-
-          </div>
-
-          {/* DIAMOND */}
-
-          <div>
-
-            <strong>
-              DIAMOND
-            </strong>
-
-            <span>
-              Highest account level
-            </span>
-
-          </div>
-
-        </div>
-
-      </section>
-
-    </div>
+      <footer className="fk-sub-trust">
+        <span>
+          <Lock size={15} aria-hidden="true" />
+          Secure payments powered by Stripe
+        </span>
+        <span>
+          <ShieldCheck size={15} aria-hidden="true" />
+          Your selected billing schedule is used at checkout
+        </span>
+      </footer>
+    </main>
   );
 }

@@ -1,16 +1,26 @@
 import {
+  forwardRef,
   useEffect,
   useRef,
+  useState,
+  type FormEvent,
 } from "react";
 
 import {
-  Volume2,
+  Loader2,
+  SendHorizontal,
+  Smile,
+  UserCheck,
   VolumeX,
 } from "lucide-react";
 
 import type {
   LiveViewerStream,
+  ViewerChatMessage,
 } from "../hooks/useLiveViewer";
+
+import { formatCount, formatRelativeTime } from "../utils";
+import { ViewerActions } from "./ViewerActions";
 
 // ============================================================================
 // PROPS
@@ -19,184 +29,247 @@ import type {
 export interface ViewerStageProps {
   stream: LiveViewerStream;
 
-  videoRef: (
-    element: HTMLVideoElement | null,
-  ) => void;
+  /** LiveKit attaches the remote track through this ref (useLiveViewer). */
+  videoRef: (element: HTMLVideoElement | null) => void;
 
+  connected: boolean;
   muted: boolean;
-
   onToggleMute: () => void;
+
+  messages: ViewerChatMessage[];
+  liked: boolean;
+  isFollowing: boolean;
+  sharing?: boolean;
+
+  onLike: () => void;
+  onFollow: () => void;
+  onShare: () => void;
+  onSend: (message: string) => void | Promise<void>;
 }
 
 // ============================================================================
-// VIEWER STAGE
+// VIEWER STAGE — immersive video with sparse overlays
 // ============================================================================
 
-export function ViewerStage({
-  stream,
-  videoRef,
-  muted,
-  onToggleMute,
-}: ViewerStageProps) {
-  const internalVideoRef =
-    useRef<HTMLVideoElement | null>(null);
+export const ViewerStage = forwardRef<HTMLInputElement, ViewerStageProps>(function ViewerStage(
+  {
+    stream,
+    videoRef,
+    connected,
+    muted,
+    onToggleMute,
+    messages,
+    liked,
+    isFollowing,
+    sharing = false,
+    onLike,
+    onFollow,
+    onShare,
+    onSend,
+  },
+  commentRef,
+) {
+  const internalVideoRef = useRef<HTMLVideoElement | null>(null);
+  const localInputRef = useRef<HTMLInputElement | null>(null);
+  const [comment, setComment] = useState("");
+  const [sending, setSending] = useState(false);
 
-  // ==========================================================================
-  // VIDEO REF
-  // ==========================================================================
+  /*
+   * Direct playback URL is only a fallback for streams that are not
+   * delivered through LiveKit. LiveKit streams attach via videoRef.
+   */
+  const usesLiveKit = Boolean(stream.token || stream.roomName);
+  const fallbackUrl = usesLiveKit ? "" : stream.playbackUrl || stream.streamUrl || "";
 
-  const setVideoRef = (
-    element: HTMLVideoElement | null,
-  ) => {
+  const setVideoRef = (element: HTMLVideoElement | null) => {
     internalVideoRef.current = element;
-
     videoRef(element);
   };
 
-  // ==========================================================================
-  // STREAM URL
-  // ==========================================================================
-
-  const streamUrl =
-    stream.playbackUrl ||
-    stream.streamUrl ||
-    "";
-
-  // ==========================================================================
-  // MUTE
-  // ==========================================================================
+  const setInputRef = (element: HTMLInputElement | null) => {
+    localInputRef.current = element;
+    if (typeof commentRef === "function") commentRef(element);
+    else if (commentRef) commentRef.current = element;
+  };
 
   useEffect(() => {
-    const video =
-      internalVideoRef.current;
-
-    if (!video) {
-      return;
-    }
-
-    video.muted = muted;
+    const video = internalVideoRef.current;
+    if (video) video.muted = muted;
   }, [muted]);
 
-  // ==========================================================================
-  // STREAM PLAYBACK
-  // ==========================================================================
-
   useEffect(() => {
-    const video =
-      internalVideoRef.current;
+    const video = internalVideoRef.current;
+    if (!video || !fallbackUrl) return;
 
-    if (!video || !streamUrl) {
-      return;
-    }
-
-    video.src = streamUrl;
+    video.src = fallbackUrl;
     video.load();
-
-    void video.play().catch((error) => {
-      console.warn(
-        "[ViewerStage] Autoplay was blocked:",
-        error,
-      );
-    });
+    void video.play().catch(() => {});
 
     return () => {
       video.pause();
       video.removeAttribute("src");
       video.load();
     };
-  }, [streamUrl]);
+  }, [fallbackUrl]);
 
-  // ==========================================================================
-  // RENDER
-  // ==========================================================================
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    const text = comment.trim();
+    if (!text || sending) return;
+
+    setSending(true);
+    try {
+      await onSend(text);
+      setComment("");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const recent = messages.slice(-4).reverse();
+  const name = stream.displayName || stream.username || "Fockis creator";
+  const hasVideo = usesLiveKit || !!fallbackUrl;
 
   return (
-    <section className="viewer-stage">
-      <div className="viewer-stage__video-container">
-
-        {/* ================================================================ */}
-        {/* VIDEO */}
-        {/* ================================================================ */}
-
+    <section className="viewer-stage" aria-label={`${name} live video`}>
+      <div className="viewer-stage__frame">
         <video
           ref={setVideoRef}
           className="viewer-stage__video"
-          src={
-            streamUrl ||
-            undefined
-          }
           autoPlay
           playsInline
           muted={muted}
           controls={false}
           preload="auto"
-          aria-label={`${stream.displayName || "Live"} live video`}
         />
 
-        {/* ================================================================ */}
-        {/* EMPTY STATE */}
-        {/* ================================================================ */}
-
-        {!streamUrl && (
-          <div className="viewer-stage__empty">
-
-            <div className="viewer-stage__empty-icon">
-              📡
-            </div>
-
-            <h3>
-              Live video unavailable
-            </h3>
-
-            <p>
-              The broadcaster has not provided
-              a playable stream yet.
-            </p>
-
+        {!hasVideo && (
+          <div className="viewer-stage__state">
+            <strong>Live video unavailable</strong>
+            <span>The creator hasn't started sending video yet.</span>
           </div>
         )}
 
-        {/* ================================================================ */}
-        {/* LIVE BADGE */}
-        {/* ================================================================ */}
+        {hasVideo && !connected && usesLiveKit && (
+          <div className="viewer-stage__state" role="status">
+            <Loader2 size={28} className="viewer-spin" aria-hidden="true" />
+            <span>Connecting to live video…</span>
+          </div>
+        )}
 
-        <div className="viewer-stage__live-badge">
-          <span className="live-dot" />
+        <div className="viewer-stage__shade" aria-hidden="true" />
 
-          <span>
-            LIVE
+        {/* ---------------------------------------------------- identity */}
+        <div className="viewer-stage__top">
+          <span className="viewer-stage__ring">
+            {stream.avatarUrl ? (
+              <img src={stream.avatarUrl} alt="" />
+            ) : (
+              <span>{name.charAt(0).toUpperCase()}</span>
+            )}
           </span>
+
+          <div className="viewer-stage__identity">
+            <span className="viewer-stage__row">
+              <strong>@{stream.username || name}</strong>
+              <button
+                type="button"
+                className={`viewer-follow ${isFollowing ? "viewer-follow--on" : ""}`}
+                onClick={onFollow}
+                aria-pressed={isFollowing}
+              >
+                {isFollowing ? (
+                  <>
+                    <UserCheck size={15} aria-hidden="true" />
+                    Following
+                  </>
+                ) : (
+                  "+ Follow"
+                )}
+              </button>
+            </span>
+            <span className="viewer-stage__meta">
+              {formatCount(stream.viewers)} viewers
+            </span>
+          </div>
         </div>
 
-        {/* ================================================================ */}
-        {/* MUTE BUTTON */}
-        {/* ================================================================ */}
+        {muted && hasVideo && (
+          <button type="button" className="viewer-stage__unmute" onClick={onToggleMute}>
+            <VolumeX size={16} aria-hidden="true" />
+            Tap to unmute
+          </button>
+        )}
 
-        <button
-          type="button"
-          className="viewer-stage__mute-button"
-          onClick={onToggleMute}
-          aria-label={
-            muted
-              ? "Unmute live stream"
-              : "Mute live stream"
-          }
-          title={
-            muted
-              ? "Unmute"
-              : "Mute"
-          }
-        >
-          {muted ? (
-            <VolumeX size={20} />
-          ) : (
-            <Volume2 size={20} />
+        <ViewerActions
+          likes={stream.likes}
+          liked={liked}
+          comments={messages.length}
+          muted={muted}
+          sharing={sharing}
+          onLike={onLike}
+          onComment={() => localInputRef.current?.focus()}
+          onShare={onShare}
+          onToggleMute={onToggleMute}
+        />
+
+        {/* ---------------------------------------------------- comments */}
+        <div className="viewer-stage__bottom">
+          {recent.length > 0 && (
+            <ul className="viewer-comments" aria-label="Recent comments">
+              {recent.map((item, index) => {
+                const author = item.displayName || item.username || "Viewer";
+                return (
+                  <li className="viewer-comment" key={item.id || `${index}-${item.createdAt ?? ""}`}>
+                    <span className="viewer-comment__avatar" aria-hidden="true">
+                      {item.avatarUrl ? <img src={item.avatarUrl} alt="" /> : author.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="viewer-comment__body">
+                      <span className="viewer-comment__meta">
+                        <strong>{author}</strong>
+                        {item.createdAt && <> · {formatRelativeTime(item.createdAt)}</>}
+                      </span>
+                      <span className="viewer-comment__text">{item.message}</span>
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
           )}
-        </button>
 
+          <form className="viewer-composer" onSubmit={submit}>
+            <div className="viewer-composer__field">
+              <label htmlFor="viewer-stage-comment" className="viewer-sr-only">Add a comment</label>
+              <input
+                id="viewer-stage-comment"
+                ref={setInputRef}
+                value={comment}
+                onChange={(event) => setComment(event.target.value)}
+                placeholder="Add a comment…"
+                maxLength={500}
+                autoComplete="off"
+                enterKeyHint="send"
+              />
+              <button
+                type="button"
+                className="viewer-composer__emoji"
+                aria-label="Add a heart"
+                onClick={() => {
+                  setComment((value) => `${value}💙`);
+                  localInputRef.current?.focus();
+                }}
+              >
+                <Smile size={22} />
+              </button>
+            </div>
+            <button type="submit" className="viewer-composer__send" disabled={!comment.trim() || sending} aria-label="Post comment">
+              <SendHorizontal size={21} />
+            </button>
+          </form>
+        </div>
       </div>
     </section>
   );
-}
+});
 
 export default ViewerStage;

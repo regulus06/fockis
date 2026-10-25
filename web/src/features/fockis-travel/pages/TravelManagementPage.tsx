@@ -810,7 +810,7 @@ export default function TravelManagementPage() {
                 <br />
                 <span
                   style={{
-                    color: "#b97812",
+                    color: "#1570ef",
                   }}
                 >
                   travel business.
@@ -1241,8 +1241,8 @@ export default function TravelManagementPage() {
                   display: "grid",
                   placeItems: "center",
                   background:
-                    "rgba(240, 169, 62, 0.16)",
-                  color: "#f0a93e",
+                    "rgba(58, 139, 255, 0.18)",
+                  color: "#8fb8ff",
                   flexShrink: 0,
                 }}
               >
@@ -1253,7 +1253,7 @@ export default function TravelManagementPage() {
                 <div
                   className="eyebrow"
                   style={{
-                    color: "#f0a93e",
+                    color: "#8fb8ff",
                   }}
                 >
                   Create inventory
@@ -1831,7 +1831,7 @@ function Feature({
     >
       <Icon
         size={22}
-        color="#f0a93e"
+        color="#8fb8ff"
       />
 
       <h4

@@ -49,7 +49,9 @@ html,
 body {
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
+  /* clip (not hidden): stops sideways scrolling without turning html and
+     body into two separate scroll containers, which showed two scrollbars. */
+  overflow-x: clip;
 }
 
 body {
@@ -806,63 +808,6 @@ body {
 
 .fk-live-now-card__watch span {
   flex: 1;
-}
-
-
-/* ============================================================================
-   LIVE SKELETON
-============================================================================ */
-
-.fk-live-now-card--skeleton {
-  min-height: 220px;
-
-  cursor: default;
-
-  pointer-events: none;
-}
-
-.fk-live-now-card__avatar-skeleton {
-  width: 100%;
-  height: 125px;
-
-  background:
-    linear-gradient(
-      90deg,
-      var(--fk-sunken),
-      var(--fk-surface-hover),
-      var(--fk-sunken)
-    );
-
-  animation: fk-live-skeleton-pulse 1.5s ease-in-out infinite;
-}
-
-.fk-live-now-card__skeleton-line {
-  width: 75%;
-  height: 10px;
-
-  margin: 12px 10px 0;
-
-  border-radius: 999px;
-
-  background: var(--fk-sunken);
-
-  animation: fk-live-skeleton-pulse 1.5s ease-in-out infinite;
-}
-
-.fk-live-now-card__skeleton-line--small {
-  width: 48%;
-  margin-top: 8px;
-}
-
-@keyframes fk-live-skeleton-pulse {
-  0%,
-  100% {
-    opacity: 0.55;
-  }
-
-  50% {
-    opacity: 1;
-  }
 }
 
 
@@ -2423,11 +2368,6 @@ body {
   .fk-live-now-rail__scroller {
     scroll-behavior: auto;
   }
-
-  .fk-live-now-card__avatar-skeleton,
-  .fk-live-now-card__skeleton-line {
-    animation: none;
-  }
 }
 
 
@@ -2482,5 +2422,51 @@ body {
   .fk-shell__left .fk-sidebar {
     position: fixed !important;
     z-index: 100001 !important;
+  }
+}
+
+/* ============================================================================
+   MOBILE DRAWER OPEN/CLOSED STATE
+   The React component toggles fk-sidebar--mobile-open on FockisSidebar.
+   Keep the drawer off-canvas until the hamburger opens it.
+============================================================================ */
+
+@media (max-width: 900px) {
+  .fk-shell__left .fk-sidebar {
+    transform: translateX(-105%) !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transition:
+      transform 220ms ease,
+      visibility 220ms ease !important;
+    will-change: transform;
+  }
+
+  .fk-shell__left .fk-sidebar.fk-sidebar--mobile-open {
+    transform: translateX(0) !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  .fk-sidebar-backdrop {
+    opacity: 0;
+    pointer-events: none !important;
+    visibility: hidden;
+    transition:
+      opacity 180ms ease,
+      visibility 180ms ease;
+  }
+
+  .fk-sidebar-backdrop.is-visible {
+    opacity: 1;
+    pointer-events: auto !important;
+    visibility: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-shell__left .fk-sidebar,
+  .fk-sidebar-backdrop {
+    transition: none !important;
   }
 }

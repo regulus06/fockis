@@ -449,10 +449,10 @@ export function GuestInvitePanel({
           )}
 
           {!searching && searchError && (
-            <p className="follower-list__empty">{searchError}</p>
+            <p className="follower-list__empty follower-list__empty--error" role="alert">{searchError}</p>
           )}
 
-          {!searching && !searchError && results.length === 0 && (
+          {!searching && results.length === 0 && !searchError && (
             <p className="follower-list__empty">
               {search.trim()
                 ? "No Fockis users found."
@@ -479,7 +479,18 @@ export function GuestInvitePanel({
                 size="sm"
                 variant="secondary"
                 icon={<UserPlus size={13} />}
-                onClick={() => inviteGuest(follower)}
+                onClick={async () => {
+                  setSearchError(null);
+                  try {
+                    await inviteGuest(follower);
+                  } catch (error) {
+                    setSearchError(
+                      error instanceof Error
+                        ? error.message
+                        : "Unable to send the invitation.",
+                    );
+                  }
+                }}
               >
                 Invite
               </Button>
@@ -563,9 +574,22 @@ export function GuestInvitePanel({
                     className="icon-btn icon-btn--remove"
                     type="button"
                     title="Remove guest"
-                    onClick={() =>
-                      removeGuest(guest.id)
-                    }
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          `Remove ${guest.name} from your live?`,
+                        )
+                      ) {
+                        void Promise.resolve(removeGuest(guest.id)).catch(
+                          (error: unknown) =>
+                            setSearchError(
+                              error instanceof Error
+                                ? error.message
+                                : "Unable to remove this guest.",
+                            ),
+                        );
+                      }
+                    }}
                   >
                     <X size={14} />
                   </button>

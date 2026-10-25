@@ -47,6 +47,43 @@ export interface SubscriptionFeature {
   description?: string;
 }
 
+/*
+ * The backend schema (subscription_plan_configs.features) stores
+ * features as plain strings. Older frontend code expected objects.
+ * Accept both shapes and normalize them with
+ * normalizeSubscriptionFeatures() before rendering.
+ */
+export type SubscriptionPlanFeatureInput =
+  | string
+  | SubscriptionFeature
+  | null
+  | undefined;
+
+
+/* ============================================================================
+   SUBSCRIPTION SCOPE (future-ready)
+
+   ACCOUNT = the overall Fockis membership (BASIC … DIAMOND).
+   MODULE  = a future module-specific subscription (Shop, Travel, …).
+
+   Only ACCOUNT exists in the backend today. MODULE is declared so
+   the UI can grow without a rewrite; nothing activates it.
+============================================================================ */
+
+export type SubscriptionScope =
+  | "ACCOUNT"
+  | "MODULE";
+
+export type FockisModuleId =
+  | "social"
+  | "shop"
+  | "travel"
+  | "live"
+  | "music"
+  | "ai"
+  | "realestate"
+  | "business";
+
 
 /* ============================================================================
    SUBSCRIPTION PLAN CONFIGURATION
@@ -67,7 +104,10 @@ export interface SubscriptionPlanConfig {
 
   currency: string;
 
-  features: SubscriptionFeature[];
+  /*
+   * Backend sends string[]; legacy frontend data used objects.
+   */
+  features: SubscriptionPlanFeatureInput[];
 
   active: boolean;
 
@@ -76,6 +116,9 @@ export interface SubscriptionPlanConfig {
   displayOrder: number;
 
   /*
+   * Not sent by the backend today — the frontend derives it from
+   * SUBSCRIPTION_PLAN_RANK. Optional so API responses type-check.
+   *
    * Frontend subscription level.
    *
    * BASIC   = 1
@@ -84,7 +127,17 @@ export interface SubscriptionPlanConfig {
    * GOLDEN  = 4
    * DIAMOND = 5
    */
-  rank: number;
+  rank?: number;
+
+  /*
+   * Future: "ACCOUNT" | "MODULE". Absent today (= ACCOUNT).
+   */
+  scope?: SubscriptionScope;
+
+  /*
+   * Future: module identifier when scope === "MODULE".
+   */
+  moduleId?: FockisModuleId;
 
   stripeMonthlyPriceId?: string;
 
@@ -172,6 +225,13 @@ export interface Subscription {
 
   lastSyncedAt?: string;
 
+  /*
+   * Future: explicit entitlement identifiers granted by the backend
+   * (e.g. "social.premium"). The current backend does not send this
+   * field; the UI only displays/uses it when it is present.
+   */
+  entitlements?: string[];
+
   createdAt?: string;
 
   updatedAt?: string;
@@ -240,7 +300,13 @@ export const SUBSCRIPTION_PLAN_RANK: Record<
 
 
 /* ============================================================================
-   DEFAULT FRONTEND PLAN CONFIGURATION
+   LEGACY FRONTEND PLAN CONFIGURATION
+
+   @deprecated
+   These are NOT real prices or features. The subscriptions feature
+   no longer reads them — plans, prices and features come only from
+   GET /subscription-plans. Kept exported only so any older import
+   elsewhere in the app keeps compiling. Do not use for display.
 ============================================================================ */
 
 export const SUBSCRIPTION_PLANS: Record<
@@ -555,6 +621,7 @@ export const SUBSCRIPTION_PLAN_ORDER: SubscriptionPlan[] = [
    GET PLAN CONFIGURATION
 ============================================================================ */
 
+/** @deprecated Returns legacy placeholder data. Load real plans from the API. */
 export function getSubscriptionPlanConfig(
   plan: SubscriptionPlan,
 ): SubscriptionPlanConfig {

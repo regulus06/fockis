@@ -4,6 +4,8 @@ import {
   useNavigate,
 } from "react-router-dom";
 
+import { FOCKIS_API_URL } from "../../../../config/fockisConfig";
+
 
 interface CurrentUser {
   avatar?: string;

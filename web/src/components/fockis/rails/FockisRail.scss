@@ -1,0 +1,208 @@
+/* ============================================================================
+   FOCKIS FRIEND RAILS
+   components/fockis/rails/FockisRail.scss
+
+   Cards for the friend rails shown between feed posts: My Friends,
+   People You May Know (both framed by FockisRail.tsx) and Friend Requests.
+   The frame itself (.fk-right-rail__section, header, "See all") is styled
+   by FockisRightRail.scss / FockisSocial.scss.
+============================================================================ */
+
+.fk-friend-rail,
+.fk-friend-requests-rail {
+  --fkr-surface: var(--fks-surface-2, var(--fk-surface-hover, #0f1d3d));
+  --fkr-border: var(--fks-border, var(--fk-border, rgba(124, 164, 255, 0.14)));
+  --fkr-border-strong: var(--fks-border-strong, rgba(124, 172, 255, 0.28));
+  --fkr-text: var(--fks-text, var(--fk-text, #eaf1ff));
+  --fkr-muted: var(--fks-text-2, #a9b7d8);
+  --fkr-primary: var(--fks-primary, #2f7bff);
+  --fkr-primary-bright: var(--fks-primary-bright, #5596ff);
+  --fkr-primary-soft: var(--fks-primary-soft, rgba(47, 123, 255, 0.16));
+
+  min-width: 0;
+  text-align: left;
+}
+
+/* Horizontal list of cards. */
+.fk-friend-rail__list,
+.fk-friend-requests-rail__list {
+  display: flex;
+  gap: 12px;
+  padding: 2px 2px 6px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+.fk-rail-card {
+  position: relative;
+  display: flex;
+  flex: 0 0 168px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px 12px 12px;
+  border: 1px solid var(--fkr-border);
+  border-radius: 16px;
+  background: var(--fkr-surface);
+  color: var(--fkr-text);
+  text-align: center;
+  scroll-snap-align: start;
+}
+
+.fk-rail-card__photo {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--fkr-primary-soft);
+  box-shadow: 0 0 0 2px var(--fkr-border-strong);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.fk-rail-card__initial {
+  color: var(--fkr-primary-bright);
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.fk-rail-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+
+  h3 {
+    margin: 0;
+    overflow: hidden;
+    color: var(--fkr-text);
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+
+.fk-rail-card__meta {
+  margin: 0;
+  overflow: hidden;
+  color: var(--fkr-muted);
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.fk-rail-card__actions {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  margin-top: auto;
+}
+
+.fk-rail-card__btn {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 150ms ease, background 150ms ease;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.7;
+  }
+
+  &--primary {
+    background: var(--fkr-primary);
+    color: #fff;
+
+    &:not(:disabled):hover {
+      filter: brightness(1.1);
+    }
+  }
+
+  /* "Join Friend" (People You May Know). */
+  &--join {
+    background: linear-gradient(135deg, #ffd54a 0%, #f5b301 100%);
+    color: #1a1300;
+    box-shadow: 0 4px 14px rgba(245, 179, 1, 0.28);
+
+    &:not(:disabled):hover {
+      filter: brightness(1.06);
+    }
+  }
+
+  &--ghost {
+    border-color: var(--fkr-border-strong);
+    background: transparent;
+    color: var(--fkr-text);
+
+    &:not(:disabled):hover {
+      background: var(--fkr-primary-soft);
+    }
+  }
+}
+
+.fk-rail-card__dismiss {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(5, 11, 26, 0.45);
+  color: var(--fkr-muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--fkr-text);
+  }
+}
+
+.fk-rail-card__footer {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  align-self: center;
+  gap: 6px;
+  padding: 0 8px;
+  color: var(--fkr-muted);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Loading placeholder card ("Loading friends..."). */
+.fk-rail-card:not(:has(.fk-rail-card__photo)) {
+  flex-basis: 100%;
+  min-height: 0;
+  padding: 14px;
+}
+
+@media (max-width: 480px) {
+  .fk-rail-card {
+    flex-basis: 148px;
+  }
+}

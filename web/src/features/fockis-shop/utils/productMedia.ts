@@ -1,31 +1,8 @@
+
 import type { Product, ProductImage } from "../types/product.types";
 import { resolveProductImageUrl } from "./productImage";
 
-/**
- * ============================================================================
- * FOCKIS SHOP — PRODUCT MEDIA HELPERS
- * ============================================================================
- *
- * One place to read images and videos from a product.
- *
- * The backend stores all product media in `images: string[]`. Sellers can
- * upload video files there too, so any entry whose path looks like a video
- * file is treated as a video and never rendered inside an <img>.
- *
- * No media is invented here: when a product has no usable image or video,
- * the helpers return `undefined` and the UI shows a neutral placeholder.
- * ============================================================================
- */
-
 const VIDEO_EXTENSION = /\.(mp4|webm|mov|m4v|ogv|ogg|m3u8)(\?.*)?(#.*)?$/i;
-
-export function isVideoUrl(value: unknown): boolean {
-  if (typeof value !== "string") return false;
-  const path = value.trim();
-  if (!path) return false;
-  if (/^data:video\//i.test(path)) return true;
-  return VIDEO_EXTENSION.test(path);
-}
 
 export interface ResolvedMedia {
   src: string;
@@ -40,13 +17,37 @@ type LegacyProduct = Product & {
   videos?: unknown;
 };
 
-function sortedImages(product: Product): ProductImage[] {
-  if (!Array.isArray(product.images)) return [];
+type RawImage = {
+  url?: unknown;
+  src?: unknown;
+  path?: unknown;
+  filename?: unknown;
+  alt?: unknown;
+  id?: unknown;
+  isPrimary?: unknown;
+  sortOrder?: unknown;
+};
 
-  return [...product.images].sort(
-    (a, b) =>
-      Number(Boolean(b?.isPrimary)) - Number(Boolean(a?.isPrimary)) ||
-      (a?.sortOrder ?? 0) - (b?.sortOrder ?? 0),
+function isRecord(value: unknown): value is RawImage {
+  return typeof value === "object" && value !== null;
+}
+
+function imageValue(value: unknown): unknown {
+  if (typeof value === "string") return value;
+
+  if (!isRecord(value)) return undefined;
+
+  return value.url ?? value.src ?? value.path ?? value.filename;
+}
+
+export function isVideoUrl(value: unknown): boolean {
+  const path = imageValue(value);
+
+  if (typeof path !== "string" || !path.trim()) return false;
+
+  return (
+    /^data:video\//i.test(path.trim()) ||
+    VIDEO_EXTENSION.test(path.trim())
   );
 }
 
@@ -54,18 +55,31 @@ function productLabel(product: Product): string {
   return product.name?.trim() || "Product";
 }
 
-/**
- * All still images for a product, resolved to absolute URLs, de-duplicated,
- * with video files filtered out.
- */
+function rawImages(product: Product): unknown[] {
+  return Array.isArray(product.images) ? [...product.images] : [];
+}
+
+function sortedImages(product: Product): unknown[] {
+  return rawImages(product).sort((left, right) => {
+    const a = isRecord(left) ? left : {};
+    const b = isRecord(right) ? right : {};
+
+    return (
+      Number(Boolean(b.isPrimary)) - Number(Boolean(a.isPrimary)) ||
+      (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0)
+    );
+  });
+}
+
+/** Resolve product images from strings, objects, and legacy fields. */
 export function getProductImages(product: Product): ResolvedMedia[] {
   const legacy = product as LegacyProduct;
   const label = productLabel(product);
 
   const candidates: Array<{ value: unknown; alt?: string }> = [
-    ...sortedImages(product).map((image) => ({
-      value: image?.url,
-      alt: image?.alt,
+    ...sortedImages(product).map((item) => ({
+      value: imageValue(item),
+      alt: isRecord(item) && typeof item.alt === "string" ? item.alt : undefined,
     })),
     { value: legacy.imageUrl },
     { value: legacy.thumbnail },
@@ -91,24 +105,19 @@ export function getProductImages(product: Product): ResolvedMedia[] {
   return result;
 }
 
-/** The best single image for cards, carts and thumbnails. */
 export function getPrimaryProductImage(
   product: Product,
 ): ResolvedMedia | undefined {
   return getProductImages(product)[0];
 }
 
-/**
- * All videos attached to a product. Reads video files stored in `images`
- * plus optional `video`, `videoUrl` and `videos` fields if the API ever
- * returns them. Returns an empty array when the product has no video.
- */
+/** Return product videos without treating them as still images. */
 export function getProductVideos(product: Product): ResolvedMedia[] {
   const legacy = product as LegacyProduct;
   const label = productLabel(product);
 
   const raw: unknown[] = [
-    ...sortedImages(product).map((image) => image?.url),
+    ...sortedImages(product).map(imageValue),
     legacy.video,
     legacy.videoUrl,
     ...(Array.isArray(legacy.videos) ? legacy.videos : []),
@@ -118,10 +127,7 @@ export function getProductVideos(product: Product): ResolvedMedia[] {
   const result: ResolvedMedia[] = [];
 
   for (const value of raw) {
-    const url =
-      typeof value === "object" && value !== null && "url" in value
-        ? (value as { url?: unknown }).url
-        : value;
+    const url = imageValue(value);
 
     if (!isVideoUrl(url)) continue;
 
@@ -141,15 +147,11 @@ export function getProductVideo(
   return getProductVideos(product)[0];
 }
 
-/**
- * A rating is shown only when the API returned a real, non-zero average.
- * The backend defaults `rating` to 0 for unrated products, so 0 means
- * "no rating yet" and is never displayed as a score.
- */
 export function getRealRating(
   product: Product,
 ): { average: number; count: number | null } | null {
   const average = Number(product.reviews?.averageRating ?? 0);
+
   if (!Number.isFinite(average) || average <= 0) return null;
 
   const total = Number(product.reviews?.totalReviews ?? 0);
@@ -160,7 +162,6 @@ export function getRealRating(
   };
 }
 
-/** Real discount percentage, or 0 when no genuine lower sale price exists. */
 export function getRealDiscount(product: Product): number {
   const price = Number(product.price);
   const sale = product.salePrice == null ? NaN : Number(product.salePrice);
@@ -171,14 +172,21 @@ export function getRealDiscount(product: Product): number {
   return Math.round(((price - sale) / price) * 100);
 }
 
-/** Delivery estimate text from real shipping data, or null. */
 export function getDeliveryEstimate(product: Product): string | null {
   const days = product.shipping?.estimatedDeliveryDays;
   if (!days) return null;
 
   const min = Number(days.min);
   const max = Number(days.max);
-  if (!Number.isFinite(min) || !Number.isFinite(max) || max <= 0) return null;
+
+  if (
+    !Number.isFinite(min) ||
+    !Number.isFinite(max) ||
+    min < 0 ||
+    max <= 0
+  ) {
+    return null;
+  }
 
   return min === max
     ? `Delivery in ${min} day${min === 1 ? "" : "s"}`

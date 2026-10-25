@@ -16,8 +16,8 @@
 
   box-sizing: border-box;
 
-  background: #f5f6f2;
-  border-bottom: 1px solid #e2e6df;
+  background: #f6f7f9;
+  border-bottom: 1px solid #e3e6ea;
 
   position: sticky;
   top: 0;
@@ -35,7 +35,7 @@
   overscroll-behavior-x: contain;
 
   scrollbar-width: thin;
-  scrollbar-color: #1f6f5c #e2e6df;
+  scrollbar-color: #ff7a00 #e3e6ea;
 }
 
 
@@ -48,16 +48,16 @@
 }
 
 .seller-sidebar::-webkit-scrollbar-track {
-  background: #e2e6df;
+  background: #e3e6ea;
 }
 
 .seller-sidebar::-webkit-scrollbar-thumb {
-  background: #1f6f5c;
+  background: #ff7a00;
   border-radius: 999px;
 }
 
 .seller-sidebar::-webkit-scrollbar-thumb:hover {
-  background: #123f34;
+  background: #e86a00;
 }
 
 
@@ -91,7 +91,7 @@
 
   border-radius: 10px;
 
-  background: #1f6f5c;
+  background: #ff7a00;
   color: #ffffff;
 }
 
@@ -115,7 +115,7 @@
   font-size: 17px;
   font-weight: 700;
 
-  color: #16211d;
+  color: #0f1b2d;
 }
 
 .brand-text span {
@@ -123,7 +123,7 @@
 
   font-size: 11px;
 
-  color: #53615b;
+  color: #5b6472;
 }
 
 
@@ -168,7 +168,7 @@
 
   background: transparent;
 
-  color: #53615b;
+  color: #5b6472;
 
   font-size: 14px;
   font-weight: 500;
@@ -185,19 +185,19 @@
 }
 
 .sidebar-menu button:hover {
-  background: #e7f0eb;
-  color: #1f6f5c;
+  background: #fff4e8;
+  color: #ff7a00;
 }
 
 .sidebar-menu button.active {
-  background: #1f6f5c;
+  background: #ff7a00;
   color: #ffffff;
 
   font-weight: 600;
 }
 
 .sidebar-menu button.active:hover {
-  background: #123f34;
+  background: #e86a00;
   color: #ffffff;
 }
 
@@ -225,7 +225,7 @@
   border: none;
   border-radius: 9px;
 
-  background: #16211d;
+  background: #0f1b2d;
   color: #ffffff;
 
   font-size: 14px;
@@ -239,7 +239,7 @@
 }
 
 .create-product-btn:hover {
-  background: #123f34;
+  background: #e86a00;
 }
 
 
@@ -292,7 +292,7 @@
 
 .seller-layout {
   min-height: 100vh;
-  background: #f5f6f2;
+  background: #f6f7f9;
 }
 
 .seller-layout__body {
@@ -302,14 +302,14 @@
   display: flex;
   flex-direction: column;
 
-  background: #f5f6f2;
+  background: #f6f7f9;
 }
 
 .seller-layout__content {
   width: 100%;
   flex: 1;
 
-  background: #f5f6f2;
+  background: #f6f7f9;
 }
 
 
@@ -392,7 +392,7 @@
      * Do NOT use scrollbar-width: none here.
      */
     scrollbar-width: thin;
-    scrollbar-color: #1f6f5c #e2e6df;
+    scrollbar-color: #ff7a00 #e3e6ea;
 
     overscroll-behavior-x: contain;
   }
@@ -407,11 +407,11 @@
   }
 
   .seller-sidebar::-webkit-scrollbar-track {
-    background: #e2e6df;
+    background: #e3e6ea;
   }
 
   .seller-sidebar::-webkit-scrollbar-thumb {
-    background: #1f6f5c;
+    background: #ff7a00;
     border-radius: 999px;
   }
 
@@ -555,4 +555,11 @@
 
     flex: 0 0 37px;
   }
+}
+
+/* Official Fockis logo in the Seller Center brand slot */
+.brand-icon.brand-icon--logo {
+  background: transparent;
+  padding: 0;
+  overflow: hidden;
 }

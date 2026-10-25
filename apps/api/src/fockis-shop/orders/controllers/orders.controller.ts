@@ -14,6 +14,7 @@ import { OrdersService } from "../services/orders.service";
 import { CreateOrderDto } from "../dto/create-order.dto";
 import { UpdateOrderStatusDto } from "../dto/update-order-status.dto";
 import { JwtAuthGuard } from "../../../auth/jwt-auth.guard";
+import { SuperAdminGuard } from "../../../admin/safety/super-admin.guard";
 
 @Controller("fockis-shop/orders")
 @UseGuards(JwtAuthGuard)
@@ -50,7 +51,12 @@ export class OrdersController {
     return this.ordersService.findMyOrders(this.getUserId(req));
   }
 
+  /**
+   * Every order on the platform, with buyer details. Super admins only;
+   * this used to be open to any signed-in user.
+   */
   @Get("all")
+  @UseGuards(SuperAdminGuard)
   async findAll() {
     return this.ordersService.findAll();
   }

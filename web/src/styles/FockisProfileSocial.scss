@@ -1,0 +1,515 @@
+/* ============================================================================
+   FOCKIS PROFILE — SOCIAL DESIGN LAYER
+   web/src/styles/FockisProfileSocial.scss
+
+   Loaded after FockisProfilePage.scss by FockisProfilePage.tsx. Scoped to
+   .fk-profile-page-wrapper.fk-social-scope so nothing else is affected.
+   Hero, tabs, posts and About have their own stylesheets.
+============================================================================ */
+
+@use "./fockis-social-tokens";
+
+$scope: ".fk-profile-page-wrapper.fk-social-scope";
+
+#{$scope} {
+  /* Re-point this page's local tokens at the Fockis social palette. */
+  --fk-profile-bg: var(--fks-bg);
+  --fk-profile-surface: var(--fks-surface);
+  --fk-profile-surface-2: var(--fks-surface-2);
+  --fk-profile-border: var(--fks-border);
+  --fk-profile-text: var(--fks-text);
+  --fk-profile-text-2: var(--fks-text-2);
+  --fk-profile-primary: var(--fks-primary);
+  --fk-profile-primary-bright: var(--fks-primary-bright);
+  --fk-profile-primary-soft: var(--fks-primary-soft);
+  --fk-profile-danger: var(--fks-rose);
+  --fk-profile-success: var(--fks-green);
+  --fk-profile-shadow: var(--fks-shadow-card);
+
+  padding: 20px 24px 64px;
+  background:
+    radial-gradient(1000px 520px at 0% -10%, var(--fks-bg-glow-1), transparent 60%),
+    radial-gradient(800px 460px at 100% 0%, var(--fks-bg-glow-2), transparent 55%),
+    var(--fks-bg);
+  color: var(--fks-text);
+  font-family: var(--fks-font);
+
+  h2,
+  h3,
+  strong {
+    font-family: inherit;
+  }
+}
+
+/* ============================================================================
+   CONTAINER
+============================================================================ */
+
+#{$scope} .fk-profile-page {
+  width: min(100%, 1100px);
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#{$scope} .fk-profile-page__content {
+  width: auto;
+  max-width: none;
+  margin: 18px 20px 0;
+  padding: 0;
+}
+
+#{$scope} .fk-profile-page__tab-content {
+  padding: 0;
+}
+
+/* The shared Layout pads and tints its content area; this page draws its own. */
+.fk-app-content:has(> .fk-profile-page-wrapper.fk-social-scope) {
+  padding: 0;
+  background: transparent;
+}
+
+.fk-app-layout:has(.fk-profile-page-wrapper.fk-social-scope) {
+  background: var(--fks-bg, #050b1a);
+}
+
+.fk-app-layout[data-theme="light"]:has(.fk-profile-page-wrapper.fk-social-scope) {
+  background: #eef3fb;
+}
+
+/* ============================================================================
+   POSTS TAB: overview column + posts column
+============================================================================ */
+
+#{$scope} .fk-profile-page__posts-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+#{$scope} .fk-profile-page__posts-aside {
+  position: sticky;
+  top: 76px;
+  display: grid;
+  gap: 16px;
+
+  .fk-profile-about {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  // The hero already shows the bio; the sidebar keeps just the details.
+  .fk-profile-about__card:first-child {
+    display: none;
+  }
+
+  .fk-profile-media-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .fk-profile-media-grid__tile {
+    border-radius: 10px;
+  }
+}
+
+#{$scope} .fk-profile-page__aside-card {
+  padding: 16px;
+  border: 1px solid var(--fks-border);
+  border-radius: 20px;
+  background: var(--fks-surface);
+  box-shadow: var(--fks-shadow-card);
+}
+
+#{$scope} .fk-profile-page__aside-head {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h3 {
+    margin: 0;
+    color: var(--fks-text);
+    font-size: 16px;
+    font-weight: 750;
+  }
+
+  button {
+    padding: 4px 6px;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--fks-primary-bright);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--fks-cyan);
+    }
+  }
+}
+
+#{$scope} .fk-profile-page__posts-main {
+  min-width: 0;
+  max-width: 720px;
+}
+
+@media (max-width: 1023px) {
+  #{$scope} .fk-profile-page__posts-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #{$scope} .fk-profile-page__posts-aside {
+    position: static;
+  }
+
+  // On narrow screens the About tab carries this; keep the feed first.
+  #{$scope} .fk-profile-page__posts-aside .fk-profile-about {
+    display: none;
+  }
+
+  #{$scope} .fk-profile-page__posts-main {
+    max-width: none;
+    order: -1;
+  }
+}
+
+/* ============================================================================
+   RELATIONSHIP / OWNER ACTIONS (inside the hero side column)
+============================================================================ */
+
+#{$scope} .fk-profile-actions {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border: 0;
+  background: none;
+}
+
+#{$scope} .fk-profile-friend-actions {
+  display: contents;
+}
+
+#{$scope} .fk-profile-actions__primary,
+#{$scope} .fk-profile-actions__secondary,
+#{$scope} .fk-profile-follow-button,
+#{$scope} .fk-profile-message-button,
+#{$scope} .fk-profile-friend-button {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--fks-border-strong);
+  border-radius: 14px;
+  background: var(--fks-surface-2);
+  color: var(--fks-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: none;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--fks-surface-3);
+    border-color: var(--fks-primary-bright);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fks-cyan);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: default;
+  }
+}
+
+/* Primary: Follow (not yet following) and Edit profile. */
+#{$scope} .fk-profile-actions__primary,
+#{$scope} .fk-profile-follow-button:not(.fk-profile-follow-button--following) {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--fks-primary-bright), var(--fks-primary));
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(47, 123, 255, 0.3);
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #6aa5ff, var(--fks-primary-bright));
+    border-color: transparent;
+  }
+}
+
+#{$scope} .fk-profile-follow-button--following {
+  background: var(--fks-primary-soft);
+  border-color: rgba(85, 150, 255, 0.45);
+  color: var(--fks-primary-bright);
+}
+
+#{$scope} .fk-profile-friend-button--friends,
+#{$scope} .fk-profile-friend-button--accept {
+  background: var(--fks-green-soft);
+  border-color: color-mix(in srgb, var(--fks-green) 45%, transparent);
+  color: var(--fks-green);
+}
+
+#{$scope} .fk-profile-friend-button--pending {
+  color: var(--fks-text-2);
+}
+
+#{$scope} .fk-profile-friend-button--danger,
+#{$scope} .fk-profile-friend-button--blocked {
+  background: var(--fks-rose-soft);
+  border-color: color-mix(in srgb, var(--fks-rose) 40%, transparent);
+  color: var(--fks-rose);
+}
+
+#{$scope} .fk-profile-follow-button__spinner,
+#{$scope} .fk-profile-friend-button__spinner {
+  animation: fk-profile-spin 900ms linear infinite;
+}
+
+#{$scope} .fk-profile-follow-error,
+#{$scope} .fk-profile-friend-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--fks-rose-soft);
+  color: var(--fks-rose);
+  font-size: 13px;
+}
+
+/* ============================================================================
+   OPTIONS MENU
+============================================================================ */
+
+#{$scope} .fk-profile-options {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+#{$scope} .fk-profile-options__toggle {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--fks-border-strong);
+  border-radius: 14px;
+  background: var(--fks-surface-2);
+  color: var(--fks-text);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--fks-surface-3);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fks-cyan);
+    outline-offset: 2px;
+  }
+}
+
+#{$scope} .fk-profile-options__menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 210px;
+  padding: 6px;
+  border: 1px solid var(--fks-border-strong);
+  border-radius: 16px;
+  background: var(--fks-surface-2);
+  box-shadow: var(--fks-shadow-pop);
+
+  button {
+    width: 100%;
+    min-height: 42px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    border-radius: 11px;
+    background: transparent;
+    color: var(--fks-text);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: var(--fks-surface-3);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--fks-cyan);
+      outline-offset: -2px;
+    }
+
+    &.is-danger {
+      color: var(--fks-rose);
+    }
+  }
+}
+
+/* ============================================================================
+   RESTRICTED + PLACEHOLDER STATES
+============================================================================ */
+
+#{$scope} .fk-profile-page__restricted,
+#{$scope} .fk-profile-page__placeholder {
+  padding: 44px 20px;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  border: 1px dashed var(--fks-border-strong);
+  border-radius: 20px;
+  background: var(--fks-surface);
+  color: var(--fks-text-2);
+  text-align: center;
+
+  h3 {
+    margin: 0;
+    color: var(--fks-text);
+    font-size: 17px;
+    font-weight: 750;
+  }
+
+  p {
+    margin: 0;
+    max-width: 42ch;
+    font-size: 14px;
+  }
+}
+
+#{$scope} .fk-profile-page__restricted-icon,
+#{$scope} .fk-profile-page__placeholder-icon {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: var(--fks-surface-3);
+  color: var(--fks-text-2);
+  font-size: 0;
+}
+
+#{$scope} .fk-profile-page__manage-link {
+  margin-top: 14px;
+  min-height: 42px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--fks-border-strong);
+  border-radius: 14px;
+  background: var(--fks-surface);
+  color: var(--fks-primary-bright);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--fks-primary-soft);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fks-cyan);
+    outline-offset: 2px;
+  }
+}
+
+/* ============================================================================
+   ACCOUNT MENU BUTTON + LOADING / EMPTY / ERROR / SETTINGS
+============================================================================ */
+
+#{$scope} .fk-profile-page__settings-button {
+  border: 1px solid var(--fks-border-strong);
+  border-radius: 14px;
+  background: var(--fks-glass);
+  color: var(--fks-text);
+  box-shadow: var(--fks-shadow-card);
+  backdrop-filter: blur(12px);
+}
+
+#{$scope} .fk-profile-page__account-menu {
+  border: 1px solid var(--fks-border-strong);
+  border-radius: 18px;
+  background: var(--fks-surface-2);
+  box-shadow: var(--fks-shadow-pop);
+}
+
+#{$scope} .fk-profile-page__account-menu-item {
+  border-radius: 12px;
+  color: var(--fks-text);
+
+  &:hover {
+    background: var(--fks-surface-3);
+  }
+}
+
+#{$scope} .fk-profile-page__loading-card,
+#{$scope} .fk-profile-page__empty-card,
+#{$scope} .fk-profile-page__error-card,
+#{$scope} .fk-profile-page__settings-wrapper {
+  border: 1px solid var(--fks-border);
+  border-radius: 22px;
+  background: var(--fks-surface);
+  box-shadow: var(--fks-shadow-card);
+  color: var(--fks-text);
+}
+
+#{$scope} .fk-profile-page__empty-card button,
+#{$scope} .fk-profile-page__error-card button {
+  border: 0;
+  border-radius: 12px;
+  background: var(--fks-primary);
+  color: #ffffff;
+}
+
+/* ============================================================================
+   RESPONSIVE
+============================================================================ */
+
+@media (max-width: 767px) {
+  #{$scope} {
+    padding: 12px 8px calc(96px + env(safe-area-inset-bottom));
+  }
+
+  #{$scope} .fk-profile-page__content {
+    margin: 14px 10px 0;
+  }
+
+  #{$scope} .fk-profile-actions__primary,
+  #{$scope} .fk-profile-actions__secondary,
+  #{$scope} .fk-profile-follow-button,
+  #{$scope} .fk-profile-message-button,
+  #{$scope} .fk-profile-friend-button {
+    flex: 1 1 calc(50% - 8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #{$scope} .fk-profile-follow-button__spinner,
+  #{$scope} .fk-profile-friend-button__spinner {
+    animation: none;
+  }
+}

@@ -3,6 +3,7 @@ export type ProfileTab =
   | "friends"
   | "about"
   | "photos"
+  | "videos"
   | "marketplace";
 
 
@@ -59,6 +60,9 @@ export interface FockisUser {
 
   joinedDate?: string;
 
+  /** Returned by GET /users/:id; true when the owner made the profile private. */
+  isPrivate?: boolean;
+
   createdAt?: string;
 
   updatedAt?: string;
@@ -88,6 +92,12 @@ export interface FockisPost {
   id: string;
 
   _id?: string;
+
+  /**
+   * ID of the user who authored the post. The backend Post schema stores the
+   * author as `user` (a plain user ID string); normalizePost copies it here.
+   */
+  userId?: string;
 
   content?: string;
 

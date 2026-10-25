@@ -1,1567 +1,529 @@
-import React, {
-  FormEvent,
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Eye, EyeOff, Globe, ImagePlus, LocateFixed, Lock, MapPin, Trash2, Users, Video } from "lucide-react";
 
+import { EVENT_CATEGORIES } from "../constants/eventCategories";
 import type {
   CreateEventInput,
   EventCategory,
   EventVisibility,
+  FockisEvent,
 } from "../types/event.types";
-
+import { eventMediaUrl } from "../utils/eventMedia";
+import { fromLocalInputValue, toLocalInputValue, viewerTimeZone } from "../utils/eventTime";
+import EventCard from "./EventCard";
 import EventDateTimeFields from "./EventDateTimeFields";
 
 interface Props {
   initialValues?: Partial<CreateEventInput>;
   submitLabel?: string;
   organizationName?: string;
-  onSubmit: (
-    values: CreateEventInput,
-  ) => Promise<void>;
+  mode?: "create" | "edit";
+  onSubmit: (values: CreateEventInput) => Promise<void>;
   onCancel?: () => void;
 }
 
-/**
- * Extended form values used by the admin event form.
- *
- * These fields are supported by the form even if the
- * current CreateEventInput type has not been updated yet.
- */
-type ExtendedEventFormValues =
-  CreateEventInput & {
-    capacity?: number;
-    requireRsvp?: boolean;
-  };
+type Errors = Partial<Record<
+  "title" | "startDate" | "endDate" | "onlineUrl" | "place" | "coordinates" | "capacity" | "media" | "form",
+  string
+>>;
 
-type AdminEventType =
-  | "church_service"
-  | "department_event"
-  | "meeting"
-  | "bible_study"
-  | "special_event";
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime", "video/x-msvideo", "video/x-matroska"];
+const MAX_IMAGE = 10 * 1024 * 1024;
+const MAX_VIDEO = 100 * 1024 * 1024;
 
-const adminEventTypes: Array<{
-  value: AdminEventType;
-  label: string;
-  category: EventCategory;
-}> = [
-  {
-    value: "church_service",
-    label: "Church Service",
-    category: "religious",
-  },
-  {
-    value: "department_event",
-    label: "Department Event",
-    category: "community",
-  },
-  {
-    value: "meeting",
-    label: "Meeting",
-    category: "meeting",
-  },
-  {
-    value: "bible_study",
-    label: "Bible Study",
-    category: "religious",
-  },
-  {
-    value: "special_event",
-    label: "Special Event",
-    category: "general",
-  },
+const VISIBILITY: Array<{ value: EventVisibility; label: string; hint: string; icon: typeof Globe }> = [
+  { value: "public", label: "Public", hint: "Anyone on Fockis can find and join.", icon: Globe },
+  { value: "friends", label: "Friends", hint: "Only your friends can see it.", icon: Users },
+  { value: "private", label: "Private", hint: "Only people you invite.", icon: Lock },
 ];
 
-const categories: EventCategory[] = [
-  "general",
-  "music",
-  "sports",
-  "business",
-  "education",
-  "food",
-  "community",
-  "party",
-  "conference",
-  "religious",
-  "school",
-  "academic",
-  "fundraiser",
-  "workshop",
-  "meeting",
-  "networking",
-  "cultural",
-  "health",
-  "youth",
-  "technology",
-  "environment",
-  "political",
-  "civic",
-  "other",
-];
-
-function formatCategory(
-  value: EventCategory,
-): string {
-  return value
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (char) =>
-      char.toUpperCase(),
-    );
+function initialLocal(value?: string) {
+  return value ? toLocalInputValue(value) : "";
 }
 
-function getInitialAdminEventType(
-  category?: EventCategory,
-): AdminEventType {
-  switch (category) {
-    case "meeting":
-      return "meeting";
+function numberOrNull(value: string): number | null {
+  if (!value.trim()) return null;
 
-    case "religious":
-      return "church_service";
+  const number = Number(value);
 
-    case "community":
-      return "department_event";
-
-    default:
-      return "special_event";
-  }
+  return Number.isFinite(number) ? number : Number.NaN;
 }
 
 export default function EventCreateForm({
-  initialValues,
-  submitLabel = "Create Event",
+  initialValues = {},
+  submitLabel = "Create event",
   organizationName,
+  mode = "create",
   onSubmit,
   onCancel,
 }: Props) {
-  /**
-   * IMPORTANT:
-   *
-   * initialValues is optional.
-   *
-   * The previous version attempted to read:
-   *
-   *   extendedInitialValues.capacity
-   *
-   * when initialValues was undefined.
-   *
-   * That caused:
-   *
-   *   Cannot read properties of undefined
-   *
-   * Defaulting to {} prevents that crash.
-   */
-  const extendedInitialValues =
-    (initialValues as
-      | Partial<ExtendedEventFormValues>
-      | undefined) ?? {};
-
-  // ==========================================================================
-  // BASIC EVENT INFORMATION
-  // ==========================================================================
-
-  const [
-    title,
-    setTitle,
-  ] = useState(
-    initialValues?.title ?? "",
+  const [title, setTitle] = useState(initialValues.title ?? "");
+  const [description, setDescription] = useState(initialValues.description ?? "");
+  const [category, setCategory] = useState<EventCategory>(initialValues.category ?? "community");
+  const [visibility, setVisibility] = useState<EventVisibility>(initialValues.visibility ?? "public");
+  const [startDate, setStartDate] = useState(initialLocal(initialValues.startDate));
+  const [endDate, setEndDate] = useState(initialLocal(initialValues.endDate));
+  const [isOnline, setIsOnline] = useState(initialValues.isOnline ?? false);
+  const [onlineUrl, setOnlineUrl] = useState(initialValues.onlineUrl ?? "");
+  const [locationName, setLocationName] = useState(initialValues.locationName ?? "");
+  const [address, setAddress] = useState(initialValues.address ?? "");
+  const [latitude, setLatitude] = useState(
+    typeof initialValues.latitude === "number" ? String(initialValues.latitude) : "",
   );
-
-  const [
-    description,
-    setDescription,
-  ] = useState(
-    initialValues?.description ?? "",
+  const [longitude, setLongitude] = useState(
+    typeof initialValues.longitude === "number" ? String(initialValues.longitude) : "",
   );
-
-  const [
-    adminEventType,
-    setAdminEventType,
-  ] = useState<AdminEventType>(
-    getInitialAdminEventType(
-      initialValues?.category,
-    ),
+  const [capacity, setCapacity] = useState(
+    typeof initialValues.capacity === "number" ? String(initialValues.capacity) : "",
   );
-
-  const [
-    category,
-    setCategory,
-  ] = useState<EventCategory>(
-    initialValues?.category ??
-      "general",
-  );
-
-  const [
-    visibility,
-    setVisibility,
-  ] = useState<EventVisibility>(
-    initialValues?.visibility ??
-      (initialValues?.organizationId
-        ? "organization"
-        : "public"),
-  );
-
-  // ==========================================================================
-  // DATE / TIME
-  // ==========================================================================
-
-  const [
-    startDate,
-    setStartDate,
-  ] = useState(
-    initialValues?.startDate ?? "",
-  );
-
-  const [
-    endDate,
-    setEndDate,
-  ] = useState(
-    initialValues?.endDate ?? "",
-  );
-
-  // ==========================================================================
-  // LOCATION
-  // ==========================================================================
-
-  const [
-    locationName,
-    setLocationName,
-  ] = useState(
-    initialValues?.locationName ?? "",
-  );
-
-  const [
-    address,
-    setAddress,
-  ] = useState(
-    initialValues?.address ?? "",
-  );
-
-  // ==========================================================================
-  // CAPACITY
-  // ==========================================================================
-
-  const [
-    capacity,
-    setCapacity,
-  ] = useState<string>(
-    extendedInitialValues.capacity !==
-      undefined
-      ? String(
-          extendedInitialValues.capacity,
-        )
-      : "",
-  );
-
-  // ==========================================================================
-  // RSVP
-  // ==========================================================================
-
-  const [
-    requireRsvp,
-    setRequireRsvp,
-  ] = useState<boolean>(
-    extendedInitialValues.requireRsvp ??
-      false,
-  );
-
-  // ==========================================================================
-  // COVER IMAGE
-  // ==========================================================================
-
-  const [
-    coverImageUrl,
-    setCoverImageUrl,
-  ] = useState(
-    initialValues?.coverImageUrl ?? "",
-  );
-
-  const [
-    coverImageFile,
-    setCoverImageFile,
-  ] = useState<File | null>(
-    null,
-  );
-
-  const [
-    coverImagePreview,
-    setCoverImagePreview,
-  ] = useState<string>(
-    initialValues?.coverImageUrl ??
-      "",
-  );
-
-  // ==========================================================================
-  // EVENT VIDEO
-  // ==========================================================================
-
-  const [
-    eventVideoUrl,
-    setEventVideoUrl,
-  ] = useState(
-    initialValues?.eventVideoUrl ?? "",
-  );
-
-  const [
-    eventVideoFile,
-    setEventVideoFile,
-  ] = useState<File | null>(
-    null,
-  );
-
-  const [
-    eventVideoPreview,
-    setEventVideoPreview,
-  ] = useState<string>(
-    initialValues?.eventVideoUrl ??
-      "",
-  );
-
-  // ==========================================================================
-  // ONLINE EVENT
-  // ==========================================================================
-
-  const [
-    isOnline,
-    setIsOnline,
-  ] = useState(
-    initialValues?.isOnline ??
-      false,
-  );
-
-  const [
-    onlineUrl,
-    setOnlineUrl,
-  ] = useState(
-    initialValues?.onlineUrl ?? "",
-  );
-
-  // ==========================================================================
-  // FORM STATE
-  // ==========================================================================
-
-  const [
-    error,
-    setError,
-  ] = useState<string | null>(
-    null,
-  );
-
-  const [
-    saving,
-    setSaving,
-  ] = useState(false);
-
-  // ==========================================================================
-  // CLEANUP OBJECT URLS
-  // ==========================================================================
-
-  useEffect(() => {
-    return () => {
-      if (
-        coverImagePreview.startsWith(
-          "blob:",
-        )
-      ) {
-        URL.revokeObjectURL(
-          coverImagePreview,
-        );
-      }
-
-      if (
-        eventVideoPreview.startsWith(
-          "blob:",
-        )
-      ) {
-        URL.revokeObjectURL(
-          eventVideoPreview,
-        );
-      }
-    };
-  }, []);
-
-  // ==========================================================================
-  // EVENT TYPE
-  // ==========================================================================
-
-  function handleAdminEventTypeChange(
-    value: AdminEventType,
-  ) {
-    setAdminEventType(value);
-
-    const selectedType =
-      adminEventTypes.find(
-        (item) =>
-          item.value === value,
-      );
-
-    if (selectedType) {
-      setCategory(
-        selectedType.category,
-      );
-    }
-  }
-
-  // ==========================================================================
-  // COVER IMAGE FILE
-  // ==========================================================================
-
-  function handleCoverImageChange(
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) {
-    const file =
-      event.target.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
-    setError(null);
-
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-    ];
-
-    if (
-      !allowedTypes.includes(
-        file.type,
-      )
-    ) {
-      setError(
-        "Cover image must be JPG, PNG, or WebP.",
-      );
-
-      event.target.value = "";
-
-      return;
-    }
-
-    const maxSize =
-      10 * 1024 * 1024;
-
-    if (file.size > maxSize) {
-      setError(
-        "Cover image must be 10 MB or smaller.",
-      );
-
-      event.target.value = "";
-
-      return;
-    }
-
-    if (
-      coverImagePreview.startsWith(
-        "blob:",
-      )
-    ) {
-      URL.revokeObjectURL(
-        coverImagePreview,
-      );
-    }
-
-    setCoverImageFile(file);
-    setCoverImageUrl("");
-
-    const previewUrl =
-      URL.createObjectURL(file);
-
-    setCoverImagePreview(
-      previewUrl,
-    );
-  }
-
-  // ==========================================================================
-  // EVENT VIDEO FILE
-  // ==========================================================================
-
-  function handleEventVideoChange(
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) {
-    const file =
-      event.target.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
-    setError(null);
-
-    const allowedTypes = [
-      "video/mp4",
-      "video/webm",
-      "video/quicktime",
-      "video/x-msvideo",
-    ];
-
-    if (
-      !allowedTypes.includes(
-        file.type,
-      )
-    ) {
-      setError(
-        "Event video must be MP4, WebM, MOV, or AVI.",
-      );
-
-      event.target.value = "";
-
-      return;
-    }
-
-    const maxSize =
-      100 * 1024 * 1024;
-
-    if (file.size > maxSize) {
-      setError(
-        "Event video must be 100 MB or smaller.",
-      );
-
-      event.target.value = "";
-
-      return;
-    }
-
-    if (
-      eventVideoPreview.startsWith(
-        "blob:",
-      )
-    ) {
-      URL.revokeObjectURL(
-        eventVideoPreview,
-      );
-    }
-
-    setEventVideoFile(file);
-    setEventVideoUrl("");
-
-    const previewUrl =
-      URL.createObjectURL(file);
-
-    setEventVideoPreview(
-      previewUrl,
-    );
-  }
-
-  // ==========================================================================
-  // REMOVE COVER
-  // ==========================================================================
-
-  function handleRemoveCoverImage() {
-    if (
-      coverImagePreview.startsWith(
-        "blob:",
-      )
-    ) {
-      URL.revokeObjectURL(
-        coverImagePreview,
-      );
-    }
-
-    setCoverImageFile(null);
-    setCoverImagePreview("");
-    setCoverImageUrl("");
-  }
-
-  // ==========================================================================
-  // REMOVE VIDEO
-  // ==========================================================================
-
-  function handleRemoveEventVideo() {
-    if (
-      eventVideoPreview.startsWith(
-        "blob:",
-      )
-    ) {
-      URL.revokeObjectURL(
-        eventVideoPreview,
-      );
-    }
-
-    setEventVideoFile(null);
-    setEventVideoPreview("");
-    setEventVideoUrl("");
-  }
-
-  // ==========================================================================
-  // COVER URL
-  // ==========================================================================
-
-  function handleCoverImageUrlChange(
-    value: string,
-  ) {
-    setCoverImageUrl(value);
-
-    if (coverImageFile) {
-      setCoverImageFile(null);
-    }
-
-    setCoverImagePreview(
-      value.trim(),
-    );
-  }
-
-  // ==========================================================================
-  // VIDEO URL
-  // ==========================================================================
-
-  function handleEventVideoUrlChange(
-    value: string,
-  ) {
-    setEventVideoUrl(value);
-
-    if (eventVideoFile) {
-      setEventVideoFile(null);
-    }
-
-    setEventVideoPreview(
-      value.trim(),
-    );
-  }
-
-  // ==========================================================================
-  // SUBMIT
-  // ==========================================================================
-
-  async function handleSubmit(
-    event: FormEvent,
-  ) {
-    event.preventDefault();
-
-    setError(null);
-
-    // ------------------------------------------------------------------------
-    // TITLE
-    // ------------------------------------------------------------------------
-
-    if (!title.trim()) {
-      setError(
-        "Event title is required.",
-      );
-
-      return;
-    }
-
-    // ------------------------------------------------------------------------
-    // START DATE
-    // ------------------------------------------------------------------------
-
-    if (!startDate) {
-      setError(
-        "Begin date and time are required.",
-      );
-
-      return;
-    }
-
-    // ------------------------------------------------------------------------
-    // END DATE
-    // ------------------------------------------------------------------------
-
-    if (!endDate) {
-      setError(
-        "End / expiration date and time are required.",
-      );
-
-      return;
-    }
-
-    const start =
-      new Date(startDate);
-
-    const end =
-      new Date(endDate);
-
-    if (
-      Number.isNaN(
-        start.getTime(),
-      )
-    ) {
-      setError(
-        "The begin date/time is invalid.",
-      );
-
-      return;
-    }
-
-    if (
-      Number.isNaN(
-        end.getTime(),
-      )
-    ) {
-      setError(
-        "The end / expiration date/time is invalid.",
-      );
-
-      return;
-    }
-
-    if (end <= start) {
-      setError(
-        "The end date/time must be after the begin date/time.",
-      );
-
-      return;
-    }
-
-    // ------------------------------------------------------------------------
-    // CAPACITY
-    // ------------------------------------------------------------------------
-
-    let parsedCapacity:
-      | number
-      | undefined;
-
-    if (capacity.trim()) {
-      parsedCapacity =
-        Number(capacity);
-
-      if (
-        !Number.isInteger(
-          parsedCapacity,
-        ) ||
-        parsedCapacity < 1
-      ) {
-        setError(
-          "Capacity must be a whole number greater than 0.",
-        );
-
+  const [coverImageFile, setCoverImageFile] = useState<File | undefined>();
+  const [eventVideoFile, setEventVideoFile] = useState<File | undefined>();
+  const [removeCover, setRemoveCover] = useState(false);
+  const [errors, setErrors] = useState<Errors>({});
+  const [saving, setSaving] = useState(false);
+  const [preview, setPreview] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const errorRef = useRef<HTMLDivElement>(null);
+  const timeZone = viewerTimeZone();
+
+  const fileUrl = useMemo(() => {
+    const file = coverImageFile ?? eventVideoFile;
+
+    return file ? URL.createObjectURL(file) : "";
+  }, [coverImageFile, eventVideoFile]);
+
+  useEffect(() => () => {
+    if (fileUrl) URL.revokeObjectURL(fileUrl);
+  }, [fileUrl]);
+
+  const existingCover =
+    !removeCover && (initialValues.coverMediaType === "video" ? initialValues.coverVideoUrl : initialValues.coverImageUrl);
+
+  function pickFile(file: File | undefined) {
+    setErrors((current) => ({ ...current, media: undefined }));
+
+    if (!file) return;
+
+    if (IMAGE_TYPES.includes(file.type)) {
+      if (file.size > MAX_IMAGE) {
+        setErrors((current) => ({ ...current, media: "Images must be 10 MB or smaller." }));
         return;
       }
-    }
 
-    // ------------------------------------------------------------------------
-    // ONLINE URL
-    // ------------------------------------------------------------------------
-
-    if (
-      isOnline &&
-      onlineUrl.trim() &&
-      !/^https?:\/\//i.test(
-        onlineUrl.trim(),
-      )
-    ) {
-      setError(
-        "Online event URL must begin with http:// or https://.",
-      );
-
+      setCoverImageFile(file);
+      setEventVideoFile(undefined);
+      setRemoveCover(false);
       return;
     }
 
-    // ------------------------------------------------------------------------
-    // COVER URL
-    // ------------------------------------------------------------------------
+    if (VIDEO_TYPES.includes(file.type)) {
+      if (file.size > MAX_VIDEO) {
+        setErrors((current) => ({ ...current, media: "Videos must be 100 MB or smaller." }));
+        return;
+      }
 
-    if (
-      coverImageUrl.trim() &&
-      !/^https?:\/\//i.test(
-        coverImageUrl.trim(),
-      )
-    ) {
-      setError(
-        "Cover image URL must begin with http:// or https://.",
-      );
-
+      setEventVideoFile(file);
+      setCoverImageFile(undefined);
+      setRemoveCover(false);
       return;
     }
 
-    // ------------------------------------------------------------------------
-    // VIDEO URL
-    // ------------------------------------------------------------------------
+    setErrors((current) => ({ ...current, media: "Use a JPG, PNG or WebP image, or an MP4, WebM, MOV, AVI or MKV video." }));
+  }
 
-    if (
-      eventVideoUrl.trim() &&
-      !/^https?:\/\//i.test(
-        eventVideoUrl.trim(),
-      )
-    ) {
-      setError(
-        "Event video URL must begin with http:// or https://.",
-      );
-
+  function useCurrentLocation() {
+    if (!navigator.geolocation) {
+      setErrors((current) => ({ ...current, coordinates: "Location isn't available in this browser." }));
       return;
     }
 
-    // ------------------------------------------------------------------------
-    // SAVE
-    // ------------------------------------------------------------------------
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLatitude(position.coords.latitude.toFixed(6));
+        setLongitude(position.coords.longitude.toFixed(6));
+        setLocating(false);
+      },
+      () => {
+        setErrors((current) => ({ ...current, coordinates: "Couldn't get your location. You can type coordinates instead." }));
+        setLocating(false);
+      },
+      { timeout: 15_000 },
+    );
+  }
+
+  function validate(): Errors {
+    const next: Errors = {};
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+
+    if (title.trim().length < 2) next.title = "Give your event a title (at least 2 characters).";
+    if (!startDate || Number.isNaN(start)) next.startDate = "Choose when the event starts.";
+    if (!endDate || Number.isNaN(end)) next.endDate = "Choose when the event ends.";
+    else if (!Number.isNaN(start) && end <= start) next.endDate = "The end must be after the start.";
+    else if (end - start > 90 * 86_400_000) next.endDate = "An event can last at most 90 days.";
+    else if (end <= Date.now() && (mode === "create" || endDate !== initialLocal(initialValues.endDate))) {
+      next.endDate = "The end time is already in the past.";
+    }
+
+    if (isOnline) {
+      if (!/^https?:\/\/\S+\.\S+/i.test(onlineUrl.trim())) next.onlineUrl = "Add a meeting link starting with https://";
+    } else {
+      if (!locationName.trim() && !address.trim()) next.place = "Add a venue name or an address.";
+
+      const lat = numberOrNull(latitude);
+      const lng = numberOrNull(longitude);
+
+      if ((lat === null) !== (lng === null)) next.coordinates = "Enter both latitude and longitude, or neither.";
+      else if (lat !== null && (Number.isNaN(lat) || lat < -90 || lat > 90)) next.coordinates = "Latitude must be between -90 and 90.";
+      else if (lng !== null && (Number.isNaN(lng) || lng < -180 || lng > 180)) next.coordinates = "Longitude must be between -180 and 180.";
+    }
+
+    if (capacity.trim()) {
+      const value = Number(capacity);
+
+      if (!Number.isInteger(value) || value < 1) next.capacity = "Capacity must be a whole number of at least 1.";
+    }
+
+    return next;
+  }
+
+  function values(): CreateEventInput {
+    const lat = numberOrNull(latitude);
+    const lng = numberOrNull(longitude);
+
+    return {
+      title: title.trim(),
+      description: description.trim(),
+      category,
+      visibility,
+      startDate: fromLocalInputValue(startDate),
+      endDate: fromLocalInputValue(endDate),
+      timeZone,
+      isOnline,
+      onlineUrl: isOnline ? onlineUrl.trim() : "",
+      locationName: isOnline ? "" : locationName.trim(),
+      address: isOnline ? "" : address.trim(),
+      latitude: isOnline ? null : lat,
+      longitude: isOnline ? null : lng,
+      capacity: capacity.trim() ? Number(capacity) : null,
+      coverImageFile,
+      eventVideoFile,
+      ...(removeCover && !coverImageFile && !eventVideoFile ? { coverImageUrl: "" } : {}),
+    };
+  }
+
+  async function submit(formEvent: FormEvent) {
+    formEvent.preventDefault();
+
+    const found = validate();
+
+    setErrors(found);
+
+    if (Object.keys(found).length) {
+      window.requestAnimationFrame(() => errorRef.current?.focus());
+      return;
+    }
 
     setSaving(true);
 
     try {
-      const values: ExtendedEventFormValues =
-        {
-          title:
-            title.trim(),
-
-          description:
-            description.trim() ||
-            undefined,
-
-          category,
-
-          visibility,
-
-          organizationId:
-            initialValues?.organizationId,
-
-          startDate:
-            start.toISOString(),
-
-          endDate:
-            end.toISOString(),
-
-          locationName:
-            locationName.trim() ||
-            undefined,
-
-          address:
-            address.trim() ||
-            undefined,
-
-          isOnline,
-
-          onlineUrl:
-            onlineUrl.trim() ||
-            undefined,
-
-          coverImageUrl:
-            coverImageUrl.trim() ||
-            undefined,
-
-          coverImageFile:
-            coverImageFile ||
-            undefined,
-
-          eventVideoUrl:
-            eventVideoUrl.trim() ||
-            undefined,
-
-          eventVideoFile:
-            eventVideoFile ||
-            undefined,
-
-          capacity:
-            parsedCapacity,
-
-          requireRsvp,
-        };
-
-      await onSubmit(
-        values as CreateEventInput,
-      );
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to save event.",
-      );
+      await onSubmit(values());
+    } catch (caught) {
+      setErrors({ form: caught instanceof Error ? caught.message : "Unable to save the event." });
+      window.requestAnimationFrame(() => errorRef.current?.focus());
     } finally {
       setSaving(false);
     }
   }
 
-  // ==========================================================================
-  // RENDER
-  // ==========================================================================
+  const previewEvent: FockisEvent = {
+    id: "preview",
+    creatorId: "",
+    organizer: null,
+    title: title.trim() || "Your event title",
+    description,
+    category,
+    visibility,
+    startDate: fromLocalInputValue(startDate) || new Date(Date.now() + 86_400_000).toISOString(),
+    endDate: fromLocalInputValue(endDate) || new Date(Date.now() + 90_000_000).toISOString(),
+    timeZone,
+    locationName,
+    address,
+    isOnline,
+    coverImageUrl: coverImageFile ? fileUrl : !eventVideoFile && !removeCover ? initialValues.coverImageUrl ?? "" : "",
+    coverVideoUrl: eventVideoFile ? fileUrl : !coverImageFile && !removeCover ? initialValues.coverVideoUrl ?? "" : "",
+    coverMediaType: eventVideoFile ? "video" : coverImageFile ? "image" : initialValues.coverMediaType ?? "image",
+    attendeeCount: 1,
+    interestedCount: 0,
+    capacity: capacity ? Number(capacity) || null : null,
+    spotsLeft: null,
+    isFull: false,
+    isGoing: true,
+    isInterested: false,
+    isInvited: false,
+    viewerRsvp: "going",
+    isOwner: true,
+    status: "upcoming",
+    isCancelled: false,
+    cancelledAt: null,
+    canRsvp: false,
+    createdAt: "",
+    updatedAt: "",
+  };
+
+  const errorList = Object.values(errors).filter(Boolean);
 
   return (
-    <form
-      className="fk-event-form"
-      onSubmit={handleSubmit}
-    >
-      {/* ====================================================================
-          ADMIN CONSOLE HEADER
-      ==================================================================== */}
-
-      <div className="fk-event-admin-header">
+    <form className="fke-form" onSubmit={submit} noValidate>
+      <header className="fke-form__header">
         <div>
-          <span className="fk-event-admin-eyebrow">
-            ADMIN CONSOLE
-          </span>
-
-          <h2>
-            Events, Live &amp; Attendance
-          </h2>
-
-          <p>
-            Create and manage events,
-            livestreams, and attendance.
-          </p>
+          <span className="fke-eyebrow">{mode === "edit" ? "Edit event" : "New event"}</span>
+          <h1>{submitLabel}</h1>
+          {organizationName && <p>For {organizationName}</p>}
         </div>
+        <button type="button" className="fke-btn fke-btn--ghost" onClick={() => setPreview((value) => !value)} aria-pressed={preview}>
+          {preview ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
+          {preview ? "Hide preview" : "Preview"}
+        </button>
+      </header>
 
-        <nav
-          className="fk-event-admin-tabs"
-          aria-label="Organization administration"
-        >
-          <span className="active">
-            Events
-          </span>
-
-          <span>
-            Live
-          </span>
-
-          <span>
-            Attendance
-          </span>
-        </nav>
-      </div>
-
-      {/* ====================================================================
-          CREATE EVENT HEADER
-      ==================================================================== */}
-
-      <div className="fk-event-create-heading">
-        <div>
-          <span className="fk-event-eyebrow">
-            {organizationName
-              ? "ORGANIZATION EVENT"
-              : "FOCKIS EVENT"}
-          </span>
-
-          <h1>
-            Create event
-          </h1>
-
-          <p>
-            Create an event for your
-            organization and let people
-            know what is happening.
-          </p>
-        </div>
-      </div>
-
-      {/* ====================================================================
-          ORGANIZATION CONTEXT
-      ==================================================================== */}
-
-      {organizationName && (
-        <div className="fk-event-organization-context">
-          <span aria-hidden="true">
-            🏛️
-          </span>
-
-          <div>
-            <strong>
-              Organization Event
-            </strong>
-
-            <small>
-              {organizationName}
-            </small>
-          </div>
+      {errorList.length > 0 && (
+        <div className="fke-form__errors" role="alert" tabIndex={-1} ref={errorRef}>
+          <strong>Please check the following:</strong>
+          <ul>
+            {errorList.map((message) => (
+              <li key={message}>{message}</li>
+            ))}
+          </ul>
         </div>
       )}
 
-      {/* ====================================================================
-          ERROR
-      ==================================================================== */}
-
-      {error && (
-        <div
-          className="fk-event-form-error"
-          role="alert"
-        >
-          {error}
+      {preview && (
+        <div className="fke-form__preview" aria-label="Preview">
+          <EventCard event={previewEvent} onOpen={() => undefined} footer={<span className="fke-muted">Preview</span>} />
         </div>
       )}
 
-      {/* ====================================================================
-          TITLE
-      ==================================================================== */}
-
-      <div className="fk-event-field">
-        <label htmlFor="event-title">
-          Title{" "}
-          <span aria-hidden="true">
-            *
-          </span>
+      <section className="fke-form__section">
+        <label className="fke-field">
+          <span>Event title</span>
+          <input
+            required
+            minLength={2}
+            maxLength={150}
+            value={title}
+            onChange={(changeEvent) => setTitle(changeEvent.target.value)}
+            placeholder="Give your event a name"
+            aria-invalid={Boolean(errors.title) || undefined}
+          />
+          {errors.title && <small className="fke-error-text">{errors.title}</small>}
         </label>
 
-        <input
-          id="event-title"
-          value={title}
-          onChange={(e) =>
-            setTitle(
-              e.target.value,
-            )
-          }
-          placeholder="Summer Festival"
-          maxLength={150}
-          required
-          disabled={saving}
-        />
-      </div>
-
-      {/* ====================================================================
-          TYPE
-      ==================================================================== */}
-
-      <div className="fk-event-field">
-        <label htmlFor="event-type">
-          Type
+        <label className="fke-field">
+          <span>Description</span>
+          <textarea
+            maxLength={5000}
+            rows={5}
+            value={description}
+            onChange={(changeEvent) => setDescription(changeEvent.target.value)}
+            placeholder="What should people know? Agenda, what to bring, who it's for…"
+          />
+          <small className="fke-muted">{description.length.toLocaleString()} / 5,000</small>
         </label>
 
-        <select
-          id="event-type"
-          value={adminEventType}
-          onChange={(e) =>
-            handleAdminEventTypeChange(
-              e.target
-                .value as AdminEventType,
-            )
-          }
-          disabled={saving}
-        >
-          {adminEventTypes.map(
-            (item) => (
-              <option
-                key={item.value}
-                value={item.value}
-              >
+        <label className="fke-field">
+          <span>Category</span>
+          <select value={category} onChange={(changeEvent) => setCategory(changeEvent.target.value as EventCategory)}>
+            {EVENT_CATEGORIES.map((item) => (
+              <option key={item.value} value={item.value}>
                 {item.label}
               </option>
-            ),
-          )}
-        </select>
-      </div>
-
-      {/* ====================================================================
-          CATEGORY + VISIBILITY
-      ==================================================================== */}
-
-      <div className="fk-event-two-columns">
-        <div className="fk-event-field">
-          <label htmlFor="event-category">
-            Category
-          </label>
-
-          <select
-            id="event-category"
-            value={category}
-            onChange={(e) =>
-              setCategory(
-                e.target
-                  .value as EventCategory,
-              )
-            }
-            disabled={saving}
-          >
-            {categories.map(
-              (item) => (
-                <option
-                  key={item}
-                  value={item}
-                >
-                  {formatCategory(
-                    item,
-                  )}
-                </option>
-              ),
-            )}
+            ))}
           </select>
-        </div>
-
-        <div className="fk-event-field">
-          <label htmlFor="event-visibility">
-            Visibility
-          </label>
-
-          <select
-            id="event-visibility"
-            value={visibility}
-            onChange={(e) =>
-              setVisibility(
-                e.target
-                  .value as EventVisibility,
-              )
-            }
-            disabled={saving}
-          >
-            <option value="public">
-              Public
-            </option>
-
-            <option value="organization">
-              Organization
-            </option>
-
-            <option value="friends">
-              Friends
-            </option>
-
-            <option value="private">
-              Private
-            </option>
-          </select>
-        </div>
-      </div>
-
-      {/* ====================================================================
-          SCHEDULE
-      ==================================================================== */}
-
-      <div className="fk-event-section-heading">
-        <h3>
-          Schedule
-        </h3>
-
-        <p>
-          Choose when the event begins
-          and ends.
-        </p>
-      </div>
-
-      <EventDateTimeFields
-        startDate={startDate}
-        endDate={endDate}
-        onStartChange={
-          setStartDate
-        }
-        onEndChange={
-          setEndDate
-        }
-      />
-
-      {/* ====================================================================
-          LOCATION
-      ==================================================================== */}
-
-      <div className="fk-event-section-heading">
-        <h3>
-          Location
-        </h3>
-
-        <p>
-          Tell attendees where the
-          event will take place.
-        </p>
-      </div>
-
-      <div className="fk-event-online-toggle">
-        <label>
-          <input
-            type="checkbox"
-            checked={isOnline}
-            onChange={(e) =>
-              setIsOnline(
-                e.target.checked,
-              )
-            }
-            disabled={saving}
-          />
-
-          <span>
-            This is an online event
-          </span>
         </label>
-      </div>
+      </section>
 
-      {isOnline ? (
-        <div className="fk-event-field">
-          <label htmlFor="event-online-url">
-            Online event URL
-          </label>
+      <section className="fke-form__section">
+        <EventDateTimeFields
+          startDate={startDate}
+          endDate={endDate}
+          onStartChange={(value) => {
+            setStartDate(value);
 
-          <input
-            id="event-online-url"
-            type="url"
-            value={onlineUrl}
-            onChange={(e) =>
-              setOnlineUrl(
-                e.target.value,
-              )
+            // Keep the end after the start: default to a 2-hour event.
+            const start = new Date(value).getTime();
+            const end = new Date(endDate).getTime();
+
+            if (!Number.isNaN(start) && (!endDate || Number.isNaN(end) || end <= start)) {
+              setEndDate(toLocalInputValue(new Date(start + 2 * 3_600_000).toISOString()));
             }
-            placeholder="https://..."
-            disabled={saving}
-          />
-        </div>
-      ) : (
-        <>
-          <div className="fk-event-field">
-            <label htmlFor="event-location">
-              Location
-            </label>
-
-            <input
-              id="event-location"
-              value={locationName}
-              onChange={(e) =>
-                setLocationName(
-                  e.target.value,
-                )
-              }
-              placeholder="Ohio Stadium"
-              disabled={saving}
-            />
-          </div>
-
-          <div className="fk-event-field">
-            <label htmlFor="event-address">
-              Address
-            </label>
-
-            <input
-              id="event-address"
-              value={address}
-              onChange={(e) =>
-                setAddress(
-                  e.target.value,
-                )
-              }
-              placeholder="411 Woody Hayes Dr, Columbus, OH"
-              disabled={saving}
-            />
-          </div>
-        </>
-      )}
-
-      {/* ====================================================================
-          CAPACITY + RSVP
-      ==================================================================== */}
-
-      <div className="fk-event-two-columns">
-        <div className="fk-event-field">
-          <label htmlFor="event-capacity">
-            Capacity
-          </label>
-
-          <input
-            id="event-capacity"
-            type="number"
-            min="1"
-            step="1"
-            value={capacity}
-            onChange={(e) =>
-              setCapacity(
-                e.target.value,
-              )
-            }
-            placeholder="Unlimited"
-            disabled={saving}
-          />
-
-          <p className="fk-event-help-text">
-            Leave blank for unlimited
-            attendance.
-          </p>
-        </div>
-
-        <div className="fk-event-field fk-event-rsvp-field">
-          <label>
-            RSVP
-          </label>
-
-          <label className="fk-event-checkbox-card">
-            <input
-              type="checkbox"
-              checked={requireRsvp}
-              onChange={(e) =>
-                setRequireRsvp(
-                  e.target.checked,
-                )
-              }
-              disabled={saving}
-            />
-
-            <span>
-              <strong>
-                Require RSVP
-              </strong>
-
-              <small>
-                Attendees must RSVP
-                before attending.
-              </small>
-            </span>
-          </label>
-        </div>
-      </div>
-
-      {/* ====================================================================
-          DESCRIPTION
-      ==================================================================== */}
-
-      <div className="fk-event-field">
-        <label htmlFor="event-description">
-          Description
-        </label>
-
-        <textarea
-          id="event-description"
-          value={description}
-          onChange={(e) =>
-            setDescription(
-              e.target.value,
-            )
-          }
-          placeholder={
-            organizationName
-              ? "Tell people about this organization event..."
-              : "Tell people about your event..."
-          }
-          rows={5}
-          maxLength={5000}
-          disabled={saving}
+          }}
+          onEndChange={setEndDate}
+          errors={{ startDate: errors.startDate, endDate: errors.endDate }}
+          timeZoneLabel={timeZone}
         />
+      </section>
 
-        <p className="fk-event-help-text">
-          Add details, instructions,
-          speakers, activities, or
-          anything attendees should know.
-        </p>
-      </div>
+      <section className="fke-form__section">
+        <fieldset className="fke-fieldset">
+          <legend>Where</legend>
+          <div className="fke-segmented" role="radiogroup" aria-label="Event format">
+            <button type="button" role="radio" aria-checked={!isOnline} className={!isOnline ? "is-active" : ""} onClick={() => setIsOnline(false)}>
+              <MapPin size={16} aria-hidden="true" /> In person
+            </button>
+            <button type="button" role="radio" aria-checked={isOnline} className={isOnline ? "is-active" : ""} onClick={() => setIsOnline(true)}>
+              <Globe size={16} aria-hidden="true" /> Online
+            </button>
+          </div>
 
-      {/* ====================================================================
-          COVER IMAGE
-      ==================================================================== */}
+          {isOnline ? (
+            <label className="fke-field">
+              <span>Meeting link</span>
+              <input
+                type="url"
+                inputMode="url"
+                placeholder="https://"
+                value={onlineUrl}
+                onChange={(changeEvent) => setOnlineUrl(changeEvent.target.value)}
+                aria-invalid={Boolean(errors.onlineUrl) || undefined}
+              />
+              <small className="fke-muted">Only shown to people who are going or interested.</small>
+              {errors.onlineUrl && <small className="fke-error-text">{errors.onlineUrl}</small>}
+            </label>
+          ) : (
+            <>
+              <div className="fke-form-grid">
+                <label className="fke-field">
+                  <span>Venue</span>
+                  <input maxLength={255} value={locationName} onChange={(changeEvent) => setLocationName(changeEvent.target.value)} placeholder="Venue or place name" />
+                </label>
+                <label className="fke-field">
+                  <span>Address</span>
+                  <input maxLength={500} value={address} onChange={(changeEvent) => setAddress(changeEvent.target.value)} placeholder="Street, city" />
+                </label>
+              </div>
+              {errors.place && <small className="fke-error-text">{errors.place}</small>}
 
-      <div className="fk-event-cover-section">
-        <div className="fk-event-field">
-          <label>
-            Cover image
-          </label>
-
-          <p className="fk-event-help-text">
-            JPG, PNG, or WebP.
-            Maximum 10 MB.
-          </p>
-
-          <label className="fk-event-file-button">
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={
-                handleCoverImageChange
-              }
-              disabled={saving}
-              hidden
-            />
-
-            <span>
-              📷 Choose Cover Image
-            </span>
-          </label>
-
-          {coverImageFile && (
-            <div className="fk-event-selected-file">
-              <span>
-                {
-                  coverImageFile.name
-                }
-              </span>
-
-              <span>
-                {(
-                  coverImageFile.size /
-                  1024 /
-                  1024
-                ).toFixed(2)}{" "}
-                MB
-              </span>
-            </div>
+              <details className="fke-disclosure" open={Boolean(latitude || longitude)}>
+                <summary>Pin the exact location (optional, enables “Nearby”)</summary>
+                <div className="fke-form-grid fke-form-grid--3">
+                  <label className="fke-field">
+                    <span>Latitude</span>
+                    <input inputMode="decimal" value={latitude} onChange={(changeEvent) => setLatitude(changeEvent.target.value)} placeholder="18.5392" />
+                  </label>
+                  <label className="fke-field">
+                    <span>Longitude</span>
+                    <input inputMode="decimal" value={longitude} onChange={(changeEvent) => setLongitude(changeEvent.target.value)} placeholder="-72.3350" />
+                  </label>
+                  <button type="button" className="fke-btn fke-btn--ghost fke-form__locate" onClick={useCurrentLocation} disabled={locating}>
+                    <LocateFixed size={16} aria-hidden="true" />
+                    {locating ? "Locating…" : "Use current location"}
+                  </button>
+                </div>
+                {errors.coordinates && <small className="fke-error-text">{errors.coordinates}</small>}
+              </details>
+            </>
           )}
+        </fieldset>
+      </section>
 
-          <div className="fk-event-cover-divider">
-            <span>
-              OR
-            </span>
-          </div>
+      <section className="fke-form__section">
+        <fieldset className="fke-fieldset">
+          <legend>Cover</legend>
 
-          <input
-            type="url"
-            value={coverImageUrl}
-            onChange={(e) =>
-              handleCoverImageUrlChange(
-                e.target.value,
-              )
-            }
-            placeholder="https://example.com/event-image.jpg"
-            disabled={
-              saving ||
-              Boolean(
-                coverImageFile,
-              )
-            }
-          />
-        </div>
-
-        {coverImagePreview && (
-          <div className="fk-event-cover-preview">
-            <div className="fk-event-cover-preview-header">
-              <span>
-                Cover preview
-              </span>
-
-              <button
-                type="button"
-                onClick={
-                  handleRemoveCoverImage
-                }
-                disabled={saving}
-                className="fk-event-remove-image"
-              >
-                Remove
-              </button>
-            </div>
-
-            <img
-              src={
-                coverImagePreview
-              }
-              alt="Event cover preview"
-              onError={() =>
-                setError(
-                  "Unable to load the cover image. Check the image URL.",
-                )
-              }
-            />
-          </div>
-        )}
-      </div>
-
-      {/* ====================================================================
-          EVENT VIDEO
-      ==================================================================== */}
-
-      <div className="fk-event-video-section">
-        <div className="fk-event-field">
-          <label>
-            Event video
-          </label>
-
-          <p className="fk-event-help-text">
-            Upload an MP4, WebM, MOV,
-            or AVI video.
-            Maximum 100 MB.
-          </p>
-
-          <label className="fk-event-file-button">
-            <input
-              type="file"
-              accept="video/mp4,video/webm,video/quicktime,video/x-msvideo"
-              onChange={
-                handleEventVideoChange
-              }
-              disabled={saving}
-              hidden
-            />
-
-            <span>
-              🎥 Choose Event Video
-            </span>
-          </label>
-
-          {eventVideoFile && (
-            <div className="fk-event-selected-file">
-              <span>
-                {
-                  eventVideoFile.name
-                }
-              </span>
-
-              <span>
-                {(
-                  eventVideoFile.size /
-                  1024 /
-                  1024
-                ).toFixed(2)}{" "}
-                MB
-              </span>
-            </div>
-          )}
-
-          <div className="fk-event-cover-divider">
-            <span>
-              OR
-            </span>
-          </div>
-
-          <input
-            type="url"
-            value={eventVideoUrl}
-            onChange={(e) =>
-              handleEventVideoUrlChange(
-                e.target.value,
-              )
-            }
-            placeholder="https://example.com/event-video.mp4"
-            disabled={
-              saving ||
-              Boolean(
-                eventVideoFile,
-              )
-            }
-          />
-        </div>
-
-        {eventVideoPreview && (
-          <div className="fk-event-video-preview">
-            <div className="fk-event-cover-preview-header">
-              <span>
-                Video preview
-              </span>
-
-              <button
-                type="button"
-                onClick={
-                  handleRemoveEventVideo
-                }
-                disabled={saving}
-                className="fk-event-remove-image"
-              >
-                Remove
-              </button>
-            </div>
-
-            <video
-              src={
-                eventVideoPreview
-              }
-              controls
-              playsInline
-              preload="metadata"
-              className="fk-event-video-player"
-            />
-
-            {eventVideoFile && (
-              <small className="fk-event-help-text">
-                Video will be
-                uploaded when
-                you save the
-                event.
-              </small>
+          <div className="fke-upload">
+            {fileUrl || existingCover ? (
+              <div className="fke-upload__preview">
+                {(eventVideoFile || (!coverImageFile && initialValues.coverMediaType === "video" && existingCover)) ? (
+                  <video src={fileUrl || eventMediaUrl(existingCover || "")} muted playsInline preload="metadata" controls />
+                ) : (
+                  <img src={fileUrl || eventMediaUrl(existingCover || "")} alt="Cover preview" />
+                )}
+                <button
+                  type="button"
+                  className="fke-btn fke-btn--ghost"
+                  onClick={() => {
+                    setCoverImageFile(undefined);
+                    setEventVideoFile(undefined);
+                    setRemoveCover(Boolean(initialValues.coverImageUrl || initialValues.coverVideoUrl));
+                  }}
+                >
+                  <Trash2 size={16} aria-hidden="true" /> Remove
+                </button>
+              </div>
+            ) : (
+              <label className="fke-upload__drop">
+                <input
+                  type="file"
+                  accept={[...IMAGE_TYPES, ...VIDEO_TYPES].join(",")}
+                  onChange={(changeEvent) => {
+                    pickFile(changeEvent.target.files?.[0]);
+                    changeEvent.target.value = "";
+                  }}
+                />
+                <span className="fke-upload__icons" aria-hidden="true">
+                  <ImagePlus size={22} />
+                  <Video size={22} />
+                </span>
+                <strong>Add a cover image or video</strong>
+                <small>Images up to 10 MB (JPG, PNG, WebP) · Videos up to 100 MB</small>
+              </label>
             )}
           </div>
-        )}
-      </div>
+          {errors.media && <small className="fke-error-text">{errors.media}</small>}
+        </fieldset>
+      </section>
 
-      {/* ====================================================================
-          ACTIONS
-      ==================================================================== */}
+      <section className="fke-form__section">
+        <fieldset className="fke-fieldset">
+          <legend>Privacy & capacity</legend>
+          <div className="fke-choice-grid" role="radiogroup" aria-label="Visibility">
+            {VISIBILITY.map((option) => (
+              <button
+                type="button"
+                role="radio"
+                aria-checked={visibility === option.value}
+                key={option.value}
+                className={`fke-choice ${visibility === option.value ? "is-active" : ""}`}
+                onClick={() => setVisibility(option.value)}
+              >
+                <option.icon size={18} aria-hidden="true" />
+                <strong>{option.label}</strong>
+                <small>{option.hint}</small>
+              </button>
+            ))}
+          </div>
+          {visibility === "organization" && (
+            <p className="fke-muted">This event uses organization visibility: only invited people and participants can see it.</p>
+          )}
 
-      <div className="fk-event-form-actions">
+          <label className="fke-field fke-field--narrow">
+            <span>Capacity (optional)</span>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              inputMode="numeric"
+              value={capacity}
+              onChange={(changeEvent) => setCapacity(changeEvent.target.value)}
+              placeholder="Unlimited"
+              aria-invalid={Boolean(errors.capacity) || undefined}
+            />
+            {errors.capacity && <small className="fke-error-text">{errors.capacity}</small>}
+          </label>
+        </fieldset>
+      </section>
+
+      <div className="fke-form__actions">
         {onCancel && (
-          <button
-            type="button"
-            className="fk-event-button secondary"
-            onClick={onCancel}
-            disabled={saving}
-          >
+          <button type="button" className="fke-btn fke-btn--ghost" onClick={onCancel} disabled={saving}>
             Cancel
           </button>
         )}
-
-        <button
-          type="submit"
-          className="fk-event-button primary"
-          disabled={saving}
-        >
-          {saving
-            ? "Saving..."
-            : submitLabel}
+        <button type="submit" className="fke-btn fke-btn--primary fke-btn--lg" disabled={saving}>
+          {saving ? "Saving…" : submitLabel}
         </button>
       </div>
     </form>

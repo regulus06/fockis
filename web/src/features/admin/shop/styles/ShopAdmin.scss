@@ -1,1 +1,201 @@
-.shop-admin-shell{display:flex;min-height:100vh;background:#f6f8fb;color:#111827}.shop-admin-sidebar{width:250px;background:#07111f;color:#fff;padding:24px 14px}.shop-admin-brand{padding:4px 12px 24px;display:flex;flex-direction:column;gap:3px}.shop-admin-brand strong{font-size:22px}.shop-admin-brand span{font-size:10px;letter-spacing:.16em;opacity:.65}.shop-admin-sidebar nav{display:grid;gap:5px}.shop-admin-sidebar a{color:#aeb8c7;text-decoration:none;padding:11px 12px;border-radius:9px}.shop-admin-sidebar a.active,.shop-admin-sidebar a:hover{background:#17304e;color:#fff}.shop-admin-main{flex:1;min-width:0}.shop-admin-main>header{height:76px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;padding:0 32px}.shop-admin-main header span{font-size:12px;color:#6b7280}.shop-admin-main h1{font-size:20px;margin:3px 0 0}.admin-pill{padding:7px 11px;border:1px solid #dbe3ee;border-radius:999px;color:#1f3b5b!important}.shop-admin-page{padding:32px}.page-title span{font-size:11px;letter-spacing:.14em;color:#64748b}.page-title h2{font-size:30px;margin:7px 0}.page-title p{color:#64748b;margin-top:0}.stat-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px;margin:26px 0}.stat-card,.admin-panel{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:20px;box-shadow:0 4px 18px rgba(15,23,42,.04)}.stat-card span{display:block;color:#64748b;font-size:13px}.stat-card strong{display:block;font-size:28px;margin-top:10px}.admin-panel{overflow:auto}.admin-panel table{width:100%;border-collapse:collapse}.admin-panel th,.admin-panel td{text-align:left;padding:13px;border-bottom:1px solid #edf0f4;white-space:nowrap}.admin-panel button{border:1px solid #d5dce5;background:#fff;border-radius:7px;padding:7px 9px;margin-right:5px;cursor:pointer}.admin-panel button:hover{background:#f1f5f9}.admin-error{background:#fff0f0;border:1px solid #fecaca;padding:14px;border-radius:10px}.admin-loading{padding:30px;color:#64748b}@media(max-width:900px){.shop-admin-sidebar{width:190px}.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:650px){.shop-admin-sidebar{display:none}.shop-admin-page{padding:18px}.stat-grid{grid-template-columns:1fr}.shop-admin-main>header{padding:0 18px}}
+/* ============================================================================
+   MARKETPLACE (FOCKIS SHOP ADMIN)
+   All rules are scoped to .shop-admin-shell — the previous file defined
+   global .stat-card / .stat-grid / .admin-panel / .page-title classes that
+   could leak into other pages.
+============================================================================ */
+
+.shop-admin-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  color: var(--fk-text-primary, #10243d);
+
+  .fk-page-header {
+    margin-bottom: 0;
+  }
+
+  .shop-admin-alert {
+    padding: 12px 16px;
+    color: var(--fk-warning, #c27c0e);
+    background: var(--fk-warning-dim, #fdf3e1);
+    border: 1px solid rgba(194, 124, 14, 0.22);
+    border-radius: 8px;
+    font-size: 13.5px;
+  }
+
+  .shop-admin-kpis {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+
+    @media (max-width: 1199.98px) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    @media (max-width: 767.98px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (max-width: 420px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .shop-admin-panel {
+    overflow: hidden;
+  }
+
+  .shop-admin-tabs {
+    padding: 16px 18px 0;
+  }
+
+  .shop-admin-page {
+    min-width: 0;
+    padding: 16px 18px 18px;
+  }
+
+  .shop-admin-toolbar {
+    margin-bottom: 14px;
+  }
+
+  .shop-admin-table {
+    border-radius: 10px;
+  }
+
+  .fk-table__pagination {
+    border-top: 0;
+    padding: 12px 0 0;
+  }
+
+  /* overview */
+  .shop-admin-intro {
+    margin-bottom: 12px;
+
+    h2 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    p {
+      margin: 4px 0 0;
+      color: var(--fk-text-secondary, #718096);
+      font-size: 13.5px;
+    }
+  }
+
+  .shop-admin-steps {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    @media (max-width: 767.98px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .shop-admin-step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 100%;
+    padding: 14px 16px;
+
+    color: inherit;
+    border: 1px solid var(--fk-border, #e4eaf1);
+    border-radius: 10px;
+    text-decoration: none;
+
+    transition: background 120ms ease, border-color 120ms ease;
+
+    &:hover {
+      background: var(--fk-bg-subtle, #f8fafc);
+      border-color: var(--fk-border-strong, #d3dce7);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--fk-accent, #b8862f);
+      outline-offset: 2px;
+    }
+  }
+
+  .shop-admin-step__icon {
+    display: grid;
+    flex: 0 0 38px;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    color: #ffffff;
+    background: linear-gradient(180deg, #d5a343 0%, #b8862f 100%);
+    border-radius: 8px;
+  }
+
+  .shop-admin-step__text {
+    flex: 1;
+    min-width: 0;
+
+    strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    span {
+      display: block;
+      margin-top: 2px;
+      color: var(--fk-text-secondary, #718096);
+      font-size: 12.5px;
+    }
+  }
+
+  .shop-admin-step__chevron {
+    flex: 0 0 auto;
+    color: var(--fk-text-secondary, #718096);
+  }
+
+  /* legacy markup still used by ShopAdminPlaceholderPage */
+  .page-title {
+    margin-bottom: 14px;
+
+    span {
+      color: var(--fk-text-secondary, #718096);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+    }
+
+    h2 {
+      margin: 4px 0;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    p {
+      margin: 0;
+      color: var(--fk-text-secondary, #718096);
+      font-size: 13.5px;
+    }
+  }
+
+  .admin-panel {
+    padding: 16px 18px;
+    background: var(--fk-bg-subtle, #f8fafc);
+    border: 1px solid var(--fk-border, #e4eaf1);
+    border-radius: 10px;
+
+    h3 {
+      margin: 0 0 6px;
+      font-size: 15px;
+    }
+
+    p {
+      margin: 0;
+      color: var(--fk-text-secondary, #718096);
+      font-size: 13.5px;
+    }
+  }
+}

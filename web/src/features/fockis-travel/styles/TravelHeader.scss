@@ -1,266 +1,431 @@
-// =========================================================
-// Fockis Travel — TravelHeader.scss
-// Styles for components/TravelHeader.tsx
-// =========================================================
+@use "./travel-ui" as ui;
 
-@use "./fockis-tokens" as fockis;
+@include ui.shield(".ft-header, .ft-drawer");
 
-.travel-header {
+// =============================================================================
+// Fockis Travel — header (components/TravelHeader.tsx)
+// White bar, Fockis blue accents, compact height (reference design).
+// =============================================================================
+
+.ft-header {
   position: sticky;
   top: 0;
-  z-index: 50;
-  background: fockis.$navy-900;
-  border-bottom: 1px solid fockis.$navy-700;
-  font-family: fockis.$font-body;
+  z-index: 60;
+  border-bottom: 1px solid ui.$line;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: saturate(1.4) blur(10px);
+  font-family: ui.$font;
 
   &__inner {
-    @include fockis.wrap;
-
+    @include ui.wrap;
     display: flex;
     align-items: center;
-    gap: 32px;
+    gap: 28px;
     height: 68px;
   }
 
-  // ---------------------------------------------------------
-  // Logo
-  // ---------------------------------------------------------
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    font-family: fockis.$font-display;
-    font-size: 1.15rem;
-    font-weight: 700;
-
-    color: fockis.$text-on-dark;
+  &__brand {
+    flex-shrink: 0;
+    border-radius: ui.$radius-sm;
     text-decoration: none;
-    white-space: nowrap;
 
-    small {
-      margin-left: 2px;
-
-      font-family: fockis.$font-body;
-      font-size: 0.62rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-
-      color: fockis.$gold-500;
-    }
-
-    .logo-mark {
-      width: 26px;
-      height: 26px;
-      flex-shrink: 0;
-
-      border-radius: fockis.$radius-sm;
-
-      background: linear-gradient(
-        135deg,
-        fockis.$gold-500,
-        fockis.$gold-600
-      );
-    }
+    @include ui.focus-ring;
   }
 
-  // ---------------------------------------------------------
-  // Primary navigation
-  // ---------------------------------------------------------
-
+  // ------------------------------------------------------------- primary nav
   &__nav {
     display: flex;
-    align-items: center;
-    gap: 22px;
     flex: 1;
-
-    @include fockis.bp-down(fockis.$bp-lg) {
-      display: none;
-    }
-
-    a {
-      padding: 6px 2px;
-
-      font-size: 0.9rem;
-      font-weight: 500;
-
-      color: fockis.$text-on-dark-muted;
-      text-decoration: none;
-
-      border-bottom: 2px solid transparent;
-
-      transition:
-        color 0.15s ease,
-        border-color 0.15s ease;
-
-      &:hover {
-        color: fockis.$text-on-dark;
-      }
-
-      &.is-active {
-        color: fockis.$text-on-dark;
-        border-bottom-color: fockis.$gold-500;
-      }
-    }
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
   }
 
-  // ---------------------------------------------------------
-  // Right-hand actions
-  // ---------------------------------------------------------
+  &__link {
+    position: relative;
+    padding: 8px 10px;
+    border-radius: ui.$radius-sm;
+    color: ui.$ink-2;
+    font: 500 14px/1.2 ui.$font;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.15s ease, background-color 0.15s ease;
 
+    &:hover {
+      color: ui.$blue;
+      background: ui.$blue-soft;
+    }
+
+    &.is-active {
+      color: ui.$blue;
+      font-weight: 600;
+
+      &::after {
+        content: "";
+        position: absolute;
+        left: 10px;
+        right: 10px;
+        bottom: -15px;
+        height: 3px;
+        border-radius: 3px 3px 0 0;
+        background: ui.$blue;
+      }
+    }
+
+    @include ui.focus-ring;
+  }
+
+  // ----------------------------------------------------------------- actions
   &__actions {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 6px;
+    margin-left: auto;
+  }
 
-    @include fockis.bp-down(fockis.$bp-lg) {
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: ui.$ink;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: ui.$blue-soft;
+      color: ui.$blue;
+    }
+
+    &--account {
+      background: ui.$blue;
+      color: ui.$white;
+
+      &:hover {
+        background: ui.$blue-hover;
+        color: ui.$white;
+      }
+    }
+
+    @include ui.focus-ring;
+  }
+
+  &__signin {
+    @include ui.btn-primary;
+    min-height: 40px;
+    margin-left: 6px;
+    padding: 0 20px;
+    border-radius: ui.$radius-sm;
+    font-size: 14px;
+  }
+
+  &__menu {
+    display: none;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid ui.$line;
+    border-radius: ui.$radius-sm;
+    background: ui.$white;
+    color: ui.$ink;
+    cursor: pointer;
+
+    &:hover {
+      border-color: ui.$blue;
+      color: ui.$blue;
+    }
+
+    @include ui.focus-ring;
+  }
+
+  @media (max-width: 1180px) {
+    &__inner {
+      gap: 16px;
+    }
+
+    &__link {
+      padding: 8px 7px;
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 1060px) {
+    &__nav {
       display: none;
     }
 
-    .text-link {
-      font-size: 0.88rem;
-      font-weight: 500;
-
-      color: fockis.$text-on-dark-muted;
-      text-decoration: none;
-      white-space: nowrap;
-
-      &:hover {
-        color: fockis.$text-on-dark;
-      }
-    }
-
-    .icon-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      width: 34px;
-      height: 34px;
-
-      padding: 0;
-      border: 0;
-      border-radius: 50%;
-
-      background: transparent;
-      color: fockis.$text-on-dark-muted;
-
-      cursor: pointer;
-
-      transition:
-        background 0.15s ease,
-        color 0.15s ease;
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: fockis.$gold-500;
-      }
-
-      &:focus-visible {
-        outline: 2px solid fockis.$gold-500;
-        outline-offset: 2px;
-      }
-    }
-
-    .btn.btn-outline {
-      @include fockis.btn-outline;
-
-      color: fockis.$text-on-dark;
-      border-color: rgba(255, 255, 255, 0.35);
-
-      &:hover {
-        background: fockis.$gold-500;
-        border-color: fockis.$gold-500;
-        color: fockis.$navy-900;
-      }
+    &__menu {
+      display: grid;
     }
   }
 
-  // ---------------------------------------------------------
-  // Mobile toggle
-  // ---------------------------------------------------------
+  @media (max-width: 640px) {
+    &__inner {
+      height: 58px;
+      gap: 8px;
+    }
 
-  &__mobile-toggle {
-    display: none;
+    &__actions {
+      gap: 2px;
+    }
+
+    &__icon {
+      width: 38px;
+      height: 38px;
+    }
+
+    &__signin {
+      display: none;
+    }
+
+    &__menu {
+      width: 38px;
+      height: 38px;
+      margin-left: 4px;
+    }
+  }
+}
+
+// =============================================================================
+// Logo
+// =============================================================================
+
+.ft-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+
+  img,
+  &__fallback {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+  }
+
+  img {
+    display: block;
+    object-fit: cover;
+  }
+
+  &__fallback {
+    display: grid;
+    place-items: center;
+    background: ui.$blue;
+    color: ui.$white;
+    font: 800 18px/1 ui.$font;
+  }
+
+  &__word {
+    color: #0b1d3a;
+    font: 800 20px/1 ui.$font;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+
+    span {
+      color: ui.$blue;
+      font-weight: 700;
+    }
+  }
+
+  &--compact &__word {
+    font-size: 18px;
+  }
+
+  @media (max-width: 640px) {
+    img,
+    &__fallback {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+    }
+
+    &__word {
+      font-size: 18px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    &__word {
+      font-size: 16px;
+    }
+  }
+}
+
+// =============================================================================
+// Drawer (tablet / phone, and the "more" destinations)
+// =============================================================================
+
+.ft-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  font-family: ui.$font;
+
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgba(16, 24, 40, 0.5);
+    cursor: pointer;
+  }
+
+  &__panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    width: min(340px, 88vw);
+    overflow-y: auto;
+    background: ui.$white;
+    box-shadow: -12px 0 40px rgba(16, 24, 40, 0.2);
+    animation: ft-drawer-in 0.2s ease-out;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+
+  &__head {
+    display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid ui.$line;
+  }
 
-    width: 36px;
-    height: 36px;
-    margin-left: auto;
-
+  &__close {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
     padding: 0;
-
-    border: 1px solid fockis.$navy-700;
-    border-radius: fockis.$radius-sm;
-
+    border: 0;
+    border-radius: 50%;
     background: transparent;
-    color: fockis.$text-on-dark;
-
+    color: ui.$ink;
     cursor: pointer;
 
-    transition:
-      background 0.15s ease,
-      border-color 0.15s ease,
-      color 0.15s ease;
-
     &:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: fockis.$gold-500;
-      color: fockis.$gold-500;
+      background: ui.$canvas;
     }
 
-    &:focus-visible {
-      outline: 2px solid fockis.$gold-500;
-      outline-offset: 2px;
-    }
+    @include ui.focus-ring;
+  }
 
-    @include fockis.bp-down(fockis.$bp-lg) {
+  &__quick {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 14px 16px;
+    border-bottom: 1px solid ui.$line;
+
+    a {
       display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 4px;
+      border-radius: ui.$radius-sm;
+      background: ui.$blue-soft;
+      color: ui.$blue;
+      font: 600 12px/1.2 ui.$font;
+      text-decoration: none;
+      text-align: center;
+
+      &:hover {
+        background: #dbe8ff;
+      }
+
+      @include ui.focus-ring;
     }
   }
 
-  // ---------------------------------------------------------
-  // Mobile menu
-  // ---------------------------------------------------------
-
-  &__mobile-menu {
-    display: none;
+  nav {
+    display: flex;
     flex-direction: column;
+    padding: 8px 8px 24px;
 
-    padding: 8px fockis.$gutter 20px;
-
-    background: fockis.$navy-900;
-    border-top: 1px solid fockis.$navy-700;
-
-    @include fockis.bp-down(fockis.$bp-lg) {
-      display: flex;
+    h2 {
+      margin: 16px 10px 6px;
+      color: ui.$muted;
+      font: 700 11px/1 ui.$font;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
     a {
-      padding: 12px 4px;
-
-      color: fockis.$text-on-dark-muted;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 0 10px;
+      border-radius: ui.$radius-sm;
+      color: ui.$ink;
+      font: 500 15px/1.2 ui.$font;
       text-decoration: none;
 
-      font-size: 0.95rem;
-
-      border-bottom: 1px solid fockis.$navy-700;
-
-      transition: color 0.15s ease;
-
-      &:last-child {
-        border-bottom: none;
-      }
-
       &:hover {
-        color: fockis.$gold-500;
+        background: ui.$canvas;
+        color: ui.$blue;
       }
 
       &.is-active {
-        color: fockis.$gold-500;
+        background: ui.$blue-soft;
+        color: ui.$blue;
+        font-weight: 600;
       }
+
+      &::after {
+        display: none;
+      }
+
+      @include ui.focus-ring;
     }
+  }
+}
+
+@keyframes ft-drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+// =============================================================================
+// Travel shell: white canvas inside the Fockis app layout
+// =============================================================================
+
+.fockis-travel-app {
+  min-height: 100vh;
+  background: ui.$white;
+  color: ui.$ink;
+  font-family: ui.$font;
+}
+
+// The global layout pads its content area and paints the app theme behind
+// it; Travel pages run edge to edge on white like the reference.
+.fk-app-content:has(> .fockis-travel-app) {
+  padding: 0 !important;
+  background: ui.$white !important;
+}
+
+.fk-app-layout:has(> .fk-app-content > .fockis-travel-app) {
+  background: ui.$white !important;
+}
+
+@media (max-width: 900px) {
+  // Leave room for the app's own bottom navigation bar.
+  .fockis-travel-app {
+    padding-bottom: 72px;
   }
 }

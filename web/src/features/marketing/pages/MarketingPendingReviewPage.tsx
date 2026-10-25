@@ -625,7 +625,7 @@ export default function MarketingPendingReviewPage() {
           </button>
 
           <Link
-            to="/marketing"
+            to="/ads"
             className="fk-marketing-secondary-button"
           >
             Dashboard
@@ -1046,7 +1046,7 @@ export default function MarketingPendingReviewPage() {
                       >
 
                         <Link
-                          to={`/marketing/campaigns/${id}`}
+                          to={`/ads/campaigns/${id}`}
                           className="fk-marketing-secondary-button"
                         >
                           Open / Review

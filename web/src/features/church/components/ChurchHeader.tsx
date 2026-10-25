@@ -8,6 +8,7 @@ import { useFockisTranslation } from "../../../i18n/useFockisTranslation";
 
 import "../styles/ChurchComponents.scss";
 
+import FockisMark from "../../../components/fockis/FockisMark";
 /* ============================================================================
    PROPS
 ========================================================================== */
@@ -329,9 +330,7 @@ export default function ChurchHeader({
             onClick={closeMobile}
             aria-label={t("church.navigation.home")}
           >
-            <span className="church-header__brand-mark" aria-hidden="true">
-              F
-            </span>
+            <span className="church-header__brand-mark" aria-hidden="true"><FockisMark /></span>
 
             <span className="church-header__brand-text">
               Fockis{" "}

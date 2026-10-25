@@ -1,161 +1,153 @@
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
+
+import { Link } from "react-router-dom";
+
+import { ArrowRight, Flame } from "lucide-react";
+
+import { businessesApi } from "../services/businessesApi";
+
+import type { Business } from "../types/business.types";
+
+import BusinessSpotlightCard from "./BusinessSpotlightCard";
 
 import {
-  useNavigate,
-} from "react-router-dom";
+  BusinessCardSkeleton,
+  RailNav,
+  useRailScroll,
+} from "./BusinessUi";
 
-import {
-  businessesApi,
-} from "../services/businessesApi";
+import { dedupeById } from "../utils/businessUtils";
 
-import type {
-  Business,
-} from "../types/business.types";
-
-import BusinessSpotlightCard
-  from "./BusinessSpotlightCard";
-
+import "../styles/BusinessUi.scss";
 import "../styles/BusinessSpotlight.scss";
 
 
-export default function BusinessSpotlight() {
+/* ============================================================================
+   BUSINESS SPOTLIGHT
 
-  const navigate = useNavigate();
+   Horizontal rail of businesses that are eligible for Spotlight
+   (published + spotlightEnabled, ordered by the backend's priority rules).
 
-  const [
-    businesses,
-    setBusinesses,
-  ] = useState<Business[]>([]);
+   Pass `businesses` to reuse data the parent already loaded; otherwise the
+   component loads GET /businesses/spotlight itself. Renders nothing when
+   there are no Spotlight businesses.
+============================================================================ */
 
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
+interface Props {
+  businesses?: Business[];
+  loading?: boolean;
+  title?: string;
+  description?: string;
+  showViewAll?: boolean;
+}
 
+export default function BusinessSpotlight({
+  businesses: providedBusinesses,
+  loading: providedLoading,
+  title = "Spotlight",
+  description = "Featured businesses on Fockis.",
+  showViewAll = true,
+}: Props) {
+  const controlled = providedBusinesses !== undefined;
+
+  const [loadedBusinesses, setLoadedBusinesses] = useState<Business[]>([]);
+  const [loadingOwn, setLoadingOwn] = useState(!controlled);
+
+  const { trackRef, canPrev, canNext, scrollBy } = useRailScroll();
 
   useEffect(() => {
+    if (controlled) {
+      return;
+    }
 
     let mounted = true;
 
     businessesApi
       .getSpotlight()
-      .then((data: Business[]) => {
-
+      .then((data) => {
         if (mounted) {
-          setBusinesses(data);
+          setLoadedBusinesses(data);
         }
-
       })
-      .catch((error: unknown) => {
-
-        console.error(
-          "Business spotlight:",
-          error,
-        );
-
+      .catch(() => {
+        // Spotlight is an enhancement; hide it on failure.
+        if (mounted) {
+          setLoadedBusinesses([]);
+        }
       })
       .finally(() => {
-
         if (mounted) {
-          setLoading(false);
+          setLoadingOwn(false);
         }
-
       });
-
 
     return () => {
       mounted = false;
     };
+  }, [controlled]);
 
-  }, []);
+  const businesses = dedupeById(
+    controlled ? providedBusinesses ?? [] : loadedBusinesses,
+  );
 
+  const loading = controlled ? Boolean(providedLoading) : loadingOwn;
 
-  if (
-    !loading &&
-    businesses.length === 0
-  ) {
+  if (!loading && businesses.length === 0) {
     return null;
   }
 
-
-  function handleViewAll() {
-    navigate("/businesses");
-  }
-
-
   return (
     <section
-      className="fk-business-spotlight"
-      aria-label="Business Spotlight"
+      className="fkb fkb-spotlight"
+      aria-labelledby="fkb-spotlight-title"
     >
-
-      <div className="fk-business-spotlight__header">
-
-        <div className="fk-business-spotlight__heading">
-
-          <div className="fk-business-spotlight__icon">
-            🏢
-          </div>
-
-          <div>
-
-            <h2>
-              Business Spotlight
-            </h2>
-
-            <p>
-              Discover businesses, offers & local deals
-            </p>
-
-          </div>
-
+      <div className="fkb-section-head">
+        <div>
+          <span className="fkb-eyebrow fkb-spotlight__eyebrow">
+            <Flame size={14} aria-hidden="true" />
+            Featured
+          </span>
+          <h2 id="fkb-spotlight-title">{title}</h2>
+          {description && <p>{description}</p>}
         </div>
 
+        <div className="fkb-section-head__actions">
+          <RailNav
+            label="Spotlight"
+            canPrev={canPrev}
+            canNext={canNext}
+            onScroll={scrollBy}
+          />
 
-        <button
-          type="button"
-          className="fk-business-spotlight__view-all"
-          onClick={handleViewAll}
+          {showViewAll && (
+            <Link to="/businesses" className="fkb-link">
+              All businesses
+              <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+          )}
+        </div>
+      </div>
+
+      <div className="fkb-rail">
+        <div
+          ref={trackRef}
+          className="fkb-rail__track"
+          role={loading ? "status" : undefined}
+          aria-label={loading ? "Loading Spotlight" : undefined}
         >
-          View all
-        </button>
-
-      </div>
-
-
-      <div
-        className="fk-business-spotlight__scroller"
-      >
-
-        {loading
-
-          ? Array.from({
-              length: 3,
-            }).map((_, index) => (
-
-              <div
-                key={index}
-                className="fk-business-card fk-business-card--skeleton"
-              />
-
-            ))
-
-          : businesses.map(
-              (business: Business) => (
-
+          {loading
+            ? Array.from({ length: 3 }, (_, index) => (
+                <BusinessCardSkeleton key={index} />
+              ))
+            : businesses.map((business) => (
                 <BusinessSpotlightCard
-                  key={business._id}
+                  key={business.id}
                   business={business}
+                  variant="featured"
                 />
-
-              ),
-            )}
-
+              ))}
+        </div>
       </div>
-
     </section>
   );
 }

@@ -41,6 +41,7 @@ import {
 import {
   UpdateOrderStatusDto,
 } from "../dto/update-order-status.dto";
+import { USER_IDENTITY_SELECT } from "../../../users/public-user.fields";
 
 @Injectable()
 export class OrdersService {
@@ -1102,9 +1103,9 @@ export class OrdersService {
         customer:
           userObjectId,
       })
-      .populate("customer")
+      .populate("customer", USER_IDENTITY_SELECT)
       .populate("items.product")
-      .populate("items.seller")
+      .populate("items.seller", USER_IDENTITY_SELECT)
       .populate("items.storeId")
       .sort({
         createdAt: -1,
@@ -1119,9 +1120,9 @@ export class OrdersService {
   async findAll() {
     return this.orderModel
       .find()
-      .populate("customer")
+      .populate("customer", USER_IDENTITY_SELECT)
       .populate("items.product")
-      .populate("items.seller")
+      .populate("items.seller", USER_IDENTITY_SELECT)
       .populate("items.storeId")
       .sort({
         createdAt: -1,
@@ -1164,9 +1165,9 @@ export class OrdersService {
           },
         },
       })
-      .populate("customer")
+      .populate("customer", USER_IDENTITY_SELECT)
       .populate("items.product")
-      .populate("items.seller")
+      .populate("items.seller", USER_IDENTITY_SELECT)
       .populate("items.storeId")
       .sort({
         createdAt: -1,
@@ -1227,9 +1228,9 @@ export class OrdersService {
           },
         },
       })
-      .populate("customer")
+      .populate("customer", USER_IDENTITY_SELECT)
       .populate("items.product")
-      .populate("items.seller")
+      .populate("items.seller", USER_IDENTITY_SELECT)
       .populate("items.storeId")
       .sort({
         createdAt: -1,
@@ -1264,9 +1265,9 @@ export class OrdersService {
         .findById(
           normalizedOrderId,
         )
-        .populate("customer")
+        .populate("customer", USER_IDENTITY_SELECT)
         .populate("items.product")
-        .populate("items.seller")
+        .populate("items.seller", USER_IDENTITY_SELECT)
         .populate("items.storeId")
         .exec();
 

@@ -12,6 +12,14 @@ export default function LoginBrandPanel() {
     <div className="auth-panel">
       <div className="auth-panel__top">
         <div className="wordmark">
+          <img
+            className="wordmark__logo"
+            src="/brand/fockis-icon-96.png"
+            srcSet="/brand/fockis-icon-96.png 1x, /brand/fockis-icon-192.png 2x"
+            alt=""
+            width={44}
+            height={44}
+          />
           <span className="wordmark__brand">FOCKIS</span>
         </div>
       </div>

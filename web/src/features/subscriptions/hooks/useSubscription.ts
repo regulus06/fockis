@@ -21,6 +21,8 @@ import {
   resetToBasic,
 } from "../services/subscriptionApi";
 
+import { assertStripeCheckoutUrl } from "../utils/subscriptionPlanUtils";
+
 /* ============================================================================
    FOCKIS SUBSCRIPTION HOOK
 ============================================================================ */
@@ -112,8 +114,15 @@ export default function useSubscription() {
         ------------------------------------------------------ */
 
         if (result.checkoutUrl) {
-          window.location.href =
-            result.checkoutUrl;
+          // Only ever redirect to a real https Stripe Checkout URL.
+          const checkoutUrl =
+            assertStripeCheckoutUrl(
+              result.checkoutUrl,
+            );
+
+          window.location.assign(
+            checkoutUrl.toString(),
+          );
 
           return result;
         }

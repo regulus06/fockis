@@ -1,6 +1,122 @@
 /* ============================================================================
-   FOCKIS SUBSCRIPTION PLAN ADMIN CARD
-   All visual rules live in the shared partial.
+   FOCKIS ADMIN — SUBSCRIPTION PLAN CARD
 ============================================================================ */
 
-@use "./fockis-subscription-shared";
+@use "./fockis-subscription-shared" as shared;
+
+.fk-sub-admin-card {
+  @include shared.fk-sub-gem-palettes;
+  @include shared.fk-sub-card;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border-top: 4px solid var(--gem-solid, var(--fk-fjord));
+
+  &__header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--fk-border);
+    background: var(--gem-soft, var(--fk-bg));
+
+    img {
+      width: 72px;
+      height: 42px;
+      border-radius: var(--fk-r-md);
+      object-fit: cover;
+    }
+
+    h2 {
+      margin: 2px 0 0;
+      font-size: 18px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__code {
+    color: var(--gem-accent, var(--fk-text-2));
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+
+  &__body {
+    display: grid;
+    gap: 14px;
+    padding: 18px;
+
+    .fk-sub-alert {
+      margin: 0;
+    }
+  }
+
+  &__footer {
+    margin-top: auto;
+    padding: 14px 18px 18px;
+    border-top: 1px solid var(--fk-border);
+
+    .fk-sub-btn {
+      width: 100%;
+    }
+  }
+}
+
+.fk-sub-admin-pill {
+  padding: 4px 10px;
+  border-radius: var(--fk-r-pill);
+  background: var(--fk-sunken);
+  color: var(--fk-text-2);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+
+  &.is-active {
+    background: color-mix(in srgb, var(--fk-success) 14%, transparent);
+    color: var(--fk-success);
+  }
+}
+
+.fk-sub-admin-hint {
+  margin: -4px 0 0;
+  color: var(--fk-text-2);
+  font-size: 12px;
+}
+
+.fk-sub-admin-stripe {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-bg);
+
+  legend {
+    padding: 0 6px;
+    color: var(--fk-text);
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  > small {
+    color: var(--fk-text-3);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  input {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+  }
+}
+
+.fk-sub-admin-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+}

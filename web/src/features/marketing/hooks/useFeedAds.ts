@@ -18,18 +18,96 @@ import type {
 import { AD_CONFIG } from "../utils/adFrequency";
 
 /* ============================================================================
-   USE FEED ADS
+CONFIGURATION
+============================================================================ */
 
-   Loads eligible FEED advertisements from the marketing delivery endpoint.
+const FEED_ADS_CACHE_TTL = 30_000;
 
-   The backend remains responsible for deciding whether an advertisement is
-   eligible for delivery.
+/* ============================================================================
+SHARED AD CACHE
 
-   The frontend is responsible for:
-   - caching the returned ads for this feed session
-   - selecting an ad for each feed slot
-   - preventing the same campaign from appearing consecutively
-   - deduplicating event tracking
+Shares requests between mounted feed components and briefly caches results.
+
+The backend remains responsible for advertisement eligibility.
+============================================================================ */
+
+interface FeedAdsCacheEntry {
+  ads: DeliveredFeedAd[];
+  cachedAt: number;
+  limit: number;
+}
+
+let feedAdsCache: FeedAdsCacheEntry | null = null;
+
+let feedAdsRequest:
+  | {
+      limit: number;
+      promise: Promise<DeliveredFeedAd[]>;
+    }
+  | null = null;
+
+/**
+ * Clear the cached ads after a relevant campaign or delivery change.
+ */
+export function invalidateFeedAdsCache(): void {
+  feedAdsCache = null;
+}
+
+/**
+ * Fetch eligible advertisements, sharing concurrent requests.
+ */
+async function loadFeedAds(
+  limit: number,
+): Promise<DeliveredFeedAd[]> {
+  const now = Date.now();
+
+  if (
+    feedAdsCache &&
+    feedAdsCache.limit === limit &&
+    now - feedAdsCache.cachedAt < FEED_ADS_CACHE_TTL
+  ) {
+    return feedAdsCache.ads;
+  }
+
+  if (
+    feedAdsRequest &&
+    feedAdsRequest.limit === limit
+  ) {
+    return feedAdsRequest.promise;
+  }
+
+  const promise = getFeedAds("FEED", limit)
+    .then((result) => {
+      const safeAds = Array.isArray(result)
+        ? result.filter(
+            (ad): ad is DeliveredFeedAd => Boolean(ad),
+          )
+        : [];
+
+      feedAdsCache = {
+        ads: safeAds,
+        cachedAt: Date.now(),
+        limit,
+      };
+
+      return safeAds;
+    })
+    .finally(() => {
+      if (feedAdsRequest?.promise === promise) {
+        feedAdsRequest = null;
+      }
+    });
+
+  feedAdsRequest = {
+    limit,
+    promise,
+  };
+
+  return promise;
+}
+
+/* ============================================================================
+HOOK
 ============================================================================ */
 
 export function useFeedAds() {
@@ -42,22 +120,18 @@ export function useFeedAds() {
       .slice(2)}`,
   );
 
-  const trackedRef =
-    useRef<Set<string>>(new Set());
+  const trackedRef = useRef<Set<string>>(new Set());
 
-  const lastCampaignIdRef =
-    useRef<string | null>(null);
+  const lastCampaignIdRef = useRef<string | null>(null);
 
   /* ==========================================================================
-     LOAD FEED ADS
-
-     Request advertisements once when the feed mounts.
+  LOAD FEED ADS
   ========================================================================== */
 
   useEffect(() => {
     let cancelled = false;
 
-    async function loadFeedAds() {
+    async function load() {
       setLoading(true);
 
       try {
@@ -65,8 +139,7 @@ export function useFeedAds() {
           "[FOCKIS FEED ADS] Loading FEED advertisements...",
         );
 
-        const result = await getFeedAds(
-          "FEED",
+        const safeAds = await loadFeedAds(
           AD_CONFIG.maxAdsPerSession,
         );
 
@@ -74,16 +147,11 @@ export function useFeedAds() {
           return;
         }
 
-        const safeAds = Array.isArray(result)
-          ? result.filter(Boolean)
-          : [];
-
         console.log(
           "[FOCKIS FEED ADS] Delivery response:",
           {
             requestedPlacement: "FEED",
-            requestedLimit:
-              AD_CONFIG.maxAdsPerSession,
+            requestedLimit: AD_CONFIG.maxAdsPerSession,
             returnedAds: safeAds.length,
             ads: safeAds,
           },
@@ -106,7 +174,7 @@ export function useFeedAds() {
       }
     }
 
-    void loadFeedAds();
+    void load();
 
     return () => {
       cancelled = true;
@@ -114,24 +182,12 @@ export function useFeedAds() {
   }, []);
 
   /* ==========================================================================
-     GET AD FOR SLOT
-
-     Selects an advertisement from the delivered pool.
-
-     We avoid consecutive advertisements from the same campaign whenever
-     multiple campaigns are available.
+  SELECT AN ADVERTISEMENT FOR A FEED SLOT
   ========================================================================== */
 
   const getAdForSlot = useCallback(
-    (
-      slotIndex: number,
-    ): DeliveredFeedAd | null => {
+    (slotIndex: number): DeliveredFeedAd | null => {
       if (ads.length === 0) {
-        console.debug(
-          "[FOCKIS FEED ADS] No delivered ads available for slot:",
-          slotIndex,
-        );
-
         return null;
       }
 
@@ -149,10 +205,6 @@ export function useFeedAds() {
 
       let attempts = 0;
 
-      /*
-       * If there is more than one ad, avoid selecting the same campaign
-       * consecutively.
-       */
       while (
         ads.length > 1 &&
         candidate.campaignId ===
@@ -163,8 +215,7 @@ export function useFeedAds() {
 
         candidate =
           ads[
-            (safeSlotIndex + attempts) %
-              ads.length
+            (safeSlotIndex + attempts) % ads.length
           ];
       }
 
@@ -180,12 +231,9 @@ export function useFeedAds() {
         {
           slotIndex: safeSlotIndex,
           adId: candidate.id,
-          campaignId:
-            candidate.campaignId,
-          placement:
-            candidate.placement,
-          headline:
-            candidate.headline,
+          campaignId: candidate.campaignId,
+          placement: candidate.placement,
+          headline: candidate.headline,
         },
       );
 
@@ -195,11 +243,7 @@ export function useFeedAds() {
   );
 
   /* ==========================================================================
-     TRACK EVENT
-
-     Deduplicated per mounted feed session.
-
-     An individual ad/event combination is only sent once.
+  TRACK AD EVENTS
   ========================================================================== */
 
   const track = useCallback(
@@ -222,19 +266,17 @@ export function useFeedAds() {
         return;
       }
 
+      // Prevent duplicate simultaneous requests for this event in this hook.
       trackedRef.current.add(key);
 
       console.log(
         "[FOCKIS FEED ADS] Tracking event:",
         {
           adId: ad.id,
-          campaignId:
-            ad.campaignId,
+          campaignId: ad.campaignId,
           type,
-          placement:
-            ad.placement,
-          sessionId:
-            sessionIdRef.current,
+          placement: ad.placement,
+          sessionId: sessionIdRef.current,
         },
       );
 
@@ -243,9 +285,11 @@ export function useFeedAds() {
         campaignId: ad.campaignId,
         type,
         placement: ad.placement,
-        sessionId:
-          sessionIdRef.current,
+        sessionId: sessionIdRef.current,
       }).catch((error) => {
+        // Allow a later attempt if the request failed.
+        trackedRef.current.delete(key);
+
         console.error(
           "[FOCKIS FEED ADS] Event tracking error:",
           error,
@@ -255,6 +299,10 @@ export function useFeedAds() {
     [],
   );
 
+  /* ==========================================================================
+  RETURN
+  ========================================================================== */
+
   return {
     ads,
     loading,
@@ -262,3 +310,5 @@ export function useFeedAds() {
     track,
   };
 }
+
+export default useFeedAds;

@@ -1,4 +1,8 @@
 import React from "react";
+
+// Shared Travel foundation (utilities + global-style shield). Imported first
+// so every page stylesheet below can override it.
+import "../styles/TravelPages.scss";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import TravelHeader from "../components/TravelHeader";
@@ -14,6 +18,7 @@ import TravelTransfersPage from "../pages/TravelTransfersPage";
 import TravelMeetingsPage from "../pages/TravelMeetingsPage";
 import TravelDestinationsPage from "../pages/TravelDestinationsPage";
 import TravelSearchPage from "../pages/TravelSearchPage";
+import TravelExplorePage from "../pages/TravelExplorePage";
 import TravelTripPlannerPage from "../pages/TravelTripPlannerPage";
 import TravelWishlistPage from "../pages/TravelWishlistPage";
 import TravelPriceAlertsPage from "../pages/TravelPriceAlertsPage";
@@ -120,6 +125,12 @@ export default function TravelRoutes() {
         <Route
           path="search"
           element={<TravelSearchPage />}
+        />
+
+        {/* Search results / category grid (Events, Vacation Rentals, …) */}
+        <Route
+          path="explore"
+          element={<TravelExplorePage />}
         />
 
         {/* ============================================================

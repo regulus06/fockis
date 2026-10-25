@@ -7,21 +7,16 @@
  * This is a multi-seller marketplace cart.
  *
  * Cart selection is intentionally NOT stored on CartLineItem.
- *
  * Selection is maintained separately by cartStore.ts through:
  *
  *   selectedLineIds: string[]
  *
- * This keeps checkout/UI state separate from canonical cart item data.
+ * Every line item preserves product, seller, store, pricing, quantity,
+ * variant, and shipping-package information.
  *
- * Every line item preserves:
- * - product identity
- * - product display information
- * - seller identity
- * - store identity
- * - pricing
- * - quantity / stock information
- * - variant information
+ * Shipping data is required by checkout to request accurate carrier rates.
+ * It should come from the product's saved shipping settings; do not invent
+ * package weight or dimensions when those values are missing.
  *
  * The canonical fields remain:
  * - productName
@@ -54,6 +49,26 @@ export interface CartLineItemVariant {
    * "Color: Navy / Size: L"
    */
   optionsLabel: string;
+}
+
+// ============================================================================
+// CART SHIPPING PACKAGE
+// ============================================================================
+
+/**
+ * Product package information used by checkout when requesting carrier rates.
+ *
+ * Values should be copied from the product's saved shipping configuration.
+ * Weight is in kilograms; dimensions are in centimeters.
+ */
+export interface CartLineItemShipping {
+  weightKg?: number | null;
+
+  dimensionsCm?: {
+    length: number;
+    width: number;
+    height: number;
+  } | null;
 }
 
 // ============================================================================
@@ -144,6 +159,19 @@ export interface CartLineItem {
   // --------------------------------------------------------------------------
 
   variant?: CartLineItemVariant | null;
+
+  // --------------------------------------------------------------------------
+  // SHIPPING
+  // --------------------------------------------------------------------------
+
+  /**
+   * Saved package details used to request carrier-calculated shipping rates.
+   *
+   * These values are optional because older products may not have shipping
+   * settings yet. Checkout should show a useful validation error if required
+   * package values are missing rather than sending fabricated measurements.
+   */
+  shipping?: CartLineItemShipping | null;
 
   // --------------------------------------------------------------------------
   // PRICING

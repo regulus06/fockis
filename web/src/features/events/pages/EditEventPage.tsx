@@ -1,526 +1,96 @@
-import React, {
-  useEffect,
-  useState,
-} from "react";
-
-import {
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import EventCreateForm from "../components/EventCreateForm";
-
-import {
-  eventsApi,
-} from "../services/eventsApi";
-
-import type {
-  CreateEventInput,
-  FockisEvent,
-} from "../types/event.types";
-
-import "../styles/EventsPage.scss";
-
-/* ============================================================================
-   AUTHENTICATED USER ID
-============================================================================ */
-
-function getCurrentUserId(): string | null {
-  const token =
-    localStorage.getItem("token") ??
-    localStorage.getItem("accessToken");
-
-  if (!token) {
-    return null;
-  }
-
-  try {
-    const parts =
-      token.split(".");
-
-    if (parts.length !== 3) {
-      return null;
-    }
-
-    const base64Payload =
-      parts[1]
-        .replace(/-/g, "+")
-        .replace(/_/g, "/");
-
-    const paddedPayload =
-      base64Payload.padEnd(
-        Math.ceil(
-          base64Payload.length / 4,
-        ) * 4,
-        "=",
-      );
-
-    const payload =
-      JSON.parse(
-        atob(paddedPayload),
-      ) as Record<string, unknown>;
-
-    const userId =
-      payload.id ??
-      payload._id ??
-      payload.userId ??
-      payload.sub;
-
-    if (
-      userId === undefined ||
-      userId === null ||
-      String(userId).trim() === ""
-    ) {
-      return null;
-    }
-
-    return String(userId);
-  } catch (error) {
-    console.error(
-      "[EditEventPage] Unable to read authenticated user:",
-      error,
-    );
-
-    return null;
-  }
-}
-
-/* ============================================================================
-   GET EVENT CREATOR ID
-============================================================================ */
-
-function getEventCreatorId(
-  event: FockisEvent,
-): string | null {
-  const creator =
-    event.creatorId as unknown;
-
-  if (
-    creator === undefined ||
-    creator === null
-  ) {
-    return null;
-  }
-
-  /*
-   * Supports either:
-   *
-   * creatorId: "123"
-   *
-   * OR populated creatorId:
-   *
-   * creatorId: {
-   *   _id: "123"
-   * }
-   */
-
-  if (
-    typeof creator === "object" &&
-    creator !== null
-  ) {
-    const populated =
-      creator as {
-        _id?: unknown;
-        id?: unknown;
-      };
-
-    const id =
-      populated._id ??
-      populated.id;
-
-    return id === undefined ||
-      id === null
-      ? null
-      : String(id);
-  }
-
-  return String(creator);
-}
-
-/* ============================================================================
-   EDIT EVENT PAGE
-============================================================================ */
+import EventEmptyState from "../components/EventEmptyState";
+import EventSkeleton from "../components/EventSkeleton";
+import EventsShell from "../components/EventsShell";
+import { publishEventPatch } from "../hooks/eventSync";
+import { eventsApi, isAbortError } from "../services/eventsApi";
+import type { FockisEvent } from "../types/event.types";
 
 export default function EditEventPage() {
-  const {
-    eventId,
-  } = useParams<{
-    eventId: string;
-  }>();
-
-  const navigate =
-    useNavigate();
-
-  const [
-    event,
-    setEvent,
-  ] = useState<FockisEvent | null>(
-    null,
-  );
-
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
-
-  const [
-    saving,
-    setSaving,
-  ] = useState(false);
-
-  const [
-    error,
-    setError,
-  ] = useState<string | null>(
-    null,
-  );
-
-  /* ==========================================================================
-     LOAD EVENT
-  ========================================================================== */
+  const { eventId } = useParams<{ eventId: string }>();
+  const navigate = useNavigate();
+  const [event, setEvent] = useState<FockisEvent | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    let active = true;
-
     if (!eventId) {
+      setError("Missing event ID.");
       setLoading(false);
-
-      setError(
-        "No event ID was provided.",
-      );
-
-      return () => {
-        active = false;
-      };
+      return;
     }
 
-    setLoading(true);
-    setError(null);
+    const controller = new AbortController();
 
     eventsApi
-      .getById(eventId)
-      .then((result) => {
-        if (!active) {
-          return;
-        }
-
-        if (!result) {
-          setEvent(null);
-
-          setError(
-            "Event not found.",
-          );
-
-          return;
-        }
-
-        /* ================================================================
-           FRONTEND OWNERSHIP CHECK
-
-           This prevents another user from opening the edit form.
-
-           The backend must ALSO enforce ownership.
-        ================================================================ */
-
-        const currentUserId =
-          getCurrentUserId();
-
-        const creatorId =
-          getEventCreatorId(result);
-
-        if (
-          !currentUserId ||
-          !creatorId ||
-          String(currentUserId) !==
-            String(creatorId)
-        ) {
-          setEvent(null);
-
-          setError(
-            "You are not authorized to edit this event. Only the event organizer can edit it.",
-          );
-
-          return;
-        }
-
-        setEvent(result);
-      })
-      .catch((err) => {
-        if (!active) {
-          return;
-        }
-
-        console.error(
-          "[EditEventPage] Failed to load event:",
-          err,
-        );
-
-        setEvent(null);
-
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Unable to load event.",
-        );
+      .getById(eventId, controller.signal)
+      .then(setEvent)
+      .catch((caught) => {
+        if (!isAbortError(caught)) setError(caught instanceof Error ? caught.message : "Unable to load the event.");
       })
       .finally(() => {
-        if (active) {
-          setLoading(false);
-        }
+        if (!controller.signal.aborted) setLoading(false);
       });
 
-    return () => {
-      active = false;
-    };
+    return () => controller.abort();
   }, [eventId]);
 
-  /* ==========================================================================
-     UPDATE EVENT
-  ========================================================================== */
-
-  async function handleUpdate(
-    values: CreateEventInput,
-  ) {
-    if (!eventId) {
-      throw new Error(
-        "Event ID is missing.",
-      );
-    }
-
-    if (!event) {
-      throw new Error(
-        "Event could not be loaded.",
-      );
-    }
-
-    const currentUserId =
-      getCurrentUserId();
-
-    const creatorId =
-      getEventCreatorId(event);
-
-    if (
-      !currentUserId ||
-      !creatorId ||
-      String(currentUserId) !==
-        String(creatorId)
-    ) {
-      throw new Error(
-        "You are not authorized to edit this event.",
-      );
-    }
-
-    setSaving(true);
-    setError(null);
-
-    try {
-      await eventsApi.update(
-        eventId,
-        values,
-      );
-
-      navigate(
-        `/events/${eventId}`,
-        {
-          replace: true,
-        },
-      );
-    } catch (err) {
-      console.error(
-        "[EditEventPage] Failed to update event:",
-        err,
-      );
-
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Unable to update event.";
-
-      setError(message);
-
-      throw err;
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  /* ==========================================================================
-     LOADING
-  ========================================================================== */
-
-  if (loading) {
-    return (
-      <main className="fk-events-page">
-        <div className="fk-events-state">
-          Loading event...
-        </div>
-      </main>
-    );
-  }
-
-  /* ==========================================================================
-     ERROR / NOT FOUND / UNAUTHORIZED
-  ========================================================================== */
-
-  if (error || !event) {
-    return (
-      <main className="fk-events-page">
-
-        <div className="fk-events-container">
-
-          <div className="fk-events-state error">
-
-            <h2>
-              Unable to edit event
-            </h2>
-
-            <p>
-              {error ??
-                "Event not found."}
-            </p>
-
-            <button
-              type="button"
-              className="fk-event-back"
-              onClick={() =>
-                navigate("/events")
-              }
-            >
-              ← Back to Events
-            </button>
-
-          </div>
-
-        </div>
-
-      </main>
-    );
-  }
-
-  /* ==========================================================================
-     EDIT FORM
-  ========================================================================== */
+  const blocked = event && (!event.isOwner || event.isCancelled);
 
   return (
-    <main className="fk-events-page">
+    <EventsShell hideTabs>
+      <div className="fke-editor">
+        {loading && <EventSkeleton variant="details" />}
 
-      <div className="fk-events-container">
+        {!loading && (error || blocked) && (
+          <EventEmptyState
+            tone={error ? "error" : "default"}
+            title={error ? "This event couldn't load" : event?.isCancelled ? "Cancelled events can't be edited" : "Only the organizer can edit this event"}
+            body={error || undefined}
+            action={
+              <Link to={event ? `/events/${event.id}` : "/events"} className="fke-btn fke-btn--primary">
+                Back
+              </Link>
+            }
+          />
+        )}
 
-        {/* ====================================================================
-            BACK BUTTON
-        ===================================================================== */}
+        {event && !blocked && (
+          <EventCreateForm
+            mode="edit"
+            submitLabel="Save changes"
+            initialValues={{
+              title: event.title,
+              description: event.description,
+              category: event.category,
+              visibility: event.visibility,
+              startDate: event.startDate,
+              endDate: event.endDate,
+              locationName: event.locationName,
+              address: event.address,
+              latitude: event.latitude,
+              longitude: event.longitude,
+              isOnline: event.isOnline,
+              onlineUrl: event.onlineUrl,
+              capacity: event.capacity,
+              coverImageUrl: event.coverImageUrl,
+              coverVideoUrl: event.coverVideoUrl,
+              coverMediaType: event.coverMediaType,
+            }}
+            onCancel={() => navigate(`/events/${event.id}`)}
+            onSubmit={async (values) => {
+              const updated = await eventsApi.update(event.id, values);
 
-        <button
-          type="button"
-          className="fk-event-back"
-          onClick={() =>
-            navigate(
-              `/events/${event.id}`,
-            )
-          }
-        >
-          ← Back to Event
-        </button>
-
-        {/* ====================================================================
-            EDIT CARD
-        ===================================================================== */}
-
-        <section className="fk-event-form-card">
-
-          <div className="fk-event-details-content">
-
-            <span className="fk-events-eyebrow">
-              Edit Event
-            </span>
-
-            <h1>
-              {event.title}
-            </h1>
-
-            {error && (
-              <div
-                className="fk-event-form-error"
-                role="alert"
-              >
-                {error}
-              </div>
-            )}
-
-            {/* ================================================================
-                FORM
-            ================================================================ */}
-
-            <EventCreateForm
-              initialValues={{
-                title:
-                  event.title,
-
-                description:
-                  event.description,
-
-                category:
-                  event.category,
-
-                visibility:
-                  event.visibility,
-
-                startDate:
-                  event.startDate,
-
-                endDate:
-                  event.endDate,
-
-                locationName:
-                  event.locationName,
-
-                address:
-                  event.address,
-
-                latitude:
-                  event.latitude ??
-                  undefined,
-
-                longitude:
-                  event.longitude ??
-                  undefined,
-
-                isOnline:
-                  event.isOnline,
-
-                onlineUrl:
-                  event.onlineUrl,
-
-                coverImageUrl:
-                  event.coverImageUrl,
-
-                eventVideoUrl:
-                  event.eventVideoUrl,
-              }}
-
-              submitLabel={
-                saving
-                  ? "Saving..."
-                  : "Save Changes"
-              }
-
-              onSubmit={
-                handleUpdate
-              }
-
-              onCancel={() =>
-                navigate(
-                  `/events/${event.id}`,
-                )
-              }
-            />
-
-          </div>
-
-        </section>
-
+              // Other open copies (feed card, rails) pick up the new times at once.
+              publishEventPatch({ ...updated });
+              navigate(`/events/${updated.id}`, { replace: true });
+            }}
+          />
+        )}
       </div>
-
-    </main>
+    </EventsShell>
   );
 }

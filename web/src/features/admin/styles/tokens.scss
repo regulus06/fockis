@@ -119,3 +119,110 @@
   --fk-info: #5b8def;
   --fk-info-dim: rgba(91, 141, 239, 0.14);
 }
+
+/* ============================================================================
+   FOCKIS APP ADMIN CENTER — NAVY & GOLD DESIGN SYSTEM
+
+   Scoped to the admin shell (.fk-shell) so none of these values leak into the
+   user-facing Fockis app. `.fk-shell[data-theme]` outranks the global
+   [data-theme='dark'] block above, so the admin always renders the light
+   navy/gold workspace shown in the reference design.
+============================================================================ */
+
+/* ---------- SCSS helpers (compile-time only, emit no CSS) ---------- */
+$fk-bp-mobile-max: 767.98px;
+$fk-bp-tablet-min: 768px;
+$fk-bp-desktop-min: 1200px;
+$fk-bp-tablet-max: 1199.98px;
+
+.fk-shell,
+.fk-shell[data-theme] {
+  /* brand */
+  --fk-navy-950: #0c1d2b;   /* sidebar */
+  --fk-navy-900: #10243d;   /* main text */
+  --fk-navy-700: #163a5f;   /* primary brand navy */
+  --fk-navy-500: #2a5a8c;
+  --fk-navy-100: #e8eef6;
+  --fk-gold-600: #b8862f;   /* gold accent */
+  --fk-gold-500: #d5a343;   /* gold highlight */
+  --fk-gold-100: #f8efdc;
+  --fk-gold-50: #fcf7ec;
+
+  /* surfaces */
+  --fk-bg: #f4f7fb;
+  --fk-bg-elevated: #ffffff;
+  --fk-bg-panel: #ffffff;
+  --fk-bg-hover: #f1f5fa;
+  --fk-bg-subtle: #f8fafc;
+
+  /* borders */
+  --fk-border: #e4eaf1;
+  --fk-border-strong: #d3dce7;
+
+  /* text */
+  --fk-text-primary: #10243d;
+  --fk-text-secondary: #718096;
+  --fk-text-tertiary: #94a3b8;
+
+  /* accent = gold */
+  --fk-accent: #b8862f;
+  --fk-accent-strong: #9c7023;
+  --fk-accent-dim: rgba(184, 134, 47, 0.12);
+
+  /* semantic */
+  --fk-success: #16a34a;
+  --fk-success-dim: #e8f7ee;
+  --fk-warning: #c27c0e;
+  --fk-warning-dim: #fdf3e1;
+  --fk-danger: #dc3b3b;
+  --fk-danger-dim: #fdecec;
+  --fk-info: #2f6fd6;
+  --fk-info-dim: #e9f1fd;
+
+  /* typography */
+  --fk-font-display: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fk-font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fk-text-xs: 11px;
+  --fk-text-sm: 12.5px;
+  --fk-text-md: 14px;
+  --fk-text-lg: 16px;
+  --fk-text-xl: 20px;
+  --fk-text-2xl: 28px;
+
+  /* spacing (4px scale) */
+  --fk-space-1: 4px;
+  --fk-space-2: 8px;
+  --fk-space-3: 12px;
+  --fk-space-4: 16px;
+  --fk-space-5: 20px;
+  --fk-space-6: 24px;
+  --fk-space-8: 32px;
+
+  /* radii */
+  --fk-radius-sm: 6px;
+  --fk-radius-md: 8px;
+  --fk-radius-lg: 12px;
+  --fk-radius-pill: 999px;
+
+  /* shadows — light, never heavy */
+  --fk-shadow-xs: 0 1px 2px rgba(16, 36, 61, 0.04);
+  --fk-shadow-sm: 0 1px 2px rgba(16, 36, 61, 0.04), 0 4px 14px rgba(16, 36, 61, 0.05);
+  --fk-shadow-lg: 0 18px 48px rgba(12, 29, 43, 0.28);
+
+  /* motion */
+  --fk-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --fk-dur-fast: 120ms;
+  --fk-dur: 220ms;
+
+  /* layout */
+  --fk-sidebar-w: 260px;
+  --fk-sidebar-w-collapsed: 76px;
+  --fk-topbar-h: 68px;
+  --fk-content-max: 1440px;
+
+  /* stacking */
+  --fk-z-header: 40;
+  --fk-z-sidebar: 60;
+  --fk-z-backdrop: 90;
+  --fk-z-drawer: 100;
+}

@@ -5,6 +5,7 @@ import AcademyToast from '../../../components/academy/AcademyToast';
 import '../../../styles/academy.scss';
 import '../../../styles/academy-admin.scss';
 
+import FockisMark from "../../../../components/fockis/FockisMark";
 export default function AcademyAdminLogin() {
   const { user, status, login } = useAcademyAdminAuth();
   const navigate = useNavigate();
@@ -36,12 +37,7 @@ export default function AcademyAdminLogin() {
     <div className="academy">
       <div className="admin-login-shell">
         <div className="admin-login-card">
-          <div className="logo-mark">
-            <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
-              <path d="M4 8L12 4L20 8L12 12L4 8Z" stroke="#E3A542" strokeWidth={1.6} strokeLinejoin="round" />
-              <path d="M7 10.5V16C7 16 9 18 12 18C15 18 17 16 17 16V10.5" stroke="#E3A542" strokeWidth={1.6} />
-            </svg>
-          </div>
+          <div className="logo-mark"><FockisMark /></div>
           <h2 style={{ marginBottom: 6 }}>Academy Admin</h2>
           <p style={{ fontSize: 13.5, marginBottom: 22 }}>Sign in to manage Fockis Academy content.</p>
 

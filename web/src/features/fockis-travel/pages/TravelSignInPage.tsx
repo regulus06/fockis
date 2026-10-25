@@ -12,6 +12,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import "../styles/TravelSignInPage.scss";
+import { TravelLogo } from "../components/TravelHeader";
 
 /**
  * ============================================================================
@@ -342,21 +343,14 @@ export default function TravelSignInPage() {
         <div className="travel-sign-in-page__header">
           <Link
             to="/travel"
-            className="logo"
+            aria-label="Fockis Travel home"
             style={{
               justifyContent: "center",
               display: "flex",
+              textDecoration: "none",
             }}
           >
-            <span
-              className="logo-mark"
-              aria-hidden="true"
-            />
-
-            Fockis{" "}
-            <small>
-              TRAVEL
-            </small>
+            <TravelLogo />
           </Link>
 
           <h1

@@ -1,354 +1,256 @@
-import {
-api,
-} from "../../../api/api";
+import { api } from "../../../api/api";
+import type { Order } from "../types/Order";
 
-import type {
-Order,
-} from "../types/Order";
+/**
+ * Fockis Shop order API.
+ *
+ * IMPORTANT:
+ * This service intentionally uses /fockis-shop/orders.
+ * Do not change this back to /marketplace/orders.
+ */
+const BASE_URL = "/fockis-shop/orders";
 
-/* ============================================================================
-BASE URL
-============================================================================ */
-
-const BASE_URL = "/marketplace/orders";
-
-/* ============================================================================
-PAYMENT TYPES
-============================================================================ */
-
-export type PaymentMethod =
-| "card"
-| "moncash"
-| "natcash"
-| "cod";
+export type PaymentMethod = "card" | "moncash" | "natcash" | "cod";
 
 export type PaymentStatus =
-| "paid"
-| "pending"
-| "failed"
-| "cancelled";
-
-/* ============================================================================
-ORDER STATUS
-============================================================================ */
+  | "paid"
+  | "pending"
+  | "failed"
+  | "cancelled"
+  | "refunded"
+  | "partially_refunded";
 
 export type OrderStatus =
-| "pending"
-| "processing"
-| "ready_to_ship"
-| "shipped"
-| "delivered"
-| "cancelled"
-| "refunded"
-| string;
-
-/* ============================================================================
-CREATE ORDER REQUEST
-============================================================================ */
+  | "pending"
+  | "paid"
+  | "processing"
+  | "ready_to_ship"
+  | "shipped"
+  | "in_transit"
+  | "out_for_delivery"
+  | "delivered"
+  | "cancelled"
+  | "refunded"
+  | "return_requested"
+  | "returned"
+  | string;
 
 export type CreateOrderRequest = {
-items: Array<{
-productId: string;
-sellerId: string;
+  items: Array<{
+    productId: string;
+    sellerId: string;
+    storeId?: string;
+    quantity: number;
 
-storeId?: string;
+    /**
+     * Compatibility/display field only.
+     * The backend must calculate the authoritative price from the database.
+     */
+    price: number;
+  }>;
 
-quantity: number;
-
-/*
- * Compatibility field.
- *
- * The backend should NOT trust this price.
- * The backend should load the product from
- * MongoDB and calculate the real price.
- */
-price: number;
-
-}>;
-
-/*
-
-* Frontend estimates.
-*
-* The backend should recalculate the authoritative
-* subtotal, discount, shipping, tax and total.
-  */
   subtotal: number;
+  shippingCost: number;
+  tax: number;
+  discount?: number;
+  totalAmount: number;
 
-shippingCost: number;
+  shippingAddress: {
+    fullName: string;
+    email?: string;
+    phone: string;
+    street: string;
+    houseOrApartmentNumber?: string;
+    neighborhood?: string;
+    address?: string;
+    apartment?: string;
+    city: string;
+    state?: string;
+    zipCode?: string;
+    country: string;
+  };
 
-tax: number;
-
-discount?: number;
-
-totalAmount: number;
-
-/* ==========================================================================
-SHIPPING ADDRESS
-========================================================================== */
-
-shippingAddress: {
-fullName: string;
-
-email?: string;
-
-phone: string;
-
-street: string;
-
-houseOrApartmentNumber?: string;
-
-neighborhood?: string;
-
-address?: string;
-
-apartment?: string;
-
-city: string;
-
-state?: string;
-
-zipCode?: string;
-
-country: string;
-
+  deliveryMethod?: string;
+  paymentMethod: PaymentMethod;
+  paymentStatus?: PaymentStatus;
+  paymentIntentId?: string;
+  moncashTransactionId?: string;
+  natcashTransactionId?: string;
 };
 
-/* ==========================================================================
-DELIVERY
-========================================================================== */
-
-deliveryMethod?: string;
-
-/* ==========================================================================
-PAYMENT
-========================================================================== */
-
-paymentMethod: PaymentMethod;
-
-paymentStatus?: PaymentStatus;
-
-/*
-
-* Stripe PaymentIntent ID.
-*
-* Empty for:
-* * MonCash
-* * NatCash
-* * Cash on Delivery
-    */
-    paymentIntentId?: string;
-
-/*
-
-* MonCash transaction/payment reference.
-  */
-  moncashTransactionId?: string;
-
-/*
-
-* NatCash transaction/payment reference.
-  */
-  natcashTransactionId?: string;
-  };
-
-/* ============================================================================
-UPDATE ORDER STATUS REQUEST
-============================================================================ */
-
 export type UpdateOrderStatusRequest = {
-/*
-
-* Examples:
-*
-* processing
-* ready_to_ship
-* shipped
-* delivered
-* cancelled
-  */
   status: OrderStatus;
-
-/* ==========================================================================
-SHIPPING / TRACKING
-========================================================================== */
-
-/*
-
-* Seller-entered carrier.
-*
-* Examples:
-* USPS
-* UPS
-* FedEx
-* DHL
-* Canada Post
-* Other
-* Seller's own carrier name
-  */
   carrier?: string;
-
-/*
-
-* Seller-entered tracking number.
-  */
   trackingNumber?: string;
-
-/*
-
-* Optional direct tracking URL.
-*
-* This is useful for:
-* * USPS
-* * UPS
-* * FedEx
-* * DHL
-* * Custom carriers
-    */
-    trackingUrl?: string;
-
-/*
-
-* Current shipment status.
-*
-* Examples:
-* label_created
-* shipped
-* in_transit
-* out_for_delivery
-* delivered
-* exception
-  */
+  trackingUrl?: string;
   shipmentStatus?: string;
-  };
+};
 
-/* ============================================================================
-ORDER API
-============================================================================ */
+/**
+ * Shipping address fields used when correcting a recipient address
+ * before purchasing a Shippo shipping label.
+ */
+export type UpdateShippingAddressRequest = {
+  fullName: string;
+  email?: string;
+  phone: string;
+  street: string;
+  houseOrApartmentNumber?: string;
+  neighborhood?: string;
+  address?: string;
+  apartment?: string;
+  city: string;
+  state?: string;
+  zipCode?: string;
+  country: string;
+};
+
+type ApiOrderResponse =
+  | Order[]
+  | {
+      data?: Order[];
+      orders?: Order[];
+      results?: Order[];
+    };
+
+function normalizeOrders(response: ApiOrderResponse): Order[] {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.orders)) return response.orders;
+  if (Array.isArray(response?.results)) return response.results;
+  if (Array.isArray(response?.data)) return response.data;
+  return [];
+}
 
 export const orderApi = {
-/* ==========================================================================
-CREATE ORDER
-========================================================================== */
+  /** Create a Fockis Shop order. */
+  createOrder: async (data: CreateOrderRequest): Promise<Order> => {
+    const response = await api.post<Order>(BASE_URL, data);
+    return response.data;
+  },
 
-createOrder: async (
-data: CreateOrderRequest,
-): Promise<Order> => {
-const response =
-await api.post<Order>(
-BASE_URL,
-data,
-);
+  /** Fetch the signed-in customer's Fockis Shop orders. */
+  getOrders: async (): Promise<Order[]> => {
+    const response = await api.get<ApiOrderResponse>(BASE_URL);
+    return normalizeOrders(response.data);
+  },
 
-return response.data;
+  /**
+   * Fetch seller orders.
+   * If a store ID is supplied, use the store-specific Fockis Shop endpoint.
+   */
+  getSellerOrders: async (storeId?: string): Promise<Order[]> => {
+    const endpoint = storeId
+      ? `${BASE_URL}/seller/store/${encodeURIComponent(storeId)}`
+      : `${BASE_URL}/seller`;
 
-},
+    const response = await api.get<ApiOrderResponse>(endpoint);
+    return normalizeOrders(response.data);
+  },
 
-/* ==========================================================================
-CUSTOMER ORDERS
-========================================================================== */
+  /** Explicit store-specific alias, for existing callers. */
+  getSellerStoreOrders: async (storeId: string): Promise<Order[]> => {
+    if (!storeId?.trim()) {
+      throw new Error("Store ID is required.");
+    }
 
-getOrders: async (): Promise<Order[]> => {
-const response =
-await api.get<Order[]>(
-BASE_URL,
-);
+    const response = await api.get<ApiOrderResponse>(
+      `${BASE_URL}/seller/store/${encodeURIComponent(storeId)}`,
+    );
 
+    return normalizeOrders(response.data);
+  },
 
-return response.data;
-},
+  /** Fetch one Fockis Shop order by ID. */
+  getOrderById: async (id: string): Promise<Order> => {
+    if (!id?.trim()) {
+      throw new Error("Order ID is required.");
+    }
 
-/* ==========================================================================
-SELLER ORDERS
-========================================================================== */
+    const response = await api.get<Order>(
+      `${BASE_URL}/${encodeURIComponent(id)}`,
+    );
 
-getSellerOrders: async (): Promise<Order[]> => {
-const response =
-await api.get<Order[]>(
-`${BASE_URL}/seller`,
-);
+    return response.data;
+  },
 
-return response.data;
+  /** Update fulfillment status and optional shipment tracking information. */
+  updateStatus: async (
+    id: string,
+    data: UpdateOrderStatusRequest,
+  ): Promise<Order> => {
+    if (!id?.trim()) {
+      throw new Error("Order ID is required.");
+    }
 
-},
+    if (!data || !data.status) {
+      throw new Error("Order status is required.");
+    }
 
-/* ==========================================================================
-SELLER STORE ORDERS
-========================================================================== */
+    const response = await api.patch<Order>(
+      `${BASE_URL}/${encodeURIComponent(id)}/status`,
+      data,
+    );
 
-getSellerStoreOrders: async (
-storeId: string,
-): Promise<Order[]> => {
-if (!storeId) {
-throw new Error(
-"Store ID is required.",
-);
-}
+    return response.data;
+  },
 
-const response =
-  await api.get<Order[]>(
-    `${BASE_URL}/seller/store/${storeId}`,
-  );
+  /**
+   * Correct the recipient's shipping address before purchasing a label.
+   *
+   * Requires the backend route:
+   * PATCH /fockis-shop/orders/:id/shipping-address
+   *
+   * The backend must verify seller authorization and reject changes
+   * when shipment fulfillment or label purchase has already occurred.
+   */
+  updateShippingAddress: async (
+    id: string,
+    data: UpdateShippingAddressRequest,
+  ): Promise<Order> => {
+    if (!id?.trim()) {
+      throw new Error("Order ID is required.");
+    }
 
-return response.data;
+    if (!data) {
+      throw new Error("Shipping address is required.");
+    }
 
-},
+    const requiredFields: Array<keyof UpdateShippingAddressRequest> = [
+      "fullName",
+      "phone",
+      "street",
+      "city",
+      "country",
+    ];
 
-/* ==========================================================================
-SINGLE ORDER
-========================================================================== */
+    for (const field of requiredFields) {
+      if (!String(data[field] ?? "").trim()) {
+        throw new Error(
+          `Shipping address field "${field}" is required.`,
+        );
+      }
+    }
 
-getOrderById: async (
-id: string,
-): Promise<Order> => {
-if (!id) {
-throw new Error(
-"Order ID is required.",
-);
-}
+    if (
+      data.country.trim().toLowerCase() === "us" ||
+      data.country.trim().toLowerCase() === "usa" ||
+      data.country.trim().toLowerCase() === "united states" ||
+      data.country.trim().toLowerCase() === "united states of america"
+    ) {
+      if (!data.state?.trim()) {
+        throw new Error("State is required for US shipping addresses.");
+      }
 
-const response =
-  await api.get<Order>(
-    `${BASE_URL}/${id}`,
-  );
+      if (!data.zipCode?.trim()) {
+        throw new Error("ZIP code is required for US shipping addresses.");
+      }
+    }
 
-return response.data;
+    const response = await api.patch<Order>(
+      `${BASE_URL}/${encodeURIComponent(id)}/shipping-address`,
+      data,
+    );
 
-},
-
-/* ==========================================================================
-UPDATE ORDER STATUS
-========================================================================== */
-
-updateStatus: async (
-id: string,
-data: UpdateOrderStatusRequest,
-): Promise<Order> => {
-if (!id) {
-throw new Error(
-"Order ID is required.",
-);
-}
-
-if (!data) {
-  throw new Error(
-    "Order status update data is required.",
-  );
-}
-
-if (!data.status) {
-  throw new Error(
-    "Order status is required.",
-  );
-}
-
-const response =
-  await api.patch<Order>(
-    `${BASE_URL}/${id}/status`,
-    data,
-  );
-
-return response.data;
-
-},
+    return response.data;
+  },
 };

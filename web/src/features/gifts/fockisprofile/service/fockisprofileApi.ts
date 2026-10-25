@@ -313,15 +313,33 @@ function normalizePost(
       ),
     );
 
+  /*
+   * The backend Post schema stores the author as `user`, a plain user-ID
+   * string (not populated). Some older responses may send an object in
+   * `author`/`user` instead. Handle both explicitly so the author ID is
+   * never lost (previously a string was spread into an empty user).
+   */
+  const rawAuthor =
+    post?.author ?? post?.user;
+
+  const authorId = String(
+    typeof rawAuthor === "string"
+      ? rawAuthor
+      : rawAuthor?._id ??
+          rawAuthor?.id ??
+          post?.userId ??
+          "",
+  );
+
   const author: FockisUser | null =
-    post?.author
-      ? normalizeUser(
-          post.author,
-        )
-      : post?.user
-        ? normalizeUser(
-            post.user,
-          )
+    rawAuthor && typeof rawAuthor === "object"
+      ? normalizeUser(rawAuthor)
+      : authorId
+        ? normalizeUser({
+            _id: authorId,
+            username: post?.username,
+            profilePicture: post?.userPhoto,
+          })
         : null;
 
   return {
@@ -335,6 +353,30 @@ function normalizePost(
     _id:
       post._id ||
       post.id,
+
+    userId:
+      authorId || undefined,
+
+    // Keep the author's image on the top-level field consumed by feed cards.
+    // Different API responses may return it on the populated author/user object.
+    userPhoto: normalizeMediaUrl(
+      post?.userPhoto ||
+        post?.userPhotoUrl ||
+        post?.authorPhoto ||
+        (rawAuthor && typeof rawAuthor === "object"
+          ? rawAuthor.avatar ||
+            rawAuthor.userPhoto ||
+            rawAuthor.photo ||
+            rawAuthor.profilePhoto ||
+            rawAuthor.profilePicture ||
+            rawAuthor.profileImage ||
+            rawAuthor.profile_picture
+          : "") ||
+        author?.avatar ||
+        author?.profilePicture ||
+        author?.profileImage ||
+        "",
+    ),
 
     content:
       post.content ||

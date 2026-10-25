@@ -461,7 +461,7 @@ export default function AdminRoleDetailsPage() {
         <Link
           to="/admin/roles"
           style={{
-            color: "#2563eb",
+            color: "#163a5f",
             textDecoration:
               "none",
             fontSize: 13,
@@ -515,7 +515,7 @@ export default function AdminRoleDetailsPage() {
                   : "#f3f4f6",
               color:
                 role.isSystemRole
-                  ? "#1d4ed8"
+                  ? "#10243d"
                   : "#374151",
               fontSize: 12,
               fontWeight: 800,
@@ -950,7 +950,7 @@ export default function AdminRoleDetailsPage() {
               border: 0,
               borderRadius: 8,
               background:
-                "#2563eb",
+                "#b8862f",
               color: "#fff",
               fontWeight:
                 700,

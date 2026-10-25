@@ -4,9 +4,7 @@ import { FOCKIS_API_URL } from "../../../config/fockisConfig";
 
    FOCKIS MARKETING API
 
-============================================================================ */
-
-
+\============================================================================ */
 
 import type {
 
@@ -28,15 +26,11 @@ import type {
 
 } from "../types/marketingTypes";
 
-
-
 /* ============================================================================
 
    API CONFIGURATION
 
-============================================================================ */
-
-
+\============================================================================ */
 
 const API_URL =
 
@@ -44,15 +38,11 @@ const API_URL =
 
   FOCKIS_API_URL;
 
-
-
 /* ============================================================================
 
    AUTHENTICATION
 
-============================================================================ */
-
-
+\============================================================================ */
 
 function getToken(): string | null {
 
@@ -61,8 +51,6 @@ function getToken(): string | null {
     return null;
 
   }
-
-
 
   const possibleKeys = [
 
@@ -76,15 +64,11 @@ function getToken(): string | null {
 
   ];
 
-
-
   for (const key of possibleKeys) {
 
     const value =
 
       window.localStorage.getItem(key);
-
-
 
     if (value && value.trim()) {
 
@@ -94,21 +78,15 @@ function getToken(): string | null {
 
   }
 
-
-
   return null;
 
 }
-
-
 
 /* ============================================================================
 
    GENERIC REQUEST
 
-============================================================================ */
-
-
+\============================================================================ */
 
 async function request<T>(
 
@@ -120,23 +98,17 @@ async function request<T>(
 
   const token = getToken();
 
-
-
   const headers = new Headers(
 
     options.headers,
 
   );
 
-
-
   /* --------------------------------------------------------------------------
 
      JSON CONTENT TYPE
 
   -------------------------------------------------------------------------- */
-
-
 
   if (
 
@@ -156,15 +128,11 @@ async function request<T>(
 
   }
 
-
-
   /* --------------------------------------------------------------------------
 
      JWT
 
   -------------------------------------------------------------------------- */
-
-
 
   if (token) {
 
@@ -178,15 +146,11 @@ async function request<T>(
 
   }
 
-
-
   /* --------------------------------------------------------------------------
 
      DEVELOPMENT LOGGING
 
   -------------------------------------------------------------------------- */
-
-
 
   if (
 
@@ -206,19 +170,13 @@ async function request<T>(
 
           options.method ?? "GET",
 
-
-
         url:
 
           `${API_URL}${path}`,
 
-
-
         authenticated:
 
           Boolean(token),
-
-
 
         hasAuthorizationHeader:
 
@@ -234,15 +192,11 @@ async function request<T>(
 
   }
 
-
-
   /* --------------------------------------------------------------------------
 
      AUTH CHECK
 
   -------------------------------------------------------------------------- */
-
-
 
   if (!token) {
 
@@ -254,19 +208,13 @@ async function request<T>(
 
   }
 
-
-
   /* --------------------------------------------------------------------------
 
      FETCH
 
   -------------------------------------------------------------------------- */
 
-
-
   let response: Response;
-
-
 
   try {
 
@@ -296,8 +244,6 @@ async function request<T>(
 
     );
 
-
-
     throw new Error(
 
       "Unable to connect to the Fockis API. Make sure the NestJS backend is running on http://localhost:3000.",
@@ -306,25 +252,17 @@ async function request<T>(
 
   }
 
-
-
   /* --------------------------------------------------------------------------
 
      READ RESPONSE
 
   -------------------------------------------------------------------------- */
 
-
-
   const text =
 
     await response.text();
 
-
-
   let parsed: unknown = null;
-
-
 
   if (text.trim()) {
 
@@ -342,15 +280,11 @@ async function request<T>(
 
   }
 
-
-
   /* ==========================================================================
 
      401
 
   ========================================================================== */
-
-
 
   if (
 
@@ -361,8 +295,6 @@ async function request<T>(
     let message =
 
       "Unauthorized. Your Fockis login session is invalid or expired.";
-
-
 
     if (
 
@@ -377,8 +309,6 @@ async function request<T>(
         parsed.trim();
 
     }
-
-
 
     if (
 
@@ -402,8 +332,6 @@ async function request<T>(
 
         ).message;
 
-
-
       if (
 
         typeof value === "string"
@@ -413,8 +341,6 @@ async function request<T>(
         message = value;
 
       }
-
-
 
       if (
 
@@ -429,8 +355,6 @@ async function request<T>(
       }
 
     }
-
-
 
     console.error(
 
@@ -450,8 +374,6 @@ async function request<T>(
 
     );
 
-
-
     throw new Error(
 
       `${message} [HTTP 401]`,
@@ -460,23 +382,17 @@ async function request<T>(
 
   }
 
-
-
   /* ==========================================================================
 
      OTHER HTTP ERRORS
 
   ========================================================================== */
 
-
-
   if (!response.ok) {
 
     let message =
 
       `Request failed: ${response.status}`;
-
-
 
     if (
 
@@ -491,8 +407,6 @@ async function request<T>(
         parsed.trim();
 
     }
-
-
 
     if (
 
@@ -516,8 +430,6 @@ async function request<T>(
 
         ).message;
 
-
-
       if (
 
         typeof value === "string"
@@ -527,8 +439,6 @@ async function request<T>(
         message = value;
 
       }
-
-
 
       if (
 
@@ -544,8 +454,6 @@ async function request<T>(
 
     }
 
-
-
     console.error(
 
       "[Fockis Marketing API] HTTP ERROR",
@@ -556,17 +464,11 @@ async function request<T>(
 
           options.method ?? "GET",
 
-
-
         path,
-
-
 
         status:
 
           response.status,
-
-
 
         response:
 
@@ -576,8 +478,6 @@ async function request<T>(
 
     );
 
-
-
     throw new Error(
 
       `${message} [HTTP ${response.status}]`,
@@ -586,15 +486,11 @@ async function request<T>(
 
   }
 
-
-
   /* ==========================================================================
 
      EMPTY RESPONSE
 
   ========================================================================== */
-
-
 
   if (
 
@@ -608,29 +504,21 @@ async function request<T>(
 
   }
 
-
-
   /* ==========================================================================
 
      JSON RESPONSE
 
   ========================================================================== */
 
-
-
   return parsed as T;
 
 }
-
-
 
 /* ============================================================================
 
    DASHBOARD
 
-============================================================================ */
-
-
+\============================================================================ */
 
 /**
 
@@ -648,15 +536,11 @@ export async function getMarketingDashboard() {
 
 }
 
-
-
 /* ============================================================================
 
    CAMPAIGNS
 
-============================================================================ */
-
-
+\============================================================================ */
 
 /**
 
@@ -673,8 +557,6 @@ export async function getCampaigns() {
   );
 
 }
-
-
 
 /**
 
@@ -696,8 +578,6 @@ export async function getCampaign(
 
 }
 
-
-
 /**
 
  * POST /marketing/campaigns
@@ -718,8 +598,6 @@ export async function createCampaign(
 
       method: "POST",
 
-
-
       body:
 
         JSON.stringify(
@@ -733,8 +611,6 @@ export async function createCampaign(
   );
 
 }
-
-
 
 /**
 
@@ -758,8 +634,6 @@ export async function updateCampaign(
 
       method: "PATCH",
 
-
-
       body:
 
         JSON.stringify(
@@ -773,8 +647,6 @@ export async function updateCampaign(
   );
 
 }
-
-
 
 /**
 
@@ -802,8 +674,6 @@ export async function submitCampaignForReview(
 
 }
 
-
-
 /**
 
  * POST /marketing/campaigns/:id/pause
@@ -830,8 +700,6 @@ export async function pauseCampaign(
 
 }
 
-
-
 /**
 
  * POST /marketing/campaigns/:id/resume
@@ -857,8 +725,6 @@ export async function resumeCampaign(
   );
 
 }
-
-
 
 /**
 
@@ -890,15 +756,11 @@ export async function deleteCampaign(
 
 }
 
-
-
 /* ============================================================================
 
    ADVERTISEMENTS
 
-============================================================================ */
-
-
+\============================================================================ */
 
 /**
 
@@ -915,8 +777,6 @@ export async function getAds() {
   );
 
 }
-
-
 
 /**
 
@@ -938,8 +798,6 @@ export async function getAd(
 
 }
 
-
-
 /**
 
  * GET /marketing/ads/campaign/:campaignId
@@ -960,15 +818,11 @@ export async function getAdsByCampaign(
 
 }
 
-
-
 /* ============================================================================
 
    CREATE AD
 
-============================================================================ */
-
-
+\============================================================================ */
 
 /**
 
@@ -986,8 +840,6 @@ export async function createAd(
 
 ): Promise<Advertisement> {
 
-
-
   console.log(
 
     "[Fockis Marketing API] Creating advertisement:",
@@ -995,8 +847,6 @@ export async function createAd(
     payload,
 
   );
-
-
 
   const response =
 
@@ -1007,8 +857,6 @@ export async function createAd(
       {
 
         method: "POST",
-
-
 
         body:
 
@@ -1022,8 +870,6 @@ export async function createAd(
 
     );
 
-
-
   console.log(
 
     "[Fockis Marketing API] Create ad response:",
@@ -1032,13 +878,9 @@ export async function createAd(
 
   );
 
-
-
   /* --------------------------------------------------------------------------
 
      BACKEND MAY RETURN:
-
-
 
      {
 
@@ -1046,17 +888,11 @@ export async function createAd(
 
      }
 
-
-
      OR:
-
-
 
      {...}
 
   -------------------------------------------------------------------------- */
-
-
 
   if (
 
@@ -1076,8 +912,6 @@ export async function createAd(
 
       };
 
-
-
     if (wrapped.ad) {
 
       return wrapped.ad;
@@ -1086,15 +920,11 @@ export async function createAd(
 
   }
 
-
-
   /* --------------------------------------------------------------------------
 
      DIRECT ADVERTISEMENT
 
   -------------------------------------------------------------------------- */
-
-
 
   if (
 
@@ -1108,8 +938,6 @@ export async function createAd(
 
   }
 
-
-
   throw new Error(
 
     "The server returned an empty advertisement response.",
@@ -1118,15 +946,11 @@ export async function createAd(
 
 }
 
-
-
 /* ============================================================================
 
    UPLOAD ADVERTISEMENT MEDIA
 
-============================================================================ */
-
-
+\============================================================================ */
 
 /**
 
@@ -1168,35 +992,19 @@ export async function uploadAdMedia(
 
   success: boolean;
 
-
-
   url: string;
-
-
 
   mediaUrl: string;
 
-
-
   fileUrl: string;
-
-
 
   filename: string;
 
-
-
   originalName: string;
-
-
 
   mimeType: string;
 
-
-
   size: number;
-
-
 
   type:
 
@@ -1205,8 +1013,6 @@ export async function uploadAdMedia(
     | "VIDEO";
 
 }> {
-
-
 
   if (!file) {
 
@@ -1218,25 +1024,17 @@ export async function uploadAdMedia(
 
   }
 
-
-
   /* --------------------------------------------------------------------------
 
      CLIENT-SIDE SIZE CHECK
-
-
 
      Backend allows 50 MB.
 
   -------------------------------------------------------------------------- */
 
-
-
   const maxSize =
 
     50 * 1024 * 1024;
-
-
 
   if (
 
@@ -1254,15 +1052,11 @@ export async function uploadAdMedia(
 
   }
 
-
-
   /* --------------------------------------------------------------------------
 
      CLIENT-SIDE TYPE CHECK
 
   -------------------------------------------------------------------------- */
-
-
 
   const allowedTypes = [
 
@@ -1272,8 +1066,6 @@ export async function uploadAdMedia(
 
     "image/webp",
 
-
-
     "video/mp4",
 
     "video/webm",
@@ -1281,8 +1073,6 @@ export async function uploadAdMedia(
     "video/quicktime",
 
   ];
-
-
 
   if (
 
@@ -1302,21 +1092,15 @@ export async function uploadAdMedia(
 
   }
 
-
-
   /* --------------------------------------------------------------------------
 
      FORM DATA
 
   -------------------------------------------------------------------------- */
 
-
-
   const formData =
 
     new FormData();
-
-
 
   formData.append(
 
@@ -1325,8 +1109,6 @@ export async function uploadAdMedia(
     file,
 
   );
-
-
 
   console.log(
 
@@ -1338,13 +1120,9 @@ export async function uploadAdMedia(
 
         file.name,
 
-
-
       type:
 
         file.type,
-
-
 
       size:
 
@@ -1354,31 +1132,19 @@ export async function uploadAdMedia(
 
   );
 
-
-
   /* --------------------------------------------------------------------------
 
      REQUEST
 
-
-
      IMPORTANT:
-
-
 
      Do NOT manually set Content-Type.
 
-
-
      The browser automatically creates:
-
-
 
      multipart/form-data; boundary=...
 
   -------------------------------------------------------------------------- */
-
-
 
   const response =
 
@@ -1386,35 +1152,19 @@ export async function uploadAdMedia(
 
       success: boolean;
 
-
-
       url: string;
-
-
 
       mediaUrl: string;
 
-
-
       fileUrl: string;
-
-
 
       filename: string;
 
-
-
       originalName: string;
-
-
 
       mimeType: string;
 
-
-
       size: number;
-
-
 
       type:
 
@@ -1430,8 +1180,6 @@ export async function uploadAdMedia(
 
         method: "POST",
 
-
-
         body:
 
           formData,
@@ -1440,8 +1188,6 @@ export async function uploadAdMedia(
 
     );
 
-
-
   console.log(
 
     "[Fockis Marketing API] Advertisement media uploaded:",
@@ -1449,8 +1195,6 @@ export async function uploadAdMedia(
     response,
 
   );
-
-
 
   if (
 
@@ -1468,21 +1212,15 @@ export async function uploadAdMedia(
 
   }
 
-
-
   return response;
 
 }
-
-
 
 /* ============================================================================
 
    UPDATE AD
 
-============================================================================ */
-
-
+\============================================================================ */
 
 /**
 
@@ -1506,8 +1244,6 @@ export async function updateAd(
 
       method: "PATCH",
 
-
-
       body:
 
         JSON.stringify(
@@ -1522,21 +1258,36 @@ export async function updateAd(
 
 }
 
-
-
 /* ============================================================================
 
    ACTIVATE AD
 
-============================================================================ */
-
-
+\============================================================================ */
 
 /**
 
  * POST /marketing/ads/:id/activate
 
  */
+
+/**
+ * POST /marketing/ads/:id/submit-for-review
+ * Submits a draft or rejected advertisement for admin review.
+ */
+export async function submitAdForReview(
+  id: string,
+): Promise<Advertisement> {
+  if (!id?.trim()) {
+    throw new Error("An advertisement ID is required.");
+  }
+
+  return request<Advertisement>(
+    `/marketing/ads/${encodeURIComponent(id)}/submit-for-review`,
+    {
+      method: "POST",
+    },
+  );
+}
 
 export async function activateAd(
 
@@ -1558,15 +1309,11 @@ export async function activateAd(
 
 }
 
-
-
 /* ============================================================================
 
    PAUSE AD
 
-============================================================================ */
-
-
+\============================================================================ */
 
 /**
 
@@ -1594,15 +1341,11 @@ export async function pauseAd(
 
 }
 
-
-
 /* ============================================================================
 
    DELETE AD
 
-============================================================================ */
-
-
+\============================================================================ */
 
 /**
 
@@ -1634,15 +1377,11 @@ export async function deleteAd(
 
 }
 
-
-
 /* ============================================================================
 
    FEED AD DELIVERY
 
-============================================================================ */
-
-
+\============================================================================ */
 
 /**
 
@@ -1651,64 +1390,104 @@ export async function deleteAd(
  */
 
 export async function getFeedAds(
+
   placement: ExtendedAdPlacement = "FEED",
+
   limit = 5,
+
 ): Promise<DeliveredFeedAd[]> {
+
   const safeLimit = Math.max(
+
     1,
+
     Math.min(Number(limit) || 5, 20),
+
   );
 
   const params = new URLSearchParams({
+
     placement,
+
     limit: String(safeLimit),
+
     _t: String(Date.now()),
+
   });
 
   const result = await request<{
+
     ads?: DeliveredFeedAd[];
+
     count?: number;
+
   }>(
+
     `/marketing/delivery/feed-ads?${params.toString()}`,
+
     {
+
       method: "GET",
+
       cache: "no-store",
+
       headers: {
+
         Accept: "application/json",
+
         "Cache-Control": "no-cache, no-store, max-age=0",
+
         Pragma: "no-cache",
+
       },
+
     },
+
   );
 
   const ads = Array.isArray(result?.ads)
+
     ? result.ads
+
     : [];
 
   console.debug(
+
     "[Fockis Feed Ads] Fresh delivery response:",
+
     {
+
       placement,
+
       requestedLimit: safeLimit,
+
       returnedAds: ads.length,
+
       count: result?.count ?? ads.length,
+
       ads: ads.map((ad) => ({
+
         id: ad.id,
+
         campaignId: ad.campaignId,
+
         placement: ad.placement,
+
         type: ad.type,
+
       })),
+
     },
+
   );
 
   return ads;
+
 }/* ============================================================================
 
    AD EVENT TRACKING
 
-============================================================================ */
-
-
+\============================================================================ */
 
 /**
 
@@ -1722,33 +1501,21 @@ export async function trackAdEvent(
 
     adId: string;
 
-
-
     campaignId: string;
-
-
 
     type:
 
       FeedAdEventType;
 
-
-
     placement?: string;
 
-
-
     sessionId?: string;
-
-
 
     deviceType?: string;
 
   },
 
 ) {
-
-
 
   return request<{
 
@@ -1763,8 +1530,6 @@ export async function trackAdEvent(
     {
 
       method: "POST",
-
-
 
       body:
 

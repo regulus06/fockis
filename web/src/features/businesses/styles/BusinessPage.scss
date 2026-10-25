@@ -1,392 +1,502 @@
-/* ============================================================================
-   FOCKIS BUSINESS PROFILE PAGE
-============================================================================ */
+@use "./fkb-tokens" as *;
 
-.fk-business-page {
-  min-height: 100vh;
-  padding: 24px;
-  background: #f5f6f8;
-  box-sizing: border-box;
+// ============================================================================
+// BUSINESS PROFILE PAGE
+// Shared tokens, buttons and badges: BusinessUi.scss
+// ============================================================================
+
+.fkb-profile {
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+    color: var(--fkb-text-muted);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--fkb-text);
+    }
+  }
+
+  &__notice {
+    margin-bottom: 16px;
+
+    a {
+      font-weight: 600;
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // HERO
+  // --------------------------------------------------------------------------
+
+  &__hero {
+    @include fkb-surface;
+    overflow: hidden;
+  }
+
+  &__cover {
+    --fkb-cover-ratio: 16 / 7;
+
+    @include fkb-up($fkb-bp-md) {
+      --fkb-cover-ratio: 4 / 1;
+    }
+  }
+
+  &__cover-skeleton {
+    aspect-ratio: 3 / 1;
+    border-radius: 0;
+  }
+
+  &__hero-body {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 4px 20px;
+    padding: 0 20px 20px;
+
+    @include fkb-up($fkb-bp-md) {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: end;
+      padding: 0 28px 24px;
+    }
+
+    @include fkb-down($fkb-bp-sm) {
+      grid-template-columns: minmax(0, 1fr);
+      padding: 0 16px 16px;
+    }
+  }
+
+  &__logo {
+    margin-top: -56px;
+
+    @include fkb-down($fkb-bp-sm) {
+      --fkb-logo-size: 88px !important;
+      margin-top: -44px;
+    }
+  }
+
+  &__logo-skeleton {
+    width: 112px;
+    height: 112px;
+    margin-top: -56px;
+    border-radius: var(--fkb-radius-md);
+    border: 3px solid #ffffff;
+  }
+
+  &__identity {
+    min-width: 0;
+    padding-top: 14px;
+
+    h1 {
+      margin-top: 8px;
+      font-size: clamp(1.5rem, 1.15rem + 1.4vw, 2.125rem);
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  &__tagline {
+    margin-top: 6px;
+    color: var(--fkb-text);
+    font-size: 1.0625rem;
+  }
+
+  &__location {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    color: var(--fkb-text-muted);
+    font-size: 0.9375rem;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+    grid-column: 1 / -1;
+
+    @include fkb-up($fkb-bp-md) {
+      grid-column: auto;
+      justify-content: flex-end;
+      max-width: 420px;
+    }
+
+    @include fkb-down($fkb-bp-sm) {
+      .fkb-btn {
+        flex: 1 1 calc(50% - 4px);
+      }
+    }
+  }
+
+  &__tabs {
+    display: flex;
+    gap: 4px;
+    padding: 0 12px;
+    border-top: 1px solid var(--fkb-border);
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    @include fkb-up($fkb-bp-md) {
+      padding: 0 20px;
+    }
+  }
+
+  &__tab {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 52px;
+    padding: 0 14px;
+    color: var(--fkb-text-muted);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover {
+      color: var(--fkb-text);
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 0;
+      height: 3px;
+      border-radius: 3px 3px 0 0;
+      background: transparent;
+    }
+
+    &[aria-current="page"] {
+      color: var(--fkb-text);
+
+      &::after {
+        background: var(--fkb-accent);
+      }
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // LAYOUT
+  // --------------------------------------------------------------------------
+
+  &__layout {
+    display: grid;
+    gap: 20px;
+    margin-top: 20px;
+    grid-template-columns: minmax(0, 1fr);
+
+    @include fkb-up($fkb-bp-md) {
+      grid-template-columns: minmax(0, 1fr) 340px;
+      align-items: start;
+    }
+  }
+
+  &__main,
+  &__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+  }
+
+  &__aside {
+    @include fkb-up($fkb-bp-md) {
+      position: sticky;
+      top: 24px;
+    }
+  }
+
+  &__panel {
+    padding: 20px;
+    @include fkb-surface;
+    scroll-margin-top: 24px;
+
+    &:focus {
+      outline: none;
+    }
+
+    &:focus-visible {
+      @include fkb-focus-ring;
+    }
+
+    &--flush {
+      padding: 20px;
+    }
+  }
+
+  &__panel-title {
+    margin-bottom: 12px !important;
+    font-size: 1.0625rem !important;
+    font-weight: 700;
+  }
+
+  &__description {
+    color: var(--fkb-text);
+    font-size: 1rem;
+    line-height: 1.65;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+
+    &--clamp {
+      @include fkb-line-clamp(6);
+    }
+  }
+
+  &__more {
+    margin-top: 12px;
+  }
+
+  &__deals {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    @include fkb-up($fkb-bp-sm) {
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+
+    .fkb-offer__title {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+  }
+
+  &__address {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 8px;
+    font-style: normal;
+    font-size: 1rem;
+  }
+
+  &__coords {
+    margin-bottom: 16px !important;
+    font-size: 0.875rem;
+  }
+
+  &__hours-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px !important;
+    color: var(--fkb-text-muted);
+    font-size: 0.9375rem;
+  }
+
+  &__tz {
+    margin-top: 10px !important;
+    font-size: 0.8125rem;
+  }
+
+  &__facts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    div {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--fkb-text);
+      font-size: 0.9375rem;
+
+      svg {
+        color: var(--fkb-text-muted);
+      }
+    }
+  }
+
+  &__related {
+    margin-top: 48px;
+  }
 }
 
-/* ============================================================================
-   LOADING
-============================================================================ */
+// ============================================================================
+// DETAILS LIST
+// ============================================================================
 
-.fk-business-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-  padding: 40px;
-  color: #555;
-  font-size: 16px;
-  font-weight: 600;
+.fkb-details {
+  display: grid;
+  gap: 0;
+  margin: 20px 0 0;
+  border-top: 1px solid var(--fkb-border);
+
+  div {
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--fkb-border);
+
+    @include fkb-down($fkb-bp-sm) {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2px;
+    }
+  }
+
+  dt {
+    color: var(--fkb-text-muted);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  dd {
+    margin: 0;
+    font-size: 0.9375rem;
+  }
 }
 
-/* ============================================================================
-   EMPTY
-============================================================================ */
+// ============================================================================
+// CONTACT
+// ============================================================================
 
-.fk-business-empty {
+.fkb-contact-list {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-  padding: 40px;
-  text-align: center;
-}
-
-.fk-business-empty h2 {
-  margin: 0 0 8px;
-  color: #171717;
-  font-size: 28px;
-}
-
-.fk-business-empty p {
+  gap: 14px;
   margin: 0;
-  color: #777;
-  font-size: 14px;
-}
+  padding: 0;
+  list-style: none;
 
-/* ============================================================================
-   BUSINESS PROFILE
-============================================================================ */
-
-.fk-business-profile {
-  width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;
-  overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 22px;
-  background: #fff;
-  box-shadow:
-    0 12px 35px rgba(0, 0, 0, 0.08);
-}
-
-/* ============================================================================
-   COVER
-============================================================================ */
-
-.fk-business-profile__cover {
-  position: relative;
-  width: 100%;
-  height: 300px;
-  overflow: hidden;
-  background:
-    linear-gradient(
-      135deg,
-      #ff9900,
-      #ff6b00
-    );
-}
-
-.fk-business-profile__cover img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.fk-business-profile__cover > div {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  font-size: 70px;
-  background:
-    radial-gradient(
-      circle at 30% 20%,
-      rgba(255, 255, 255, 0.2),
-      transparent 35%
-    ),
-    linear-gradient(
-      135deg,
-      #ff9900,
-      #ff6b00
-    );
-}
-
-/* ============================================================================
-   PROFILE CONTENT
-============================================================================ */
-
-.fk-business-profile__content {
-  position: relative;
-  padding: 0 32px 32px;
-}
-
-/* ============================================================================
-   IDENTITY
-============================================================================ */
-
-.fk-business-profile__identity {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-top: -70px;
-  position: relative;
-  z-index: 2;
-}
-
-.fk-business-profile__identity img,
-.fk-business-profile__identity > span {
-  width: 140px;
-  height: 140px;
-  flex: 0 0 140px;
-  border: 6px solid #fff;
-  border-radius: 50%;
-  box-sizing: border-box;
-  box-shadow:
-    0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
-.fk-business-profile__identity img {
-  display: block;
-  object-fit: cover;
-  background: #f1f1f1;
-}
-
-.fk-business-profile__identity > span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ff9900;
-  font-size: 48px;
-}
-
-.fk-business-profile__identity > div {
-  min-width: 0;
-  padding-top: 58px;
-}
-
-.fk-business-profile__identity h1 {
-  margin: 0;
-  color: #171717;
-  font-size: 36px;
-  line-height: 1.15;
-  font-weight: 800;
-  word-break: break-word;
-}
-
-.fk-business-profile__identity > div > span {
-  display: inline-block;
-  margin-top: 8px;
-  color: #777;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-/* ============================================================================
-   ABOUT
-============================================================================ */
-
-.fk-business-profile__about {
-  margin-top: 34px;
-  padding-top: 25px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.fk-business-profile__about h2,
-.fk-business-profile__contact h2 {
-  margin: 0 0 10px;
-  color: #171717;
-  font-size: 20px;
-  line-height: 1.25;
-}
-
-.fk-business-profile__about p {
-  max-width: 800px;
-  margin: 0;
-  color: #555;
-  font-size: 15px;
-  line-height: 1.7;
-}
-
-/* ============================================================================
-   CONTACT
-============================================================================ */
-
-.fk-business-profile__contact {
-  display: grid;
-  gap: 9px;
-  margin-top: 28px;
-  padding-top: 25px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.fk-business-profile__contact span {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #555;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-/* ============================================================================
-   BUSINESS PAGE SECTIONS
-============================================================================ */
-
-.fk-business-page__section {
-  width: 100%;
-  max-width: 1100px;
-  margin: 24px auto 0;
-}
-
-/* ============================================================================
-   BUSINESS FEED RAIL
-============================================================================ */
-
-.fk-business-page__section .business-feed-rail {
-  width: 100%;
-}
-
-/* ============================================================================
-   RESPONSIVE
-============================================================================ */
-
-@media (max-width: 900px) {
-  .fk-business-page {
-    padding: 16px;
-  }
-
-  .fk-business-profile__cover {
-    height: 250px;
-  }
-
-  .fk-business-profile__content {
-    padding: 0 24px 26px;
-  }
-
-  .fk-business-profile__identity {
-    gap: 16px;
-  }
-
-  .fk-business-profile__identity img,
-  .fk-business-profile__identity > span {
-    width: 120px;
-    height: 120px;
-    flex-basis: 120px;
-  }
-
-  .fk-business-profile__identity > div {
-    padding-top: 50px;
-  }
-
-  .fk-business-profile__identity h1 {
-    font-size: 30px;
-  }
-}
-
-/* ============================================================================
-   MOBILE
-============================================================================ */
-
-@media (max-width: 600px) {
-  .fk-business-page {
-    padding: 0;
-    background: #f5f6f8;
-  }
-
-  .fk-business-profile {
-    border-radius: 0;
-    border-left: 0;
-    border-right: 0;
-    box-shadow: none;
-  }
-
-  .fk-business-profile__cover {
-    height: 210px;
-  }
-
-  .fk-business-profile__cover > div {
-    font-size: 52px;
-  }
-
-  .fk-business-profile__content {
-    padding: 0 16px 24px;
-  }
-
-  .fk-business-profile__identity {
+  li {
     display: flex;
-    align-items: flex-end;
-    gap: 13px;
-    margin-top: -55px;
+    gap: 12px;
+    min-width: 0;
   }
 
-  .fk-business-profile__identity img,
-  .fk-business-profile__identity > span {
-    width: 100px;
-    height: 100px;
-    flex-basis: 100px;
-    border-width: 5px;
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: var(--fkb-radius-sm);
+    background: var(--fkb-navy-soft);
+    color: var(--fkb-navy);
   }
 
-  .fk-business-profile__identity > span {
-    font-size: 36px;
+  &__body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    font-size: 0.9375rem;
+
+    a {
+      color: var(--fkb-text);
+      font-weight: 600;
+      text-decoration: none;
+      overflow-wrap: anywhere;
+
+      &:hover {
+        color: var(--fkb-accent-text);
+        text-decoration: underline;
+      }
+    }
+
+    address {
+      display: flex;
+      flex-direction: column;
+      font-style: normal;
+    }
   }
 
-  .fk-business-profile__identity > div {
-    flex: 1;
-    padding-top: 0;
-    padding-bottom: 5px;
+  &__label {
+    color: var(--fkb-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
-  .fk-business-profile__identity h1 {
-    font-size: 24px;
-    line-height: 1.2;
-  }
-
-  .fk-business-profile__identity > div > span {
-    margin-top: 5px;
-    font-size: 10px;
-  }
-
-  .fk-business-profile__about {
-    margin-top: 24px;
-    padding-top: 20px;
-  }
-
-  .fk-business-profile__contact {
-    margin-top: 22px;
-    padding-top: 20px;
-  }
-
-  .fk-business-profile__about h2,
-  .fk-business-profile__contact h2 {
-    font-size: 18px;
-  }
-
-  .fk-business-profile__about p {
-    font-size: 14px;
-    line-height: 1.6;
-  }
-
-  .fk-business-profile__contact span {
-    font-size: 13px;
-  }
-
-  .fk-business-page__section {
-    margin-top: 16px;
+  &__body a.fkb-contact-list__sub-link {
+    margin-top: 4px;
+    color: var(--fkb-accent-text);
+    font-size: 0.875rem;
   }
 }
 
-/* ============================================================================
-   REDUCED MOTION
-============================================================================ */
+.fkb-social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--fkb-border);
 
-@media (prefers-reduced-motion: reduce) {
-  .fk-business-page *,
-  .fk-business-page *::before,
-  .fk-business-page *::after {
-    scroll-behavior: auto;
-    transition: none !important;
-    animation: none !important;
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--fkb-border);
+    border-radius: 50%;
+    color: var(--fkb-navy);
+    font-size: 1.125rem;
+    transition: background-color 0.15s var(--fkb-ease), border-color 0.15s var(--fkb-ease);
+
+    &:hover {
+      background: var(--fkb-navy-soft);
+      border-color: var(--fkb-border-strong);
+    }
+  }
+}
+
+// ============================================================================
+// HOURS
+// ============================================================================
+
+.fkb-hours {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+
+  th,
+  td {
+    padding: 7px 0;
+    border-bottom: 1px solid var(--fkb-border);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  tr:last-child th,
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  th {
+    width: 45%;
+    color: var(--fkb-text-muted);
+    font-weight: 500;
+  }
+
+  td {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__closed {
+    color: var(--fkb-text-muted);
   }
 }

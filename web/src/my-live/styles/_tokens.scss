@@ -1,0 +1,151 @@
+// =============================================================================
+// FOCKIS LIVE · DESIGN TOKENS
+// web/src/my-live/styles/_tokens.scss
+//
+// One source of truth for the Live Studio, Live Viewer and Live Manager.
+// Tokens are emitted as CSS custom properties on each feature's own root
+// class (.fls, .live-viewer, .live-manager) — never on :root — so nothing
+// outside Fockis Live is affected.
+//
+// Usage:
+//   @use "../styles/tokens" as fl;
+//   .my-root { @include fl.tokens; }
+// =============================================================================
+
+@mixin tokens-light {
+  // Brand
+  --fl-blue: #1765f5;
+  --fl-blue-bright: #2f7bff;
+  --fl-blue-deep: #0f4fd1;
+  --fl-blue-soft: #e8f0ff;
+  --fl-blue-softer: #f3f7ff;
+  --fl-blue-line: #c9dafd;
+  --fl-gradient: linear-gradient(135deg, #2f7bff 0%, #1765f5 55%, #0f4fd1 100%);
+
+  // Surfaces
+  --fl-bg: #f1f5fc;
+  --fl-surface: #ffffff;
+  --fl-surface-2: #f6f8fd;
+  --fl-surface-3: #eef2fa;
+  --fl-border: #e1e8f5;
+  --fl-border-strong: #cfdaee;
+
+  // Text
+  --fl-text: #0b1a3a;
+  --fl-text-2: #4a5a7b;
+  --fl-text-3: #7b89a6;
+  --fl-on-blue: #ffffff;
+
+  // Media overlays (always dark — they sit on video)
+  --fl-media: #0a1226;
+  --fl-scrim: rgba(8, 14, 32, 0.55);
+  --fl-scrim-strong: rgba(8, 14, 32, 0.78);
+  --fl-glass: rgba(20, 28, 48, 0.42);
+
+  // Status
+  --fl-live: #ef3b4f;
+  --fl-danger: #e0364a;
+  --fl-danger-soft: #fdecee;
+  --fl-success: #16a34a;
+  --fl-success-soft: #e7f7ed;
+  --fl-warning: #c27c0e;
+  --fl-warning-soft: #fdf3e2;
+
+  // Shadow
+  --fl-shadow-sm: 0 1px 2px rgba(16, 38, 89, 0.06);
+  --fl-shadow: 0 1px 2px rgba(16, 38, 89, 0.05), 0 6px 18px rgba(16, 38, 89, 0.06);
+  --fl-shadow-lg: 0 18px 48px rgba(16, 38, 89, 0.16);
+  --fl-shadow-blue: 0 6px 16px rgba(23, 101, 245, 0.28);
+  --fl-focus: 0 0 0 3px rgba(47, 123, 255, 0.35);
+}
+
+@mixin tokens-dark {
+  --fl-blue: #2f7bff;
+  --fl-blue-bright: #5596ff;
+  --fl-blue-deep: #1765f5;
+  --fl-blue-soft: rgba(47, 123, 255, 0.16);
+  --fl-blue-softer: rgba(47, 123, 255, 0.08);
+  --fl-blue-line: rgba(85, 150, 255, 0.4);
+
+  --fl-bg: #060d1f;
+  --fl-surface: #0c1630;
+  --fl-surface-2: #101d3c;
+  --fl-surface-3: #152447;
+  --fl-border: rgba(124, 164, 255, 0.14);
+  --fl-border-strong: rgba(124, 172, 255, 0.26);
+
+  --fl-text: #eaf1ff;
+  --fl-text-2: #a9b7d8;
+  --fl-text-3: #7486ab;
+
+  --fl-danger-soft: rgba(239, 59, 79, 0.16);
+  --fl-success-soft: rgba(22, 163, 74, 0.16);
+  --fl-warning-soft: rgba(194, 124, 14, 0.18);
+
+  --fl-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --fl-shadow: 0 10px 28px rgba(0, 4, 18, 0.4);
+  --fl-shadow-lg: 0 24px 60px rgba(0, 4, 18, 0.6);
+}
+
+@mixin tokens {
+  @include tokens-light;
+
+  // Shape, type and motion are theme independent.
+  --fl-radius-xs: 8px;
+  --fl-radius-sm: 10px;
+  --fl-radius: 14px;
+  --fl-radius-lg: 18px;
+  --fl-radius-xl: 22px;
+  --fl-radius-pill: 999px;
+
+  --fl-space-1: 4px;
+  --fl-space-2: 8px;
+  --fl-space-3: 12px;
+  --fl-space-4: 16px;
+  --fl-space-5: 20px;
+  --fl-space-6: 24px;
+
+  --fl-font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --fl-font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --fl-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --fl-fast: 140ms;
+  --fl-med: 220ms;
+
+  [data-theme="dark"] & {
+    @include tokens-dark;
+  }
+}
+
+// Shared focus ring for any interactive element.
+@mixin focus-ring {
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--fl-focus);
+  }
+}
+
+// Visually hidden but readable by screen readers.
+@mixin sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

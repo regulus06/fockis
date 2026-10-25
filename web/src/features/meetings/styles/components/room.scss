@@ -1,1813 +1,1524 @@
-/* =========================================================
+@use '../tokens' as t;
+@use '../mixins' as m;
+
+/* =========================================================================
    FOCKIS MEETING ROOM
-   Full-screen conferencing layout
-   ========================================================= */
+   Header across the top, stage + rail on the left, tabbed sidebar on the
+   right, floating toolbar centred underneath. Every rule is scoped to
+   .fm-room so nothing leaks into the rest of Fockis.
+   ========================================================================= */
 
 .fm-room {
-  --fm-room-bg: #050b16;
-  --fm-room-bg-soft: #071120;
-  --fm-room-stage: #07101f;
-  --fm-room-surface: rgba(14, 25, 43, 0.94);
-  --fm-room-surface-2: rgba(20, 34, 56, 0.96);
-  --fm-room-border: rgba(148, 163, 184, 0.14);
-  --fm-room-border-strong: rgba(148, 163, 184, 0.22);
-  --fm-room-text: #f8fafc;
-  --fm-room-muted: #94a3b8;
-  --fm-room-muted-2: #64748b;
-  --fm-room-blue: #3b82f6;
-  --fm-room-blue-dark: #2563eb;
-  --fm-room-green: #10b981;
-  --fm-room-red: #ef4444;
+  // Palette for the live room. Exposed as custom properties so the
+  // participant, control and waiting-room styles can share them.
+  --fm-bg: #060b16;
+  --fm-bg-2: #0a1222;
+  --fm-surface: #0d1626;
+  --fm-surface-2: #121d31;
+  --fm-surface-3: #18253c;
+  --fm-border: rgba(148, 163, 184, 0.14);
+  --fm-border-strong: rgba(148, 163, 184, 0.24);
+  --fm-text: #f5f7fb;
+  --fm-text-2: #c5cfdd;
+  --fm-muted: #8d9bb0;
+  --fm-blue: #2e6bf6;
+  --fm-blue-hover: #4079ff;
+  --fm-blue-text: #5b95ff;
+  --fm-blue-soft: rgba(46, 107, 246, 0.16);
+  --fm-green: #22c55e;
+  --fm-green-text: #4ade80;
+  --fm-green-soft: rgba(34, 197, 94, 0.12);
+  --fm-red: #ef3b41;
+  --fm-red-hover: #f75257;
+  --fm-red-text: #ff6b70;
+  --fm-amber: #f5b13d;
+  --fm-radius: 14px;
+  --fm-radius-sm: 10px;
+  --fm-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
 
   position: fixed;
   inset: 0;
+  z-index: 50;
+
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
 
   width: 100%;
   height: 100dvh;
-  min-height: 0;
-
-  display: flex;
   overflow: hidden;
 
-  background:
-    radial-gradient(
-      circle at 50% 35%,
-      rgba(37, 99, 235, 0.09),
-      transparent 34%
-    ),
-    var(--fm-room-bg);
-
-  color: var(--fm-room-text);
-
-  box-sizing: border-box;
-
+  color: var(--fm-text);
   isolation: isolate;
-  z-index: 50;
 
   *,
   *::before,
   *::after {
     box-sizing: border-box;
   }
+
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--fm-blue-text);
+    outline-offset: 2px;
+  }
+
+  // Shared panel primitives render in the dark sidebar here.
+  .fm-panel {
+    background: transparent;
+  }
+
+  .fm-panel--embedded .fm-panel__scroll {
+    padding-top: 6px;
+  }
+
+  .fm-empty {
+    color: var(--fm-muted);
+
+    &__icon { color: var(--fm-muted); }
+    &__title { color: var(--fm-text); }
+  }
 }
 
-/* =========================================================
-   MAIN ROOM
-   ========================================================= */
+// Zero-specificity reset so component colours always win over it.
+:where(.fm-room) button {
+  font: inherit;
+  color: inherit;
+}
+
+// Doubled class so this beats .fockis-meetings-root--dark regardless of
+// the order Vite emits the stylesheets in.
+.fm-room.fockis-meetings-root--dark,
+.fm-room.fm-room {
+  background:
+    radial-gradient(120% 70% at 30% 0%, rgba(37, 84, 190, 0.12), transparent 55%),
+    radial-gradient(90% 60% at 50% 110%, rgba(40, 92, 220, 0.22), transparent 60%),
+    var(--fm-bg);
+}
+
+/* =========================================================================
+   HEADER
+   ========================================================================= */
+
+.fm-header {
+  position: relative;
+  z-index: 30;
+
+  display: flex;
+  align-items: center;
+  gap: 22px;
+
+  min-height: 80px;
+  padding: 12px 20px 12px 28px;
+
+  background: linear-gradient(180deg, rgba(9, 15, 28, 0.98), rgba(7, 12, 23, 0.96));
+  border-bottom: 1px solid var(--fm-border);
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 0 0 auto;
+  }
+
+  &__brand-mark {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    border-radius: 10px;
+    font-weight: 800;
+
+    .fockis-mark--fill {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .fockis-mark__spacer { visibility: hidden; }
+  }
+
+  &__brand-name {
+    font-family: t.$font-display;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--fm-text);
+  }
+
+  &__brand-product {
+    margin-left: 4px;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--fm-text-2);
+  }
+
+  &__divider {
+    flex: 0 0 1px;
+    align-self: stretch;
+    margin: 4px 0;
+    background: var(--fm-border-strong);
+  }
+
+  &__meeting {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 0 1 auto;
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  &__title {
+    margin: 0;
+    min-width: 0;
+    @include m.truncate;
+    font-family: t.$font-body;
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--fm-text);
+  }
+
+  &__info {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--fm-text-2);
+    cursor: pointer;
+
+    &:hover { color: var(--fm-text); background: rgba(255, 255, 255, 0.07); }
+  }
+
+  &__schedule {
+    margin: 0;
+    @include m.truncate;
+    font-size: 15px;
+    color: var(--fm-text-2);
+  }
+
+  &__live {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 0 auto;
+    height: 44px;
+    padding: 0 20px;
+
+    border: 1px solid rgba(34, 197, 94, 0.45);
+    border-radius: t.$radius-pill;
+    background: var(--fm-green-soft);
+    color: var(--fm-green-text);
+    font-size: 18px;
+    font-weight: 600;
+
+    &-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--fm-green);
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18);
+      animation: fm-room-live 2s ease-in-out infinite;
+    }
+
+    &-timer {
+      padding-left: 10px;
+      border-left: 1px solid rgba(74, 222, 128, 0.3);
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(187, 247, 208, 0.85);
+    }
+
+    &--reconnecting {
+      border-color: rgba(245, 177, 61, 0.45);
+      background: rgba(245, 177, 61, 0.12);
+      color: var(--fm-amber);
+
+      .fm-header__live-dot { background: var(--fm-amber); box-shadow: 0 0 0 4px rgba(245, 177, 61, 0.18); }
+      .fm-header__live-timer { color: rgba(253, 230, 138, 0.85); border-color: rgba(245, 177, 61, 0.3); }
+    }
+
+    &--disconnected {
+      border-color: rgba(239, 59, 65, 0.4);
+      background: rgba(239, 59, 65, 0.1);
+      color: var(--fm-red-text);
+
+      .fm-header__live-dot { background: var(--fm-red); box-shadow: none; animation: none; }
+      .fm-header__live-timer { color: rgba(254, 202, 202, 0.8); border-color: rgba(239, 59, 65, 0.3); }
+    }
+  }
+
+  &__recording {
+    flex: 0 0 auto;
+    padding: 6px 10px;
+    border-radius: t.$radius-pill;
+    background: rgba(239, 59, 65, 0.12);
+  }
+
+  &__spacer { flex: 1 1 auto; min-width: 0; }
+
+  &__stats {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex: 0 0 auto;
+  }
+
+  &__stat {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--fm-text-2);
+
+    > span:not(.fm-header__bars) {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      line-height: 1.1;
+    }
+
+    strong {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--fm-text);
+    }
+
+    small {
+      font-size: 13px;
+      color: var(--fm-text-2);
+      white-space: nowrap;
+    }
+
+    &--good .fm-header__bars i.is-on { background: var(--fm-green); }
+    &--weak .fm-header__bars i.is-on { background: var(--fm-amber); }
+    &--poor .fm-header__bars i.is-on,
+    &--reconnecting .fm-header__bars i.is-on { background: var(--fm-red); }
+  }
+
+  &__bars {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 22px;
+
+    i {
+      width: 4px;
+      border-radius: 2px;
+      background: rgba(148, 163, 184, 0.3);
+
+      &:nth-child(1) { height: 30%; }
+      &:nth-child(2) { height: 55%; }
+      &:nth-child(3) { height: 78%; }
+      &:nth-child(4) { height: 100%; }
+    }
+  }
+
+  &__layout {
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  &__layout-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    height: 54px;
+    padding: 0 16px;
+
+    border: 1px solid var(--fm-border-strong);
+    border-radius: 12px;
+    background: var(--fm-surface-2);
+    color: var(--fm-text);
+    font-size: 17px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background t.$dur-fast ease, border-color t.$dur-fast ease;
+
+    &:hover { background: var(--fm-surface-3); border-color: rgba(148, 163, 184, 0.34); }
+    &[aria-expanded='true'] { border-color: var(--fm-blue); }
+  }
+
+  &__menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 60;
+    min-width: 210px;
+    padding: 6px;
+    border: 1px solid var(--fm-border-strong);
+    border-radius: 12px;
+    background: var(--fm-surface-2);
+    box-shadow: var(--fm-shadow);
+  }
+
+  &__menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--fm-text-2);
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover { background: rgba(255, 255, 255, 0.06); color: var(--fm-text); }
+    &[aria-checked='true'] { color: var(--fm-text); }
+  }
+
+  &__menu-check { margin-left: auto; color: var(--fm-blue-text); }
+
+  &__leave {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 0 auto;
+    height: 56px;
+    padding: 0 30px;
+
+    border: 0;
+    border-radius: 14px;
+    background: var(--fm-red);
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 10px 26px rgba(239, 59, 65, 0.28);
+    transition: background t.$dur-fast ease, transform t.$dur-fast ease;
+
+    &:hover { background: var(--fm-red-hover); }
+    &:active { transform: translateY(1px); }
+  }
+}
+
+// Phone handset turned down = hang up.
+.fm-room .fm-hangup-icon {
+  transform: rotate(135deg);
+  fill: currentColor;
+}
+
+@keyframes fm-room-live {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18); }
+  50% { box-shadow: 0 0 0 7px rgba(34, 197, 94, 0.06); }
+}
+
+/* =========================================================================
+   BODY: STAGE + SIDEBAR
+   ========================================================================= */
+
+.fm-room__body {
+  position: relative;
+  min-height: 0;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+
+  padding: 20px 16px 6px 20px;
+}
 
 .fm-room__main {
   position: relative;
-
-  flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
-
-  height: 100%;
-
   display: flex;
   flex-direction: column;
+  gap: 10px;
 
-  overflow: hidden;
-
-  background:
-    radial-gradient(
-      ellipse at 50% 40%,
-      rgba(29, 78, 216, 0.07),
-      transparent 48%
-    ),
-    var(--fm-room-bg);
+  .fm-share-banner { border-radius: var(--fm-radius-sm); }
 }
-
-.fm-room__main--panel {
-  width: calc(100% - 360px);
-}
-
-/* =========================================================
-   TOP AREA
-   ========================================================= */
-
-.fm-room__main > .fm-meeting-topbar,
-.fm-room__main > header {
-  flex: 0 0 auto;
-  position: relative;
-  z-index: 20;
-}
-
-/*
-  Make sure the actual meeting top bar stays dark.
-  This prevents the white block visible in the screenshot.
-*/
-
-.fm-room .fm-meeting-topbar {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(5, 11, 22, 0.98),
-      rgba(5, 11, 22, 0.94)
-    );
-
-  border-bottom: 1px solid var(--fm-room-border);
-
-  color: var(--fm-room-text);
-}
-
-/* =========================================================
-   SECURE / CONNECTION STRIP
-   ========================================================= */
-
-.fm-room__secure-strip {
-  flex: 0 0 42px;
-
-  height: 42px;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 0 24px;
-
-  background: rgba(5, 12, 24, 0.96);
-
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-
-  color: #dbeafe;
-
-  font-size: 13px;
-  font-weight: 500;
-
-  position: relative;
-  z-index: 15;
-}
-
-.fm-room__secure-strip-left,
-.fm-room__secure-strip-right {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.fm-room__secure-strip-left svg {
-  color: #10b981;
-}
-
-.fm-room__secure-strip-right {
-  color: #93a4bc;
-}
-
-.fm-room__secure-strip-right svg {
-  color: #ef4444;
-}
-
-/* =========================================================
-   STAGE
-   ========================================================= */
 
 .fm-room__stage {
   position: relative;
-
   flex: 1 1 auto;
   min-height: 0;
-
-  width: 100%;
-
   display: flex;
-  align-items: stretch;
-  justify-content: center;
-
-  overflow: hidden;
-
-  background:
-    radial-gradient(
-      ellipse at center,
-      rgba(18, 50, 105, 0.16) 0%,
-      rgba(7, 16, 31, 0.4) 36%,
-      rgba(3, 8, 17, 0.96) 82%
-    ),
-    var(--fm-room-stage);
 }
 
-.fm-room__stage--empty {
-  align-items: center;
-  justify-content: center;
-}
+/* ---- Stage (VideoGrid) ------------------------------------------------- */
 
-/* =========================================================
-   CURRENT EMPTY-STAGE MARKUP
-   These selectors match MeetingRoomPage.tsx exactly.
-   ========================================================= */
-
-.fm-room__stage-content {
-  position: relative;
-  z-index: 2;
-
-  width: 100%;
-  height: 100%;
+.fm-stage {
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  overflow: hidden;
-}
-
-.fm-room__stage-glow {
-  position: absolute;
-  inset: 0;
-
-  pointer-events: none;
-
-  background:
-    radial-gradient(
-      circle at 50% 42%,
-      rgba(37, 99, 235, 0.13),
-      transparent 34%
-    ),
-    radial-gradient(
-      circle at 50% 70%,
-      rgba(16, 185, 129, 0.035),
-      transparent 38%
-    );
-
-  z-index: 0;
-}
-
-/* =========================================================
-   FOCKIS EMPTY MEETING STATE
-   ========================================================= */
-
-.fm-room-empty {
-  position: relative;
-  z-index: 3;
-
-  width: min(760px, calc(100% - 40px));
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  text-align: center;
-
-  margin: 0 auto;
-  padding: 30px 20px 150px;
-
-  color: #fff;
-}
-
-.fm-room-empty__orb {
-  width: 112px;
-  height: 112px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  margin-bottom: 24px;
-
-  border-radius: 30px;
-
-  background:
-    linear-gradient(
-      145deg,
-      #3b82f6 0%,
-      #2563eb 55%,
-      #1d4ed8 100%
-    );
-
-  border: 8px solid rgba(59, 130, 246, 0.12);
-
-  box-shadow:
-    0 0 0 1px rgba(59, 130, 246, 0.24),
-    0 0 55px rgba(37, 99, 235, 0.24),
-    0 24px 70px rgba(0, 0, 0, 0.35);
-
-  color: #fff;
-
-  font-size: 42px;
-  font-weight: 800;
-  line-height: 1;
-
-  user-select: none;
-}
-
-.fm-room-empty__orb span {
-  display: block;
-
-  transform: translateY(-1px);
-}
-
-/* Waiting badge */
-
-.fm-room-empty__badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  gap: 8px;
-
-  min-height: 34px;
-
-  padding: 0 14px;
-
-  margin-bottom: 18px;
-
-  border-radius: 999px;
-
-  background: rgba(16, 185, 129, 0.08);
-
-  border: 1px solid rgba(16, 185, 129, 0.28);
-
-  color: #6ee7b7;
-
-  font-size: 13px;
-  font-weight: 650;
-
-  box-shadow:
-    0 8px 25px rgba(16, 185, 129, 0.05);
-}
-
-.fm-room-empty__badge span {
-  width: 7px;
-  height: 7px;
-
-  flex: 0 0 7px;
-
-  border-radius: 50%;
-
-  background: #10b981;
-
-  box-shadow:
-    0 0 0 3px rgba(16, 185, 129, 0.08),
-    0 0 12px rgba(16, 185, 129, 0.8);
-}
-
-/* Title */
-
-.fm-room-empty h1 {
-  max-width: 700px;
-
-  margin: 0;
-
-  color: #f8fafc;
-
-  font-size: clamp(25px, 2.5vw, 34px);
-  font-weight: 750;
-
-  line-height: 1.18;
-
-  letter-spacing: -0.03em;
-
-  text-wrap: balance;
-}
-
-/* Description */
-
-.fm-room-empty > p {
-  max-width: 620px;
-
-  margin: 12px auto 0;
-
-  color: #8fa3bf;
-
-  font-size: 15px;
-  font-weight: 400;
-
-  line-height: 1.65;
-
-  text-wrap: balance;
-}
-
-/* Meta cards */
-
-.fm-room-empty__meta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  flex-wrap: wrap;
-
-  gap: 10px;
-
-  margin-top: 24px;
-}
-
-.fm-room-empty__meta > span {
-  min-height: 40px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  gap: 8px;
-
-  padding: 0 14px;
-
-  border-radius: 11px;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(20, 35, 58, 0.92),
-      rgba(12, 24, 42, 0.92)
-    );
-
-  border: 1px solid rgba(148, 163, 184, 0.15);
-
-  color: #d9e4f1;
-
-  font-size: 12px;
-  font-weight: 600;
-
-  box-shadow:
-    0 8px 25px rgba(0, 0, 0, 0.16);
-}
-
-.fm-room-empty__meta svg {
-  color: #8ea4bf;
-
-  flex: 0 0 auto;
-}
-
-/* Waiting-room button */
-
-.fm-room-empty__waiting {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  gap: 8px;
-
-  min-height: 42px;
-
-  margin-top: 16px;
-
-  padding: 0 16px;
-
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  border-radius: 11px;
-
-  background: rgba(37, 99, 235, 0.12);
-
-  color: #93c5fd;
-
-  font-size: 13px;
-  font-weight: 650;
-
-  cursor: pointer;
-
-  transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    transform 0.18s ease;
-}
-
-.fm-room-empty__waiting:hover {
-  background: rgba(37, 99, 235, 0.2);
-
-  border-color: rgba(96, 165, 250, 0.42);
-
-  color: #bfdbfe;
-}
-
-.fm-room-empty__waiting:active {
-  transform: translateY(1px);
-}
-
-.fm-room-empty__waiting svg {
-  flex: 0 0 auto;
-}
-
-/* =========================================================
-   CURRENT SECURE BAR MARKUP
-   ========================================================= */
-
-.fm-room__secure {
-  flex: 0 0 42px;
-
-  height: 42px;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 0 24px;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(5, 12, 24, 0.98),
-      rgba(5, 11, 22, 0.96)
-    );
-
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-
-  color: #dbeafe;
-
-  font-size: 13px;
-  font-weight: 500;
-
-  position: relative;
-  z-index: 15;
-}
-
-.fm-room__secure > div {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-
-  white-space: nowrap;
-}
-
-.fm-room__secure svg {
-  flex: 0 0 auto;
-}
-
-.fm-room__secure > div:first-child svg {
-  color: #10b981;
-}
-
-.fm-room__connection {
-  color: #93a4bc;
-}
-
-.fm-room__connection svg {
-  color: #ef4444;
-}
-
-.fm-room__connection:has(svg[class*="Wifi"]) {
-  color: #93c5fd;
-}
-
-.fm-room__connection:has(svg[class*="Wifi"]) svg {
-  color: #10b981;
-}
-
-/* =========================================================
-   STAGE WITH PANEL
-   ========================================================= */
-
-.fm-room__stage--with-panel {
-  padding-right: 0;
-}
-
-/* =========================================================
-   MOBILE EMPTY STATE
-   ========================================================= */
-
-@media (max-width: 640px) {
-  .fm-room-empty {
-    width: calc(100% - 20px);
-
-    padding: 20px 10px 125px;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 14px;
+
+  &__main {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-radius);
+    background: var(--fm-bg-2);
+    box-shadow: var(--fm-shadow);
+
+    &:fullscreen {
+      border: 0;
+      border-radius: 0;
+      background: #000;
+    }
+
+    > .fm-tile,
+    > .fm-screen-share-view {
+      position: absolute;
+      inset: 0;
+    }
   }
 
-  .fm-room-empty__orb {
-    width: 88px;
-    height: 88px;
+  &__fullscreen {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 6;
 
-    margin-bottom: 18px;
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    padding: 0;
 
-    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    background: rgba(12, 18, 30, 0.72);
+    color: #fff;
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    transition: background t.$dur-fast ease;
 
-    border-width: 7px;
-
-    font-size: 34px;
+    &:hover { background: rgba(24, 34, 54, 0.9); }
   }
 
-  .fm-room-empty__badge {
-    min-height: 31px;
+  &__alert {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    right: 70px;
+    z-index: 7;
 
-    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 12px;
 
-    margin-bottom: 14px;
-
-    font-size: 11px;
-  }
-
-  .fm-room-empty h1 {
-    font-size: 23px;
-  }
-
-  .fm-room-empty > p {
-    margin-top: 9px;
-
+    border: 1px solid rgba(239, 59, 65, 0.35);
+    border-radius: 10px;
+    background: rgba(70, 14, 20, 0.92);
+    color: #fde2e2;
     font-size: 13px;
+    line-height: 1.4;
 
-    line-height: 1.55;
+    button {
+      flex: 0 0 auto;
+      padding: 6px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      cursor: pointer;
+
+      &:hover { background: rgba(255, 255, 255, 0.18); }
+    }
   }
 
-  .fm-room-empty__meta {
-    gap: 7px;
+  /* Rail of participant thumbnails under the stage. */
+  &__rail {
+    --fm-rail-h: clamp(84px, 13.5vh, 116px);
 
-    margin-top: 18px;
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 2px 4px;
+    scroll-snap-type: x proximity;
+    @include m.scrollbar-thin(transparent, rgba(148, 163, 184, 0.3));
+
+    // Centre the rail while still letting it scroll when it overflows.
+    > :first-child { margin-left: auto; }
+    > :last-child { margin-right: auto; }
   }
 
-  .fm-room-empty__meta > span {
-    min-height: 36px;
+  &__rail-item {
+    // Shrink toward a 16:10 card before the rail starts scrolling.
+    flex: 0 1 calc(var(--fm-rail-h) * 2.3);
+    min-width: calc(var(--fm-rail-h) * 1.6);
+    height: var(--fm-rail-h);
+    scroll-snap-align: start;
 
-    padding: 0 11px;
-
-    font-size: 11px;
+    > .fm-tile { width: 100%; height: 100%; }
   }
 
-  .fm-room__secure {
-    height: 38px;
-    min-height: 38px;
+  &__invite {
+    width: 100%;
+    height: 100%;
 
-    padding: 0 13px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 
-    font-size: 11px;
+    border: 1px solid var(--fm-border);
+    border-radius: 12px;
+    background: rgba(13, 22, 38, 0.7);
+    color: var(--fm-text-2);
+    font-size: 15px;
+    cursor: pointer;
+    transition: background t.$dur-fast ease, border-color t.$dur-fast ease, color t.$dur-fast ease;
+
+    &:hover {
+      border-color: rgba(91, 149, 255, 0.5);
+      background: rgba(46, 107, 246, 0.08);
+      color: var(--fm-text);
+    }
   }
 
-  .fm-room__secure > div {
+  &__invite-icon {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  /* Gallery layout */
+  &--gallery { grid-template-rows: minmax(0, 1fr); }
+
+  &__gallery {
+    position: relative;
+    min-height: 0;
+    display: grid;
+    grid-auto-rows: minmax(0, 1fr);
+    gap: 12px;
+    padding: 0;
+
+    &:fullscreen { padding: 12px; background: #000; }
+  }
+
+  /* Nobody connected yet */
+  &--empty {
+    grid-template-rows: 1fr;
+    place-items: center;
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-radius);
+    background: var(--fm-bg-2);
+    position: relative;
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    max-width: 420px;
+    padding: 24px;
+    text-align: center;
+
+    h2 { margin: 6px 0 0; font-size: 22px; color: var(--fm-text); }
+    p { margin: 0; color: var(--fm-muted); font-size: 14px; line-height: 1.55; }
+  }
+
+  &__empty-icon {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    background: var(--fm-blue-soft);
+    color: var(--fm-blue-text);
+  }
+
+  &__empty-invite {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--fm-blue);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover { background: var(--fm-blue-hover); }
+  }
+}
+
+/* ---- Participant tile -------------------------------------------------- */
+
+.fm-tile {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+
+  border-radius: 12px;
+  background: radial-gradient(circle at 50% 40%, #16233a, #0b1424 70%);
+  isolation: isolate;
+
+  &__surface {
+    position: absolute;
+    inset: 0;
+  }
+
+  &__video {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover; // fills the frame without stretching faces
+    background: #050b14;
+  }
+
+  &__placeholder {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    pointer-events: none;
+    background: radial-gradient(circle at 50% 42%, #18263f, #0b1424 72%);
+  }
+
+  &__chip {
+    padding: 6px 11px;
+    border-radius: t.$radius-pill;
+    background: rgba(0, 0, 0, 0.55);
+    color: #e2e8f0;
+    font-size: 12px;
+    white-space: nowrap;
+
+    &--error { background: rgba(127, 29, 29, 0.9); color: #fff; }
+  }
+
+  &__top {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 4;
+    display: flex;
     gap: 6px;
   }
 
-  .fm-room__secure > div:first-child span {
-    display: none;
-  }
-}
+  &__status {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: rgba(10, 16, 28, 0.72);
+    color: var(--fm-text);
+    backdrop-filter: blur(8px);
 
-/* =========================================================
-   SHORT VIEWPORT
-   ========================================================= */
-
-@media (max-height: 700px) and (min-width: 641px) {
-  .fm-room-empty {
-    padding-bottom: 125px;
-  }
-
-  .fm-room-empty__orb {
-    width: 86px;
-    height: 86px;
-
-    margin-bottom: 14px;
-
-    border-width: 7px;
-
-    border-radius: 23px;
-
-    font-size: 31px;
+    &--hand { color: var(--fm-amber); }
+    &--bad { color: var(--fm-red-text); }
   }
 
-  .fm-room-empty__badge {
-    min-height: 30px;
-
-    margin-bottom: 10px;
-
-    padding: 0 11px;
+  &__bottom {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 14px;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
   }
 
-  .fm-room-empty h1 {
-    font-size: 25px;
-  }
-
-  .fm-room-empty > p {
-    margin-top: 7px;
-
-    font-size: 13px;
-  }
-
-  .fm-room-empty__meta {
-    margin-top: 14px;
-  }
-
-  .fm-room__secure {
+  &__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    max-width: 100%;
     height: 36px;
-    min-height: 36px;
+    padding: 0 12px;
+
+    border-radius: 9px;
+    background: rgba(10, 16, 28, 0.72);
+    backdrop-filter: blur(10px);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+
+    &--icon { padding: 0 10px; flex: 0 0 auto; }
+  }
+
+  &__name { @include m.truncate; }
+
+  &__mic {
+    display: inline-flex;
+    flex: 0 0 auto;
+    color: var(--fm-green);
+
+    &--off { color: var(--fm-red-text); }
+  }
+
+  &__audio-bars {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 12px;
+    flex: 0 0 auto;
+
+    i {
+      width: 3px;
+      border-radius: 2px;
+      background: var(--fm-green);
+      animation: fm-tile-bars 0.9s ease-in-out infinite;
+
+      &:nth-child(1) { height: 40%; }
+      &:nth-child(2) { height: 100%; animation-delay: 0.15s; }
+      &:nth-child(3) { height: 60%; animation-delay: 0.3s; }
+    }
+  }
+
+  // Border lives on a pseudo-element so it sits above the video.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    border: 2px solid transparent;
+    border-radius: inherit;
+    pointer-events: none;
+    transition: border-color t.$dur-fast ease, box-shadow t.$dur-fast ease;
+  }
+
+  &--speaking::after { border-color: rgba(34, 197, 94, 0.85); }
+
+  &--selected::after {
+    border-color: var(--fm-blue);
+    box-shadow: inset 0 0 0 1px rgba(91, 149, 255, 0.35), 0 0 18px rgba(46, 107, 246, 0.35);
+  }
+
+  &--interactive {
+    cursor: pointer;
+
+    &:hover::after { border-color: rgba(91, 149, 255, 0.55); }
+    &.fm-tile--selected:hover::after { border-color: var(--fm-blue); }
+  }
+
+  /* Variants */
+  &--featured {
+    border-radius: 0;
+    background: var(--fm-bg-2);
+
+    .fm-tile__bottom { left: 16px; bottom: 16px; }
+    .fm-tile__label { height: 40px; }
+    .fm-avatar--xl { width: 128px; height: 128px; font-size: 42px; }
+    &::after { display: none; }
+  }
+
+  &--thumb {
+    border: 1px solid var(--fm-border);
+
+    .fm-tile__bottom { left: 8px; right: 8px; bottom: 8px; }
+    .fm-tile__label { height: 30px; padding: 0 9px; gap: 6px; font-size: 13px; }
+    .fm-tile__top { top: 6px; left: 6px; }
+    .fm-tile__status { width: 22px; height: 22px; }
+  }
+
+  &--grid {
+    border: 1px solid var(--fm-border);
+    min-height: 120px;
   }
 }
 
-/* =========================================================
-   EMPTY STAGE
-   ========================================================= */
-
-.fm-room__empty-state {
-  width: min(720px, 90%);
-
-  margin-top: -4vh;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  text-align: center;
+@keyframes fm-tile-bars {
+  0%, 100% { transform: scaleY(0.5); }
+  50% { transform: scaleY(1); }
 }
 
-.fm-room__empty-avatar {
-  width: 124px;
-  height: 124px;
+/* ---- Stage signal bars (featured tile) ---------------------------------- */
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 30px;
-
-  background:
-    linear-gradient(
-      145deg,
-      #3b82f6 0%,
-      #2563eb 55%,
-      #1d4ed8 100%
-    );
-
-  border: 9px solid rgba(59, 130, 246, 0.13);
-
-  box-shadow:
-    0 0 0 1px rgba(59, 130, 246, 0.2),
-    0 22px 70px rgba(37, 99, 235, 0.28);
-
-  color: #fff;
-
-  font-size: 44px;
-  font-weight: 800;
-
-  margin-bottom: 24px;
-}
-
-.fm-room__empty-status {
+.fm-signal {
   display: inline-flex;
-  align-items: center;
-  gap: 8px;
-
-  padding: 8px 14px;
-
-  border-radius: 999px;
-
-  background: rgba(16, 185, 129, 0.08);
-
-  border: 1px solid rgba(16, 185, 129, 0.3);
-
-  color: #6ee7b7;
-
-  font-size: 13px;
-  font-weight: 600;
-
-  margin-bottom: 18px;
-}
-
-.fm-room__empty-status::before {
-  content: "";
-
-  width: 7px;
-  height: 7px;
-
-  border-radius: 50%;
-
-  background: #10b981;
-
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
-}
-
-.fm-room__empty-title {
-  margin: 0;
-
-  color: #fff;
-
-  font-size: clamp(24px, 2.2vw, 32px);
-  line-height: 1.2;
-
-  font-weight: 700;
-  letter-spacing: -0.025em;
-}
-
-.fm-room__empty-description {
-  max-width: 620px;
-
-  margin: 12px auto 0;
-
-  color: #8fa3bf;
-
-  font-size: 15px;
-  line-height: 1.65;
-}
-
-.fm-room__empty-meta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-
-  margin-top: 24px;
-}
-
-.fm-room__empty-meta-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-
-  min-height: 38px;
-
-  padding: 0 13px;
-
-  border-radius: 10px;
-
-  background: rgba(15, 28, 48, 0.8);
-
-  border: 1px solid rgba(148, 163, 184, 0.15);
-
-  color: #d7e2f0;
-
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.fm-room__empty-meta-item svg {
-  color: #94a3b8;
-}
-
-/* =========================================================
-   VIDEO / SCREEN SHARE
-   ========================================================= */
-
-.fm-room__stage > .fm-video-grid,
-.fm-room__stage > .fm-screen-share-view {
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-}
-
-.fm-room__stage .fm-video-grid {
-  padding: 18px;
-}
-
-/* =========================================================
-   STAGE FOOTER
-   ========================================================= */
-
-.fm-room__stage-footer {
-  position: absolute;
-
-  left: 22px;
-  right: 22px;
-  bottom: 18px;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  pointer-events: none;
-
-  z-index: 12;
-}
-
-.fm-room__meeting-id {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-
-  min-height: 38px;
-
-  padding: 0 12px;
-
-  border-radius: 10px;
-
-  background: rgba(7, 15, 29, 0.82);
-
-  border: 1px solid rgba(148, 163, 184, 0.15);
-
-  backdrop-filter: blur(12px);
-
-  color: #91a3ba;
-
-  font-size: 12px;
-}
-
-.fm-room__meeting-id strong {
-  color: #f8fafc;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-.fm-room__meeting-id button {
-  pointer-events: auto;
-
-  width: 28px;
-  height: 28px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 0;
-
-  border: 0;
-  border-radius: 7px;
-
-  background: transparent;
-
-  color: #94a3b8;
-
-  cursor: pointer;
-
-  transition:
-    background 0.18s ease,
-    color 0.18s ease;
-}
-
-.fm-room__meeting-id button:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-}
-
-.fm-room__live-state {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-
-  min-height: 38px;
-
-  padding: 0 12px;
-
-  border-radius: 10px;
-
-  background: rgba(7, 15, 29, 0.82);
-
-  border: 1px solid rgba(148, 163, 184, 0.15);
-
-  backdrop-filter: blur(12px);
-
-  color: #aebbd0;
-
-  font-size: 12px;
-}
-
-.fm-room__live-state::before {
-  content: "";
-
-  width: 7px;
-  height: 7px;
-
-  border-radius: 50%;
-
-  background: #10b981;
-
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.75);
-}
-
-/* =========================================================
-   TOOLBAR AREA
-   ========================================================= */
-
-.fm-room__toolbar-wrap {
-  position: absolute;
-  left: 50%;
-  bottom: 18px;
-
-  transform: translateX(-50%);
-
-  z-index: 40;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  width: auto;
-  max-width: none;
-
-  pointer-events: none;
-  white-space: nowrap;
-}
-
-.fm-room__toolbar-wrap > * {
-  pointer-events: auto;
-}
-
-/*
- * Fockis meeting toolbar.
- *
- * The toolbar is intentionally forced into ONE horizontal row.
- * This prevents controls such as Mute / Stop video / More from
- * wrapping into a second row.
- */
-.fm-room__toolbar-wrap .fm-meeting-toolbar {
-  position: relative;
-
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-
-  align-items: center !important;
-  justify-content: center !important;
-
-  width: max-content !important;
-  min-width: max-content !important;
-  max-width: none !important;
-  min-height: 74px;
-
+  align-items: flex-end;
   gap: 2px;
-
-  padding: 8px 10px;
-
-  border-radius: 18px;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(18, 31, 51, 0.98),
-      rgba(8, 18, 32, 0.99)
-    );
-
-  border: 1px solid rgba(148, 163, 184, 0.17);
-
-  box-shadow:
-    0 20px 50px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
-
-  backdrop-filter: blur(18px);
-
-  white-space: nowrap;
-}
-
-/*
- * Every direct toolbar child remains on the same row.
- */
-.fm-room__toolbar-wrap .fm-meeting-toolbar > * {
-  flex: 0 0 auto !important;
-  flex-shrink: 0 !important;
-
-  min-width: 0;
-
-  white-space: nowrap;
-}
-
-/*
- * Common toolbar wrappers/groups must not create a second row.
- */
-.fm-room__toolbar-wrap .fm-meeting-toolbar > div,
-.fm-room__toolbar-wrap .fm-meeting-toolbar > section,
-.fm-room__toolbar-wrap .fm-meeting-toolbar > nav {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-
-  align-items: center !important;
-
-  flex: 0 0 auto !important;
-}
-
-/*
- * Individual controls.
- */
-.fm-room__toolbar-wrap .fm-meeting-toolbar button {
-  position: relative;
-
-  flex: 0 0 auto !important;
-  flex-shrink: 0 !important;
-
-  width: auto;
-  min-width: 56px;
-  height: 58px;
-
-  display: inline-flex !important;
-  flex-direction: column !important;
-
-  align-items: center !important;
-  justify-content: center !important;
-
-  gap: 4px;
-
-  margin: 0 !important;
-  padding: 6px 8px !important;
-
-  border: 0;
-  border-radius: 11px;
-
-  background: transparent;
-
-  color: #cbd5e1;
-
-  font-size: 11px;
-  line-height: 1.1;
-
-  white-space: nowrap;
-
-  cursor: pointer;
-
-  transition:
-    background 0.18s ease,
-    color 0.18s ease,
-    transform 0.18s ease;
-}
-
-.fm-room__toolbar-wrap .fm-meeting-toolbar button:hover {
-  background: rgba(255, 255, 255, 0.07);
-  color: #fff;
-}
-
-.fm-room__toolbar-wrap .fm-meeting-toolbar button:active {
-  transform: translateY(1px);
-}
-
-.fm-room__toolbar-wrap .fm-meeting-toolbar button svg {
-  flex: 0 0 auto;
-
-  width: 19px;
-  height: 19px;
-
-  display: block;
-}
-
-/*
- * Active control state.
- */
-.fm-room__toolbar-wrap .fm-meeting-toolbar button[aria-pressed="true"] {
-  color: #fff;
-  background: rgba(59, 130, 246, 0.15);
-}
-
-/*
- * Keep icon + label together.
- */
-.fm-room__toolbar-wrap .fm-meeting-toolbar button > span,
-.fm-room__toolbar-wrap .fm-meeting-toolbar button > .label,
-.fm-room__toolbar-wrap .fm-meeting-toolbar button > [class*="label"] {
-  display: block;
-
-  max-width: 90px;
-
-  overflow: hidden;
-
-  text-overflow: ellipsis;
-
-  white-space: nowrap;
-
-  text-align: center;
-}
-
-/*
- * Do not let old toolbar positioning rules push the first
- * controls upward/downward.
- */
-.fm-room__toolbar-wrap .fm-meeting-toolbar button {
-  position: relative !important;
-  inset: auto !important;
-  top: auto !important;
-  right: auto !important;
-  bottom: auto !important;
-  left: auto !important;
-}
-
-/*
- * Separators, if the toolbar contains them.
- */
-.fm-room__toolbar-wrap .fm-meeting-toolbar [role="separator"] {
-  flex: 0 0 1px !important;
-
-  width: 1px;
-  height: 34px;
-
-  margin: 0 5px;
-
-  background: rgba(148, 163, 184, 0.14);
-}
-
-/*
- * Leave is intentionally larger and horizontal.
- */
-.fm-room__toolbar-wrap .fm-meeting-toolbar button.fm-leave-button,
-.fm-room__toolbar-wrap .fm-meeting-toolbar button[data-action="leave"],
-.fm-room__toolbar-wrap .fm-meeting-toolbar button[aria-label*="Leave"],
-.fm-room__toolbar-wrap .fm-meeting-toolbar button[title*="Leave"] {
-  min-width: 96px;
-
-  height: 46px;
-
-  flex-direction: row !important;
-
-  gap: 8px;
-
-  margin-left: 7px !important;
-  padding: 0 16px !important;
-
-  border-radius: 12px;
-
-  background: #ef4444;
-
-  color: #fff;
-
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.fm-room__toolbar-wrap .fm-meeting-toolbar button.fm-leave-button:hover,
-.fm-room__toolbar-wrap .fm-meeting-toolbar button[data-action="leave"]:hover,
-.fm-room__toolbar-wrap .fm-meeting-toolbar button[aria-label*="Leave"]:hover,
-.fm-room__toolbar-wrap .fm-meeting-toolbar button[title*="Leave"]:hover {
-  background: #dc2626;
-  color: #fff;
-}
-
-/*
- * Some toolbar implementations use a dedicated danger button
- * without a semantic class. Keep the common red button style.
- */
-.fm-room__toolbar-wrap .fm-meeting-toolbar .fm-button--danger,
-.fm-room__toolbar-wrap .fm-meeting-toolbar .button--danger {
-  flex-direction: row !important;
-
-  min-width: 96px;
-  height: 46px;
-
-  margin-left: 7px !important;
-
-  border-radius: 12px;
-
-  background: #ef4444;
-  color: #fff;
-}
-
-/*
- * Hide accidental toolbar footer/branding rows.
- *
- * The screenshot showed "YOUR CONTROLS" and "FOCKIS MEETINGS"
- * appearing underneath the controls. Those are presentation
- * labels, not meeting controls.
- */
-.fm-room__toolbar-wrap .fm-meeting-toolbar__footer,
-.fm-room__toolbar-wrap .fm-toolbar-footer,
-.fm-room__toolbar-wrap [class*="toolbar-footer"],
-.fm-room__toolbar-wrap [class*="ToolbarFooter"] {
-  display: none !important;
-}
-
-/*
- * Prevent any nested control list from wrapping.
- */
-.fm-room__toolbar-wrap .fm-meeting-toolbar ul,
-.fm-room__toolbar-wrap .fm-meeting-toolbar ol {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-
-  align-items: center !important;
-
-  margin: 0 !important;
-  padding: 0 !important;
-
-  list-style: none;
-}
-
-.fm-room__toolbar-wrap .fm-meeting-toolbar li {
-  flex: 0 0 auto !important;
-}
-
-/*
- * If the toolbar has a group specifically named "controls",
- * keep it horizontal as well.
- */
-.fm-room__toolbar-wrap .fm-meeting-toolbar [class*="controls"],
-.fm-room__toolbar-wrap .fm-meeting-toolbar [class*="Controls"] {
-  flex-wrap: nowrap !important;
-}
-
-/*
- * Desktop toolbar width safeguard.
- */
-@media (min-width: 901px) {
-  .fm-room__toolbar-wrap .fm-meeting-toolbar {
-    max-width: calc(100vw - 48px) !important;
-    overflow: visible;
+  height: 16px;
+
+  i {
+    width: 3px;
+    border-radius: 2px;
+    background: rgba(148, 163, 184, 0.35);
+
+    &:nth-child(1) { height: 30%; }
+    &:nth-child(2) { height: 55%; }
+    &:nth-child(3) { height: 78%; }
+    &:nth-child(4) { height: 100%; }
   }
+
+  &--good i.is-on { background: var(--fm-green); }
+  &--weak i.is-on { background: var(--fm-amber); }
+  &--poor i.is-on,
+  &--reconnecting i.is-on { background: var(--fm-red); }
 }
 
-/* =========================================================
-   RUNNING LATE
-   ========================================================= */
+/* ---- Screen share placeholder ------------------------------------------ */
 
-.fm-room__late-pill,
-.fm-room__late-button {
-  position: absolute;
-
-  right: 18px;
-  bottom: 18px;
-
-  z-index: 45;
-}
-
-/* =========================================================
-   SIDE PANEL
-   ========================================================= */
-
-.fm-room__panel {
-  position: relative;
-
-  flex: 0 0 360px;
-
-  width: 360px;
-  height: 100%;
-
-  min-height: 0;
-
+.fm-screen-share-view {
   display: flex;
   flex-direction: column;
-
-  overflow: hidden;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(11, 21, 37, 0.99),
-      rgba(7, 15, 27, 0.99)
-    );
-
-  border-left: 1px solid var(--fm-room-border);
-
-  box-shadow: -18px 0 45px rgba(0, 0, 0, 0.22);
-
-  z-index: 60;
-}
-
-.fm-room__panel-header {
-  flex: 0 0 auto;
-
-  min-height: 68px;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 0 18px;
-
-  border-bottom: 1px solid var(--fm-room-border);
-}
-
-.fm-room__panel-title {
-  margin: 0;
-
-  color: #fff;
-
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.fm-room__panel-close {
-  width: 34px;
-  height: 34px;
-
-  display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 14px;
+  background: radial-gradient(circle at 50% 40%, #142441, #0a1222 70%);
+  color: var(--fm-text-2);
+  font-size: 16px;
 
-  border: 1px solid rgba(148, 163, 184, 0.13);
-  border-radius: 9px;
-
-  background: rgba(255, 255, 255, 0.04);
-
-  color: #94a3b8;
-
-  cursor: pointer;
+  svg { color: var(--fm-blue-text); }
+  p { margin: 0; }
 }
 
-.fm-room__panel-close:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-}
+/* ---- Floating reactions ------------------------------------------------- */
 
-.fm-room__panel-content {
-  flex: 1 1 auto;
-
-  min-height: 0;
-
-  overflow-y: auto;
-  overflow-x: hidden;
-
-  scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.22) transparent;
-}
-
-/* =========================================================
-   MEETING INFO
-   ========================================================= */
-
-.fm-room__info {
-  padding: 20px;
-}
-
-.fm-room__info-accent {
-  position: relative;
-
-  overflow: hidden;
-
-  padding: 18px;
-
-  border-radius: 16px;
-
-  background:
-    radial-gradient(
-      circle at top right,
-      rgba(59, 130, 246, 0.22),
-      transparent 45%
-    ),
-    rgba(15, 29, 49, 0.88);
-
-  border: 1px solid rgba(59, 130, 246, 0.16);
-
-  margin-bottom: 16px;
-}
-
-.fm-room__info-accent::after {
-  content: "";
-
+.fm-room__reactions {
   position: absolute;
+  left: 32px;
+  bottom: 150px;
+  z-index: 8;
+  width: 120px;
+  height: 0;
+  pointer-events: none;
+}
 
-  left: 0;
-  top: 0;
+.fm-room__reaction {
+  position: absolute;
   bottom: 0;
 
-  width: 3px;
-
-  background: #3b82f6;
+  .fm-floating-reaction {
+    position: static;
+    display: block;
+    font-size: 34px;
+  }
 }
 
-.fm-room__info-eyebrow {
-  margin-bottom: 7px;
+/* ---- Loading / error state --------------------------------------------- */
 
-  color: #60a5fa;
+.fm-room-empty {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px 20px;
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius);
+  background: var(--fm-bg-2);
+  text-align: center;
 
-  font-size: 11px;
-  font-weight: 700;
+  h1 { margin: 0; font-size: clamp(22px, 2.4vw, 30px); color: var(--fm-text); }
+  p { margin: 0; max-width: 520px; color: var(--fm-muted); font-size: 15px; line-height: 1.6; }
 
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: t.$radius-pill;
+    background: var(--fm-green-soft);
+    color: var(--fm-green-text);
+    font-size: 13px;
+    font-weight: 600;
+
+    span { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+    &--error {
+      border-color: rgba(239, 59, 65, 0.35);
+      background: rgba(239, 59, 65, 0.1);
+      color: var(--fm-red-text);
+    }
+  }
+
+  &__action {
+    margin-top: 6px;
+    padding: 10px 18px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--fm-blue);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover { background: var(--fm-blue-hover); }
+  }
 }
 
-.fm-room__info-title {
-  margin: 0;
+/* =========================================================================
+   SIDEBAR
+   ========================================================================= */
 
-  color: #fff;
+.fm-room__sidebar {
+  position: relative;
+  z-index: 20;
+  width: clamp(330px, 25vw, 416px);
+  min-height: 0;
 
-  font-size: 17px;
-  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 
-  line-height: 1.35;
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius);
+  background: linear-gradient(180deg, rgba(13, 21, 37, 0.98), rgba(9, 16, 29, 0.98));
+  box-shadow: var(--fm-shadow);
 }
 
-.fm-room__info-status {
+.fm-room__sidebar-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+
+  > * { flex: 1 1 auto; min-height: 0; }
+
+  // The host waiting room panel ships its own frame; let it fill ours.
+  .fm-waiting-room-panel {
+    width: 100%;
+    border-left: 0;
+    background: transparent;
+  }
+}
+
+.fm-room__scrim { display: none; }
+
+.fm-sidebar-tabs {
+  position: relative;
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  padding: 6px 8px 0;
+  border-bottom: 1px solid var(--fm-border);
+
+  &__tab {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+    min-height: 84px;
+    padding: 10px 2px 14px;
+
+    border: 0;
+    border-radius: 12px 12px 0 0;
+    background: transparent;
+    color: var(--fm-text-2);
+    font-size: 14.5px;
+    cursor: pointer;
+    transition: background t.$dur-fast ease, color t.$dur-fast ease;
+
+    span { max-width: 100%; @include m.truncate; }
+
+    &:hover { color: var(--fm-text); background: rgba(255, 255, 255, 0.035); }
+
+    &.is-active {
+      background: linear-gradient(180deg, rgba(46, 107, 246, 0.2), rgba(46, 107, 246, 0.1));
+      color: var(--fm-blue-text);
+      font-weight: 600;
+
+      &::after {
+        content: '';
+        position: absolute;
+        left: 14px;
+        right: 14px;
+        bottom: 0;
+        height: 3px;
+        border-radius: 3px 3px 0 0;
+        background: var(--fm-blue);
+      }
+    }
+  }
+
+  &__close {
+    display: none;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--fm-text-2);
+    cursor: pointer;
+  }
+}
+
+/* ---- Meeting information (sidebar overlay) ------------------------------ */
+
+.fm-meeting-info-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  overflow-y: auto;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+
+    h2 { margin: 4px 0 0; font-size: 20px; color: var(--fm-text); }
+  }
+
+  &__status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid rgba(46, 107, 246, 0.25);
+    border-radius: 12px;
+    background: rgba(46, 107, 246, 0.08);
+
+    > div { display: flex; flex-direction: column; gap: 2px; }
+    strong { font-size: 14px; }
+    span { font-size: 13px; color: var(--fm-muted); }
+  }
+
+  &__status-icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--fm-blue-soft);
+    color: var(--fm-blue-text);
+  }
+
+  &__body { display: grid; gap: 10px; }
+}
+
+.fm-info-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--fm-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+
+  > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+  strong { font-size: 15px; color: var(--fm-text); @include m.truncate; }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--fm-text-2);
+  }
+
+  &__label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fm-muted);
+  }
+
+  > button {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid var(--fm-border);
+    border-radius: 9px;
+    background: transparent;
+    color: var(--fm-text-2);
+    cursor: pointer;
+
+    &:hover { background: rgba(255, 255, 255, 0.06); color: var(--fm-text); }
+  }
+}
+
+.fm-room .fm-panel-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--fm-muted);
+}
+
+.fm-room .fm-panel-close {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid var(--fm-border);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--fm-text-2);
+  cursor: pointer;
+
+  &:hover { background: rgba(255, 255, 255, 0.08); color: var(--fm-text); }
+}
+
+/* ---- Settings tab ------------------------------------------------------- */
+
+.fm-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 18px 20px 24px;
+  overflow-y: auto;
+  @include m.scrollbar-thin(transparent, rgba(148, 163, 184, 0.3));
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    & + & { padding-top: 18px; border-top: 1px solid var(--fm-border); }
+  }
+
+  &__heading { margin: 0; font-size: 16px; font-weight: 600; color: var(--fm-text); }
+
+  &__toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  &__toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--fm-border);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--fm-text);
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+
+    svg { color: var(--fm-green); flex: 0 0 auto; }
+    &:hover { background: rgba(255, 255, 255, 0.06); }
+
+    &--off {
+      border-color: rgba(239, 59, 65, 0.3);
+      svg { color: var(--fm-red-text); }
+    }
+  }
+
+  .fm-device-select { margin-bottom: 0; }
+
+  .fm-device-select__label { color: var(--fm-text-2); font-size: 13px; }
+
+  .fm-select {
+    width: 100%;
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--fm-border-strong);
+    border-radius: 10px;
+    background: var(--fm-surface-2);
+    color: var(--fm-text);
+    font-size: 14px;
+
+    &:disabled { opacity: 0.6; }
+    option { background: #0d1626; color: #f5f7fb; }
+  }
+
+  &__hint { margin: 0; color: var(--fm-muted); font-size: 12px; line-height: 1.5; }
+
+  &__refresh {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 12px;
+    border: 1px solid var(--fm-border);
+    border-radius: 9px;
+    background: transparent;
+    color: var(--fm-text-2);
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover { color: var(--fm-text); background: rgba(255, 255, 255, 0.05); }
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--fm-border);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.025);
+
+    > span { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    small { color: var(--fm-muted); font-size: 12px; }
+    strong { color: var(--fm-text); font-size: 14px; font-weight: 500; @include m.truncate; }
+
+    button {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      flex: 0 0 auto;
+      padding: 0;
+      border: 1px solid var(--fm-border);
+      border-radius: 9px;
+      background: transparent;
+      color: var(--fm-text-2);
+      cursor: pointer;
+
+      &:hover { background: rgba(255, 255, 255, 0.06); color: var(--fm-text); }
+    }
+  }
+}
+
+/* =========================================================================
+   DOCK (floating toolbar row)
+   ========================================================================= */
+
+.fm-room__dock {
+  position: relative;
+  z-index: 25;
+  display: flex;
+  justify-content: center;
+  padding: 10px 16px 16px;
+  min-width: 0;
+}
+
+.fm-room__host-menu-anchor {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 70;
+
+  .fm-host-menu {
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--fm-surface-2);
+    border-color: var(--fm-border-strong);
+  }
+}
+
+/* ---- Toast -------------------------------------------------------------- */
+
+.fm-room__toast {
+  position: fixed;
+  left: 50%;
+  bottom: 120px;
+  z-index: 90;
+  transform: translateX(-50%);
+
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+  padding: 10px 16px;
 
-  margin-top: 12px;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-radius: 12px;
+  background: rgba(10, 22, 18, 0.95);
+  color: #dcfce7;
+  font-size: 14px;
+  box-shadow: var(--fm-shadow);
+  animation: fm-room-toast 0.2s ease-out;
 
-  color: #6ee7b7;
-
-  font-size: 12px;
-  font-weight: 600;
+  svg { color: var(--fm-green); flex: 0 0 auto; }
 }
 
-.fm-room__info-status::before {
-  content: "";
-
-  width: 7px;
-  height: 7px;
-
-  border-radius: 50%;
-
-  background: #10b981;
+@keyframes fm-room-toast {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
 }
-
-.fm-room__info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-
-  gap: 10px;
-}
-
-.fm-room__info-card {
-  min-height: 86px;
-
-  padding: 13px;
-
-  border-radius: 13px;
-
-  background: rgba(15, 28, 47, 0.72);
-
-  border: 1px solid rgba(148, 163, 184, 0.12);
-}
-
-.fm-room__info-card-label {
-  margin-bottom: 7px;
-
-  color: #64748b;
-
-  font-size: 10px;
-  font-weight: 700;
-
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.fm-room__info-card-value {
-  color: #e2e8f0;
-
-  font-size: 13px;
-  font-weight: 600;
-
-  line-height: 1.4;
-}
-
-.fm-room__info-card-value--green {
-  color: #6ee7b7;
-}
-
-.fm-room__info-card-value--blue {
-  color: #93c5fd;
-}
-
-/* =========================================================
-   WAITING / LATE FLOATING ELEMENTS
-   ========================================================= */
-
-.fm-room__waiting-pill {
-  position: absolute;
-
-  top: 56px;
-  left: 50%;
-
-  transform: translateX(-50%);
-
-  z-index: 30;
-
-  padding: 8px 13px;
-
-  border-radius: 999px;
-
-  background: rgba(8, 20, 34, 0.92);
-
-  border: 1px solid rgba(16, 185, 129, 0.2);
-
-  color: #86efac;
-
-  font-size: 12px;
-  font-weight: 600;
-
-  backdrop-filter: blur(12px);
-}
-
-/* =========================================================
-   HOST MENU
-   ========================================================= */
-
-.fm-room__toolbar-wrap .fm-host-controls-menu {
-  position: absolute;
-
-  left: 50%;
-  bottom: calc(100% + 12px);
-
-  transform: translateX(-50%);
-
-  z-index: 80;
-}
-
-/* =========================================================
-   LATE MODAL / ALERT
-   ========================================================= */
 
 .fm-room .fm-late-notice-modal,
-.fm-room .fm-host-late-alert {
+.fm-room .fm-host-late-alert,
+.fm-room .fm-modal-overlay {
   z-index: 100;
 }
 
-/* =========================================================
-   MOBILE
-   ========================================================= */
+/* =========================================================================
+   RESPONSIVE
+   ========================================================================= */
 
+// Narrower desktops: tighten the header before anything wraps.
+@media (max-width: 1400px) {
+  .fm-header {
+    gap: 16px;
+
+    &__brand-name { font-size: 26px; }
+    &__brand-product { font-size: 17px; }
+    &__stats { gap: 20px; }
+    &__live { height: 40px; padding: 0 14px; font-size: 16px; }
+    &__layout-btn { height: 48px; font-size: 15px; }
+    &__leave { height: 50px; padding: 0 22px; font-size: 16px; }
+  }
+}
+
+@media (max-width: 1540px) {
+  .fm-header {
+    &__live-timer { display: none; }
+    &__stat small { display: none; }
+  }
+}
+
+@media (max-width: 1360px) {
+  .fm-header {
+    &__brand-product,
+    &__stat--secure { display: none; }
+  }
+
+  .fm-sidebar-tabs__tab { font-size: 13px; min-height: 76px; }
+}
+
+// Tablet: smaller sidebar, compact header.
+@media (max-width: 1100px) {
+  .fm-header {
+    &__layout-btn span { display: none; }
+  }
+
+  .fm-room__body { gap: 14px; padding: 14px 12px 4px 14px; }
+}
+
+// Sidebar becomes a drawer over the stage.
 @media (max-width: 900px) {
-  .fm-room__main--panel {
-    width: 100%;
-  }
-
-  .fm-room__panel {
-    position: absolute;
-
-    inset: auto 0 0 0;
-
-    width: 100%;
-    height: min(72dvh, 620px);
-
-    border-left: 0;
-    border-top: 1px solid var(--fm-room-border);
-
-    border-radius: 20px 20px 0 0;
-
-    box-shadow:
-      0 -20px 50px rgba(0, 0, 0, 0.45);
-  }
-
-  .fm-room__secure-strip {
-    padding: 0 15px;
-  }
-
-  .fm-room__stage-footer {
-    left: 14px;
-    right: 14px;
-    bottom: 104px;
-  }
-
-  .fm-room__toolbar-wrap {
-    bottom: 12px;
-
-    max-width: calc(100% - 20px);
-  }
-
-  .fm-room__late-pill,
-  .fm-room__late-button {
-    right: 12px;
-    bottom: 102px;
-  }
-}
-
-@media (max-width: 640px) {
-  .fm-room__secure-strip {
-    height: 38px;
-    min-height: 38px;
-
-    font-size: 11px;
-  }
-
-  .fm-room__secure-strip-left,
-  .fm-room__secure-strip-right {
-    gap: 6px;
-  }
-
-  .fm-room__secure-strip-left span {
-    display: none;
-  }
-
-  .fm-room__empty-avatar {
-    width: 94px;
-    height: 94px;
-
-    border-radius: 24px;
-
-    font-size: 34px;
-
-    margin-bottom: 18px;
-  }
-
-  .fm-room__empty-title {
-    font-size: 23px;
-  }
-
-  .fm-room__empty-description {
-    padding: 0 16px;
-
-    font-size: 13px;
-  }
-
-  .fm-room__empty-meta {
-    flex-wrap: wrap;
-
-    padding: 0 12px;
-  }
-
-  .fm-room__stage-footer {
-    bottom: 96px;
-  }
-
-  .fm-room__meeting-id {
-    font-size: 10px;
-  }
-
-  .fm-room__meeting-id span:first-child {
-    display: none;
-  }
-
-  .fm-room__live-state {
-    font-size: 10px;
-  }
-
-  .fm-room__toolbar-wrap {
-    left: 10px;
-    right: 10px;
-
-    width: auto;
-    max-width: none;
-
-    transform: none;
-  }
-
-  .fm-room__toolbar-wrap .fm-meeting-toolbar {
-    width: max-content !important;
-    max-width: 100% !important;
-
-    min-width: 0;
-
+  .fm-header {
     min-height: 68px;
+    padding: 10px 14px;
+    gap: 12px;
 
-    gap: 0;
-
-    padding: 6px;
-
-    border-radius: 16px;
-
-    overflow-x: auto;
-    overflow-y: hidden;
-
-    scrollbar-width: none;
+    &__divider,
+    &__stat--quality { display: none; }
+    &__brand-name { font-size: 22px; }
+    &__brand-mark { width: 34px; height: 34px; }
+    &__title { font-size: 17px; }
+    &__schedule { font-size: 13px; }
   }
 
-  .fm-room__toolbar-wrap .fm-meeting-toolbar::-webkit-scrollbar {
-    display: none;
+  .fm-room__body {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .fm-room__toolbar-wrap .fm-meeting-toolbar button {
-    min-width: 48px;
-    height: 54px;
-
-    padding: 5px 6px !important;
-
-    font-size: 10px;
+  .fm-room__scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 75;
+    padding: 0;
+    border: 0;
+    background: rgba(2, 6, 14, 0.6);
+    cursor: pointer;
   }
 
-  .fm-room__toolbar-wrap .fm-meeting-toolbar button svg {
-    width: 18px;
-    height: 18px;
+  .fm-room__sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 80;
+    width: min(420px, 100vw);
+    border-radius: 0;
+    border-width: 0 0 0 1px;
   }
 
-  .fm-room__toolbar-wrap .fm-meeting-toolbar button.fm-leave-button,
-  .fm-room__toolbar-wrap .fm-meeting-toolbar button[data-action="leave"],
-  .fm-room__toolbar-wrap .fm-meeting-toolbar button[aria-label*="Leave"],
-  .fm-room__toolbar-wrap .fm-meeting-toolbar button[title*="Leave"] {
-    min-width: 82px;
-    height: 44px;
+  .fm-sidebar-tabs {
+    padding-right: 48px;
 
-    margin-left: 4px !important;
-
-    padding: 0 11px !important;
+    &__close { display: grid; }
   }
 
-  .fm-room__late-pill,
-  .fm-room__late-button {
-    right: 10px;
-    bottom: 84px;
-  }
-
-  .fm-room__info {
-    padding: 15px;
-  }
+  .fm-room__toast { bottom: 104px; }
 }
 
-/* =========================================================
-   SMALL HEIGHT SCREENS
-   ========================================================= */
+// Phones.
+@media (max-width: 640px) {
+  .fm-header {
+    min-height: 60px;
+    padding: 8px 12px;
+    gap: 10px;
 
-@media (max-height: 700px) and (min-width: 641px) {
-  .fm-room__secure-strip {
-    height: 36px;
-    min-height: 36px;
+    &__brand-name,
+    &__schedule,
+    &__live > span:not(.fm-header__live-dot),
+    &__stats,
+    &__recording { display: none; }
+
+    &__live { width: 14px; height: 14px; padding: 0; border: 0; background: transparent; justify-content: center; }
+    &__title { font-size: 16px; }
+    &__layout-btn { height: 40px; padding: 0 10px; gap: 4px; }
+    &__leave { height: 40px; padding: 0 14px; font-size: 14px; border-radius: 10px; }
   }
 
-  .fm-room__empty-avatar {
-    width: 88px;
-    height: 88px;
+  .fm-room__body { padding: 10px 10px 2px; }
 
-    border-width: 7px;
+  .fm-stage {
+    gap: 10px;
 
-    font-size: 32px;
-
-    margin-bottom: 14px;
+    &__rail { --fm-rail-h: 74px; gap: 8px; }
+    &__rail-item { flex-basis: calc(var(--fm-rail-h) * 1.5); min-width: calc(var(--fm-rail-h) * 1.35); }
+    &__fullscreen { top: 10px; right: 10px; width: 36px; height: 36px; }
   }
 
-  .fm-room__empty-status {
-    margin-bottom: 10px;
-    padding: 6px 11px;
+  .fm-tile {
+    &--featured .fm-avatar--xl { width: 88px; height: 88px; font-size: 28px; }
+    &--featured .fm-tile__bottom { left: 10px; bottom: 10px; }
+    &--featured .fm-tile__label { height: 34px; font-size: 14px; }
+    &--thumb .fm-tile__label { height: 24px; font-size: 11px; padding: 0 6px; }
+    &--thumb .fm-avatar--md { width: 30px; height: 30px; font-size: 11px; }
   }
 
-  .fm-room__empty-description {
-    margin-top: 7px;
-  }
+  .fm-room__dock { padding: 8px 8px 10px; }
 
-  .fm-room__empty-meta {
-    margin-top: 14px;
-  }
-
-  .fm-room__toolbar-wrap {
-    bottom: 10px;
-  }
-
-  .fm-room__stage-footer {
-    bottom: 98px;
-  }
+  .fm-room__reactions { left: 16px; bottom: 110px; }
 }
 
-/* =========================================================
-   ACCESSIBILITY
-   ========================================================= */
-
-.fm-room button:focus-visible,
-.fm-room a:focus-visible {
-  outline: 2px solid #60a5fa;
-  outline-offset: 2px;
+@media (max-height: 720px) and (min-width: 641px) {
+  .fm-header { min-height: 64px; padding-top: 8px; padding-bottom: 8px; }
+  .fm-room__body { padding-top: 12px; }
+  .fm-stage__rail { --fm-rail-h: 80px; }
+  .fm-sidebar-tabs__tab { min-height: 64px; padding-bottom: 10px; }
 }
-
-/* =========================================================
-   REDUCED MOTION
-   ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
   .fm-room *,
@@ -1815,7 +1526,6 @@
   .fm-room *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
 }

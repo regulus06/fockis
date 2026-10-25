@@ -1,0 +1,160 @@
+/* ============================================================================
+   FOCKIS SOCIAL — DESIGN TOKENS
+   web/src/styles/fockis-social-tokens.scss
+
+   The Fockis social identity: midnight navy surfaces, electric blue and
+   cyan accents, a little violet and green for category colour.
+
+   Scope: only containers that opt in with one of these classes:
+     .fk-app            (feed page root)
+     .fk-social-scope   (profile page root, story viewer, Wave player)
+
+   Inside those containers the older --fk-* tokens are re-pointed at the
+   new palette, so every existing component that already reads --fk-*
+   picks up the new look without editing it. Nothing outside the scope
+   changes.
+
+   Theme: follows the existing ThemeContext, which writes data-theme on the
+   page root (light | dark).
+============================================================================ */
+
+@mixin fks-dark {
+  --fks-bg: #050b1a;
+  --fks-bg-glow-1: rgba(37, 99, 235, 0.22);
+  --fks-bg-glow-2: rgba(34, 211, 238, 0.08);
+  --fks-surface: #0b1630;
+  --fks-surface-2: #0f1d3d;
+  --fks-surface-3: #14254b;
+  --fks-glass: rgba(12, 24, 52, 0.72);
+  --fks-sunken: #070f22;
+  --fks-border: rgba(124, 164, 255, 0.14);
+  --fks-border-strong: rgba(124, 172, 255, 0.28);
+
+  --fks-text: #eaf1ff;
+  --fks-text-2: #a9b7d8;
+  --fks-text-3: #7486ab;
+
+  --fks-primary: #2f7bff;
+  --fks-primary-bright: #5596ff;
+  --fks-primary-deep: #1546b8;
+  --fks-primary-soft: rgba(47, 123, 255, 0.16);
+  --fks-on-primary: #ffffff;
+
+  --fks-cyan: #22d3ee;
+  --fks-cyan-soft: rgba(34, 211, 238, 0.14);
+  --fks-violet: #8b5cf6;
+  --fks-violet-soft: rgba(139, 92, 246, 0.16);
+  --fks-green: #34d399;
+  --fks-green-soft: rgba(52, 211, 153, 0.14);
+  --fks-gold: #fbbf24;
+  --fks-gold-soft: rgba(251, 191, 36, 0.14);
+  --fks-rose: #fb7185;
+  --fks-rose-soft: rgba(251, 113, 133, 0.14);
+  --fks-live: #ff3b5c;
+
+  --fks-sidebar: #070e20;
+  --fks-sidebar-text: rgba(226, 235, 255, 0.76);
+
+  --fks-shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 18px 40px rgba(0, 4, 18, 0.45);
+  --fks-shadow-pop: 0 24px 60px rgba(0, 4, 18, 0.6);
+  --fks-glow: 0 0 0 1px rgba(85, 150, 255, 0.35), 0 10px 30px rgba(47, 123, 255, 0.28);
+}
+
+@mixin fks-light {
+  --fks-bg: #eef3fb;
+  --fks-bg-glow-1: rgba(47, 123, 255, 0.10);
+  --fks-bg-glow-2: rgba(34, 211, 238, 0.08);
+  --fks-surface: #ffffff;
+  --fks-surface-2: #f4f7fd;
+  --fks-surface-3: #e9effa;
+  --fks-glass: rgba(255, 255, 255, 0.92);
+  --fks-sunken: #e6ecf7;
+  --fks-border: #dbe3f1;
+  --fks-border-strong: #c3cfe4;
+
+  --fks-text: #0b1530;
+  --fks-text-2: #47577a;
+  --fks-text-3: #7584a3;
+
+  --fks-primary: #1765f5;
+  --fks-primary-bright: #2f7bff;
+  --fks-primary-deep: #0d47c2;
+  --fks-primary-soft: rgba(23, 101, 245, 0.10);
+  --fks-on-primary: #ffffff;
+
+  --fks-cyan: #0891b2;
+  --fks-cyan-soft: rgba(8, 145, 178, 0.10);
+  --fks-violet: #7c3aed;
+  --fks-violet-soft: rgba(124, 58, 237, 0.10);
+  --fks-green: #059669;
+  --fks-green-soft: rgba(5, 150, 105, 0.10);
+  --fks-gold: #b7791f;
+  --fks-gold-soft: rgba(217, 119, 6, 0.10);
+  --fks-rose: #e11d48;
+  --fks-rose-soft: rgba(225, 29, 72, 0.08);
+  --fks-live: #e11d48;
+
+  --fks-sidebar: #0a1328;
+  --fks-sidebar-text: rgba(226, 235, 255, 0.76);
+
+  --fks-shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 28px rgba(15, 35, 80, 0.07);
+  --fks-shadow-pop: 0 24px 60px rgba(15, 35, 80, 0.18);
+  --fks-glow: 0 0 0 1px rgba(23, 101, 245, 0.25), 0 10px 26px rgba(23, 101, 245, 0.18);
+}
+
+/* Map the legacy --fk-* names onto the new palette. */
+@mixin fks-legacy-bridge {
+  --fk-bg: var(--fks-bg);
+  --fk-bg-secondary: var(--fks-surface);
+  --fk-surface: var(--fks-surface);
+  --fk-surface-hover: var(--fks-surface-2);
+  --fk-sunken: var(--fks-sunken);
+  --fk-border: var(--fks-border);
+  --fk-border-strong: var(--fks-border-strong);
+  --fk-text: var(--fks-text);
+  --fk-text-2: var(--fks-text-2);
+  --fk-text-3: var(--fks-text-3);
+  --fk-fjord: var(--fks-primary);
+  --fk-fjord-bright: var(--fks-primary-bright);
+  --fk-fjord-dark: var(--fks-primary-deep);
+  --fk-fjord-soft: var(--fks-primary-soft);
+  --fk-amber: var(--fks-cyan);
+  --fk-amber-bright: var(--fks-cyan);
+  --fk-amber-dark: var(--fks-cyan);
+  --fk-amber-soft: var(--fks-cyan-soft);
+  --fk-info: var(--fks-primary-bright);
+  --fk-danger: var(--fks-rose);
+  --fk-success: var(--fks-green);
+  --fk-r-sm: 10px;
+  --fk-r-md: 14px;
+  --fk-r-lg: 20px;
+  --fk-r-xl: 24px;
+  --fk-shadow-sm: var(--fks-shadow-card);
+  --fk-shadow-md: var(--fks-shadow-card);
+  --fk-shadow-lg: var(--fks-shadow-pop);
+  --fk-font-display: var(--fks-font);
+}
+
+.fk-app,
+.fk-social-scope {
+  --fks-font: "Inter", "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --fks-radius-card: 20px;
+  --fks-radius-tile: 14px;
+  --fks-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  @include fks-light;
+  @include fks-legacy-bridge;
+}
+
+.fk-app[data-theme="dark"],
+[data-theme="dark"] .fk-app,
+.fk-social-scope[data-theme="dark"],
+[data-theme="dark"] .fk-social-scope {
+  @include fks-dark;
+}
+
+/* Full-screen overlays (story viewer, Waves) are always dark. */
+.fk-social-scope--always-dark {
+  @include fks-dark;
+  @include fks-legacy-bridge;
+}

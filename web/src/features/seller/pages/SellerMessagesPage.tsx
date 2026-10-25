@@ -245,6 +245,7 @@ export default function SellerMessagesPage() {
         </h1>
 
         <div
+          className="seller-messages-grid"
           style={{
             display: "grid",
             gridTemplateColumns:

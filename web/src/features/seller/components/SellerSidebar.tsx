@@ -10,12 +10,14 @@ import {
   BarChart3,
   MessageSquare,
   Settings,
-  Store,
   PlusCircle,
   LogOut,
   ExternalLink,
   Megaphone,
+  Wallet,
 } from "lucide-react";
+
+import { FockisLogo } from "../../fockis-shop/components/common/FockisLogo";
 
 import "../styles/SellerSidebar.scss";
 
@@ -34,6 +36,11 @@ const MENU = [
     label: "Orders",
     path: "/seller/orders",
     icon: ShoppingBag,
+  },
+  {
+    label: "Payouts",
+    path: "/seller/payouts",
+    icon: Wallet,
   },
   {
     label: "Analytics",
@@ -81,8 +88,8 @@ export default function SellerSidebar() {
 
       {/* BRAND */}
       <div className="sidebar-brand">
-        <div className="brand-icon">
-          <Store size={22} />
+        <div className="brand-icon brand-icon--logo">
+          <FockisLogo size={40} />
         </div>
 
         <div className="brand-text">

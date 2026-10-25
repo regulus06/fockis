@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 
+import FockisMark from "../../../../components/fockis/FockisMark";
 const NAV_ITEMS = [
   { to: "/admin/travel", label: "Dashboard", icon: "📊", end: true },
   { to: "/admin/travel/applications", label: "Partner Applications", icon: "📝" },
@@ -12,7 +13,7 @@ export default function AdminSidebar() {
   return (
     <aside className="travel-admin-sidebar">
       <div className="travel-admin-sidebar-header">
-        <span className="logo-mark">✈️</span>
+        <span className="logo-mark"><FockisMark spacer="✈️" /></span>
         <span className="logo-text">Fockis Travel Admin</span>
       </div>
 

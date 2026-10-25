@@ -46,10 +46,12 @@ export default function RestaurantCard({
         <div className="cuisine">{cuisine}</div>
         <h4>{name}</h4>
         <div className="row1">
-          <div className="rating">
-            <span className="star"><Star size={12} fill="currentColor" aria-hidden="true" /></span>
-            {rating.toFixed(1)}
-          </div>
+          {Number.isFinite(rating) && rating > 0 && (
+            <div className="rating">
+              <span className="star"><Star size={12} fill="currentColor" aria-hidden="true" /></span>
+              {rating.toFixed(1)}
+            </div>
+          )}
           <div className="loc">{location}</div>
         </div>
         {priceRange && <div className="price-range">{priceRange}</div>}

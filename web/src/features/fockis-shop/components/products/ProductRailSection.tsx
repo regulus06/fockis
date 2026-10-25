@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { Link } from "react-router-dom";
 
 import type { Product } from "../../types/product.types";
@@ -8,11 +9,17 @@ import { ProductCard } from "./ProductCard";
 
 /**
  * ============================================================================
- * PRODUCT RAIL SECTION
+ * FOCKIS SHOP — PRODUCT RAIL SECTION
  * ============================================================================
- * One reusable block for every horizontal product row on the Shop:
- * heading · optional subtitle · optional "See all" · rail · skeleton ·
- * empty state · error state.
+ *
+ * Shared section for horizontal product collections:
+ * - Recently viewed
+ * - New arrivals
+ * - Flash sale
+ * - Recommended products
+ * - Local delivery and international shipping
+ *
+ * Existing API and component props are preserved.
  * ============================================================================
  */
 
@@ -26,25 +33,35 @@ export interface ProductRailSectionProps {
   error?: string | null;
   emptyTitle?: string;
   emptyMessage?: string;
-  /** Hide the whole section instead of showing an empty state. */
   hideWhenEmpty?: boolean;
-  /** Visual accent for the section heading. */
   accent?: "default" | "deal" | "flash";
   eyebrow?: string;
   id?: string;
   showActions?: boolean;
-  /** Card layout used inside the rail. */
   cardVariant?: "rail" | "compact";
-  /** Icon shown in the empty state (lucide icon element or emoji). */
   emptyIcon?: React.ReactNode;
-  /** Ref used for lazy-loading (from useInView). */
   sectionRef?: React.Ref<HTMLElement>;
 }
 
-export function ProductCardSkeleton({ variant = "rail" }: { variant?: "rail" | "compact" }) {
+interface ProductCardSkeletonProps {
+  variant?: "rail" | "compact";
+}
+
+interface RailSkeletonProps {
+  count?: number;
+  variant?: "rail" | "compact";
+}
+
+export function ProductCardSkeleton({
+  variant = "rail",
+}: ProductCardSkeletonProps) {
   return (
-    <div className={`fk-card fk-card--${variant} fk-card--skeleton`} aria-hidden="true">
+    <div
+      className={`fk-card fk-card--${variant} fk-card--skeleton`}
+      aria-hidden="true"
+    >
       <div className="fk-card__media fk-skel" />
+
       <div className="fk-card__body">
         <div className="fk-skel fk-skel--line" />
         <div className="fk-skel fk-skel--line fk-skel--short" />
@@ -56,19 +73,26 @@ export function ProductCardSkeleton({ variant = "rail" }: { variant?: "rail" | "
 }
 
 export function RailSkeleton({
-  count = 6,
+  count = 5,
   variant = "rail",
-}: {
-  count?: number;
-  variant?: "rail" | "compact";
-}) {
+}: RailSkeletonProps) {
   return (
-    <div className="rail-wrap" role="status" aria-label="Loading products">
+    <div
+      className={`rail-wrap rail-wrap--${variant}`}
+      role="status"
+      aria-label="Loading products"
+      aria-busy="true"
+    >
       <div className="rail-scroll">
-        {Array.from({ length: count }).map((_, index) => (
-          <ProductCardSkeleton key={index} variant={variant} />
+        {Array.from({ length: count }, (_, index) => (
+          <ProductCardSkeleton
+            key={`${variant}-skeleton-${index}`}
+            variant={variant}
+          />
         ))}
       </div>
+
+      <span className="fk-sr-only">Loading products…</span>
     </div>
   );
 }
@@ -92,53 +116,81 @@ export function ProductRailSection({
   emptyIcon,
   sectionRef,
 }: ProductRailSectionProps) {
-  if (!loading && !error && products.length === 0 && hideWhenEmpty) {
+  const hasProducts = products.length > 0;
+
+  if (!loading && !error && !hasProducts && hideWhenEmpty) {
     return null;
   }
 
+  const sectionClassName = [
+    "fk-section",
+    "fk-rail-section",
+    `fk-rail-section--${accent}`,
+    `fk-rail-section--cards-${cardVariant}`,
+  ].join(" ");
+
   return (
     <section
-      className={`fk-section fk-rail-section fk-rail-section--${accent} fk-rail-section--cards-${cardVariant}`}
+      className={sectionClassName}
       id={id}
       ref={sectionRef}
       aria-label={title}
+      aria-busy={loading}
     >
-      <div className="fk-section__head">
-        <div>
-          {eyebrow && <span className="fk-section__eyebrow">{eyebrow}</span>}
+      <header className="fk-section__head">
+        <div className="fk-section__heading">
+          {eyebrow && (
+            <span className="fk-section__eyebrow">{eyebrow}</span>
+          )}
+
           <h2>{title}</h2>
-          {subtitle && <p>{subtitle}</p>}
+
+          {subtitle && (
+            <p className="fk-section__subtitle">{subtitle}</p>
+          )}
         </div>
 
         {seeAllTo && (
-          <Link to={seeAllTo} className="fk-section__link">
-            {seeAllLabel} <span aria-hidden="true">›</span>
+          <Link
+            to={seeAllTo}
+            className="fk-section__link"
+            aria-label={`${seeAllLabel}: ${title}`}
+          >
+            <span>{seeAllLabel}</span>
+            <span aria-hidden="true">›</span>
           </Link>
         )}
-      </div>
+      </header>
 
       {loading ? (
-        <RailSkeleton variant={cardVariant} />
+        <RailSkeleton
+          count={cardVariant === "compact" ? 4 : 5}
+          variant={cardVariant}
+        />
       ) : error ? (
-        <ShopError title={`${title} couldn’t load`} message={error} />
-      ) : products.length === 0 ? (
+        <ShopError
+          title={`${title} couldn’t load`}
+          message={error}
+        />
+      ) : hasProducts ? (
+        <Rail ariaLabel={title}>
+          {products.map((product) => (
+            <Fragment key={product.id}>
+              <ProductCard
+                product={product}
+                variant={cardVariant}
+                showActions={showActions}
+              />
+            </Fragment>
+          ))}
+        </Rail>
+      ) : (
         <ShopEmptyState
           compact
           icon={emptyIcon ?? "🛍️"}
           title={emptyTitle}
           message={emptyMessage}
         />
-      ) : (
-        <Rail ariaLabel={title}>
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              variant={cardVariant}
-              showActions={showActions}
-            />
-          ))}
-        </Rail>
       )}
     </section>
   );

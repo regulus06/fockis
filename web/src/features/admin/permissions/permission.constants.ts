@@ -62,6 +62,13 @@ export const PERMISSIONS = {
   MODERATION_REVIEW: "moderation.review",
   MODERATION_RESTRICT: "moderation.restrict",
   MODERATION_RESTORE: "moderation.restore",
+  MODERATION_ASSIGN: "moderation.assign",
+  MODERATION_RESOLVE: "moderation.resolve",
+  MODERATION_CONTENT_REMOVE: "moderation.content.remove",
+  MODERATION_WARN: "moderation.warn",
+  MODERATION_SUSPEND: "moderation.suspend",
+  MODERATION_APPEALS: "moderation.appeals",
+  MODERATION_SETTINGS: "moderation.settings",
 
   // ============================================================
   // SUPPORT

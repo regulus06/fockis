@@ -1,6 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
+import { FockisLogo } from "../../fockis-shop/components/common/FockisLogo";
+
 const SellerFooter: React.FC = () => {
   const year = new Date().getFullYear();
 
@@ -9,7 +11,7 @@ const SellerFooter: React.FC = () => {
       <div className="seller-footer__inner">
         <div className="seller-footer__brand">
           <Link to="/shop" className="seller-footer__logo">
-            <span className="seller-footer__crest">F</span>
+            <FockisLogo size={32} className="seller-footer__mark" />
             <span>Fockis</span>
             <small>SELLER CENTER</small>
           </Link>

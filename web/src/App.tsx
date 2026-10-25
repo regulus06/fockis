@@ -89,13 +89,17 @@ import ChurchAdminLivestreamPage from "./features/church/admin/live/ChurchAdminL
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 // ============================================================================
 // GENERAL
 // ============================================================================
 
 import FockisFeedPage from "./pages/FockisFeedPage";
+import AccountSettingsPage from "./features/account/pages/AccountSettingsPage";
 import FockisProfilePage from "./features/gifts/fockisprofile/pages/FockisProfilePage";
+import LegalPolicyPage from "./pages/legal/LegalPolicyPage";
 
 // ============================================================================
 // MESSAGES
@@ -161,13 +165,14 @@ import EarningsPage from "./features/earnings/pages/EarningsPage";
 // ============================================================================
 
 import FockisMarketingRoutes from "./features/admin/fockismail/routes/FockisMarketingRoutes";
+import AdsRoutes from "./features/marketing/routes/AdsRoutes";
 
 // ============================================================================
 // SUBSCRIPTIONS
 // ============================================================================
 
 import SubscriptionPage from "./features/subscriptions/pages/SubscriptionPage";
-import SubscriptionPlansPage from "./features/subscriptions/pages/SubscriptionPlansPage";
+import SubscriptionPlansPage from "./features/subscriptions/pages/SubscriptionPlans";
 import SubscriptionBillingPage from "./features/subscriptions/pages/SubscriptionBillingPage";
 import SubscriptionSuccessPage from "./features/subscriptions/pages/SubscriptionSuccessPage";
 import SubscriptionCancelPage from "./features/subscriptions/pages/SubscriptionCancelPage";
@@ -216,6 +221,7 @@ import EditEventPage from "./features/events/pages/EditEventPage";
 import EventDetailsPage from "./features/events/pages/EventDetailsPage";
 import MyEventsPage from "./features/events/pages/MyEventsPage";
 import MyRsvpsPage from "./features/events/pages/MyRsvpsPage";
+import MyModerationPage from "./features/reports/pages/MyModerationPage";
 
 // ============================================================================
 // BUSINESSES
@@ -933,6 +939,16 @@ function App(): React.JSX.Element {
         element={<Register />}
       />
 
+      <Route
+        path="/forgot-password"
+        element={<ForgotPassword />}
+      />
+
+      <Route
+        path="/reset-password"
+        element={<ResetPassword />}
+      />
+
       {/* ====================================================================
           GLOBAL ADMIN
       ==================================================================== */}
@@ -1000,6 +1016,18 @@ function App(): React.JSX.Element {
             }
           />
         }
+      />
+
+      {/* ====================================================================
+          FOCKIS ADS
+
+          Advertiser dashboard (features/marketing). It has its own sidebar,
+          so it sits outside the main Layout like Fockis Mail above.
+      ==================================================================== */}
+
+      <Route
+        path="/ads/*"
+        element={<AdsRoutes />}
       />
 
       {/* ====================================================================
@@ -1893,6 +1921,20 @@ function App(): React.JSX.Element {
           element={<FockisIdPage />}
         />
 
+        {/* ================================================================
+            ACCOUNT SETTINGS
+        ================================================================ */}
+
+        <Route
+          path="/settings"
+          element={<AccountSettingsPage />}
+        />
+
+        <Route
+          path="/settings/account"
+          element={<AccountSettingsPage />}
+        />
+
         {/* ==================================================================
             MEETINGS
         ================================================================== */}
@@ -1960,6 +2002,15 @@ function App(): React.JSX.Element {
         <Route
           path="/events/:eventId"
           element={<EventDetailsPage />}
+        />
+
+        {/* ==================================================================
+            MODERATION CENTER (decisions about me, appeals, my reports)
+        ================================================================== */}
+
+        <Route
+          path="/moderation"
+          element={<MyModerationPage />}
         />
 
         {/* ==================================================================
@@ -2378,6 +2429,45 @@ function App(): React.JSX.Element {
         <Route
           path="/orders"
           element={<OrdersPage />}
+        />
+
+        {/* ==================================================================
+            LEGAL & POLICIES
+        ================================================================== */}
+
+        <Route
+          path="/privacy"
+          element={<LegalPolicyPage slug="privacy" />}
+        />
+
+        <Route
+          path="/terms"
+          element={<LegalPolicyPage slug="terms" />}
+        />
+
+        <Route
+          path="/community-guidelines"
+          element={<LegalPolicyPage slug="community-guidelines" />}
+        />
+
+        <Route
+          path="/child-safety"
+          element={<LegalPolicyPage slug="child-safety" />}
+        />
+
+        <Route
+          path="/payments"
+          element={<LegalPolicyPage slug="payments" />}
+        />
+
+        <Route
+          path="/copyright"
+          element={<LegalPolicyPage slug="copyright" />}
+        />
+
+        <Route
+          path="/shop-advertising"
+          element={<LegalPolicyPage slug="shop-advertising" />}
         />
       </Route>
 

@@ -235,7 +235,7 @@ export default function FockisShopDiscovery({
         });
 
         const productResponse = await fetch(
-          `${API}/marketplace/products?${params.toString()}`,
+          `${API}/fockis-shop/products?${params.toString()}`,
           {
             method: "GET",
             credentials: "include",

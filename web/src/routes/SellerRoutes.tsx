@@ -11,6 +11,7 @@ import SellerAnalyticsPage from "../features/seller/pages/SellerAnalyticsPage";
 import SellerMessagesPage from "../features/seller/pages/SellerMessagesPage";
 import SellerSettingsPage from "../features/seller/pages/SellerSettingsPage";
 import SellerShippingPage from "../features/seller/pages/SellerShippingPage";
+import SellerPayoutsPage from "../features/seller/pages/SellerPayoutsPage";
 import SellerStoriesPage from "../features/seller/pages/SellerStoriesPage";
 import SellerStoresPage from "../features/seller/pages/SellerStoresPage";
 import SellerStoreSelectorPage from "../features/seller/pages/SellerStoreSelectorPage";
@@ -98,6 +99,11 @@ export function SellerRoutes() {
           <Route
             path="stories"
             element={<SellerStoriesPage />}
+          />
+
+          <Route
+            path="payouts"
+            element={<SellerPayoutsPage />}
           />
         </Route>
       </Route>

@@ -1,6 +1,64 @@
 /* ============================================================================
    FOCKIS SUBSCRIPTION FEATURE GATE
-   All visual rules live in the shared partial (.fk-subscription-gate).
 ============================================================================ */
 
-@use "./fockis-subscription-shared";
+@use "./fockis-subscription-shared" as shared;
+
+.fk-sub-gate {
+  @include shared.fk-sub-gem-palettes;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 20px;
+  border: 1px solid var(--gem-ring, var(--fk-border));
+  border-radius: var(--fk-r-xl);
+  background:
+    linear-gradient(135deg, var(--gem-soft, transparent), transparent 60%),
+    var(--fk-surface);
+  color: var(--fk-text);
+  font-family: var(--fk-font-body);
+  text-align: center;
+
+  @media (min-width: shared.$fk-sub-bp-sm) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    justify-items: start;
+    text-align: left;
+  }
+
+  &__gem {
+    width: 120px;
+    height: 70px;
+    border-radius: var(--fk-r-md);
+    object-fit: cover;
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--fk-fjord-soft);
+    color: var(--fk-fjord-bright);
+  }
+
+  &__copy {
+    min-width: 0;
+
+    strong {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    p {
+      margin: 4px 0 0;
+      color: var(--fk-text-2);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  }
+}

@@ -19,7 +19,9 @@ export interface PublicLiveStream {
   creatorId?: string;
 }
 
-function getLiveAuthToken(): string {
+const ACTIVE_STATUSES = new Set(["live", "active", "started"]);
+
+export function getLiveAuthToken(): string {
   const keys = [
     "accessToken",
     "access_token",
@@ -42,72 +44,113 @@ function getLiveAuthToken(): string {
   return "";
 }
 
-export async function getPublicLiveStreams(): Promise<
-  PublicLiveStream[]
-> {
+/**
+ * Only active, public streams belong in the feed's Live Now section.
+ * Ended, private and followers-only streams are excluded.
+ */
+export function isActivePublicLiveStream(
+  stream: PublicLiveStream,
+): boolean {
+  const status = String(stream.status || "").toLowerCase();
+  const visibility = String(stream.visibility || "").toLowerCase();
+
+  const publicStream =
+    stream.isPublic !== false &&
+    visibility !== "private" &&
+    visibility !== "followers";
+
+  return publicStream && ACTIVE_STATUSES.has(status);
+}
+
+/**
+ * Accepts a stream from the REST API or a socket event. Returns null when
+ * it has no usable ID.
+ */
+export function normalizePublicLiveStream(
+  value: unknown,
+): PublicLiveStream | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const raw = value as Record<string, unknown>;
+  const id = String(raw.id ?? raw._id ?? "").trim();
+
+  if (!id) {
+    return null;
+  }
+
+  return {
+    ...(raw as unknown as PublicLiveStream),
+    id,
+    title: String(raw.title ?? ""),
+  };
+}
+
+/**
+ * Loads the active public streams. Throws on network or HTTP errors so
+ * callers can keep what they already show instead of clearing it.
+ */
+export async function fetchPublicLiveStreams(
+  signal?: AbortSignal,
+): Promise<PublicLiveStream[]> {
   const apiUrl = FOCKIS_API_URL.replace(/\/+$/, "");
   const endpoint = `${apiUrl}/live/public`;
   const token = getLiveAuthToken();
 
+  const response = await fetch(endpoint, {
+    method: "GET",
+    credentials: "include",
+    signal,
+    headers: {
+      Accept: "application/json",
+      ...(token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : {}),
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Live API returned ${response.status}`);
+  }
+
+  const payload = await response.json();
+
+  const raw: unknown[] = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.streams)
+      ? payload.streams
+      : Array.isArray(payload?.data)
+        ? payload.data
+        : [];
+
+  const seen = new Set<string>();
+  const streams: PublicLiveStream[] = [];
+
+  for (const item of raw) {
+    const stream = normalizePublicLiveStream(item);
+
+    if (
+      stream &&
+      !seen.has(stream.id) &&
+      isActivePublicLiveStream(stream)
+    ) {
+      seen.add(stream.id);
+      streams.push(stream);
+    }
+  }
+
+  return streams;
+}
+
+/** Same as fetchPublicLiveStreams, but resolves to [] on any error. */
+export async function getPublicLiveStreams(): Promise<
+  PublicLiveStream[]
+> {
   try {
-    const response = await fetch(endpoint, {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        Accept: "application/json",
-        ...(token
-          ? {
-              Authorization: `Bearer ${token}`,
-            }
-          : {}),
-      },
-    });
-
-    if (!response.ok) {
-      console.warn(
-        `[FockisFeedPage] Live API returned ${response.status}`,
-      );
-
-      return [];
-    }
-
-    const payload = await response.json();
-
-    const raw = Array.isArray(payload)
-      ? payload
-      : Array.isArray(payload?.streams)
-        ? payload.streams
-        : Array.isArray(payload?.data)
-          ? payload.data
-          : [];
-
-    if (!Array.isArray(raw)) {
-      return [];
-    }
-
-    return raw.filter(
-      (stream: PublicLiveStream) => {
-        const status = String(
-          stream.status || "",
-        ).toLowerCase();
-
-        const visibility = String(
-          stream.visibility || "",
-        ).toLowerCase();
-
-        const publicStream =
-          stream.isPublic !== false &&
-          visibility !== "private" &&
-          visibility !== "followers";
-
-        const active =
-          status === "live" ||
-          status === "active" ||
-          status === "started";
-
-        return publicStream && active;
-      },
-    );
+    return await fetchPublicLiveStreams();
   } catch (error) {
     console.error(
       "[FockisFeedPage] Failed to load public live streams:",

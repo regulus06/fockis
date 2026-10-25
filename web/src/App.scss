@@ -1,47 +1,57 @@
 /* =========================
-   GLOBAL APP WRAPPER
+   GLOBAL APP ROOT
 ========================= */
 
 html,
 body,
 #root {
-  height: 100%;
+  width: 100%;
+  min-height: 100%;
   margin: 0;
   padding: 0;
   background: #0b0f17;
   font-family: Inter, system-ui, Arial, sans-serif;
 }
 
-/* Root app container (React mount) */
+html {
+  overflow-x: clip;
+}
+
+body {
+  overflow-x: clip;
+  overflow-y: auto;
+}
+
 #root {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* =========================
-   GLOBAL LAYOUT (Layout.tsx)
+   LEGACY APP LAYOUTS
 ========================= */
 
 .app-layout {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
-/* If you have sidebar + content */
 .app-body {
   display: flex;
-  flex: 1;
-  min-height: 0; /* important for scroll */
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
 }
 
-/* main content area */
 .app-content {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
-  overflow-y: auto;
   background: #0b0f17;
 }
 
@@ -52,36 +62,61 @@ body,
 .seller-layout {
   display: flex;
   width: 100%;
-  height: 100%;
+  min-width: 0;
   min-height: 0;
 }
 
-/* IMPORTANT: prevents dashboard escaping layout */
 .seller-content {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
-  overflow-y: auto;
   background: #0f1522;
   padding: 20px;
 }
 
 /* =========================
-   SCROLL FIXES (CRITICAL)
+   GLOBAL BOX SIZING
 ========================= */
 
-/* prevents double scrollbars */
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-/* ensures nested flex children behave correctly */
-main,
-div {
+/* =========================
+   SHOP: SINGLE PAGE SCROLL
+========================= */
+
+.fk-app-layout:has(.shop-page-root) {
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: auto;
+  overflow: visible;
+}
+
+.fk-app-content--shop {
+  display: block;
+  width: 100%;
+  min-width: 0;
   min-height: 0;
+  height: auto;
+  padding: 0;
+  overflow: visible;
+}
+
+.fk-app-content--shop > .shop-page-root {
+  width: 100%;
+  min-height: 0;
+  height: auto;
+  margin: 0;
+  padding-bottom: 0;
 }
 
 /* =========================
-   OPTIONAL: NICE SCROLLBAR
+   SCROLLBAR
 ========================= */
 
 ::-webkit-scrollbar {

@@ -1,62 +1,72 @@
-import { FOCKIS_API_URL } from "../../../config/fockisConfig";
 
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
 import { useActiveStore } from "../store/activeStore";
 import { useSellerProducts } from "../hooks/useSellerProducts";
 import { sellerApi } from "../services/sellerApi";
 
 import "../styles/SellerProductsPage.scss";
 
-// Inline SVG data URI — no external file needed, so this can never 404.
 const placeholderImg =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23222'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='14' fill='%23888' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
 
-function getImageUrl(image: any) {
-  if (!image) {
+function getImageUrl(image: any): string {
+  if (!image) return placeholderImg;
+
+  let raw: unknown = image;
+  let storageKey = "";
+
+  if (typeof image === "object") {
+    storageKey = String(image.storageKey || image.key || "").trim();
+    raw =
+      image.url ||
+      image.media ||
+      image.path ||
+      image.filename ||
+      image.fileName ||
+      image.file ||
+      storageKey;
+  }
+
+  const value = String(raw ?? "").trim();
+
+  if (!value || /^(undefined|null)$/i.test(value)) {
     return placeholderImg;
   }
 
-  let img = image;
+  if (/^https?:\/\//i.test(value)) return value;
+  if (/^(data:|blob:)/i.test(value)) return value;
 
-  if (typeof img === "object") {
-    img =
-      img.url ||
-      img.path ||
-      img.filename ||
-      img.fileName ||
-      img.file;
-  }
+  const normalized = (storageKey || value)
+    .replace(/\\/g, "/")
+    .replace(/^https?:\/\/[^/]+/i, "")
+    .split(/[?#]/)[0]
+    .replace(/^\/+/, "")
+    .replace(/^uploads\/media\//i, "")
+    .replace(/^uploads\//i, "")
+    .replace(/^media\//i, "");
 
-  if (!img) {
+  if (!normalized) return placeholderImg;
+
+  const objectKey = normalized.includes("/")
+    ? normalized
+    : `posts/images/${normalized}`;
+
+  const apiBase = String(FOCKIS_API_URL || "").replace(/\/+$/, "");
+
+  if (!apiBase) {
+    console.error("FOCKIS_API_URL is empty; cannot resolve product image.");
     return placeholderImg;
   }
 
-  img = String(img);
+  const encodedKey = objectKey
+    .split("/")
+    .map((part: string) => encodeURIComponent(part))
+    .join("/");
 
-  // Guard against corrupted upload data.
-  if (
-    img.includes("undefined") ||
-    img.includes("null") ||
-    img.trim() === ""
-  ) {
-    return placeholderImg;
-  }
-
-  if (img.startsWith("http")) {
-    return img;
-  }
-
-  if (img.startsWith("/uploads")) {
-    return FOCKIS_API_URL + img;
-  }
-
-  if (img.startsWith("/")) {
-    return FOCKIS_API_URL + img;
-  }
-
-  return FOCKIS_API_URL + "/uploads/" + img;
+  return `${apiBase}/uploads/media/${encodedKey}`;
 }
 
 const LOW_STOCK_THRESHOLD = 5;
@@ -64,132 +74,110 @@ const LOW_STOCK_THRESHOLD = 5;
 export default function SellerProductsPage() {
   const navigate = useNavigate();
 
-  const { activeStore } = useActiveStore();
+  const activeStore = useActiveStore((state) => state.activeStore);
+  const loadActiveStore = useActiveStore((state) => state.loadActiveStore);
+
+  const [storeReady, setStoreReady] = useState(false);
+  const [storeError, setStoreError] = useState<string | null>(null);
 
   const {
     products,
     loading,
     error,
-  } = useSellerProducts(
-    activeStore?._id
-  );
+    reload,
+  } = useSellerProducts(storeReady ? activeStore?._id : undefined);
 
-  // Local mirror of the product list so a delete
-  // can remove an item immediately.
-  const [
-    items,
-    setItems,
-  ] = useState<any[]>([]);
+  const [items, setItems] = useState<any[]>([]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const [
-    deletingId,
-    setDeletingId,
-  ] = useState<string | null>(
-    null
-  );
+  useEffect(() => {
+    let cancelled = false;
 
-  const [
-    deleteError,
-    setDeleteError,
-  ] = useState<string | null>(
-    null
-  );
+    async function initializeStore() {
+      setStoreReady(false);
+      setStoreError(null);
 
-  const [
-    searchTerm,
-    setSearchTerm,
-  ] = useState("");
+      try {
+        const store = await loadActiveStore();
+
+        if (cancelled) return;
+
+        if (store?._id) {
+          setStoreReady(true);
+        } else {
+          setStoreError(
+            "No store was returned for your account. Please check your store or sign in again."
+          );
+        }
+      } catch (err) {
+        if (cancelled) return;
+
+        console.error("Unable to initialize Seller Center store:", err);
+        setStoreError("Unable to load your store. Please try again.");
+      }
+    }
+
+    void initializeStore();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadActiveStore]);
 
   useEffect(() => {
     setItems(products || []);
   }, [products]);
 
   const filteredItems = useMemo(() => {
-    const term =
-      searchTerm
-        .trim()
-        .toLowerCase();
+    const term = searchTerm.trim().toLowerCase();
 
-    if (!term) {
-      return items;
-    }
+    if (!term) return items;
 
-    return items.filter(
-      (product: any) =>
-        product.name
-          ?.toLowerCase()
-          .includes(term)
+    return items.filter((product: any) =>
+      String(product.name || "").toLowerCase().includes(term)
     );
-  }, [
-    items,
-    searchTerm,
-  ]);
+  }, [items, searchTerm]);
 
-  const totalCount =
-    items.length;
+  const totalCount = items.length;
 
-  const lowStockCount =
-    items.filter(
-      (product: any) =>
-        product.stock !==
-          undefined &&
-        product.stock > 0 &&
-        product.stock <=
-          LOW_STOCK_THRESHOLD
-    ).length;
+  const lowStockCount = items.filter((product: any) => {
+    const stock = Number(product.stock ?? 0);
+    return stock > 0 && stock <= LOW_STOCK_THRESHOLD;
+  }).length;
 
-  const outOfStockCount =
-    items.filter(
-      (product: any) =>
-        product.stock !==
-          undefined &&
-        product.stock <= 0
-    ).length;
+  const outOfStockCount = items.filter(
+    (product: any) => Number(product.stock ?? 0) <= 0
+  ).length;
 
-  function handleEdit(
-    productId: string
-  ) {
-    navigate(
-      `/seller/products/edit/${productId}`
-    );
+  function handleEdit(productId: string) {
+    navigate(`/seller/products/edit/${productId}`);
   }
 
-  async function handleDelete(
-    productId: string,
-    productName: string
-  ) {
-    const confirmed =
-      window.confirm(
-        `Delete "${productName}"? This can't be undone.`
-      );
+  async function handleDelete(productId: string, productName: string) {
+    const confirmed = window.confirm(
+      `Delete "${productName}"? This can't be undone.`
+    );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     setDeleteError(null);
     setDeletingId(productId);
 
     try {
-      await sellerApi.deleteProduct(
-        productId
+      await sellerApi.deleteProduct(productId);
+
+      setItems((previous) =>
+        previous.filter((product) => product._id !== productId)
       );
 
-      setItems((prev) =>
-        prev.filter(
-          (product) =>
-            product._id !==
-            productId
-        )
-      );
+      await reload();
     } catch (err: any) {
-      console.error(
-        "Failed to delete product:",
-        err
-      );
-
+      console.error("Failed to delete product:", err);
       setDeleteError(
-        err?.message ||
+        err?.response?.data?.message ||
+          err?.message ||
           "Failed to delete product. Please try again."
       );
     } finally {
@@ -200,117 +188,59 @@ export default function SellerProductsPage() {
   return (
     <div className="seller-products">
       <div className="products-body">
-
-        {/* =================================================
-            HEADER
-        ================================================= */}
-
         <div className="products-header">
           <div className="header-copy">
-            <span className="eyebrow">
-              Inventory
-            </span>
-
-            <h1>
-              Products
-            </h1>
-
+            <span className="eyebrow">Inventory</span>
+            <h1>Products</h1>
             <p>
               Manage your store products
+              {activeStore?.name ? ` — ${activeStore.name}` : ""}
             </p>
           </div>
 
           <button
             className="btn btn-primary"
-            onClick={() =>
-              navigate(
-                "/seller/products/add"
-              )
-            }
+            onClick={() => navigate("/seller/products/add")}
           >
             + Add Product
           </button>
         </div>
 
-        {/* =================================================
-            ERRORS
-        ================================================= */}
+        {storeError && (
+          <p style={{ color: "var(--danger)" }}>{storeError}</p>
+        )}
 
         {error && (
-          <p
-            style={{
-              color:
-                "var(--danger)",
-            }}
-          >
-            {error}
-          </p>
+          <p style={{ color: "var(--danger)" }}>{error}</p>
         )}
 
         {deleteError && (
-          <p
-            style={{
-              color:
-                "var(--danger)",
-            }}
-          >
-            {deleteError}
-          </p>
+          <p style={{ color: "var(--danger)" }}>{deleteError}</p>
         )}
 
-        {/* =================================================
-            LOADING
-        ================================================= */}
-
-        {loading ? (
+        {!storeReady || loading ? (
           <>
             <div className="skeleton skeleton-search" />
-
             <div className="skeleton skeleton-table" />
           </>
         ) : (
           <>
-            {/* =============================================
-                SUMMARY
-            ============================================= */}
-
             <div className="products-summary">
-
               <div className="summary-chip">
-                <span className="summary-count">
-                  {totalCount}
-                </span>
-
-                <span>
-                  Total products
-                </span>
+                <span className="summary-count">{totalCount}</span>
+                <span>Total products</span>
               </div>
 
               <div className="summary-chip summary-warning">
-                <span className="summary-count">
-                  {lowStockCount}
-                </span>
-
-                <span>
-                  Low stock
-                </span>
+                <span className="summary-count">{lowStockCount}</span>
+                <span>Low stock</span>
               </div>
 
               <div className="summary-chip summary-danger">
-                <span className="summary-count">
-                  {outOfStockCount}
-                </span>
-
-                <span>
-                  Out of stock
-                </span>
+                <span className="summary-count">{outOfStockCount}</span>
+                <span>Out of stock</span>
               </div>
-
             </div>
-
-            {/* =============================================
-                SEARCH
-            ============================================= */}
 
             <div className="search-bar">
               <input
@@ -318,263 +248,138 @@ export default function SellerProductsPage() {
                 type="text"
                 placeholder="Search products..."
                 value={searchTerm}
-                onChange={(event) =>
-                  setSearchTerm(
-                    event.target.value
-                  )
-                }
+                onChange={(event) => setSearchTerm(event.target.value)}
               />
             </div>
 
-            {/* =============================================
-                EMPTY STATE
-            ============================================= */}
-
             {filteredItems.length === 0 ? (
               <div className="empty-state">
-
-                <div className="empty-icon">
-                  📦
-                </div>
-
+                <div className="empty-icon">📦</div>
                 <p>
                   {totalCount === 0
-                    ? "No products yet"
+                    ? "No products found for this store"
                     : "No matching products"}
                 </p>
-
                 <span>
                   {totalCount === 0
-                    ? "Start adding products to your store."
+                    ? "Your existing products may not be linked to the selected store. Refresh and check the product API response before creating anything new."
                     : "Try a different search term."}
                 </span>
 
                 {totalCount === 0 && (
                   <button
                     className="btn btn-primary"
-                    style={{
-                      marginTop: 16,
-                    }}
-                    onClick={() =>
-                      navigate(
-                        "/seller/products/add"
-                      )
-                    }
+                    style={{ marginTop: 16 }}
+                    onClick={() => void reload()}
                   >
-                    Create First Product
+                    Retry loading products
                   </button>
                 )}
-
               </div>
             ) : (
-
-              /* ===========================================
-                 PRODUCT TABLE
-              =========================================== */
-
               <div className="table-wrapper">
-
                 <table className="inventory-table">
-
                   <thead>
                     <tr>
-                      <th>
-                        Product
-                      </th>
-
-                      <th>
-                        Price
-                      </th>
-
-                      <th>
-                        Stock
-                      </th>
-
-                      <th>
-                        Status
-                      </th>
-
-                      <th
-                        style={{
-                          textAlign:
-                            "right",
-                        }}
-                      >
-                        Actions
-                      </th>
+                      <th>Product</th>
+                      <th>Price</th>
+                      <th>Stock</th>
+                      <th>Status</th>
+                      <th style={{ textAlign: "right" }}>Actions</th>
                     </tr>
                   </thead>
 
                   <tbody>
+                    {filteredItems.map((product: any) => {
+                      const stock = Number(product.stock ?? 0);
+                      const isOut = stock <= 0;
+                      const isLow = !isOut && stock <= LOW_STOCK_THRESHOLD;
 
-                    {filteredItems.map(
-                      (product: any) => {
-
-                        const stock =
-                          product.stock ??
-                          0;
-
-                        const isOut =
-                          stock <= 0;
-
-                        const isLow =
-                          !isOut &&
-                          stock <=
-                            LOW_STOCK_THRESHOLD;
-
-                        return (
-                          <tr
-                            key={
-                              product._id
-                            }
-                          >
-
-                            {/* PRODUCT */}
-
-                            <td>
-                              <div className="product-cell">
-
-                                <img
-                                  className="product-thumb"
-                                  src={getImageUrl(
-                                    product
-                                      .images?.[0]
-                                  )}
-                                  alt={
-                                    product.name
+                      return (
+                        <tr key={product._id}>
+                          <td>
+                            <div className="product-cell">
+                              <img
+                                className="product-thumb"
+                                src={getImageUrl(product.images?.[0])}
+                                alt={product.name || "Product"}
+                                onError={(event) => {
+                                  if (
+                                    event.currentTarget.src !== placeholderImg
+                                  ) {
+                                    event.currentTarget.src = placeholderImg;
                                   }
-                                  onError={(
-                                    event
-                                  ) => {
-                                    if (
-                                      event
-                                        .currentTarget
-                                        .src !==
-                                      placeholderImg
-                                    ) {
-                                      console.log(
-                                        "FAILED IMAGE:",
-                                        product.images
-                                      );
+                                }}
+                              />
 
-                                      event
-                                        .currentTarget
-                                        .src =
-                                        placeholderImg;
-                                    }
-                                  }}
-                                />
-
-                                <div>
-                                  <h3>
-                                    {
-                                      product.name
-                                    }
-                                  </h3>
-
-                                  {product.description && (
-                                    <p>
-                                      {
-                                        product.description
-                                      }
-                                    </p>
-                                  )}
-                                </div>
-
+                              <div>
+                                <h3>{product.name}</h3>
+                                {product.description && (
+                                  <p>{product.description}</p>
+                                )}
                               </div>
-                            </td>
+                            </div>
+                          </td>
 
-                            {/* PRICE */}
+                          <td className="price-cell">
+                            ${Number(product.price ?? 0).toFixed(2)}
+                          </td>
 
-                            <td className="price-cell">
-                              $
-                              {product.price}
-                            </td>
+                          <td>
+                            <span
+                              className={
+                                isLow || isOut
+                                  ? "stock-value stock-low"
+                                  : "stock-value"
+                              }
+                            >
+                              {stock}
+                            </span>
+                          </td>
 
-                            {/* STOCK */}
+                          <td>
+                            <span
+                              className={
+                                isOut
+                                  ? "status-pill status-out"
+                                  : "status-pill status-active"
+                              }
+                            >
+                              {isOut ? "Out of stock" : "Active"}
+                            </span>
+                          </td>
 
-                            <td>
-                              <span
-                                className={
-                                  isLow ||
-                                  isOut
-                                    ? "stock-value stock-low"
-                                    : "stock-value"
-                                }
+                          <td>
+                            <div className="actions-cell">
+                              <button
+                                className="icon-btn"
+                                onClick={() => handleEdit(product._id)}
                               >
-                                {stock}
-                              </span>
-                            </td>
+                                ✏️ Edit
+                              </button>
 
-                            {/* STATUS */}
-
-                            <td>
-                              <span
-                                className={
-                                  isOut
-                                    ? "status-pill status-out"
-                                    : "status-pill status-active"
+                              <button
+                                className="icon-btn icon-btn-danger"
+                                onClick={() =>
+                                  handleDelete(product._id, product.name)
                                 }
+                                disabled={deletingId === product._id}
                               >
-                                {isOut
-                                  ? "Out of stock"
-                                  : "Active"}
-                              </span>
-                            </td>
-
-                            {/* ACTIONS */}
-
-                            <td>
-                              <div className="actions-cell">
-
-                                <button
-                                  className="icon-btn"
-                                  onClick={() =>
-                                    handleEdit(
-                                      product._id
-                                    )
-                                  }
-                                >
-                                  ✏️ Edit
-                                </button>
-
-                                <button
-                                  className="icon-btn icon-btn-danger"
-                                  onClick={() =>
-                                    handleDelete(
-                                      product._id,
-                                      product.name
-                                    )
-                                  }
-                                  disabled={
-                                    deletingId ===
-                                    product._id
-                                  }
-                                >
-                                  {deletingId ===
-                                  product._id
-                                    ? "Deleting..."
-                                    : "🗑️ Delete"}
-                                </button>
-
-                              </div>
-                            </td>
-
-                          </tr>
-                        );
-                      }
-                    )}
-
+                                {deletingId === product._id
+                                  ? "Deleting..."
+                                  : "🗑️ Delete"}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
-
                 </table>
-
               </div>
             )}
-
           </>
         )}
-
       </div>
     </div>
   );

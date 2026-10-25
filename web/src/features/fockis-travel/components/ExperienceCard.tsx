@@ -40,7 +40,7 @@ export default function ExperienceCard({
           {duration}
         </div>
         <h4>{name}</h4>
-        {typeof rating === 'number' && (
+        {typeof rating === 'number' && rating > 0 && (
           <div className="meta-row">
             <Star size={12} aria-hidden="true" fill="currentColor" /> {rating.toFixed(1)}
           </div>

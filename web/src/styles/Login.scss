@@ -1205,3 +1205,25 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Official Fockis logo beside the wordmark (public/brand). */
+.wordmark {
+  gap: 12px;
+}
+
+.wordmark__logo {
+  display: block;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+@media (max-width: 640px) {
+  .wordmark__logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+}

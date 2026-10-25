@@ -1,4 +1,5 @@
-import { Check, Radio, Square, X } from "lucide-react";
+import { useRef } from "react";
+import { Check, PhoneOff, Radio, X } from "lucide-react";
 
 import type {
   Analytics,
@@ -7,7 +8,7 @@ import type {
   StreamInfo,
 } from "../../types";
 
-import { Button } from "../ui/Primitives";
+import { Button, useDialogFocus } from "../ui/Primitives";
 import {
   formatCount,
   formatDuration,
@@ -84,6 +85,9 @@ export function GoLiveModal({
     >
       <div
         className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Go live"
         onClick={(event) =>
           event.stopPropagation()
         }
@@ -315,12 +319,17 @@ export function EndLiveModal({
   confirmEndLive,
   analytics,
   elapsedSeconds,
+  guestCount = 0,
 }: {
   closeEndLiveModal: () => void;
   confirmEndLive: () => void;
   analytics: Analytics;
   elapsedSeconds: number;
+  guestCount?: number;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useDialogFocus(ref, closeEndLiveModal);
+
   return (
     <div
       className="modal-backdrop"
@@ -328,91 +337,55 @@ export function EndLiveModal({
     >
       <div
         className="modal"
+        ref={ref}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="fls-end-live-title"
+        aria-describedby="fls-end-live-desc"
+        tabIndex={-1}
         onClick={(event) =>
           event.stopPropagation()
         }
-        onKeyDown={(event) =>
-          event.stopPropagation()
-        }
       >
-        {/* ================================================================
-            ICON
-        ================================================================ */}
-
         <div className="modal__icon-badge modal__icon-badge--end">
-          <Square
-            size={18}
-            fill="currentColor"
-          />
+          <PhoneOff size={18} />
         </div>
 
-        {/* ================================================================
-            HEADER
-        ================================================================ */}
-
-        <h2 className="modal__title">
-          End your live stream?
+        <h2 className="modal__title" id="fls-end-live-title">
+          End your live session?
         </h2>
 
-        <p className="modal__subtitle">
-          Viewers will be disconnected and your
-          stream will stop broadcasting. This
-          can't be undone.
+        <p className="modal__subtitle" id="fls-end-live-desc">
+          Your broadcast will stop and viewers will be disconnected
+          {guestCount > 0
+            ? `, along with ${guestCount} ${guestCount === 1 ? "guest" : "guests"} on your stage`
+            : ""}
+          . Your camera and microphone will be released. This can't be undone.
         </p>
 
-        {/* ================================================================
-            ANALYTICS
-        ================================================================ */}
-
         <div className="modal__checklist">
-
           <div className="modal__check-row">
-            <span className="modal__check-label">
-              Duration
-            </span>
-
-            <span className="modal__check-plain">
-              {formatDuration(
-                elapsedSeconds,
-              )}
-            </span>
+            <span className="modal__check-label">Duration</span>
+            <span className="modal__check-plain">{formatDuration(elapsedSeconds)}</span>
           </div>
 
           <div className="modal__check-row">
-            <span className="modal__check-label">
-              Current viewers
-            </span>
-
-            <span className="modal__check-plain">
-              {formatCount(
-                analytics.currentViewers,
-              )}
-            </span>
+            <span className="modal__check-label">Current viewers</span>
+            <span className="modal__check-plain">{formatCount(analytics.currentViewers)}</span>
           </div>
 
           <div className="modal__check-row">
-            <span className="modal__check-label">
-              Peak viewers
-            </span>
-
-            <span className="modal__check-plain">
-              {formatCount(
-                analytics.peakViewers,
-              )}
-            </span>
+            <span className="modal__check-label">Peak viewers</span>
+            <span className="modal__check-plain">{formatCount(analytics.peakViewers)}</span>
           </div>
-
         </div>
-
-        {/* ================================================================
-            ACTIONS
-        ================================================================ */}
 
         <div className="modal__actions">
           <Button
             variant="secondary"
             fullWidth
             onClick={closeEndLiveModal}
+            data-autofocus
           >
             Keep streaming
           </Button>
@@ -422,7 +395,7 @@ export function EndLiveModal({
             fullWidth
             onClick={confirmEndLive}
           >
-            End live
+            End live session
           </Button>
         </div>
       </div>

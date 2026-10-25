@@ -253,7 +253,7 @@
     margin-top: 2px;
     border: 1px solid fockis.$navy-800;
     border-radius: fockis.$radius-pill;
-    background: fockis.$navy-800;
+    background: fockis.$gold-500;
     color: #ffffff;
     font-family: fockis.$font-body;
     font-size: 0.84rem;
@@ -268,7 +268,7 @@
 
   form > .btn-primary:hover:not(:disabled) {
     border-color: fockis.$navy-900;
-    background: fockis.$navy-900;
+    background: fockis.$gold-600;
     box-shadow: 0 8px 20px rgba(10, 24, 48, 0.16);
     transform: translateY(-1px);
   }

@@ -67,8 +67,8 @@ export default function CampaignAnalyticsPage() {
         <Link
           to={
             campaignId
-              ? `/marketing/campaigns/${campaignId}`
-              : "/marketing"
+              ? `/ads/campaigns/${campaignId}`
+              : "/ads"
           }
           className="fk-marketing-secondary-button"
         >

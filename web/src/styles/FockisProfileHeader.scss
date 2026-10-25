@@ -1,298 +1,440 @@
 /* ============================================================================
-   FOCKIS PROFILE HEADER
-   src/styles/FockisProfileHeader.scss
-   Cover photo band with an avatar overlapping its bottom edge, plus
-   name / verified badge / username / location. On the person's own
-   profile, the avatar becomes a clickable upload target (see the
-   --editable modifier below).
+   FOCKIS PROFILE HERO  (component: FockisProfileHeader.tsx)
 
-   REDESIGN: already read colors through the global theme tokens, so the
-   cover gradient and verified badge already resolved to navy/gold
-   automatically — no hardcoded colors to fix. Two consistency changes:
-   the avatar is now squared to match every other avatar in the app
-   (post cards, sidebar, right rail, friends grid) instead of being the
-   lone circle, with a thin gold trim ring added as a college-portrait
-   touch, and the name now uses the serif display font.
+   Composition:
+     1. A wide cover band with a midnight wash.
+     2. A glass identity panel that rises over the bottom of the cover.
+        Left: framed avatar + name/handle/bio/details.
+        Right: stats strip + relationship actions, in their own column.
+   The avatar sits *inside* the panel (with a faceted "F-frame"), rather
+   than hanging off the cover edge.
 ============================================================================ */
 
-@use "./fockis-theme";
+@use "./fockis-social-tokens";
 
-.fk-profile-header {
+.fk-profile-hero {
   position: relative;
-
-  /* Loading state - just the "Loading profile..." <p>, no cover/avatar yet */
-  > p {
-    margin: 0;
-    padding: 40px 20px;
-
-    text-align: center;
-
-    color: var(--fk-text-2);
-    font-size: 14px;
-    font-weight: 600;
-  }
-}
-
-.fk-profile-header__cover {
   width: 100%;
-  height: 200px;
-
-  overflow: hidden;
-
-  background: linear-gradient(135deg, var(--fk-fjord-soft), var(--fk-amber-soft));
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-}
-
-.fk-profile-header__content {
-  position: relative;
-
-  padding: 0 20px;
-
-  display: flex;
-  align-items: flex-end;
-
-  gap: 16px;
-
-  /* Pulls the avatar up so it overlaps the bottom of the cover photo */
-  margin-top: -56px;
-}
-
-.fk-profile-header__avatar {
-  position: relative;
-
-  width: 112px;
-  height: 112px;
-
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: var(--fk-r-md, 10px);
-  border: 4px solid var(--fk-surface);
-
-  overflow: hidden;
-
-  background: var(--fk-fjord);
-  color: var(--fk-amber-bright);
-
-  font-family: var(--fk-font-display);
-  font-size: 40px;
-  font-weight: 700;
-
-  box-shadow: 0 0 0 2px var(--fk-amber-bright) inset;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-}
-
-/* Own-profile avatar is a real <button>, so reset its default styling
-   and give it a hover cue that it's clickable.
-
-   IMPORTANT: unlike the plain (non-editable) avatar above, this variant
-   does NOT clip its own overflow - the camera badge is an absolutely
-   positioned sibling that needs to sit outside the circle's edge. The
-   photo clipping instead lives on .fk-profile-header__avatar-clip
-   below, so the badge isn't cut off by it. */
-.fk-profile-header__avatar--editable {
-  padding: 0;
-  border: none;
-
-  overflow: visible;
-
-  background: transparent;
-
-  cursor: pointer;
-
-  transition: filter var(--fk-fast) var(--fk-ease);
-
-  &:hover .fk-profile-header__avatar-clip {
-    filter: brightness(0.92);
-  }
-
-  &:hover .fk-profile-header__avatar-edit {
-    transform: scale(1.06);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--fk-amber-bright);
-    outline-offset: 2px;
-  }
-}
-
-.fk-profile-header__avatar-clip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 100%;
-  height: 100%;
-
-  overflow: hidden;
-
-  border-radius: var(--fk-r-md, 10px);
-  border: 4px solid var(--fk-surface);
-
-  background: var(--fk-fjord);
-  color: var(--fk-amber-bright);
-
-  font-family: var(--fk-font-display);
-  font-size: 40px;
-  font-weight: 700;
-
-  box-shadow: 0 0 0 2px var(--fk-amber-bright) inset;
-
-  transition: filter var(--fk-fast) var(--fk-ease);
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-}
-
-.fk-profile-header__avatar-fallback {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 100%;
-  height: 100%;
-}
-
-.fk-profile-header__avatar-edit {
-  position: absolute;
-  right: -2px;
-  bottom: -2px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 30px;
-  height: 30px;
-
-  border-radius: 50%;
-  border: 2px solid var(--fk-surface);
-
-  background: var(--fk-fjord);
-  color: #ffffff;
-
-  transition: transform var(--fk-fast) var(--fk-ease);
-}
-
-.fk-profile-header__avatar-uploading {
-  position: absolute;
-  inset: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: var(--fk-r-md, 10px);
-
-  background: rgba(10, 34, 64, 0.65);
-  color: #ffffff;
-
-  font-size: 10px;
-  font-weight: 700;
-  text-align: center;
-
-  padding: 0 6px;
-}
-
-.fk-profile-header__info {
-  padding-bottom: 10px;
-
-  min-width: 0;
-
-  h1 {
-    margin: 0;
-
-    display: flex;
-    align-items: center;
-    gap: 6px;
-
-    color: var(--fk-text);
-
-    font-family: var(--fk-font-display);
-    font-size: 22px;
-    font-weight: 700;
-    line-height: 1.2;
-  }
-
-  p {
-    margin: 2px 0 0;
-
-    color: var(--fk-text-2);
-
-    font-size: 14px;
-  }
-
-  > span {
-    display: inline-block;
-
-    margin-top: 4px;
-
-    color: var(--fk-text-2);
-
-    font-size: 13px;
-  }
-}
-
-.fk-profile-header__verified {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 18px;
-  height: 18px;
-
-  border-radius: 50%;
-
-  background: var(--fk-fjord);
-  color: #ffffff;
-
-  font-size: 11px;
-  font-weight: 700;
+  color: var(--fks-text);
+  font-family: var(--fks-font, system-ui, sans-serif);
 }
 
 /* ============================================================================
-   MOBILE
+   COVER
 ============================================================================ */
 
-@media (max-width: 767px) {
-  .fk-profile-header__cover {
-    height: 140px;
+.fk-profile-hero__cover {
+  position: relative;
+  height: clamp(180px, 26vw, 300px);
+  overflow: hidden;
+  border-radius: 24px 24px 0 0;
+  background:
+    radial-gradient(70% 120% at 85% 0%, rgba(34, 211, 238, 0.35), transparent 60%),
+    radial-gradient(60% 120% at 10% 100%, rgba(139, 92, 246, 0.45), transparent 60%),
+    linear-gradient(135deg, #0a2a7a 0%, #1546b8 45%, #0b1630 100%);
+
+  > img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
   }
 
-  .fk-profile-header__avatar {
-    width: 84px;
-    height: 84px;
-
-    font-size: 30px;
+  // Missing cover: a flowing Fockis wave pattern instead of a blank block.
+  &.is-empty::before,
+  &.is-empty::after {
+    content: "";
+    position: absolute;
+    left: -10%;
+    right: -10%;
+    height: 220px;
+    border-radius: 50%;
+    border-top: 2px solid rgba(255, 255, 255, 0.18);
   }
 
-  .fk-profile-header__avatar-edit {
-    width: 26px;
-    height: 26px;
+  &.is-empty::before {
+    bottom: -120px;
+    transform: rotate(-4deg);
   }
 
-  .fk-profile-header__content {
-    margin-top: -42px;
+  &.is-empty::after {
+    bottom: -150px;
+    border-top-color: rgba(34, 211, 238, 0.35);
+    transform: rotate(3deg);
+  }
+}
 
-    padding: 0 14px;
+.fk-profile-hero__cover-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(5, 11, 26, 0) 35%, rgba(5, 11, 26, 0.65) 100%);
+  pointer-events: none;
+}
 
+.fk-profile-hero--loading .fk-profile-hero__cover {
+  border-radius: 24px;
+  animation: fk-hero-pulse 1.4s ease-in-out infinite;
+}
+
+/* ============================================================================
+   IDENTITY PANEL
+============================================================================ */
+
+.fk-profile-hero__panel {
+  position: relative;
+  z-index: 1;
+  margin: -72px 20px 0;
+  padding: 22px 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 24px;
+  align-items: start;
+
+  border: 1px solid var(--fks-border);
+  border-radius: 24px;
+  background: var(--fks-glass);
+  box-shadow: var(--fks-shadow-card);
+  backdrop-filter: blur(18px) saturate(1.1);
+}
+
+.fk-profile-hero__identity {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+/* Faceted frame: a rotated square "badge" behind a rounded avatar. */
+.fk-profile-hero__frame {
+  position: relative;
+  flex: 0 0 auto;
+  width: 124px;
+  height: 124px;
+  margin-top: -54px;
+  display: grid;
+  place-items: center;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: 34px;
+    background: conic-gradient(from 210deg, #22d3ee, #2f7bff, #8b5cf6, #22d3ee);
+    transform: rotate(8deg);
+    box-shadow: 0 14px 34px rgba(47, 123, 255, 0.35);
+  }
+}
+
+.fk-profile-hero__avatar {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 4px solid var(--fks-surface);
+  border-radius: 30px;
+  background: linear-gradient(140deg, #2f7bff, #6d28d9);
+  color: #ffffff;
+  font: inherit;
+
+  img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+
+  &--editable {
+    cursor: pointer;
+
+    &:hover .fk-profile-hero__avatar-edit,
+    &:focus-visible .fk-profile-hero__avatar-edit {
+      transform: scale(1.08);
+    }
+
+    &:focus-visible {
+      outline: 3px solid var(--fks-cyan);
+      outline-offset: 4px;
+    }
+
+    &:disabled {
+      cursor: progress;
+    }
+  }
+}
+
+.fk-profile-hero__initial {
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.fk-profile-hero__avatar-edit {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--fks-surface);
+  border-radius: 11px;
+  background: var(--fks-primary);
+  color: #ffffff;
+  transition: transform 160ms ease;
+}
+
+.fk-profile-hero__spin {
+  animation: fk-hero-spin 900ms linear infinite;
+}
+
+.fk-profile-hero__info {
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.fk-profile-hero__name {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--fks-text);
+  font-family: inherit;
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+
+  > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.fk-profile-hero__verified {
+  flex: 0 0 auto;
+  color: var(--fks-cyan);
+}
+
+.fk-profile-hero__handle {
+  margin: 4px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--fks-text-2);
+  font-size: 14.5px;
+}
+
+.fk-profile-hero__private {
+  height: 22px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  background: var(--fks-surface-3);
+  color: var(--fks-text-2);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.fk-profile-hero__bio {
+  margin: 12px 0 0;
+  max-width: 62ch;
+  color: var(--fks-text);
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.fk-profile-hero__details {
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  list-style: none;
+  color: var(--fks-text-2);
+  font-size: 13.5px;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  svg {
+    color: var(--fks-primary-bright);
+    flex: 0 0 auto;
+  }
+
+  a {
+    color: var(--fks-primary-bright);
+    font-weight: 600;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+/* ============================================================================
+   SIDE COLUMN — stats + actions
+============================================================================ */
+
+.fk-profile-hero__side {
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.fk-profile-hero__stats {
+  margin: 0;
+  padding: 6px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  list-style: none;
+  border-radius: 18px;
+  background: var(--fks-surface-2);
+  box-shadow: inset 0 0 0 1px var(--fks-border);
+}
+
+.fk-profile-hero__stat {
+  min-width: 0;
+
+  > button,
+  > .fk-profile-hero__stat-static {
+    width: 100%;
+    min-height: 58px;
+    padding: 8px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border: 0;
+    border-radius: 14px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+  }
+
+  > button {
+    cursor: pointer;
+    transition: background-color 150ms ease;
+
+    &:hover {
+      background: var(--fks-primary-soft);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--fks-cyan);
+      outline-offset: 1px;
+    }
+  }
+}
+
+.fk-profile-hero__stat-value {
+  color: var(--fks-text);
+  font-size: 19px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.fk-profile-hero__stat-label {
+  color: var(--fks-text-3);
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.fk-profile-hero__actions {
+  min-width: 0;
+}
+
+.fk-profile-hero__notices {
+  display: grid;
+  gap: 6px;
+}
+
+/* ============================================================================
+   ANIMATION
+============================================================================ */
+
+@keyframes fk-hero-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fk-hero-pulse {
+  50% { opacity: 0.6; }
+}
+
+/* ============================================================================
+   RESPONSIVE
+============================================================================ */
+
+@media (max-width: 1023px) {
+  .fk-profile-hero__panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .fk-profile-hero__cover {
+    height: 170px;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .fk-profile-hero__panel {
+    margin: -48px 10px 0;
+    padding: 18px 16px;
+    border-radius: 20px;
+    gap: 16px;
+  }
+
+  .fk-profile-hero__identity {
+    flex-direction: column;
     gap: 12px;
+  }
+
+  .fk-profile-hero__frame {
+    width: 104px;
+    height: 104px;
+    margin-top: -64px;
+  }
+
+  .fk-profile-hero__avatar {
+    width: 94px;
+    height: 94px;
+    border-radius: 26px;
+  }
+
+  .fk-profile-hero__initial {
+    font-size: 36px;
+  }
+
+  .fk-profile-hero__stat-value {
+    font-size: 17px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-profile-hero__spin,
+  .fk-profile-hero--loading .fk-profile-hero__cover {
+    animation: none;
+  }
+
+  .fk-profile-hero__avatar-edit {
+    transition: none;
   }
 }

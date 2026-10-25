@@ -33,6 +33,7 @@ import SidebarAccountSection from "./sidebar/SidebarAccountSection";
 import SidebarAdminSection from "./sidebar/SidebarAdminSection";
 import SidebarProfileCard from "./sidebar/SidebarProfileCard";
 
+import FockisMark from "../FockisMark";
 
 export interface FockisSidebarProps {
   collapsed?: boolean;
@@ -41,85 +42,49 @@ export interface FockisSidebarProps {
   onClose?: () => void;
 }
 
-
 export default function FockisSidebar({
   collapsed = false,
   mobileOpen = false,
   onClose,
 }: FockisSidebarProps) {
-
   const navigate = useNavigate();
 
+  const { profile } = useFockisProfile();
 
-  const {
-    profile,
-  } = useFockisProfile();
-
-
-  const currentUser =
-    profile?.user;
-
+  const currentUser = profile?.user;
 
   useNotifications();
 
+  const [groupInviteCount, setGroupInviteCount] =
+    useState(0);
 
-  const [
-    groupInviteCount,
-    setGroupInviteCount,
-  ] = useState(0);
+  const [savedCount, setSavedCount] =
+    useState(0);
 
-
-  const [
-    savedCount,
-    setSavedCount,
-  ] = useState(0);
-
-
-  /* ============================================================
-     LOAD COUNTS
-
-     These counts are retained for compatibility with existing
-     services. They are not used to render navigation links.
-  ============================================================ */
+  /* LOAD COUNTS */
 
   useEffect(() => {
-
     async function loadCounts() {
-
       try {
-
         const invites =
           groupsApi.getPendingInviteCount
             ? await groupsApi.getPendingInviteCount()
             : 0;
 
+        const saved = await savedApi.getSaved();
 
-        const saved =
-          await savedApi.getSaved();
-
-
-        setGroupInviteCount(
-          Number(invites) || 0,
-        );
-
+        setGroupInviteCount(Number(invites) || 0);
 
         if (Array.isArray(saved)) {
-
-          setSavedCount(
-            saved.length,
-          );
-
+          setSavedCount(saved.length);
         } else if (
           saved &&
           typeof saved === "object"
         ) {
-
-          const data =
-            saved as {
-              items?: unknown[];
-              data?: unknown[];
-            };
-
+          const data = saved as {
+            items?: unknown[];
+            data?: unknown[];
+          };
 
           setSavedCount(
             data.items?.length ||
@@ -127,191 +92,115 @@ export default function FockisSidebar({
               0,
           );
         }
-
       } catch (error) {
-
         console.error(
           "[FockisSidebar] Sidebar count error:",
           error,
         );
-
       }
     }
 
-
     void loadCounts();
-
   }, []);
 
-
-  /* ============================================================
-     MOBILE NAVIGATION
-  ============================================================ */
+  /* MOBILE NAVIGATION */
 
   function handleNavigation() {
-
-    if (
-      mobileOpen &&
-      onClose
-    ) {
+    if (mobileOpen && onClose) {
       onClose();
     }
   }
 
-
-  /* ============================================================
-     LOGOUT
-  ============================================================ */
+  /* LOGOUT */
 
   function handleLogout() {
-
     try {
+      localStorage.removeItem("token");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("user");
+      localStorage.removeItem("currentUser");
 
-      localStorage.removeItem(
-        "token",
-      );
-
-      localStorage.removeItem(
-        "userId",
-      );
-
-      localStorage.removeItem(
-        "user",
-      );
-
-      localStorage.removeItem(
-        "currentUser",
-      );
-
-
-      sessionStorage.removeItem(
-        "token",
-      );
-
-      sessionStorage.removeItem(
-        "userId",
-      );
-
-      sessionStorage.removeItem(
-        "user",
-      );
-
-      sessionStorage.removeItem(
-        "currentUser",
-      );
-
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("userId");
+      sessionStorage.removeItem("user");
+      sessionStorage.removeItem("currentUser");
 
       console.log(
         "[FockisSidebar] User logged out.",
       );
-
     } catch (error) {
-
       console.error(
         "[FockisSidebar] Logout cleanup failed:",
         error,
       );
     }
 
-
-    if (
-      mobileOpen &&
-      onClose
-    ) {
+    if (mobileOpen && onClose) {
       onClose();
     }
 
-
-    navigate(
-      "/login",
-      {
-        replace: true,
-      },
-    );
+    navigate("/login", {
+      replace: true,
+    });
   }
-
 
   return (
     <aside
       className={[
         "fk-sidebar",
-
-        collapsed
-          ? "fk-sidebar--collapsed"
-          : "",
-
-        mobileOpen
-          ? "fk-sidebar--mobile-open"
-          : "",
+        collapsed ? "fk-sidebar--collapsed" : "",
+        mobileOpen ? "fk-sidebar--mobile-open" : "",
       ]
         .filter(Boolean)
         .join(" ")}
     >
+      {/* BRAND */}
 
       <div className="fk-sidebar__brand">
-
         <NavLink
           to="/fockis-preview"
           className="fk-sidebar__logo"
-          onClick={
-            handleNavigation
-          }
+          onClick={handleNavigation}
           aria-label="Fockis Feed"
         >
-
           <span className="fk-sidebar__logo-mark">
-            F
+            <FockisMark />
           </span>
 
           <span className="fk-sidebar__logo-text">
             Fockis
           </span>
-
         </NavLink>
-
       </div>
 
+      {/* MAIN NAVIGATION */}
 
       <nav
         className="fk-sidebar__nav"
         aria-label="Fockis main navigation"
       >
-
         <SidebarMainSection
-          onNavigate={
-            handleNavigation
-          }
+          onNavigate={handleNavigation}
         />
-
 
         <SidebarAccountSection
-          currentUser={
-            currentUser
-          }
-          onNavigate={
-            handleNavigation
-          }
+          currentUser={currentUser}
+          onNavigate={handleNavigation}
         />
-
 
         <SidebarAdminSection
-          currentUser={
-            currentUser
-          }
-          onNavigate={
-            handleNavigation
-          }
+          currentUser={currentUser}
+          onNavigate={handleNavigation}
         />
-
       </nav>
 
+      {/* MESSAGES */}
 
       <NavLink
         to="/messages"
         className={({ isActive }) =>
           [
             "fk-sidebar__messages-link",
-
             isActive
               ? "fk-sidebar__messages-link--active"
               : "",
@@ -319,44 +208,29 @@ export default function FockisSidebar({
             .filter(Boolean)
             .join(" ")
         }
-        onClick={
-          handleNavigation
-        }
+        onClick={handleNavigation}
         aria-label="Messages"
       >
-
-        <IconMessages
-          size={19}
-        />
-
-        <span>
-          Messages
-        </span>
-
+        <IconMessages size={19} />
+        <span>Messages</span>
       </NavLink>
 
+      {/* PROFILE */}
 
       <SidebarProfileCard
-        currentUser={
-          currentUser
-        }
-        onNavigate={
-          handleNavigation
-        }
+        currentUser={currentUser}
+        onNavigate={handleNavigation}
       />
 
+      {/* LOGOUT */}
 
       <div className="fk-sidebar__logout-container">
-
         <button
           type="button"
           className="fk-sidebar__logout-button"
-          onClick={
-            handleLogout
-          }
+          onClick={handleLogout}
           aria-label="Log out"
         >
-
           <span
             className="fk-sidebar__logout-icon"
             aria-hidden="true"
@@ -364,14 +238,9 @@ export default function FockisSidebar({
             ↪
           </span>
 
-          <span>
-            Log out
-          </span>
-
+          <span>Log out</span>
         </button>
-
       </div>
-
     </aside>
   );
 }

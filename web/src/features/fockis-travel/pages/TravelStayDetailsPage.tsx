@@ -1,1603 +1,916 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+  Link,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import {
+  AirVent,
   ArrowLeft,
-  CalendarDays,
+  BadgeCheck,
+  Bath,
+  BedDouble,
+  Car,
   Check,
   ChevronLeft,
   ChevronRight,
-  Clock3,
+  CircleCheck,
+  Coffee,
+  CookingPot,
+  Dumbbell,
+  Flame,
   Heart,
+  House,
+  Images,
+  Mail,
   MapPin,
+  Mountain,
+  PawPrint,
+  Phone,
+  Share2,
+  SquareParking,
   Star,
+  Tv,
+  Umbrella,
   Users,
-} from 'lucide-react';
+  UtensilsCrossed,
+  WashingMachine,
+  Waves,
+  Wifi,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+import TravelListingCard from "../components/TravelListingCard";
+import { useTravelFavorites } from "../hooks/useTravelFavorites";
+import { CANCELLATION_POLICIES } from "./TravelListingCreatePage/constants";
 import {
-  Link,
-  useNavigate,
-  useParams,
-} from 'react-router-dom';
+  buildVerifiedPartnerIndex,
+  fetchTravelListing,
+  fetchTravelListings,
+  fetchVerifiedBusinesses,
+  findListingPartner,
+  formatTravelPrice,
+  getBusinessDisplayName,
+  getListingId,
+  getListingImages,
+  getListingName,
+  getListingPrice,
+  getListingRating,
+  getListingType,
+  getPriceUnitLabel,
+  resolveTravelMedia,
+  sortFeaturedFirst,
+} from "../services/travelListingView";
+import type {
+  TravelListingView,
+  VerifiedBusinessView,
+} from "../services/travelListingView";
+import "../styles/TravelStayDetailsPage.scss";
 
-import { travelApi } from '../services/travelApi';
-import '../styles/TravelStayDetailsPage.scss';
+/**
+ * ============================================================================
+ * FOCKIS TRAVEL — PROPERTY DETAILS
+ * ============================================================================
+ *
+ * Reference layout: wide scenic photo, thumbnail strip, title + Verified,
+ * rating · location, quick facts, About, Amenities, sticky booking card with
+ * host, then Similar Stays.
+ *
+ * Data:
+ *   GET /travel/listings/:id         the listing
+ *   GET /travel/listings?type=…      similar stays
+ *   GET /travel/partners/verified    Verified badge + host business
+ *   GET/POST/DELETE /travel/wishlist the heart
+ *
+ * Booking: "Book Now" opens the existing /travel/booking flow with the
+ * selected dates and travelers; that page creates the booking through
+ * POST /travel/bookings and only shows a confirmation when the API returns
+ * one. The price summary uses the same 5 % fee / 10 % tax the backend's
+ * bookings.service applies and is labelled as an estimate.
+ * ============================================================================
+ */
 
-interface TravelListing {
-  _id: string;
-  id?: string;
+const FEE_RATE = 0.05;
+const TAX_RATE = 0.1;
+const DAY_MS = 86_400_000;
 
-  name: string;
-  title?: string;
-  type: string;
-  description?: string;
-
-  country: string;
-  city: string;
-  state?: string;
-  address?: string;
-  postalCode?: string;
-
-  images?: unknown[];
-  amenities?: string[];
-  tags?: string[];
-
-  rating?: number;
-  reviewCount?: number;
-
-  currency?: string;
-  price?: number;
-  priceUnit?: string;
-
-  active?: boolean;
-
-  metadata?: Record<string, unknown>;
+function todayString(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
-const API_ORIGIN = String(
-  import.meta.env.VITE_API_URL ||
-    import.meta.env.VITE_API_BASE_URL ||
-    'http://192.168.1.112:3000',
-)
-  .trim()
-  .replace(/\/+$/, '')
-  .replace(/\/travel$/, '');
-
-function getString(
-  value: unknown,
-): string {
-  return typeof value === 'string'
-    ? value.trim()
-    : '';
+function addDays(date: string, days: number): string {
+  const value = new Date(`${date}T12:00:00`);
+  value.setDate(value.getDate() + days);
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
 }
 
-function resolveMediaUrl(
-  value: unknown,
-): string {
-  const raw = getString(value);
-
-  if (!raw) {
-    return '';
-  }
-
-  if (
-    /^(https?:|blob:|data:)/i.test(
-      raw,
-    )
-  ) {
-    return raw;
-  }
-
-  if (raw.startsWith('//')) {
-    return `${window.location.protocol}${raw}`;
-  }
-
-  const normalized = raw.startsWith('/')
-    ? raw
-    : `/${raw}`;
-
-  return `${API_ORIGIN}${normalized}`;
+function isDateString(value: string | null): value is string {
+  return Boolean(value && /^\d{4}-\d{2}-\d{2}$/.test(value));
 }
 
-function extractImageUrl(
-  value: unknown,
-): string {
-  if (typeof value === 'string') {
-    return value.trim();
-  }
-
-  if (
-    value &&
-    typeof value === 'object'
-  ) {
-    const record =
-      value as Record<
-        string,
-        unknown
-      >;
-
-    const candidates = [
-      record.url,
-      record.src,
-      record.image,
-      record.imageUrl,
-      record.media,
-      record.mediaUrl,
-      record.path,
-    ];
-
-    for (const candidate of candidates) {
-      const result =
-        getString(candidate);
-
-      if (result) {
-        return result;
-      }
-    }
-  }
-
-  return '';
+function getText(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
 }
 
-function getCurrencySymbol(
-  currency?: string,
-): string {
-  const symbols: Record<
-    string,
-    string
-  > = {
-    USD: '$',
-    HTG: 'G',
-    EUR: '€',
-    GBP: '£',
-    CAD: 'C$',
-    DOP: 'RD$',
-    JPY: '¥',
-    AUD: 'A$',
-  };
-
-  const normalized = String(
-    currency || 'USD',
-  ).toUpperCase();
-
-  return (
-    symbols[normalized] ||
-    currency ||
-    '$'
-  );
+function getNumber(value: unknown): number | null {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : null;
 }
 
-function formatPrice(
-  price: number,
-  currency?: string,
-): string {
-  const safePrice =
-    Number.isFinite(price)
-      ? price
-      : 0;
-
-  return `${getCurrencySymbol(
-    currency,
-  )}${safePrice.toFixed(2)}`;
+/** Reads a field that may live on the listing or inside listing.metadata. */
+function readField(listing: TravelListingView, key: string): unknown {
+  const record = listing as unknown as Record<string, unknown>;
+  if (record[key] !== undefined && record[key] !== null && record[key] !== "") return record[key];
+  return listing.metadata?.[key];
 }
 
-function getTodayString(): string {
-  const today = new Date();
+const AMENITY_ICONS: Array<[RegExp, LucideIcon]> = [
+  [/pool|swim/i, Waves],
+  [/beach|sea|ocean front/i, Umbrella],
+  [/wi-?fi|internet/i, Wifi],
+  [/air ?con|a\/c|\bac\b|cooling/i, AirVent],
+  [/kitchen|cook/i, CookingPot],
+  [/parking|garage/i, SquareParking],
+  [/gym|fitness/i, Dumbbell],
+  [/tv|television|netflix/i, Tv],
+  [/breakfast|coffee/i, Coffee],
+  [/bath|tub|jacuzzi|hot tub|spa/i, Bath],
+  [/pet|dog/i, PawPrint],
+  [/washer|laundry|dryer/i, WashingMachine],
+  [/fire|heating|bbq|grill/i, Flame],
+  [/mountain|view/i, Mountain],
+  [/restaurant|dining|bar/i, UtensilsCrossed],
+  [/shuttle|transfer|car/i, Car],
+];
 
-  const year =
-    today.getFullYear();
-
-  const month = String(
-    today.getMonth() + 1,
-  ).padStart(2, '0');
-
-  const day = String(
-    today.getDate(),
-  ).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
+function amenityIcon(label: string): LucideIcon {
+  return AMENITY_ICONS.find(([pattern]) => pattern.test(label))?.[1] ?? Check;
 }
 
-function addDays(
-  dateString: string,
-  days: number,
-): string {
-  const date = new Date(
-    `${dateString}T12:00:00`,
-  );
-
-  date.setDate(
-    date.getDate() + days,
-  );
-
-  const year =
-    date.getFullYear();
-
-  const month = String(
-    date.getMonth() + 1,
-  ).padStart(2, '0');
-
-  const day = String(
-    date.getDate(),
-  ).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
-}
-
-function calculateDurationMilliseconds(
-  startAt: string,
-  endAt: string,
-): number {
-  if (!startAt || !endAt) {
-    return 0;
+function typeLabel(type: string): string {
+  switch (type) {
+    case "stay":
+      return "Hotel stay";
+    case "rental":
+      return "Entire rental";
+    case "experience":
+      return "Experience";
+    case "restaurant":
+      return "Restaurant";
+    case "meeting":
+      return "Meeting space";
+    case "event":
+      return "Event";
+    case "car":
+      return "Car rental";
+    default:
+      return type ? type.charAt(0).toUpperCase() + type.slice(1) : "";
   }
-
-  const start = new Date(
-    startAt,
-  );
-
-  const end = new Date(
-    endAt,
-  );
-
-  if (
-    Number.isNaN(
-      start.getTime(),
-    ) ||
-    Number.isNaN(end.getTime())
-  ) {
-    return 0;
-  }
-
-  return (
-    end.getTime() -
-    start.getTime()
-  );
-}
-
-function calculateBookingDays(
-  checkIn: string,
-  checkOut: string,
-): number {
-  if (!checkIn || !checkOut) {
-    return 1;
-  }
-
-  const startAt = `${checkIn}T15:00:00`;
-  const endAt = `${checkOut}T11:00:00`;
-
-  const difference =
-    calculateDurationMilliseconds(
-      startAt,
-      endAt,
-    );
-
-  if (difference <= 0) {
-    return 1;
-  }
-
-  return Math.max(
-    1,
-    Math.ceil(
-      difference / 86400000,
-    ),
-  );
-}
-
-function calculateBookingHours(
-  checkIn: string,
-  checkOut: string,
-): number {
-  if (!checkIn || !checkOut) {
-    return 1;
-  }
-
-  const startAt = `${checkIn}T15:00:00`;
-  const endAt = `${checkOut}T11:00:00`;
-
-  const difference =
-    calculateDurationMilliseconds(
-      startAt,
-      endAt,
-    );
-
-  if (difference <= 0) {
-    return 1;
-  }
-
-  return Math.max(
-    1,
-    Math.ceil(
-      difference / 3600000,
-    ),
-  );
-}
-
-function normalizePriceUnit(
-  priceUnit?: string,
-): string {
-  return String(
-    priceUnit || 'night',
-  )
-    .trim()
-    .toLowerCase();
 }
 
 export default function TravelStayDetailsPage() {
-  const { id } =
-    useParams<{ id: string }>();
-
+  const { id = "" } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isSaved, isPending, toggle } = useTravelFavorites();
 
-  const [listing, setListing] =
-    useState<TravelListing | null>(
-      null,
-    );
+  const today = useMemo(todayString, []);
+  const initialCheckIn = isDateString(searchParams.get("checkIn")) && searchParams.get("checkIn")! >= today
+    ? searchParams.get("checkIn")!
+    : today;
+  const initialCheckOut = isDateString(searchParams.get("checkOut")) && searchParams.get("checkOut")! > initialCheckIn
+    ? searchParams.get("checkOut")!
+    : addDays(initialCheckIn, 1);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [listing, setListing] = useState<TravelListingView | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [businesses, setBusinesses] = useState<VerifiedBusinessView[]>([]);
+  const [similar, setSimilar] = useState<TravelListingView[]>([]);
+  const [similarLoading, setSimilarLoading] = useState(true);
 
-  const [error, setError] =
-    useState<string | null>(null);
+  const [activeImage, setActiveImage] = useState(0);
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
+  const [shareMessage, setShareMessage] = useState("");
 
-  const [activeImage, setActiveImage] =
-    useState(0);
-
-  const [saved, setSaved] =
-    useState(false);
-
-  const [thumbnailOffset, setThumbnailOffset] =
-    useState(0);
-
-  const today = useMemo(
-    () => getTodayString(),
-    [],
+  const [checkIn, setCheckIn] = useState(initialCheckIn);
+  const [checkOut, setCheckOut] = useState(initialCheckOut);
+  const [guests, setGuests] = useState(
+    Math.min(16, Math.max(1, Number(searchParams.get("guests")) || 1)),
   );
+  const [quantity, setQuantity] = useState(1);
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
-  const [checkIn, setCheckIn] =
-    useState(today);
+  const thumbsRef = useRef<HTMLDivElement>(null);
 
-  const [checkOut, setCheckOut] =
-    useState(
-      addDays(today, 1),
-    );
+  /* ------------------------------------------------------------- loading */
 
-  const [guests, setGuests] =
-    useState(1);
-
-  const [quantity, setQuantity] =
-    useState(1);
-
-  const [bookingError, setBookingError] =
-    useState<string | null>(
-      null,
-    );
-
-  const loadListing =
-    useCallback(
-      async () => {
-        if (!id) {
-          setError(
-            'Stay listing was not specified.',
-          );
-
-          setLoading(false);
-
-          return;
-        }
-
-        setLoading(true);
-        setError(null);
-
-        try {
-          const response =
-            await travelApi.get<TravelListing>(
-              `/travel/listings/${id}`,
-            );
-
-          setListing(response);
-          setActiveImage(0);
-          setThumbnailOffset(0);
-        } catch (err) {
-          const apiError =
-            err as {
-              message?: string;
-            };
-
-          setError(
-            apiError.message ||
-              'Unable to load this stay.',
-          );
-        } finally {
-          setLoading(false);
-        }
-      },
-      [id],
-    );
-
-  useEffect(() => {
-    void loadListing();
-  }, [loadListing]);
-
-  const images = useMemo(
-    () => {
-      if (!listing) {
-        return [];
-      }
-
-      const source =
-        Array.isArray(
-          listing.images,
-        )
-          ? listing.images
-          : [];
-
-      const normalized =
-        source
-          .map(
-            (
-              image,
-            ) =>
-              resolveMediaUrl(
-                extractImageUrl(
-                  image,
-                ),
-              ),
-          )
-          .filter(Boolean);
-
-      if (
-        normalized.length > 0
-      ) {
-        return normalized;
-      }
-
-      return [
-        'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1400',
-      ];
-    },
-    [listing],
-  );
-
-  useEffect(() => {
-    if (
-      activeImage >=
-      images.length
-    ) {
-      setActiveImage(0);
-    }
-  }, [
-    activeImage,
-    images.length,
-  ]);
-
-  const price =
-    listing?.price ?? 0;
-
-  const priceUnit =
-    normalizePriceUnit(
-      listing?.priceUnit,
-    );
-
-  const durationMilliseconds =
-    useMemo(
-      () =>
-        calculateDurationMilliseconds(
-          `${checkIn}T15:00:00`,
-          `${checkOut}T11:00:00`,
-        ),
-      [checkIn, checkOut],
-    );
-
-  const nights = useMemo(
-    () =>
-      calculateBookingDays(
-        checkIn,
-        checkOut,
-      ),
-    [checkIn, checkOut],
-  );
-
-  const hours = useMemo(
-    () =>
-      calculateBookingHours(
-        checkIn,
-        checkOut,
-      ),
-    [checkIn, checkOut],
-  );
-
-  const estimatedSubtotal =
-    useMemo(() => {
-      if (!listing) {
-        return 0;
-      }
-
-      const safeQuantity =
-        Math.max(
-          1,
-          quantity || 1,
-        );
-
-      if (
-        priceUnit === 'hour'
-      ) {
-        return price * hours;
-      }
-
-      if (
-        priceUnit === 'day'
-      ) {
-        return price * nights;
-      }
-
-      if (
-        priceUnit === 'person'
-      ) {
-        return (
-          price *
-          safeQuantity
-        );
-      }
-
-      if (
-        priceUnit === 'night'
-      ) {
-        return price * nights;
-      }
-
-      return (
-        price *
-        safeQuantity
-      );
-    }, [
-      listing,
-      price,
-      priceUnit,
-      quantity,
-      nights,
-      hours,
-    ]);
-
-  const estimatedFees =
-    useMemo(
-      () =>
-        Math.round(
-          estimatedSubtotal *
-            0.05 *
-            100,
-        ) / 100,
-      [estimatedSubtotal],
-    );
-
-  const estimatedTax =
-    useMemo(
-      () =>
-        Math.round(
-          estimatedSubtotal *
-            0.1 *
-            100,
-        ) / 100,
-      [estimatedSubtotal],
-    );
-
-  const estimatedTotal =
-    useMemo(
-      () =>
-        estimatedSubtotal +
-        estimatedFees +
-        estimatedTax,
-      [
-        estimatedSubtotal,
-        estimatedFees,
-        estimatedTax,
-      ],
-    );
-
-  function handleCheckInChange(
-    value: string,
-  ) {
-    setBookingError(null);
-
-    setCheckIn(value);
-
-    if (
-      checkOut &&
-      value &&
-      checkOut <= value
-    ) {
-      setCheckOut(
-        addDays(value, 1),
-      );
-    }
-  }
-
-  function handleCheckOutChange(
-    value: string,
-  ) {
-    setBookingError(null);
-    setCheckOut(value);
-  }
-
-  function handleGuestsChange(
-    value: number,
-  ) {
-    setBookingError(null);
-
-    setGuests(
-      Math.max(1, value),
-    );
-  }
-
-  function handleQuantityChange(
-    value: number,
-  ) {
-    setBookingError(null);
-
-    setQuantity(
-      Math.max(1, value),
-    );
-  }
-
-  function handleReserve() {
-    setBookingError(null);
-
-    if (!listing || !id) {
-      setBookingError(
-        'This stay is not available right now.',
-      );
-
+  const loadListing = useCallback(async () => {
+    if (!id) {
+      setError("This listing link is incomplete.");
+      setLoading(false);
       return;
     }
 
-    if (
-      !checkIn ||
-      !checkOut
-    ) {
-      setBookingError(
-        'Please select your check-in and check-out dates.',
-      );
+    setLoading(true);
+    setError(null);
 
+    try {
+      const result = await fetchTravelListing(id);
+      if (!result) throw new Error("This listing could not be found.");
+      setListing(result);
+      setActiveImage(0);
+      setFailedImages(new Set());
+    } catch (reason) {
+      const message =
+        reason && typeof reason === "object" && "message" in reason
+          ? String((reason as { message?: unknown }).message || "")
+          : "";
+      setError(message || "Unable to load this listing.");
+      setListing(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    void loadListing();
+    window.scrollTo({ top: 0 });
+  }, [loadListing]);
+
+  useEffect(() => {
+    let active = true;
+    fetchVerifiedBusinesses()
+      .then((items) => active && setBusinesses(items))
+      .catch((reason) => console.error("[Fockis Travel] Verified businesses:", reason));
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!listing) return;
+    let active = true;
+    const type = getListingType(listing) || "stay";
+    const currentId = getListingId(listing);
+    setSimilarLoading(true);
+
+    fetchTravelListings({ type })
+      .then((items) => {
+        if (!active) return;
+        const others = items.filter((item) => getListingId(item) !== currentId);
+        const sameCountry = (item: TravelListingView) =>
+          Boolean(listing.country) &&
+          String(item.country || "").toLowerCase() === String(listing.country).toLowerCase();
+        others.sort(
+          (a, b) => Number(sameCountry(b)) - Number(sameCountry(a)) || sortFeaturedFirst(a, b),
+        );
+        setSimilar(others.slice(0, 4));
+      })
+      .catch((reason) => {
+        console.error("[Fockis Travel] Similar listings:", reason);
+        if (active) setSimilar([]);
+      })
+      .finally(() => active && setSimilarLoading(false));
+
+    return () => {
+      active = false;
+    };
+  }, [listing]);
+
+  /* ------------------------------------------------------------ derived */
+
+  const verifiedIndex = useMemo(() => buildVerifiedPartnerIndex(businesses), [businesses]);
+  const host = listing ? findListingPartner(listing, verifiedIndex) : null;
+
+  const images = useMemo(
+    () => (listing ? getListingImages(listing).filter((src) => !failedImages.has(src)) : []),
+    [listing, failedImages],
+  );
+
+  useEffect(() => {
+    if (activeImage >= images.length && images.length > 0) setActiveImage(0);
+  }, [activeImage, images.length]);
+
+  useEffect(() => {
+    const strip = thumbsRef.current;
+    const active = strip?.querySelector<HTMLElement>(`[data-index="${activeImage}"]`);
+    if (strip && active) {
+      strip.scrollTo({ left: active.offsetLeft - strip.clientWidth / 2 + active.clientWidth / 2, behavior: "smooth" });
+    }
+  }, [activeImage]);
+
+  const price = listing ? getListingPrice(listing) : null;
+  const priceUnit = String(listing?.priceUnit || "night").toLowerCase();
+  const nights = Math.max(
+    1,
+    Math.round((new Date(`${checkOut}T12:00:00`).getTime() - new Date(`${checkIn}T12:00:00`).getTime()) / DAY_MS),
+  );
+
+  const units =
+    priceUnit === "night" || priceUnit === "day" ? nights * Math.max(1, quantity) : Math.max(1, quantity);
+  const unitsLabel =
+    priceUnit === "night"
+      ? `${nights} ${nights === 1 ? "night" : "nights"}${quantity > 1 ? ` × ${quantity}` : ""}`
+      : priceUnit === "day"
+        ? `${nights} ${nights === 1 ? "day" : "days"}${quantity > 1 ? ` × ${quantity}` : ""}`
+        : `${quantity} ${quantity === 1 ? "unit" : "units"}`;
+
+  const subtotal = price !== null ? price * units : 0;
+  const fees = Math.round(subtotal * FEE_RATE * 100) / 100;
+  const tax = Math.round(subtotal * TAX_RATE * 100) / 100;
+  const total = subtotal + fees + tax;
+
+  /* ------------------------------------------------------------ actions */
+
+  function showImage(index: number) {
+    if (images.length === 0) return;
+    setActiveImage((index + images.length) % images.length);
+  }
+
+  function handleCheckIn(value: string) {
+    setBookingError(null);
+    setCheckIn(value);
+    if (value && checkOut <= value) setCheckOut(addDays(value, 1));
+  }
+
+  function handleBook() {
+    setBookingError(null);
+
+    if (!listing) return;
+
+    if (!checkIn || !checkOut) {
+      setBookingError("Choose your check-in and check-out dates.");
       return;
     }
 
     if (checkOut <= checkIn) {
-      setBookingError(
-        'Check-out must be after check-in.',
-      );
-
+      setBookingError("Check-out must be after check-in.");
       return;
     }
 
-    if (
-      durationMilliseconds <=
-      0
-    ) {
-      setBookingError(
-        'Please select valid reservation dates.',
-      );
+    const params = new URLSearchParams({
+      listingId: getListingId(listing),
+      startAt: `${checkIn}T15:00:00`,
+      endAt: `${checkOut}T11:00:00`,
+      guests: String(guests),
+      quantity: String(quantity),
+    });
 
-      return;
+    navigate(`/travel/booking/${encodeURIComponent(getListingId(listing))}?${params.toString()}`);
+  }
+
+  async function handleShare() {
+    const url = window.location.origin + location.pathname;
+    const title = listing ? getListingName(listing) : "Fockis Travel";
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setShareMessage("Link copied");
+    } catch (reason) {
+      if ((reason as { name?: string })?.name === "AbortError") return;
+      setShareMessage("Couldn’t copy the link");
     }
-
-    const safeGuests =
-      Math.max(1, guests);
-
-    const safeQuantity =
-      Math.max(1, quantity);
-
-    const params =
-      new URLSearchParams();
-
-    params.set(
-      'listingId',
-      id,
-    );
-
-    params.set(
-      'startAt',
-      `${checkIn}T15:00:00`,
-    );
-
-    params.set(
-      'endAt',
-      `${checkOut}T11:00:00`,
-    );
-
-    params.set(
-      'guests',
-      String(safeGuests),
-    );
-
-    params.set(
-      'quantity',
-      String(safeQuantity),
-    );
-
-    navigate(
-      `/travel/booking/${id}?${params.toString()}`,
-    );
+    window.setTimeout(() => setShareMessage(""), 2200);
   }
 
-  function handlePreviousImage() {
-    if (images.length <= 1) {
-      return;
-    }
-
-    setActiveImage(
-      (current) =>
-        current <= 0
-          ? images.length - 1
-          : current - 1,
-    );
-  }
-
-  function handleNextImage() {
-    if (images.length <= 1) {
-      return;
-    }
-
-    setActiveImage(
-      (current) =>
-        current >=
-        images.length - 1
-          ? 0
-          : current + 1,
-    );
-  }
-
-  function handlePreviousThumbnails() {
-    if (images.length <= 1) {
-      return;
-    }
-
-    setThumbnailOffset(
-      (current) =>
-        current <= 0
-          ? images.length - 1
-          : current - 1,
-    );
-  }
-
-  function handleNextThumbnails() {
-    if (images.length <= 1) {
-      return;
-    }
-
-    setThumbnailOffset(
-      (current) =>
-        current >=
-        images.length - 1
-          ? 0
-          : current + 1,
-    );
-  }
-
-  function handleImageError(
-    event: React.SyntheticEvent<HTMLImageElement>,
-  ) {
-    event.currentTarget.style.display =
-      'none';
-  }
+  /* ------------------------------------------------------------ states */
 
   if (loading) {
     return (
-      <div className="travel-stay-details">
-        <div className="wrap">
-          <div className="travel-stay-details__loading">
-            <div className="travel-stay-details__loading-icon">
-              🏨
+      <div className="ft-details">
+        <div className="ft-details__wrap" aria-busy="true" aria-live="polite">
+          <div className="ft-details__skel-hero ft-skel" />
+          <div className="ft-details__skel-grid">
+            <div>
+              <div className="ft-skel ft-skel--line" style={{ width: "55%", height: 26 }} />
+              <div className="ft-skel ft-skel--line" style={{ width: "35%", marginTop: 12 }} />
+              <div className="ft-skel ft-skel--line" style={{ marginTop: 28 }} />
+              <div className="ft-skel ft-skel--line" style={{ marginTop: 10, width: "90%" }} />
             </div>
-
-            <h2>
-              Loading stay...
-            </h2>
-
-            <p>
-              We're getting the
-              latest information
-              about this
-              accommodation.
-            </p>
+            <div className="ft-skel" style={{ height: 320, borderRadius: 14 }} />
           </div>
+          <span className="ft-sr-only">Loading listing…</span>
         </div>
       </div>
     );
   }
 
-  if (
-    error ||
-    !listing
-  ) {
+  if (error || !listing) {
     return (
-      <div className="travel-stay-details">
-        <div className="wrap">
-          <div className="travel-stay-details__error">
-            <div className="travel-stay-details__error-icon">
-              ⚠️
+      <div className="ft-details">
+        <div className="ft-details__wrap">
+          <div className="ft-details__error" role="alert">
+            <h1>We couldn’t open this listing</h1>
+            <p>{error || "This listing is no longer available."}</p>
+            <div>
+              <button type="button" className="ft-details__btn-outline" onClick={() => void loadListing()}>
+                Try again
+              </button>
+              <Link to="/travel/stays" className="ft-details__btn-primary">
+                Browse stays
+              </Link>
             </div>
-
-            <h2>
-              Stay unavailable
-            </h2>
-
-            <p>
-              {error ||
-                'We could not find this stay.'}
-            </p>
-
-            <Link
-              to="/travel/stays"
-              className="btn btn-outline"
-            >
-              <ArrowLeft
-                size={16}
-              />
-
-              Back to stays
-            </Link>
           </div>
         </div>
       </div>
     );
   }
 
-  const location = [
-    listing.city,
-    listing.state,
-    listing.country,
-  ]
+  /* ------------------------------------------------------------ view */
+
+  const listingId = getListingId(listing);
+  const name = getListingName(listing);
+  const type = getListingType(listing);
+  const rating = getListingRating(listing);
+  const saved = isSaved(listingId);
+  const fullLocation = [listing.city, listing.department || listing.state, listing.country]
     .filter(Boolean)
-    .join(', ');
+    .join(", ");
+  const description = getText(listing.description);
+  const longDescription = description.length > 320;
+  const amenities = Array.from(
+    new Set([...(listing.amenities ?? []), ...(listing.features ?? [])].map((item) => String(item).trim()).filter(Boolean)),
+  );
 
-  const rating =
-    listing.rating ?? 0;
+  const capacity = getNumber(listing.capacity);
+  const bedrooms = getNumber(listing.bedrooms);
+  const bathrooms = getNumber(listing.bathrooms);
+  const facts: Array<{ icon: LucideIcon; label: string }> = [];
+  if (type) facts.push({ icon: House, label: typeLabel(type) });
+  if (capacity) facts.push({ icon: Users, label: `${capacity} ${capacity === 1 ? "guest" : "guests"}` });
+  if (bedrooms) facts.push({ icon: BedDouble, label: `${bedrooms} ${bedrooms === 1 ? "bedroom" : "bedrooms"}` });
+  if (bathrooms) facts.push({ icon: Bath, label: `${bathrooms} ${bathrooms === 1 ? "bathroom" : "bathrooms"}` });
 
-  const reviewCount =
-    listing.reviewCount ?? 0;
+  const policyValue = getText(readField(listing, "cancellationPolicy")).toLowerCase();
+  const policy = CANCELLATION_POLICIES.find((item) => item.value === policyValue);
+  const checkInTime = getText(readField(listing, "checkInTime"));
+  const checkOutTime = getText(readField(listing, "checkOutTime"));
 
-  const amenities =
-    Array.isArray(
-      listing.amenities,
-    )
-      ? listing.amenities
-      : [];
-
-  const description =
-    listing.description ||
-    'Enjoy a comfortable stay with Fockis Travel. Review the accommodation details, choose your dates, and reserve your stay securely.';
-
-  const safeQuantity =
-    Math.max(1, quantity);
-
-  const priceCalculationLabel =
-    priceUnit === 'hour'
-      ? `${formatPrice(
-          price,
-          listing.currency,
-        )} × ${hours} ${
-          hours === 1
-            ? 'hour'
-            : 'hours'
-        }`
-      : priceUnit === 'person'
-        ? `${formatPrice(
-            price,
-            listing.currency,
-          )} × ${safeQuantity} ${
-            safeQuantity === 1
-              ? 'unit'
-              : 'units'
-          }`
-        : priceUnit === 'day'
-          ? `${formatPrice(
-              price,
-              listing.currency,
-            )} × ${nights} ${
-              nights === 1
-                ? 'day'
-                : 'days'
-            }`
-          : priceUnit ===
-              'night'
-            ? `${formatPrice(
-                price,
-                listing.currency,
-              )} × ${nights} ${
-                nights === 1
-                  ? 'night'
-                  : 'nights'
-              }`
-            : `${formatPrice(
-                price,
-                listing.currency,
-              )} × ${safeQuantity} ${
-                safeQuantity === 1
-                  ? 'unit'
-                  : 'units'
-              }`;
-
-  const visibleThumbnailIndexes =
-    images.length <= 6
-      ? images.map(
-          (_, index) =>
-            index,
-        )
-      : Array.from(
-          { length: 6 },
-          (_, index) =>
-            (thumbnailOffset +
-              index) %
-            images.length,
-        );
-
-  const activeImageUrl =
-    images[activeImage] ||
-    images[0];
+  const hostName = host ? getBusinessDisplayName(host) : getText(readField(listing, "hostName"));
+  const hostAvatar = host ? resolveTravelMedia(host.logo || host.coverImage || "") : "";
+  const hostId = host ? String(host._id || host.id || "") : "";
+  const contactEmail =
+    getText(listing.email) || getText(host?.contact?.email) || getText(host?.email);
+  const contactPhone =
+    getText(listing.phone) || getText(host?.contact?.phone) || getText(host?.phone);
+  const accepting = listing.active !== false && listing.acceptingBookings !== false;
+  const maxGuests = Math.max(1, Math.min(16, capacity ?? 16));
+  const activeSrc = images[activeImage];
 
   return (
-    <div className="travel-stay-details">
-      <div className="wrap">
-        <div className="travel-stay-details__breadcrumbs">
-          <Link to="/travel/stays">
-            <ArrowLeft
-              size={16}
-            />
-
-            Back to stays
+    <div className="ft-details">
+      <div className="ft-details__wrap">
+        <nav className="ft-details__crumbs" aria-label="Breadcrumb">
+          <Link to={type === "experience" ? "/travel/experiences" : "/travel/stays"}>
+            <ArrowLeft size={16} aria-hidden="true" />
+            {type === "experience" ? "Experiences" : "Stays"}
           </Link>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">{name}</span>
+        </nav>
 
-          <span>/</span>
-
-          <span>
-            {listing.name}
-          </span>
-        </div>
-
-        <section className="travel-stay-details__hero">
-          <div className="travel-stay-details__gallery">
-            <div className="travel-stay-details__main-image">
+        {/* =========================== GALLERY =========================== */}
+        <section className="ft-gallery" aria-label={`${name} photos`}>
+          <div className="ft-gallery__main">
+            {activeSrc ? (
               <img
-                src={activeImageUrl}
-                alt={listing.name}
-                onError={
-                  handleImageError
-                }
+                key={activeSrc}
+                src={activeSrc}
+                alt={`${name} — photo ${activeImage + 1} of ${images.length}`}
+                onError={() => setFailedImages((current) => new Set(current).add(activeSrc))}
               />
+            ) : (
+              <div className="ft-gallery__empty">
+                <Images size={34} aria-hidden="true" />
+                <span>The host hasn’t added photos yet</span>
+              </div>
+            )}
 
-              {images.length >
-                1 && (
+            {images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="ft-gallery__nav ft-gallery__nav--prev"
+                  onClick={() => showImage(activeImage - 1)}
+                  aria-label="Previous photo"
+                >
+                  <ChevronLeft size={22} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className="ft-gallery__nav ft-gallery__nav--next"
+                  onClick={() => showImage(activeImage + 1)}
+                  aria-label="Next photo"
+                >
+                  <ChevronRight size={22} aria-hidden="true" />
+                </button>
+              </>
+            )}
+
+            <div className="ft-gallery__tools">
+              <button
+                type="button"
+                className={`ft-gallery__tool${saved ? " is-saved" : ""}`}
+                onClick={() => void toggle(listingId)}
+                disabled={isPending(listingId)}
+                aria-pressed={saved}
+                aria-label={saved ? "Remove from favorites" : "Save to favorites"}
+              >
+                <Heart size={18} fill={saved ? "currentColor" : "none"} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="ft-gallery__tool"
+                onClick={() => void handleShare()}
+                aria-label="Share this listing"
+              >
+                <Share2 size={18} aria-hidden="true" />
+              </button>
+            </div>
+
+            {shareMessage && (
+              <span className="ft-gallery__toast" role="status">
+                {shareMessage}
+              </span>
+            )}
+
+            {images.length > 0 && (
+              <span className="ft-gallery__count" aria-hidden="true">
+                {activeImage + 1}/{images.length}
+              </span>
+            )}
+          </div>
+        </section>
+
+        <div className="ft-details__grid">
+          {/* =========================== MAIN =========================== */}
+          <div className="ft-details__main">
+            {images.length > 1 && (
+              <div className="ft-gallery__thumbs" ref={thumbsRef} role="list" aria-label="Choose a photo">
+                {images.map((src, index) => (
+                  <button
+                    key={src}
+                    type="button"
+                    role="listitem"
+                    data-index={index}
+                    className={`ft-gallery__thumb${index === activeImage ? " is-active" : ""}`}
+                    onClick={() => setActiveImage(index)}
+                    aria-label={`Show photo ${index + 1}`}
+                    aria-current={index === activeImage}
+                  >
+                    <img
+                      src={src}
+                      alt=""
+                      loading="lazy"
+                      onError={() => setFailedImages((current) => new Set(current).add(src))}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <header className="ft-details__title">
+              <h1>
+                {name}
+                {host && (
+                  <span className="ft-details__verified">
+                    <BadgeCheck size={14} aria-hidden="true" /> Verified
+                  </span>
+                )}
+              </h1>
+
+              <p className="ft-details__meta">
+                {rating && (
+                  <span className="ft-details__rating">
+                    <Star size={16} fill="currentColor" aria-hidden="true" />
+                    <strong>{rating.average.toFixed(1)}</strong>
+                    {rating.count > 0 && (
+                      <span>
+                        ({rating.count.toLocaleString()} {rating.count === 1 ? "review" : "reviews"})
+                      </span>
+                    )}
+                  </span>
+                )}
+                {rating && fullLocation && <span aria-hidden="true">·</span>}
+                {fullLocation && (
+                  <span className="ft-details__place">
+                    <MapPin size={15} aria-hidden="true" /> {fullLocation}
+                  </span>
+                )}
+              </p>
+            </header>
+
+            {/* Mobile-only price row, right under the title (reference). */}
+            <p className="ft-details__mobile-price">
+              {price !== null ? (
                 <>
-                  <button
-                    type="button"
-                    className="travel-stay-details__gallery-button travel-stay-details__gallery-button--left"
-                    onClick={
-                      handlePreviousImage
-                    }
-                    aria-label="Previous image"
-                  >
-                    <ChevronLeft
-                      size={22}
-                    />
-                  </button>
-
-                  <button
-                    type="button"
-                    className="travel-stay-details__gallery-button travel-stay-details__gallery-button--right"
-                    onClick={
-                      handleNextImage
-                    }
-                    aria-label="Next image"
-                  >
-                    <ChevronRight
-                      size={22}
-                    />
-                  </button>
+                  <strong>{formatTravelPrice(price, listing.currency)}</strong>{" "}
+                  {getPriceUnitLabel(listing)}
                 </>
+              ) : (
+                "Price on request"
+              )}
+            </p>
+
+            {facts.length > 0 && (
+              <ul className="ft-details__facts" aria-label="Property facts">
+                {facts.map(({ icon: Icon, label }) => (
+                  <li key={label}>
+                    <Icon size={22} aria-hidden="true" />
+                    <span>{label}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <section className="ft-details__section" aria-labelledby="ft-about">
+              <h2 id="ft-about">About this {type === "experience" ? "experience" : "stay"}</h2>
+              {description ? (
+                <>
+                  <p
+                    id="ft-about-text"
+                    className={`ft-details__about${longDescription && !descriptionOpen ? " is-clamped" : ""}`}
+                  >
+                    {description}
+                  </p>
+                  {longDescription && (
+                    <button
+                      type="button"
+                      className="ft-details__more"
+                      aria-expanded={descriptionOpen}
+                      aria-controls="ft-about-text"
+                      onClick={() => setDescriptionOpen((open) => !open)}
+                    >
+                      {descriptionOpen ? "Show less" : "Read more"}
+                      <ChevronRight size={15} aria-hidden="true" />
+                    </button>
+                  )}
+                </>
+              ) : (
+                <p className="ft-details__muted">The host hasn’t added a description yet.</p>
+              )}
+            </section>
+
+            <section className="ft-details__section" aria-labelledby="ft-amenities">
+              <h2 id="ft-amenities">Amenities</h2>
+              {amenities.length > 0 ? (
+                <ul className="ft-details__amenities">
+                  {amenities.map((amenity) => {
+                    const Icon = amenityIcon(amenity);
+                    return (
+                      <li key={amenity}>
+                        <Icon size={20} aria-hidden="true" />
+                        <span>{amenity}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="ft-details__muted">Amenities haven’t been listed for this property.</p>
+              )}
+            </section>
+
+            {(checkInTime || checkOutTime || policy) && (
+              <section className="ft-details__section" aria-labelledby="ft-policies">
+                <h2 id="ft-policies">Good to know</h2>
+                <ul className="ft-details__policies">
+                  {checkInTime && (
+                    <li>
+                      <strong>Check-in</strong> from {checkInTime}
+                    </li>
+                  )}
+                  {checkOutTime && (
+                    <li>
+                      <strong>Check-out</strong> by {checkOutTime}
+                    </li>
+                  )}
+                  {policy && (
+                    <li>
+                      <strong>{policy.label} cancellation</strong> — {policy.description}
+                    </li>
+                  )}
+                </ul>
+              </section>
+            )}
+          </div>
+
+          {/* =========================== BOOKING =========================== */}
+          <aside className="ft-book" aria-label="Book this listing">
+            <div className="ft-book__card">
+              <div className="ft-book__top">
+                <p className="ft-book__price">
+                  {price !== null ? (
+                    <>
+                      <strong>{formatTravelPrice(price, listing.currency)}</strong>
+                      <span>{getPriceUnitLabel(listing)}</span>
+                    </>
+                  ) : (
+                    <span className="ft-book__price-na">Price on request</span>
+                  )}
+                </p>
+                {rating && (
+                  <span className="ft-book__rating">
+                    <Star size={14} fill="currentColor" aria-hidden="true" />
+                    {rating.average.toFixed(1)}
+                    {rating.count > 0 && <small>({rating.count.toLocaleString()})</small>}
+                  </span>
+                )}
+              </div>
+
+              <div className="ft-book__dates">
+                <label>
+                  <span>Check in</span>
+                  <input
+                    type="date"
+                    value={checkIn}
+                    min={today}
+                    onChange={(event) => handleCheckIn(event.target.value)}
+                  />
+                </label>
+                <label>
+                  <span>Check out</span>
+                  <input
+                    type="date"
+                    value={checkOut}
+                    min={addDays(checkIn || today, 1)}
+                    onChange={(event) => {
+                      setBookingError(null);
+                      setCheckOut(event.target.value);
+                    }}
+                  />
+                </label>
+              </div>
+
+              <div className="ft-book__selects">
+                <label>
+                  <span>Travelers</span>
+                  <select value={guests} onChange={(event) => setGuests(Number(event.target.value))}>
+                    {Array.from({ length: maxGuests }, (_, index) => index + 1).map((count) => (
+                      <option key={count} value={count}>
+                        {count} {count === 1 ? "traveler" : "travelers"}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Rooms / units</span>
+                  <select value={quantity} onChange={(event) => setQuantity(Number(event.target.value))}>
+                    {[1, 2, 3, 4, 5].map((count) => (
+                      <option key={count} value={count}>
+                        {count}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              {bookingError && (
+                <p className="ft-book__error" role="alert">
+                  {bookingError}
+                </p>
               )}
 
               <button
                 type="button"
-                className={`travel-stay-details__save${
-                  saved
-                    ? ' is-saved'
-                    : ''
-                }`}
-                onClick={() =>
-                  setSaved(
-                    (current) =>
-                      !current,
-                  )
-                }
-                aria-label={
-                  saved
-                    ? 'Remove from wishlist'
-                    : 'Save to wishlist'
-                }
-                aria-pressed={
-                  saved
-                }
+                className="ft-book__primary"
+                onClick={handleBook}
+                disabled={!accepting}
               >
-                <Heart
-                  size={18}
-                  fill={
-                    saved
-                      ? 'currentColor'
-                      : 'none'
-                  }
-                />
+                {accepting ? "Book Now" : "Not accepting bookings"}
               </button>
 
-              {images.length >
-                1 && (
-                <div className="travel-stay-details__image-counter">
-                  {activeImage + 1} /{' '}
-                  {images.length}
-                </div>
-              )}
-            </div>
-
-            {images.length >
-              1 && (
-              <div className="travel-stay-details__thumbnail-row">
-                <button
-                  type="button"
-                  className="travel-stay-details__thumbnail-scroll-button"
-                  onClick={
-                    handlePreviousThumbnails
-                  }
-                  aria-label="Previous thumbnails"
-                >
-                  <ChevronLeft
-                    size={18}
-                  />
-                </button>
-
-                <div className="travel-stay-details__thumbnails">
-                  {visibleThumbnailIndexes.map(
-                    (imageIndex) => {
-                      const image =
-                        images[
-                          imageIndex
-                        ];
-
-                      return (
-                        <button
-                          key={`${image}-${imageIndex}`}
-                          type="button"
-                          className={`travel-stay-details__thumbnail${
-                            imageIndex ===
-                            activeImage
-                              ? ' is-active'
-                              : ''
-                          }`}
-                          onClick={() =>
-                            setActiveImage(
-                              imageIndex,
-                            )
-                          }
-                          aria-label={`View image ${
-                            imageIndex +
-                            1
-                          }`}
-                          aria-pressed={
-                            imageIndex ===
-                            activeImage
-                          }
-                        >
-                          <img
-                            src={image}
-                            alt={`${listing.name} ${
-                              imageIndex +
-                              1
-                            }`}
-                            onError={
-                              handleImageError
-                            }
-                          />
-                        </button>
-                      );
-                    },
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  className="travel-stay-details__thumbnail-scroll-button"
-                  onClick={
-                    handleNextThumbnails
-                  }
-                  aria-label="Next thumbnails"
-                >
-                  <ChevronRight
-                    size={18}
-                  />
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="travel-stay-details__content">
-            <div className="travel-stay-details__eyebrow">
-              FOCKIS TRAVEL STAY
-            </div>
-
-            <h1>
-              {listing.name}
-            </h1>
-
-            <div className="travel-stay-details__location">
-              <MapPin
-                size={17}
-                aria-hidden="true"
-              />
-
-              <span>
-                {listing.address
-                  ? `${listing.address}, ${location}`
-                  : location}
-              </span>
-            </div>
-
-            <div className="travel-stay-details__rating">
-              <span className="travel-stay-details__rating-star">
-                <Star
-                  size={15}
-                  fill="currentColor"
-                />
-              </span>
-
-              <strong>
-                {rating > 0
-                  ? rating.toFixed(
-                      1,
-                    )
-                  : 'New'}
-              </strong>
-
-              {reviewCount >
-                0 && (
-                <span>
-                  {reviewCount}{' '}
-                  {reviewCount ===
-                  1
-                    ? 'review'
-                    : 'reviews'}
-                </span>
-              )}
-            </div>
-
-            {listing.tags &&
-              listing.tags.length >
-                0 && (
-                <div className="travel-stay-details__tags">
-                  {listing.tags.map(
-                    (tag) => (
-                      <span
-                        key={tag}
-                      >
-                        {tag}
-                      </span>
-                    ),
-                  )}
-                </div>
+              {price !== null && accepting && (
+                <dl className="ft-book__summary">
+                  <div>
+                    <dt>
+                      {formatTravelPrice(price, listing.currency)} × {unitsLabel}
+                    </dt>
+                    <dd>{formatTravelPrice(subtotal, listing.currency)}</dd>
+                  </div>
+                  <div>
+                    <dt>Fockis Travel fee</dt>
+                    <dd>{formatTravelPrice(fees, listing.currency)}</dd>
+                  </div>
+                  <div>
+                    <dt>Estimated tax</dt>
+                    <dd>{formatTravelPrice(tax, listing.currency)}</dd>
+                  </div>
+                  <div className="ft-book__total">
+                    <dt>Estimated total</dt>
+                    <dd>{formatTravelPrice(total, listing.currency)}</dd>
+                  </div>
+                </dl>
               )}
 
-            <div className="travel-stay-details__description">
-              <h2>
-                About this stay
-              </h2>
-
-              <p>
-                {description}
+              <p className="ft-book__note">
+                <CircleCheck size={15} aria-hidden="true" />
+                {policy
+                  ? `${policy.label} cancellation: ${policy.description}`
+                  : "You won’t be charged yet. You’ll review everything before the booking is sent."}
               </p>
             </div>
 
-            <div className="travel-stay-details__facts">
-              <div>
-                <MapPin
-                  size={18}
-                />
-
-                <span>
-                  {location}
-                </span>
-              </div>
-
-              <div>
-                <Users
-                  size={18}
-                />
-
-                <span>
-                  Ideal for
-                  travelers
-                </span>
-              </div>
-
-              <div>
-                <Clock3
-                  size={18}
-                />
-
-                <span>
-                  Flexible stay
-                </span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="travel-stay-details__body">
-          <div className="travel-stay-details__main">
-            <section className="travel-stay-details__section">
-              <div className="travel-stay-details__section-heading">
-                <div>
-                  <span className="travel-stay-details__section-eyebrow">
-                    FOCKIS TRAVEL
+            {(hostName || contactEmail || contactPhone) && (
+              <div className="ft-book__host">
+                <div className="ft-book__host-row">
+                  <span className="ft-book__avatar" aria-hidden="true">
+                    {hostAvatar ? <img src={hostAvatar} alt="" /> : (hostName || "F").charAt(0).toUpperCase()}
                   </span>
-
-                  <h2>
-                    Amenities
-                  </h2>
-                </div>
-              </div>
-
-              {amenities.length >
-              0 ? (
-                <div className="travel-stay-details__amenities">
-                  {amenities.map(
-                    (
-                      amenity,
-                    ) => (
-                      <div
-                        key={
-                          amenity
-                        }
-                        className="travel-stay-details__amenity"
-                      >
-                        <Check
-                          size={17}
-                        />
-
-                        <span>
-                          {amenity}
-                        </span>
-                      </div>
-                    ),
-                  )}
-                </div>
-              ) : (
-                <div className="travel-stay-details__empty">
-                  Comfortable
-                  stay with
-                  Fockis
-                  Travel.
-                </div>
-              )}
-            </section>
-
-            <section className="travel-stay-details__section">
-              <div className="travel-stay-details__section-heading">
-                <div>
-                  <span className="travel-stay-details__section-eyebrow">
-                    YOUR STAY
-                  </span>
-
-                  <h2>
-                    Reservation
-                    information
-                  </h2>
-                </div>
-              </div>
-
-              <div className="travel-stay-details__info-grid">
-                <div>
-                  <CalendarDays
-                    size={20}
-                  />
-
                   <div>
+                    <span>Hosted by</span>
                     <strong>
-                      Check-in
+                      {hostId ? (
+                        <Link to={`/travel/businesses/${encodeURIComponent(hostId)}`}>
+                          {hostName || "Fockis Travel partner"}
+                        </Link>
+                      ) : (
+                        hostName || "Fockis Travel partner"
+                      )}
                     </strong>
-
-                    <span>
-                      From
-                      3:00 PM
-                    </span>
                   </div>
                 </div>
 
-                <div>
-                  <CalendarDays
-                    size={20}
-                  />
-
-                  <div>
-                    <strong>
-                      Check-out
-                    </strong>
-
-                    <span>
-                      By
-                      11:00 AM
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <Users
-                    size={20}
-                  />
-
-                  <div>
-                    <strong>
-                      Guests
-                    </strong>
-
-                    <span>
-                      Choose
-                      during
-                      reservation
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
-
-          <aside className="travel-stay-details__booking-card">
-            <div className="travel-stay-details__booking-price">
-              <strong>
-                {formatPrice(
-                  price,
-                  listing.currency,
-                )}
-              </strong>
-
-              <span>
-                /{' '}
-                {priceUnit ===
-                'night'
-                  ? 'night'
-                  : priceUnit}
-              </span>
-            </div>
-
-            <div className="travel-stay-details__booking-card-title">
-              Reserve this stay
-            </div>
-
-            <div className="travel-stay-details__booking-fields">
-              <label>
-                <span>
-                  Check-in
-                </span>
-
-                <input
-                  type="date"
-                  min={today}
-                  value={checkIn}
-                  onChange={(
-                    event,
-                  ) =>
-                    handleCheckInChange(
-                      event.target
-                        .value,
-                    )
-                  }
-                />
-              </label>
-
-              <label>
-                <span>
-                  Check-out
-                </span>
-
-                <input
-                  type="date"
-                  min={addDays(
-                    checkIn ||
-                      today,
-                    1,
-                  )}
-                  value={checkOut}
-                  onChange={(
-                    event,
-                  ) =>
-                    handleCheckOutChange(
-                      event.target
-                        .value,
-                    )
-                  }
-                />
-              </label>
-
-              <label>
-                <span>
-                  Guests
-                </span>
-
-                <select
-                  value={guests}
-                  onChange={(
-                    event,
-                  ) =>
-                    handleGuestsChange(
-                      Number(
-                        event
-                          .target
-                          .value,
-                      ),
-                    )
-                  }
-                >
-                  {Array.from(
-                    {
-                      length: 10,
-                    },
-                    (
-                      _,
-                      index,
-                    ) => (
-                      <option
-                        key={
-                          index +
-                          1
-                        }
-                        value={
-                          index +
-                          1
-                        }
-                      >
-                        {index + 1}{' '}
-                        {index ===
-                        0
-                          ? 'guest'
-                          : 'guests'}
-                      </option>
-                    ),
-                  )}
-                </select>
-              </label>
-
-              <label>
-                <span>
-                  Rooms /
-                  quantity
-                </span>
-
-                <select
-                  value={quantity}
-                  onChange={(
-                    event,
-                  ) =>
-                    handleQuantityChange(
-                      Number(
-                        event
-                          .target
-                          .value,
-                      ),
-                    )
-                  }
-                >
-                  {Array.from(
-                    {
-                      length: 5,
-                    },
-                    (
-                      _,
-                      index,
-                    ) => (
-                      <option
-                        key={
-                          index +
-                          1
-                        }
-                        value={
-                          index +
-                          1
-                        }
-                      >
-                        {index + 1}
-                      </option>
-                    ),
-                  )}
-                </select>
-              </label>
-            </div>
-
-            <div className="travel-stay-details__booking-summary">
-              <div>
-                <span>
-                  {
-                    priceCalculationLabel
-                  }
-                </span>
-
-                <strong>
-                  {formatPrice(
-                    estimatedSubtotal,
-                    listing.currency,
-                  )}
-                </strong>
-              </div>
-
-              <div>
-                <span>
-                  Fockis Travel
-                  fee
-                </span>
-
-                <strong>
-                  {formatPrice(
-                    estimatedFees,
-                    listing.currency,
-                  )}
-                </strong>
-              </div>
-
-              <div>
-                <span>
-                  Estimated tax
-                </span>
-
-                <strong>
-                  {formatPrice(
-                    estimatedTax,
-                    listing.currency,
-                  )}
-                </strong>
-              </div>
-
-              <div className="total">
-                <span>
-                  Estimated total
-                </span>
-
-                <strong>
-                  {formatPrice(
-                    estimatedTotal,
-                    listing.currency,
-                  )}
-                </strong>
-              </div>
-            </div>
-
-            {bookingError && (
-              <div className="travel-stay-details__booking-error">
-                {bookingError}
+                {contactEmail ? (
+                  <a
+                    className="ft-book__secondary"
+                    href={`mailto:${contactEmail}?subject=${encodeURIComponent(`Question about ${name}`)}`}
+                  >
+                    <Mail size={17} aria-hidden="true" /> Contact Host
+                  </a>
+                ) : contactPhone ? (
+                  <a className="ft-book__secondary" href={`tel:${contactPhone.replace(/[^\d+]/g, "")}`}>
+                    <Phone size={17} aria-hidden="true" /> Call Host
+                  </a>
+                ) : hostId ? (
+                  <Link className="ft-book__secondary" to={`/travel/businesses/${encodeURIComponent(hostId)}`}>
+                    View host profile
+                  </Link>
+                ) : null}
               </div>
             )}
-
-            <button
-              type="button"
-              className="travel-stay-details__reserve-button"
-              onClick={
-                handleReserve
-              }
-              disabled={
-                listing.active ===
-                false
-              }
-            >
-              {listing.active ===
-              false
-                ? 'Currently unavailable'
-                : 'Reserve this stay'}
-            </button>
-
-            <p className="travel-stay-details__booking-note">
-              You will review
-              your reservation
-              details before the
-              booking is submitted.
-            </p>
           </aside>
+        </div>
+
+        {/* =========================== SIMILAR =========================== */}
+        <section className="ft-details__similar" aria-labelledby="ft-similar">
+          <div className="ft-details__similar-head">
+            <h2 id="ft-similar">Similar {type === "experience" ? "Experiences" : "Stays"}</h2>
+            <Link
+              to={type === "experience" ? "/travel/experiences" : type === "stay" ? "/travel/stays" : `/travel/explore?type=${encodeURIComponent(type)}`}
+              className="ft-details__view-all"
+            >
+              View All <ChevronRight size={16} aria-hidden="true" />
+            </Link>
+          </div>
+
+          {similarLoading ? (
+            <div className="ft-details__similar-grid" aria-hidden="true">
+              {[0, 1, 2, 3].map((index) => (
+                <div key={index} className="ft-skel" style={{ height: 230, borderRadius: 12 }} />
+              ))}
+            </div>
+          ) : similar.length > 0 ? (
+            <div className="ft-details__similar-grid">
+              {similar.map((item) => (
+                <TravelListingCard
+                  key={getListingId(item)}
+                  listing={item}
+                  variant="compact"
+                  verified={Boolean(findListingPartner(item, verifiedIndex))}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="ft-details__muted">No similar listings are available right now.</p>
+          )}
         </section>
+      </div>
+
+      {/* Phone: booking action stays within reach (reference mobile screen). */}
+      <div className="ft-details__mobile-bar">
+        <p>
+          {price !== null ? (
+            <>
+              <strong>{formatTravelPrice(price, listing.currency)}</strong>
+              <span>{getPriceUnitLabel(listing)}</span>
+            </>
+          ) : (
+            <span>Price on request</span>
+          )}
+        </p>
+        <button type="button" onClick={handleBook} disabled={!accepting}>
+          {accepting ? "Book Now" : "Unavailable"}
+        </button>
       </div>
     </div>
   );

@@ -138,12 +138,12 @@
 
   .btn-primary {
     border-color: fockis.$navy-900;
-    background: fockis.$navy-900;
+    background: fockis.$gold-500;
     color: #ffffff;
 
     &:hover {
       border-color: fockis.$navy-800;
-      background: fockis.$navy-800;
+      background: fockis.$gold-600;
       color: #ffffff;
     }
   }
@@ -264,7 +264,7 @@
       border-color 0.16s ease;
 
     &:hover {
-      border-color: rgba(240, 169, 62, 0.55);
+      border-color: rgba(21, 112, 239, 0.55);
       box-shadow: 0 8px 22px rgba(10, 24, 48, 0.09);
       transform: translateY(-2px);
     }
@@ -467,7 +467,7 @@
   .ft-field select:focus,
   .ft-field textarea:focus {
     border-color: fockis.$gold-500;
-    box-shadow: 0 0 0 3px rgba(240, 169, 62, 0.14);
+    box-shadow: 0 0 0 3px rgba(21, 112, 239, 0.14);
   }
 
   .ft-empty-state {

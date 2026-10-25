@@ -286,7 +286,6 @@ export class UserSearchService {
             { firstName: regex },
             { lastName: regex },
             { username: regex },
-            { email: regex },
             { fockisId: regex },
           ],
         },

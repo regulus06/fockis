@@ -1,0 +1,1294 @@
+/* ============================================================================
+   FOCKIS ACCOUNT SETTINGS
+   web/src/features/account/pages/AccountSettingsPage.scss
+
+   Everything here is scoped to .fk-account-shell, so the re-skin of the
+   shared sidebar and top bar applies to /settings only and never leaks into
+   other pages.
+============================================================================ */
+
+$acc-mobile: 767px; // matches the FockisSidebar mobile-drawer breakpoint
+$acc-tablet: 1199px;
+
+/* ============================================================================
+   TOKENS
+============================================================================ */
+
+.fk-account-shell {
+  --acc-primary: #1765f5;
+  --acc-primary-hover: #0f54d6;
+  --acc-primary-ring: rgba(23, 101, 245, 0.16);
+  --acc-navy: #111927;
+
+  --acc-bg: #f2f5fa;
+  --acc-surface: #ffffff;
+  --acc-muted: #f6f8fc;
+  --acc-border: #e3e8f0;
+  --acc-border-strong: #cfd7e3;
+
+  --acc-text: #0f1728;
+  --acc-text-2: #5a6578;
+  --acc-text-3: #8792a5;
+
+  --acc-info-bg: #eef4ff;
+  --acc-info-border: #d5e3ff;
+  --acc-info-text: #1d3f8f;
+
+  --acc-blue-soft: #e8f0ff;
+  --acc-purple: #7c3aed;
+  --acc-purple-soft: #f1ebff;
+  --acc-green: #15924b;
+  --acc-green-soft: #e6f6ec;
+  --acc-orange: #d9650b;
+  --acc-orange-soft: #fff1e3;
+  --acc-orange-border: #ffd6ad;
+  --acc-orange-text: #9a4a06;
+
+  --acc-danger: #c62828;
+  --acc-danger-soft: #fdeeee;
+  --acc-danger-border: #f6caca;
+
+  --acc-shadow:
+    0 1px 2px rgba(16, 24, 40, 0.04),
+    0 6px 20px rgba(16, 24, 40, 0.05);
+
+  --acc-radius-card: 16px;
+  --acc-radius-field: 10px;
+  --acc-sidebar-width: 260px;
+}
+
+[data-theme="dark"] .fk-account-shell {
+  --acc-primary: #3b82f6;
+  --acc-primary-hover: #5b96f8;
+  --acc-primary-ring: rgba(59, 130, 246, 0.28);
+
+  --acc-bg: #0e131b;
+  --acc-surface: #161d29;
+  --acc-muted: #1b2433;
+  --acc-border: #263142;
+  --acc-border-strong: #34415a;
+
+  --acc-text: #e7ebf3;
+  --acc-text-2: #a2adbf;
+  --acc-text-3: #7d889b;
+
+  --acc-info-bg: rgba(59, 130, 246, 0.12);
+  --acc-info-border: rgba(59, 130, 246, 0.32);
+  --acc-info-text: #c5d8ff;
+
+  --acc-blue-soft: rgba(59, 130, 246, 0.16);
+  --acc-purple: #a78bfa;
+  --acc-purple-soft: rgba(167, 139, 250, 0.16);
+  --acc-green: #4ade80;
+  --acc-green-soft: rgba(74, 222, 128, 0.14);
+  --acc-orange: #fb923c;
+  --acc-orange-soft: rgba(251, 146, 60, 0.13);
+  --acc-orange-border: rgba(251, 146, 60, 0.35);
+  --acc-orange-text: #fdba74;
+
+  --acc-danger: #f87171;
+  --acc-danger-soft: rgba(248, 113, 113, 0.12);
+  --acc-danger-border: rgba(248, 113, 113, 0.35);
+
+  --acc-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* ============================================================================
+   GLOBAL LAYOUT HAND-OFF
+   The shared Layout pads its content area; this page draws its own frame.
+============================================================================ */
+
+.fk-app-layout:has(.fk-account-shell) {
+  background: #f2f5fa;
+}
+
+.fk-app-layout[data-theme="dark"]:has(.fk-account-shell) {
+  background: #0e131b;
+}
+
+.fk-app-content:has(> .fk-account-shell) {
+  padding: 0;
+  background: transparent;
+}
+
+/* ============================================================================
+   SHELL
+============================================================================ */
+
+.fk-account-shell {
+  min-height: 100vh;
+  width: 100%;
+
+  background: var(--acc-bg);
+  color: var(--acc-text);
+
+  font-family: var(--fk-font-body, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: normal;
+  text-align: left;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
+
+.fk-account-shell__main {
+  min-width: 0;
+  margin-left: var(--acc-sidebar-width);
+}
+
+/* ============================================================================
+   SIDEBAR RE-SKIN (settings page only)
+============================================================================ */
+
+.fk-account-shell .fk-sidebar {
+  width: var(--acc-sidebar-width);
+  background: var(--acc-navy);
+  box-shadow: none;
+}
+
+.fk-account-shell .fk-sidebar__logo-mark {
+  border-radius: 10px;
+  background: var(--acc-primary);
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.fk-account-shell .fk-sidebar__section-label {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.fk-account-shell .fk-sidebar__nav-item,
+.fk-account-shell .fk-sidebar__messages-link,
+.fk-account-shell .fk-sidebar__admin-link {
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.fk-account-shell .fk-sidebar__nav-item:hover,
+.fk-account-shell .fk-sidebar__messages-link:hover,
+.fk-account-shell .fk-sidebar__admin-link:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #ffffff;
+}
+
+.fk-account-shell .fk-sidebar__nav-item.is-active,
+.fk-account-shell .fk-sidebar__nav-item--active,
+.fk-account-shell .fk-sidebar__messages-link--active,
+.fk-account-shell .fk-sidebar__admin-link--active {
+  background: var(--acc-primary);
+  color: #ffffff;
+  font-weight: 650;
+}
+
+.fk-account-shell .fk-sidebar__nav-item:focus-visible,
+.fk-account-shell .fk-sidebar__messages-link:focus-visible,
+.fk-account-shell .fk-sidebar__admin-link:focus-visible {
+  outline: 2px solid #8fb4ff;
+  outline-offset: 2px;
+}
+
+.fk-account-shell .fk-sidebar__badge,
+.fk-account-shell .fk-sidebar__profile-avatar {
+  background: var(--acc-primary);
+  color: #ffffff;
+}
+
+.fk-account-shell .fk-sidebar__profile-avatar {
+  border-radius: 50%;
+}
+
+.fk-account-shell .fk-sidebar__admin-divider,
+.fk-account-shell .fk-sidebar__bottom,
+.fk-account-shell .fk-sidebar__logout-container {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================================================
+   TOP BAR (existing FockisTopBar, framed for this page)
+============================================================================ */
+
+.fk-account-shell__topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+
+  min-height: 68px;
+  padding: 0 32px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  background: var(--acc-surface);
+  border-bottom: 1px solid var(--acc-border);
+}
+
+.fk-account-shell__topbar .fk-topbar {
+  position: static;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+
+  background: transparent;
+  border: 0;
+}
+
+// The sidebar already carries the logo on desktop and tablet.
+.fk-account-shell__topbar .fk-topbar__logo {
+  display: none;
+}
+
+.fk-account-shell__topbar .fk-topbar__search {
+  display: flex;
+  max-width: 420px;
+
+  padding: 10px 16px;
+
+  background: var(--acc-muted);
+  border-color: var(--acc-border);
+  color: var(--acc-text-3);
+
+  &:focus-within {
+    background: var(--acc-surface);
+    border-color: var(--acc-primary);
+    box-shadow: 0 0 0 3px var(--acc-primary-ring);
+  }
+
+  input {
+    color: var(--acc-text);
+  }
+}
+
+.fk-account-shell__topbar .fk-topbar__actions {
+  gap: 6px;
+}
+
+.fk-account-shell__topbar .fk-icon-btn,
+.fk-account-shell__topbar .fockis-notification-bell {
+  width: 40px;
+  height: 40px;
+  flex-basis: 40px;
+
+  color: var(--acc-text-2);
+}
+
+.fk-account-shell__topbar .fk-topbar__notification-wrapper {
+  width: 40px;
+  height: 40px;
+}
+
+.fk-account-shell__topbar .fk-icon-btn:hover,
+.fk-account-shell__topbar .fockis-notification-bell:hover {
+  background: var(--acc-muted);
+  color: var(--acc-primary);
+}
+
+.fk-account-shell__topbar .fk-topbar__profile {
+  width: 40px;
+  height: 40px;
+  flex-basis: 40px;
+
+  background: var(--acc-blue-soft);
+  color: var(--acc-primary);
+}
+
+.fk-account-shell__menu {
+  display: none;
+
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+
+  background: transparent;
+  color: var(--acc-text);
+
+  cursor: pointer;
+
+  &:hover {
+    background: var(--acc-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--acc-primary);
+    outline-offset: 2px;
+  }
+}
+
+.fk-account-shell__backdrop {
+  display: none;
+}
+
+/* ============================================================================
+   PAGE CONTENT
+============================================================================ */
+
+.fk-account-settings {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px 32px 64px;
+
+  &__header {
+    margin-bottom: 24px;
+
+    h1 {
+      margin: 0 0 6px;
+
+      color: var(--acc-text);
+
+      font-family: inherit;
+      font-size: 30px;
+      font-weight: 750;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+
+    p {
+      margin: 0;
+      color: var(--acc-text-2);
+      font-size: 15px;
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+     CARD
+  -------------------------------------------------------------------------- */
+
+  &__card {
+    margin-bottom: 20px;
+    padding: 28px;
+
+    background: var(--acc-surface);
+    border: 1px solid var(--acc-border);
+    border-radius: var(--acc-radius-card);
+    box-shadow: var(--acc-shadow);
+
+    h2 {
+      margin: 0 0 4px;
+
+      color: var(--acc-text);
+
+      font-family: inherit;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+
+    p {
+      margin: 0;
+      color: var(--acc-text-2);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+  }
+
+  &__loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    color: var(--acc-text-2);
+  }
+
+  &__card-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+
+    > div {
+      min-width: 0;
+      padding-top: 2px;
+    }
+
+    &--plain {
+      display: block;
+      margin-bottom: 18px;
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+     ICON TILES
+  -------------------------------------------------------------------------- */
+
+  &__icon {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    &--sm {
+      width: 34px;
+      height: 34px;
+      flex-basis: 34px;
+      border-radius: 10px;
+    }
+
+    &--blue {
+      background: var(--acc-blue-soft);
+      color: var(--acc-primary);
+    }
+
+    &--purple {
+      background: var(--acc-purple-soft);
+      color: var(--acc-purple);
+    }
+
+    &--green {
+      background: var(--acc-green-soft);
+      color: var(--acc-green);
+    }
+
+    &--orange {
+      background: var(--acc-orange-soft);
+      color: var(--acc-orange);
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+     ACCOUNT INFORMATION
+  -------------------------------------------------------------------------- */
+
+  &__account {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(220px, 300px);
+    align-items: center;
+    gap: 28px;
+  }
+
+  &__account-body {
+    min-width: 0;
+  }
+
+  &__avatar-wrap {
+    position: relative;
+    width: 104px;
+    height: 104px;
+    align-self: center;
+  }
+
+  &__avatar {
+    position: relative;
+
+    width: 104px;
+    height: 104px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    border-radius: 50%;
+    background: linear-gradient(145deg, #2f7bff, var(--acc-primary));
+    color: #ffffff;
+    box-shadow:
+      0 0 0 4px var(--acc-surface),
+      0 0 0 5px var(--acc-border);
+
+    font-size: 34px;
+    font-weight: 750;
+    letter-spacing: 0.02em;
+
+    img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+  }
+
+  &__avatar-busy {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(15, 23, 40, 0.45);
+    color: #ffffff;
+  }
+
+  &__avatar-button {
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+
+    width: 34px;
+    height: 34px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 3px solid var(--acc-surface);
+    border-radius: 50%;
+
+    background: var(--acc-primary);
+    color: #ffffff;
+
+    cursor: pointer;
+
+    transition: background-color 150ms ease;
+
+    &:hover:not(:disabled) {
+      background: var(--acc-primary-hover);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--acc-primary);
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+  }
+
+  &__file {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &__info {
+    align-self: stretch;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    padding: 18px;
+
+    background: var(--acc-info-bg);
+    border: 1px solid var(--acc-info-border);
+    border-radius: 12px;
+
+    color: var(--acc-primary);
+
+    svg {
+      flex: 0 0 auto;
+      margin-top: 1px;
+    }
+
+    p {
+      color: var(--acc-info-text);
+      font-size: 13.5px;
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+     FORMS
+  -------------------------------------------------------------------------- */
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    column-gap: 18px;
+  }
+
+  &__form {
+    min-width: 0;
+  }
+
+  &__field {
+    display: grid;
+    gap: 7px;
+    margin-bottom: 16px;
+
+    label {
+      color: var(--acc-text);
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      height: 46px;
+      padding: 0 14px;
+
+      border: 1px solid var(--acc-border-strong);
+      border-radius: var(--acc-radius-field);
+
+      background: var(--acc-surface);
+      color: var(--acc-text);
+
+      font: inherit;
+      font-size: 15px;
+
+      transition:
+        border-color 150ms ease,
+        box-shadow 150ms ease;
+
+      &::placeholder {
+        color: var(--acc-text-3);
+      }
+
+      &:focus {
+        border-color: var(--acc-primary);
+        outline: none;
+        box-shadow: 0 0 0 3px var(--acc-primary-ring);
+      }
+
+      &[aria-invalid="true"] {
+        border-color: var(--acc-danger);
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+    }
+
+    input.fk-account-settings__readonly {
+      border-color: var(--acc-border);
+      background: var(--acc-muted);
+      color: var(--acc-text-2);
+
+      &:focus {
+        box-shadow: none;
+        border-color: var(--acc-border-strong);
+      }
+    }
+
+    &--code {
+      max-width: 320px;
+
+      input {
+        font-variant-numeric: tabular-nums;
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 0.4em;
+      }
+    }
+  }
+
+  &__password {
+    position: relative;
+
+    input {
+      padding-right: 48px;
+    }
+  }
+
+  &__reveal {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+
+    width: 36px;
+    height: 36px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+
+    background: transparent;
+    color: var(--acc-text-3);
+
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: var(--acc-muted);
+      color: var(--acc-text);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--acc-primary);
+      outline-offset: 0;
+    }
+  }
+
+  &__field-error {
+    margin: -8px 0 14px !important;
+    color: var(--acc-danger) !important;
+    font-size: 13px !important;
+  }
+
+  /* --------------------------------------------------------------------------
+     BUTTONS
+  -------------------------------------------------------------------------- */
+
+  &__primary,
+  &__secondary {
+    min-height: 46px;
+    padding: 0 20px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    border-radius: var(--acc-radius-field);
+
+    font: inherit;
+    font-size: 15px;
+    font-weight: 650;
+
+    cursor: pointer;
+
+    transition:
+      background-color 150ms ease,
+      border-color 150ms ease,
+      opacity 150ms ease;
+
+    &:focus-visible {
+      outline: 2px solid var(--acc-primary);
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  }
+
+  &__primary {
+    width: 100%;
+
+    border: 1px solid transparent;
+    background: var(--acc-primary);
+    color: #ffffff;
+
+    &:hover:not(:disabled) {
+      background: var(--acc-primary-hover);
+    }
+  }
+
+  &__secondary {
+    border: 1px solid var(--acc-border-strong);
+    background: var(--acc-surface);
+    color: var(--acc-text);
+
+    &:hover:not(:disabled) {
+      background: var(--acc-muted);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    .fk-account-settings__primary {
+      width: auto;
+      flex: 1 1 240px;
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+     EMAIL STEPPER
+  -------------------------------------------------------------------------- */
+
+  &__steps {
+    margin: 24px 0 22px;
+    padding: 16px 20px;
+
+    display: flex;
+    align-items: center;
+
+    list-style: none;
+
+    background: var(--acc-muted);
+    border: 1px solid var(--acc-border);
+    border-radius: 12px;
+  }
+
+  &__step {
+    min-width: 0;
+    flex: 1 1 0;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    color: var(--acc-text-3);
+    font-size: 13.5px;
+    font-weight: 600;
+
+    &:last-child {
+      flex: 0 1 auto;
+    }
+
+    &:not(:last-child)::after {
+      content: "";
+      flex: 1 1 24px;
+      min-width: 16px;
+      height: 2px;
+      margin: 0 14px;
+
+      border-radius: 2px;
+      background: var(--acc-border-strong);
+    }
+
+    &.is-current {
+      color: var(--acc-text);
+    }
+
+    &.is-complete {
+      color: var(--acc-text);
+
+      &::after {
+        background: var(--acc-primary);
+      }
+    }
+  }
+
+  &__step-dot {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 2px solid var(--acc-border-strong);
+    border-radius: 50%;
+
+    background: var(--acc-surface);
+    color: var(--acc-text-3);
+
+    font-size: 13px;
+    font-weight: 700;
+
+    .is-current & {
+      border-color: var(--acc-primary);
+      background: var(--acc-primary);
+      color: #ffffff;
+      box-shadow: 0 0 0 4px var(--acc-primary-ring);
+    }
+
+    .is-complete & {
+      border-color: var(--acc-primary);
+      background: var(--acc-primary);
+      color: #ffffff;
+    }
+  }
+
+  &__step-label {
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  /* --------------------------------------------------------------------------
+     PASSWORD SPLIT
+  -------------------------------------------------------------------------- */
+
+  &__split {
+    margin-top: 24px;
+
+    display: grid;
+    grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+    align-items: start;
+    gap: 28px;
+  }
+
+  &__guide {
+    padding: 20px;
+
+    background: var(--acc-muted);
+    border: 1px solid var(--acc-border);
+    border-radius: 12px;
+
+    ul {
+      margin: 16px 0 0;
+      padding: 0;
+
+      display: grid;
+      gap: 12px;
+
+      list-style: none;
+    }
+
+    li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+
+      color: var(--acc-text-2);
+      font-size: 13.5px;
+      line-height: 1.45;
+
+      svg {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 20px;
+        padding: 3px;
+
+        border-radius: 50%;
+        background: var(--acc-border);
+        color: var(--acc-text-3);
+
+        transition:
+          background-color 150ms ease,
+          color 150ms ease;
+      }
+
+      &.is-met {
+        color: var(--acc-text);
+
+        svg {
+          background: var(--acc-green-soft);
+          color: var(--acc-green);
+        }
+      }
+    }
+  }
+
+  &__guide-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    strong {
+      color: var(--acc-text);
+      font-size: 14.5px;
+      font-weight: 700;
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+     TWO-FACTOR
+  -------------------------------------------------------------------------- */
+
+  &__mfa {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  &__pill {
+    flex: 0 0 auto;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 9px 14px;
+
+    border: 1px solid transparent;
+    border-radius: 10px;
+
+    font-size: 13.5px;
+    font-weight: 650;
+    white-space: nowrap;
+
+    &--off {
+      background: var(--acc-orange-soft);
+      border-color: var(--acc-orange-border);
+      color: var(--acc-orange-text);
+    }
+
+    &--on {
+      background: var(--acc-green-soft);
+      border-color: transparent;
+      color: var(--acc-green);
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+     NOTICES
+  -------------------------------------------------------------------------- */
+
+  &__notice {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    border: 1px solid transparent;
+    border-radius: 10px;
+
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+
+    svg {
+      flex: 0 0 auto;
+      margin-top: 1px;
+    }
+
+    &--error {
+      background: var(--acc-danger-soft);
+      border-color: var(--acc-danger-border);
+      color: var(--acc-danger);
+    }
+
+    &--success {
+      background: var(--acc-green-soft);
+      border-color: transparent;
+      color: var(--acc-green);
+    }
+
+    &--info {
+      background: var(--acc-info-bg);
+      border-color: var(--acc-info-border);
+      color: var(--acc-info-text);
+    }
+  }
+
+  &__account-body &__notice {
+    margin: 2px 0 0;
+  }
+
+  /* --------------------------------------------------------------------------
+     SPINNER
+  -------------------------------------------------------------------------- */
+
+  &__spinner {
+    animation: fk-account-spin 900ms linear infinite;
+  }
+}
+
+@keyframes fk-account-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================================
+   TABLET
+============================================================================ */
+
+@media (max-width: $acc-tablet) {
+  .fk-account-settings {
+    padding: 28px 24px 56px;
+
+    &__card {
+      padding: 24px;
+    }
+
+    &__account {
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 20px 24px;
+    }
+
+    &__info {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .fk-account-shell__topbar {
+    padding: 0 24px;
+  }
+}
+
+@media (max-width: 960px) {
+  .fk-account-settings {
+    &__split {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 20px;
+    }
+
+    &__step-label {
+      white-space: normal;
+    }
+  }
+}
+
+/* ============================================================================
+   MOBILE — sidebar becomes the existing drawer
+============================================================================ */
+
+@media (max-width: $acc-mobile) {
+  .fk-account-shell__main {
+    margin-left: 0;
+  }
+
+  .fk-account-shell .fk-sidebar {
+    width: min(310px, 86vw);
+  }
+
+  .fk-account-shell__backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+
+    display: block;
+
+    padding: 0;
+    border: 0;
+
+    background: rgba(9, 14, 24, 0.55);
+
+    cursor: pointer;
+  }
+
+  .fk-account-shell__menu {
+    display: inline-flex;
+  }
+
+  .fk-account-shell__topbar {
+    min-height: 60px;
+    padding: 0 12px;
+    gap: 6px;
+  }
+
+  .fk-account-shell__topbar .fk-topbar {
+    gap: 8px;
+  }
+
+  .fk-account-shell__topbar .fk-topbar__logo {
+    display: inline-flex;
+  }
+
+  .fk-account-shell__topbar .fk-topbar__logo-image {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+  }
+
+  .fk-account-shell__topbar .fk-topbar__logo-text {
+    font-size: 18px;
+  }
+
+  .fk-account-shell__topbar .fk-topbar__search {
+    display: none;
+  }
+
+  .fk-account-shell__topbar .fk-topbar__actions {
+    gap: 0;
+  }
+
+  // Home and Friends are already in the global bottom nav on phones.
+  .fk-account-shell__topbar .fk-topbar__action--home,
+  .fk-account-shell__topbar .fk-topbar__action--friends {
+    display: none;
+  }
+
+  .fk-account-shell__topbar .fk-icon-btn,
+  .fk-account-shell__topbar .fockis-notification-bell,
+  .fk-account-shell__topbar .fk-topbar__notification-wrapper,
+  .fk-account-shell__topbar .fk-topbar__profile {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+
+  .fk-account-settings {
+    // Leave room for the global FockisBottomNav.
+    padding: 20px 16px calc(96px + env(safe-area-inset-bottom));
+
+    &__header {
+      margin-bottom: 18px;
+
+      h1 {
+        font-size: 26px;
+      }
+    }
+
+    &__card {
+      margin-bottom: 16px;
+      padding: 20px 18px;
+      border-radius: 14px;
+    }
+
+    &__card-heading {
+      gap: 14px;
+    }
+
+    &__icon {
+      width: 42px;
+      height: 42px;
+      flex-basis: 42px;
+    }
+
+    &__account {
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: start;
+    }
+
+    &__avatar-wrap,
+    &__avatar {
+      width: 88px;
+      height: 88px;
+    }
+
+    &__avatar {
+      font-size: 30px;
+    }
+
+    &__steps {
+      padding: 14px 16px;
+
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+
+    &__step {
+      flex: 0 0 auto;
+
+      &:not(:last-child)::after {
+        display: none;
+      }
+    }
+
+    &__field--code {
+      max-width: none;
+    }
+
+    &__actions {
+      flex-direction: column;
+
+      .fk-account-settings__primary,
+      .fk-account-settings__secondary {
+        width: 100%;
+        flex: 0 0 auto;
+      }
+    }
+
+    &__mfa {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+}
+
+/* ============================================================================
+   REDUCED MOTION
+============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-account-settings__spinner {
+    animation: none;
+  }
+
+  .fk-account-settings *,
+  .fk-account-shell__topbar * {
+    transition: none !important;
+  }
+}

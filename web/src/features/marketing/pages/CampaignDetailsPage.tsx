@@ -2,7 +2,7 @@
    CAMPAIGN DETAILS PAGE
 ============================================================================ */
 
-import React, {
+import {
   useCallback,
   useEffect,
   useState,
@@ -385,7 +385,7 @@ export default function CampaignDetailsPage() {
             className="fk-marketing-primary-button"
             onClick={() =>
               navigate(
-                "/marketing/campaigns",
+                "/ads/campaigns",
               )
             }
           >
@@ -442,7 +442,7 @@ export default function CampaignDetailsPage() {
             className="fk-marketing-primary-button"
             onClick={() =>
               navigate(
-                "/marketing/campaigns",
+                "/ads/campaigns",
               )
             }
           >
@@ -591,7 +591,7 @@ export default function CampaignDetailsPage() {
       );
 
       navigate(
-        "/marketing/campaigns",
+        "/ads/campaigns",
       );
 
     } catch (err) {
@@ -724,7 +724,7 @@ export default function CampaignDetailsPage() {
         <div>
 
           <Link
-            to="/marketing/campaigns"
+            to="/ads/campaigns"
             className="fk-marketing-link"
           >
             ← Campaigns
@@ -747,19 +747,26 @@ export default function CampaignDetailsPage() {
         <div className="fk-marketing-header-actions">
 
           <Link
-            to={`/marketing/campaigns/${campaignId}/analytics`}
+            to={`/ads/campaigns/${campaignId}/analytics`}
             className="fk-marketing-secondary-button"
           >
             View Analytics
           </Link>
 
 
-          <Link
-            to={`/marketing/campaigns/${campaignId}/edit`}
-            className="fk-marketing-primary-button"
-          >
-            Edit Campaign
-          </Link>
+          {/*
+           * The API refuses edits while a campaign is running or in
+           * review, so the button only appears when an edit can be saved.
+           */}
+          {status !== "ACTIVE" &&
+            status !== "PENDING_REVIEW" && (
+            <Link
+              to={`/ads/campaigns/${campaignId}/edit`}
+              className="fk-marketing-primary-button"
+            >
+              Edit Campaign
+            </Link>
+          )}
 
         </div>
 
@@ -884,7 +891,8 @@ export default function CampaignDetailsPage() {
 
           <div className="fk-marketing-action-list">
 
-            {status === "DRAFT" && (
+            {(status === "DRAFT" ||
+              status === "REJECTED") && (
 
               <button
                 type="button"
@@ -932,14 +940,20 @@ export default function CampaignDetailsPage() {
             )}
 
 
-            <button
-              type="button"
-              disabled={actionLoading}
-              onClick={handleDelete}
-              className="fk-marketing-danger-button"
-            >
-              Delete Campaign
-            </button>
+            {/*
+             * The API refuses to delete running or in-review campaigns.
+             */}
+            {status !== "ACTIVE" &&
+              status !== "PENDING_REVIEW" && (
+              <button
+                type="button"
+                disabled={actionLoading}
+                onClick={handleDelete}
+                className="fk-marketing-danger-button"
+              >
+                Delete Campaign
+              </button>
+            )}
 
           </div>
 
@@ -1253,7 +1267,7 @@ export default function CampaignDetailsPage() {
             </h2>
 
             <Link
-              to={`/marketing/campaigns/${campaignId}/analytics`}
+              to={`/ads/campaigns/${campaignId}/analytics`}
               className="fk-marketing-link"
             >
               View Full Analytics →
@@ -1329,7 +1343,8 @@ export default function CampaignDetailsPage() {
 
               <strong>
                 {formatMoney(
-                  campaign.spend,
+                  campaign.spend ??
+                    campaign.spent,
                 )}
               </strong>
 

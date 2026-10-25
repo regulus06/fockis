@@ -4,6 +4,8 @@ import SellerSidebar from "../components/SellerSidebar";
 import SellerFooter from "../components/SellerFooter";
 
 import "../styles/SellerLayout.scss";
+// Must stay last: pins Seller Center to the light Fockis theme.
+import "../styles/seller-center-theme.scss";
 
 function SellerLayout() {
 return ( <div className="seller-layout"> <div className="seller-layout__body"> <SellerSidebar />

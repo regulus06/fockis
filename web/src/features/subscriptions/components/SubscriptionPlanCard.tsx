@@ -1,8 +1,4 @@
-/* ============================================================================
-   FOCKIS SUBSCRIPTION PLAN CARD
-============================================================================ */
-
-import React from "react";
+import { Check, Minus } from "lucide-react";
 
 import type {
   BillingInterval,
@@ -10,387 +6,191 @@ import type {
   SubscriptionPlanConfig,
 } from "../types/subscriptionTypes";
 
+import { getSubscriptionPlanTheme } from "../config/subscriptionPlanThemes";
+
+import {
+  formatMoney,
+  getPlanLabel,
+  getPlanPrice,
+  getPlanRank,
+  getYearlySavingsPercent,
+  normalizeSubscriptionFeatures,
+} from "../utils/subscriptionPlanUtils";
+import type { PlanCardAction } from "../utils/subscriptionPlanUtils";
 
 /* ============================================================================
-   PROPS
+   FOCKIS SUBSCRIPTION PLAN CARD
+
+   Presentation only. Everything shown comes from the backend plan
+   config; the gemstone art comes from subscriptionPlanThemes.
+
+   `action` decides the button. When it is omitted (legacy callers)
+   the card falls back to "current / choose" behaviour.
 ============================================================================ */
 
 interface Props {
   config: SubscriptionPlanConfig;
-
   currentPlan: SubscriptionPlan;
-
   billingInterval: BillingInterval;
-
   loading?: boolean;
-
-  onSelect: (
-    plan: SubscriptionPlan,
-  ) => void;
+  /** True while THIS plan's checkout is being created. */
+  pending?: boolean;
+  action?: PlanCardAction;
+  onSelect: (plan: SubscriptionPlan) => void;
 }
-
-
-/* ============================================================================
-   FORMAT PRICE
-============================================================================ */
-
-function formatPrice(
-  price: number,
-  currency: string = "USD",
-): string {
-
-  return new Intl.NumberFormat(
-    "en-US",
-    {
-      style: "currency",
-      currency: currency.toUpperCase(),
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    },
-  ).format(price);
-}
-
-
-/* ============================================================================
-   PLAN RANK
-============================================================================ */
-
-function getRank(
-  plan: SubscriptionPlan,
-): number {
-
-  switch (plan) {
-
-    case "DIAMOND":
-      return 5;
-
-    case "GOLDEN":
-      return 4;
-
-    case "SILVER":
-      return 3;
-
-    case "BRONZE":
-      return 2;
-
-    case "BASIC":
-    default:
-      return 1;
-  }
-}
-
-
-/* ============================================================================
-   HIGHLIGHTED PLAN
-============================================================================ */
-
-/*
- * Silver is currently the recommended plan.
- *
- * If the backend plan configuration later exposes
- * a "popular" property, this can be changed to:
- *
- * config.popular
- */
-
-function isHighlightedPlan(
-  plan: SubscriptionPlan,
-): boolean {
-
-  return plan === "SILVER";
-}
-
-
-/* ============================================================================
-   COMPONENT
-============================================================================ */
 
 export default function SubscriptionPlanCard({
   config,
   currentPlan,
   billingInterval,
   loading = false,
+  pending = false,
+  action,
   onSelect,
 }: Props) {
+  const theme = getSubscriptionPlanTheme(config.plan);
+  const name = getPlanLabel(config.plan, [config]);
+  const rank = config.rank ?? getPlanRank(config.plan);
+  const features = normalizeSubscriptionFeatures(config.features);
+  const price = getPlanPrice(config, billingInterval);
+  const currency = config.currency || "USD";
+  const savings = billingInterval === "YEARLY" ? getYearlySavingsPercent(config) : null;
+  const intervalWord = billingInterval === "YEARLY" ? "year" : "month";
 
+  const resolvedAction: PlanCardAction =
+    action ??
+    (currentPlan === config.plan
+      ? { kind: "current", label: "Your current plan", disabled: true }
+      : { kind: "checkout", label: `Choose ${name}`, disabled: price === null });
 
-  /* --------------------------------------------------------------------------
-     CURRENT PLAN
-  -------------------------------------------------------------------------- */
+  const isCurrent = resolvedAction.kind === "current";
+  const isFeatured = config.plan === "DIAMOND";
+  const buttonDisabled = resolvedAction.disabled || loading;
+  const headingId = `fk-sub-plan-${config.plan.toLowerCase()}`;
+  const hintId = resolvedAction.hint ? `${headingId}-hint` : undefined;
 
-  const isCurrent =
-    currentPlan === config.plan;
-
-
-  /* --------------------------------------------------------------------------
-     PLAN RANK
-  -------------------------------------------------------------------------- */
-
-  const currentRank =
-    getRank(currentPlan);
-
-  const planRank =
-    getRank(config.plan);
-
-
-  const isUpgrade =
-    planRank > currentRank;
-
-
-  const isDowngrade =
-    planRank < currentRank;
-
-
-  /* --------------------------------------------------------------------------
-     HIGHLIGHT
-  -------------------------------------------------------------------------- */
-
-  const highlighted =
-    isHighlightedPlan(
-      config.plan,
-    );
-
-
-  /* --------------------------------------------------------------------------
-     PRICE
-  -------------------------------------------------------------------------- */
-
-  const price =
-    billingInterval === "YEARLY"
-      ? config.yearlyPrice
-      : config.monthlyPrice;
-
-
-  /* --------------------------------------------------------------------------
-     CURRENCY
-  -------------------------------------------------------------------------- */
-
-  const currency =
-    config.currency || "USD";
-
-
-  /* --------------------------------------------------------------------------
-     BUTTON TEXT
-  -------------------------------------------------------------------------- */
-
-  let buttonText =
-    "Choose plan";
-
-
-  if (isCurrent) {
-
-    buttonText =
-      "Current plan";
-
-  } else if (isUpgrade) {
-
-    buttonText =
-      `Upgrade to ${config.name}`;
-
-  } else if (isDowngrade) {
-
-    buttonText =
-      `Switch to ${config.name}`;
-
-  }
-
-
-  /* --------------------------------------------------------------------------
-     CARD CLASSES
-  -------------------------------------------------------------------------- */
-
-  const cardClasses = [
-    "fk-subscription-plan",
-
-    highlighted
-      ? "fk-subscription-plan--highlighted"
-      : "",
-
-    isCurrent
-      ? "fk-subscription-plan--current"
-      : "",
+  const classes = [
+    "fk-sub-plan",
+    `fk-sub-plan--${theme.key}`,
+    isCurrent ? "is-current" : "",
+    isFeatured ? "is-featured" : "",
+    config.popular ? "is-popular" : "",
   ]
     .filter(Boolean)
     .join(" ");
 
-
-  /* ==========================================================================
-     RENDER
-  ========================================================================== */
-
   return (
+    <article className={classes} aria-labelledby={headingId}>
+      <div className="fk-sub-plan__media">
+        <img
+          src={theme.image}
+          alt={theme.imageAlt}
+          width={266}
+          height={156}
+          loading="lazy"
+          decoding="async"
+        />
 
-    <article
-      className={cardClasses}
-    >
+        {(isCurrent || config.popular || isFeatured) && (
+          <div className="fk-sub-plan__flags">
+            {isCurrent && <span className="fk-sub-flag fk-sub-flag--current">Current plan</span>}
+            {!isCurrent && config.popular && <span className="fk-sub-flag fk-sub-flag--popular">Most popular</span>}
+            {!isCurrent && !config.popular && isFeatured && (
+              <span className="fk-sub-flag fk-sub-flag--featured">Top tier</span>
+            )}
+          </div>
+        )}
+      </div>
 
-      {/* ================================================================
-          MOST POPULAR
-      ================================================================ */}
+      <div className="fk-sub-plan__body">
+        <span className="fk-sub-plan__level">Level {rank}</span>
 
-      {highlighted && (
-
-        <div
-          className="fk-subscription-plan__popular"
-        >
-          Most popular
-        </div>
-
-      )}
-
-
-      {/* ================================================================
-          HEADER
-      ================================================================ */}
-
-      <div
-        className="fk-subscription-plan__header"
-      >
-
-        <span
-          className="fk-subscription-plan__rank"
-        >
-          Level {planRank}
-        </span>
-
-
-        <h3>
-          {config.name}
+        <h3 id={headingId} className="fk-sub-plan__name">
+          {name}
         </h3>
 
+        {config.description?.trim() ? (
+          <p className="fk-sub-plan__description">{config.description.trim()}</p>
+        ) : null}
 
-        <p>
-          {config.description}
+        <div className="fk-sub-plan__price" aria-live="polite">
+          {price === null ? (
+            <span className="fk-sub-plan__amount fk-sub-plan__amount--muted">Price unavailable</span>
+          ) : price === 0 ? (
+            <>
+              <span className="fk-sub-plan__amount">Free</span>
+              <span className="fk-sub-plan__interval">forever</span>
+            </>
+          ) : (
+            <>
+              <span className="fk-sub-plan__amount">{formatMoney(price, currency)}</span>
+              <span className="fk-sub-plan__interval">/{intervalWord}</span>
+            </>
+          )}
+        </div>
+
+        <p className="fk-sub-plan__billing-note">
+          {price === null
+            ? " "
+            : price === 0
+              ? "No payment required"
+              : savings
+                ? `Billed yearly · save ${savings}% vs monthly`
+                : billingInterval === "YEARLY"
+                  ? "Billed once per year"
+                  : "Billed once per month"}
         </p>
 
-      </div>
-
-
-      {/* ================================================================
-          PRICE
-      ================================================================ */}
-
-      <div
-        className="fk-subscription-plan__price"
-      >
-
-        <strong>
-
-          {price === 0
-            ? "Free"
-            : formatPrice(
-                price,
-                currency,
-              )}
-
-        </strong>
-
-
-        {price > 0 && (
-
-          <span>
-
-            /
-            {billingInterval === "YEARLY"
-              ? "year"
-              : "month"}
-
-          </span>
-
-        )}
-
-      </div>
-
-
-      {/* ================================================================
-          FEATURES
-      ================================================================ */}
-
-      <ul
-        className="fk-subscription-plan__features"
-      >
-
-        {config.features.map(
-          (
-            feature,
-            index,
-          ) => (
-
-            <li
-              key={`${config.plan}-feature-${index}`}
-              className={
-                feature.included
-                  ? "fk-subscription-feature--included"
-                  : "fk-subscription-feature--excluded"
-              }
-            >
-
-              <span
-                className="fk-subscription-feature__icon"
-                aria-hidden="true"
+        {features.length > 0 ? (
+          <ul className="fk-sub-plan__features" aria-label={`${name} features`}>
+            {features.map((feature, index) => (
+              <li
+                key={`${config.plan}-${index}-${feature.name}`}
+                className={feature.included ? "is-included" : "is-excluded"}
               >
-                {feature.included
-                  ? "✓"
-                  : "×"}
-              </span>
-
-
-              <span
-                className="fk-subscription-feature__content"
-              >
-
-                <span
-                  className="fk-subscription-feature__name"
-                >
-                  {feature.name}
+                <span className="fk-sub-plan__feature-icon" aria-hidden="true">
+                  {feature.included ? <Check size={14} strokeWidth={3} /> : <Minus size={14} strokeWidth={3} />}
                 </span>
-
-
-                {feature.description && (
-
-                  <span
-                    className="fk-subscription-feature__description"
-                  >
-                    {feature.description}
-                  </span>
-
-                )}
-
-              </span>
-
-            </li>
-
-          ),
+                <span className="fk-sub-plan__feature-text">
+                  {!feature.included && <span className="fk-sub-sr-only">Not included: </span>}
+                  {feature.name}
+                  {feature.description && <small>{feature.description}</small>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="fk-sub-plan__features-empty">Plan features are being updated.</p>
         )}
 
-      </ul>
+        <div className="fk-sub-plan__footer">
+          <button
+            type="button"
+            className={`fk-sub-plan__button fk-sub-plan__button--${resolvedAction.kind}`}
+            disabled={buttonDisabled}
+            aria-describedby={hintId}
+            aria-busy={pending || undefined}
+            onClick={() => {
+              if (!buttonDisabled) onSelect(config.plan);
+            }}
+          >
+            {pending ? (
+              <>
+                <span className="fk-sub-spinner" aria-hidden="true" />
+                Opening checkout…
+              </>
+            ) : (
+              resolvedAction.label
+            )}
+          </button>
 
-
-      {/* ================================================================
-          SELECT BUTTON
-      ================================================================ */}
-
-      <button
-        type="button"
-        className="fk-subscription-plan__button"
-        disabled={
-          isCurrent ||
-          loading
-        }
-        onClick={() =>
-          onSelect(
-            config.plan,
-          )
-        }
-      >
-
-        {loading
-          ? "Processing..."
-          : buttonText}
-
-      </button>
-
+          {resolvedAction.hint && (
+            <p id={hintId} className="fk-sub-plan__hint">
+              {resolvedAction.hint}
+            </p>
+          )}
+        </div>
+      </div>
     </article>
-
   );
 }

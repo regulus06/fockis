@@ -1,0 +1,1142 @@
+@use "./fkb-tokens" as *;
+
+// ============================================================================
+// FOCKIS BUSINESSES — SHARED UI
+//
+// Tokens, buttons, badges, chips, cards, rails, skeletons and empty states
+// used across every Businesses page and component. Everything is namespaced
+// with `fkb-` so it cannot collide with other Fockis stylesheets.
+// ============================================================================
+
+.fkb {
+  --fkb-accent: #f97316;
+  --fkb-accent-hover: #ea580c;
+  --fkb-accent-soft: #fff7ed;
+  --fkb-accent-soft-border: #fed7aa;
+  --fkb-accent-text: #c2410c;
+
+  --fkb-navy: #172033;
+  --fkb-navy-soft: #eef1f6;
+
+  --fkb-bg: #f7f8fa;
+  --fkb-surface: #ffffff;
+  --fkb-surface-muted: #f8fafc;
+  --fkb-text: #172033;
+  --fkb-text-muted: #64748b;
+  --fkb-border: #e5e7eb;
+  --fkb-border-strong: #cbd5e1;
+
+  --fkb-success: #15803d;
+  --fkb-success-soft: #f0fdf4;
+  --fkb-warning: #b45309;
+  --fkb-warning-soft: #fffbeb;
+  --fkb-danger: #b91c1c;
+  --fkb-danger-soft: #fef2f2;
+  --fkb-info: #1d4ed8;
+  --fkb-info-soft: #eff6ff;
+
+  --fkb-focus: #2563eb;
+
+  --fkb-radius-sm: 8px;
+  --fkb-radius-md: 12px;
+  --fkb-radius-lg: 16px;
+  --fkb-radius-pill: 999px;
+
+  --fkb-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --fkb-shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
+  --fkb-shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.12);
+
+  --fkb-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  color: var(--fkb-text);
+  font-family: inherit;
+  text-align: left;
+  letter-spacing: normal;
+  line-height: 1.5;
+  box-sizing: border-box;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  :where(h1, h2, h3, h4) {
+    color: var(--fkb-text);
+    font-family: inherit;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    margin: 0;
+  }
+
+  :where(p) {
+    margin: 0;
+  }
+
+  :where(img) {
+    max-width: 100%;
+  }
+
+  :where(a) {
+    color: inherit;
+  }
+
+  :focus-visible {
+    @include fkb-focus-ring;
+  }
+}
+
+// ============================================================================
+// PAGE SHELL
+// ============================================================================
+
+.fkb-page {
+  width: 100%;
+  min-height: 100%;
+  background: var(--fkb-bg);
+  padding: 24px 16px 64px;
+
+  @include fkb-up($fkb-bp-md) {
+    padding: 32px 24px 80px;
+  }
+}
+
+.fkb-container {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.fkb-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.fkb-eyebrow {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fkb-accent-text);
+}
+
+.fkb-muted {
+  color: var(--fkb-text-muted);
+}
+
+// ============================================================================
+// BUTTONS
+// ============================================================================
+
+.fkb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: var(--fkb-radius-sm);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.15s var(--fkb-ease),
+    border-color 0.15s var(--fkb-ease),
+    color 0.15s var(--fkb-ease),
+    box-shadow 0.15s var(--fkb-ease);
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  &:disabled,
+  &[aria-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &--primary {
+    background: var(--fkb-accent);
+    border-color: var(--fkb-accent);
+    color: var(--fkb-navy);
+
+    &:hover:not(:disabled) {
+      background: var(--fkb-accent-hover);
+      border-color: var(--fkb-accent-hover);
+    }
+  }
+
+  &--dark {
+    background: var(--fkb-navy);
+    border-color: var(--fkb-navy);
+    color: #ffffff;
+
+    &:hover:not(:disabled) {
+      background: #24304a;
+    }
+  }
+
+  &--secondary {
+    background: var(--fkb-surface);
+    border-color: var(--fkb-border-strong);
+    color: var(--fkb-text);
+
+    &:hover:not(:disabled) {
+      border-color: var(--fkb-navy);
+      background: var(--fkb-surface-muted);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--fkb-text);
+
+    &:hover:not(:disabled) {
+      background: var(--fkb-navy-soft);
+    }
+  }
+
+  &--danger {
+    background: var(--fkb-surface);
+    border-color: #fecaca;
+    color: var(--fkb-danger);
+
+    &:hover:not(:disabled) {
+      background: var(--fkb-danger-soft);
+    }
+  }
+
+  &--danger-solid {
+    background: var(--fkb-danger);
+    border-color: var(--fkb-danger);
+    color: #ffffff;
+
+    &:hover:not(:disabled) {
+      background: #991b1b;
+    }
+  }
+
+  &--sm {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 0.875rem;
+  }
+
+  &--lg {
+    min-height: 48px;
+    padding: 0 22px;
+    font-size: 1rem;
+  }
+
+  &--block {
+    width: 100%;
+  }
+
+  &--icon {
+    width: 42px;
+    padding: 0;
+  }
+}
+
+.fkb-spin {
+  animation: fkb-spin 0.9s linear infinite;
+}
+
+@keyframes fkb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ============================================================================
+// BADGES & CHIPS
+// ============================================================================
+
+.fkb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: var(--fkb-radius-pill);
+  background: var(--fkb-navy-soft);
+  color: var(--fkb-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+
+  &--verified {
+    background: var(--fkb-info-soft);
+    color: var(--fkb-info);
+  }
+
+  &--accent {
+    background: var(--fkb-accent-soft);
+    color: var(--fkb-accent-text);
+  }
+
+  &--success {
+    background: var(--fkb-success-soft);
+    color: var(--fkb-success);
+  }
+
+  &--warning {
+    background: var(--fkb-warning-soft);
+    color: var(--fkb-warning);
+  }
+
+  &--danger {
+    background: var(--fkb-danger-soft);
+    color: var(--fkb-danger);
+  }
+
+  &--neutral {
+    background: var(--fkb-navy-soft);
+    color: var(--fkb-text-muted);
+  }
+}
+
+.fkb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--fkb-border);
+  border-radius: var(--fkb-radius-pill);
+  background: var(--fkb-surface);
+  color: var(--fkb-text);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.15s var(--fkb-ease),
+    border-color 0.15s var(--fkb-ease);
+
+  &:hover {
+    border-color: var(--fkb-border-strong);
+  }
+
+  &[aria-pressed="true"] {
+    background: var(--fkb-navy);
+    border-color: var(--fkb-navy);
+    color: #ffffff;
+  }
+}
+
+// ============================================================================
+// SECTION HEADER
+// ============================================================================
+
+.fkb-section {
+  margin-top: 40px;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
+.fkb-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin-top: 4px;
+    color: var(--fkb-text-muted);
+    font-size: 0.9375rem;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+}
+
+.fkb-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--fkb-accent-text);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ============================================================================
+// IMAGES (logo + cover with local fallbacks)
+// ============================================================================
+
+.fkb-logo {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--fkb-logo-size, 56px);
+  height: var(--fkb-logo-size, 56px);
+  border-radius: var(--fkb-radius-md);
+  background: var(--fkb-navy);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: calc(var(--fkb-logo-size, 56px) * 0.36);
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  user-select: none;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #ffffff;
+  }
+
+  &--ring {
+    border: 3px solid var(--fkb-surface);
+    box-shadow: var(--fkb-shadow-md);
+  }
+
+  &--round {
+    border-radius: 50%;
+  }
+}
+
+.fkb-cover {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: var(--fkb-cover-ratio, 16 / 9);
+  overflow: hidden;
+  background: var(--fkb-navy-soft);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(249, 115, 22, 0.12), transparent 55%),
+      var(--fkb-navy-soft);
+    color: #94a3b8;
+
+    svg {
+      width: 36%;
+      max-width: 72px;
+      height: auto;
+    }
+  }
+}
+
+// ============================================================================
+// BUSINESS CARD
+// ============================================================================
+
+.fkb-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  @include fkb-surface;
+  overflow: hidden;
+  transition:
+    box-shadow 0.2s var(--fkb-ease),
+    transform 0.2s var(--fkb-ease),
+    border-color 0.2s var(--fkb-ease);
+
+  &:hover {
+    box-shadow: var(--fkb-shadow-md);
+    border-color: var(--fkb-border-strong);
+    transform: translateY(-2px);
+  }
+
+  @include fkb-reduced-motion {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+
+  &__media {
+    position: relative;
+    display: block;
+    --fkb-cover-ratio: 16 / 9;
+  }
+
+  &__media-badges {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    pointer-events: none;
+
+    .fkb-badge {
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: var(--fkb-shadow-sm);
+    }
+  }
+
+  &__body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 10px;
+    padding: 0 16px 16px;
+  }
+
+  &__identity {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    .fkb-logo {
+      --fkb-logo-size: 56px;
+      margin-top: -28px;
+    }
+  }
+
+  &__titles {
+    min-width: 0;
+    padding-top: 8px;
+  }
+
+  &__name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    font-size: 1.0625rem;
+    font-weight: 700;
+
+    a {
+      text-decoration: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    svg {
+      flex-shrink: 0;
+      color: var(--fkb-info);
+    }
+  }
+
+  &__category {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 2px;
+    color: var(--fkb-text-muted);
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+
+  &__description {
+    color: var(--fkb-text-muted);
+    font-size: 0.9375rem;
+    @include fkb-line-clamp(2);
+    min-height: calc(1.5em * 2);
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    color: var(--fkb-text-muted);
+    font-size: 0.8125rem;
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+    }
+  }
+
+  &__deal {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px dashed var(--fkb-accent-soft-border);
+    border-radius: var(--fkb-radius-sm);
+    background: var(--fkb-accent-soft);
+    color: var(--fkb-accent-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+
+    span {
+      @include fkb-line-clamp(1);
+    }
+
+    svg {
+      flex-shrink: 0;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 6px;
+
+    .fkb-btn {
+      flex: 1 1 auto;
+    }
+  }
+
+  // Compact cards used in horizontal rails.
+  &--compact {
+    .fkb-card__description {
+      min-height: 0;
+    }
+  }
+}
+
+// ============================================================================
+// GRID & RAIL
+// ============================================================================
+
+.fkb-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+}
+
+.fkb-rail {
+  position: relative;
+
+  &__track {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(260px, 300px);
+    gap: 16px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 2px;
+    padding: 2px 2px 12px;
+    scrollbar-width: thin;
+
+    > * {
+      scroll-snap-align: start;
+    }
+
+    @include fkb-down($fkb-bp-sm) {
+      grid-auto-columns: 82%;
+    }
+  }
+
+  &__nav {
+    display: none;
+    gap: 8px;
+
+    @include fkb-up($fkb-bp-md) {
+      display: inline-flex;
+    }
+  }
+}
+
+// ============================================================================
+// SKELETONS
+// ============================================================================
+
+.fkb-skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--fkb-radius-sm);
+  background: #eceff3;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    animation: fkb-shimmer 1.4s infinite;
+  }
+
+  @include fkb-reduced-motion {
+    &::after {
+      animation: none;
+    }
+  }
+}
+
+@keyframes fkb-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.fkb-card-skeleton {
+  @include fkb-surface;
+  overflow: hidden;
+
+  &__cover {
+    aspect-ratio: 16 / 9;
+    border-radius: 0;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+  }
+
+  &__line {
+    height: 12px;
+
+    &--title {
+      height: 18px;
+      width: 60%;
+    }
+
+    &--short {
+      width: 40%;
+    }
+  }
+}
+
+// ============================================================================
+// STATES
+// ============================================================================
+
+.fkb-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 24px;
+  border: 1px dashed var(--fkb-border-strong);
+  border-radius: var(--fkb-radius-lg);
+  background: var(--fkb-surface);
+  text-align: center;
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--fkb-navy-soft);
+    color: var(--fkb-text-muted);
+  }
+
+  h2,
+  h3 {
+    font-size: 1.0625rem;
+    font-weight: 700;
+  }
+
+  p {
+    max-width: 440px;
+    color: var(--fkb-text-muted);
+    font-size: 0.9375rem;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  &--error {
+    border-style: solid;
+    border-color: #fecaca;
+    background: var(--fkb-danger-soft);
+
+    .fkb-state__icon {
+      background: #fee2e2;
+      color: var(--fkb-danger);
+    }
+  }
+
+  &--compact {
+    padding: 24px 16px;
+  }
+}
+
+.fkb-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--fkb-radius-md);
+  border: 1px solid;
+  font-size: 0.9375rem;
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  &--error {
+    background: var(--fkb-danger-soft);
+    border-color: #fecaca;
+    color: var(--fkb-danger);
+  }
+
+  &--success {
+    background: var(--fkb-success-soft);
+    border-color: #bbf7d0;
+    color: var(--fkb-success);
+  }
+
+  &--info {
+    background: var(--fkb-info-soft);
+    border-color: #bfdbfe;
+    color: var(--fkb-info);
+  }
+
+  &--warning {
+    background: var(--fkb-warning-soft);
+    border-color: #fde68a;
+    color: var(--fkb-warning);
+  }
+}
+
+// ============================================================================
+// FORM CONTROLS (shared by business and deal forms)
+// ============================================================================
+
+.fkb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+
+  &__label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--fkb-text);
+  }
+
+  &__required {
+    color: var(--fkb-danger);
+    margin-left: 2px;
+  }
+
+  &__hint {
+    font-size: 0.8125rem;
+    color: var(--fkb-text-muted);
+  }
+
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--fkb-danger);
+  }
+
+  &--full {
+    grid-column: 1 / -1;
+  }
+}
+
+.fkb-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--fkb-border-strong);
+  border-radius: var(--fkb-radius-sm);
+  background: var(--fkb-surface);
+  color: var(--fkb-text);
+  font: inherit;
+  font-size: 0.9375rem;
+  transition:
+    border-color 0.15s var(--fkb-ease),
+    box-shadow 0.15s var(--fkb-ease);
+
+  &::placeholder {
+    color: #94a3b8;
+  }
+
+  &:hover {
+    border-color: #94a3b8;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--fkb-focus);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+  }
+
+  &[aria-invalid="true"] {
+    border-color: var(--fkb-danger);
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.15);
+    }
+  }
+
+  &:disabled {
+    background: var(--fkb-surface-muted);
+    color: var(--fkb-text-muted);
+  }
+}
+
+textarea.fkb-input {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+select.fkb-input {
+  appearance: none;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.fkb-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  > svg {
+    position: absolute;
+    left: 12px;
+    color: var(--fkb-text-muted);
+    pointer-events: none;
+  }
+
+  .fkb-input {
+    padding-left: 38px;
+  }
+}
+
+.fkb-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--fkb-border);
+  border-radius: var(--fkb-radius-md);
+  background: var(--fkb-surface);
+  cursor: pointer;
+
+  input {
+    width: 18px;
+    height: 18px;
+    margin: 2px 0 0;
+    accent-color: var(--fkb-accent-hover);
+    flex-shrink: 0;
+  }
+
+  strong {
+    display: block;
+    font-size: 0.9375rem;
+  }
+
+  small {
+    display: block;
+    margin-top: 2px;
+    color: var(--fkb-text-muted);
+    font-size: 0.8125rem;
+  }
+
+  &:has(input:checked) {
+    border-color: var(--fkb-accent-soft-border);
+    background: var(--fkb-accent-soft);
+  }
+
+  &:has(input:disabled) {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
+// ============================================================================
+// DIALOG
+// ============================================================================
+
+.fkb-dialog {
+  width: min(440px, calc(100vw - 32px));
+  padding: 24px;
+  border: 0;
+  border-radius: var(--fkb-radius-lg);
+  box-shadow: var(--fkb-shadow-lg);
+  color: var(--fkb-text);
+
+  &::backdrop {
+    background: rgba(15, 23, 42, 0.5);
+  }
+
+  h2 {
+    font-size: 1.125rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin-top: 8px;
+    color: var(--fkb-text-muted);
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 20px;
+  }
+}
+
+// ============================================================================
+// TOAST
+// ============================================================================
+
+.fkb-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: var(--fkb-radius-pill);
+  background: var(--fkb-navy);
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: var(--fkb-shadow-lg);
+  transform: translateX(-50%);
+  animation: fkb-toast-in 0.2s var(--fkb-ease);
+
+  @include fkb-reduced-motion {
+    animation: none;
+  }
+}
+
+@keyframes fkb-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+
+// ============================================================================
+// OFFERS & COUPONS (deals rail + business profile)
+// ============================================================================
+
+.fkb-offer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border: 1px dashed var(--fkb-accent-soft-border, #fed7aa);
+  border-radius: var(--fkb-radius-md, 12px);
+  background: var(--fkb-accent-soft, #fff7ed);
+
+  &__discount {
+    color: var(--fkb-accent-text, #c2410c);
+    font-size: 1.25rem;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  &__title {
+    font-weight: 600;
+    font-size: 0.9375rem;
+  }
+
+  &__description {
+    color: var(--fkb-text-muted, #64748b);
+    font-size: 0.8125rem;
+    @include fkb-line-clamp(2);
+  }
+
+  &__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  &__expiry {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--fkb-text-muted, #64748b);
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+}
+
+.fkb-coupon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--fkb-border-strong, #cbd5e1);
+  border-radius: var(--fkb-radius-sm, 8px);
+  background: var(--fkb-surface, #ffffff);
+  color: var(--fkb-text, #172033);
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--fkb-navy, #172033);
+  }
+}
