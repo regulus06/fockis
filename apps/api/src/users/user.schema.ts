@@ -62,43 +62,43 @@ export class User {
 
   /**
 
-   * Permanent internal Fockis identity.
+   \* Permanent internal Fockis identity.
 
-   *
+   \*
 
-   * Format:
+   \* Format:
 
-   * FK + 6 uppercase characters
+   \* FK + 6 uppercase characters
 
-   *
+   \*
 
-   * Example:
+   \* Example:
 
-   * FK7Q2M8A
+   \* FK7Q2M8A
 
-   *
+   \*
 
-   * IMPORTANT:
+   \* IMPORTANT:
 
-   * This value is the globally unique identity.
+   \* This value is the globally unique identity.
 
-   *
+   \*
 
-   * It does NOT contain the country/calling code.
+   \* It does NOT contain the country/calling code.
 
-   *
+   \*
 
-   * Public identity is generated from:
+   \* Public identity is generated from:
 
-   *
+   \*
 
-   * callingCode + "-" + fockisId
+   \* callingCode + "-" + fockisId
 
-   *
+   \*
 
-   * Example:
+   \* Example:
 
-   * +509-FK7Q2M8A
+   \* +509-FK7Q2M8A
 
    */
 
@@ -136,35 +136,35 @@ export class User {
 
   /**
 
-   * ISO 3166-1 alpha-2 country code.
+   \* ISO 3166-1 alpha-2 country code.
 
-   *
+   \*
 
-   * Examples:
+   \* Examples:
 
-   * US = United States
+   \* US = United States
 
-   * HT = Haiti
+   \* HT = Haiti
 
-   * DO = Dominican Republic
+   \* DO = Dominican Republic
 
-   * CA = Canada
+   \* CA = Canada
 
-   * FR = France
+   \* FR = France
 
-   *
+   \*
 
-   * This is NOT a phone number.
+   \* This is NOT a phone number.
 
-   *
+   \*
 
-   * New accounts should provide this during registration.
+   \* New accounts should provide this during registration.
 
-   *
+   \*
 
-   * required:false is intentional for backward compatibility
+   \* required:false is intentional for backward compatibility
 
-   * with existing/test accounts created before country support.
+   \* with existing/test accounts created before country support.
 
    */
 
@@ -198,53 +198,53 @@ export class User {
 
   /**
 
-   * International calling code associated with countryCode.
+   \* International calling code associated with countryCode.
 
-   *
+   \*
 
-   * Examples:
+   \* Examples:
 
-   * US -> +1
+   \* US -> +1
 
-   * HT -> +509
+   \* HT -> +509
 
-   * DO -> +1
+   \* DO -> +1
 
-   * CA -> +1
+   \* CA -> +1
 
-   * FR -> +33
+   \* FR -> +33
 
-   *
+   \*
 
-   * IMPORTANT:
+   \* IMPORTANT:
 
-   *
+   \*
 
-   * This is NOT the user's phone number.
+   \* This is NOT the user's phone number.
 
-   *
+   \*
 
-   * Multiple countries/territories can share
+   \* Multiple countries/territories can share
 
-   * the same calling code.
+   \* the same calling code.
 
-   *
+   \*
 
-   * Therefore callingCode is NOT unique.
+   \* Therefore callingCode is NOT unique.
 
-   *
+   \*
 
-   * The backend determines this value from
+   \* The backend determines this value from
 
-   * countryCode. It should not be trusted from
+   \* countryCode. It should not be trusted from
 
-   * the frontend.
+   \* the frontend.
 
-   *
+   \*
 
-   * required:false is intentional for backward compatibility
+   \* required:false is intentional for backward compatibility
 
-   * with existing/test accounts created before country support.
+   \* with existing/test accounts created before country support.
 
    */
 
@@ -272,7 +272,7 @@ export class User {
 
   /**
 
-   * Whether the user has paid for Fockis ID access.
+   \* Whether the user has paid for Fockis ID access.
 
    */
 
@@ -290,7 +290,7 @@ export class User {
 
   /**
 
-   * Date/time when Fockis ID access was successfully paid.
+   \* Date/time when Fockis ID access was successfully paid.
 
    */
 
@@ -306,9 +306,9 @@ export class User {
 
   /**
 
-   * Stripe payment identifier associated with
+   \* Stripe payment identifier associated with
 
-   * the successful Fockis ID access payment.
+   \* the successful Fockis ID access payment.
 
    */
 
@@ -779,17 +779,17 @@ export class User {
 
   /**
 
-   * Existing phone field.
+   \* Existing phone field.
 
-   *
+   \*
 
-   * This remains separate from Fockis ID.
+   \* This remains separate from Fockis ID.
 
-   *
+   \*
 
-   * Fockis registration does NOT require
+   \* Fockis registration does NOT require
 
-   * a phone number.
+   \* a phone number.
 
    */
 
@@ -917,27 +917,27 @@ export class User {
 
   /**
 
-   * Permanent Fockis system role.
+   \* Permanent Fockis system role.
 
-   *
+   \*
 
-   * These are the only permanent system roles:
+   \* These are the only permanent system roles:
 
-   *
+   \*
 
-   * user
+   \* user
 
-   * moderator
+   \* moderator
 
-   * admin
+   \* admin
 
-   * super_admin
+   \* super_admin
 
-   *
+   \*
 
-   * Custom administrative roles must NOT be stored here.
+   \* Custom administrative roles must NOT be stored here.
 
-   * Custom roles use adminRoleId below.
+   \* Custom roles use adminRoleId below.
 
    */
 
@@ -965,41 +965,41 @@ export class User {
 
   /**
 
-   * Custom administrative role assigned to this user.
+   \* Custom administrative role assigned to this user.
 
-   *
+   \*
 
-   * References the AdminRole collection.
+   \* References the AdminRole collection.
 
-   *
+   \*
 
-   * Examples:
+   \* Examples:
 
-   *
+   \*
 
-   * Real Estate Agent
+   \* Real Estate Agent
 
-   * Career Recruiter
+   \* Career Recruiter
 
-   * Marketplace Moderator
+   \* Marketplace Moderator
 
-   * Marketing Analyst
+   \* Marketing Analyst
 
-   * Finance Analyst
+   \* Finance Analyst
 
-   * Academy Instructor
+   \* Academy Instructor
 
-   * Travel Partner Manager
+   \* Travel Partner Manager
 
-   * Content Moderator
+   \* Content Moderator
 
-   * Support Agent
+   \* Support Agent
 
-   *
+   \*
 
-   * This is intentionally separate from the permanent
+   \* This is intentionally separate from the permanent
 
-   * system role above.
+   \* system role above.
 
    */
 
@@ -1019,13 +1019,13 @@ export class User {
 
   /**
 
-   * Direct permissions assigned to the user.
+   \* Direct permissions assigned to the user.
 
-   *
+   \*
 
-   * These can continue to be used by the existing
+   \* These can continue to be used by the existing
 
-   * permission system.
+   \* permission system.
 
    */
 
@@ -1307,23 +1307,23 @@ UserSchema.index({
 
 /**
 
- * Allows efficient lookup of:
+ \* Allows efficient lookup of:
 
- *
+ \*
 
- * +509-FK7Q2M8A
+ \* +509-FK7Q2M8A
 
- *
+ \*
 
- * by:
+ \* by:
 
- *
+ \*
 
- * callingCode + fockisId
+ \* callingCode + fockisId
 
- *
+ \*
 
- * The Fockis ID itself remains globally unique.
+ \* The Fockis ID itself remains globally unique.
 
  */
 
@@ -1343,15 +1343,12 @@ UserSchema.index({
 
 /**
 
- * Allows efficient lookup of users assigned
+ \* Allows efficient lookup of users assigned
 
- * to a specific custom administrative role.
+ \* to a specific custom administrative role.
 
  */
 
 UserSchema.index({
-
   adminRoleId: 1,
-
 });
-
