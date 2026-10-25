@@ -1,208 +1,75 @@
-import React, { useEffect, useState } from "react";
-import { Radio, Users, Video } from "lucide-react";
+import type { ReactNode } from "react";
 
-import { liveApi } from "../../../my-live/api";
+import { Users } from "lucide-react";
 
-interface LiveStream {
-  id: string;
+import "./FockisRail.scss";
+
+/*
+ * ============================================================================
+ * FOCKIS RAIL
+ *
+ * Shared frame for the friend rails shown between feed posts
+ * (MyFriendsRail, PeopleYouMayKnowRail): a header with a title and an
+ * optional "See all" link, and the rail's cards below.
+ *
+ * It renders exactly what it is given. Each rail decides on its own to
+ * render nothing when it has nothing to show, so no empty box is left in
+ * the feed.
+ *
+ * Same frame markup as FriendRequestsRail, so all friend rails match.
+ * ============================================================================
+ */
+
+interface FockisRailProps {
   title: string;
-  description?: string;
-  displayName: string;
-  username?: string;
-  avatar?: string;
-  viewers?: number;
-  thumbnailUrl?: string;
-  status?: string;
+  /** Link for "See all". Omit to hide it. */
+  seeAllHref?: string;
+  seeAllLabel?: string;
+  /** Header icon. Defaults to the people icon. */
+  icon?: ReactNode;
+  className?: string;
+  children: ReactNode;
 }
 
-export default function LiveStreamsRail() {
-  const [streams, setStreams] = useState<LiveStream[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadLiveStreams() {
-      try {
-        setLoading(true);
-
-        const result = await liveApi.getPublicLiveStreams();
-
-        if (!mounted) {
-          return;
-        }
-
-        const list = Array.isArray(result)
-          ? result
-          : Array.isArray((result as any)?.streams)
-            ? (result as any).streams
-            : [];
-
-        setStreams(
-          list.filter(
-            (stream: LiveStream) =>
-              stream &&
-              stream.status !== "ended",
-          ),
-        );
-      } catch (error) {
-        console.error(
-          "[LiveStreamsRail] Failed to load live streams:",
-          error,
-        );
-
-        if (mounted) {
-          setStreams([]);
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void loadLiveStreams();
-
-    const interval = window.setInterval(
-      loadLiveStreams,
-      30000,
-    );
-
-    return () => {
-      mounted = false;
-      window.clearInterval(interval);
-    };
-  }, []);
-
-  function openStream(streamId: string) {
-    window.location.href = `/live/${streamId}`;
-  }
-
+export default function FockisRail({
+  title,
+  seeAllHref,
+  seeAllLabel = "See all",
+  icon,
+  className,
+  children,
+}: FockisRailProps) {
   return (
     <section
-      className="fk-live-rail"
-      aria-label="Live now"
+      className={[
+        "fk-right-rail__section",
+        "fk-friend-rail",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      aria-label={title}
     >
-      <div className="fk-live-rail__header">
-        <div className="fk-live-rail__title">
-          <span className="fk-live-rail__live-icon">
-            <Radio size={16} />
-          </span>
+      <div className="fk-right-rail__section-header">
+        <div className="fk-right-rail__section-title">
+          {icon ?? <Users size={18} aria-hidden="true" />}
 
-          <div>
-            <h2>Live Now</h2>
-            <p>People streaming on Fockis</p>
-          </div>
+          <h2>{title}</h2>
         </div>
 
-        {streams.length > 0 && (
-          <span className="fk-live-rail__count">
-            {streams.length} live
-          </span>
+        {seeAllHref && (
+          <a
+            href={seeAllHref}
+            className="fk-right-rail__view-all"
+          >
+            {seeAllLabel}
+          </a>
         )}
       </div>
 
-      {loading && (
-        <div className="fk-live-rail__loading">
-          <div className="fk-live-rail__skeleton" />
-          <div className="fk-live-rail__skeleton" />
-          <div className="fk-live-rail__skeleton" />
-        </div>
-      )}
-
-      {!loading && streams.length === 0 && (
-        <div className="fk-live-rail__empty">
-          <div className="fk-live-rail__empty-icon">
-            <Video size={22} />
-          </div>
-
-          <div>
-            <strong>No one is live right now</strong>
-            <span>
-              When someone starts a public live,
-              it will appear here.
-            </span>
-          </div>
-        </div>
-      )}
-
-      {!loading && streams.length > 0 && (
-        <div className="fk-live-rail__scroller">
-          {streams.map((stream) => (
-            <button
-              key={stream.id}
-              type="button"
-              className="fk-live-card"
-              onClick={() =>
-                openStream(stream.id)
-              }
-            >
-              <div className="fk-live-card__media">
-                {stream.thumbnailUrl ? (
-                  <img
-                    src={stream.thumbnailUrl}
-                    alt=""
-                  />
-                ) : (
-                  <div className="fk-live-card__placeholder">
-                    <Video size={30} />
-                  </div>
-                )}
-
-                <span className="fk-live-card__badge">
-                  <span />
-                  LIVE
-                </span>
-
-                <span className="fk-live-card__viewers">
-                  <Users size={12} />
-                  {stream.viewers ?? 0}
-                </span>
-              </div>
-
-              <div className="fk-live-card__body">
-                <div className="fk-live-card__creator">
-                  {stream.avatar ? (
-                    <img
-                      src={stream.avatar}
-                      alt=""
-                    />
-                  ) : (
-                    <div className="fk-live-card__avatar">
-                      {(
-                        stream.displayName ||
-                        stream.username ||
-                        "F"
-                      )
-                        .charAt(0)
-                        .toUpperCase()}
-                    </div>
-                  )}
-
-                  <div>
-                    <strong>
-                      {stream.displayName ||
-                        stream.username ||
-                        "Fockis User"}
-                    </strong>
-
-                    {stream.username && (
-                      <span>
-                        @{stream.username}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <h3>
-                  {stream.title ||
-                    "Live on Fockis"}
-                </h3>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="fk-friend-rail__list">
+        {children}
+      </div>
     </section>
   );
 }

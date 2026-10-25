@@ -91,13 +91,7 @@ import FockisVideoReel from "./FockisFeedPage/FockisVideoReel";
 
 import FeedRailInsertions from "./FockisFeedPage/FeedRailInsertions";
 
-import {
-
-  getPublicLiveStreams,
-
-  type PublicLiveStream,
-
-} from "./FockisFeedPage/liveStreams";
+import { usePublicLiveStreams } from "./FockisFeedPage/usePublicLiveStreams";
 
 const EMPTY_FEED_COPY: Record<
 
@@ -268,93 +262,13 @@ function FeedInner() {
 
     "/playlists";
 
-  const [
-
-    liveStreams,
-
-    setLiveStreams,
-
-  ] = useState<
-
-    PublicLiveStream[]
-
-  >([]);
-
-  const [
-
-    liveLoading,
-
-    setLiveLoading,
-
-  ] = useState(true);
-
-  useEffect(() => {
-
-    let mounted = true;
-
-    async function loadLiveStreams() {
-
-      try {
-
-        const streams =
-
-          await getPublicLiveStreams();
-
-        if (mounted) {
-
-          setLiveStreams(
-
-            streams,
-
-          );
-
-        }
-
-      } finally {
-
-        if (mounted) {
-
-          setLiveLoading(
-
-            false,
-
-          );
-
-        }
-
-      }
-
-    }
-
-    void loadLiveStreams();
-
-    const interval =
-
-      window.setInterval(
-
-        () => {
-
-          void loadLiveStreams();
-
-        },
-
-        30_000,
-
-      );
-
-    return () => {
-
-      mounted = false;
-
-      window.clearInterval(
-
-        interval,
-
-      );
-
-    };
-
-  }, []);
+  /*
+   * Active public live streams, kept up to date in real time through the
+   * /live socket (no polling). Empty when nobody is live, in which case the
+   * Live Now section is not rendered at all.
+   */
+  const liveStreams =
+    usePublicLiveStreams();
 
   function handleOpenLive(
 
@@ -830,12 +744,6 @@ function FeedInner() {
               streams={
 
                 liveStreams
-
-              }
-
-              loading={
-
-                liveLoading
 
               }
 

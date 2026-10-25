@@ -1,4 +1,8 @@
-import { useState } from "react";
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   Radio,
   Users,
@@ -10,9 +14,26 @@ import type { PublicLiveStream } from "./liveStreams";
 import { FOCKIS_API_URL } from "../../config/fockisConfig";
 
 interface LiveNowRailProps {
+  /** Active public streams. Nothing is rendered when this is empty. */
   streams: PublicLiveStream[];
-  loading: boolean;
   onOpen: (streamId: string) => void;
+}
+
+/*
+ * Chrome, Edge and Firefox keep the reading position on their own when
+ * content above the viewport is added or removed (CSS scroll anchoring).
+ * Elsewhere the rail does it itself.
+ */
+const supportsScrollAnchoring =
+  typeof CSS !== "undefined" &&
+  typeof CSS.supports === "function" &&
+  CSS.supports("overflow-anchor", "auto");
+
+interface RailBox {
+  /** Distance from the top of the document to the rail. */
+  top: number;
+  /** Rail height plus the gap or margin before the next section. */
+  space: number;
 }
 
 /**
@@ -44,15 +65,93 @@ function resolveMediaUrl(value?: string): string {
 
 export default function LiveNowRail({
   streams,
-  loading,
   onOpen,
 }: LiveNowRailProps) {
-  if (!loading && streams.length === 0) {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const boxRef = useRef<RailBox | null>(null);
+  const visible = streams.length > 0;
+
+  useLayoutEffect(() => {
+    const section = sectionRef.current;
+
+    if (!visible || !section) {
+      return;
+    }
+
+    const measure = () => {
+      const rect = section.getBoundingClientRect();
+      const next = section.nextElementSibling;
+
+      // Space the rail takes in the column, including any flex gap or
+      // margin before the next section.
+      const space = next
+        ? next.getBoundingClientRect().top - rect.top
+        : rect.height +
+          (parseFloat(getComputedStyle(section).marginBottom) || 0);
+
+      boxRef.current = {
+        top: rect.top + window.scrollY,
+        space: Math.max(0, space),
+      };
+    };
+
+    measure();
+
+    // Appeared above what the user is reading: keep their position.
+    if (
+      !supportsScrollAnchoring &&
+      boxRef.current &&
+      boxRef.current.top + boxRef.current.space <= window.scrollY
+    ) {
+      window.scrollBy(0, boxRef.current.space);
+      measure();
+    }
+
+    let frame = 0;
+
+    const scheduleMeasure = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(measure);
+    };
+
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(scheduleMeasure)
+        : null;
+
+    resizeObserver?.observe(section);
+    window.addEventListener("scroll", scheduleMeasure, { passive: true });
+    window.addEventListener("resize", scheduleMeasure);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      resizeObserver?.disconnect();
+      window.removeEventListener("scroll", scheduleMeasure);
+      window.removeEventListener("resize", scheduleMeasure);
+
+      // Removed above what the user is reading: keep their position.
+      const box = boxRef.current;
+
+      if (
+        !supportsScrollAnchoring &&
+        box &&
+        box.top + box.space <= window.scrollY
+      ) {
+        window.scrollBy(0, -box.space);
+      }
+
+      boxRef.current = null;
+    };
+  }, [visible]);
+
+  // No public stream is live: render nothing, so no space is reserved.
+  if (!visible) {
     return null;
   }
 
   return (
     <section
+      ref={sectionRef}
       className="fk-live-now-rail"
       aria-label="Live now"
     >
@@ -71,46 +170,23 @@ export default function LiveNowRail({
           </div>
         </div>
 
-        {streams.length > 0 && (
-          <span className="fk-live-now-rail__count">
-            {streams.length} live
-          </span>
-        )}
+        <span className="fk-live-now-rail__count">
+          {streams.length} live
+        </span>
       </div>
 
-      {loading && (
-        <div
-          className="fk-live-now-rail__scroller"
-          aria-live="polite"
-        >
-          {[1, 2, 3, 4].map((item) => (
-            <div
-              key={item}
-              className="fk-live-now-card fk-live-now-card--skeleton"
-              aria-hidden="true"
-            >
-              <div className="fk-live-now-card__avatar-skeleton" />
-              <div className="fk-live-now-card__skeleton-line" />
-              <div className="fk-live-now-card__skeleton-line fk-live-now-card__skeleton-line--small" />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {!loading && streams.length > 0 && (
-        <div
-          className="fk-live-now-rail__scroller"
-          aria-label="Active live streams"
-        >
-          {streams.map((stream) => (
-            <LiveNowCard
-              key={stream.id}
-              stream={stream}
-              onOpen={onOpen}
-            />
-          ))}
-        </div>
-      )}
+      <div
+        className="fk-live-now-rail__scroller"
+        aria-label="Active live streams"
+      >
+        {streams.map((stream) => (
+          <LiveNowCard
+            key={stream.id}
+            stream={stream}
+            onOpen={onOpen}
+          />
+        ))}
+      </div>
     </section>
   );
 }

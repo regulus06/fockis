@@ -69,6 +69,14 @@ export class AuthRegistrationService {
       );
     }
 
+    // Usernames are public (@handle), so they must never be an email
+    // address or anything else that exposes private contact details.
+    if (!/^[a-z0-9._]{3,30}$/.test(normalizedUsername)) {
+      throw new BadRequestException(
+        "Username can only use letters, numbers, dots and underscores (3-30 characters). Do not use your email address.",
+      );
+    }
+
     if (!normalizedEmail) {
       throw new BadRequestException(
         "Email is required.",

@@ -31,6 +31,7 @@ import {
 } from "../dto/live-guest.dto";
 
 import { getUserId } from "../utils/live-room.util";
+import { LiveGateway } from "../gateways/live.gateway";
 
 @Controller("live")
 export class LiveController {
@@ -41,6 +42,7 @@ export class LiveController {
     private readonly discoveryService: LiveDiscoveryService,
     private readonly liveGuestService: LiveGuestService,
     private readonly recordingService: LiveRecordingService,
+    private readonly liveGateway: LiveGateway,
   ) {}
 
   @UseGuards(LiveJwtGuard)
@@ -57,10 +59,18 @@ export class LiveController {
       );
     }
 
-    return this.liveService.create(
-      userId,
-      dto,
+    const stream =
+      await this.liveService.create(
+        userId,
+        dto,
+      );
+
+    // Feed "Live Now" rails show the new stream immediately.
+    this.liveGateway.broadcastPublicStreamStarted(
+      stream,
     );
+
+    return stream;
   }
 
   @Get("public")
@@ -554,6 +564,11 @@ export class LiveController {
       id,
     );
 
+    // Feed "Live Now" rails drop the stream immediately.
+    this.liveGateway.broadcastPublicStreamEnded(
+      id,
+    );
+
     return result;
   }
 
@@ -572,10 +587,17 @@ export class LiveController {
       );
     }
 
-    return this.liveService.delete(
-      userId,
+    const result =
+      await this.liveService.delete(
+        userId,
+        id,
+      );
+
+    this.liveGateway.broadcastPublicStreamEnded(
       id,
     );
+
+    return result;
   }
 
   @Post(":id/share")

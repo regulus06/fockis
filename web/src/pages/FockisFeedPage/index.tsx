@@ -47,10 +47,7 @@ import LiveNowRail from "./LiveNowRail";
 import FockisVideoReel from "./FockisVideoReel";
 import FeedRailInsertions from "./FeedRailInsertions";
 
-import {
-  getPublicLiveStreams,
-  type PublicLiveStream,
-} from "./liveStreams";
+import { usePublicLiveStreams } from "./usePublicLiveStreams";
 
 function FeedInner() {
   const { theme, toggleTheme } =
@@ -72,57 +69,9 @@ function FeedInner() {
     location.pathname ===
     "/playlists";
 
-  const [
-    liveStreams,
-    setLiveStreams,
-  ] = useState<
-    PublicLiveStream[]
-  >([]);
-
-  const [
-    liveLoading,
-    setLiveLoading,
-  ] = useState(true);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadLiveStreams() {
-      try {
-        const streams =
-          await getPublicLiveStreams();
-
-        if (mounted) {
-          setLiveStreams(
-            streams,
-          );
-        }
-      } finally {
-        if (mounted) {
-          setLiveLoading(
-            false,
-          );
-        }
-      }
-    }
-
-    void loadLiveStreams();
-
-    const interval =
-      window.setInterval(
-        () => {
-          void loadLiveStreams();
-        },
-        30_000,
-      );
-
-    return () => {
-      mounted = false;
-      window.clearInterval(
-        interval,
-      );
-    };
-  }, []);
+  // Active public live streams, updated in real time (no polling).
+  const liveStreams =
+    usePublicLiveStreams();
 
   function handleOpenLive(
     streamId: string,
@@ -467,9 +416,6 @@ function FeedInner() {
             <LiveNowRail
               streams={
                 liveStreams
-              }
-              loading={
-                liveLoading
               }
               onOpen={
                 handleOpenLive

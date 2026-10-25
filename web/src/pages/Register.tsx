@@ -2864,6 +2864,14 @@ export default function Register() {
 
     }
 
+    // Usernames are public (@handle): never an email address.
+    if (!/^[a-z0-9._]{3,30}$/i.test(username.trim())) {
+      alert(
+        "Username can only use letters, numbers, dots and underscores (3-30 characters). Do not use your email address.",
+      );
+      return;
+    }
+
 
 
     // ========================================================================
@@ -3749,7 +3757,7 @@ export default function Register() {
 
                   }
 
-                  autoComplete="username"
+                  autoComplete="off"
 
                   disabled={loading}
 

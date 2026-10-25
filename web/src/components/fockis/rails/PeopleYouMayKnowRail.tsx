@@ -445,6 +445,7 @@ export default function PeopleYouMayKnowRail() {
                   </h3>
 
                   {user.username &&
+                    !user.username.includes("@") &&
                     user.username !==
                       name && (
                       <p className="fk-rail-card__meta">
@@ -518,7 +519,7 @@ export default function PeopleYouMayKnowRail() {
                   ) : (
                     <button
                       type="button"
-                      className="fk-rail-card__btn fk-rail-card__btn--primary"
+                      className="fk-rail-card__btn fk-rail-card__btn--join"
                       disabled={
                         isProcessing
                       }
@@ -534,7 +535,7 @@ export default function PeopleYouMayKnowRail() {
 
                       {isProcessing
                         ? "..."
-                        : "Add Friend"}
+                        : "Join Friend"}
                     </button>
                   )}
                 </div>

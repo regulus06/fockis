@@ -812,63 +812,6 @@ body {
 
 
 /* ============================================================================
-   LIVE SKELETON
-============================================================================ */
-
-.fk-live-now-card--skeleton {
-  min-height: 220px;
-
-  cursor: default;
-
-  pointer-events: none;
-}
-
-.fk-live-now-card__avatar-skeleton {
-  width: 100%;
-  height: 125px;
-
-  background:
-    linear-gradient(
-      90deg,
-      var(--fk-sunken),
-      var(--fk-surface-hover),
-      var(--fk-sunken)
-    );
-
-  animation: fk-live-skeleton-pulse 1.5s ease-in-out infinite;
-}
-
-.fk-live-now-card__skeleton-line {
-  width: 75%;
-  height: 10px;
-
-  margin: 12px 10px 0;
-
-  border-radius: 999px;
-
-  background: var(--fk-sunken);
-
-  animation: fk-live-skeleton-pulse 1.5s ease-in-out infinite;
-}
-
-.fk-live-now-card__skeleton-line--small {
-  width: 48%;
-  margin-top: 8px;
-}
-
-@keyframes fk-live-skeleton-pulse {
-  0%,
-  100% {
-    opacity: 0.55;
-  }
-
-  50% {
-    opacity: 1;
-  }
-}
-
-
-/* ============================================================================
    FEED SECTION WRAPPERS
 ============================================================================ */
 
@@ -2424,11 +2367,6 @@ body {
   .spotlight-deals-list,
   .fk-live-now-rail__scroller {
     scroll-behavior: auto;
-  }
-
-  .fk-live-now-card__avatar-skeleton,
-  .fk-live-now-card__skeleton-line {
-    animation: none;
   }
 }
 

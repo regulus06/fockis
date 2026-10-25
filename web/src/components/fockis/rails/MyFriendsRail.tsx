@@ -214,6 +214,7 @@ export default function MyFriendsRail() {
                 </h3>
 
                 {friend.username &&
+                  !friend.username.includes("@") &&
                   friend.username !==
                     name && (
                     <p className="fk-rail-card__meta">
