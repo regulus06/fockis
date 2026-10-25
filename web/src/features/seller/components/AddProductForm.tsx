@@ -334,6 +334,13 @@ export default function AddProductForm({ mode = "create", productId, initialData
   const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
   const [discount, setDiscount] = useState(0);
 
+  // Seller declarations about the brand and how the product is sourced.
+  const [brandOwnership, setBrandOwnership] = useState<"" | "OWN_BRAND" | "THIRD_PARTY_BRAND" | "UNBRANDED">("");
+  const [productSource, setProductSource] = useState<"" | "SELF_MANUFACTURED" | "SUPPLIER" | "DROPSHIPPING">("");
+  const [supplierName, setSupplierName] = useState("");
+  const [sourcingDetails, setSourcingDetails] = useState("");
+  const [fulfillmentDetails, setFulfillmentDetails] = useState("");
+
   // Shipping package measurements sent to the backend and Shippo.
   const [shippingWeight, setShippingWeight] = useState("");
   const [shippingWeightUnit, setShippingWeightUnit] = useState<WeightUnit>("lb");
@@ -518,6 +525,13 @@ export default function AddProductForm({ mode = "create", productId, initialData
       category: String(initialData.category ?? ""),
     });
     setDiscount(Number(initialData.discount) || 0);
+    setBrandOwnership(["OWN_BRAND", "THIRD_PARTY_BRAND", "UNBRANDED"].includes(initialData.brandOwnership)
+      ? initialData.brandOwnership : "");
+    setProductSource(["SELF_MANUFACTURED", "SUPPLIER", "DROPSHIPPING"].includes(initialData.productSource)
+      ? initialData.productSource : "");
+    setSupplierName(String(initialData.supplierName ?? ""));
+    setSourcingDetails(String(initialData.sourcingDetails ?? ""));
+    setFulfillmentDetails(String(initialData.fulfillmentDetails ?? ""));
 
     setShippingWeight(initialData.shippingWeight != null ? String(initialData.shippingWeight) : "");
     setShippingWeightUnit(["lb", "oz", "kg", "g"].includes(initialData.shippingWeightUnit) ? initialData.shippingWeightUnit : "lb");
@@ -585,6 +599,11 @@ export default function AddProductForm({ mode = "create", productId, initialData
       const d = JSON.parse(raw);
       if (d.form) setForm({ ...EMPTY_FORM, ...d.form });
       if (typeof d.discount === "number") setDiscount(d.discount);
+      if (["OWN_BRAND", "THIRD_PARTY_BRAND", "UNBRANDED"].includes(d.brandOwnership)) setBrandOwnership(d.brandOwnership);
+      if (["SELF_MANUFACTURED", "SUPPLIER", "DROPSHIPPING"].includes(d.productSource)) setProductSource(d.productSource);
+      setSupplierName(String(d.supplierName ?? ""));
+      setSourcingDetails(String(d.sourcingDetails ?? ""));
+      setFulfillmentDetails(String(d.fulfillmentDetails ?? ""));
       if (d.shipping) {
         setShippingWeight(String(d.shipping.weight ?? ""));
         setShippingWeightUnit(d.shipping.weightUnit ?? "lb");
@@ -867,6 +886,7 @@ export default function AddProductForm({ mode = "create", productId, initialData
       savedAt: new Date().toISOString(),
       form,
       discount,
+      brandOwnership, productSource, supplierName, sourcingDetails, fulfillmentDetails,
       shipping: {
         weight: shippingWeight, weightUnit: shippingWeightUnit,
         length: shippingLength, width: shippingWidth, height: shippingHeight,
@@ -898,6 +918,11 @@ export default function AddProductForm({ mode = "create", productId, initialData
     if (!form.name.trim()) return "Product name is required.";
     if (form.name.trim().length > 160) return "Product name must be 160 characters or fewer.";
     if (!form.category) return "Please select a category.";
+    if (!brandOwnership) return "Please select Brand Ownership.";
+    if (brandOwnership === "OWN_BRAND" && !form.brand.trim()) return "Enter your brand name for My Own Brand.";
+    if (brandOwnership === "THIRD_PARTY_BRAND" && !form.brand.trim()) return "Enter the product's brand for Another Company's Brand.";
+    if (!productSource) return "Please select Product Source.";
+    if (productSource === "DROPSHIPPING" && !supplierName.trim()) return "Enter the supplier name for dropshipping.";
     if (!categories.some((item) => item.name === form.category) && form.category !== initialData?.category) return "Please select a valid category.";
     if (!Number.isFinite(form.price) || form.price <= 0) return "Price must be greater than 0.";
     if (!Number.isInteger(form.stock) || form.stock < 0) return "Stock must be a whole number of 0 or greater.";
@@ -951,7 +976,12 @@ export default function AddProductForm({ mode = "create", productId, initialData
       const payload: any = {
         storeId: selectedStore,
         name: form.name.trim(),
-        brand: form.brand.trim(),
+        brand: brandOwnership === "UNBRANDED" ? "" : form.brand.trim(),
+        brandOwnership,
+        productSource,
+        supplierName: supplierName.trim() || undefined,
+        sourcingDetails: sourcingDetails.trim() || undefined,
+        fulfillmentDetails: fulfillmentDetails.trim() || undefined,
         location: form.location.trim(),
         description: form.description.trim(),
         price: Number(form.price),
@@ -1160,14 +1190,63 @@ export default function AddProductForm({ mode = "create", productId, initialData
 
             <div className="pe-grid-2">
               <div className="pe-field">
-                <label htmlFor="product-brand">Brand</label>
-                <input id="product-brand" type="text" maxLength={100} placeholder="Brand name (optional)" value={form.brand} onChange={(e) => updateForm("brand", e.target.value)} />
+                <label htmlFor="brand-ownership">Brand Ownership <span className="pe-req">*</span></label>
+                <select id="brand-ownership" value={brandOwnership} onChange={(e) => {
+                  const value = e.target.value as typeof brandOwnership;
+                  setBrandOwnership(value);
+                  if (value === "UNBRANDED") updateForm("brand", "");
+                }} required>
+                  <option value="">Select brand ownership</option>
+                  <option value="OWN_BRAND">My Own Brand</option>
+                  <option value="THIRD_PARTY_BRAND">Another Company's Brand</option>
+                  <option value="UNBRANDED">Unbranded</option>
+                </select>
+                <p className="pe-help">Choose who owns the brand represented by this product. Reselling a product does not make its brand your own.</p>
+              </div>
+              <div className="pe-field">
+                <label htmlFor="product-brand">{brandOwnership === "OWN_BRAND" ? "Your brand name" : brandOwnership === "THIRD_PARTY_BRAND" ? "Product brand" : "Brand"}{brandOwnership !== "UNBRANDED" && <span className="pe-req"> *</span>}</label>
+                <input id="product-brand" type="text" maxLength={100}
+                  placeholder={brandOwnership === "OWN_BRAND" ? "Enter your brand name" : brandOwnership === "THIRD_PARTY_BRAND" ? "e.g. HP, Nike, Samsung" : "No brand required"}
+                  value={form.brand} onChange={(e) => updateForm("brand", e.target.value)}
+                  required={brandOwnership === "OWN_BRAND" || brandOwnership === "THIRD_PARTY_BRAND"} disabled={brandOwnership === "UNBRANDED"} />
+              </div>
+            </div>
+
+            <div className="pe-grid-2">
+              <div className="pe-field">
+                <label htmlFor="product-source">Product Source <span className="pe-req">*</span></label>
+                <select id="product-source" value={productSource} onChange={(e) => setProductSource(e.target.value as typeof productSource)} required>
+                  <option value="">Select product source</option>
+                  <option value="SELF_MANUFACTURED">Manufactured by Me</option>
+                  <option value="SUPPLIER">Purchased from a Supplier</option>
+                  <option value="DROPSHIPPING">Dropshipping</option>
+                </select>
+                <p className="pe-help">Tell customers and Fockis how you obtain or fulfill this product.</p>
               </div>
               <div className="pe-field">
                 <label htmlFor="product-location">Ships from / location</label>
                 <input id="product-location" type="text" maxLength={120} placeholder="City, state or region" value={form.location} onChange={(e) => updateForm("location", e.target.value)} />
               </div>
             </div>
+
+            {(productSource === "SUPPLIER" || productSource === "DROPSHIPPING") && (
+              <div className="pe-grid-2">
+                <div className="pe-field">
+                  <label htmlFor="supplier-name">{productSource === "DROPSHIPPING" ? "Dropshipping supplier name" : "Supplier name (optional)"}{productSource === "DROPSHIPPING" && <span className="pe-req"> *</span>}</label>
+                  <input id="supplier-name" type="text" maxLength={160} value={supplierName} onChange={(e) => setSupplierName(e.target.value)} placeholder="Supplier or distributor name" required={productSource === "DROPSHIPPING"} />
+                </div>
+                <div className="pe-field">
+                  <label htmlFor="sourcing-details">Sourcing details (optional)</label>
+                  <input id="sourcing-details" type="text" maxLength={500} value={sourcingDetails} onChange={(e) => setSourcingDetails(e.target.value)} placeholder="e.g. wholesale distributor, authorized supplier" />
+                </div>
+              </div>
+            )}
+            {productSource === "DROPSHIPPING" && (
+              <div className="pe-field">
+                <label htmlFor="fulfillment-details">Fulfillment details</label>
+                <textarea id="fulfillment-details" rows={2} maxLength={1000} value={fulfillmentDetails} onChange={(e) => setFulfillmentDetails(e.target.value)} placeholder="Explain who ships the item and expected handling time." />
+              </div>
+            )}
 
             <div className="pe-field">
               <label htmlFor="product-type">Product type / style</label>

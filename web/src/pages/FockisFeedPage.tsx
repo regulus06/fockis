@@ -26,6 +26,14 @@ import "../styles/FockisFeedPage.scss";
 
 /* Fockis social design layer — must load after FockisFeedPage.scss. */
 import "../styles/FockisSocial.scss";
+import "../styles/FockisFeedProducts.scss";
+
+import FockisFeedProductPost from "../components/feed/FockisFeedProductPost";
+
+import {
+  getPostRenderKey,
+  useFeedProductPlacements,
+} from "./FockisFeedPage/feedProductPlacement";
 
 import { useFockisTheme } from "../context/ThemeContext";
 
@@ -166,6 +174,15 @@ function FeedInner() {
   const feed =
 
     useFockisFeed(feedMode);
+
+  // Fockis Shop products placed between posts (For You and Latest only).
+  // Placements are sticky per feed session, see feedProductPlacement.ts.
+  const productPlacements =
+    useFeedProductPlacements(
+      feed.posts,
+      feed.products,
+      feedMode,
+    );
 
   // Holder of the "new posts" pill, just above the post list.
   const postListTopRef =
@@ -599,6 +616,8 @@ function FeedInner() {
 
   }, [videoReelPostId]);
 
+
+
   return (
 
     <div
@@ -926,6 +945,11 @@ function FeedInner() {
 
                     adSlotsBefore,
 
+                  );
+
+                const productPlacement =
+                  productPlacements.get(
+                    getPostRenderKey(post),
                   );
 
                 const adForSlot =
@@ -1285,6 +1309,13 @@ function FeedInner() {
 
                       />
 
+                    )}
+
+                    {productPlacement && (
+                      <FockisFeedProductPost
+                        key={`product-${getPostRenderKey(post)}`}
+                        product={productPlacement}
+                      />
                     )}
 
                   </React.Fragment>

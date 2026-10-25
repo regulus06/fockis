@@ -97,6 +97,7 @@ type LoadReason = "initial" | "scroll" | "continue" | "manual";
 export function useFockisFeed(mode: FeedMode = "for-you") {
   const [posts, setPosts] = useState<FockisPost[]>([]);
   const [stories, setStories] = useState<FockisStory[]>([]);
+  const [products, setProducts] = useState<Record<string, any>[]>([]);
 
   const [notifications, setNotifications] =
     useState<AppNotification[]>([]);
@@ -816,6 +817,22 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
           return;
         }
 
+        if (Array.isArray(res?.products)) {
+          setProducts((previous) => {
+            const merged = new Map<string, Record<string, any>>();
+            for (const product of previous) {
+              const id = String(product?._id ?? product?.id ?? "");
+              if (id) merged.set(id, product);
+            }
+            for (const product of res.products) {
+              if (!product || typeof product !== "object") continue;
+              const id = String(product._id ?? product.id ?? "");
+              if (id) merged.set(id, product);
+            }
+            return Array.from(merged.values());
+          });
+        }
+
         const pagePosts = mapFeedItemsToPosts(
           Array.isArray(res?.feed)
             ? (res.feed as BackendPostData[])
@@ -1041,6 +1058,22 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
         pollFailuresRef.current = 0;
         pollBlockedUntilRef.current = 0;
 
+        if (Array.isArray(res?.products)) {
+          setProducts((previous) => {
+            const merged = new Map<string, Record<string, any>>();
+            for (const product of previous) {
+              const id = String(product?._id ?? product?.id ?? "");
+              if (id) merged.set(id, product);
+            }
+            for (const product of res.products) {
+              if (!product || typeof product !== "object") continue;
+              const id = String(product._id ?? product.id ?? "");
+              if (id) merged.set(id, product);
+            }
+            return Array.from(merged.values());
+          });
+        }
+
         const latest = mapFeedItemsToPosts(
           Array.isArray(res?.feed)
             ? (res.feed as BackendPostData[])
@@ -1230,6 +1263,7 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
     takenEventAnchorsRef.current = new Set();
 
     setPosts([]);
+    setProducts([]);
     setFeedEvents([]);
     setPendingNewPosts([]);
     setFeedStatus("idle");
@@ -2697,6 +2731,7 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
   return {
     posts,
     stories,
+    products,
 
     notifications,
     notificationCount,

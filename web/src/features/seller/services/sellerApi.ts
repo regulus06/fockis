@@ -1,4 +1,5 @@
 import { api } from "../../../api/api";
+
 import categoryApi from "../../fockis-shop/services/categoryApi";
 
 // =====================================================
@@ -410,64 +411,101 @@ export const sellerApi = {
   // ===================================================
 
   uploadImage: async (
+
     formData: FormData,
+
   ) => {
+
     const res = await api.post(
+
       "/uploads",
+
       formData,
+
       {
+
         headers: {
+
           "Content-Type": "multipart/form-data",
+
         },
+
       },
+
     );
 
     const uploaded = res.data;
 
     // The backend returns `media` and `storageKey` for Google Cloud Storage.
+
     if (!uploaded?.success || !uploaded?.storageKey) {
+
       throw new Error(
+
         uploaded?.message ||
+
           "Image upload failed: the server did not return a Google Cloud Storage key.",
+
       );
+
     }
 
     // Use the stable API media route instead of an expiring signed URL.
+
     const encodedKey = String(uploaded.storageKey)
+
       .split("/")
+
       .map((segment: string) => encodeURIComponent(segment))
+
       .join("/");
 
     const baseUrl = String(api.defaults.baseURL || "")
+
       .replace(/\/+$/, "");
 
     if (!baseUrl) {
+
       throw new Error(
+
         "Image upload failed: API base URL is not configured.",
+
       );
+
     }
 
     const imageUrl = `${baseUrl}/uploads/media/${encodedKey}`;
 
     return {
+
       url: imageUrl,
+
       storageKey: String(uploaded.storageKey),
+
       thumbnailUrl: imageUrl,
+
       thumbnailStorageKey: String(uploaded.storageKey),
+
     };
+
   },
 
   // FOCKIS SHOP CATEGORIES
 
   getCategories: async () => {
+
     const categories = await categoryApi.listCategories();
 
     if (!Array.isArray(categories)) {
+
       console.error("Fockis Shop categories did not return an array.");
+
       return [];
+
     }
 
     return categories;
+
   },
 
   // PRODUCTS
@@ -857,238 +895,105 @@ export const sellerApi = {
   // ===================================================
 
   updateProduct: async (
-
     id: string,
-
     data: any,
-
   ) => {
-
     if (
-
       !id ||
-
-      id === "undefined"
-
+      id === "undefined" ||
+      id === "null"
     ) {
+      throw new Error("Product ID is required");
+    }
 
-      throw new Error(
+    // Build a partial-update payload. Do not send empty defaults for fields
+    // that the caller did not intend to change.
+    const payload: Record<string, any> = {};
 
-        "Product ID is required",
+    if (data.name !== undefined) {
+      payload.name = String(data.name).trim();
+    }
 
+    if (data.description !== undefined) {
+      payload.description = data.description;
+    }
+
+    if (data.price !== undefined) {
+      payload.price = Number(data.price);
+    }
+
+    if (data.stock !== undefined) {
+      payload.stock = Number(data.stock);
+    }
+
+    if (data.category !== undefined) {
+      payload.category = data.category;
+    }
+
+    if (Array.isArray(data.images)) {
+      payload.images = data.images.filter(
+        (img: unknown): img is string =>
+          typeof img === "string" &&
+          Boolean(img.trim()) &&
+          img !== "undefined" &&
+          !img.includes("/uploads/undefined"),
       );
-
     }
 
-    const payload: any = {
-
-      name:
-
-        data.name !== undefined
-
-          ? String(
-
-              data.name,
-
-            ).trim()
-
-          : undefined,
-
-      description:
-
-        data.description ?? "",
-
-      price:
-
-        data.price !== undefined
-
-          ? Number(data.price)
-
-          : undefined,
-
-      stock:
-
-        data.stock !== undefined
-
-          ? Number(data.stock)
-
-          : undefined,
-
-      category:
-
-        data.category ?? "",
-
-      images:
-
-        Array.isArray(
-
-          data.images,
-
-        )
-
-          ? data.images.filter(
-
-              (img: string) =>
-
-                Boolean(img) &&
-
-                img !== "undefined" &&
-
-                !img.includes(
-
-                  "/uploads/undefined",
-
-                ),
-
-            )
-
-          : [],
-
-      displayLocations:
-
-        Array.isArray(
-
-          data.displayLocations,
-
-        )
-
-          ? data.displayLocations
-
-          : ["marketplace"],
-
-    };
-
-    if (
-
-      data.discount !==
-
-      undefined
-
-    ) {
-
-      payload.discount =
-
-        Number(
-
-          data.discount,
-
-        );
-
+    if (Array.isArray(data.displayLocations)) {
+      payload.displayLocations = data.displayLocations;
     }
 
     if (
-
-      data.brand !==
-
-      undefined
-
+      data.discount !== undefined &&
+      data.discount !== null &&
+      data.discount !== ""
     ) {
+      payload.discount = Number(data.discount);
+    }
 
-      payload.brand =
+    if (data.brand !== undefined) {
+      payload.brand = data.brand;
+    }
 
-        data.brand;
-
+    if (data.location !== undefined) {
+      payload.location = data.location;
     }
 
     if (
-
-      data.location !==
-
-      undefined
-
+      Array.isArray(payload.displayLocations) &&
+      payload.displayLocations.includes("feed")
     ) {
-
-      payload.location =
-
-        data.location;
-
+      payload.feedDays = Number(data.feedDays ?? 3);
+    } else if (data.feedDays !== undefined) {
+      payload.feedDays = Number(data.feedDays);
     }
 
     if (
-
-      payload.displayLocations.includes(
-
-        "feed",
-
-      )
-
+      Array.isArray(payload.displayLocations) &&
+      payload.displayLocations.includes("story") &&
+      data.storyDays !== undefined
     ) {
-
-      payload.feedDays =
-
-        Number(
-
-          data.feedDays ?? 3,
-
-        );
-
+      payload.storyDays = Number(data.storyDays);
     }
 
-    if (
+    console.log("UPDATE PRODUCT PAYLOAD:", payload);
 
-      payload.displayLocations.includes(
-
-        "story",
-
-      ) &&
-
-      data.storyDays !==
-
-        undefined
-
-    ) {
-
-      payload.storyDays =
-
-        Number(
-
-          data.storyDays,
-
-        );
-
+    try {
+      const res = await api.put(
+        `/fockis-shop/products/${encodeURIComponent(id)}`,
+        payload,
+      );
+      return res.data;
+    } catch (error: any) {
+      console.error(
+        "UPDATE PRODUCT FAILED:",
+        error?.response?.status,
+        error?.response?.data ?? error?.message,
+      );
+      throw error;
     }
-
-    Object.keys(
-
-      payload,
-
-    ).forEach((key) => {
-
-      if (
-
-        payload[key] ===
-
-        undefined
-
-      ) {
-
-        delete payload[key];
-
-      }
-
-    });
-
-    console.log(
-
-      "UPDATE PRODUCT PAYLOAD:",
-
-      payload,
-
-    );
-
-    const res = await api.put(
-
-      `/fockis-shop/products/${encodeURIComponent(id)}`,
-
-      payload,
-
-    );
-
-    return res.data;
-
   },
-
-  // ===================================================
 
   // DELETE PRODUCT
 

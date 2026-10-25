@@ -1,0 +1,650 @@
+/* ==========================================================================
+   FOCKIS FEED — SHOP PRODUCT POSTS
+   web/src/styles/FockisFeedProducts.scss
+
+   Styles for components/feed/FockisFeedProductPost.tsx. Product posts sit
+   between normal posts and share their card frame (.fk-post: radius,
+   spacing, hover border), but always use a deep navy "showcase" surface
+   with Fockis blue and gold accents so shop items read as shop items in
+   both the dark and light themes.
+
+   Selectors start with `.fk-app .fk-post.fk-product-post` so they win over
+   the shared `.fk-app .fk-post` surface without !important.
+========================================================================== */
+
+.fk-app .fk-post.fk-product-post {
+  --fkp-surface: #0b1630;
+  --fkp-surface-deep: #070f22;
+  --fkp-raised: #12224a;
+  --fkp-text: #f4f7ff;
+  --fkp-text-2: #aebcdc;
+  --fkp-text-3: #7d8db2;
+  --fkp-line: rgba(124, 164, 255, 0.16);
+  --fkp-line-strong: rgba(124, 172, 255, 0.3);
+  --fkp-blue: #2f7bff;
+  --fkp-blue-bright: #5596ff;
+  --fkp-gold: #fbbf24;
+  --fkp-gold-deep: #f59e0b;
+  --fkp-gold-soft: rgba(251, 191, 36, 0.14);
+  --fkp-ease: var(--fks-ease, cubic-bezier(0.2, 0.8, 0.2, 1));
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  isolation: isolate;
+  /* #root is text-align: center app-wide. */
+  text-align: left;
+  color: var(--fkp-text);
+  color-scheme: dark;
+  background:
+    radial-gradient(120% 60% at 100% 0%, rgba(251, 191, 36, 0.07), transparent 55%),
+    radial-gradient(90% 50% at 0% 0%, rgba(47, 123, 255, 0.12), transparent 60%),
+    linear-gradient(180deg, var(--fkp-surface) 0%, var(--fkp-surface-deep) 100%);
+  border: 1px solid var(--fkp-line);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 18px 40px rgba(0, 4, 18, 0.35);
+
+  /* Blue-to-gold accent along the top edge. */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 2;
+    height: 2px;
+    background: linear-gradient(90deg, var(--fkp-blue) 0%, var(--fkp-blue-bright) 45%, var(--fkp-gold) 100%);
+    pointer-events: none;
+  }
+
+  &:hover {
+    border-color: rgba(251, 191, 36, 0.32);
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button {
+    font: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--fkp-gold);
+    outline-offset: 2px;
+  }
+
+  /* ------------------------------------------------------------------------
+     Header
+  ------------------------------------------------------------------------ */
+
+  .fk-product-post__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px 12px;
+  }
+
+  .fk-product-post__avatar {
+    position: relative;
+    display: grid;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    padding: 2px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: conic-gradient(from 210deg, var(--fkp-gold), var(--fkp-blue-bright), var(--fkp-blue), var(--fkp-gold));
+
+    img,
+    span {
+      display: grid;
+      width: 100%;
+      height: 100%;
+      place-items: center;
+      border-radius: 50%;
+      border: 2px solid var(--fkp-surface);
+    }
+
+    img {
+      object-fit: cover;
+      background: var(--fkp-raised);
+    }
+
+    span {
+      background: linear-gradient(145deg, #173068, #0d1b3d);
+      color: var(--fkp-gold);
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+  }
+
+  .fk-product-post__identity {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+
+    strong {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+      overflow: hidden;
+      color: var(--fkp-text);
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.25;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+
+      svg {
+        flex: none;
+        color: var(--fkp-blue-bright);
+      }
+    }
+
+    span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+      overflow: hidden;
+      color: var(--fkp-text-2);
+      font-size: 12.5px;
+      font-weight: 500;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+
+      svg {
+        flex: none;
+        color: var(--fkp-gold);
+      }
+
+      i {
+        font-style: normal;
+        color: var(--fkp-text-3);
+      }
+    }
+  }
+
+  .fk-product-post__tag {
+    flex: none;
+    padding: 5px 10px;
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    border-radius: 999px;
+    background: var(--fkp-gold-soft);
+    color: var(--fkp-gold);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ------------------------------------------------------------------------
+     Media stage
+  ------------------------------------------------------------------------ */
+
+  .fk-product-post__stage {
+    position: relative;
+    margin: 0 12px;
+    overflow: hidden;
+    border-radius: 16px;
+    background: #050b1a;
+    box-shadow: 0 0 0 1px var(--fkp-line) inset;
+  }
+
+  .fk-product-post__media {
+    position: relative;
+    display: grid;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    max-height: 560px;
+    place-items: center;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  /* Blurred copy fills the frame so any image shape looks intentional. */
+  .fk-product-post__backdrop {
+    position: absolute;
+    inset: -10%;
+    width: 120%;
+    height: 120%;
+    object-fit: cover;
+    filter: blur(28px) saturate(1.25) brightness(0.6);
+    transform: scale(1.05);
+    pointer-events: none;
+  }
+
+  .fk-product-post__image {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform 420ms var(--fkp-ease);
+    animation: fk-product-post-fade 260ms var(--fkp-ease);
+  }
+
+  .fk-product-post__media:hover .fk-product-post__image {
+    transform: scale(1.035);
+  }
+
+  .fk-product-post__no-image {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--fkp-text-3);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .fk-product-post__badges {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    pointer-events: none;
+  }
+
+  .fk-product-post__badge {
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.2;
+    box-shadow: 0 6px 16px rgba(0, 4, 18, 0.35);
+    backdrop-filter: blur(8px);
+
+    &--deal {
+      background: linear-gradient(135deg, #fde68a, var(--fkp-gold) 45%, var(--fkp-gold-deep));
+      color: #1f1503;
+    }
+
+    &--low {
+      background: rgba(251, 113, 133, 0.9);
+      color: #fff;
+    }
+
+    &--out {
+      background: rgba(5, 11, 26, 0.82);
+      border: 1px solid var(--fkp-line-strong);
+      color: var(--fkp-text);
+    }
+  }
+
+  .fk-product-post__counter {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: rgba(5, 11, 26, 0.66);
+    color: var(--fkp-text);
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    backdrop-filter: blur(8px);
+    pointer-events: none;
+  }
+
+  .fk-product-post__nav {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 50%;
+    background: rgba(5, 11, 26, 0.6);
+    color: #fff;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(-50%);
+    transition: opacity 180ms var(--fkp-ease), background 180ms var(--fkp-ease);
+    backdrop-filter: blur(8px);
+
+    &:hover {
+      background: rgba(5, 11, 26, 0.85);
+    }
+
+    &--prev {
+      left: 10px;
+    }
+
+    &--next {
+      right: 10px;
+    }
+  }
+
+  .fk-product-post__stage:hover .fk-product-post__nav,
+  .fk-product-post__nav:focus-visible {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    .fk-product-post__nav {
+      opacity: 1;
+      width: 32px;
+      height: 32px;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Thumbnail rail
+  ------------------------------------------------------------------------ */
+
+  .fk-product-post__thumbs {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px 2px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--fkp-line-strong) transparent;
+    scroll-snap-type: x proximity;
+
+    button {
+      display: grid;
+      flex: 0 0 58px;
+      width: 58px;
+      height: 58px;
+      place-items: center;
+      padding: 0;
+      overflow: hidden;
+      border: 2px solid transparent;
+      border-radius: 12px;
+      background: var(--fkp-raised);
+      color: var(--fkp-text-3);
+      cursor: pointer;
+      opacity: 0.6;
+      scroll-snap-align: start;
+      transition:
+        opacity 160ms var(--fkp-ease),
+        border-color 160ms var(--fkp-ease),
+        transform 160ms var(--fkp-ease);
+
+      &:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+
+      &.is-active {
+        border-color: var(--fkp-gold);
+        opacity: 1;
+        box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18);
+      }
+    }
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Body
+  ------------------------------------------------------------------------ */
+
+  .fk-product-post__body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 18px 2px;
+  }
+
+  .fk-product-post__title {
+    margin: 0;
+    color: var(--fkp-text) !important;
+    font-size: 17px;
+    font-weight: 750;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+
+    a {
+      transition: color 160ms var(--fkp-ease);
+    }
+
+    a:hover {
+      color: var(--fkp-gold);
+    }
+  }
+
+  .fk-product-post__description {
+    display: -webkit-box;
+    margin: 0;
+    overflow: hidden;
+    color: var(--fkp-text-2) !important;
+    font-size: 14px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+
+  .fk-product-post__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 2px;
+
+    span {
+      padding: 3px 9px;
+      border: 1px solid var(--fkp-line-strong);
+      border-radius: 999px;
+      color: var(--fkp-text-2);
+      font-size: 12px;
+      font-weight: 600;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Footer: price + call to action
+  ------------------------------------------------------------------------ */
+
+  /*
+   * The card uses <header> and <footer>. Some app-wide stylesheets style
+   * those elements directly (e.g. a white footer background), so reset the
+   * properties that would leak in.
+   */
+  .fk-product-post__header,
+  .fk-product-post__footer {
+    position: static;
+    width: auto;
+    min-height: 0;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0;
+    color: var(--fkp-text) !important;
+    text-align: left;
+  }
+
+  .fk-product-post__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin: 12px 18px 0;
+    padding: 14px 0 18px;
+    border-top: 1px solid var(--fkp-line);
+  }
+
+  .fk-product-post__price {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+    min-width: 0;
+
+    strong {
+      color: #ffffff !important;
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+
+      &.is-muted {
+        color: var(--fkp-text-2) !important;
+        font-size: 15px;
+        font-weight: 650;
+        letter-spacing: 0;
+      }
+    }
+
+    s {
+      color: var(--fkp-text-2) !important;
+      font-size: 14px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  .fk-product-post__shop-button {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 20px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #fde68a 0%, var(--fkp-gold) 38%, var(--fkp-gold-deep) 100%);
+    color: #1a1204;
+    font-size: 14.5px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.45) inset,
+      0 10px 24px rgba(245, 158, 11, 0.28);
+    transition:
+      transform 160ms var(--fkp-ease),
+      box-shadow 160ms var(--fkp-ease),
+      filter 160ms var(--fkp-ease);
+
+    svg {
+      transition: transform 160ms var(--fkp-ease);
+    }
+
+    &:hover {
+      color: #1a1204;
+      filter: brightness(1.06);
+      transform: translateY(-1px);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.5) inset,
+        0 14px 30px rgba(245, 158, 11, 0.38);
+
+      svg {
+        transform: translateX(3px);
+      }
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Small screens
+  ------------------------------------------------------------------------ */
+
+  @media (max-width: 560px) {
+    .fk-product-post__media {
+      aspect-ratio: 1 / 1;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .fk-product-post__header {
+      padding: 14px 14px 10px;
+    }
+
+    .fk-product-post__stage {
+      margin: 0 10px;
+      border-radius: 14px;
+    }
+
+    .fk-product-post__thumbs {
+      padding: 10px 10px 2px;
+
+      button {
+        flex-basis: 52px;
+        width: 52px;
+        height: 52px;
+      }
+    }
+
+    .fk-product-post__body {
+      padding: 12px 14px 2px;
+    }
+
+    .fk-product-post__footer {
+      margin: 10px 14px 0;
+      padding: 12px 0 14px;
+    }
+
+    .fk-product-post__price strong {
+      font-size: 20px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .fk-product-post__footer {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .fk-product-post__shop-button {
+      width: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+
+    .fk-product-post__media:hover .fk-product-post__image {
+      transform: none;
+    }
+  }
+}
+
+@keyframes fk-product-post-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
