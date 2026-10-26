@@ -1,0 +1,64 @@
+/* ============================================================================
+   FOCKIS HOME FEED — TikTok-style snap scrolling (phones and tablets)
+   Active only while <html> has .fk-feed-snap (added by useFeedSnapScroll).
+   Load this file LAST so nothing overrides it.
+============================================================================ */
+
+$fk-snap-header-h: 60px;   // .fk-mobile-header height
+$fk-snap-gap: 8px;         // small space above each snapped post
+
+@media (max-width: 900px) {
+  html.fk-feed-snap {
+    /* Each swipe lands on the next post. */
+    scroll-snap-type: y mandatory;
+
+    /* Snapped posts start just below the fixed mobile header. */
+    scroll-padding-top: $fk-snap-header-h + $fk-snap-gap;
+
+    /* No pinch zoom, no rubber-band bounce, no pull-to-refresh. */
+    touch-action: pan-x pan-y;
+    overscroll-behavior-y: none;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  html.fk-feed-snap body {
+    touch-action: pan-x pan-y;
+    overscroll-behavior-y: none;
+  }
+
+  /* --- Snap points --------------------------------------------------------- */
+
+  /* Top of the feed (top bar, stories, create post) so users can scroll back up. */
+  html.fk-feed-snap .fk-shell__center-inner > :first-child {
+    scroll-snap-align: start;
+    scroll-margin-top: $fk-snap-header-h + 200px;  // land at the very top
+  }
+
+  /* Every post, plus ads / product cards / event rails between posts. */
+  html.fk-feed-snap .fk-shell__center-inner > .fk-post,
+  html.fk-feed-snap .fk-shell__center-inner > .fk-post ~ :not(.fk-feed-new-posts):not(.fk-feed-loader):not(.fk-feed-status--loading) {
+    scroll-snap-align: start;
+
+    /* One post per swipe: a fast flick can't skip past several posts. */
+    scroll-snap-stop: always;
+  }
+
+  /* Status messages ("You're all caught up", errors) snap too but don't trap. */
+  html.fk-feed-snap .fk-shell__center-inner > .fk-feed-status {
+    scroll-snap-stop: normal;
+  }
+
+  /* Small inputs make iOS zoom in when tapped — keep them at 16px. */
+  html.fk-feed-snap .fk-shell__center input,
+  html.fk-feed-snap .fk-shell__center textarea,
+  html.fk-feed-snap .fk-shell__center select {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* Users who ask for less motion get normal scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  html.fk-feed-snap {
+    scroll-snap-type: y proximity;
+  }
+}
