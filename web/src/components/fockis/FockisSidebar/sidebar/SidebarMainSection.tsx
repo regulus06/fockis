@@ -75,8 +75,6 @@ export default function SidebarMainSection({
       .filter(Boolean)
       .join(" ");
 
-  // Ads Manager, Marketing, Create, AI Studio, and Fockis Academy
-  // are intentionally excluded from this sidebar.
   const navigationItems = [
     { to: "/fockis-preview", label: "Feed", icon: "🏠" },
     { to: "/settings", label: "Account Settings", icon: "⚙️" },
@@ -85,6 +83,12 @@ export default function SidebarMainSection({
     { to: "/my-live", label: "My Live", icon: "🔴" },
     { to: "/events", label: "Events", icon: "📅" },
     { to: "/businesses", label: "Businesses", icon: "🏢" },
+
+    // Manager pages
+    { to: "/business/manager", label: "Business Manager", icon: "📊" },
+    { to: "/marketing/dashboard", label: "Marketing Manager", icon: "📣" },
+    { to: "/ads", label: "Ads Manager", icon: "📢" },
+
     { to: "/shop", label: "Fockis Shop", icon: "🛍️" },
     { to: "/seller", label: "Seller Center", icon: "🏪" },
     { to: "/travel", label: "Fockis Travel", icon: "✈️" },
