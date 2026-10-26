@@ -189,6 +189,14 @@ function isAdminUser(
 function getRealAdminRole(
   user: StoredFockisUser,
 ): AdminRole | null {
+  /*
+   * A Super Admin flag wins over whatever "role" says, so an account
+   * with isSuperAdmin: true and role "admin"/"user" still gets in.
+   */
+  if (isSuperAdmin(user)) {
+    return "SUPER_ADMIN" as AdminRole;
+  }
+
   const candidates: string[] = [];
 
   if (user.role) {

@@ -48,6 +48,48 @@ function isSuperAdmin(user: SidebarUser | null): boolean {
   );
 }
 
+/** The saved login user (written at login). Read fresh on every render. */
+function readStoredUser(): SidebarUser | null {
+  try {
+    const raw = localStorage.getItem("user");
+    const parsed: unknown = raw ? JSON.parse(raw) : null;
+
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as SidebarUser)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The role inside the login token (the backend puts it there). */
+function readTokenUser(): SidebarUser | null {
+  try {
+    const token = (
+      localStorage.getItem("accessToken") ||
+      localStorage.getItem("access_token") ||
+      localStorage.getItem("token") ||
+      ""
+    )
+      .replace(/^Bearer\s+/i, "")
+      .trim();
+
+    const payload = token.split(".")[1];
+
+    if (!payload) {
+      return null;
+    }
+
+    const json = atob(
+      payload.replace(/-/g, "+").replace(/_/g, "/"),
+    );
+
+    return JSON.parse(json) as SidebarUser;
+  } catch {
+    return null;
+  }
+}
+
 export default function SidebarMainSection({
   onNavigate,
 }: SidebarMainSectionProps) {
@@ -55,9 +97,12 @@ export default function SidebarMainSection({
     (state) => state.currentAdmin
   );
 
-  const showAdminDashboard = isSuperAdmin(
-    currentAdmin as SidebarUser | null
-  );
+  // Checked on every render (the sidebar re-renders on navigation), so
+  // logging in as a Super Admin shows the link without a page reload.
+  const showAdminDashboard =
+    isSuperAdmin(currentAdmin as SidebarUser | null) ||
+    isSuperAdmin(readStoredUser()) ||
+    isSuperAdmin(readTokenUser());
 
   const handleNavigation = () => {
     onNavigate?.();

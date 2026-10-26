@@ -6,43 +6,39 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-
     "icon": "./assets/fockis-icon.png",
-
     "splash": {
       "image": "./assets/fockis-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#071B3A"
     },
-
     "platforms": [
       "ios",
       "android",
       "web"
     ],
-
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.fockis.mobile"
+      "bundleIdentifier": "com.fockis.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Fockis uses your camera so you can share video during meetings.",
+        "NSMicrophoneUsageDescription": "Fockis uses your microphone so you can speak during meetings.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
-
     "android": {
       "package": "com.fockis.mobile",
       "usesCleartextTraffic": true,
-
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-
       "adaptiveIcon": {
         "foregroundImage": "./assets/fockis-icon.png",
         "backgroundColor": "#071B3A"
       }
     },
-
     "web": {},
-
     "extra": {
       "eas": {
         "projectId": "7c3917a2-b39c-4086-a80f-c2edac41b7a1"
