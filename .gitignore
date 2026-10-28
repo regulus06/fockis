@@ -48,3 +48,20 @@ Thumbs.db
 fockis-secrets/
 .vercel
 .env*
+
+# Private credentials and local secrets
+.env
+.env.*
+!.env.example
+apps/api/secrets/
+fockis mail password/
+
+# Local backups and debug dumps
+web/my-live-redesign-backup-20261019/
+web/admin-redesign-backup-20261017/
+web/room-redesign-backup/
+web/shop-backup-before-flash-design/
+subscription-cleanup-backup-20261016-141333/
+subscription-redesign-backup-20261016/
+*.backup
+*.backup-*

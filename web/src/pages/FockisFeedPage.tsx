@@ -28,6 +28,11 @@ import "../styles/FockisFeedPage.scss";
 import "../styles/FockisSocial.scss";
 import "../styles/FockisFeedProducts.scss";
 
+/* TikTok-style snap scrolling on phones — keep this import last. */
+import "../styles/FockisFeedSnap.scss";
+
+import { useFeedSnapScroll } from "../hooks/useFeedSnapScroll";
+
 import FockisFeedProductPost from "../components/feed/FockisFeedProductPost";
 
 import {
@@ -530,7 +535,14 @@ function FeedInner() {
 
   }, [videoReelPostId]);
 
-
+  /*
+   * TikTok-style: one post per swipe + no pinch zoom on the home feed.
+   * Turned off while the sidebar or the Waves player is open so they
+   * scroll normally.
+   */
+  useFeedSnapScroll(
+    !mobileSidebarOpen && !videoReelPostId,
+  );
 
   return (
 
