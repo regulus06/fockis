@@ -88,13 +88,14 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "Support",
     anyOf: [
       P.SUPPORT_VIEW,
+      P.MODERATION_VIEW,
       P.USERS_RECOVERY,
     ],
     children: [
       {
-        label: "Support Cases",
-        path: "/admin/support/cases",
-        anyOf: [P.SUPPORT_VIEW],
+        label: "Support & Moderation",
+        path: "/admin/support",
+        anyOf: [P.SUPPORT_VIEW, P.MODERATION_VIEW],
       },
       {
         label: "Account Recovery",

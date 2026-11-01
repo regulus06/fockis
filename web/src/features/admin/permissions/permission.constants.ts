@@ -78,6 +78,9 @@ export const PERMISSIONS = {
   SUPPORT_CREATE: "support.create",
   SUPPORT_ASSIGN: "support.assign",
   SUPPORT_RESOLVE: "support.resolve",
+  SUPPORT_RESPOND: "support.respond",
+  SUPPORT_SETTINGS: "support.settings",
+  HELP_CONTENT_MANAGE: "help.content.manage",
 
   // ============================================================
   // MARKETPLACE
@@ -289,4 +292,4 @@ export const REASON_REQUIRED_ACTIONS = new Set<string>([
   "CHANGE_ADMIN_ROLE",
   "CHANGE_PERMISSIONS",
   "EMERGENCY_ACTION",
-]);
+]);

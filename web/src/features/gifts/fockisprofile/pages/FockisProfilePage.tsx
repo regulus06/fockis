@@ -2115,7 +2115,7 @@ function FockisProfilePageInner() {
     setAccountMenuOpen(false);
     setSettingsOpen(false);
 
-    navigate("/playlists", {
+    navigate("/music", {
       replace: false,
     });
   }
@@ -2171,8 +2171,9 @@ function FockisProfilePageInner() {
 
   function goToLive(): void {
     setAccountMenuOpen(false);
+    setSettingsOpen(false);
 
-    navigate("/live", {
+    navigate("/my-live", {
       replace: false,
     });
   }

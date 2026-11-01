@@ -1,0 +1,469 @@
+@use './tokens' as *;
+
+// ============================================================
+// EMPLOYER CENTER SHELL — sidebar, top bar, content
+// ============================================================
+
+// The global Fockis layout pads its content area and paints the app theme
+// behind it; the Employer Center runs edge to edge (same pattern as Travel).
+:global(.fk-app-content:has(> .fockis-employer-app)) {
+  padding: 0 !important;
+  background: $ec-bg !important;
+}
+
+:global(.fk-app-layout:has(> .fk-app-content > .fockis-employer-app)) {
+  background: $ec-bg !important;
+}
+
+.shell {
+  color-scheme: light;
+  text-align: left;
+  letter-spacing: normal;
+  line-height: 1.45;
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  min-height: 100vh;
+  background: $ec-bg;
+  color: $ec-text;
+  font-family: $ec-font;
+
+  @include ec-tablet {
+    grid-template-columns: 1fr;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  // Other features ship global heading rules (e.g. a serif display font).
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: $ec-font;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    font-size: inherit;
+  }
+}
+
+/* ---------------- sidebar ---------------- */
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 18px 14px;
+  background: linear-gradient(180deg, $ec-navy-800 0%, $ec-navy-900 100%);
+  color: $ec-navy-text;
+
+  @include ec-tablet {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 900;
+    width: 280px;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    box-shadow: $ec-shadow-lg;
+  }
+}
+
+.sidebarOpen {
+  @include ec-tablet {
+    transform: translateX(0);
+  }
+}
+
+.scrim {
+  display: none;
+
+  @include ec-tablet {
+    position: fixed;
+    inset: 0;
+    z-index: 899;
+    display: block;
+    border: 0;
+    background: rgba(13, 20, 51, 0.45);
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 18px;
+  color: #fff;
+  text-decoration: none;
+}
+
+.brandMark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  background: $ec-gradient;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  overflow: hidden;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.brandText {
+  display: grid;
+
+  strong {
+    font-size: 19px;
+    font-weight: 750;
+    letter-spacing: -0.02em;
+  }
+
+  span {
+    color: #9ea6d6;
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+}
+
+.sidebar .sidebarClose {
+  display: none;
+  margin-left: auto;
+  color: #fff;
+
+  @include ec-tablet {
+    display: inline-grid;
+  }
+}
+
+.nav {
+  display: grid;
+  gap: 2px;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  color: $ec-navy-text;
+  font-size: 14px;
+  font-weight: 550;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  svg {
+    flex-shrink: 0;
+    opacity: 0.9;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.6);
+    outline-offset: 1px;
+  }
+}
+
+.navLinkActive {
+  background: $ec-gradient;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(22, 119, 232, 0.3);
+
+  &:hover {
+    background: $ec-gradient;
+  }
+}
+
+.navBadge {
+  margin-left: auto;
+  min-width: 22px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #2f5fe0;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.navLinkActive .navBadge {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.sidebarFooter {
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.careersLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* ---------------- main column ---------------- */
+
+.main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 64px;
+  padding: 0 24px;
+  border-bottom: 1px solid $ec-border;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+
+  @include ec-mobile {
+    gap: 6px;
+    padding: 0 12px;
+  }
+}
+
+.menuToggle {
+  display: none !important;
+
+  @include ec-tablet {
+    display: inline-grid !important;
+  }
+}
+
+.topSearch {
+  position: relative;
+  flex: 1;
+  max-width: 460px;
+
+  svg {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    color: $ec-muted;
+    transform: translateY(-50%);
+  }
+
+  input {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px 0 36px;
+    border: 1px solid $ec-border;
+    border-radius: 10px;
+    background: $ec-surface-2;
+    color: $ec-text;
+    font: inherit;
+    font-size: 13.5px;
+
+    &:focus {
+      border-color: $ec-primary;
+      outline: none;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(22, 119, 232, 0.12);
+    }
+  }
+
+  @include ec-mobile {
+    input::placeholder {
+      color: transparent;
+    }
+  }
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.iconAction {
+  position: relative;
+}
+
+.dot {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #ef4444;
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 260px;
+  padding: 5px 8px 5px 5px;
+  border: 1px solid $ec-border;
+  border-radius: 12px;
+  background: #fff;
+  color: $ec-text;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    border-color: $ec-border-strong;
+  }
+
+  &:focus-visible {
+    @include ec-focus;
+  }
+}
+
+.accountLogo {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 9px;
+  background: $ec-gradient;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 750;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.accountText {
+  display: grid;
+  min-width: 0;
+
+  strong {
+    overflow: hidden;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span {
+    color: $ec-muted;
+    font-size: 11.5px;
+  }
+
+  @include ec-mobile {
+    display: none;
+  }
+}
+
+.popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  padding: 8px;
+  border: 1px solid $ec-border;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: $ec-shadow-lg;
+}
+
+.popoverHeader {
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid $ec-border;
+  margin-bottom: 6px;
+
+  strong {
+    display: block;
+    font-size: 14px;
+  }
+
+  span {
+    color: $ec-muted;
+    font-size: 12px;
+  }
+}
+
+.activityItem {
+  display: grid;
+  gap: 2px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  color: $ec-text;
+  font-size: 13px;
+  line-height: 1.4;
+  text-decoration: none;
+
+  span {
+    color: $ec-muted;
+    font-size: 11.5px;
+  }
+
+  &:hover {
+    background: $ec-primary-50;
+  }
+}
+
+.content {
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 24px;
+
+  @include ec-mobile {
+    // Leave room for the app's global bottom navigation bar.
+    padding: 14px 12px 96px;
+  }
+}
+
+.invite {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 12px 16px;
+  border: 1px solid $ec-primary-100;
+  border-radius: 12px;
+  background: $ec-primary-50;
+  font-size: 13.5px;
+}

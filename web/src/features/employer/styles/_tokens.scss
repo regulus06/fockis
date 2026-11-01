@@ -1,0 +1,78 @@
+// ============================================================
+// FOCKIS EMPLOYER CENTER — DESIGN TOKENS
+// ============================================================
+
+// Sidebar
+$ec-navy-900: #0b1a3a;
+$ec-navy-800: #172b4d;
+$ec-navy-700: #22396a;
+$ec-navy-text: #c9d4ea;
+
+// Brand
+$ec-primary: #1677e8;
+$ec-primary-600: #0f5fc4;
+$ec-primary-50: #eaf3fe;
+$ec-primary-100: #d3e6fd;
+$ec-blue: #1677e8;
+$ec-purple: #5b6cf2;
+$ec-gradient: linear-gradient(135deg, #1677e8 0%, #2f5fe0 100%);
+$ec-soft-gradient: linear-gradient(110deg, #ffffff 35%, #eef5ff 70%, #e1edfd 100%);
+
+// Surfaces + text
+$ec-bg: #f4f7fc;
+$ec-surface: #ffffff;
+$ec-surface-2: #f8f9fd;
+$ec-border: #e6e9f2;
+$ec-border-strong: #d5daea;
+$ec-text: #172b4d;
+$ec-text-2: #4a5272;
+$ec-muted: #7a819e;
+
+// Status (reserved for state, never for chart series)
+$ec-success: #15803d;
+$ec-success-bg: #dcfce7;
+$ec-warning: #b45309;
+$ec-warning-bg: #fef3c7;
+$ec-danger: #b91c1c;
+$ec-danger-bg: #fee2e2;
+$ec-info: #1d4ed8;
+$ec-info-bg: #dbeafe;
+$ec-violet: #6d28d9;
+$ec-violet-bg: #ede9fe;
+$ec-orange: #c2410c;
+$ec-orange-bg: #ffedd5;
+$ec-neutral-bg: #eef0f5;
+
+// Chart series (validated: categorical, fixed order)
+$ec-series-1: #1677e8;
+$ec-series-2: #0ea5a4;
+$ec-series-3: #a78bfa;
+
+// Shape
+$ec-radius-sm: 8px;
+$ec-radius: 12px;
+$ec-radius-lg: 16px;
+$ec-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 20px rgba(31, 41, 90, 0.05);
+$ec-shadow-lg: 0 18px 48px rgba(20, 26, 60, 0.18);
+$ec-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+// Breakpoints
+$ec-bp-mobile: 640px;
+$ec-bp-tablet: 1024px;
+
+@mixin ec-mobile {
+  @media (max-width: $ec-bp-mobile) {
+    @content;
+  }
+}
+
+@mixin ec-tablet {
+  @media (max-width: $ec-bp-tablet) {
+    @content;
+  }
+}
+
+@mixin ec-focus {
+  outline: 2px solid rgba(22, 119, 232, 0.45);
+  outline-offset: 2px;
+}

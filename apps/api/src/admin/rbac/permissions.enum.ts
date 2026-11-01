@@ -295,6 +295,17 @@ export enum Permission {
   MODERATION_SETTINGS = "moderation.settings",
 
   // ========================================================================
+  // HELP & SUPPORT (feedback, tickets, live chat, help articles)
+  // ========================================================================
+
+  SUPPORT_VIEW = "support.view",
+  SUPPORT_RESPOND = "support.respond",
+  SUPPORT_ASSIGN = "support.assign",
+  SUPPORT_RESOLVE = "support.resolve",
+  SUPPORT_SETTINGS = "support.settings",
+  HELP_CONTENT_MANAGE = "help.content.manage",
+
+  // ========================================================================
   // SECURITY
   // ========================================================================
 

@@ -1,265 +1,562 @@
+@use '../../employer/styles/tokens' as *;
+
+// ============================================================
+// FOCKIS CAREERS — public top-nav shell + job seeker sidebar shell
+// ============================================================
+
+// The global Fockis layout pads its content and paints the app theme;
+// Careers runs edge to edge (same pattern as Travel and Employer Center).
+:global(.fk-app-content:has(> .fockis-careers-app)) {
+  padding: 0 !important;
+  background: $ec-bg !important;
+}
+
+:global(.fk-app-layout:has(> .fk-app-content > .fockis-careers-app)) {
+  background: $ec-bg !important;
+}
+
 .root {
   min-height: 100vh;
-  background: var(--careers-bg);
-  padding-bottom: 0;
+  background: $ec-bg;
+  color: $ec-text;
+  color-scheme: light;
+  font-family: $ec-font;
+  line-height: 1.45;
+  letter-spacing: normal;
+  text-align: left;
 
-  @media (max-width: 860px) {
-    padding-bottom: 64px;
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: $ec-font;
+    letter-spacing: -0.01em;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+  }
+
+  @include ec-mobile {
+    padding-bottom: 80px; // global bottom nav
   }
 }
 
-.content {
-  background: var(--careers-bg);
-  min-height: calc(100vh - 66px);
+/* ---------------- brand ---------------- */
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: $ec-text;
+  text-decoration: none;
 }
 
-/* ---------- Desktop topbar ---------- */
+.brandMark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 9px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.brandText {
+  display: grid;
+  line-height: 1.05;
+
+  strong {
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  span {
+    color: $ec-primary;
+    font-size: 12.5px;
+    font-weight: 650;
+  }
+}
+
+.brandInline span {
+  font-size: 15px;
+}
+
+/* ---------------- top bar ---------------- */
+
 .topbar {
   position: sticky;
   top: 0;
-  z-index: 50;
-  background: rgba(255, 255, 255, 0.92);
+  z-index: 60;
+  border-bottom: 1px solid $ec-border;
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--careers-line);
 }
+
 .topbarInner {
-  max-width: 1240px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  max-width: 1280px;
+  min-height: 66px;
   margin: 0 auto;
-  padding: 0 28px;
-  height: 66px;
-  display: flex;
-  align-items: center;
-  gap: 28px;
-}
+  padding: 0 24px;
 
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-family: var(--careers-font-display);
-  font-weight: 700;
-  font-size: 19px;
-  color: var(--careers-indigo-deep);
-  flex-shrink: 0;
-}
-.mark {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--careers-indigo) 0%, var(--careers-indigo-deep) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 15px;
-  font-weight: 700;
-}
-.sub {
-  font-family: var(--careers-font-mono);
-  font-weight: 500;
-  font-size: 11px;
-  color: var(--careers-teal);
-  background: var(--careers-teal-tint);
-  padding: 2px 7px;
-  border-radius: 5px;
-  letter-spacing: 0.03em;
-}
-
-.primaryNav {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex: 1;
-  overflow-x: auto;
-
-  @media (max-width: 860px) {
-    display: none;
+  @include ec-mobile {
+    gap: 10px;
+    padding: 0 14px;
   }
+}
+
+.topNav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 16px;
 
   a {
-    background: none;
-    border: none;
-    padding: 9px 13px;
+    padding: 8px 12px;
     border-radius: 8px;
+    color: $ec-text;
     font-size: 14px;
-    font-weight: 500;
-    color: var(--careers-ink-soft);
-    white-space: nowrap;
+    font-weight: 600;
     text-decoration: none;
-    transition: background 0.15s, color 0.15s;
 
     &:hover {
-      background: var(--careers-bg-alt);
-      color: var(--careers-ink);
+      background: $ec-primary-50;
+      color: $ec-primary;
     }
   }
-  .active {
-    background: var(--careers-indigo-tint);
-    color: var(--careers-indigo-deep);
-    font-weight: 600;
+
+  .navActive {
+    color: $ec-primary;
+    background: $ec-primary-50;
+  }
+
+  @include ec-tablet {
+    display: none;
   }
 }
 
-.topbarActions {
+.topActions {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-
-  .btnGhost,
-  .btnOutline,
-  .btnPrimary {
-    @media (max-width: 860px) {
-      display: none;
-    }
-  }
+  gap: 8px;
+  margin-left: auto;
 }
 
-.btnGhost,
-.btnOutline,
-.btnPrimary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border-radius: 9px;
-  font-weight: 600;
-  font-size: 14px;
-  padding: 9px 16px;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: transform 0.12s, background 0.15s, border-color 0.15s;
-
-  &:active {
-    transform: scale(0.98);
+.employerLink {
+  @include ec-mobile {
+    display: none !important;
   }
-}
-.btnPrimary {
-  background: var(--careers-indigo);
-  color: #fff;
-  box-shadow: var(--careers-shadow-sm);
-  &:hover {
-    background: var(--careers-indigo-deep);
-  }
-}
-.btnGhost {
-  background: transparent;
-  color: var(--careers-ink-soft);
-  border-color: var(--careers-line);
-  &:hover {
-    border-color: var(--careers-ink-faint);
-    color: var(--careers-ink);
-  }
-}
-.btnOutline {
-  background: #fff;
-  color: var(--careers-indigo);
-  border-color: var(--careers-indigo-tint);
-  &:hover {
-    background: var(--careers-indigo-tint);
-  }
-}
-
-.avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #5b4fc7, var(--careers-indigo-deep));
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  font-family: var(--careers-font-display);
-  flex-shrink: 0;
 }
 
 .burger {
-  display: none;
-  background: none;
-  border: 1px solid var(--careers-line);
-  border-radius: 8px;
-  padding: 8px 10px;
+  display: none !important;
+
+  @include ec-tablet {
+    display: inline-grid !important;
+  }
+}
+
+.iconWrap {
+  position: relative;
+}
+
+.badgeDot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 13px;
+  text-align: center;
+}
+
+.avatarBtn {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  overflow: hidden;
+  padding: 0;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d3e6fd, #e8f0fd);
+  box-shadow: 0 0 0 1px $ec-border;
+  color: $ec-primary-600;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
 
-  @media (max-width: 860px) {
-    display: block;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &:focus-visible {
+    @include ec-focus;
   }
 }
 
-/* ---------- Mobile drawer ---------- */
-.mobileDrawer {
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 70;
+  display: grid;
+  width: 240px;
+  padding: 6px;
+  border: 1px solid $ec-border;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: $ec-shadow-lg;
+}
+
+.menuHeader {
+  padding: 8px 10px 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid $ec-border;
+
+  strong {
+    display: block;
+    font-size: 14px;
+  }
+
+  span {
+    color: $ec-muted;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+}
+
+.menuLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  color: $ec-text;
+  font-size: 13.5px;
+  text-decoration: none;
+
+  &:hover {
+    background: $ec-primary-50;
+    color: $ec-primary;
+  }
+}
+
+/* ---------------- drawer (tablet / phone) ---------------- */
+
+.scrim {
   position: fixed;
   inset: 0;
-  background: rgba(20, 23, 31, 0.4);
-  z-index: 90;
-  display: flex;
-  justify-content: flex-end;
+  z-index: 899;
+  border: 0;
+  background: rgba(11, 26, 58, 0.45);
 }
-.sheet {
-  width: 88%;
-  max-width: 340px;
-  background: var(--careers-bg);
-  height: 100%;
-  padding: 20px;
-  overflow-y: auto;
 
-  .logo {
-    margin-bottom: 20px;
-  }
-}
-.drawerLinks {
+.drawer {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 900;
   display: flex;
+  width: 290px;
+  max-width: 86vw;
   flex-direction: column;
   gap: 4px;
+  overflow-y: auto;
+  padding: 18px 14px;
+  background: #fff;
+  box-shadow: $ec-shadow-lg;
+}
 
-  button {
-    justify-content: flex-start;
-    text-align: left;
+.drawerLink {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  color: $ec-text;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    background: $ec-primary-50;
   }
 }
 
-/* ---------- Mobile tab bar ---------- */
-.mobileTabbar {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #fff;
-  border-top: 1px solid var(--careers-line);
-  padding: 8px 6px calc(env(safe-area-inset-bottom) + 6px);
-  z-index: 60;
-  box-shadow: 0 -4px 16px rgba(20, 23, 31, 0.06);
+.drawerActive {
+  background: $ec-primary-50;
+  color: $ec-primary;
+}
 
-  @media (max-width: 860px) {
-    display: block;
+.drawerDivider {
+  height: 1px;
+  margin: 8px 4px;
+  background: $ec-border;
+}
+
+/* ---------------- public content ---------------- */
+
+.publicMain {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 24px 56px;
+
+  @include ec-mobile {
+    padding: 14px 12px 40px;
   }
+}
 
-  .row {
+.publicFooter {
+  border-top: 1px solid $ec-border;
+  background: #fff;
+  color: $ec-muted;
+  font-size: 13px;
+
+  div {
     display: flex;
-    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 18px 24px;
   }
 
   a {
-    background: none;
-    border: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    font-size: 10.5px;
-    color: var(--careers-ink-faint);
-    padding: 4px 6px;
-    flex: 1;
+    color: $ec-text-2;
     text-decoration: none;
+
+    &:hover {
+      color: $ec-primary;
+    }
   }
-  .active {
-    color: var(--careers-indigo);
-    font-weight: 600;
+}
+
+/* ---------------- job seeker sidebar shell ---------------- */
+
+.seekerShell {
+  display: grid;
+  grid-template-columns: 236px minmax(0, 1fr);
+  min-height: 100vh;
+
+  @include ec-tablet {
+    grid-template-columns: 1fr;
   }
-  .ic {
-    font-size: 17px;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 18px 14px;
+  background: linear-gradient(180deg, $ec-navy-800 0%, $ec-navy-900 100%);
+  color: $ec-navy-text;
+
+  .brand {
+    margin: 0 6px 22px;
+    color: #fff;
+  }
+
+  .brandText span {
+    color: #8fb9f3;
+  }
+
+  @include ec-tablet {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 900;
+    width: 280px;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    box-shadow: $ec-shadow-lg;
+  }
+}
+
+.sidebarOpen {
+  @include ec-tablet {
+    transform: translateX(0);
+  }
+}
+
+.sideNav {
+  display: grid;
+  gap: 2px;
+}
+
+.sideLink {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  color: $ec-navy-text;
+  font-size: 14px;
+  font-weight: 550;
+  text-decoration: none;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.6);
+  }
+}
+
+.sideActive {
+  background: $ec-primary;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(22, 119, 232, 0.35);
+
+  &:hover {
+    background: $ec-primary;
+  }
+}
+
+.sideBadge {
+  margin-left: auto;
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.sideFooter {
+  display: grid;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 18px;
+
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 650;
+    text-decoration: none;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+  }
+}
+
+.sideClose {
+  display: none !important;
+  margin-left: auto;
+  color: #fff !important;
+
+  @include ec-tablet {
+    display: inline-grid !important;
+  }
+}
+
+.seekerMain {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.seekerTop {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 62px;
+  padding: 0 24px;
+  border-bottom: 1px solid $ec-border;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+
+  @include ec-mobile {
+    padding: 0 12px;
+  }
+}
+
+.seekerContent {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px;
+
+  @include ec-mobile {
+    padding: 14px 12px 40px;
+  }
+}
+
+.topSearch {
+  position: relative;
+  flex: 1;
+  max-width: 420px;
+
+  svg {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    color: $ec-muted;
+    transform: translateY(-50%);
+  }
+
+  input {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px 0 36px;
+    border: 1px solid $ec-border;
+    border-radius: 10px;
+    background: $ec-surface-2;
+    color: $ec-text;
+    font: inherit;
+    font-size: 13.5px;
+
+    &:focus {
+      border-color: $ec-primary;
+      outline: none;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(22, 119, 232, 0.12);
+    }
   }
 }

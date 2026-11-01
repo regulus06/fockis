@@ -99,9 +99,6 @@ export class UsersController {
   async getMe(@Req() req: any) {
     const userId = this.getAuthenticatedUserId(req);
     const profile = await this.usersService.getUserById(userId);
-
-    // The account owner may see their own email address. This is added
-    // only here (never in GET /users/:id), so other users can't read it.
     const account = await this.usersService.findById(userId);
 
     return {
@@ -275,7 +272,6 @@ export class UsersController {
   }
 
   // POST /users/:id/email-change/request
-  // Requires authentication, account ownership, and the current password.
   @Post(":id/email-change/request")
   @UseGuards(JwtAuthGuard)
   async requestEmailChange(
@@ -293,7 +289,6 @@ export class UsersController {
   }
 
   // POST /users/:id/email-change/verify
-  // Updates the account email only after the verification code is valid.
   @Post(":id/email-change/verify")
   @UseGuards(JwtAuthGuard)
   async verifyEmailChange(
@@ -340,7 +335,19 @@ export class UsersController {
     );
   }
 
+  // DELETE /users/:id/account
+  @Delete(":id/account")
+  @UseGuards(JwtAuthGuard)
+  deleteAccount(
+    @Param("id") id: string,
+    @Req() req: any,
+  ) {
+    this.verifyOwner(req, id);
+    return this.usersService.deleteUser(id);
+  }
+
   // DELETE /users/:id
+  // Existing route preserved for compatibility.
   @Delete(":id")
   @UseGuards(JwtAuthGuard)
   deleteUser(

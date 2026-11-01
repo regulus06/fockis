@@ -1,0 +1,219 @@
+@use './tokens' as *;
+
+.stepper {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0 0 24px;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  color: $ec-muted;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+
+  &::before {
+    position: absolute;
+    top: 15px;
+    right: 50%;
+    left: -50%;
+    height: 2px;
+    background: $ec-border;
+    content: '';
+  }
+
+  &:first-child::before {
+    content: none;
+  }
+
+  button {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    width: 32px;
+    height: 32px;
+    place-items: center;
+    border: 2px solid $ec-border-strong;
+    border-radius: 50%;
+    background: $ec-surface;
+    color: $ec-muted;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: default;
+    }
+
+    &:focus-visible {
+      @include ec-focus;
+    }
+  }
+
+  @include ec-mobile {
+    font-size: 11px;
+  }
+}
+
+.stepDone {
+  composes: step;
+  color: $ec-text;
+
+  &::before {
+    background: $ec-primary;
+  }
+
+  button {
+    border-color: $ec-primary;
+    background: $ec-primary-50;
+    color: $ec-primary;
+  }
+}
+
+.stepCurrent {
+  composes: step;
+  color: $ec-primary;
+
+  &::before {
+    background: $ec-primary;
+  }
+
+  button {
+    border-color: transparent;
+    background: $ec-gradient;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(22, 119, 232, 0.3);
+  }
+}
+
+.formSection {
+  display: grid;
+  gap: 16px;
+
+  & + & {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid $ec-border;
+  }
+
+  h2 {
+    margin: 0;
+    color: $ec-text;
+    font-size: 16px;
+  }
+}
+
+.salaryRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+
+  @include ec-tablet {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.tagInput {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 42px;
+  padding: 6px 8px;
+  border: 1px solid $ec-border-strong;
+  border-radius: 10px;
+  background: $ec-surface;
+  cursor: text;
+
+  &:focus-within {
+    border-color: $ec-primary;
+    box-shadow: 0 0 0 3px rgba(22, 119, 232, 0.15);
+  }
+
+  input {
+    flex: 1 1 140px;
+    min-width: 120px;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    font-size: 14px;
+  }
+}
+
+.tagChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px 3px 9px;
+  border-radius: 6px;
+  background: $ec-primary-50;
+  color: $ec-primary-600;
+  font-size: 12.5px;
+  font-weight: 600;
+
+  button {
+    display: grid;
+    width: 18px;
+    height: 18px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+
+    &:hover {
+      background: $ec-primary-100;
+    }
+  }
+}
+
+.review {
+  display: grid;
+  gap: 18px;
+}
+
+.reviewBlock {
+  padding: 16px;
+  border: 1px solid $ec-border;
+  border-radius: $ec-radius;
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+
+    h3 {
+      margin: 0;
+      font-size: 14px;
+    }
+  }
+}
+
+.reviewGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+
+  @include ec-mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid $ec-border;
+}

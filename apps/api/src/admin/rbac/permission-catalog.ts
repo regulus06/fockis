@@ -654,6 +654,47 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
   },
 
   // ============================================================
+  // HELP & SUPPORT
+  // ============================================================
+
+  {
+    key: "support.view",
+    label: "View Support",
+    description: "View feedback, support tickets and live chats.",
+    module: "support",
+  },
+  {
+    key: "support.respond",
+    label: "Respond to Users",
+    description: "Reply to feedback, tickets and live chats, and add internal notes.",
+    module: "support",
+  },
+  {
+    key: "support.assign",
+    label: "Assign Support Work",
+    description: "Assign, transfer and escalate tickets, chats and feedback.",
+    module: "support",
+  },
+  {
+    key: "support.resolve",
+    label: "Resolve Support Work",
+    description: "Change status and priority, close, reopen and archive.",
+    module: "support",
+  },
+  {
+    key: "support.settings",
+    label: "Support Settings",
+    description: "Switch live chat availability on or off.",
+    module: "support",
+  },
+  {
+    key: "help.content.manage",
+    label: "Manage Help Articles",
+    description: "Create, edit, publish and archive Help Center articles and FAQs.",
+    module: "support",
+  },
+
+  // ============================================================
   // SYSTEM
   // ============================================================
 

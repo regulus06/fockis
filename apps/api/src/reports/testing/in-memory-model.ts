@@ -30,7 +30,12 @@ function norm(value: any): any {
 }
 
 function getPath(doc: Doc, path: string): any {
-  return path.split(".").reduce<any>((acc, key) => (acc == null ? undefined : acc[key]), doc);
+  return path.split(".").reduce<any>((acc, key) => {
+    if (acc == null) return undefined;
+    // Like MongoDB, "items.field" reaches into every element of an array.
+    if (Array.isArray(acc) && !/^\d+$/.test(key)) return acc.map((item) => (item == null ? undefined : item[key])).flat();
+    return acc[key];
+  }, doc);
 }
 
 function setPath(doc: Doc, path: string, value: any) {
@@ -132,7 +137,7 @@ class Query<T> {
   private skipN = 0;
   private limitN = 0;
 
-  constructor(private readonly run: () => Promise<T>) {}
+  constructor(private readonly run: () => Promise<T>, private readonly single = false) {}
 
   lean<R = T>() {
     return this as unknown as Query<R>;
@@ -171,8 +176,18 @@ class Query<T> {
         });
       }
       result = result.slice(this.skipN, this.limitN ? this.skipN + this.limitN : undefined);
+      if (this.single) return (result[0] ?? null) as T;
     }
     return result;
+  }
+  cursor() {
+    const run = () => this.exec();
+    return {
+      async *[Symbol.asyncIterator]() {
+        const rows: any = await run();
+        for (const row of rows) yield row;
+      },
+    };
   }
   then<R1 = T, R2 = never>(ok?: (value: T) => R1 | PromiseLike<R1>, fail?: (reason: any) => R2 | PromiseLike<R2>) {
     return this.exec().then(ok, fail);
@@ -204,15 +219,27 @@ export class InMemoryModel {
     return { ...clone(doc), toObject: () => clone(doc) };
   }
 
+  async insertMany(inputs: Doc[]) {
+    const out: Array<Awaited<ReturnType<InMemoryModel["create"]>>> = [];
+
+    for (const input of inputs) {
+      out.push(await this.create(input));
+    }
+
+    return out;
+  }
+
+  findByIdAndUpdate(id: any, update: Doc, options: { returnDocument?: "before" | "after" } = {}) {
+    return this.findOneAndUpdate({ _id: Types.ObjectId.isValid(String(id)) ? new Types.ObjectId(String(id)) : id }, update, options);
+  }
+
   find(filter: Doc = {}) {
     return new Query(async () => this.docs.filter((doc) => matches(doc, filter)).map(clone));
   }
 
   findOne(filter: Doc = {}) {
-    return new Query(async () => {
-      const doc = this.docs.find((item) => matches(item, filter));
-      return doc ? clone(doc) : null;
-    });
+    // Runs as a find so .sort() is honoured, then returns the first match.
+    return new Query<any>(async () => this.docs.filter((item) => matches(item, filter)).map(clone), true);
   }
 
   findById(id: any) {

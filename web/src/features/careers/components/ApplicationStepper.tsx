@@ -1,16 +1,7 @@
-import styles from "../styles/ApplicationStepper.module.scss";
 
-const APPLICATION_STEPS: string[] = [
-  "Personal",
-  "Resume",
-  "Education",
-  "Experience",
-  "Skills",
-  "Cover Letter",
-  "Eligibility",
-  "Review",
-  "Submit",
-];
+import { APPLICATION_STEPS } from '../types';
+
+import styles from '../styles/ApplicationStepper.module.scss';
 
 interface ApplicationStepperProps {
   currentStep: number;
@@ -19,44 +10,88 @@ interface ApplicationStepperProps {
 export function ApplicationStepper({
   currentStep,
 }: ApplicationStepperProps) {
+  const steps = APPLICATION_STEPS;
+
+  const safeCurrentStep = Math.min(
+    Math.max(currentStep, 0),
+    steps.length - 1,
+  );
+
+  const progress = steps.length > 1
+    ? (safeCurrentStep / (steps.length - 1)) * 100
+    : 0;
+
   return (
-    <div className={styles.stepper}>
-      {APPLICATION_STEPS.map(
-        (label, index) => {
-          const state =
-            index < currentStep
-              ? styles.done
-              : index === currentStep
-                ? styles.current
-                : "";
+    <div
+      className={styles.stepper}
+      aria-label="Application progress"
+    >
+      <div
+        className={styles.stepWrap}
+        style={{
+          position: 'relative',
+        }}
+      >
+        {steps.map((label, index) => {
+          const isCompleted = index < safeCurrentStep;
+          const isCurrent = index === safeCurrentStep;
+
+          const state = isCompleted
+            ? styles.done
+            : isCurrent
+              ? styles.current
+              : '';
 
           return (
             <div
-              className={styles.stepWrap}
-              key={label}
+              className={styles.step}
+              key={`${label}-${index}`}
+              aria-current={isCurrent ? 'step' : undefined}
+              aria-label={`${label}: ${
+                isCompleted
+                  ? 'completed'
+                  : isCurrent
+                    ? 'current step'
+                    : 'not started'
+              }`}
             >
-              <div
-                className={`${styles.step} ${state}`}
-              >
-                <div className={styles.dot}>
-                  {index < currentStep
-                    ? "✓"
-                    : index + 1}
-                </div>
-
-                <div className={styles.label}>
-                  {label}
-                </div>
+              <div className={`${styles.dot} ${state}`}>
+                {isCompleted ? '✓' : index + 1}
               </div>
 
-              {index <
-                APPLICATION_STEPS.length - 1 && (
-                <div className={styles.line} />
-              )}
+              <div className={`${styles.label} ${state}`}>
+                {label}
+              </div>
             </div>
           );
-        },
-      )}
+        })}
+      </div>
+
+      <div
+        role="progressbar"
+        aria-label="Application completion"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(progress)}
+        style={{
+          marginTop: 12,
+          height: 4,
+          width: '100%',
+          background: 'rgba(128,128,128,0.2)',
+          borderRadius: 10,
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            width: `${progress}%`,
+            height: '100%',
+            background: 'currentColor',
+            borderRadius: 10,
+            transition: 'width 200ms ease',
+          }}
+        />
+      </div>
     </div>
   );
 }

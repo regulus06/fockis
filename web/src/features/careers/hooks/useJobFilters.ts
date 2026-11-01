@@ -1,3 +1,4 @@
+
 import { create } from "zustand";
 
 import type {
@@ -14,49 +15,20 @@ import type {
 interface JobFiltersState {
   filters: JobFilters;
 
-  setKeyword: (
-    keyword: string,
-  ) => void;
+  setKeyword: (keyword: string) => void;
+  setLocation: (location: string) => void;
 
-  setLocation: (
-    location: string,
-  ) => void;
+  toggleJobType: (type: JobType) => void;
+  toggleArrangement: (arrangement: WorkArrangement) => void;
+  toggleExperienceLevel: (level: ExperienceLevel) => void;
+  toggleIndustry: (industry: string) => void;
 
-  toggleJobType: (
-    type: JobType,
-  ) => void;
+  setMinSalary: (value: number | undefined) => void;
+  setDatePosted: (value: JobFilters["datePosted"]) => void;
+  setSort: (sort: JobFilters["sort"]) => void;
 
-  toggleArrangement: (
-    arrangement: WorkArrangement,
-  ) => void;
-
-  toggleExperienceLevel: (
-    level: ExperienceLevel,
-  ) => void;
-
-  toggleIndustry: (
-    industry: string,
-  ) => void;
-
-  setMinSalary: (
-    value: number | undefined,
-  ) => void;
-
-  setDatePosted: (
-    value: JobFilters["datePosted"],
-  ) => void;
-
-  setSort: (
-    sort: JobFilters["sort"],
-  ) => void;
-
-  setPage: (
-    page: number,
-  ) => void;
-
-  setPageSize: (
-    pageSize: number,
-  ) => void;
+  setPage: (page: number) => void;
+  setPageSize: (pageSize: number) => void;
 
   reset: () => void;
 }
@@ -65,30 +37,20 @@ interface JobFiltersState {
    DEFAULT FILTERS
 ============================================================ */
 
-const defaultFilters: JobFilters = {
+const createDefaultFilters = (): JobFilters => ({
   keyword: "",
   location: "",
-
   jobTypes: [],
-
   arrangements: [],
-
   experienceLevels: [],
-
   industries: [],
-
   minSalary: undefined,
-
   datePosted: "any",
-
   benefits: [],
-
   sort: "recommended",
-
   page: 1,
-
   pageSize: 20,
-};
+});
 
 /* ============================================================
    HELPERS
@@ -98,41 +60,44 @@ function toggleInArray<T>(
   array: T[],
   value: T,
 ): T[] {
-  if (array.includes(value)) {
-    return array.filter(
-      (item) => item !== value,
-    );
+  return array.includes(value)
+    ? array.filter((item) => item !== value)
+    : [...array, value];
+}
+
+function normalizePage(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 1;
   }
 
-  return [
-    ...array,
-    value,
-  ];
+  return Math.max(1, Math.floor(value));
+}
+
+function normalizePageSize(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 20;
+  }
+
+  return Math.min(100, Math.max(1, Math.floor(value)));
 }
 
 /* ============================================================
    STORE
 ============================================================ */
 
-export const useJobFilters =
-  create<JobFiltersState>((set) => ({
-    filters: {
-      ...defaultFilters,
-    },
+export const useJobFilters = create<JobFiltersState>(
+  (set) => ({
+    filters: createDefaultFilters(),
 
     /* ========================================================
        KEYWORD
     ======================================================== */
 
-    setKeyword: (
-      keyword: string,
-    ) => {
+    setKeyword: (keyword) => {
       set((state) => ({
         filters: {
           ...state.filters,
-
           keyword,
-
           page: 1,
         },
       }));
@@ -142,15 +107,11 @@ export const useJobFilters =
        LOCATION
     ======================================================== */
 
-    setLocation: (
-      location: string,
-    ) => {
+    setLocation: (location) => {
       set((state) => ({
         filters: {
           ...state.filters,
-
           location,
-
           page: 1,
         },
       }));
@@ -160,19 +121,14 @@ export const useJobFilters =
        JOB TYPE
     ======================================================== */
 
-    toggleJobType: (
-      type: JobType,
-    ) => {
+    toggleJobType: (type) => {
       set((state) => ({
         filters: {
           ...state.filters,
-
-          jobTypes:
-            toggleInArray(
-              state.filters.jobTypes,
-              type,
-            ),
-
+          jobTypes: toggleInArray(
+            state.filters.jobTypes,
+            type,
+          ),
           page: 1,
         },
       }));
@@ -182,19 +138,14 @@ export const useJobFilters =
        WORK ARRANGEMENT
     ======================================================== */
 
-    toggleArrangement: (
-      arrangement: WorkArrangement,
-    ) => {
+    toggleArrangement: (arrangement) => {
       set((state) => ({
         filters: {
           ...state.filters,
-
-          arrangements:
-            toggleInArray(
-              state.filters.arrangements,
-              arrangement,
-            ),
-
+          arrangements: toggleInArray(
+            state.filters.arrangements,
+            arrangement,
+          ),
           page: 1,
         },
       }));
@@ -204,20 +155,14 @@ export const useJobFilters =
        EXPERIENCE LEVEL
     ======================================================== */
 
-    toggleExperienceLevel: (
-      level: ExperienceLevel,
-    ) => {
+    toggleExperienceLevel: (level) => {
       set((state) => ({
         filters: {
           ...state.filters,
-
-          experienceLevels:
-            toggleInArray(
-              state.filters
-                .experienceLevels,
-              level,
-            ),
-
+          experienceLevels: toggleInArray(
+            state.filters.experienceLevels,
+            level,
+          ),
           page: 1,
         },
       }));
@@ -227,19 +172,20 @@ export const useJobFilters =
        INDUSTRY
     ======================================================== */
 
-    toggleIndustry: (
-      industry: string,
-    ) => {
+    toggleIndustry: (industry) => {
+      const normalizedIndustry = industry.trim();
+
+      if (!normalizedIndustry) {
+        return;
+      }
+
       set((state) => ({
         filters: {
           ...state.filters,
-
-          industries:
-            toggleInArray(
-              state.filters.industries,
-              industry,
-            ),
-
+          industries: toggleInArray(
+            state.filters.industries,
+            normalizedIndustry,
+          ),
           page: 1,
         },
       }));
@@ -249,15 +195,16 @@ export const useJobFilters =
        MINIMUM SALARY
     ======================================================== */
 
-    setMinSalary: (
-      value: number | undefined,
-    ) => {
+    setMinSalary: (value) => {
+      const normalizedValue =
+        value === undefined || !Number.isFinite(value)
+          ? undefined
+          : Math.max(0, value);
+
       set((state) => ({
         filters: {
           ...state.filters,
-
-          minSalary: value,
-
+          minSalary: normalizedValue,
           page: 1,
         },
       }));
@@ -267,15 +214,11 @@ export const useJobFilters =
        DATE POSTED
     ======================================================== */
 
-    setDatePosted: (
-      value: JobFilters["datePosted"],
-    ) => {
+    setDatePosted: (value) => {
       set((state) => ({
         filters: {
           ...state.filters,
-
           datePosted: value,
-
           page: 1,
         },
       }));
@@ -285,15 +228,11 @@ export const useJobFilters =
        SORT
     ======================================================== */
 
-    setSort: (
-      sort: JobFilters["sort"],
-    ) => {
+    setSort: (sort) => {
       set((state) => ({
         filters: {
           ...state.filters,
-
           sort,
-
           page: 1,
         },
       }));
@@ -303,18 +242,11 @@ export const useJobFilters =
        PAGE
     ======================================================== */
 
-    setPage: (
-      page: number,
-    ) => {
+    setPage: (page) => {
       set((state) => ({
         filters: {
           ...state.filters,
-
-          page:
-            Math.max(
-              1,
-              page,
-            ),
+          page: normalizePage(page),
         },
       }));
     },
@@ -323,19 +255,11 @@ export const useJobFilters =
        PAGE SIZE
     ======================================================== */
 
-    setPageSize: (
-      pageSize: number,
-    ) => {
+    setPageSize: (pageSize) => {
       set((state) => ({
         filters: {
           ...state.filters,
-
-          pageSize:
-            Math.max(
-              1,
-              pageSize,
-            ),
-
+          pageSize: normalizePageSize(pageSize),
           page: 1,
         },
       }));
@@ -347,19 +271,8 @@ export const useJobFilters =
 
     reset: () => {
       set({
-        filters: {
-          ...defaultFilters,
-
-          jobTypes: [],
-
-          arrangements: [],
-
-          experienceLevels: [],
-
-          industries: [],
-
-          benefits: [],
-        },
+        filters: createDefaultFilters(),
       });
     },
-  }));
+  }),
+);

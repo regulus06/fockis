@@ -2644,6 +2644,23 @@ const COUNTRIES: Country[] = [
 
 
 
+function calculateAge(dateOfBirth: string): number | null {
+  if (!dateOfBirth) return null;
+
+  const birthDate = new Date(`${dateOfBirth}T00:00:00`);
+  if (Number.isNaN(birthDate.getTime())) return null;
+
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const birthdayHasPassed =
+    today.getMonth() > birthDate.getMonth() ||
+    (today.getMonth() === birthDate.getMonth() &&
+      today.getDate() >= birthDate.getDate());
+
+  if (!birthdayHasPassed) age -= 1;
+  return age;
+}
+
 export default function Register() {
 
   const navigate = useNavigate();
@@ -2657,6 +2674,10 @@ export default function Register() {
   const [username, setUsername] = useState("");
 
   const [email, setEmail] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [guardianName, setGuardianName] = useState("");
+  const [guardianEmail, setGuardianEmail] = useState("");
+  const [guardianConsentConfirmed, setGuardianConsentConfirmed] = useState(false);
 
 
 
@@ -2688,6 +2709,12 @@ export default function Register() {
 
   const [loading, setLoading] = useState(false);
   const [acceptedPolicies, setAcceptedPolicies] = useState(false);
+  const calculatedAge = useMemo(
+    () => calculateAge(dateOfBirth),
+    [dateOfBirth],
+  );
+  const isMinor = calculatedAge !== null && calculatedAge < 18;
+  const maxDateOfBirth = new Date().toISOString().slice(0, 10);
 
 
 
@@ -2845,7 +2872,7 @@ export default function Register() {
       !username.trim() ||
 
       !email.trim() ||
-
+      !dateOfBirth ||
       !countryCode ||
 
       !password ||
@@ -2862,6 +2889,26 @@ export default function Register() {
 
       return;
 
+    }
+
+    const age = calculateAge(dateOfBirth);
+    if (age === null || age < 0) {
+      alert("Please enter a valid date of birth.");
+      return;
+    }
+    if (age < 13) {
+      alert("You must be at least 13 years old to create a Fockis account.");
+      return;
+    }
+    if (age < 18) {
+      if (!guardianName.trim() || !guardianEmail.trim()) {
+        alert("Users under 18 must provide a parent or legal guardian's name and email.");
+        return;
+      }
+      if (!guardianConsentConfirmed) {
+        alert("Please confirm that your parent or legal guardian is aware of and agrees to your Fockis account.");
+        return;
+      }
     }
 
     // Usernames are public (@handle): never an email address.
@@ -3563,7 +3610,7 @@ export default function Register() {
 
             <p className="form-header__body">
 
-              Join Fockis and create your profile.
+              Join Fockis. Users 13–17 receive a protected, limited-access teen account.
 
             </p>
 
@@ -3846,6 +3893,105 @@ export default function Register() {
             </div>
 
 
+
+            {/* ============================================================ */}
+            {/* DATE OF BIRTH AND AGE */}
+            {/* ============================================================ */}
+            <div className="field">
+              <label htmlFor="dateOfBirth">Date of birth</label>
+              <div className="input-shell input-shell--plain">
+                <input
+                  id="dateOfBirth"
+                  type="date"
+                  value={dateOfBirth}
+                  max={maxDateOfBirth}
+                  onChange={(e) => {
+                    setDateOfBirth(e.target.value);
+                    setGuardianConsentConfirmed(false);
+                  }}
+                  autoComplete="bday"
+                  disabled={loading}
+                  required
+                  aria-describedby="age-help"
+                />
+              </div>
+              <p className="age-help" id="age-help">
+                You must be at least 13 years old to join Fockis.
+                {calculatedAge !== null && calculatedAge >= 13 && calculatedAge < 18
+                  ? ` Your account will have teen safety restrictions because you are ${calculatedAge}.`
+                  : calculatedAge !== null && calculatedAge >= 18
+                    ? " You are registering for a standard adult account."
+                    : ""}
+              </p>
+              {calculatedAge !== null && calculatedAge < 13 && (
+                <p className="age-error" role="alert">
+                  Fockis registration is not available to users under 13.
+                </p>
+              )}
+            </div>
+
+            {isMinor && (
+              <section className="guardian-section" aria-labelledby="guardian-title">
+                <div className="guardian-section__heading">
+                  <span className="guardian-section__icon" aria-hidden="true">✓</span>
+                  <div>
+                    <h3 id="guardian-title">Parent or legal guardian</h3>
+                    <p>Teen accounts have limited access and require an adult representative.</p>
+                  </div>
+                </div>
+
+                <div className="field">
+                  <label htmlFor="guardianName">Parent/guardian full name</label>
+                  <div className="input-shell input-shell--plain">
+                    <input
+                      id="guardianName"
+                      type="text"
+                      value={guardianName}
+                      onChange={(e) => setGuardianName(e.target.value)}
+                      placeholder="Adult's full name"
+                      autoComplete="name"
+                      disabled={loading}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="field">
+                  <label htmlFor="guardianEmail">Parent/guardian email</label>
+                  <div className="input-shell input-shell--plain">
+                    <input
+                      id="guardianEmail"
+                      type="email"
+                      value={guardianEmail}
+                      onChange={(e) => setGuardianEmail(e.target.value)}
+                      placeholder="Adult's email address"
+                      autoComplete="email"
+                      disabled={loading}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <label className="guardian-consent">
+                  <input
+                    type="checkbox"
+                    checked={guardianConsentConfirmed}
+                    onChange={(e) => setGuardianConsentConfirmed(e.target.checked)}
+                    disabled={loading}
+                    required
+                  />
+                  <span>
+                    I confirm that my parent or legal guardian knows about this account
+                    and agrees to be my adult representative. I understand this does
+                    not replace Fockis's separate guardian verification.
+                  </span>
+                </label>
+                <p className="guardian-note">
+                  Teen accounts will have limited features. Guardian details must be
+                  verified before any guardian-dependent features are enabled.
+                </p>
+              </section>
+            )}
 
             {/* ============================================================ */}
 
@@ -4708,7 +4854,13 @@ export default function Register() {
 
               }`}
 
-              disabled={loading || !acceptedPolicies}
+              disabled={
+                loading ||
+                !acceptedPolicies ||
+                calculatedAge === null ||
+                calculatedAge < 13 ||
+                (isMinor && (!guardianName.trim() || !guardianEmail.trim() || !guardianConsentConfirmed))
+              }
 
             >
 

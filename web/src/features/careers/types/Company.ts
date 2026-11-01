@@ -1,39 +1,24 @@
-export interface CompanyBenefit {
-  id: string;
-  label: string;
-}
+import type { Job } from './Job';
 
-export interface Company {
+export interface CompanySummary {
   id: string;
   name: string;
-  initials: string;
-  logoUrl?: string;
-  coverImageUrl?: string;
-  verified: boolean;
+  logoUrl: string | null;
   industry: string;
   location: string;
-  employeeCount: string;
-  website?: string;
-  foundedYear?: number;
-  about: string;
-  mission?: string;
-  benefits: CompanyBenefit[];
-  rating?: number;
-  reviewCount?: number;
-}
-
-export interface EmployerJobSummary {
-  id: string;
-  title: string;
-  jobType: string;
-  status: 'live' | 'draft' | 'closed';
-  applicantCount: number;
-  viewCount: number;
-}
-
-export interface EmployerStats {
+  tagline: string;
+  verified: boolean;
   openJobs: number;
-  totalApplicants: number;
-  inInterview: number;
-  hireRate: number;
+}
+
+export interface Company extends Omit<CompanySummary, 'openJobs'> {
+  coverImageUrl: string | null;
+  companySize: string;
+  website: string;
+  foundedYear: number | null;
+  about: string;
+  socialLinks: Partial<Record<'linkedin' | 'x' | 'facebook' | 'instagram' | 'youtube', string>>;
+  media: { url: string; caption: string }[];
+  openJobs: number;
+  jobs: Job[];
 }

@@ -42,7 +42,7 @@ export const EVENT_CATEGORIES: EventCategoryMeta[] = [
   { value: "business", label: "Business", icon: Briefcase, featured: true },
   { value: "education", label: "Education", icon: GraduationCap, featured: true },
   { value: "sports", label: "Sports", icon: Trophy, featured: true },
-  { value: "food", label: "Food & drink", icon: Utensils, featured: true },
+  { value: "food", label: "Food & Drink", icon: Utensils, featured: true },
   { value: "technology", label: "Technology", icon: Cpu, featured: true },
   { value: "arts", label: "Arts", icon: Palette, featured: true },
   { value: "community", label: "Community", icon: Users, featured: true },

@@ -297,6 +297,17 @@ export class Post {
 
   @Prop({ type: String, default: null })
   moderationCaseId?: string | null;
+
+  /** Staff member who hid the post directly (not through a report case). */
+  @Prop({ type: String, default: null })
+  moderationHiddenBy?: string | null;
+
+  @Prop({ type: String, default: null, maxlength: 1000 })
+  moderationReason?: string | null;
+
+  /** Set when a moderator escalates the post for senior review. */
+  @Prop({ type: Date, default: null })
+  moderationEscalatedAt?: Date | null;
 }
 
 export const PostSchema =
@@ -318,3 +329,6 @@ export const PostSchema =
 PostSchema.index({ createdAt: -1, _id: -1 });
 PostSchema.index({ user: 1, createdAt: -1, _id: -1 });
 PostSchema.index({ score: -1, _id: -1 });
+
+// Hidden Posts manager (Admin Center → Support & Moderation).
+PostSchema.index({ moderationStatus: 1, moderationRemovedAt: -1 });

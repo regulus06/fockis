@@ -1,291 +1,78 @@
-// web/src/features/careers/hooks/useSavedJobs.ts
-
-import { create } from "zustand";
-
-import { savedJobsApi } from "../services/savedJobsApi";
-
-import type {
-  SavedJob,
-} from "../types";
-
-/* ============================================================
-   HELPERS
-============================================================ */
-
-function extractJobId(
-  item: SavedJob & {
-    job?: unknown;
-  },
-): string | null {
-  const jobId = item.jobId;
-
-  /*
-   * Normal SavedJob response:
-   *
-   * {
-   *   jobId: "665..."
-   * }
-   */
-  if (typeof jobId === "string") {
-    return jobId;
-  }
-
-  /*
-   * Handle populated MongoDB ObjectId:
-   *
-   * {
-   *   jobId: {
-   *     _id: "665..."
-   *   }
-   * }
-   */
-  if (
-    jobId &&
-    typeof jobId === "object"
-  ) {
-    const value =
-      jobId as {
-        _id?: unknown;
-        id?: unknown;
-      };
-
-    if (
-      typeof value._id === "string"
-    ) {
-      return value._id;
-    }
-
-    if (
-      typeof value.id === "string"
-    ) {
-      return value.id;
-    }
-  }
-
-  return null;
-}
-
-/* ============================================================
-   STATE
-============================================================ */
+import { create } from 'zustand';
+import { savedJobsApi, type SavedJobEntry } from '../services/savedJobsApi';
 
 interface SavedJobsState {
+  entries: SavedJobEntry[];
   savedJobIds: Set<string>;
-
+  loaded: boolean;
   isLoading: boolean;
-
-  load: () => Promise<void>;
-
-  toggleSave: (
-    jobId: string,
-  ) => Promise<void>;
-
-  isSaved: (
-    jobId: string,
-  ) => boolean;
+  error: string | null;
+  load: (force?: boolean) => Promise<void>;
+  toggleSave: (jobId: string) => Promise<boolean>;
+  isSaved: (jobId: string) => boolean;
 }
 
-/* ============================================================
-   SAVED JOBS STORE
-============================================================ */
+/**
+ * Saved jobs, shared by every Careers page.
+ * GET/POST/DELETE /careers/saved-jobs
+ */
+export const useSavedJobs = create<SavedJobsState>((set, get) => {
+  const pending = new Set<string>();
+  let requestId = 0;
 
-export const useSavedJobs =
-  create<SavedJobsState>(
-    (set, get) => ({
-      savedJobIds:
-        new Set<string>(),
+  return {
+    entries: [],
+    savedJobIds: new Set(),
+    loaded: false,
+    isLoading: false,
+    error: null,
 
-      isLoading: false,
+    load: async (force = false) => {
+      if (get().loaded && !force) return;
+      const current = ++requestId;
+      set({ isLoading: true, error: null });
+      try {
+        const entries = await savedJobsApi.getSavedJobs();
+        if (current !== requestId) return;
+        set({ entries, savedJobIds: new Set(entries.map((e) => e.jobId)), loaded: true });
+      } catch (error) {
+        if (current === requestId) set({ error: error instanceof Error ? error.message : 'Unable to load saved jobs.' });
+      } finally {
+        if (current === requestId) set({ isLoading: false });
+      }
+    },
 
-      /* ======================================================
-         LOAD SAVED JOBS
-
-         GET /careers/saved-jobs
-      ====================================================== */
-
-      load: async () => {
-        set({
-          isLoading: true,
-        });
-
-        try {
-          const saved =
-            await savedJobsApi.getSavedJobs();
-
-          const ids =
-            Array.isArray(saved)
-              ? saved
-                  .map((item) =>
-                    extractJobId(
-                      item,
-                    ),
-                  )
-                  .filter(
-                    (
-                      id,
-                    ): id is string =>
-                      Boolean(
-                        id &&
-                          id.trim(),
-                      ),
-                  )
-              : [];
-
-          set({
-            savedJobIds:
-              new Set<string>(
-                ids,
-              ),
-          });
-        } catch {
-          /*
-           * Do not keep stale saved-job
-           * state when loading fails.
-           */
-
-          set({
-            savedJobIds:
-              new Set<string>(),
-          });
-        } finally {
-          set({
-            isLoading: false,
-          });
-        }
-      },
-
-      /* ======================================================
-         TOGGLE SAVE
-
-         SAVE:
-         POST /careers/saved-jobs/:jobId
-
-         UNSAVE:
-         DELETE /careers/saved-jobs/:jobId
-      ====================================================== */
-
-      toggleSave: async (
-        jobId: string,
-      ) => {
-        const normalizedJobId =
-          jobId.trim();
-
-        if (!normalizedJobId) {
-          return;
-        }
-
-        const alreadySaved =
-          get().savedJobIds.has(
-            normalizedJobId,
-          );
-
-        /*
-         * ----------------------------------------------------
-         * OPTIMISTIC UPDATE
-         * ----------------------------------------------------
-         */
-
+    /** Returns the new saved state. Rolls back and throws on failure. */
+    toggleSave: async (jobId: string) => {
+      const id = jobId?.trim();
+      if (!id) throw new Error('Job ID is required.');
+      if (pending.has(id)) return get().savedJobIds.has(id);
+      pending.add(id);
+      const wasSaved = get().savedJobIds.has(id);
+      const flip = (saved: boolean) =>
         set((state) => {
-          const next =
-            new Set<string>(
-              state.savedJobIds,
-            );
-
-          if (alreadySaved) {
-            next.delete(
-              normalizedJobId,
-            );
-          } else {
-            next.add(
-              normalizedJobId,
-            );
-          }
-
+          const next = new Set(state.savedJobIds);
+          if (saved) next.add(id);
+          else next.delete(id);
           return {
             savedJobIds: next,
+            entries: saved ? state.entries : state.entries.filter((e) => e.jobId !== id),
           };
         });
+      flip(!wasSaved);
+      try {
+        if (wasSaved) await savedJobsApi.unsaveJob(id);
+        else await savedJobsApi.saveJob(id);
+        if (!wasSaved) void get().load(true);
+        return !wasSaved;
+      } catch (error) {
+        flip(wasSaved);
+        throw error;
+      } finally {
+        pending.delete(id);
+      }
+    },
 
-        try {
-          /*
-           * --------------------------------------------------
-           * UNSAVE
-           * --------------------------------------------------
-           */
-
-          if (alreadySaved) {
-            await savedJobsApi.unsaveJob(
-              normalizedJobId,
-            );
-
-            return;
-          }
-
-          /*
-           * --------------------------------------------------
-           * SAVE
-           * --------------------------------------------------
-           */
-
-          await savedJobsApi.saveJob(
-            normalizedJobId,
-          );
-        } catch (error) {
-          /*
-           * --------------------------------------------------
-           * ROLLBACK
-           * --------------------------------------------------
-           */
-
-          set((state) => {
-            const next =
-              new Set<string>(
-                state.savedJobIds,
-              );
-
-            if (alreadySaved) {
-              /*
-               * Unsave failed.
-               * Restore saved state.
-               */
-              next.add(
-                normalizedJobId,
-              );
-            } else {
-              /*
-               * Save failed.
-               * Remove optimistic state.
-               */
-              next.delete(
-                normalizedJobId,
-              );
-            }
-
-            return {
-              savedJobIds: next,
-            };
-          });
-
-          throw error;
-        }
-      },
-
-      /* ======================================================
-         CHECK LOCAL SAVED STATE
-      ====================================================== */
-
-      isSaved: (
-        jobId: string,
-      ) => {
-        if (!jobId) {
-          return false;
-        }
-
-        return get()
-          .savedJobIds
-          .has(
-            jobId.trim(),
-          );
-      },
-    }),
-  );
+    isSaved: (jobId: string) => get().savedJobIds.has(jobId?.trim()),
+  };
+});

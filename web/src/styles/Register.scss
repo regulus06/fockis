@@ -3837,3 +3837,94 @@ $font-body: "Inter", sans-serif;
     min-height: 29px;
   }
 }
+
+
+/* ==========================================================
+   AGE ELIGIBILITY AND TEEN GUARDIAN FIELDS
+   ========================================================== */
+
+.register-page {
+  .age-help,
+  .age-error {
+    margin: 0.45rem 0 0;
+    font-size: 0.76rem;
+    line-height: 1.5;
+  }
+
+  .age-help {
+    color: $gray-500;
+  }
+
+  .age-error {
+    color: #b42318;
+    font-weight: 700;
+  }
+
+  .guardian-section {
+    margin: 0 0 1.15rem;
+    padding: 1rem;
+    border: 1px solid rgba(47, 90, 168, 0.2);
+    border-radius: $radius-md;
+    background: rgba(47, 90, 168, 0.045);
+  }
+
+  .guardian-section__heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    margin-bottom: 1rem;
+
+    h3 {
+      margin: 0 0 0.25rem;
+      color: $navy-950;
+      font-size: 0.92rem;
+      font-weight: 800;
+    }
+
+    p {
+      margin: 0;
+      color: $gray-500;
+      font-size: 0.76rem;
+      line-height: 1.5;
+    }
+  }
+
+  .guardian-section__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 2rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: rgba(47, 90, 168, 0.12);
+    color: $blue-600;
+    font-weight: 800;
+  }
+
+  .guardian-consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin: 0.2rem 0 0.65rem;
+    color: $ink;
+    font-size: 0.76rem;
+    line-height: 1.5;
+    cursor: pointer;
+
+    input {
+      flex: 0 0 auto;
+      width: 16px;
+      height: 16px;
+      margin: 2px 0 0;
+      accent-color: $blue-600;
+    }
+  }
+
+  .guardian-note {
+    margin: 0;
+    color: $gray-500;
+    font-size: 0.72rem;
+    line-height: 1.5;
+  }
+}

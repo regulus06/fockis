@@ -1,5 +1,8 @@
+
 import {
+  useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -8,7 +11,11 @@ import { employerApi } from "../services/employerApi";
 import type {
   EmployerJobSummary,
   EmployerStats,
-} from "../types";
+} from "../services/employerApi";
+
+/* ============================================================
+   USE EMPLOYER JOBS
+============================================================ */
 
 interface UseEmployerJobsResult {
   jobs: EmployerJobSummary[];
@@ -19,69 +26,87 @@ interface UseEmployerJobsResult {
 }
 
 export function useEmployerJobs(): UseEmployerJobsResult {
-  const [jobs, setJobs] =
-    useState<EmployerJobSummary[]>([]);
+  const [jobs, setJobs] = useState<EmployerJobSummary[]>([]);
+  const [stats, setStats] = useState<EmployerStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [stats, setStats] =
-    useState<EmployerStats | null>(null);
+  const requestIdRef = useRef(0);
 
-  const [isLoading, setIsLoading] =
-    useState(true);
+  /* ============================================================
+     LOAD EMPLOYER JOBS AND STATISTICS
+  ============================================================ */
 
-  const [error, setError] =
-    useState<string | null>(null);
+  const loadEmployerData = useCallback(async (): Promise<void> => {
+    const requestId = ++requestIdRef.current;
 
-  const loadEmployerData =
-    async (): Promise<void> => {
-      setIsLoading(true);
-      setError(null);
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        const [
-          jobsData,
-          statsData,
-        ] = await Promise.all([
-          employerApi.getEmployerJobs(),
-          employerApi.getEmployerStats(),
-        ]);
+    try {
+      const jobsData = await employerApi.getEmployerJobs();
 
-        setJobs(
-          Array.isArray(jobsData)
-            ? jobsData
-            : [],
-        );
-
-        setStats(
-          statsData ?? null,
-        );
-      } catch (err: unknown) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to load employer data",
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-  useEffect(() => {
-    let mounted = true;
-
-    const load = async () => {
-      if (!mounted) {
+      if (requestId !== requestIdRef.current) {
         return;
       }
 
-      await loadEmployerData();
-    };
+      if (!Array.isArray(jobsData)) {
+        throw new Error(
+          "Invalid employer jobs response from server.",
+        );
+      }
 
-    void load();
+      const openJobs = jobsData.filter(
+        (job) => job.status === "live",
+      ).length;
+
+      const totalApplicants = jobsData.reduce(
+        (total, job) =>
+          total + Number(job.applicantCount ?? 0),
+        0,
+      );
+
+      const statsData: EmployerStats = {
+        openJobs,
+        totalApplicants,
+        inInterview: 0,
+        hireRate: 0,
+      };
+
+      setJobs(jobsData);
+      setStats(statsData);
+    } catch (err: unknown) {
+      if (requestId !== requestIdRef.current) {
+        return;
+      }
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load employer data.",
+      );
+    } finally {
+      if (requestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
+    }
+  }, []);
+
+  /* ============================================================
+     INITIAL LOAD AND CLEANUP
+  ============================================================ */
+
+  useEffect(() => {
+    void loadEmployerData();
 
     return () => {
-      mounted = false;
+      requestIdRef.current += 1;
     };
-  }, []);
+  }, [loadEmployerData]);
+
+  /* ============================================================
+     RETURN DATA
+  ============================================================ */
 
   return {
     jobs,

@@ -86,6 +86,9 @@ export const ROLE_PERMISSIONS: Record<
     P.SUPPORT_CREATE,
     P.SUPPORT_ASSIGN,
     P.SUPPORT_RESOLVE,
+    P.SUPPORT_RESPOND,
+    P.SUPPORT_SETTINGS,
+    P.HELP_CONTENT_MANAGE,
 
     P.USERS_VIEW,
     P.USERS_VIEW_BASIC,
@@ -296,4 +299,4 @@ export function getPermissionsForRole(
   role: AdminRole,
 ): PermissionValue[] {
   return ROLE_PERMISSIONS[role] ?? [];
-}
+}

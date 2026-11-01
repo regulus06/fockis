@@ -1,0 +1,134 @@
+@use './tokens' as *;
+
+.chartRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 20px;
+
+  @include ec-tablet {
+    grid-template-columns: 1fr;
+  }
+}
+
+.quickActions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+
+  @include ec-tablet {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include ec-mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.quickAction {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid $ec-border;
+  border-radius: $ec-radius;
+  background: $ec-surface;
+  color: $ec-text;
+  text-decoration: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+
+  strong {
+    display: block;
+    font-size: 14px;
+  }
+
+  span {
+    color: $ec-muted;
+    font-size: 12px;
+  }
+
+  &:hover {
+    border-color: $ec-primary;
+    box-shadow: $ec-shadow;
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    @include ec-focus;
+  }
+}
+
+.quickIcon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 10px;
+  background: $ec-primary-50;
+  color: $ec-primary;
+}
+
+.activity {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid $ec-border;
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  a {
+    color: $ec-text;
+    font-size: 13.5px;
+    line-height: 1.45;
+    text-decoration: none;
+
+    &:hover {
+      color: $ec-primary;
+    }
+  }
+
+  time {
+    display: block;
+    color: $ec-muted;
+    font-size: 12px;
+  }
+}
+
+.activityIcon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 50%;
+  background: $ec-primary-50;
+  color: $ec-primary;
+}
+
+.welcome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px dashed $ec-primary;
+  border-radius: $ec-radius-lg;
+  background: #f8fbff;
+
+  p {
+    flex: 1 1 280px;
+    margin: 0;
+    color: $ec-text-2;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}

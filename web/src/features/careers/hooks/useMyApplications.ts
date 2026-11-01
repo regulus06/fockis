@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { applicationsApi } from "../services/applicationsApi";
 
@@ -12,42 +18,53 @@ interface UseMyApplicationsResult {
 }
 
 export function useMyApplications(): UseMyApplicationsResult {
-  const [applications, setApplications] =
-    useState<Application[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [isLoading, setIsLoading] =
-    useState<boolean>(true);
+  const requestIdRef = useRef(0);
 
-  const [error, setError] =
-    useState<string | null>(null);
+  const loadApplications = useCallback(async (): Promise<void> => {
+    const requestId = ++requestIdRef.current;
 
-  const loadApplications = useCallback(
-    async () => {
-      setIsLoading(true);
-      setError(null);
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        const data =
-          await applicationsApi.getMyApplications();
+    try {
+      const data = await applicationsApi.getMyApplications();
 
-        setApplications(data);
-      } catch (err: unknown) {
-        setApplications([]);
+      if (requestId !== requestIdRef.current) {
+        return;
+      }
 
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to load applications",
-        );
-      } finally {
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid applications response from server.");
+      }
+
+      setApplications(data);
+    } catch (err: unknown) {
+      if (requestId !== requestIdRef.current) {
+        return;
+      }
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load applications.",
+      );
+    } finally {
+      if (requestId === requestIdRef.current) {
         setIsLoading(false);
       }
-    },
-    [],
-  );
+    }
+  }, []);
 
   useEffect(() => {
     void loadApplications();
+
+    return () => {
+      requestIdRef.current += 1;
+    };
   }, [loadApplications]);
 
   return {

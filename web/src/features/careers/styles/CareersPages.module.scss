@@ -1,0 +1,828 @@
+@use '../../employer/styles/tokens' as *;
+
+// ============================================================
+// FOCKIS CAREERS — page styles
+// ============================================================
+
+.page {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+
+  h2 {
+    margin: 0;
+    color: $ec-text;
+    font-size: 20px;
+    font-weight: 750;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: $ec-muted;
+    font-size: 13.5px;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: $ec-primary;
+    font-size: 13.5px;
+    font-weight: 650;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+}
+
+/* ---------------- hero ---------------- */
+
+.hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+  overflow: hidden;
+  padding: 44px 44px 36px;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(91, 156, 245, 0.45), transparent 45%),
+    linear-gradient(120deg, #0b1a3a 0%, #133a7c 55%, #1677e8 100%);
+  color: #fff;
+
+  @include ec-tablet {
+    grid-template-columns: 1fr;
+    padding: 32px 24px 28px;
+  }
+
+  @include ec-mobile {
+    padding: 26px 16px 22px;
+    border-radius: 16px;
+  }
+}
+
+.heroText {
+  position: relative;
+  z-index: 1;
+
+  h1 {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(32px, 4.4vw, 52px);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1.04;
+  }
+
+  p {
+    max-width: 520px;
+    margin: 14px 0 0;
+    color: #d6e4fb;
+    font-size: 16px;
+    line-height: 1.55;
+  }
+}
+
+.heroSearch {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  max-width: 680px;
+  margin-top: 26px;
+  padding: 8px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(5, 16, 40, 0.35);
+
+  @include ec-mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.heroField {
+  position: relative;
+
+  svg {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    color: $ec-muted;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  input {
+    width: 100%;
+    height: 46px;
+    padding: 0 12px 0 38px;
+    border: 0;
+    border-radius: 10px;
+    background: $ec-surface-2;
+    color: $ec-text;
+    font: inherit;
+    font-size: 14.5px;
+
+    &:focus {
+      outline: 2px solid rgba(22, 119, 232, 0.35);
+      background: #fff;
+    }
+  }
+}
+
+.heroSearch button {
+  min-height: 46px;
+  padding: 0 22px;
+}
+
+.heroArt {
+  position: relative;
+  min-height: 260px;
+
+  @include ec-tablet {
+    display: none;
+  }
+}
+
+.floatCard {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 290px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 20px 40px rgba(5, 16, 40, 0.35);
+  color: $ec-text;
+  text-decoration: none;
+
+  strong {
+    display: block;
+    overflow: hidden;
+    color: $ec-text;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  > span:last-child {
+    flex: 1;
+    min-width: 0;
+  }
+
+  > span:last-child > span {
+    display: block;
+    overflow: hidden;
+    color: $ec-muted;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &:nth-child(1) {
+    top: 8px;
+    right: 40px;
+    transform: rotate(-2deg);
+  }
+
+  &:nth-child(2) {
+    top: 100px;
+    right: 0;
+  }
+
+  &:nth-child(3) {
+    top: 192px;
+    right: 70px;
+    transform: rotate(1.5deg);
+  }
+}
+
+.heroStat {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(6px);
+
+  strong {
+    display: block;
+    font-size: 24px;
+  }
+
+  span {
+    color: #cfe0fa;
+    font-size: 12px;
+  }
+}
+
+/* ---------------- category cards ---------------- */
+
+.categories {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+
+  @include ec-tablet {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @include ec-mobile {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+.category {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 18px 12px;
+  border: 1px solid $ec-border;
+  border-radius: $ec-radius-lg;
+  background: #fff;
+  box-shadow: $ec-shadow;
+  color: $ec-text;
+  text-align: center;
+  text-decoration: none;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+
+  strong {
+    margin-top: 6px;
+    font-size: 14.5px;
+  }
+
+  span {
+    color: $ec-muted;
+    font-size: 12.5px;
+  }
+
+  &:hover {
+    border-color: $ec-primary;
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    @include ec-focus;
+  }
+}
+
+.categoryIcon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 12px;
+  background: $ec-primary-50;
+  color: $ec-primary;
+}
+
+/* ---------------- companies ---------------- */
+
+.companyStrip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+
+  @include ec-tablet {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @include ec-mobile {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.companyTile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid $ec-border;
+  border-radius: $ec-radius;
+  background: #fff;
+  color: $ec-text;
+  text-decoration: none;
+
+  strong {
+    display: block;
+    overflow: hidden;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span {
+    color: $ec-muted;
+    font-size: 12px;
+  }
+
+  &:hover {
+    border-color: $ec-primary;
+  }
+}
+
+.companyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 14px;
+}
+
+.companyCard {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid $ec-border;
+  border-radius: $ec-radius-lg;
+  background: #fff;
+  box-shadow: $ec-shadow;
+  color: $ec-text;
+  text-decoration: none;
+
+  &:hover {
+    border-color: $ec-primary;
+  }
+
+  p {
+    margin: 0;
+    color: $ec-text-2;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}
+
+/* ---------------- lists ---------------- */
+
+.jobList {
+  display: grid;
+  gap: 12px;
+}
+
+.chipLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 0 14px;
+    border: 1px solid $ec-border-strong;
+    border-radius: 999px;
+    background: #fff;
+    color: $ec-text-2;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      border-color: $ec-primary;
+      color: $ec-primary;
+    }
+  }
+}
+
+.resourceRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+
+  @include ec-mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.resourceTile {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid $ec-border;
+  border-radius: $ec-radius-lg;
+  background: #fff;
+  color: $ec-text;
+  text-decoration: none;
+
+  strong {
+    display: block;
+    font-size: 14.5px;
+  }
+
+  span {
+    color: $ec-muted;
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+
+  &:hover {
+    border-color: $ec-primary;
+  }
+}
+
+.tileIcon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 12px;
+  background: $ec-primary-50;
+  color: $ec-primary;
+}
+
+.ctaBand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 24px;
+  border-radius: 18px;
+  background: linear-gradient(120deg, #eaf3fe, #f7fbff);
+  border: 1px solid #d3e6fd;
+
+  div {
+    flex: 1 1 280px;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: $ec-text-2;
+    font-size: 14px;
+  }
+}
+
+/* ---------------- job listings ---------------- */
+
+.searchBar {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid $ec-border;
+  border-radius: $ec-radius-lg;
+  background: #fff;
+  box-shadow: $ec-shadow;
+
+  @include ec-mobile {
+    grid-template-columns: 1fr;
+  }
+
+  .heroField input {
+    border: 1px solid $ec-border-strong;
+    background: #fff;
+  }
+}
+
+.listingLayout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+
+  @include ec-tablet {
+    grid-template-columns: 1fr;
+  }
+}
+
+.filters {
+  position: sticky;
+  top: 86px;
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid $ec-border;
+  border-radius: $ec-radius-lg;
+  background: #fff;
+  box-shadow: $ec-shadow;
+
+  @include ec-tablet {
+    position: static;
+  }
+}
+
+.filtersHidden {
+  @include ec-tablet {
+    display: none;
+  }
+}
+
+.filtersToggle {
+  display: none !important;
+
+  @include ec-tablet {
+    display: inline-flex !important;
+  }
+}
+
+.filterHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h2 {
+    margin: 0;
+    font-size: 15px;
+  }
+}
+
+.filterGroup {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  legend {
+    margin-bottom: 8px;
+    padding: 0;
+    color: $ec-text;
+    font-size: 13.5px;
+    font-weight: 700;
+  }
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: $ec-text-2;
+  font-size: 13.5px;
+  cursor: pointer;
+
+  input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: $ec-primary;
+  }
+
+  em {
+    margin-left: auto;
+    color: $ec-muted;
+    font-size: 12px;
+    font-style: normal;
+  }
+}
+
+.range {
+  width: 100%;
+  accent-color: $ec-primary;
+}
+
+.rangeValue {
+  display: flex;
+  justify-content: space-between;
+  color: $ec-text-2;
+  font-size: 12.5px;
+}
+
+.resultsHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+
+  h1 {
+    margin: 0;
+    font-size: 18px;
+  }
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: $ec-muted;
+    font-size: 13px;
+  }
+}
+
+.loadMore {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+/* ---------------- job details ---------------- */
+
+.detailLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 20px;
+  align-items: start;
+
+  @include ec-tablet {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detailHeader {
+  overflow: hidden;
+  border: 1px solid $ec-border;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: $ec-shadow;
+}
+
+.cover {
+  position: relative;
+  height: 150px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.25), transparent 40%),
+    linear-gradient(120deg, #0b1a3a, #1677e8);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @include ec-mobile {
+    height: 100px;
+  }
+}
+
+.headerBody {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  padding: 0 24px 20px;
+
+  > :first-child {
+    position: relative;
+    z-index: 1;
+    margin-top: -36px;
+    border: 4px solid #fff;
+    box-shadow: $ec-shadow;
+  }
+
+  @include ec-mobile {
+    grid-template-columns: 1fr;
+    padding: 0 16px 16px;
+  }
+}
+
+.headerText {
+  padding-top: 14px;
+
+  h1 {
+    margin: 4px 0 0;
+    color: $ec-text;
+    font-size: clamp(22px, 2.6vw, 28px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+}
+
+.companyLine {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 700;
+
+  a {
+    color: $ec-text;
+    text-decoration: none;
+
+    &:hover {
+      color: $ec-primary;
+    }
+  }
+}
+
+.headerMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 10px;
+  color: $ec-text-2;
+  font-size: 13.5px;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+
+  .applyBtn {
+    min-width: 170px;
+  }
+}
+
+.tabPanel {
+  padding: 22px 24px;
+
+  @include ec-mobile {
+    padding: 16px;
+  }
+
+  h2 {
+    margin: 0 0 10px;
+    font-size: 17px;
+  }
+
+  h3 {
+    margin: 20px 0 8px;
+    font-size: 15px;
+  }
+
+  p {
+    margin: 0 0 10px;
+    color: $ec-text-2;
+    font-size: 14.5px;
+    line-height: 1.65;
+  }
+
+  ul {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding-left: 20px;
+    list-style: disc;
+    color: $ec-text-2;
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+}
+
+.summaryList {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    gap: 12px;
+    font-size: 14px;
+
+    svg {
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: $ec-primary;
+    }
+  }
+
+  span {
+    display: block;
+    color: $ec-muted;
+    font-size: 12px;
+  }
+}
+
+.similar {
+  display: grid;
+  gap: 10px;
+}
+
+.similarItem {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid $ec-border;
+  border-radius: $ec-radius;
+  color: $ec-text;
+  text-decoration: none;
+
+  strong {
+    display: block;
+    color: $ec-primary;
+    font-size: 13.5px;
+  }
+
+  span {
+    color: $ec-muted;
+    font-size: 12px;
+  }
+
+  &:hover {
+    border-color: $ec-primary;
+  }
+}

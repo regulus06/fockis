@@ -39,6 +39,7 @@ import { RepostsModule } from "./reposts/reposts.module";
 import { WavesModule } from "./waves/waves.module";
 import { EventsModule } from "./events/events.module";
 import { ReportsModule } from "./reports/reports.module";
+import { SupportModule } from "./support/support.module";
 import { MessagesModule } from "./messages/messages.module";
 import { MessageAdminModule } from "./message-admin/message-admin.module";
 
@@ -366,6 +367,7 @@ import {
     WavesModule,
     EventsModule,
     ReportsModule,
+    SupportModule,
     MessagesModule,
     MessageAdminModule,
 

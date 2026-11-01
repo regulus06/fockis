@@ -1,3 +1,4 @@
+
 import {
   Controller,
   Delete,
@@ -5,24 +6,31 @@ import {
   Param,
   Post,
   Req,
+  UnauthorizedException,
   UseGuards,
 } from "@nestjs/common";
+
+import type { Request } from "express";
 
 import { SavedJobsService } from "../services/saved-jobs.service";
 
 import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
 
-/* ============================================================
-   SAVED JOBS CONTROLLER
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id?: string;
+    sub?: string;
+  };
+}
 
-   Routes:
-
-   GET    /careers/saved-jobs
-   POST   /careers/saved-jobs/:jobId
-   DELETE /careers/saved-jobs/:jobId
-   GET    /careers/saved-jobs/:jobId/status
-============================================================ */
-
+/**
+ * SAVED JOBS CONTROLLER
+ *
+ * GET    /careers/saved-jobs
+ * POST   /careers/saved-jobs/:jobId
+ * DELETE /careers/saved-jobs/:jobId
+ * GET    /careers/saved-jobs/:jobId/status
+ */
 @Controller("careers/saved-jobs")
 @UseGuards(JwtAuthGuard)
 export class SavedJobsController {
@@ -30,86 +38,93 @@ export class SavedJobsController {
     private readonly savedJobsService: SavedJobsService,
   ) {}
 
-  /* ==========================================================
-     GET MY SAVED JOBS
-
-     GET /careers/saved-jobs
-
-     The user ID comes from the authenticated JWT.
-  ========================================================== */
-
+  /**
+   * GET /careers/saved-jobs
+   *
+   * Retrieve the authenticated user's saved jobs.
+   */
   @Get()
-  findMine(@Req() req: any) {
-    return this.savedJobsService.findMine(
-      req.user.id,
-    );
+  async findMine(
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const userId = this.getUserId(req);
+
+    return this.savedJobsService.findMine(userId);
   }
 
-  /* ==========================================================
-     CHECK SAVED STATUS
-
-     GET /careers/saved-jobs/:jobId/status
-
-     Returns:
-
-     {
-       saved: true
-     }
-
-     or:
-
-     {
-       saved: false
-     }
-  ========================================================== */
-
+  /**
+   * GET /careers/saved-jobs/:jobId/status
+   *
+   * Check whether a job is saved by the current user.
+   */
   @Get(":jobId/status")
   async checkSavedStatus(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Param("jobId") jobId: string,
   ) {
-    const saved =
-      await this.savedJobsService.isSaved(
-        req.user.id,
-        jobId,
-      );
+    const userId = this.getUserId(req);
 
-    return {
-      saved,
-    };
+    const saved = await this.savedJobsService.isSaved(
+      userId,
+      jobId,
+    );
+
+    return { saved };
   }
 
-  /* ==========================================================
-     SAVE JOB
-
-     POST /careers/saved-jobs/:jobId
-  ========================================================== */
-
+  /**
+   * POST /careers/saved-jobs/:jobId
+   *
+   * Save a job for the authenticated user.
+   */
   @Post(":jobId")
-  saveJob(
-    @Req() req: any,
+  async saveJob(
+    @Req() req: AuthenticatedRequest,
     @Param("jobId") jobId: string,
   ) {
+    const userId = this.getUserId(req);
+
     return this.savedJobsService.saveJob(
-      req.user.id,
+      userId,
       jobId,
     );
   }
 
-  /* ==========================================================
-     REMOVE SAVED JOB
-
-     DELETE /careers/saved-jobs/:jobId
-  ========================================================== */
-
+  /**
+   * DELETE /careers/saved-jobs/:jobId
+   *
+   * Remove a saved job.
+   */
   @Delete(":jobId")
-  removeSavedJob(
-    @Req() req: any,
+  async removeSavedJob(
+    @Req() req: AuthenticatedRequest,
     @Param("jobId") jobId: string,
   ) {
+    const userId = this.getUserId(req);
+
     return this.savedJobsService.removeSavedJob(
-      req.user.id,
+      userId,
       jobId,
     );
+  }
+
+  /**
+   * Extract authenticated user ID from JWT.
+   */
+  private getUserId(
+    req: AuthenticatedRequest,
+  ): string {
+    const userId = req.user?.id ?? req.user?.sub;
+
+    if (
+      typeof userId !== "string" ||
+      !userId.trim()
+    ) {
+      throw new UnauthorizedException(
+        "You must be logged in to access saved jobs.",
+      );
+    }
+
+    return userId;
   }
 }

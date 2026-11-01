@@ -1,0 +1,83 @@
+@use './tokens' as *;
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+
+  @include ec-tablet {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include ec-mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.resource {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 24px 18px;
+  border: 1px solid $ec-border;
+  border-radius: $ec-radius-lg;
+  background: $ec-surface;
+  box-shadow: $ec-shadow;
+  text-align: center;
+  scroll-margin-top: 90px;
+
+  h2 {
+    margin: 4px 0 0;
+    color: $ec-text;
+    font-size: 15.5px;
+  }
+
+  p {
+    margin: 0 0 6px;
+    color: $ec-muted;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}
+
+.icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 14px;
+  background: $ec-primary-50;
+  color: $ec-primary;
+}
+
+.points {
+  display: grid;
+  list-style: disc;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+  color: $ec-text-2;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.template {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid $ec-border;
+  border-radius: $ec-radius;
+
+  h3 {
+    margin: 0;
+    font-size: 15px;
+  }
+
+  p {
+    margin: 3px 0 0;
+    color: $ec-muted;
+    font-size: 13px;
+  }
+}

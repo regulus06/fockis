@@ -1,3 +1,4 @@
+
 import {
   BadRequestException,
   ConflictException,
@@ -22,41 +23,27 @@ import {
   JobDocument,
 } from "../schemas/job.schema";
 
-/* ============================================================
-   SAVED JOBS SERVICE
-============================================================ */
-
 @Injectable()
 export class SavedJobsService {
   constructor(
     @InjectModel(SavedJob.name)
-    private readonly savedJobModel:
-      Model<SavedJobDocument>,
+    private readonly savedJobModel: Model<SavedJobDocument>,
 
     @InjectModel(Job.name)
-    private readonly jobModel:
-      Model<JobDocument>,
+    private readonly jobModel: Model<JobDocument>,
   ) {}
 
-  /* ==========================================================
-     GET MY SAVED JOBS
-
-     Returns the current user's saved jobs.
-
-     The Job document is populated so the frontend receives
-     the actual job information.
-  ========================================================== */
-
-  async findMine(
-    userId: string,
-  ) {
+  /**
+   * GET MY SAVED JOBS
+   *
+   * Returns the authenticated user's saved jobs.
+   */
+  async findMine(userId: string) {
     this.validateUserId(userId);
 
     return this.savedJobModel
       .find({
-        userId: new Types.ObjectId(
-          userId,
-        ),
+        userId: new Types.ObjectId(userId),
       })
       .populate("jobId")
       .sort({
@@ -65,10 +52,11 @@ export class SavedJobsService {
       .exec();
   }
 
-  /* ==========================================================
-     SAVE JOB
-  ========================================================== */
-
+  /**
+   * SAVE JOB
+   *
+   * Only active and approved jobs can be saved.
+   */
   async saveJob(
     userId: string,
     jobId: string,
@@ -76,39 +64,31 @@ export class SavedJobsService {
     this.validateUserId(userId);
     this.validateJobId(jobId);
 
-    const userObjectId =
-      new Types.ObjectId(userId);
+    const userObjectId = new Types.ObjectId(userId);
+    const jobObjectId = new Types.ObjectId(jobId);
 
-    const jobObjectId =
-      new Types.ObjectId(jobId);
-
-    /* ========================================================
-       VERIFY JOB EXISTS
-    ======================================================== */
-
-    const job =
-      await this.jobModel.findById(
-        jobObjectId,
-      );
+    // Verify that the job exists and is publicly available.
+    const job = await this.jobModel
+      .findOne({
+        _id: jobObjectId,
+        isActive: true,
+        isApproved: true,
+      })
+      .exec();
 
     if (!job) {
       throw new NotFoundException(
-        `Job ${jobId} not found`,
+        "Job not found or is not available",
       );
     }
 
-    /* ========================================================
-       CHECK EXISTING SAVE
-
-       This gives the API a clean error instead of relying
-       only on the MongoDB unique index.
-    ======================================================== */
-
-    const existing =
-      await this.savedJobModel.findOne({
+    // Prevent duplicate saves.
+    const existing = await this.savedJobModel
+      .exists({
         userId: userObjectId,
         jobId: jobObjectId,
-      });
+      })
+      .exec();
 
     if (existing) {
       throw new ConflictException(
@@ -116,24 +96,25 @@ export class SavedJobsService {
       );
     }
 
-    /* ========================================================
-       CREATE SAVE
-    ======================================================== */
-
     try {
-      const savedJob =
-        await this.savedJobModel.create({
-          userId: userObjectId,
-          jobId: jobObjectId,
-        });
+      const savedJob = await this.savedJobModel.create({
+        userId: userObjectId,
+        jobId: jobObjectId,
+      });
 
-      return savedJob;
-    } catch (error: any) {
-      /*
-       * MongoDB duplicate-key protection.
-       */
-
-      if (error?.code === 11000) {
+      return this.savedJobModel
+        .findById(savedJob._id)
+        .populate("jobId")
+        .exec();
+    } catch (error: unknown) {
+      // Handle MongoDB duplicate-key errors caused by
+      // simultaneous save requests.
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === 11000
+      ) {
         throw new ConflictException(
           "Job is already saved",
         );
@@ -143,10 +124,9 @@ export class SavedJobsService {
     }
   }
 
-  /* ==========================================================
-     REMOVE SAVED JOB
-  ========================================================== */
-
+  /**
+   * REMOVE SAVED JOB
+   */
   async removeSavedJob(
     userId: string,
     jobId: string,
@@ -154,14 +134,12 @@ export class SavedJobsService {
     this.validateUserId(userId);
     this.validateJobId(jobId);
 
-    const deleted =
-      await this.savedJobModel.findOneAndDelete({
-        userId:
-          new Types.ObjectId(userId),
-
-        jobId:
-          new Types.ObjectId(jobId),
-      });
+    const deleted = await this.savedJobModel
+      .findOneAndDelete({
+        userId: new Types.ObjectId(userId),
+        jobId: new Types.ObjectId(jobId),
+      })
+      .exec();
 
     if (!deleted) {
       throw new NotFoundException(
@@ -170,15 +148,13 @@ export class SavedJobsService {
     }
 
     return {
-      message:
-        "Job removed from saved jobs",
+      message: "Job removed from saved jobs",
     };
   }
 
-  /* ==========================================================
-     CHECK WHETHER JOB IS SAVED
-  ========================================================== */
-
+  /**
+   * CHECK WHETHER JOB IS SAVED
+   */
   async isSaved(
     userId: string,
     jobId: string,
@@ -186,26 +162,22 @@ export class SavedJobsService {
     this.validateUserId(userId);
     this.validateJobId(jobId);
 
-    const saved =
-      await this.savedJobModel.exists({
-        userId:
-          new Types.ObjectId(userId),
+    const saved = await this.savedJobModel
+      .exists({
+        userId: new Types.ObjectId(userId),
+        jobId: new Types.ObjectId(jobId),
+      })
+      .exec();
 
-        jobId:
-          new Types.ObjectId(jobId),
-      });
-
-    return !!saved;
+    return Boolean(saved);
   }
 
-  /* ==========================================================
-     VALIDATE USER ID
-  ========================================================== */
-
-  private validateUserId(
-    userId: string,
-  ): void {
+  /**
+   * VALIDATE USER ID
+   */
+  private validateUserId(userId: string): void {
     if (
+      typeof userId !== "string" ||
       !Types.ObjectId.isValid(userId)
     ) {
       throw new BadRequestException(
@@ -214,14 +186,12 @@ export class SavedJobsService {
     }
   }
 
-  /* ==========================================================
-     VALIDATE JOB ID
-  ========================================================== */
-
-  private validateJobId(
-    jobId: string,
-  ): void {
+  /**
+   * VALIDATE JOB ID
+   */
+  private validateJobId(jobId: string): void {
     if (
+      typeof jobId !== "string" ||
       !Types.ObjectId.isValid(jobId)
     ) {
       throw new BadRequestException(

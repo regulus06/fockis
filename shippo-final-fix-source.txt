@@ -1,0 +1,3650 @@
+FOCKIS SHIPPO FINAL FIX SOURCE
+
+===== FILE: .\apps\api\src\fockis-shop\orders\orders.module.ts =====
+import {
+Module,
+} from "@nestjs/common";
+
+import {
+MongooseModule,
+} from "@nestjs/mongoose";
+
+import {
+Order,
+OrderSchema,
+} from "./schemas/order.schema";
+
+import {
+Cart,
+CartSchema,
+} from "../cart/schemas/cart.schema";
+
+import {
+User,
+UserSchema,
+} from "../../users/user.schema";
+
+import {
+Store,
+StoreSchema,
+} from "../../stores/schemas/store.schema";
+
+import {
+OrdersController,
+} from "./controllers/orders.controller";
+
+import {
+InvoiceController,
+} from "./controllers/invoice.controller";
+
+import {
+OrdersService,
+} from "./services/orders.service";
+
+import {
+InvoiceService,
+} from "./services/invoice.service";
+
+import {
+ProductsModule,
+} from "../products/products.module";
+
+import {
+InventoryModule,
+} from "../inventory/inventory.module";
+
+import {
+PaymentsModule,
+} from "../../payments/payments.module";
+
+@Module({
+imports: [
+MongooseModule.forFeature([
+{
+name:
+Order.name,
+
+    schema:
+      OrderSchema,
+  },
+
+  {
+    name:
+      Cart.name,
+
+    schema:
+      CartSchema,
+  },
+
+  {
+    name:
+      User.name,
+
+    schema:
+      UserSchema,
+  },
+
+  {
+    name:
+      Store.name,
+
+    schema:
+      StoreSchema,
+  },
+]),
+
+ProductsModule,
+
+InventoryModule,
+
+PaymentsModule,
+],
+
+controllers: [
+OrdersController,
+
+
+InvoiceController,
+
+],
+
+providers: [
+OrdersService,
+
+InvoiceService,
+
+],
+
+exports: [
+OrdersService,
+],
+})
+export class OrdersModule {}
+
+
+===== FILE: .\apps\api\src\fockis-shop\orders\schemas\order.schema.ts =====
+import {
+Prop,
+Schema,
+SchemaFactory,
+} from "@nestjs/mongoose";
+
+import {
+Document,
+Types,
+} from "mongoose";
+
+/* ============================================================================
+ORDER DOCUMENT
+============================================================================ */
+
+export type OrderDocument =
+Order & Document;
+
+/* ============================================================================
+ORDER STATUS
+============================================================================ */
+
+export enum OrderStatus {
+PENDING = "pending",
+PAID = "paid",
+PROCESSING = "processing",
+READY_TO_SHIP = "ready_to_ship",
+SHIPPED = "shipped",
+IN_TRANSIT = "in_transit",
+OUT_FOR_DELIVERY = "out_for_delivery",
+DELIVERED = "delivered",
+CANCELLED = "cancelled",
+REFUNDED = "refunded",
+RETURN_REQUESTED = "return_requested",
+RETURNED = "returned",
+}
+
+/* ============================================================================
+PAYMENT STATUS
+============================================================================ */
+
+export enum PaymentStatus {
+PENDING = "pending",
+PAID = "paid",
+FAILED = "failed",
+REFUNDED = "refunded",
+PARTIALLY_REFUNDED = "partially_refunded",
+}
+
+/* ============================================================================
+SHIPMENT STATUS
+============================================================================ */
+
+export enum ShipmentStatus {
+PENDING = "pending",
+PROCESSING = "processing",
+READY_TO_SHIP = "ready_to_ship",
+SHIPPED = "shipped",
+IN_TRANSIT = "in_transit",
+OUT_FOR_DELIVERY = "out_for_delivery",
+DELIVERED = "delivered",
+EXCEPTION = "exception",
+CANCELLED = "cancelled",
+}
+
+/* ============================================================================
+ORDER ITEM
+============================================================================ */
+
+@Schema({
+_id: true,
+})
+export class OrderItem {
+@Prop({
+type: Types.ObjectId,
+ref: "Product",
+required: true,
+})
+product!: Types.ObjectId;
+
+@Prop({
+type: Types.ObjectId,
+ref: "User",
+required: true,
+})
+seller!: Types.ObjectId;
+
+@Prop({
+type: Types.ObjectId,
+ref: "Store",
+required: true,
+})
+storeId!: Types.ObjectId;
+
+@Prop({
+required: true,
+default: "",
+})
+productName!: string;
+
+@Prop({
+default: "",
+})
+productImage!: string;
+
+/*
+
+* Cart snapshot metadata.
+*
+* These fields preserve useful information from checkout without
+* becoming the source of truth for pricing, inventory, seller,
+* or store ownership.
+  */
+
+@Prop({
+default: "",
+})
+cartItemId!: string;
+
+@Prop({
+default: "",
+})
+productSlug!: string;
+
+@Prop({
+default: "",
+})
+storeName!: string;
+
+@Prop({
+default: "",
+})
+storeSlug!: string;
+
+@Prop({
+min: 0,
+default: 0,
+})
+unitPrice!: number;
+
+/*
+
+* Price supplied by the frontend at checkout.
+*
+* This is retained only as a historical snapshot.
+* The `price` field remains the authoritative order price.
+  */
+  @Prop({
+  min: 0,
+  default: 0,
+  })
+  clientPrice!: number;
+
+@Prop({
+min: 0,
+default: 0,
+})
+maxQuantity!: number;
+
+@Prop({
+type: Date,
+default: null,
+})
+addedAt!: Date | null;
+
+@Prop({
+min: 0,
+default: 0,
+})
+weight!: number;
+
+@Prop({
+type: Object,
+default: {},
+})
+metadata!: Record<string, unknown>;
+
+@Prop({
+required: true,
+min: 1,
+})
+quantity!: number;
+
+/*
+
+* Authoritative backend price.
+  */
+  @Prop({
+  required: true,
+  min: 0,
+  })
+  price!: number;
+
+/*
+
+* Backend-calculated quantity × authoritative price.
+  */
+  @Prop({
+  required: true,
+  min: 0,
+  })
+  itemTotal!: number;
+  }
+
+export const OrderItemSchema =
+SchemaFactory.createForClass(
+OrderItem,
+);
+
+/* ============================================================================
+ORDER ADDRESS
+============================================================================ */
+
+@Schema({
+_id: false,
+})
+export class OrderAddress {
+@Prop({
+required: true,
+default: "",
+})
+fullName!: string;
+
+@Prop({
+default: "",
+})
+email!: string;
+
+@Prop({
+required: true,
+default: "",
+})
+phone!: string;
+
+@Prop({
+required: true,
+default: "",
+})
+houseOrApartmentNumber!: string;
+
+@Prop({
+default: "",
+})
+neighborhood!: string;
+
+@Prop({
+default: "",
+})
+street!: string;
+
+@Prop({
+default: "",
+})
+apartment!: string;
+
+@Prop({
+required: true,
+default: "",
+})
+city!: string;
+
+@Prop({
+default: "",
+})
+state!: string;
+
+@Prop({
+default: "",
+})
+zipCode!: string;
+
+@Prop({
+required: true,
+default: "US",
+})
+country!: string;
+}
+
+export const OrderAddressSchema =
+SchemaFactory.createForClass(
+OrderAddress,
+);
+
+/* ============================================================================
+ORDER SHIPMENT
+============================================================================ */
+
+@Schema({
+_id: true,
+timestamps: true,
+})
+export class OrderShipment {
+@Prop({
+type: Types.ObjectId,
+ref: "User",
+required: true,
+})
+seller!: Types.ObjectId;
+
+@Prop({
+type: Types.ObjectId,
+ref: "Store",
+required: true,
+})
+storeId!: Types.ObjectId;
+
+@Prop({
+type: [Types.ObjectId],
+default: [],
+})
+itemIds!: Types.ObjectId[];
+
+@Prop({
+type: String,
+enum: ShipmentStatus,
+default: ShipmentStatus.PENDING,
+})
+status!: ShipmentStatus;
+
+@Prop({
+type: String,
+default: "",
+})
+carrier!: string;
+
+@Prop({
+type: String,
+default: "",
+})
+trackingNumber!: string;
+
+@Prop({
+type: String,
+default: "",
+})
+trackingUrl!: string;
+
+@Prop({
+type: Date,
+default: null,
+})
+estimatedDeliveryDate!: Date | null;
+
+@Prop({
+type: Date,
+default: null,
+})
+shippedAt!: Date | null;
+
+@Prop({
+type: Date,
+default: null,
+})
+deliveredAt!: Date | null;
+}
+
+export const OrderShipmentSchema =
+SchemaFactory.createForClass(
+OrderShipment,
+);
+
+/* ============================================================================
+ORDER
+============================================================================ */
+
+@Schema({
+timestamps: true,
+})
+export class Order {
+@Prop({
+required: true,
+unique: true,
+index: true,
+})
+orderNumber!: string;
+
+@Prop({
+required: true,
+unique: true,
+index: true,
+})
+invoiceNumber!: string;
+
+@Prop({
+type: Types.ObjectId,
+ref: "User",
+required: true,
+index: true,
+})
+customer!: Types.ObjectId;
+
+@Prop({
+default: "",
+})
+customerName!: string;
+
+@Prop({
+default: "",
+})
+customerEmail!: string;
+
+@Prop({
+default: "",
+})
+customerPhone!: string;
+
+@Prop({
+type: [OrderItemSchema],
+default: [],
+})
+items!: OrderItem[];
+
+@Prop({
+type: OrderAddressSchema,
+required: true,
+})
+shippingAddress!: OrderAddress;
+
+@Prop({
+type: OrderAddressSchema,
+required: true,
+})
+billingAddress!: OrderAddress;
+
+@Prop({
+required: true,
+min: 0,
+default: 0,
+})
+subtotal!: number;
+
+@Prop({
+required: true,
+min: 0,
+default: 0,
+})
+shippingCost!: number;
+
+@Prop({
+required: true,
+min: 0,
+default: 0,
+})
+tax!: number;
+
+@Prop({
+required: true,
+min: 0,
+default: 0,
+})
+discount!: number;
+
+@Prop({
+required: true,
+min: 0,
+default: 0,
+})
+tipAmount!: number;
+
+@Prop({
+required: true,
+min: 0,
+})
+totalAmount!: number;
+
+@Prop({
+default: "standard",
+})
+deliveryMethod!: string;
+
+@Prop({
+required: true,
+})
+paymentMethod!: string;
+
+@Prop({
+type: String,
+enum: PaymentStatus,
+default: PaymentStatus.PENDING,
+})
+paymentStatus!: PaymentStatus;
+
+@Prop({
+default: "",
+})
+paymentIntentId!: string;
+
+@Prop({
+default: "",
+})
+moncashTransactionId!: string;
+
+/*
+
+* Correct spelling for new orders.
+  */
+  @Prop({
+  default: "",
+  })
+  natcashTransactionId!: string;
+
+/*
+
+* Legacy field retained so existing orders remain compatible.
+  */
+  @Prop({
+  default: "",
+  })
+  natchTransactionId!: string;
+
+@Prop({
+default: "USD",
+})
+currency!: string;
+
+@Prop({
+min: 0,
+default: 1,
+})
+exchangeRate!: number;
+
+@Prop({
+type: String,
+enum: OrderStatus,
+default: OrderStatus.PENDING,
+index: true,
+})
+status!: OrderStatus;
+
+@Prop({
+type: [OrderShipmentSchema],
+default: [],
+})
+shipments!: OrderShipment[];
+
+@Prop({
+default: "",
+})
+trackingNumber!: string;
+
+@Prop({
+default: "",
+})
+carrier!: string;
+
+@Prop({
+type: Date,
+default: null,
+})
+paidAt!: Date | null;
+
+@Prop({
+type: Date,
+default: null,
+})
+shippedAt!: Date | null;
+
+@Prop({
+type: Date,
+default: null,
+})
+deliveredAt!: Date | null;
+
+@Prop({
+type: Date,
+default: null,
+})
+cancelledAt!: Date | null;
+
+@Prop({
+type: Date,
+default: null,
+})
+orderDate!: Date | null;
+
+@Prop({
+default: "",
+})
+month!: string;
+
+@Prop({
+default: 0,
+})
+year!: number;
+}
+
+export const OrderSchema =
+SchemaFactory.createForClass(
+Order,
+);
+
+/* ============================================================================
+INDEXES
+============================================================================ */
+
+OrderSchema.index({
+customer: 1,
+createdAt: -1,
+});
+
+OrderSchema.index({
+"items.seller": 1,
+createdAt: -1,
+});
+
+OrderSchema.index({
+"items.storeId": 1,
+createdAt: -1,
+});
+
+OrderSchema.index({
+status: 1,
+createdAt: -1,
+});
+
+OrderSchema.index({
+paymentStatus: 1,
+createdAt: -1,
+});
+
+OrderSchema.index({
+paymentMethod: 1,
+createdAt: -1,
+});
+
+
+===== FILE: .\apps\api\src\fockis-shop\orders\controllers\orders.controller.ts =====
+import {
+BadRequestException,
+Body,
+Controller,
+Get,
+Param,
+Patch,
+Post,
+Req,
+UseGuards,
+} from "@nestjs/common";
+
+import { Types } from "mongoose";
+
+import { OrdersService } from "../services/orders.service";
+import { CreateOrderDto } from "../dto/create-order.dto";
+import { UpdateOrderStatusDto } from "../dto/update-order-status.dto";
+import { JwtAuthGuard } from "../../../auth/jwt-auth.guard";
+
+@Controller("fockis-shop/orders")
+@UseGuards(JwtAuthGuard)
+export class OrdersController {
+constructor(
+private readonly ordersService: OrdersService,
+) {}
+
+private getUserId(req: any): string {
+const userId =
+req?.user?.id ??
+req?.user?.userId ??
+req?.user?.sub;
+
+console.log(
+  "[OrdersController] Authenticated user:",
+  req?.user,
+);
+
+console.log(
+  "[OrdersController] Resolved user ID:",
+  userId,
+);
+
+if (
+  !userId ||
+  !Types.ObjectId.isValid(String(userId))
+) {
+  throw new BadRequestException(
+    "Invalid user authentication. The authenticated user ID must be a valid MongoDB ObjectId.",
+  );
+}
+
+return String(userId);
+
+}
+
+@Post()
+async createOrder(
+@Req() req: any,
+@Body() dto: CreateOrderDto,
+) {
+const customerId = this.getUserId(req);
+
+console.log(
+  "[OrdersController] Creating Fockis Shop order for customer:",
+  customerId,
+);
+
+return this.ordersService.createOrder(
+  customerId,
+  dto,
+);
+
+}
+
+@Get()
+async findMyOrders(
+@Req() req: any,
+) {
+const customerId = this.getUserId(req);
+
+console.log(
+  "[OrdersController] Loading Fockis Shop orders:",
+  customerId,
+);
+
+return this.ordersService.findMyOrders(
+  customerId,
+);
+}
+
+@Get("all")
+async findAll() {
+console.log(
+"[OrdersController] Loading all Fockis Shop orders",
+);
+
+return this.ordersService.findAll();
+
+}
+
+@Get("seller")
+async findSellerOrders(
+@Req() req: any,
+) {
+const sellerId = this.getUserId(req);
+
+console.log(
+  "[OrdersController] Loading seller orders for:",
+  sellerId,
+);
+
+const orders =
+  await this.ordersService.findSellerOrders(
+    sellerId,
+  );
+
+console.log(
+  "[OrdersController] Seller orders found:",
+  orders.length,
+);
+
+return orders;
+
+}
+
+@Get("seller/store/:storeId")
+async findSellerStoreOrders(
+@Req() req: any,
+@Param("storeId") storeId: string,
+) {
+const sellerId = this.getUserId(req);
+
+if (
+  !Types.ObjectId.isValid(storeId)
+) {
+  throw new BadRequestException(
+    "Invalid store ID",
+  );
+}
+
+console.log(
+  "[OrdersController] Loading seller store orders:",
+  {
+    sellerId,
+    storeId,
+  },
+);
+
+return this.ordersService.findSellerStoreOrders(
+  sellerId,
+  storeId,
+);
+
+}
+
+@Get(":id")
+async findOne(
+@Req() req: any,
+@Param("id") id: string,
+) {
+const userId = this.getUserId(req);
+
+if (
+  !Types.ObjectId.isValid(id)
+) {
+  throw new BadRequestException(
+    "Invalid order ID",
+  );
+}
+
+return this.ordersService.findOne(
+  id,
+  userId,
+);
+
+}
+
+@Patch(":id/status")
+async updateStatus(
+@Req() req: any,
+@Param("id") id: string,
+@Body() dto: UpdateOrderStatusDto,
+) {
+const sellerId = this.getUserId(req);
+
+if (
+  !Types.ObjectId.isValid(id)
+) {
+  throw new BadRequestException(
+    "Invalid order ID",
+  );
+}
+
+console.log(
+  "[OrdersController] Updating Fockis Shop order status:",
+  {
+    orderId: id,
+    sellerId,
+    nextStatus: dto.status,
+    shipmentStatus:
+      dto.shipmentStatus,
+  },
+);
+
+return this.ordersService.updateStatus(
+  id,
+  sellerId,
+  dto,
+);
+
+}
+}
+
+
+===== FILE: .\apps\api\src\fockis-shop\orders\services\orders.service.ts =====
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+
+import { InjectModel } from "@nestjs/mongoose";
+
+import { Model, Types } from "mongoose";
+
+import { randomUUID } from "crypto";
+
+import { EventEmitter2 } from "@nestjs/event-emitter";
+
+import {
+  Order,
+  OrderDocument,
+  OrderStatus,
+  PaymentStatus,
+  ShipmentStatus,
+} from "../schemas/order.schema";
+
+import {
+  User,
+  UserDocument,
+} from "../../../users/user.schema";
+
+import {
+  Product,
+  ProductDocument,
+} from "../../products/schemas/product.schema";
+
+import {
+  InventoryService,
+} from "../../inventory/inventory.service";
+
+import {
+  CreateOrderDto,
+} from "../dto/create-order.dto";
+
+import {
+  UpdateOrderStatusDto,
+} from "../dto/update-order-status.dto";
+
+@Injectable()
+export class OrdersService {
+  constructor(
+    @InjectModel(Order.name)
+    private readonly orderModel: Model<OrderDocument>,
+
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
+
+    @InjectModel(Product.name)
+    private readonly productModel: Model<ProductDocument>,
+
+    private readonly inventoryService: InventoryService,
+
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
+
+  /* ==========================================================================
+     ID HELPERS
+  ========================================================================== */
+
+  private normalizeId(
+    value: unknown,
+  ): string {
+    if (
+      value === null ||
+      value === undefined
+    ) {
+      return "";
+    }
+
+    return String(value).trim();
+  }
+
+  private requireValidObjectId(
+    value: unknown,
+    label: string,
+  ): string {
+    const normalized =
+      this.normalizeId(value);
+
+    if (
+      !normalized ||
+      !Types.ObjectId.isValid(normalized)
+    ) {
+      throw new BadRequestException(
+        `Invalid ${label}`,
+      );
+    }
+
+    return normalized;
+  }
+
+  private toObjectId(
+    value: unknown,
+    label: string,
+  ): Types.ObjectId {
+    const normalized =
+      this.requireValidObjectId(
+        value,
+        label,
+      );
+
+    return new Types.ObjectId(
+      normalized,
+    );
+  }
+
+  /* ==========================================================================
+     CREATE ORDER
+  ========================================================================== */
+
+  async createOrder(
+    customerId: string,
+    dto: CreateOrderDto,
+  ) {
+    const normalizedCustomerId =
+      this.requireValidObjectId(
+        customerId,
+        "customer ID",
+      );
+
+    const customerObjectId =
+      new Types.ObjectId(
+        normalizedCustomerId,
+      );
+
+    const user =
+      await this.userModel.findById(
+        customerObjectId,
+      );
+
+    if (!user) {
+      throw new NotFoundException(
+        "User not found",
+      );
+    }
+
+    if (
+      !dto.items ||
+      dto.items.length === 0
+    ) {
+      throw new BadRequestException(
+        "Order must contain at least one item",
+      );
+    }
+
+    if (!dto.shippingAddress) {
+      throw new BadRequestException(
+        "Shipping address is required",
+      );
+    }
+
+    const address =
+      dto.shippingAddress;
+
+    if (!address.fullName?.trim()) {
+      throw new BadRequestException(
+        "Recipient full name is required",
+      );
+    }
+
+    if (!address.phone?.trim()) {
+      throw new BadRequestException(
+        "Phone number is required",
+      );
+    }
+
+    if (
+      !address.houseOrApartmentNumber?.trim()
+    ) {
+      throw new BadRequestException(
+        "House or apartment number is required",
+      );
+    }
+
+    if (!address.city?.trim()) {
+      throw new BadRequestException(
+        "City is required",
+      );
+    }
+
+    if (!address.country?.trim()) {
+      throw new BadRequestException(
+        "Country is required",
+      );
+    }
+
+    /* =========================================================================
+       COUNTRY VALIDATION
+    ========================================================================= */
+
+    const normalizedCountry =
+      address.country
+        .trim()
+        .toLowerCase();
+
+    const isUnitedStates = [
+      "united states",
+      "united states of america",
+      "usa",
+      "us",
+    ].includes(normalizedCountry);
+
+    const isHaiti = [
+      "haiti",
+      "ht",
+    ].includes(normalizedCountry);
+
+    if (isUnitedStates) {
+      if (!address.street?.trim()) {
+        throw new BadRequestException(
+          "Street address is required for United States deliveries",
+        );
+      }
+
+      if (!address.state?.trim()) {
+        throw new BadRequestException(
+          "State is required for United States deliveries",
+        );
+      }
+
+      if (!address.zipCode?.trim()) {
+        throw new BadRequestException(
+          "ZIP code is required for United States deliveries",
+        );
+      }
+    }
+
+    if (isHaiti) {
+      if (!address.neighborhood?.trim()) {
+        throw new BadRequestException(
+          "Neighborhood or local area is required for Haiti deliveries",
+        );
+      }
+
+      if (!address.state?.trim()) {
+        throw new BadRequestException(
+          "Department is required for Haiti deliveries",
+        );
+      }
+    }
+
+    if (
+      !isUnitedStates &&
+      !isHaiti
+    ) {
+      if (
+        !address.street?.trim() &&
+        !address.neighborhood?.trim()
+      ) {
+        throw new BadRequestException(
+          "Please provide either a street address or neighborhood/local area",
+        );
+      }
+    }
+
+    /* =========================================================================
+       PAYMENT METHOD
+    ========================================================================= */
+
+    const paymentMethod =
+      String(
+        dto.paymentMethod ?? "",
+      )
+        .trim()
+        .toLowerCase();
+
+    const validPaymentMethods = [
+      "card",
+      "moncash",
+      "natcash",
+      "cod",
+    ];
+
+    if (
+      !validPaymentMethods.includes(
+        paymentMethod,
+      )
+    ) {
+      throw new BadRequestException(
+        "Invalid payment method",
+      );
+    }
+
+    if (
+      !isHaiti &&
+      [
+        "moncash",
+        "natcash",
+        "cod",
+      ].includes(paymentMethod)
+    ) {
+      throw new BadRequestException(
+        "This payment method is only available for Haiti deliveries",
+      );
+    }
+
+    if (
+      paymentMethod === "card" &&
+      !dto.paymentIntentId
+    ) {
+      throw new BadRequestException(
+        "Stripe payment information is required",
+      );
+    }
+
+    /* =========================================================================
+       ORDER DATA
+    ========================================================================= */
+
+    const orderItems: any[] = [];
+
+    let calculatedSubtotal = 0;
+
+    let calculatedProductDiscount = 0;
+
+    const sellerGroups = new Map<
+      string,
+      {
+        sellerId: string;
+        storeId: string;
+        itemIds: Types.ObjectId[];
+      }
+    >();
+
+    const reservedItems: Array<{
+      productId: string;
+      sellerId: string;
+      quantity: number;
+    }> = [];
+
+    try {
+      for (const item of dto.items) {
+        /* =====================================================================
+           NORMALIZE REQUEST IDS
+
+           These are deliberately converted to guaranteed strings before
+           being passed to Mongoose. This prevents string | undefined from
+           reaching Types.ObjectId or Types.ObjectId.isValid.
+        ===================================================================== */
+
+        const itemProductId =
+          this.normalizeId(
+            item.productId,
+          );
+
+        const itemSellerId =
+          this.normalizeId(
+            item.sellerId,
+          );
+
+        const itemStoreId =
+          this.normalizeId(
+            item.storeId,
+          );
+
+        if (
+          !itemProductId ||
+          !Types.ObjectId.isValid(
+            itemProductId,
+          )
+        ) {
+          throw new BadRequestException(
+            `Invalid product ID: ${itemProductId || "missing"}`,
+          );
+        }
+
+        if (
+          !itemSellerId ||
+          !Types.ObjectId.isValid(
+            itemSellerId,
+          )
+        ) {
+          throw new BadRequestException(
+            `Invalid seller ID: ${itemSellerId || "missing"}`,
+          );
+        }
+
+        if (
+          itemStoreId &&
+          !Types.ObjectId.isValid(
+            itemStoreId,
+          )
+        ) {
+          throw new BadRequestException(
+            `Invalid store ID: ${itemStoreId}`,
+          );
+        }
+
+        if (
+          !Number.isInteger(
+            item.quantity,
+          ) ||
+          item.quantity < 1
+        ) {
+          throw new BadRequestException(
+            "Product quantity must be at least 1",
+          );
+        }
+
+        /* =====================================================================
+           LOAD PRODUCT
+        ===================================================================== */
+
+        const product =
+          await this.productModel.findById(
+            itemProductId,
+          );
+
+        if (!product) {
+          throw new NotFoundException(
+            `Product ${itemProductId} not found`,
+          );
+        }
+
+        if (!product.isActive) {
+          throw new BadRequestException(
+            `Product ${product.name} is no longer available`,
+          );
+        }
+
+        /* =====================================================================
+           PRODUCT SELLER REFERENCE
+        ===================================================================== */
+
+        const productSellerId =
+          this.normalizeId(
+            product.seller,
+          );
+
+        if (
+          !productSellerId ||
+          !Types.ObjectId.isValid(
+            productSellerId,
+          )
+        ) {
+          throw new BadRequestException(
+            `Product ${product.name} does not have a valid seller`,
+          );
+        }
+
+        /* =====================================================================
+           PRODUCT STORE REFERENCE
+        ===================================================================== */
+
+        const productStoreId =
+          this.normalizeId(
+            product.storeId,
+          );
+
+        if (
+          !productStoreId ||
+          !Types.ObjectId.isValid(
+            productStoreId,
+          )
+        ) {
+          throw new BadRequestException(
+            `Product ${product.name} does not have a valid store`,
+          );
+        }
+
+        /* =====================================================================
+           GUARANTEED OBJECT IDS
+        ===================================================================== */
+
+        const productSellerObjectId =
+          new Types.ObjectId(
+            productSellerId,
+          );
+
+        const productStoreObjectId =
+          new Types.ObjectId(
+            productStoreId,
+          );
+
+        const productObjectId =
+          new Types.ObjectId(
+            itemProductId,
+          );
+
+        /* =====================================================================
+           VERIFY SELLER
+        ===================================================================== */
+
+        if (
+          productSellerId !==
+          itemSellerId
+        ) {
+          throw new BadRequestException(
+            `Seller does not own product ${product.name}`,
+          );
+        }
+
+        /* =====================================================================
+           VERIFY STORE
+        ===================================================================== */
+
+        if (
+          itemStoreId &&
+          itemStoreId !==
+          productStoreId
+        ) {
+          throw new BadRequestException(
+            `Product ${product.name} does not belong to the selected store`,
+          );
+        }
+
+        /* =====================================================================
+           RESERVE INVENTORY
+        ===================================================================== */
+
+        await this.inventoryService.reserve(
+          itemProductId,
+          itemSellerId,
+          item.quantity,
+        );
+
+        reservedItems.push({
+          productId:
+            itemProductId,
+
+          sellerId:
+            itemSellerId,
+
+          quantity:
+            item.quantity,
+        });
+
+        /* =====================================================================
+           SERVER-SIDE PRICE
+        ===================================================================== */
+
+        const basePrice =
+          Number(
+            product.price ?? 0,
+          );
+
+        const discountPercent =
+          Number(
+            product.discount ?? 0,
+          );
+
+        if (
+          !Number.isFinite(
+            basePrice,
+          ) ||
+          basePrice < 0
+        ) {
+          throw new BadRequestException(
+            `Invalid price for product ${product.name}`,
+          );
+        }
+
+        if (
+          !Number.isFinite(
+            discountPercent,
+          ) ||
+          discountPercent < 0 ||
+          discountPercent > 100
+        ) {
+          throw new BadRequestException(
+            `Invalid discount for product ${product.name}`,
+          );
+        }
+
+        const discountAmount =
+          Number(
+            (
+              basePrice *
+              (
+                discountPercent /
+                100
+              )
+            ).toFixed(2),
+          );
+
+        const serverPrice =
+          Number(
+            (
+              basePrice -
+              discountAmount
+            ).toFixed(2),
+          );
+
+        const quantity =
+          Number(
+            item.quantity,
+          );
+
+        const itemTotal =
+          Number(
+            (
+              serverPrice *
+              quantity
+            ).toFixed(2),
+          );
+
+        const originalItemTotal =
+          Number(
+            (
+              basePrice *
+              quantity
+            ).toFixed(2),
+          );
+
+        const itemDiscountTotal =
+          Number(
+            (
+              originalItemTotal -
+              itemTotal
+            ).toFixed(2),
+          );
+
+        calculatedSubtotal =
+          Number(
+            (
+              calculatedSubtotal +
+              itemTotal
+            ).toFixed(2),
+          );
+
+        calculatedProductDiscount =
+          Number(
+            (
+              calculatedProductDiscount +
+              itemDiscountTotal
+            ).toFixed(2),
+          );
+
+        /* =====================================================================
+           ORDER ITEM
+        ===================================================================== */
+
+        const orderItemId =
+          new Types.ObjectId();
+
+        orderItems.push({
+          _id:
+            orderItemId,
+
+          product:
+            productObjectId,
+
+          seller:
+            productSellerObjectId,
+
+          storeId:
+            productStoreObjectId,
+
+          productName:
+            product.name,
+
+          productImage:
+            product.images?.[0] ??
+            "",
+
+          quantity,
+
+          price:
+            serverPrice,
+
+          itemTotal,
+        });
+
+        /* =====================================================================
+           SELLER / STORE GROUP
+        ===================================================================== */
+
+        const sellerKey =
+          `${productSellerId}_${productStoreId}`;
+
+        let sellerGroup =
+          sellerGroups.get(
+            sellerKey,
+          );
+
+        if (!sellerGroup) {
+          sellerGroup = {
+            sellerId:
+              productSellerId,
+
+            storeId:
+              productStoreId,
+
+            itemIds: [],
+          };
+
+          sellerGroups.set(
+            sellerKey,
+            sellerGroup,
+          );
+        }
+
+        sellerGroup.itemIds.push(
+          orderItemId,
+        );
+      }
+
+      /* =========================================================================
+         ORDER NUMBER
+      ========================================================================= */
+
+      const orderNumber =
+        `FOC-${Date.now()}-${Math.floor(
+          Math.random() * 10000,
+        )}`;
+
+      /* =========================================================================
+         INVOICE NUMBER
+      ========================================================================= */
+
+      const invoiceNumber =
+        `INV-${randomUUID()}`;
+
+      /* =========================================================================
+         SHIPPING ADDRESS
+      ========================================================================= */
+
+      const shippingAddress = {
+        fullName:
+          address.fullName.trim(),
+
+        email:
+          address.email?.trim() ||
+          user.email ||
+          "",
+
+        phone:
+          address.phone.trim(),
+
+        houseOrApartmentNumber:
+          address.houseOrApartmentNumber.trim(),
+
+        neighborhood:
+          address.neighborhood?.trim() ||
+          "",
+
+        street:
+          address.street?.trim() ||
+          "",
+
+        apartment:
+          address.apartment?.trim() ||
+          "",
+
+        city:
+          address.city.trim(),
+
+        state:
+          address.state?.trim() ||
+          "",
+
+        zipCode:
+          address.zipCode?.trim() ||
+          "",
+
+        country:
+          address.country.trim(),
+      };
+
+      /* =========================================================================
+         SELLER SHIPMENTS
+      ========================================================================= */
+
+      const shipments =
+        Array.from(
+          sellerGroups.values(),
+        ).map(
+          (group) => {
+            const shipmentSellerId =
+              this.toObjectId(
+                group.sellerId,
+                "shipment seller ID",
+              );
+
+            const shipmentStoreId =
+              this.toObjectId(
+                group.storeId,
+                "shipment store ID",
+              );
+
+            return {
+              seller:
+                shipmentSellerId,
+
+              storeId:
+                shipmentStoreId,
+
+              itemIds:
+                group.itemIds,
+
+              status:
+                ShipmentStatus.PENDING,
+
+              carrier:
+                "",
+
+              trackingNumber:
+                "",
+
+              trackingUrl:
+                "",
+
+              estimatedDeliveryDate:
+                null,
+
+              shippedAt:
+                null,
+
+              deliveredAt:
+                null,
+            };
+          },
+        );
+
+      /* =========================================================================
+         SHIPPING COST
+      ========================================================================= */
+
+      const shippingCost =
+        Number(
+          dto.shippingCost ?? 0,
+        );
+
+      if (
+        !Number.isFinite(
+          shippingCost,
+        ) ||
+        shippingCost < 0
+      ) {
+        throw new BadRequestException(
+          "Invalid shipping cost",
+        );
+      }
+
+      /* =========================================================================
+         TAX
+      ========================================================================= */
+
+      const tax =
+        Number(
+          dto.tax ?? 0,
+        );
+
+      if (
+        !Number.isFinite(
+          tax,
+        ) ||
+        tax < 0
+      ) {
+        throw new BadRequestException(
+          "Invalid tax amount",
+        );
+      }
+
+      /* =========================================================================
+         TOTAL
+      ========================================================================= */
+
+      const calculatedTotalAmount =
+        Number(
+          (
+            calculatedSubtotal +
+            shippingCost +
+            tax
+          ).toFixed(2),
+        );
+
+      /* =========================================================================
+         PAYMENT STATUS
+      ========================================================================= */
+
+      const isPaymentConfirmed =
+        dto.paymentStatus ===
+          "paid" &&
+        Boolean(
+          dto.paymentIntentId,
+        );
+
+      const paymentStatus =
+        isPaymentConfirmed
+          ? PaymentStatus.PAID
+          : PaymentStatus.PENDING;
+
+      const orderStatus =
+        isPaymentConfirmed
+          ? OrderStatus.PAID
+          : OrderStatus.PENDING;
+
+      /* =========================================================================
+         CURRENCY
+      ========================================================================= */
+
+      const currency =
+        dto.currency?.trim() ||
+        (
+          isHaiti &&
+          paymentMethod !== "card"
+            ? "HTG"
+            : "USD"
+        );
+
+      /* =========================================================================
+         EXCHANGE RATE
+      ========================================================================= */
+
+      const exchangeRate =
+        Number(
+          dto.exchangeRate ?? 1,
+        );
+
+      if (
+        !Number.isFinite(
+          exchangeRate,
+        ) ||
+        exchangeRate <= 0
+      ) {
+        throw new BadRequestException(
+          "Invalid exchange rate",
+        );
+      }
+
+      /* =========================================================================
+         ORDER DATA
+      ========================================================================= */
+
+      const now =
+        new Date();
+
+      const orderData = {
+        orderNumber,
+
+        invoiceNumber,
+
+        customer:
+          customerObjectId,
+
+        customerName:
+          `${user.firstName || ""} ${
+            user.lastName || ""
+          }`.trim(),
+
+        customerEmail:
+          user.email ??
+          "",
+
+        customerPhone:
+          user.phone ??
+          "",
+
+        items:
+          orderItems,
+
+        shippingAddress,
+
+        billingAddress:
+          shippingAddress,
+
+        subtotal:
+          calculatedSubtotal,
+
+        shippingCost,
+
+        tax,
+
+        discount:
+          calculatedProductDiscount,
+
+        totalAmount:
+          calculatedTotalAmount,
+
+        deliveryMethod:
+          dto.deliveryMethod ??
+          "standard",
+
+        paymentMethod,
+
+        paymentStatus,
+
+        paymentIntentId:
+          dto.paymentIntentId ??
+          "",
+
+        moncashTransactionId:
+          dto.moncashTransactionId ??
+          "",
+
+        natchTransactionId:
+          dto.natcashTransactionId ??
+          "",
+
+        currency,
+
+        exchangeRate,
+
+        status:
+          orderStatus,
+
+        shipments,
+
+        orderDate:
+          now,
+
+        paidAt:
+          isPaymentConfirmed
+            ? now
+            : null,
+
+        month:
+          now.toLocaleString(
+            "default",
+            {
+              month: "long",
+            },
+          ),
+
+        year:
+          now.getFullYear(),
+      };
+
+      const order =
+        await this.orderModel.create(
+          orderData,
+        ) as OrderDocument;
+
+      /* =========================================================================
+         EVENTS
+      ========================================================================= */
+
+      this.eventEmitter.emit(
+        "order.created",
+        order,
+      );
+
+      if (
+        order.paymentStatus ===
+        PaymentStatus.PAID
+      ) {
+        this.eventEmitter.emit(
+          "order.paid",
+          order,
+        );
+      }
+
+      return order;
+    } catch (error) {
+      /* =========================================================================
+         RELEASE INVENTORY
+      ========================================================================= */
+
+      for (
+        const reserved of reservedItems
+      ) {
+        try {
+          const inventoryService =
+            this.inventoryService as any;
+
+          if (
+            typeof inventoryService.release ===
+            "function"
+          ) {
+            await inventoryService.release(
+              reserved.productId,
+              reserved.sellerId,
+              reserved.quantity,
+            );
+          }
+        } catch {
+          // Preserve the original checkout error.
+        }
+      }
+
+      throw error;
+    }
+  }
+
+  /* ==========================================================================
+     CUSTOMER ORDERS
+  ========================================================================== */
+
+  async findMyOrders(
+    userId: string,
+  ) {
+    const normalizedUserId =
+      this.requireValidObjectId(
+        userId,
+        "user ID",
+      );
+
+    const userObjectId =
+      new Types.ObjectId(
+        normalizedUserId,
+      );
+
+    return this.orderModel
+      .find({
+        customer:
+          userObjectId,
+      })
+      .populate("customer")
+      .populate("items.product")
+      .populate("items.seller")
+      .populate("items.storeId")
+      .sort({
+        createdAt: -1,
+      })
+      .exec();
+  }
+
+  /* ==========================================================================
+     ALL ORDERS
+  ========================================================================== */
+
+  async findAll() {
+    return this.orderModel
+      .find()
+      .populate("customer")
+      .populate("items.product")
+      .populate("items.seller")
+      .populate("items.storeId")
+      .sort({
+        createdAt: -1,
+      })
+      .exec();
+  }
+
+  /* ==========================================================================
+     SELLER ORDERS
+  ========================================================================== */
+
+  async findSellerOrders(
+    sellerId: string,
+  ) {
+    const normalizedSellerId =
+      this.normalizeId(
+        sellerId,
+      );
+
+    if (
+      !normalizedSellerId ||
+      !Types.ObjectId.isValid(
+        normalizedSellerId,
+      )
+    ) {
+      return [];
+    }
+
+    const sellerObjectId =
+      new Types.ObjectId(
+        normalizedSellerId,
+      );
+
+    return this.orderModel
+      .find({
+        items: {
+          $elemMatch: {
+            seller:
+              sellerObjectId,
+          },
+        },
+      })
+      .populate("customer")
+      .populate("items.product")
+      .populate("items.seller")
+      .populate("items.storeId")
+      .sort({
+        createdAt: -1,
+      })
+      .exec();
+  }
+
+  /* ==========================================================================
+     SELLER STORE ORDERS
+  ========================================================================== */
+
+  async findSellerStoreOrders(
+    sellerId: string,
+    storeId: string,
+  ) {
+    const normalizedSellerId =
+      this.normalizeId(
+        sellerId,
+      );
+
+    const normalizedStoreId =
+      this.normalizeId(
+        storeId,
+      );
+
+    if (
+      !normalizedSellerId ||
+      !Types.ObjectId.isValid(
+        normalizedSellerId,
+      ) ||
+      !normalizedStoreId ||
+      !Types.ObjectId.isValid(
+        normalizedStoreId,
+      )
+    ) {
+      return [];
+    }
+
+    const sellerObjectId =
+      new Types.ObjectId(
+        normalizedSellerId,
+      );
+
+    const storeObjectId =
+      new Types.ObjectId(
+        normalizedStoreId,
+      );
+
+    return this.orderModel
+      .find({
+        items: {
+          $elemMatch: {
+            seller:
+              sellerObjectId,
+
+            storeId:
+              storeObjectId,
+          },
+        },
+      })
+      .populate("customer")
+      .populate("items.product")
+      .populate("items.seller")
+      .populate("items.storeId")
+      .sort({
+        createdAt: -1,
+      })
+      .exec();
+  }
+
+  /* ==========================================================================
+     SINGLE ORDER
+  ========================================================================== */
+
+  async findOne(
+    id: string,
+    userId?: string,
+  ) {
+    const normalizedOrderId =
+      this.requireValidObjectId(
+        id,
+        "order ID",
+      );
+
+    const normalizedUserId =
+      userId
+        ? this.requireValidObjectId(
+            userId,
+            "user ID",
+          )
+        : undefined;
+
+    const order =
+      await this.orderModel
+        .findById(
+          normalizedOrderId,
+        )
+        .populate("customer")
+        .populate("items.product")
+        .populate("items.seller")
+        .populate("items.storeId")
+        .exec();
+
+    if (!order) {
+      throw new NotFoundException(
+        "Order not found",
+      );
+    }
+
+    if (normalizedUserId) {
+      const isCustomer =
+        order.customer?._id?.toString() ===
+        normalizedUserId;
+
+      const isSeller =
+        order.items.some(
+          (item: any) =>
+            item.seller?._id?.toString() ===
+            normalizedUserId,
+        );
+
+      if (
+        !isCustomer &&
+        !isSeller
+      ) {
+        throw new BadRequestException(
+          "You are not authorized to view this order",
+        );
+      }
+    }
+
+    return order;
+  }
+
+  /* ==========================================================================
+     UPDATE ORDER STATUS
+  ========================================================================== */
+
+  async updateStatus(
+    id: string,
+    sellerId: string,
+    dto: UpdateOrderStatusDto,
+  ) {
+    const normalizedOrderId =
+      this.requireValidObjectId(
+        id,
+        "order ID",
+      );
+
+    const normalizedSellerId =
+      this.requireValidObjectId(
+        sellerId,
+        "seller ID",
+      );
+
+    const order =
+      await this.orderModel.findById(
+        normalizedOrderId,
+      );
+
+    if (!order) {
+      throw new NotFoundException(
+        "Order not found",
+      );
+    }
+
+    const sellerShipment =
+      order.shipments.find(
+        (shipment) =>
+          shipment.seller.toString() ===
+          normalizedSellerId,
+      );
+
+    if (!sellerShipment) {
+      throw new BadRequestException(
+        "You are not authorized to update this order",
+      );
+    }
+
+    const currentStatus =
+      order.status;
+
+    const nextStatus =
+      dto.status;
+
+    /* =========================================================================
+       PAYMENT PROTECTION
+    ========================================================================= */
+
+    if (
+      nextStatus ===
+      OrderStatus.PAID
+    ) {
+      throw new BadRequestException(
+        "Payment confirmation must be completed by the payment system. Sellers cannot manually mark an order as paid.",
+      );
+    }
+
+    const fulfillmentStatuses = [
+      OrderStatus.PROCESSING,
+      OrderStatus.READY_TO_SHIP,
+      OrderStatus.SHIPPED,
+      OrderStatus.IN_TRANSIT,
+      OrderStatus.OUT_FOR_DELIVERY,
+      OrderStatus.DELIVERED,
+    ];
+
+    if (
+      fulfillmentStatuses.includes(
+        nextStatus,
+      ) &&
+      order.paymentStatus !==
+        PaymentStatus.PAID
+    ) {
+      throw new BadRequestException(
+        "This order cannot be processed or shipped until payment has been confirmed.",
+      );
+    }
+
+    /* =========================================================================
+       VALID SELLER TRANSITIONS
+    ========================================================================= */
+
+    const allowedTransitions:
+      Record<
+        string,
+        string[]
+      > = {
+        [OrderStatus.PENDING]: [
+          OrderStatus.CANCELLED,
+        ],
+
+        [OrderStatus.PAID]: [
+          OrderStatus.PROCESSING,
+          OrderStatus.CANCELLED,
+        ],
+
+        [OrderStatus.PROCESSING]: [
+          OrderStatus.READY_TO_SHIP,
+        ],
+
+        [OrderStatus.READY_TO_SHIP]: [
+          OrderStatus.SHIPPED,
+        ],
+
+        [OrderStatus.SHIPPED]: [
+          OrderStatus.IN_TRANSIT,
+          OrderStatus.OUT_FOR_DELIVERY,
+          OrderStatus.DELIVERED,
+        ],
+
+        [OrderStatus.IN_TRANSIT]: [
+          OrderStatus.OUT_FOR_DELIVERY,
+          OrderStatus.DELIVERED,
+        ],
+
+        [OrderStatus.OUT_FOR_DELIVERY]: [
+          OrderStatus.DELIVERED,
+        ],
+
+        [OrderStatus.DELIVERED]: [],
+
+        [OrderStatus.CANCELLED]: [],
+
+        [OrderStatus.REFUNDED]: [],
+
+        [OrderStatus.RETURN_REQUESTED]: [
+          OrderStatus.RETURNED,
+        ],
+
+        [OrderStatus.RETURNED]: [],
+      };
+
+    const allowed =
+      allowedTransitions[
+        currentStatus
+      ] ?? [];
+
+    if (
+      !allowed.includes(
+        nextStatus,
+      )
+    ) {
+      throw new BadRequestException(
+        `Cannot change order status from "${currentStatus}" to "${nextStatus}"`,
+      );
+    }
+
+    /* =========================================================================
+       UPDATE SELLER SHIPMENT
+    ========================================================================= */
+
+    switch (nextStatus) {
+      case OrderStatus.PROCESSING:
+        sellerShipment.status =
+          ShipmentStatus.PROCESSING;
+        break;
+
+      case OrderStatus.READY_TO_SHIP:
+        sellerShipment.status =
+          ShipmentStatus.READY_TO_SHIP;
+        break;
+
+      case OrderStatus.SHIPPED:
+        sellerShipment.status =
+          ShipmentStatus.SHIPPED;
+
+        sellerShipment.shippedAt =
+          new Date();
+        break;
+
+      case OrderStatus.IN_TRANSIT:
+        sellerShipment.status =
+          ShipmentStatus.IN_TRANSIT;
+        break;
+
+      case OrderStatus.OUT_FOR_DELIVERY:
+        sellerShipment.status =
+          ShipmentStatus.OUT_FOR_DELIVERY;
+        break;
+
+      case OrderStatus.DELIVERED:
+        sellerShipment.status =
+          ShipmentStatus.DELIVERED;
+
+        sellerShipment.deliveredAt =
+          new Date();
+        break;
+
+      case OrderStatus.CANCELLED:
+        sellerShipment.status =
+          ShipmentStatus.CANCELLED;
+        break;
+
+      default:
+        break;
+    }
+
+    /* =========================================================================
+       EXPLICIT SHIPMENT STATUS OVERRIDE
+    ========================================================================= */
+
+    if (dto.shipmentStatus) {
+      sellerShipment.status =
+        dto.shipmentStatus;
+    }
+
+    /* =========================================================================
+       TRACKING INFORMATION
+    ========================================================================= */
+
+    if (
+      dto.trackingNumber !==
+      undefined
+    ) {
+      const trackingNumber =
+        String(
+          dto.trackingNumber,
+        ).trim();
+
+      sellerShipment.trackingNumber =
+        trackingNumber;
+
+      order.trackingNumber =
+        trackingNumber;
+    }
+
+    if (
+      dto.carrier !==
+      undefined
+    ) {
+      const carrier =
+        String(
+          dto.carrier,
+        ).trim();
+
+      sellerShipment.carrier =
+        carrier;
+
+      order.carrier =
+        carrier;
+    }
+
+    if (
+      dto.trackingUrl !==
+      undefined
+    ) {
+      sellerShipment.trackingUrl =
+        String(
+          dto.trackingUrl,
+        ).trim();
+    }
+
+    /* =========================================================================
+       ORDER STATUS
+    ========================================================================= */
+
+    order.status =
+      nextStatus as OrderStatus;
+
+    /* =========================================================================
+       ORDER DATES
+    ========================================================================= */
+
+    if (
+      nextStatus ===
+      OrderStatus.SHIPPED
+    ) {
+      order.shippedAt =
+        new Date();
+    }
+
+    if (
+      nextStatus ===
+      OrderStatus.DELIVERED
+    ) {
+      order.deliveredAt =
+        new Date();
+    }
+
+    if (
+      nextStatus ===
+      OrderStatus.CANCELLED
+    ) {
+      order.cancelledAt =
+        new Date();
+    }
+
+    await order.save();
+
+    /* =========================================================================
+       EVENTS
+    ========================================================================= */
+
+    this.eventEmitter.emit(
+      "order.status.updated",
+      order,
+    );
+
+    if (
+      nextStatus ===
+      OrderStatus.PROCESSING
+    ) {
+      this.eventEmitter.emit(
+        "order.processing",
+        order,
+      );
+    }
+
+    if (
+      nextStatus ===
+      OrderStatus.READY_TO_SHIP
+    ) {
+      this.eventEmitter.emit(
+        "order.ready_to_ship",
+        order,
+      );
+    }
+
+    if (
+      nextStatus ===
+      OrderStatus.SHIPPED
+    ) {
+      this.eventEmitter.emit(
+        "order.shipped",
+        order,
+      );
+    }
+
+    if (
+      nextStatus ===
+      OrderStatus.DELIVERED
+    ) {
+      this.eventEmitter.emit(
+        "order.delivered",
+        order,
+      );
+    }
+
+    return order;
+  }
+
+  /* ==========================================================================
+     CONFIRM PAYMENT
+  ========================================================================== */
+
+  async confirmPayment(
+    id: string,
+    paymentIntentId?: string,
+  ) {
+    const normalizedOrderId =
+      this.requireValidObjectId(
+        id,
+        "order ID",
+      );
+
+    const order =
+      await this.orderModel.findById(
+        normalizedOrderId,
+      );
+
+    if (!order) {
+      throw new NotFoundException(
+        "Order not found",
+      );
+    }
+
+    if (
+      order.paymentStatus ===
+      PaymentStatus.PAID
+    ) {
+      return order;
+    }
+
+    order.paymentStatus =
+      PaymentStatus.PAID;
+
+    order.status =
+      OrderStatus.PAID;
+
+    order.paidAt =
+      new Date();
+
+    if (paymentIntentId) {
+      order.paymentIntentId =
+        paymentIntentId;
+    }
+
+    await order.save();
+
+    this.eventEmitter.emit(
+      "order.paid",
+      order,
+    );
+
+    this.eventEmitter.emit(
+      "payment.confirmed",
+      order,
+    );
+
+    return order;
+  }
+}
+
+===== FILE: .\apps\api\src\fockis-shop\shipping\shipping.module.ts =====
+import { Module } from "@nestjs/common";
+import { MongooseModule } from "@nestjs/mongoose";
+
+import {
+  Shipment,
+  ShipmentSchema,
+} from "./schemas/shipment.schema";
+
+import { ShippingService } from "./services/shipping.service";
+import { ShippingSyncService } from "./services/shipping-sync.service";
+import { TrackingService } from "./services/tracking.service";
+import { CarrierService } from "./services/carrier.service";
+
+import { ShippingController } from "./controllers/shipping.controller";
+
+import { UpsProvider } from "./providers/ups.provider";
+import { UspsProvider } from "./providers/usps.provider";
+import { FedexProvider } from "./providers/fedex.provider";
+import { DhlProvider } from "./providers/dhl.provider";
+
+@Module({
+  imports: [
+    MongooseModule.forFeature([
+      {
+        name: Shipment.name,
+        schema: ShipmentSchema,
+      },
+    ]),
+  ],
+
+  controllers: [
+    ShippingController,
+  ],
+
+  providers: [
+    // ==========================================================
+    // SHIPPING
+    // ==========================================================
+
+    ShippingService,
+    ShippingSyncService,
+    TrackingService,
+    CarrierService,
+
+    // ==========================================================
+    // CARRIERS
+    // ==========================================================
+
+    UpsProvider,
+    UspsProvider,
+    FedexProvider,
+    DhlProvider,
+  ],
+
+  exports: [
+    ShippingService,
+    TrackingService,
+    CarrierService,
+  ],
+})
+export class ShippingModule {}
+
+===== FILE: .\apps\api\src\stores\schemas\store.schema.ts =====
+import {
+  Prop,
+  Schema,
+  SchemaFactory,
+} from "@nestjs/mongoose";
+
+import {
+  Document,
+  Types,
+} from "mongoose";
+
+export type StoreDocument = Store & Document;
+
+export enum StoreCurrency {
+  USD = "USD",
+  CAD = "CAD",
+  EUR = "EUR",
+  GBP = "GBP",
+  CHF = "CHF",
+  AUD = "AUD",
+  NZD = "NZD",
+  JPY = "JPY",
+  CNY = "CNY",
+  HKD = "HKD",
+  SGD = "SGD",
+  INR = "INR",
+  KRW = "KRW",
+  BRL = "BRL",
+  MXN = "MXN",
+  ARS = "ARS",
+  CLP = "CLP",
+  COP = "COP",
+  DOP = "DOP",
+  HTG = "HTG",
+  XOF = "XOF",
+  ZAR = "ZAR",
+  NGN = "NGN",
+  KES = "KES",
+  AED = "AED",
+  SAR = "SAR",
+  TRY = "TRY",
+  PLN = "PLN",
+  SEK = "SEK",
+  NOK = "NOK",
+  DKK = "DKK",
+}
+
+@Schema({
+  timestamps: true,
+})
+export class Store {
+  @Prop({
+    type: Types.ObjectId,
+    ref: "User",
+    required: true,
+    index: true,
+  })
+  ownerId!: Types.ObjectId;
+
+  @Prop({
+    type: Types.ObjectId,
+    ref: "Seller",
+    index: true,
+  })
+  sellerId?: Types.ObjectId;
+
+  /*
+   * Permanent Fockis Store identifier.
+   *
+   * Example:
+   * FKUSST7K4M9Q2A8B6
+   *
+   * FK  = Fockis
+   * US  = country code
+   * ST  = Store
+   * rest = unique identifier
+   */
+  @Prop({
+    required: true,
+    unique: true,
+    index: true,
+    immutable: true,
+    trim: true,
+    uppercase: true,
+  })
+  fockisStoreId!: string;
+
+  /*
+   * Store's Fockis domain.
+   *
+   * Example:
+   * regulusfashion.fockis.com
+   */
+  @Prop({
+    required: true,
+    unique: true,
+    index: true,
+    lowercase: true,
+    trim: true,
+  })
+  domainName!: string;
+
+  @Prop({
+    required: true,
+    trim: true,
+  })
+  name!: string;
+
+  @Prop({
+    required: true,
+    trim: true,
+    lowercase: true,
+    unique: true,
+    index: true,
+  })
+  slug!: string;
+
+  @Prop({
+    default: "",
+  })
+  description!: string;
+
+  @Prop({
+    default: "",
+    index: true,
+  })
+  category!: string;
+
+  /*
+   * Public store profile image/logo.
+   */
+  @Prop({
+    default: "",
+  })
+  logo!: string;
+
+  /*
+   * Public store cover/banner image.
+   */
+  @Prop({
+    default: "",
+  })
+  banner!: string;
+
+  @Prop({
+    default: "",
+  })
+  email!: string;
+
+  @Prop({
+    default: "",
+  })
+  phone!: string;
+
+  @Prop({
+    default: "",
+  })
+  website!: string;
+
+  /*
+   * Human-readable country name.
+   */
+  @Prop({
+    required: true,
+    trim: true,
+  })
+  country!: string;
+
+  /*
+   * Two-letter country code used by the Fockis Store ID.
+   *
+   * Example:
+   * US
+   * HT
+   * CA
+   */
+  @Prop({
+    required: true,
+    trim: true,
+    uppercase: true,
+    minlength: 2,
+    maxlength: 2,
+    index: true,
+  })
+  countryCode!: string;
+
+  @Prop({
+    required: true,
+    trim: true,
+  })
+  city!: string;
+
+  @Prop({
+    required: true,
+    trim: true,
+  })
+  address!: string;
+
+  @Prop({
+    default: "",
+  })
+  state!: string;
+
+  @Prop({
+    default: "",
+  })
+  zipCode!: string;
+
+  @Prop({
+    type: String,
+    enum: Object.values(StoreCurrency),
+    default: StoreCurrency.USD,
+    required: true,
+    index: true,
+  })
+  currency!: StoreCurrency;
+
+  @Prop({
+    default: "",
+  })
+  shippingPolicy!: string;
+
+  @Prop({
+    default: "",
+  })
+  returnPolicy!: string;
+
+  @Prop({
+    default: "",
+  })
+  facebook!: string;
+
+  @Prop({
+    default: "",
+  })
+  instagram!: string;
+
+  @Prop({
+    default: "",
+  })
+  twitter!: string;
+
+  @Prop({
+    default: 0,
+  })
+  followers!: number;
+
+  @Prop({
+    type: [Types.ObjectId],
+    ref: "User",
+    default: [],
+  })
+  followersList!: Types.ObjectId[];
+
+  @Prop({
+    default: 0,
+  })
+  rating!: number;
+
+  @Prop({
+    default: 0,
+  })
+  reviewCount!: number;
+
+  @Prop({
+    default: 0,
+  })
+  totalSales!: number;
+
+  @Prop({
+    default: 0,
+  })
+  totalProducts!: number;
+
+  @Prop({
+    default: 0,
+  })
+  totalViews!: number;
+
+  @Prop({
+    default: "PENDING",
+    enum: [
+      "PENDING",
+      "ACTIVE",
+      "SUSPENDED",
+    ],
+  })
+  status!:
+    | "PENDING"
+    | "ACTIVE"
+    | "SUSPENDED";
+
+  @Prop({
+    default: false,
+  })
+  verified!: boolean;
+
+  @Prop({
+    default: true,
+    index: true,
+  })
+  active!: boolean;
+}
+
+export const StoreSchema =
+  SchemaFactory.createForClass(Store);
+
+StoreSchema.index({
+  ownerId: 1,
+  createdAt: -1,
+});
+
+StoreSchema.index({
+  slug: 1,
+  active: 1,
+});
+
+StoreSchema.index({
+  ownerId: 1,
+  active: 1,
+});
+
+StoreSchema.index({
+  country: 1,
+  currency: 1,
+});
+
+StoreSchema.index({
+  countryCode: 1,
+  active: 1,
+});
+
+StoreSchema.index({
+  domainName: 1,
+  active: 1,
+});
+
+StoreSchema.index({
+  fockisStoreId: 1,
+  active: 1,
+});
+
+===== FILE: .\web\src\features\orders\services\orderApi.ts =====
+import { api } from "../../../api/api";
+import type { Order } from "../types/Order";
+
+/**
+ * Fockis Shop order API.
+ *
+ * IMPORTANT:
+ * This service intentionally uses /fockis-shop/orders.
+ * Do not change this back to /marketplace/orders; Fockis Shop has its
+ * own order endpoints.
+ */
+const BASE_URL = "/fockis-shop/orders";
+
+export type PaymentMethod = "card" | "moncash" | "natcash" | "cod";
+
+export type PaymentStatus =
+  | "paid"
+  | "pending"
+  | "failed"
+  | "cancelled"
+  | "refunded"
+  | "partially_refunded";
+
+export type OrderStatus =
+  | "pending"
+  | "paid"
+  | "processing"
+  | "ready_to_ship"
+  | "shipped"
+  | "in_transit"
+  | "out_for_delivery"
+  | "delivered"
+  | "cancelled"
+  | "refunded"
+  | "return_requested"
+  | "returned"
+  | string;
+
+export type CreateOrderRequest = {
+  items: Array<{
+    productId: string;
+    sellerId: string;
+    storeId?: string;
+    quantity: number;
+
+    /**
+     * Compatibility/display field only.
+     * The backend must calculate the authoritative price from the database.
+     */
+    price: number;
+  }>;
+
+  subtotal: number;
+  shippingCost: number;
+  tax: number;
+  discount?: number;
+  totalAmount: number;
+
+  shippingAddress: {
+    fullName: string;
+    email?: string;
+    phone: string;
+    street: string;
+    houseOrApartmentNumber?: string;
+    neighborhood?: string;
+    address?: string;
+    apartment?: string;
+    city: string;
+    state?: string;
+    zipCode?: string;
+    country: string;
+  };
+
+  deliveryMethod?: string;
+  paymentMethod: PaymentMethod;
+  paymentStatus?: PaymentStatus;
+  paymentIntentId?: string;
+  moncashTransactionId?: string;
+  natcashTransactionId?: string;
+};
+
+export type UpdateOrderStatusRequest = {
+  status: OrderStatus;
+  carrier?: string;
+  trackingNumber?: string;
+  trackingUrl?: string;
+  shipmentStatus?: string;
+};
+
+type ApiOrderResponse = Order[] | { data?: Order[]; orders?: Order[]; results?: Order[] };
+
+function normalizeOrders(response: ApiOrderResponse): Order[] {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.orders)) return response.orders;
+  if (Array.isArray(response?.results)) return response.results;
+  if (Array.isArray(response?.data)) return response.data;
+  return [];
+}
+
+export const orderApi = {
+  /** Create a Fockis Shop order. */
+  createOrder: async (data: CreateOrderRequest): Promise<Order> => {
+    const response = await api.post<Order>(BASE_URL, data);
+    return response.data;
+  },
+
+  /** Fetch the signed-in customer's Fockis Shop orders. */
+  getOrders: async (): Promise<Order[]> => {
+    const response = await api.get<ApiOrderResponse>(BASE_URL);
+    return normalizeOrders(response.data);
+  },
+
+  /**
+   * Fetch seller orders.
+   * If a store ID is supplied, use the store-specific Fockis Shop endpoint.
+   */
+  getSellerOrders: async (storeId?: string): Promise<Order[]> => {
+    const endpoint = storeId
+      ? `${BASE_URL}/seller/store/${encodeURIComponent(storeId)}`
+      : `${BASE_URL}/seller`;
+
+    const response = await api.get<ApiOrderResponse>(endpoint);
+    return normalizeOrders(response.data);
+  },
+
+  /** Explicit store-specific alias, for existing callers. */
+  getSellerStoreOrders: async (storeId: string): Promise<Order[]> => {
+    if (!storeId?.trim()) {
+      throw new Error("Store ID is required.");
+    }
+
+    const response = await api.get<ApiOrderResponse>(
+      `${BASE_URL}/seller/store/${encodeURIComponent(storeId)}`,
+    );
+    return normalizeOrders(response.data);
+  },
+
+  /** Fetch one Fockis Shop order by ID. */
+  getOrderById: async (id: string): Promise<Order> => {
+    if (!id?.trim()) {
+      throw new Error("Order ID is required.");
+    }
+
+    const response = await api.get<Order>(
+      `${BASE_URL}/${encodeURIComponent(id)}`,
+    );
+    return response.data;
+  },
+
+  /** Update fulfillment status and optional shipment tracking information. */
+  updateStatus: async (
+    id: string,
+    data: UpdateOrderStatusRequest,
+  ): Promise<Order> => {
+    if (!id?.trim()) {
+      throw new Error("Order ID is required.");
+    }
+    if (!data || !data.status) {
+      throw new Error("Order status is required.");
+    }
+
+    const response = await api.patch<Order>(
+      `${BASE_URL}/${encodeURIComponent(id)}/status`,
+      data,
+    );
+    return response.data;
+  },
+};
+
+
+===== FILE: .\web\src\features\fockis-shop\services\orderApi.ts =====
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+import type { Order } from "../types/order.types";
+
+/**
+ * Fockis Shop — Order API
+ *
+ * Backend endpoints:
+ * GET /fockis-shop/orders
+ * GET /fockis-shop/orders/:orderId
+ *
+ * The backend identifies the customer from the authenticated session/JWT.
+ */
+
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  FOCKIS_API_URL
+).replace(/\/+$/, "");
+
+const ORDERS_PATH = "/fockis-shop/orders";
+
+type UnknownRecord = Record<string, unknown>;
+
+function isRecord(value: unknown): value is UnknownRecord {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function getAuthToken(): string | null {
+  const tokenKeys = [
+    "access_token",
+    "accessToken",
+    "token",
+    "authToken",
+    "jwt",
+    "fockis_token",
+    "fockis_auth_token",
+  ];
+
+  let bestToken: string | null = null;
+  let bestIssuedAt = -1;
+  let bestPriority = Number.MAX_SAFE_INTEGER;
+
+  for (let index = 0; index < tokenKeys.length; index += 1) {
+    const token = localStorage.getItem(tokenKeys[index])?.trim();
+    if (!token) continue;
+
+    let issuedAt = 0;
+
+    try {
+      const parts = token.split(".");
+      if (parts.length === 3) {
+        const payload = JSON.parse(
+          atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
+        ) as { exp?: unknown; iat?: unknown };
+
+        if (typeof payload.exp === "number" && payload.exp <= Math.floor(Date.now() / 1000)) {
+          continue;
+        }
+
+        if (typeof payload.iat === "number") {
+          issuedAt = payload.iat;
+        }
+      }
+    } catch {
+      // Non-JWT tokens are still allowed; the server validates them.
+    }
+
+    if (
+      issuedAt > bestIssuedAt ||
+      (issuedAt === bestIssuedAt && index < bestPriority)
+    ) {
+      bestToken = token;
+      bestIssuedAt = issuedAt;
+      bestPriority = index;
+    }
+  }
+
+  return bestToken;
+}
+
+function buildUrl(path: string): string {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${API_BASE_URL}${normalizedPath}`;
+}
+
+async function readErrorMessage(response: Response): Promise<string> {
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    try {
+      const body: unknown = await response.json();
+      if (isRecord(body)) {
+        if (typeof body.message === "string") return body.message;
+        if (Array.isArray(body.message)) return body.message.join(", ");
+        if (typeof body.error === "string") return body.error;
+      }
+    } catch {
+      // Fall through to the status message.
+    }
+  } else {
+    try {
+      const text = await response.text();
+      if (text) return text;
+    } catch {
+      // Fall through to the status message.
+    }
+  }
+
+  return `Request failed with status ${response.status}`;
+}
+
+async function request<T>(path: string): Promise<T> {
+  const token = getAuthToken();
+  const headers = new Headers({ Accept: "application/json" });
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  const url = buildUrl(path);
+  const response = await fetch(url, {
+    method: "GET",
+    headers,
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) throw new Error("UNAUTHORIZED");
+    if (response.status === 403) throw new Error("FORBIDDEN");
+    if (response.status === 404) throw new Error("ORDER_NOT_FOUND");
+    throw new Error(await readErrorMessage(response));
+  }
+
+  if (response.status === 204) return undefined as T;
+
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    const text = await response.text();
+    if (!text) return undefined as T;
+
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      throw new Error("The order API returned an unexpected response.");
+    }
+  }
+
+  return (await response.json()) as T;
+}
+
+function firstDefined(record: UnknownRecord, keys: string[]): unknown {
+  for (const key of keys) {
+    const value = record[key];
+    if (value !== undefined && value !== null && value !== "") return value;
+  }
+  return undefined;
+}
+
+function asString(value: unknown, fallback = ""): string {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (typeof value === "number") return String(value);
+  return fallback;
+}
+
+function asNumber(value: unknown, fallback = 0): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+}
+
+function unwrapOne(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+  if (isRecord(value.data)) return value.data;
+  if (isRecord(value.order)) return value.order;
+  return value;
+}
+
+function unwrapOrderList(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+  if (!isRecord(value)) return [];
+
+  for (const key of ["orders", "items", "results", "data"]) {
+    const candidate = value[key];
+    if (Array.isArray(candidate)) return candidate;
+    if (isRecord(candidate)) {
+      for (const nestedKey of ["orders", "items", "results"]) {
+        if (Array.isArray(candidate[nestedKey])) {
+          return candidate[nestedKey] as unknown[];
+        }
+      }
+    }
+  }
+
+  return [];
+}
+
+function normalizeAddress(value: unknown): UnknownRecord {
+  const address = isRecord(value) ? value : {};
+
+  return {
+    ...address,
+    fullName: asString(firstDefined(address, ["fullName", "name", "recipientName"])),
+    line1: asString(firstDefined(address, ["line1", "street", "addressLine1", "address"])),
+    line2: asString(firstDefined(address, ["line2", "apartment", "addressLine2"])),
+    city: asString(address.city),
+    state: asString(firstDefined(address, ["state", "region", "province"])),
+    postalCode: asString(firstDefined(address, ["postalCode", "zipCode", "zip"])),
+    country: asString(address.country),
+  };
+}
+
+function normalizeItem(value: unknown, index: number): UnknownRecord {
+  const item = isRecord(value) ? value : {};
+  const quantity = Math.max(1, asNumber(item.quantity, 1));
+  const unitPrice = asNumber(
+    firstDefined(item, ["unitPrice", "price", "unit_price", "pricePerUnit"]),
+    0,
+  );
+  const lineTotal = asNumber(
+    firstDefined(item, ["lineTotal", "totalPrice", "line_total", "total"]),
+    unitPrice * quantity,
+  );
+
+  return {
+    ...item,
+    id: asString(firstDefined(item, ["id", "_id", "productId", "product_id"]), `item-${index}`),
+    productId: asString(firstDefined(item, ["productId", "product_id", "id", "_id"])),
+    productName: asString(firstDefined(item, ["productName", "name", "title"]), "Product"),
+    productEmoji: asString(item.productEmoji, "📦"),
+    quantity,
+    unitPrice,
+    lineTotal,
+    sellerId: asString(firstDefined(item, ["sellerId", "seller", "seller_id"])),
+    storeId: asString(firstDefined(item, ["storeId", "store", "store_id"])),
+    storeName: asString(firstDefined(item, ["storeName", "storeTitle"]), "Store"),
+    status: asString(item.status, "processing"),
+    trackingNumber: asString(firstDefined(item, ["trackingNumber", "tracking_number"])),
+  };
+}
+
+function normalizeOrder(value: unknown): Order {
+  const raw = unwrapOne(value);
+  if (!isRecord(raw)) {
+    throw new Error("The order API returned an invalid order.");
+  }
+
+  const rawItems = Array.isArray(raw.items)
+    ? raw.items
+    : Array.isArray(raw.orderItems)
+      ? raw.orderItems
+      : Array.isArray(raw.products)
+        ? raw.products
+        : [];
+
+  const items = rawItems.map(normalizeItem);
+
+  const existingGroups = Array.isArray(raw.sellerGroups)
+    ? raw.sellerGroups
+    : Array.isArray(raw.seller_groups)
+      ? raw.seller_groups
+      : [];
+
+  const sellerGroups: UnknownRecord[] = existingGroups
+    .filter(isRecord)
+    .map((group, groupIndex) => {
+      const groupItems = Array.isArray(group.items) ? group.items : [];
+      return {
+        ...group,
+        id: asString(firstDefined(group, ["id", "_id", "storeId"]), `group-${groupIndex}`),
+        storeName: asString(firstDefined(group, ["storeName", "name"]), "Store"),
+        status: asString(group.status, "processing"),
+        trackingNumber: asString(firstDefined(group, ["trackingNumber", "tracking_number"])),
+        items: groupItems.map(normalizeItem),
+      };
+    });
+
+  if (sellerGroups.length === 0 && items.length > 0) {
+    const groups = new Map<string, UnknownRecord>();
+
+    for (const item of items) {
+      const key = asString(item.storeId || item.sellerId, "default-store");
+      let group = groups.get(key);
+
+      if (!group) {
+        group = {
+          id: key,
+          storeName: asString(item.storeName, "Store"),
+          status: asString(item.status, "processing"),
+          trackingNumber: asString(item.trackingNumber),
+          items: [],
+        };
+        groups.set(key, group);
+      }
+
+      (group.items as UnknownRecord[]).push(item);
+    }
+
+    sellerGroups.push(...groups.values());
+  }
+
+  const subtotal = asNumber(
+    firstDefined(raw, ["subtotal", "subTotal", "itemsSubtotal"]),
+    items.reduce((sum, item) => sum + asNumber(item.lineTotal), 0),
+  );
+  const shippingTotal = asNumber(
+    firstDefined(raw, ["shippingTotal", "shippingCost", "shipping", "shippingAmount"]),
+    0,
+  );
+  const taxTotal = asNumber(
+    firstDefined(raw, ["taxTotal", "tax", "taxAmount"]),
+    0,
+  );
+  const total = asNumber(
+    firstDefined(raw, ["total", "totalAmount", "grandTotal", "amountTotal"]),
+    subtotal + shippingTotal + taxTotal,
+  );
+
+  const placedAt = firstDefined(raw, [
+    "placedAt",
+    "createdAt",
+    "orderDate",
+    "created_at",
+    "dateCreated",
+  ]);
+
+  const normalized: UnknownRecord = {
+    ...raw,
+    id: asString(firstDefined(raw, ["id", "_id", "orderId"])),
+    orderNumber: asString(firstDefined(raw, ["orderNumber", "number", "reference"]), "Order"),
+    placedAt: asString(placedAt),
+    items,
+    sellerGroups,
+    subtotal,
+    shippingTotal,
+    taxTotal,
+    total,
+    shippingAddress: normalizeAddress(
+      firstDefined(raw, ["shippingAddress", "shipping_address", "deliveryAddress"]),
+    ),
+    paymentStatus: asString(firstDefined(raw, ["paymentStatus", "payment_status", "status"]), "pending"),
+    invoiceNumber: asString(firstDefined(raw, ["invoiceNumber", "invoice", "invoice_number"])),
+    paymentIntentId: asString(firstDefined(raw, ["paymentIntentId", "paymentIntent", "payment_intent_id"])),
+    deliveryMethod: asString(firstDefined(raw, ["deliveryMethod", "shippingMethod", "delivery_method"])),
+    carrier: asString(firstDefined(raw, ["carrier", "shippingCarrier"])),
+    trackingNumber: asString(firstDefined(raw, ["trackingNumber", "tracking_number"])),
+  };
+
+  return normalized as unknown as Order;
+}
+
+// ============================================================================
+// LIST CURRENT USER ORDERS
+// ============================================================================
+
+export async function listMyOrders(): Promise<Order[]> {
+  const result = await request<unknown>(ORDERS_PATH);
+  return unwrapOrderList(result).map(normalizeOrder);
+}
+
+// ============================================================================
+// GET ORDER BY ID
+// ============================================================================
+
+export async function getOrderById(orderId: string): Promise<Order | null> {
+  const normalizedId = orderId?.trim();
+  if (!normalizedId) return null;
+
+  try {
+    const result = await request<unknown>(
+      `${ORDERS_PATH}/${encodeURIComponent(normalizedId)}`,
+    );
+
+    if (result == null) return null;
+    return normalizeOrder(result);
+  } catch (error) {
+    if (error instanceof Error && error.message === "ORDER_NOT_FOUND") {
+      return null;
+    }
+    throw error;
+  }
+}
+
+export const orderApi = {
+  listMyOrders,
+  getOrderById,
+};
+
+export default orderApi;
+

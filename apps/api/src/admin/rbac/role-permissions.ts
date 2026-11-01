@@ -38,6 +38,11 @@ export const RolePermissions: Record<Role, Permission[]> = {
     Permission.MODERATION_RESTRICT,
     Permission.MODERATION_RESTORE,
     Permission.MODERATION_APPEALS,
+
+    // Help & Support: moderators could already answer tickets; keep that.
+    Permission.SUPPORT_VIEW,
+    Permission.SUPPORT_RESPOND,
+    Permission.SUPPORT_RESOLVE,
   ],
 
   // ========================================================================
@@ -135,6 +140,14 @@ export const RolePermissions: Record<Role, Permission[]> = {
     Permission.MODERATION_RESTORE,
     Permission.MODERATION_APPEALS,
     Permission.MODERATION_SETTINGS,
+
+    // Help & Support
+    Permission.SUPPORT_VIEW,
+    Permission.SUPPORT_RESPOND,
+    Permission.SUPPORT_ASSIGN,
+    Permission.SUPPORT_RESOLVE,
+    Permission.SUPPORT_SETTINGS,
+    Permission.HELP_CONTENT_MANAGE,
   ],
 
   // ========================================================================

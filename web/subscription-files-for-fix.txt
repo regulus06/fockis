@@ -1,0 +1,1539 @@
+
+===== FILE: .\src\features\subscriptions\pages\SubscriptionPlans.tsx =====
+
+
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import useSubscription from "../hooks/useSubscription";
+import {
+  createCheckout,
+  getSubscriptionPlans,
+} from "../services/subscriptionApi";
+
+import type {
+  BillingInterval,
+  SubscriptionPlan,
+  SubscriptionPlanConfig,
+} from "../types/subscriptionTypes";
+
+import SubscriptionPlans from "../components/SubscriptionPlans";
+import "../styles/SubscriptionPlans.scss";
+
+export default function SubscriptionPlansPage() {
+  const navigate = useNavigate();
+
+  const {
+    plan,
+    loading,
+    actionLoading,
+    error,
+  } = useSubscription();
+
+  const [billingInterval, setBillingInterval] =
+    useState<BillingInterval>("MONTHLY");
+
+  const [plans, setPlans] =
+    useState<SubscriptionPlanConfig[]>([]);
+
+  const [plansLoading, setPlansLoading] =
+    useState(true);
+
+  const [plansError, setPlansError] =
+    useState<string | null>(null);
+
+  const [checkoutLoading, setCheckoutLoading] =
+    useState(false);
+
+  const [checkoutError, setCheckoutError] =
+    useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadPlans() {
+      setPlansLoading(true);
+      setPlansError(null);
+
+      try {
+        const result = await getSubscriptionPlans();
+
+        if (!mounted) return;
+
+        setPlans(
+          result.filter((item) => item.active),
+        );
+      } catch (err) {
+        if (!mounted) return;
+
+        setPlansError(
+          err instanceof Error
+            ? err.message
+            : "Unable to load current subscription prices.",
+        );
+      } finally {
+        if (mounted) {
+          setPlansLoading(false);
+        }
+      }
+    }
+
+    void loadPlans();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const currentPlan: SubscriptionPlan =
+    plan ?? "BASIC";
+
+  const isProcessing =
+    loading || actionLoading || checkoutLoading;
+
+  const handleSelect = async (
+    selectedPlan: SubscriptionPlan,
+  ): Promise<void> => {
+    if (selectedPlan === "BASIC") {
+      navigate("/subscriptions");
+      return;
+    }
+
+    if (checkoutLoading || loading || actionLoading) {
+      return;
+    }
+
+    const selectedConfig = plans.find(
+      (item) => item.plan === selectedPlan,
+    );
+
+    if (!selectedConfig || !selectedConfig.active) {
+      setCheckoutError(
+        "This subscription plan is currently unavailable.",
+      );
+      return;
+    }
+
+    const selectedPrice =
+      billingInterval === "YEARLY"
+        ? selectedConfig.yearlyPrice
+        : selectedConfig.monthlyPrice;
+
+    if (
+      !Number.isFinite(selectedPrice) ||
+      selectedPrice <= 0
+    ) {
+      setCheckoutError(
+        "This plan does not have a valid price for the selected billing interval. Please contact support.",
+      );
+      return;
+    }
+
+    try {
+      setCheckoutLoading(true);
+      setCheckoutError(null);
+
+      const result = await createCheckout({
+        plan: selectedPlan as Exclude<
+          SubscriptionPlan,
+          "BASIC"
+        >,
+        billingInterval,
+      });
+
+      if (!result.checkoutUrl) {
+        throw new Error(
+          result.message ??
+            "Stripe did not return a checkout URL.",
+        );
+      }
+
+      const checkoutUrl = new URL(result.checkoutUrl);
+
+      if (
+        checkoutUrl.protocol !== "https:" ||
+        !(
+          checkoutUrl.hostname === "checkout.stripe.com" ||
+          checkoutUrl.hostname.endsWith(".checkout.stripe.com")
+        )
+      ) {
+        throw new Error(
+          "The checkout URL is not a recognized secure Stripe Checkout URL.",
+        );
+      }
+
+      window.location.assign(checkoutUrl.toString());
+    } catch (err) {
+      setCheckoutError(
+        err instanceof Error
+          ? err.message
+          : "Unable to start subscription checkout.",
+      );
+
+      setCheckoutLoading(false);
+    }
+  };
+
+  if (loading || plansLoading) {
+    return (
+      <main className="fk-subscription-plans-page">
+        <div
+          className="fk-subscription-loading"
+          role="status"
+          aria-live="polite"
+        >
+          Loading your Fockis account plans...
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="fk-subscription-plans-page">
+      <header className="fk-subscription-plans-page__header">
+        <span className="fk-subscriptions-eyebrow">
+          FOCKIS ACCOUNT
+        </span>
+
+        <h1>Choose Your Fockis Account</h1>
+
+        <p>
+          Find the account level that fits your needs.
+          Compare features, choose your billing schedule,
+          and upgrade when you are ready.
+        </p>
+      </header>
+
+      <section
+        className="fk-subscription-current-summary"
+        aria-label="Current subscription"
+      >
+        <div>
+          <span>YOUR CURRENT ACCOUNT</span>
+          <p>
+            Your current Fockis subscription level
+          </p>
+        </div>
+
+        <strong>{currentPlan}</strong>
+      </section>
+
+      {(checkoutError || plansError || error) && (
+        <div className="fk-subscription-error" role="alert">
+          {checkoutError || plansError || error}
+        </div>
+      )}
+
+      {!plansError && plans.length === 0 && (
+        <div className="fk-subscription-error" role="alert">
+          No active subscription plans are currently available.
+          Please try again later.
+        </div>
+      )}
+
+      {plansError && (
+        <button
+          type="button"
+          className="fk-subscription-retry"
+          onClick={() => window.location.reload()}
+        >
+          Retry loading plans
+        </button>
+      )}
+
+      {!plansError && plans.length > 0 && (
+        <>
+          <section
+            className="fk-subscription-billing-control"
+            aria-labelledby="fk-billing-heading"
+          >
+            <div className="fk-subscription-billing-control__copy">
+              <h2 id="fk-billing-heading">
+                Choose your billing
+              </h2>
+
+              <p>
+                Select how often you want your subscription
+                to renew.
+              </p>
+            </div>
+
+            <div
+              className="fk-billing-selector"
+              role="group"
+              aria-label="Billing interval"
+            >
+              <button
+                type="button"
+                className={
+                  billingInterval === "MONTHLY"
+                    ? "active"
+                    : ""
+                }
+                aria-pressed={billingInterval === "MONTHLY"}
+                disabled={checkoutLoading}
+                onClick={() => {
+                  setBillingInterval("MONTHLY");
+                  setCheckoutError(null);
+                }}
+              >
+                Monthly
+              </button>
+
+              <button
+                type="button"
+                className={
+                  billingInterval === "YEARLY"
+                    ? "active"
+                    : ""
+                }
+                aria-pressed={billingInterval === "YEARLY"}
+                disabled={checkoutLoading}
+                onClick={() => {
+                  setBillingInterval("YEARLY");
+                  setCheckoutError(null);
+                }}
+              >
+                Yearly
+              </button>
+            </div>
+
+            <p className="fk-subscription-billing-note">
+              {billingInterval === "YEARLY"
+                ? "Yearly billing is charged once per year."
+                : "Monthly billing is charged once per month."}
+            </p>
+          </section>
+
+          {checkoutLoading && (
+            <div
+              className="fk-subscription-checkout-message"
+              role="status"
+              aria-live="polite"
+            >
+              Preparing your secure Stripe checkout...
+            </div>
+          )}
+
+          <SubscriptionPlans
+            plans={plans}
+            currentPlan={currentPlan}
+            billingInterval={billingInterval}
+            loading={isProcessing}
+            onSelect={handleSelect}
+          />
+
+          <footer className="fk-subscription-plans-page__footer">
+            <span>
+              Secure payments powered by Stripe.
+            </span>
+            <span>
+              Your selected billing interval will be used at checkout.
+            </span>
+          </footer>
+        </>
+      )}
+    </main>
+  );
+}
+
+
+===== FILE: .\src\features\subscriptions\components\SubscriptionPlans.tsx =====
+
+
+import React from "react";
+
+import type {
+  BillingInterval,
+  SubscriptionPlan,
+  SubscriptionPlanConfig,
+} from "../types/subscriptionTypes";
+
+import SubscriptionPlanCard from "../components/SubscriptionPlanCard";
+
+interface SubscriptionPlansProps {
+  plans?: SubscriptionPlanConfig[];
+  currentPlan: SubscriptionPlan;
+  billingInterval: BillingInterval;
+  loading?: boolean;
+  onSelect: (plan: SubscriptionPlan) => void;
+}
+
+const DEFAULT_PLANS: SubscriptionPlanConfig[] = [
+  {
+    plan: "BASIC",
+    name: "Basic",
+    description: "Free Fockis account with essential services.",
+    monthlyPrice: 0,
+    yearlyPrice: 0,
+    currency: "USD",
+    features: [
+      { name: "Fockis Feed", included: true },
+      { name: "Create posts", included: true },
+      { name: "Friends and groups", included: true },
+      { name: "Marketplace browsing", included: true },
+      { name: "Basic profile", included: true },
+    ],
+    active: true,
+    popular: false,
+    displayOrder: 1,
+    rank: 1,
+  },
+  {
+    plan: "BRONZE",
+    name: "Bronze",
+    description: "More Fockis services and higher account limits.",
+    monthlyPrice: 9.99,
+    yearlyPrice: 99.99,
+    currency: "USD",
+    features: [
+      { name: "Everything in Basic", included: true },
+      { name: "Higher account limits", included: true },
+      { name: "Enhanced profile features", included: true },
+      { name: "Additional Fockis services", included: true },
+    ],
+    active: true,
+    popular: false,
+    displayOrder: 2,
+    rank: 2,
+  },
+  {
+    plan: "SILVER",
+    name: "Silver",
+    description: "Expanded Fockis services for growing users.",
+    monthlyPrice: 19.99,
+    yearlyPrice: 199.99,
+    currency: "USD",
+    features: [
+      { name: "Everything in Bronze", included: true },
+      { name: "Expanded account limits", included: true },
+      { name: "Advanced profile tools", included: true },
+      { name: "Advanced marketplace tools", included: true },
+      { name: "Advanced analytics", included: true },
+    ],
+    active: true,
+    popular: true,
+    displayOrder: 3,
+    rank: 3,
+  },
+  {
+    plan: "GOLDEN",
+    name: "Golden",
+    description: "Advanced Fockis services and premium capabilities.",
+    monthlyPrice: 39.99,
+    yearlyPrice: 399.99,
+    currency: "USD",
+    features: [
+      { name: "Everything in Silver", included: true },
+      { name: "Premium account capabilities", included: true },
+      { name: "Advanced marketing tools", included: true },
+      { name: "Premium analytics", included: true },
+      { name: "Priority features", included: true },
+    ],
+    active: true,
+    popular: false,
+    displayOrder: 4,
+    rank: 4,
+  },
+  {
+    plan: "DIAMOND",
+    name: "Diamond",
+    description: "The highest Fockis account level with maximum services.",
+    monthlyPrice: 79.99,
+    yearlyPrice: 799.99,
+    currency: "USD",
+    features: [
+      { name: "Everything in Golden", included: true },
+      { name: "Maximum account limits", included: true },
+      { name: "Maximum premium capabilities", included: true },
+      { name: "Advanced marketing", included: true },
+      { name: "Maximum analytics", included: true },
+      { name: "Highest Fockis account level", included: true },
+    ],
+    active: true,
+    popular: false,
+    displayOrder: 5,
+    rank: 5,
+  },
+];
+
+export default function SubscriptionPlans({
+  plans = DEFAULT_PLANS,
+  currentPlan,
+  billingInterval,
+  loading = false,
+  onSelect,
+}: SubscriptionPlansProps) {
+  const activePlans = [...plans]
+    .filter((item) => item.active)
+    .sort((a, b) => a.displayOrder - b.displayOrder);
+
+  return (
+    <section className="fk-subscription-plans">
+      <div className="fk-subscription-plans__billing">
+        <div>
+          <span>Selected billing schedule</span>
+          <p>
+            {billingInterval === "YEARLY"
+              ? "One payment each year"
+              : "One payment each month"}
+          </p>
+        </div>
+
+        <strong>
+          {billingInterval === "YEARLY" ? "Yearly" : "Monthly"}
+        </strong>
+      </div>
+
+      <div className="fk-subscription-plans__grid">
+        {activePlans.map((config) => (
+          <SubscriptionPlanCard
+            key={config.plan}
+            config={config}
+            currentPlan={currentPlan}
+            billingInterval={billingInterval}
+            loading={loading}
+            onSelect={onSelect}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+
+===== FILE: .\src\features\subscriptions\components\BillingIntervalSelector.tsx =====
+
+import React from "react";
+
+import type {
+  BillingInterval,
+} from "../types/subscriptionTypes";
+
+import "../styles/BillingIntervalSelector.scss";
+
+interface Props {
+  value: BillingInterval;
+
+  onChange: (
+    value: BillingInterval,
+  ) => void;
+}
+
+export default function BillingIntervalSelector({
+  value,
+  onChange,
+}: Props) {
+  return (
+    <div className="fk-billing-selector">
+      <button
+        type="button"
+        className={
+          value === "MONTHLY"
+            ? "is-active"
+            : ""
+        }
+        onClick={() =>
+          onChange("MONTHLY")
+        }
+      >
+        Monthly
+      </button>
+
+      <button
+        type="button"
+        className={
+          value === "YEARLY"
+            ? "is-active"
+            : ""
+        }
+        onClick={() =>
+          onChange("YEARLY")
+        }
+      >
+        Yearly
+        <span>Save annually</span>
+      </button>
+    </div>
+  );
+}
+
+===== FILE: .\src\features\subscriptions\styles\SubscriptionPlans.scss =====
+
+
+@use "./fockis-subscription-shared";
+
+.fk-subscription-plans-page {
+  box-sizing: border-box;
+  max-width: 1440px;
+  padding: clamp(20px, 3vw, 40px) clamp(16px, 3vw, 36px) 64px;
+}
+
+.fk-subscription-plans-page *,
+.fk-subscription-plans-page *::before,
+.fk-subscription-plans-page *::after {
+  box-sizing: border-box;
+}
+
+.fk-subscription-plans-page__header {
+  margin-bottom: 28px;
+
+  .fk-subscriptions-eyebrow {
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: var(--fk-fjord-soft);
+  }
+
+  h1 {
+    margin-top: 8px;
+    letter-spacing: -0.04em;
+  }
+
+  p {
+    max-width: 720px;
+  }
+}
+
+.fk-subscription-current-summary {
+  min-height: 84px;
+  margin-bottom: 24px;
+
+  > div {
+    min-width: 0;
+  }
+
+  span {
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+  }
+
+  p {
+    margin: 5px 0 0;
+    color: var(--fk-text-2);
+    font-size: 13px;
+  }
+}
+
+.fk-subscription-billing-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 24px;
+  margin: 24px 0;
+
+  padding: 20px 22px;
+  border: 1px solid var(--fk-border);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+
+  box-shadow: var(--fk-shadow-sm);
+
+  .fk-billing-selector {
+    margin: 0;
+  }
+}
+
+.fk-subscription-billing-control__copy {
+  h2 {
+    margin: 0;
+    color: var(--fk-text);
+    font-family: var(--fk-font-display);
+    font-size: 17px;
+    font-weight: 800;
+  }
+
+  p {
+    margin: 5px 0 0;
+    color: var(--fk-text-2);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}
+
+.fk-subscription-billing-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--fk-text-2);
+  font-size: 12px;
+}
+
+.fk-subscription-plans__billing {
+  min-height: 64px;
+  gap: 12px;
+
+  > div {
+    min-width: 0;
+  }
+
+  p {
+    margin: 5px 0 0;
+    color: var(--fk-text-2);
+    font-size: 12px;
+  }
+}
+
+.fk-subscription-plans__grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.fk-subscription-plan-card {
+  min-width: 0;
+  height: 100%;
+  padding: 26px 18px 20px;
+  overflow-wrap: anywhere;
+
+  &.is-popular {
+    border-width: 2px;
+  }
+
+  &.is-current {
+    background:
+      linear-gradient(
+        180deg,
+        var(--fk-fjord-soft) 0%,
+        var(--fk-surface) 150px
+      );
+  }
+}
+
+.fk-subscription-plan-card__level {
+  color: var(--fk-fjord);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.fk-subscription-plan-card__name {
+  margin: 2px 0 0;
+}
+
+.fk-subscription-plan-card__description {
+  margin: 0;
+  min-height: 76px;
+  overflow-wrap: anywhere;
+}
+
+.fk-subscription-plan-card__price {
+  min-height: 52px;
+  flex-wrap: wrap;
+  white-space: normal;
+}
+
+.fk-subscription-plan-card__amount {
+  font-size: clamp(24px, 2vw, 31px);
+  overflow-wrap: anywhere;
+}
+
+.fk-subscription-plan-card__interval {
+  font-size: 12px;
+}
+
+.fk-subscription-plan-card__current {
+  padding: 9px 10px;
+  border-radius: var(--fk-r-md);
+  background: var(--fk-fjord-soft);
+  color: var(--fk-fjord);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.fk-subscription-plan-card__features {
+  gap: 12px;
+}
+
+.fk-subscription-plan-card__feature {
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.fk-subscription-plan-card__feature-icon {
+  flex: 0 0 16px;
+  font-weight: 800;
+}
+
+.fk-subscription-plan-card__feature-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.fk-subscription-plan-card__button {
+  width: 100%;
+  min-height: 44px;
+  height: auto;
+  margin-top: auto;
+  padding: 10px 12px;
+  white-space: normal;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.fk-subscription-plans-page__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 20px;
+  margin-top: 26px;
+  padding-top: 16px;
+  border-top: 1px solid var(--fk-border);
+  color: var(--fk-text-2);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.fk-subscription-retry {
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1200px) {
+  .fk-subscription-plans__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .fk-subscription-plan-card__amount {
+    font-size: 29px;
+  }
+}
+
+@media (max-width: 760px) {
+  .fk-subscription-plans-page {
+    padding: 22px 16px 48px;
+  }
+
+  .fk-subscription-current-summary {
+    align-items: flex-start;
+    padding: 16px;
+  }
+
+  .fk-subscription-billing-control {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 17px;
+  }
+
+  .fk-subscription-billing-control .fk-billing-selector {
+    width: 100%;
+  }
+
+  .fk-subscription-billing-control .fk-billing-selector button {
+    flex: 1;
+    padding: 0 12px;
+  }
+
+  .fk-subscription-plans__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .fk-subscription-plan-card {
+    padding: 22px 15px 16px;
+  }
+
+  .fk-subscription-plan-card__description {
+    min-height: 0;
+  }
+
+  .fk-subscription-plan-card__amount {
+    font-size: 27px;
+  }
+}
+
+@media (max-width: 480px) {
+  .fk-subscription-plans-page__header h1 {
+    font-size: 29px;
+  }
+
+  .fk-subscription-plans__grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .fk-subscription-plan-card {
+    padding: 25px 20px 20px;
+  }
+
+  .fk-subscription-plan-card__description {
+    min-height: 0;
+  }
+
+  .fk-subscription-plan-card__amount {
+    font-size: 31px;
+  }
+
+  .fk-subscription-current-summary {
+    align-items: center;
+  }
+
+  .fk-subscription-plans-page__footer {
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-subscription-plan-card {
+    transition: none;
+  }
+
+  .fk-subscription-plan-card:hover,
+  .fk-subscription-plan-card.is-popular {
+    transform: none;
+  }
+}
+
+
+===== FILE: .\src\features\subscriptions\styles\BillingIntervalSelector.scss =====
+
+/* ============================================================================
+   FOCKIS BILLING INTERVAL SELECTOR
+   All visual rules live in the shared partial (.fk-billing-selector).
+============================================================================ */
+
+@use "./fockis-subscription-shared";
+
+===== FILE: .\src\features\subscriptions\types\subscriptionTypes.ts =====
+
+/* ============================================================================
+   FOCKIS SUBSCRIPTION TYPES
+============================================================================ */
+
+/* ============================================================================
+   SUBSCRIPTION PLAN
+============================================================================ */
+
+export type SubscriptionPlan =
+  | "BASIC"
+  | "BRONZE"
+  | "SILVER"
+  | "GOLDEN"
+  | "DIAMOND";
+
+
+/* ============================================================================
+   BILLING INTERVAL
+============================================================================ */
+
+export type BillingInterval =
+  | "MONTHLY"
+  | "YEARLY";
+
+
+/* ============================================================================
+   SUBSCRIPTION STATUS
+============================================================================ */
+
+export type SubscriptionStatus =
+  | "ACTIVE"
+  | "TRIALING"
+  | "PAST_DUE"
+  | "CANCELED"
+  | "EXPIRED";
+
+
+/* ============================================================================
+   SUBSCRIPTION FEATURE
+============================================================================ */
+
+export interface SubscriptionFeature {
+  name: string;
+
+  included: boolean;
+
+  description?: string;
+}
+
+
+/* ============================================================================
+   SUBSCRIPTION PLAN CONFIGURATION
+============================================================================ */
+
+export interface SubscriptionPlanConfig {
+  _id?: string;
+
+  plan: SubscriptionPlan;
+
+  name: string;
+
+  description: string;
+
+  monthlyPrice: number;
+
+  yearlyPrice: number;
+
+  currency: string;
+
+  features: SubscriptionFeature[];
+
+  active: boolean;
+
+  popular: boolean;
+
+  displayOrder: number;
+
+  /*
+   * Frontend subscription level.
+   *
+   * BASIC   = 1
+   * BRONZE  = 2
+   * SILVER  = 3
+   * GOLDEN  = 4
+   * DIAMOND = 5
+   */
+  rank: number;
+
+  stripeMonthlyPriceId?: string;
+
+  stripeYearlyPriceId?: string;
+
+  priceUpdatedAt?: string;
+
+  createdAt?: string;
+
+  updatedAt?: string;
+}
+
+
+/* ============================================================================
+   UPDATE SUBSCRIPTION PLAN PAYLOAD
+============================================================================ */
+
+export interface UpdateSubscriptionPlanPayload {
+  name?: string;
+
+  description?: string;
+
+  monthlyPrice?: number;
+
+  yearlyPrice?: number;
+
+  currency?: string;
+
+  features?: SubscriptionFeature[];
+
+  active?: boolean;
+
+  popular?: boolean;
+
+  displayOrder?: number;
+
+  stripeMonthlyPriceId?: string;
+
+  stripeYearlyPriceId?: string;
+}
+
+
+/* ============================================================================
+   SUBSCRIPTION
+============================================================================ */
+
+export interface Subscription {
+  _id?: string;
+
+  userId: string;
+
+  plan: SubscriptionPlan;
+
+  status: SubscriptionStatus;
+
+  billingInterval?: BillingInterval;
+
+  price: number;
+
+  currency?: string;
+
+  stripeCustomerId?: string;
+
+  stripeSubscriptionId?: string;
+
+  stripePriceId?: string;
+
+  currentPeriodStart?: string;
+
+  currentPeriodEnd?: string;
+
+  trialStart?: string;
+
+  trialEnd?: string;
+
+  trialEndsAt?: string;
+
+  canceledAt?: string;
+
+  cancelAtPeriodEnd: boolean;
+
+  lastPaymentFailedAt?: string;
+
+  paymentFailureCount: number;
+
+  lastSyncedAt?: string;
+
+  createdAt?: string;
+
+  updatedAt?: string;
+}
+
+
+/* ============================================================================
+   CREATE CHECKOUT PAYLOAD
+============================================================================ */
+
+export interface CreateCheckoutPayload {
+  plan:
+    | "BRONZE"
+    | "SILVER"
+    | "GOLDEN"
+    | "DIAMOND";
+
+  billingInterval: BillingInterval;
+}
+
+
+/* ============================================================================
+   CHECKOUT RESPONSE
+============================================================================ */
+
+export interface CheckoutResponse {
+  checkoutUrl?: string;
+
+  sessionId?: string;
+
+  message?: string;
+
+  subscription?: Subscription;
+}
+
+
+/* ============================================================================
+   CHANGE PLAN PAYLOAD
+============================================================================ */
+
+export interface ChangePlanPayload {
+  plan: SubscriptionPlan;
+
+  billingInterval?: BillingInterval;
+}
+
+
+/* ============================================================================
+   SUBSCRIPTION PLAN RANK
+============================================================================ */
+
+export const SUBSCRIPTION_PLAN_RANK: Record<
+  SubscriptionPlan,
+  number
+> = {
+  BASIC: 1,
+
+  BRONZE: 2,
+
+  SILVER: 3,
+
+  GOLDEN: 4,
+
+  DIAMOND: 5,
+};
+
+
+/* ============================================================================
+   DEFAULT FRONTEND PLAN CONFIGURATION
+============================================================================ */
+
+export const SUBSCRIPTION_PLANS: Record<
+  SubscriptionPlan,
+  SubscriptionPlanConfig
+> = {
+
+  /* --------------------------------------------------------------------------
+     BASIC
+  -------------------------------------------------------------------------- */
+
+  BASIC: {
+    plan: "BASIC",
+
+    name: "Basic",
+
+    description:
+      "Free Fockis account with essential services.",
+
+    monthlyPrice: 0,
+
+    yearlyPrice: 0,
+
+    currency: "USD",
+
+    active: true,
+
+    popular: false,
+
+    displayOrder: 1,
+
+    rank: 1,
+
+    features: [
+      {
+        name: "Fockis Feed",
+        included: true,
+      },
+
+      {
+        name: "Create posts",
+        included: true,
+      },
+
+      {
+        name: "Friends and groups",
+        included: true,
+      },
+
+      {
+        name: "Marketplace browsing",
+        included: true,
+      },
+
+      {
+        name: "Basic profile",
+        included: true,
+      },
+
+      {
+        name: "Premium account features",
+        included: false,
+      },
+    ],
+  },
+
+
+  /* --------------------------------------------------------------------------
+     BRONZE
+  -------------------------------------------------------------------------- */
+
+  BRONZE: {
+    plan: "BRONZE",
+
+    name: "Bronze",
+
+    description:
+      "More Fockis services and higher account limits.",
+
+    monthlyPrice: 9.99,
+
+    yearlyPrice: 99.99,
+
+    currency: "USD",
+
+    active: true,
+
+    popular: false,
+
+    displayOrder: 2,
+
+    rank: 2,
+
+    features: [
+      {
+        name: "Everything in Basic",
+        included: true,
+      },
+
+      {
+        name: "Higher account limits",
+        included: true,
+      },
+
+      {
+        name: "Enhanced profile features",
+        included: true,
+      },
+
+      {
+        name: "Additional Fockis services",
+        included: true,
+      },
+
+      {
+        name: "Advanced analytics",
+        included: false,
+      },
+    ],
+  },
+
+
+  /* --------------------------------------------------------------------------
+     SILVER
+  -------------------------------------------------------------------------- */
+
+  SILVER: {
+    plan: "SILVER",
+
+    name: "Silver",
+
+    description:
+      "Expanded Fockis services for growing users.",
+
+    monthlyPrice: 19.99,
+
+    yearlyPrice: 199.99,
+
+    currency: "USD",
+
+    active: true,
+
+    popular: true,
+
+    displayOrder: 3,
+
+    rank: 3,
+
+    features: [
+      {
+        name: "Everything in Bronze",
+        included: true,
+      },
+
+      {
+        name: "Expanded account limits",
+        included: true,
+      },
+
+      {
+        name: "Advanced profile tools",
+        included: true,
+      },
+
+      {
+        name: "Advanced marketplace tools",
+        included: true,
+      },
+
+      {
+        name: "Advanced analytics",
+        included: true,
+      },
+    ],
+  },
+
+
+  /* --------------------------------------------------------------------------
+     GOLDEN
+  -------------------------------------------------------------------------- */
+
+  GOLDEN: {
+    plan: "GOLDEN",
+
+    name: "Golden",
+
+    description:
+      "Advanced Fockis services and premium capabilities.",
+
+    monthlyPrice: 39.99,
+
+    yearlyPrice: 399.99,
+
+    currency: "USD",
+
+    active: true,
+
+    popular: false,
+
+    displayOrder: 4,
+
+    rank: 4,
+
+    features: [
+      {
+        name: "Everything in Silver",
+        included: true,
+      },
+
+      {
+        name: "Premium account capabilities",
+        included: true,
+      },
+
+      {
+        name: "Advanced marketing tools",
+        included: true,
+      },
+
+      {
+        name: "Premium analytics",
+        included: true,
+      },
+
+      {
+        name: "Priority features",
+        included: true,
+      },
+    ],
+  },
+
+
+  /* --------------------------------------------------------------------------
+     DIAMOND
+  -------------------------------------------------------------------------- */
+
+  DIAMOND: {
+    plan: "DIAMOND",
+
+    name: "Diamond",
+
+    description:
+      "The highest Fockis account level with maximum services.",
+
+    monthlyPrice: 79.99,
+
+    yearlyPrice: 799.99,
+
+    currency: "USD",
+
+    active: true,
+
+    popular: false,
+
+    displayOrder: 5,
+
+    rank: 5,
+
+    features: [
+      {
+        name: "Everything in Golden",
+        included: true,
+      },
+
+      {
+        name: "Maximum account limits",
+        included: true,
+      },
+
+      {
+        name: "Maximum premium capabilities",
+        included: true,
+      },
+
+      {
+        name: "Advanced marketing",
+        included: true,
+      },
+
+      {
+        name: "Maximum analytics",
+        included: true,
+      },
+
+      {
+        name: "Highest Fockis account level",
+        included: true,
+      },
+    ],
+  },
+};
+
+
+/* ============================================================================
+   PLAN ORDER
+============================================================================ */
+
+export const SUBSCRIPTION_PLAN_ORDER: SubscriptionPlan[] = [
+  "BASIC",
+
+  "BRONZE",
+
+  "SILVER",
+
+  "GOLDEN",
+
+  "DIAMOND",
+];
+
+
+/* ============================================================================
+   GET PLAN CONFIGURATION
+============================================================================ */
+
+export function getSubscriptionPlanConfig(
+  plan: SubscriptionPlan,
+): SubscriptionPlanConfig {
+  return SUBSCRIPTION_PLANS[plan];
+}
+
+
+/* ============================================================================
+   GET PLAN RANK
+============================================================================ */
+
+export function getSubscriptionPlanRank(
+  plan: SubscriptionPlan,
+): number {
+  return SUBSCRIPTION_PLAN_RANK[plan];
+}
+
+
+/* ============================================================================
+   CHECK PLAN ACCESS
+============================================================================ */
+
+export function hasSubscriptionPlanAccess(
+  currentPlan: SubscriptionPlan,
+  requiredPlan: SubscriptionPlan,
+): boolean {
+  return (
+    getSubscriptionPlanRank(currentPlan) >=
+    getSubscriptionPlanRank(requiredPlan)
+  );
+}
+
+
+/* ============================================================================
+   CHECK PAID PLAN
+============================================================================ */
+
+export function isPaidSubscriptionPlan(
+  plan: SubscriptionPlan,
+): boolean {
+  return plan !== "BASIC";
+}
+
+
+/* ============================================================================
+   FORMAT PRICE
+============================================================================ */
+
+export function formatSubscriptionPrice(
+  price: number,
+  currency = "USD",
+): string {
+  return new Intl.NumberFormat(
+    "en-US",
+    {
+      style: "currency",
+
+      currency,
+
+      minimumFractionDigits: 0,
+
+      maximumFractionDigits: 2,
+    },
+  ).format(price);
+}
+
+
+/* ============================================================================
+   GET BILLING PRICE
+============================================================================ */
+
+export function getSubscriptionPrice(
+  config: SubscriptionPlanConfig,
+  billingInterval: BillingInterval,
+): number {
+  return billingInterval === "YEARLY"
+    ? config.yearlyPrice
+    : config.monthlyPrice;
+}
+

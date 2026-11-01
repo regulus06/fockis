@@ -1,0 +1,169 @@
+@use './tokens' as *;
+
+.profile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+}
+
+.profileText {
+  flex: 1 1 260px;
+  min-width: 0;
+
+  h2 {
+    margin: 0;
+    color: $ec-text;
+    font-size: 21px;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: $ec-text-2;
+    font-size: 14px;
+  }
+}
+
+.contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 10px;
+  font-size: 13px;
+
+  a,
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: $ec-text-2;
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: $ec-primary;
+  }
+}
+
+.statusBox {
+  display: grid;
+  gap: 10px;
+}
+
+.timeline {
+  position: relative;
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0 0 0 22px;
+  list-style: none;
+
+  &::before {
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    left: 6px;
+    width: 2px;
+    background: $ec-border;
+    content: '';
+  }
+
+  li {
+    position: relative;
+    font-size: 13.5px;
+
+    &::before {
+      position: absolute;
+      top: 4px;
+      left: -21px;
+      width: 10px;
+      height: 10px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      background: $ec-primary;
+      box-shadow: 0 0 0 2px $ec-primary-100;
+      content: '';
+    }
+  }
+
+  time {
+    display: block;
+    color: $ec-muted;
+    font-size: 12px;
+  }
+}
+
+.note {
+  padding: 12px 14px;
+  border-radius: $ec-radius;
+  background: $ec-surface-2;
+
+  p {
+    margin: 0;
+    color: $ec-text;
+    font-size: 13.5px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  footer {
+    margin-top: 6px;
+    color: $ec-muted;
+    font-size: 12px;
+  }
+}
+
+.candidateGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 16px;
+}
+
+.candidateCard {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.candidateTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+
+  h3 {
+    margin: 0;
+    font-size: 15px;
+  }
+
+  p {
+    margin: 2px 0 0;
+    color: $ec-text-2;
+    font-size: 13px;
+  }
+}
+
+.candidateMeta {
+  display: grid;
+  gap: 4px;
+  color: $ec-muted;
+  font-size: 12.5px;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 16px;
+
+  .select,
+  input {
+    width: auto;
+  }
+}

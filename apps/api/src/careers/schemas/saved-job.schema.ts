@@ -1,3 +1,4 @@
+
 import {
   Prop,
   Schema,
@@ -9,65 +10,56 @@ import {
   Types,
 } from "mongoose";
 
-/* ============================================================
-   SAVED JOB DOCUMENT
-============================================================ */
-
+/**
+ * SAVED JOB DOCUMENT
+ */
 export type SavedJobDocument =
   HydratedDocument<SavedJob>;
 
-/* ============================================================
-   SAVED JOB SCHEMA
-============================================================ */
-
+/**
+ * SAVED JOB SCHEMA
+ */
 @Schema({
   timestamps: true,
+  versionKey: false,
 })
 export class SavedJob {
-  /* ==========================================================
-     USER
-
-     The candidate who saved the job.
-  ========================================================== */
-
+  /**
+   * USER
+   *
+   * Candidate who saved the job.
+   */
   @Prop({
     type: Types.ObjectId,
     ref: "User",
     required: true,
-    index: true,
   })
   userId!: Types.ObjectId;
 
-  /* ==========================================================
-     JOB
-
-     The job being saved.
-  ========================================================== */
-
+  /**
+   * JOB
+   *
+   * Saved job reference.
+   */
   @Prop({
     type: Types.ObjectId,
     ref: "Job",
     required: true,
-    index: true,
   })
   jobId!: Types.ObjectId;
 }
 
-/* ============================================================
-   SCHEMA FACTORY
-============================================================ */
-
+/**
+ * CREATE MONGOOSE SCHEMA
+ */
 export const SavedJobSchema =
-  SchemaFactory.createForClass(
-    SavedJob,
-  );
+  SchemaFactory.createForClass(SavedJob);
 
-/* ============================================================
-   PREVENT DUPLICATE SAVES
-
-   A user can save a particular job only once.
-============================================================ */
-
+/**
+ * PREVENT DUPLICATE SAVES
+ *
+ * A user can save each job only once.
+ */
 SavedJobSchema.index(
   {
     userId: 1,
@@ -75,14 +67,33 @@ SavedJobSchema.index(
   },
   {
     unique: true,
+    name: "unique_user_saved_job",
   },
 );
 
-/* ============================================================
-   USER SAVED-JOBS LOOKUP
-============================================================ */
+/**
+ * USER SAVED-JOBS LOOKUP
+ *
+ * Supports retrieving saved jobs newest first.
+ */
+SavedJobSchema.index(
+  {
+    userId: 1,
+    createdAt: -1,
+  },
+  {
+    name: "user_saved_jobs_created_at",
+  },
+);
 
-SavedJobSchema.index({
-  userId: 1,
-  createdAt: -1,
-});
+/**
+ * JOB REFERENCE LOOKUP
+ */
+SavedJobSchema.index(
+  {
+    jobId: 1,
+  },
+  {
+    name: "saved_job_reference",
+  },
+);

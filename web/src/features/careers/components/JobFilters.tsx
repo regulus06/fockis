@@ -1,100 +1,106 @@
-import { useJobFilters } from "../hooks/useJobFilters";
+
+import {
+  useJobFilters,
+} from '../hooks/useJobFilters';
+
 import type {
   JobType,
   WorkArrangement,
   ExperienceLevel,
-} from "../types";
-import styles from "../styles/JobFilters.module.scss";
+} from '../types';
+
+import styles from '../styles/JobFilters.module.scss';
 
 const JOB_TYPES: {
   value: JobType;
   label: string;
 }[] = [
-  { value: "full-time", label: "Full-time" },
-  { value: "part-time", label: "Part-time" },
-  { value: "internship", label: "Internship" },
-  { value: "co-op", label: "Co-op" },
-  { value: "contract", label: "Contract" },
-  { value: "temporary", label: "Temporary" },
+  { value: 'full-time', label: 'Full-time' },
+  { value: 'part-time', label: 'Part-time' },
+  { value: 'internship', label: 'Internship' },
+  { value: 'co-op', label: 'Co-op' },
+  { value: 'contract', label: 'Contract' },
+  { value: 'temporary', label: 'Temporary' },
 ];
 
 const ARRANGEMENTS: {
   value: WorkArrangement;
   label: string;
 }[] = [
-  { value: "remote", label: "Remote" },
-  { value: "hybrid", label: "Hybrid" },
-  { value: "on-site", label: "On-site" },
+  { value: 'remote', label: 'Remote' },
+  { value: 'hybrid', label: 'Hybrid' },
+  { value: 'on-site', label: 'On-site' },
 ];
 
 const LEVELS: {
   value: ExperienceLevel;
   label: string;
 }[] = [
-  { value: "student", label: "Student" },
-  { value: "entry", label: "Entry level" },
-  { value: "mid", label: "Mid level" },
-  { value: "senior", label: "Senior" },
+  { value: 'student', label: 'Student' },
+  { value: 'entry', label: 'Entry level' },
+  { value: 'mid', label: 'Mid level' },
+  { value: 'senior', label: 'Senior' },
 ];
 
-const INDUSTRIES: string[] = [
-  "Technology",
-  "Cybersecurity",
-  "Healthcare",
-  "Business",
-  "Engineering",
+const INDUSTRIES = [
+  'Technology',
+  'Cybersecurity',
+  'Healthcare',
+  'Business',
+  'Engineering',
 ];
 
 const DATE_POSTED = [
-  {
-    value: "24h" as const,
-    label: "Past 24 hours",
-  },
-  {
-    value: "week" as const,
-    label: "Past week",
-  },
-  {
-    value: "month" as const,
-    label: "Past month",
-  },
+  { value: '24h' as const, label: 'Past 24 hours' },
+  { value: 'week' as const, label: 'Past week' },
+  { value: 'month' as const, label: 'Past month' },
 ];
 
 export function JobFilters() {
-  const filters = useJobFilters(
-    (state) => state.filters
-  );
+  const filters = useJobFilters((state) => state.filters);
 
   const toggleJobType = useJobFilters(
-    (state) => state.toggleJobType
+    (state) => state.toggleJobType,
   );
 
   const toggleArrangement = useJobFilters(
-    (state) => state.toggleArrangement
+    (state) => state.toggleArrangement,
   );
 
   const toggleExperienceLevel = useJobFilters(
-    (state) => state.toggleExperienceLevel
+    (state) => state.toggleExperienceLevel,
   );
 
   const toggleIndustry = useJobFilters(
-    (state) => state.toggleIndustry
+    (state) => state.toggleIndustry,
   );
 
   const setMinSalary = useJobFilters(
-    (state) => state.setMinSalary
+    (state) => state.setMinSalary,
   );
 
   const setDatePosted = useJobFilters(
-    (state) => state.setDatePosted
+    (state) => state.setDatePosted,
   );
 
-  const reset = useJobFilters(
-    (state) => state.reset
-  );
+  const reset = useJobFilters((state) => state.reset);
+
+  const minSalary = filters.minSalary ?? 0;
+
+  const formatSalary = (value: number) => {
+    if (value >= 1000) {
+      return `$${Math.round(value / 1000)}k`;
+    }
+
+    return `$${value}`;
+  };
 
   return (
-    <aside className={styles.panel}>
+    <aside
+      className={styles.panel}
+      aria-label="Job search filters"
+    >
+      {/* HEADER */}
       <div className={styles.header}>
         <h3>Filters</h3>
 
@@ -107,6 +113,7 @@ export function JobFilters() {
         </button>
       </div>
 
+      {/* JOB TYPE */}
       <div className={styles.group}>
         <h4>Job type</h4>
 
@@ -117,12 +124,8 @@ export function JobFilters() {
           >
             <input
               type="checkbox"
-              checked={filters.jobTypes.includes(
-                type.value
-              )}
-              onChange={() =>
-                toggleJobType(type.value)
-              }
+              checked={filters.jobTypes.includes(type.value)}
+              onChange={() => toggleJobType(type.value)}
             />
 
             <span>{type.label}</span>
@@ -130,6 +133,7 @@ export function JobFilters() {
         ))}
       </div>
 
+      {/* WORK ARRANGEMENT */}
       <div className={styles.group}>
         <h4>Work arrangement</h4>
 
@@ -141,12 +145,10 @@ export function JobFilters() {
             <input
               type="checkbox"
               checked={filters.arrangements.includes(
-                arrangement.value
+                arrangement.value,
               )}
               onChange={() =>
-                toggleArrangement(
-                  arrangement.value
-                )
+                toggleArrangement(arrangement.value)
               }
             />
 
@@ -155,37 +157,35 @@ export function JobFilters() {
         ))}
       </div>
 
+      {/* MINIMUM SALARY */}
       <div className={styles.group}>
-        <h4>Salary (min)</h4>
+        <h4>Minimum salary</h4>
 
         <input
           type="range"
           min={0}
           max={200000}
           step={5000}
-          value={filters.minSalary ?? 0}
+          value={Math.min(200000, Math.max(0, minSalary))}
           onChange={(event) =>
-            setMinSalary(
-              Number(event.target.value)
-            )
+            setMinSalary(Number(event.target.value))
           }
+          aria-label="Minimum salary"
+          aria-valuetext={`${formatSalary(minSalary)} minimum`}
         />
 
         <div className={styles.rangeHint}>
           <span>$0</span>
 
           <span>
-            $
-            {Math.round(
-              (filters.minSalary ?? 0) / 1000
-            )}
-            k+
+            {formatSalary(minSalary)}+
           </span>
 
           <span>$200k</span>
         </div>
       </div>
 
+      {/* EXPERIENCE LEVEL */}
       <div className={styles.group}>
         <h4>Experience level</h4>
 
@@ -197,12 +197,10 @@ export function JobFilters() {
             <input
               type="checkbox"
               checked={filters.experienceLevels.includes(
-                level.value
+                level.value,
               )}
               onChange={() =>
-                toggleExperienceLevel(
-                  level.value
-                )
+                toggleExperienceLevel(level.value)
               }
             />
 
@@ -211,6 +209,7 @@ export function JobFilters() {
         ))}
       </div>
 
+      {/* INDUSTRY */}
       <div className={styles.group}>
         <h4>Industry</h4>
 
@@ -221,12 +220,8 @@ export function JobFilters() {
           >
             <input
               type="checkbox"
-              checked={filters.industries.includes(
-                industry
-              )}
-              onChange={() =>
-                toggleIndustry(industry)
-              }
+              checked={filters.industries.includes(industry)}
+              onChange={() => toggleIndustry(industry)}
             />
 
             <span>{industry}</span>
@@ -234,6 +229,7 @@ export function JobFilters() {
         ))}
       </div>
 
+      {/* DATE POSTED */}
       <div className={styles.group}>
         <h4>Date posted</h4>
 
@@ -244,13 +240,9 @@ export function JobFilters() {
           >
             <input
               type="radio"
-              name="datePosted"
-              checked={
-                filters.datePosted === date.value
-              }
-              onChange={() =>
-                setDatePosted(date.value)
-              }
+              name="careers-date-posted"
+              checked={filters.datePosted === date.value}
+              onChange={() => setDatePosted(date.value)}
             />
 
             <span>{date.label}</span>
