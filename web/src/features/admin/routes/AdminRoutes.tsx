@@ -26,6 +26,8 @@ import ModerationQueuePage from "../moderation/pages/ModerationQueuePage";
 import ModerationCaseDetailsPage from "../moderation/pages/ModerationCaseDetailsPage";
 import ModerationSettingsPage from "../moderation/pages/ModerationSettingsPage";
 import SupportModRoutes from "../support/SupportModRoutes";
+import LegalRoutes from "../legal/LegalRoutes";
+import PolicyComplianceRoutes from "../policy-compliance/PolicyComplianceRoutes";
 
 /* ================================================================
    SUBSCRIPTION PLAN MANAGEMENT
@@ -329,6 +331,24 @@ export function AdminRoutes(): React.ReactElement {
             element={guarded(
               [P.SUPPORT_VIEW, P.MODERATION_VIEW, P.HELP_CONTENT_MANAGE],
               <SupportModRoutes />,
+            )}
+          />
+
+          {/* Legal & Evidence (restricted: legal.* permissions only). */}
+          <Route
+            path="legal/*"
+            element={guarded(
+              [P.LEGAL_VIEW],
+              <LegalRoutes />,
+            )}
+          />
+
+          {/* Policy & Compliance (policy.* permissions). */}
+          <Route
+            path="policy-compliance/*"
+            element={guarded(
+              [P.POLICY_VIEW],
+              <PolicyComplianceRoutes />,
             )}
           />
 

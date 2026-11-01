@@ -25,6 +25,8 @@ import { AdminRoutes } from "./features/admin/routes/AdminRoutes";
 import { RealestateRoutes } from "./routes/RealestateRoutes";
 import { CareersRoutes } from "./routes/CareersRoutes";
 import { HelpRoutes } from "./routes/HelpRoutes";
+import { PolicyCenterRoutes } from "./routes/PolicyCenterRoutes";
+import NotificationsPage from "./features/notifications/pages/NotificationsPage";
 import { EmployerRoutes } from "./features/employer/routes/EmployerRoutes";
 
 // ============================================================================
@@ -2021,6 +2023,19 @@ function App(): React.JSX.Element {
         ================================================================== */}
 
         {HelpRoutes()}
+
+        {/* ==================================================================
+            POLICY, PRIVACY & SAFETY: /settings/policy/* and /policies/*
+        ================================================================== */}
+
+        {PolicyCenterRoutes()}
+
+        {/* NOTIFICATIONS */}
+
+        <Route
+          path="/notifications"
+          element={<NotificationsPage />}
+        />
 
         {/* ==================================================================
             BUSINESSES

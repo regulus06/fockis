@@ -40,6 +40,8 @@ import { WavesModule } from "./waves/waves.module";
 import { EventsModule } from "./events/events.module";
 import { ReportsModule } from "./reports/reports.module";
 import { SupportModule } from "./support/support.module";
+import { LegalModule } from "./legal/legal.module";
+import { PolicyCenterModule } from "./policy-center/policy-center.module";
 import { MessagesModule } from "./messages/messages.module";
 import { MessageAdminModule } from "./message-admin/message-admin.module";
 
@@ -368,6 +370,8 @@ import {
     EventsModule,
     ReportsModule,
     SupportModule,
+    LegalModule,
+    PolicyCenterModule,
     MessagesModule,
     MessageAdminModule,
 

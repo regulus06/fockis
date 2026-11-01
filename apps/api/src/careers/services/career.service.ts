@@ -35,7 +35,7 @@ interface JobFilters {
 @Injectable()
 export class CareerService {
   constructor(
-    @InjectModel(Job.name)
+    @InjectModel("FockisCareerJob")
     private readonly jobModel: Model<JobDocument>,
   ) {}
 
@@ -189,7 +189,6 @@ export class CareerService {
   async findOne(id: string) {
     this.validateObjectId(id, "job");
 
-    // Each public detail view is counted for employer analytics.
     const job = await this.jobModel
       .findOneAndUpdate(
         {
@@ -398,7 +397,6 @@ export class CareerService {
 
     // Employers cannot modify employerId, isApproved, or other
     // protected moderation fields through this endpoint.
-
     const job = await this.jobModel
       .findOneAndUpdate(
         {
@@ -451,9 +449,6 @@ export class CareerService {
 
   /**
    * PAUSE / ACTIVATE OWN JOB
-   *
-   * Paused jobs are hidden from public search and stop
-   * accepting Fockis applications.
    */
   async setActive(
     id: string,
@@ -598,9 +593,6 @@ export class CareerService {
 
   /**
    * RESOLVE APPLICATION METHOD + URL
-   *
-   * External jobs must carry a valid http(s) URL.
-   * Fockis jobs never keep a stale external URL.
    */
   private resolveApplication(
     method?: string,

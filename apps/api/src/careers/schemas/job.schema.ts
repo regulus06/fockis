@@ -55,6 +55,7 @@ export enum ApplicationMethod {
  */
 @Schema({
   timestamps: true,
+  collection: "jobs",
 })
 export class Job {
   /**
@@ -229,9 +230,6 @@ export class Job {
 
   /**
    * HOW CANDIDATES APPLY
-   *
-   * Defaults to the internal Fockis flow so existing jobs
-   * keep working without a migration.
    */
   @Prop({
     type: String,
@@ -243,8 +241,6 @@ export class Job {
 
   /**
    * EXTERNAL APPLICATION URL
-   *
-   * Required when applicationMethod is "external".
    */
   @Prop({
     type: String,
@@ -265,8 +261,6 @@ export class Job {
 
   /**
    * REMOTE FLAG
-   *
-   * Kept for compatibility with existing API/frontend.
    */
   @Prop({
     type: Boolean,
@@ -312,8 +306,6 @@ export class Job {
 
   /**
    * ADMINISTRATOR APPROVAL
-   *
-   * Jobs remain private until approved.
    */
   @Prop({
     type: Boolean,

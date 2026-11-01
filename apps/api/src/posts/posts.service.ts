@@ -23,6 +23,7 @@ import {
 } from './utils/viral-score';
 
 import { BlockVisibilityService } from '../friends/services/block-visibility.service';
+import { assertInteractionAllowed } from '../policy-center/privacy-enforcement';
 
 /*
  * Viral-score safety guard
@@ -558,6 +559,14 @@ export class PostsService {
       );
     }
 
+    // Author's "who can comment" privacy setting (Policy Center).
+    await assertInteractionAllowed(
+      this.model.db,
+      'comments',
+      String(body.userId),
+      String(post.user),
+    );
+
     /*
     |--------------------------------------------------------------------------
     | CREATE COMMENT
@@ -957,4 +966,4 @@ export class PostsService {
       id,
     );
   }
-}
+}

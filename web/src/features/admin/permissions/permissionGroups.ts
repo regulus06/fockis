@@ -106,6 +106,22 @@ export const NAV_SECTIONS: NavSection[] = [
   },
 
   // ============================================================
+  // LEGAL & EVIDENCE
+  // ============================================================
+
+  {
+    label: "Legal & Evidence",
+    path: "/admin/legal",
+    anyOf: [P.LEGAL_VIEW],
+  },
+
+  {
+    label: "Policy & Compliance",
+    path: "/admin/policy-compliance",
+    anyOf: [P.POLICY_VIEW],
+  },
+
+  // ============================================================
   // MARKETPLACE
   // ============================================================
 

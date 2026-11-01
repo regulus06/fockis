@@ -1,3 +1,4 @@
+
 import {
   BadRequestException,
   Injectable,
@@ -6,6 +7,7 @@ import {
 
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
+
 import { randomUUID } from "crypto";
 import { extname } from "path";
 
@@ -16,7 +18,7 @@ import {
   CareerProfileDocument,
 } from "../schemas/career-profile.schema";
 
-import { Job, JobDocument } from "../schemas/job.schema";
+import { JobDocument } from "../schemas/job.schema";
 
 import {
   CreateJobAlertDto,
@@ -63,7 +65,7 @@ export class CareerProfileService {
     @InjectModel(CareerProfile.name)
     private readonly profileModel: Model<CareerProfileDocument>,
 
-    @InjectModel(Job.name)
+    @InjectModel("FockisCareerJob")
     private readonly jobModel: Model<JobDocument>,
 
     private readonly storage: CloudStorageService,

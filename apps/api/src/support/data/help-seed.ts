@@ -1254,23 +1254,6 @@ export const HELP_SEED: HelpSeedItem[] = [
     "featured": false
   },
   {
-    "slug": "go-live",
-    "kind": "faq",
-    "topic": "waves",
-    "title": "How do I go live?",
-    "summary": "Open Live Studio, set up your stream and start it when you're ready.",
-    "body": [],
-    "links": [
-      {
-        "label": "Live Studio",
-        "to": "/live/studio"
-      }
-    ],
-    "keywords": [],
-    "order": 9,
-    "featured": false
-  },
-  {
     "slug": "coins",
     "kind": "faq",
     "topic": "waves",

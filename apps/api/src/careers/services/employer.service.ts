@@ -138,7 +138,7 @@ type LeanApplication = Application & { _id: Types.ObjectId; createdAt?: Date; up
 @Injectable()
 export class EmployerService {
   constructor(
-    @InjectModel(Job.name)
+    @InjectModel("FockisCareerJob")
     private readonly jobModel: Model<JobDocument>,
 
     @InjectModel(Application.name)

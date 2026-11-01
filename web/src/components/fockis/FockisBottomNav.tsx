@@ -66,7 +66,7 @@ const ShoppingCartIcon: NavigationIcon = ({
 // ============================================================================
 // NAVIGATION ORDER
 //
-// Feed → Marketplace → Cart → + → Real Estate → Messages → Profile
+// Feed → Fockis Shop → Cart → + → Real Estate → Messages → Profile
 // ============================================================================
 
 const navItems: BottomNavItem[] = [
@@ -77,13 +77,14 @@ const navItems: BottomNavItem[] = [
     end: true,
   },
   {
-    label: "Marketplace",
-    path: "/marketplace",
+    label: "Shop",
+    path: "/shop",
     icon: IconMarketplace,
+    end: true,
   },
   {
     label: "Cart",
-    path: "/marketplace/cart",
+    path: "/shop/cart",
     icon: ShoppingCartIcon,
   },
   {

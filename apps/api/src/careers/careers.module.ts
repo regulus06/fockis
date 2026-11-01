@@ -19,7 +19,6 @@ import { EmployerService } from "./services/employer.service";
 import { CareerProfileService } from "./services/career-profile.service";
 
 import {
-  Job,
   JobSchema,
 } from "./schemas/job.schema";
 
@@ -55,7 +54,7 @@ import {
 
     MongooseModule.forFeature([
       {
-        name: Job.name,
+        name: "FockisCareerJob",
         schema: JobSchema,
       },
       {
@@ -81,8 +80,6 @@ import {
     ]),
   ],
 
-  // Controllers with fixed "careers/..." prefixes are registered before
-  // CareerController so its GET /careers/:id does not swallow them.
   controllers: [
     ApplicationsController,
     SavedJobsController,

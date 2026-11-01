@@ -22,7 +22,6 @@ import { UpdateApplicationStatusDto } from "../dto/update-application-status.dto
 
 import {
   ApplicationMethod,
-  Job,
   JobDocument,
 } from "../schemas/job.schema";
 
@@ -32,7 +31,7 @@ export class ApplicationsService {
     @InjectModel(Application.name)
     private readonly applicationModel: Model<ApplicationDocument>,
 
-    @InjectModel(Job.name)
+    @InjectModel("FockisCareerJob")
     private readonly jobModel: Model<JobDocument>,
 
     @Optional()
@@ -132,15 +131,22 @@ export class ApplicationsService {
 
     if (useProfileResume) {
       if (!this.careerProfiles) {
-        throw new BadRequestException("Resume attachments are not available.");
+        throw new BadRequestException(
+          "Resume attachments are not available.",
+        );
       }
+
       resume = await this.careerProfiles.copyResumeForApplication(userId);
     }
 
     const application = await this.applicationModel.create({
       ...fields,
       ...(resume
-        ? { resumeFileName: resume.fileName, resumeStorageKey: resume.storageKey, resumeUrl: undefined }
+        ? {
+            resumeFileName: resume.fileName,
+            resumeStorageKey: resume.storageKey,
+            resumeUrl: undefined,
+          }
         : {}),
       jobId: new Types.ObjectId(dto.jobId),
       userId: new Types.ObjectId(userId),
@@ -164,7 +170,7 @@ export class ApplicationsService {
 
   /**
    * @param employerId owner of the job (the employer account)
-   * @param actorId    user performing the change (owner or team member)
+   * @param actorId user performing the change (owner or team member)
    */
   async updateStatus(
     id: string,
@@ -208,8 +214,7 @@ export class ApplicationsService {
     }
 
     if (application.status !== dto.status) {
-      application.status =
-        dto.status as ApplicationStatus;
+      application.status = dto.status as ApplicationStatus;
 
       application.statusHistory = [
         ...(application.statusHistory ?? []),

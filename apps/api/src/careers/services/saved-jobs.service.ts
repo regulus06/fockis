@@ -1,4 +1,3 @@
-
 import {
   BadRequestException,
   ConflictException,
@@ -19,7 +18,6 @@ import {
 } from "../schemas/saved-job.schema";
 
 import {
-  Job,
   JobDocument,
 } from "../schemas/job.schema";
 
@@ -29,7 +27,7 @@ export class SavedJobsService {
     @InjectModel(SavedJob.name)
     private readonly savedJobModel: Model<SavedJobDocument>,
 
-    @InjectModel(Job.name)
+    @InjectModel("FockisCareerJob")
     private readonly jobModel: Model<JobDocument>,
   ) {}
 

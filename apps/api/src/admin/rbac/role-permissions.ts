@@ -148,6 +148,13 @@ export const RolePermissions: Record<Role, Permission[]> = {
     Permission.SUPPORT_RESOLVE,
     Permission.SUPPORT_SETTINGS,
     Permission.HELP_CONTENT_MANAGE,
+
+    // Policy & Compliance (approval, publishing and sensitive records stay
+    // with super admins and the seeded Policy Approver / Compliance roles)
+    Permission.POLICY_VIEW,
+    Permission.POLICY_EDIT,
+    Permission.POLICY_RULES_MANAGE,
+    Permission.POLICY_AUDIT_VIEW,
   ],
 
   // ========================================================================

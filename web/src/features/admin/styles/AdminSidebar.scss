@@ -396,3 +396,34 @@
     transition: none !important;
   }
 }
+
+/* Quick links (shown in Policy & Compliance) */
+.admin-sidebar__quick {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.admin-sidebar__quick-title {
+  display: block;
+  padding: 0 14px 6px;
+  color: rgba(226, 234, 250, 0.7);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.admin-sidebar__badge {
+  margin-left: auto;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ef3b45;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}

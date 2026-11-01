@@ -121,7 +121,20 @@ function applyUpdate(doc: Doc, update: Doc, inserting: boolean) {
         }
         case "$push": {
           const current = getPath(doc, path);
-          setPath(doc, path, [...(Array.isArray(current) ? current : []), clone(value)]);
+          const items = value && typeof value === "object" && Array.isArray((value as Doc).$each) ? (value as Doc).$each : [value];
+          setPath(doc, path, [...(Array.isArray(current) ? current : []), ...items.map(clone)]);
+          break;
+        }
+        case "$addToSet": {
+          const current = Array.isArray(getPath(doc, path)) ? [...getPath(doc, path)] : [];
+          const items = value && typeof value === "object" && Array.isArray((value as Doc).$each) ? (value as Doc).$each : [value];
+          for (const item of items) if (!current.some((c: unknown) => equals(c, item))) current.push(clone(item));
+          setPath(doc, path, current);
+          break;
+        }
+        case "$pull": {
+          const current = getPath(doc, path);
+          if (Array.isArray(current)) setPath(doc, path, current.filter((c: unknown) => !equals(c, value)));
           break;
         }
         default:
@@ -287,6 +300,14 @@ export class InMemoryModel {
     });
   }
 
+  deleteMany(filter: Doc) {
+    return new Query(async () => {
+      const before = this.docs.length;
+      this.docs = this.docs.filter((item) => !matches(item, filter));
+      return { deletedCount: before - this.docs.length };
+    });
+  }
+
   deleteOne(filter: Doc) {
     return new Query(async () => {
       const index = this.docs.findIndex((item) => matches(item, filter));
@@ -295,7 +316,8 @@ export class InMemoryModel {
     });
   }
 
-  findOneAndUpdate(filter: Doc, update: Doc, options: { upsert?: boolean; returnDocument?: "before" | "after" } = {}) {
+  findOneAndUpdate(filter: Doc, update: Doc, options: { upsert?: boolean; new?: boolean; returnDocument?: "before" | "after" } = {}) {
+    if (options.new) options = { ...options, returnDocument: "after" };
     return new Query(async () => {
       const doc = this.docs.find((item) => matches(item, filter));
 

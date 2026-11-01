@@ -83,6 +83,34 @@ export const PERMISSIONS = {
   HELP_CONTENT_MANAGE: "help.content.manage",
 
   // ============================================================
+  // LEGAL & EVIDENCE (restricted)
+  // ============================================================
+
+  LEGAL_VIEW: "legal.view",
+  LEGAL_EVIDENCE_VIEW: "legal.evidence.view",
+  LEGAL_EVIDENCE_PRESERVE: "legal.evidence.preserve",
+  LEGAL_EVIDENCE_EXPORT: "legal.evidence.export",
+  LEGAL_HOLDS_MANAGE: "legal.holds.manage",
+  LEGAL_REQUESTS_MANAGE: "legal.requests.manage",
+  LEGAL_REQUESTS_APPROVE: "legal.requests.approve",
+  LEGAL_RETENTION_MANAGE: "legal.retention.manage",
+  LEGAL_AUDIT_VIEW: "legal.audit.view",
+  LEGAL_DELETIONS_VIEW: "legal.deletions.view",
+
+  // ============================================================
+  // POLICY & COMPLIANCE
+  // ============================================================
+
+  POLICY_VIEW: "policy.view",
+  POLICY_EDIT: "policy.edit",
+  POLICY_REVIEW: "policy.review",
+  POLICY_PUBLISH: "policy.publish",
+  POLICY_RULES_MANAGE: "policy.rules.manage",
+  POLICY_ACCEPTANCE_VIEW: "policy.acceptance.view",
+  POLICY_AUDIT_VIEW: "policy.audit.view",
+  POLICY_SETTINGS: "policy.settings",
+
+  // ============================================================
   // MARKETPLACE
   // ============================================================
 
@@ -292,4 +320,4 @@ export const REASON_REQUIRED_ACTIONS = new Set<string>([
   "CHANGE_ADMIN_ROLE",
   "CHANGE_PERMISSIONS",
   "EMERGENCY_ACTION",
-]);
+]);

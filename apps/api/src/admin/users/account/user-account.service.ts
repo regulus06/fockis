@@ -353,6 +353,30 @@ export class UserAccountService {
     }
 
     if (permanent) {
+      /*
+       * Accounts under an active legal hold can't be erased.
+       * (Soft deletion below only deactivates the account.)
+       */
+      const holdModel =
+        this.userModel.db.models["LegalHold"];
+
+      const activeHold = holdModel
+        ? await holdModel
+            .findOne({
+              status: "active",
+              "subjects.userId": String(id),
+            })
+            .select("number")
+            .lean()
+            .exec()
+        : null;
+
+      if (activeHold) {
+        throw new ForbiddenException(
+          "This account is under an active legal hold and can't be permanently deleted. Deactivate it instead.",
+        );
+      }
+
       await this.userModel
         .deleteOne({
           _id: id,

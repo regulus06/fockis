@@ -541,6 +541,11 @@ export class ReportsService {
       [updated.decision?.decidedBy ?? "", updated.assignedTo ? String(updated.assignedTo) : ""],
     );
 
+    // Shown under "Recent Activity" in the user's Policy Center.
+    await this.connection.models["UserPolicyActivity"]
+      ?.create({ userId, type: "appeal_submitted", title: "Appeal submitted", description: String(updated.decision?.ruleLabel ?? "Moderation decision").slice(0, 300), at: now })
+      .catch(() => undefined);
+
     return { success: true, decision: this.serializeDecision(updated) };
   }
 

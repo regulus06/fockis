@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { AlertTriangle, ArrowLeft, Eye, EyeOff, Flag, Search, ShieldAlert, Trash2, TriangleAlert } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight, ExternalLink, Eye, EyeOff, Flag, ImageOff, Play, Search, ShieldAlert, Trash2, TriangleAlert, X } from "lucide-react";
 
-import { buildFockisUploadUrl } from "../../../../config/fockisConfig";
+import { buildMediaUrl } from "../../../../utils/fockisFeedHelpers";
 import { PERMISSIONS } from "../../permissions/permission.constants";
 import { isSuperAdminSession, useAdminAccess } from "../../permissions/adminAccess";
 import { useAdminNotificationStore } from "../../store/adminNotificationStore";
@@ -125,8 +125,90 @@ function usePostActions(onDone: (post: ModeratedPost | null) => void) {
   return { items, element: confirm.element };
 }
 
-function mediaKind(url: string) {
-  return /\.(mp4|webm|mov|m4v)(\?|$)/i.test(url) ? "video" : "image";
+/** Post media is served by GET /post-media/:file (same helper the feed uses). */
+function mediaKind(url: string, postType?: string) {
+  if (/\.(mp4|webm|mov|m4v|ogg|ogv)(\?|$)/i.test(url)) return "video";
+  if (/\.(jpe?g|png|gif|webp|avif|heic|bmp|svg)(\?|$)/i.test(url)) return "image";
+  return ["video", "reel", "wave"].includes(String(postType ?? "").toLowerCase()) ? "video" : "image";
+}
+
+function MediaThumb({ src, kind, onOpen, index }: { src: string; kind: "video" | "image"; onOpen: () => void; index: number }) {
+  const [broken, setBroken] = useState(false);
+  if (broken) {
+    return (
+      <a className="fksm-media-thumb fksm-media-thumb--broken" href={src} target="_blank" rel="noreferrer" title="Open the file directly">
+        <ImageOff size={22} aria-hidden="true" />
+        <span>Media unavailable</span>
+      </a>
+    );
+  }
+  return (
+    <button type="button" className="fksm-media-thumb" onClick={onOpen} aria-label={`Open ${kind} ${index + 1}`}>
+      {kind === "video" ? (
+        <>
+          <video src={src} preload="metadata" muted playsInline onError={() => setBroken(true)} />
+          <span className="fksm-media-thumb__play" aria-hidden="true">
+            <Play size={22} fill="currentColor" />
+          </span>
+        </>
+      ) : (
+        <img src={src} alt={`Post media ${index + 1}`} loading="lazy" onError={() => setBroken(true)} />
+      )}
+    </button>
+  );
+}
+
+/** Full-size viewer for a post's photos and videos. */
+function MediaViewer({ items, index, onClose, onIndex }: { items: { src: string; kind: "video" | "image" }[]; index: number; onClose: () => void; onIndex: (i: number) => void }) {
+  const item = items[index];
+  const [broken, setBroken] = useState(false);
+  useEffect(() => setBroken(false), [index]);
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight" && index < items.length - 1) onIndex(index + 1);
+      if (e.key === "ArrowLeft" && index > 0) onIndex(index - 1);
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [index, items.length, onClose, onIndex]);
+  if (!item) return null;
+  return (
+    <div className="fksm-viewer" role="dialog" aria-modal="true" aria-label="Post media" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="fksm-viewer__bar">
+        <span>
+          {index + 1} / {items.length}
+        </span>
+        <a href={item.src} target="_blank" rel="noreferrer">
+          <ExternalLink size={16} aria-hidden="true" /> Open original
+        </a>
+        <button type="button" onClick={onClose} aria-label="Close">
+          <X size={20} />
+        </button>
+      </div>
+      {index > 0 && (
+        <button type="button" className="fksm-viewer__nav fksm-viewer__nav--prev" onClick={() => onIndex(index - 1)} aria-label="Previous">
+          <ChevronLeft size={28} />
+        </button>
+      )}
+      <div className="fksm-viewer__stage">
+        {broken ? (
+          <p className="fksm-viewer__error">
+            <ImageOff size={28} aria-hidden="true" /> This file couldn't be loaded. It may have been removed from storage.
+          </p>
+        ) : item.kind === "video" ? (
+          <video key={item.src} src={item.src} controls autoPlay playsInline onError={() => setBroken(true)} />
+        ) : (
+          <img key={item.src} src={item.src} alt={`Post media ${index + 1}`} onError={() => setBroken(true)} />
+        )}
+      </div>
+      {index < items.length - 1 && (
+        <button type="button" className="fksm-viewer__nav fksm-viewer__nav--next" onClick={() => onIndex(index + 1)} aria-label="Next">
+          <ChevronRight size={28} />
+        </button>
+      )}
+    </div>
+  );
 }
 
 /* ============================================================================
@@ -279,6 +361,7 @@ export function PostReviewPage() {
   const query = useAdminQuery(() => supportAdminApi.post(postId), [postId]);
   const actions = usePostActions((post) => (post ? void query.refetch() : navigate("/admin/support/hidden-posts")));
   const post = query.data;
+  const [viewer, setViewer] = useState<number | null>(null);
 
   if (query.loading && !post) return <SmLoading label="Loading post…" />;
   if (query.error || !post) return <SmError message={query.error ?? "Post not found."} onRetry={query.refetch} />;
@@ -322,16 +405,18 @@ export function PostReviewPage() {
               {post.content ? <p className="fksm-prose">{post.content}</p> : <p className="fksm-muted">No text.</p>}
               {post.media.length > 0 && (
                 <div className="fksm-post__media">
-                  {post.media.map((m) =>
-                    mediaKind(m) === "video" ? (
-                      <video key={m} src={buildFockisUploadUrl(m)} controls preload="metadata" />
-                    ) : (
-                      <a key={m} href={buildFockisUploadUrl(m)} target="_blank" rel="noreferrer">
-                        <img src={buildFockisUploadUrl(m)} alt="Post media" loading="lazy" />
-                      </a>
-                    ),
-                  )}
+                  {post.media.map((m, i) => (
+                    <MediaThumb key={m} src={buildMediaUrl(m)} kind={mediaKind(m, post.type)} index={i} onOpen={() => setViewer(i)} />
+                  ))}
                 </div>
+              )}
+              {viewer !== null && (
+                <MediaViewer
+                  items={post.media.map((m) => ({ src: buildMediaUrl(m), kind: mediaKind(m, post.type) }))}
+                  index={viewer}
+                  onIndex={setViewer}
+                  onClose={() => setViewer(null)}
+                />
               )}
             </div>
 

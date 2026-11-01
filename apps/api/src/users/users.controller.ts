@@ -336,14 +336,34 @@ export class UsersController {
   }
 
   // DELETE /users/:id/account
+  // Settings → Delete account. Confirms the password, then runs the account
+  // deletion workflow (legal holds, retention rules, audit).
   @Delete(":id/account")
   @UseGuards(JwtAuthGuard)
   deleteAccount(
     @Param("id") id: string,
+    @Body() body: {
+      currentPassword?: string;
+      confirmation?: string;
+    },
     @Req() req: any,
   ) {
     this.verifyOwner(req, id);
-    return this.usersService.deleteUser(id);
+
+    if (
+      typeof body?.currentPassword !== "string" ||
+      !body.currentPassword ||
+      body?.confirmation !== "DELETE MY ACCOUNT"
+    ) {
+      throw new BadRequestException(
+        'Enter your password and type "DELETE MY ACCOUNT" to confirm.',
+      );
+    }
+
+    return this.usersService.deleteOwnAccount(
+      id,
+      body.currentPassword,
+    );
   }
 
   // DELETE /users/:id

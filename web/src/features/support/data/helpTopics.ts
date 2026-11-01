@@ -3,7 +3,7 @@ import type { HelpTopic, TopicId } from "../types";
 /** The ten help topics shown in "Browse Help Topics" (same ids as the API's support categories). */
 export const HELP_TOPICS: HelpTopic[] = [
   { id: "account", title: "Account & Login", description: "Password, account recovery, and security." },
-  { id: "marketplace", title: "Marketplace & Business", description: "Products, stores, and advertising." },
+  { id: "marketplace", title: "Shop & Business", description: "Fockis Shop stores, businesses, and advertising." },
   { id: "profile", title: "Profile & Feed", description: "Posts, comments, privacy, and followers." },
   { id: "messages", title: "Messages", description: "Chat, notifications, and blocked users." },
   { id: "waves", title: "Waves & Live", description: "Upload videos, live streaming, and gifts." },
