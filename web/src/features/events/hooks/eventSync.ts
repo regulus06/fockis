@@ -48,3 +48,12 @@ export function useSyncedEvent<T extends FockisEvent>(event: T): T {
 
   return { ...event, ...patch };
 }
+
+/** Listen to every patch (e.g. to refresh lists when an RSVP changes). */
+export function subscribeEventPatches(listener: Listener): () => void {
+  listeners.add(listener);
+
+  return () => {
+    listeners.delete(listener);
+  };
+}

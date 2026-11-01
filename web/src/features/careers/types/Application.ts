@@ -1,10 +1,6 @@
-export type ApplicationStatus =
-  | 'applied'
-  | 'viewed'
-  | 'shortlisted'
-  | 'interview'
-  | 'offer'
-  | 'rejected';
+import type { Job } from './Job';
+
+export type ApplicationStatus = 'applied' | 'viewed' | 'shortlisted' | 'interview' | 'offer' | 'rejected';
 
 export interface ApplicationEducation {
   school: string;
@@ -18,6 +14,7 @@ export interface ApplicationExperience {
   description: string;
 }
 
+/** Body for POST /careers/applications (CreateApplicationDto). */
 export interface ApplicationPayload {
   jobId: string;
   fullName: string;
@@ -25,8 +22,6 @@ export interface ApplicationPayload {
   phone: string;
   location: string;
   linkedInUrl?: string;
-  resumeFileName?: string;
-  resumeUrl?: string;
   education: ApplicationEducation;
   experience?: ApplicationExperience;
   skills: string[];
@@ -34,29 +29,17 @@ export interface ApplicationPayload {
   workAuthorized: boolean;
   availableStartDate?: string;
   answers?: Record<string, string>;
+  /** Attach the resume stored on the career profile. */
+  useProfileResume?: boolean;
 }
 
-export interface Application {
+export interface MyApplication {
   id: string;
-  jobId: string;
-  jobTitle: string;
-  companyName: string;
-  jobType: string;
   status: ApplicationStatus;
-  submittedAt: string;
+  appliedAt: string;
   updatedAt: string;
+  job: Job | null;
+  resumeFileName: string | null;
+  coverLetter: string | null;
+  statusHistory: { status: ApplicationStatus; changedAt: string }[];
 }
-
-export const APPLICATION_STEPS = [
-  'Personal Info',
-  'Resume',
-  'Education',
-  'Experience',
-  'Skills',
-  'Cover Letter',
-  'Questions',
-  'Review',
-  'Submit',
-] as const;
-
-export type ApplicationStepName = (typeof APPLICATION_STEPS)[number];

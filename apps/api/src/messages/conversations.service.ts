@@ -35,6 +35,7 @@ import {
 import {
   mapConversation,
 } from "./mappers/conversation.mapper";
+import { assertInteractionAllowed } from "../policy-center/privacy-enforcement";
 
 @Injectable()
 export class ConversationsService {
@@ -267,6 +268,27 @@ export class ConversationsService {
 
     const isGroup =
       dto.isGroup === true;
+
+    /* ------------------------------------------------------------------------
+       PRIVACY: "who can message me" (Policy Center)
+    ------------------------------------------------------------------------ */
+
+    if (
+      !isGroup &&
+      uniqueIds.length === 2
+    ) {
+      const otherId =
+        uniqueIds.find(
+          (id) => id !== userId,
+        ) as string;
+
+      await assertInteractionAllowed(
+        this.userModel.db,
+        "messaging",
+        userId,
+        otherId,
+      );
+    }
 
     /* ------------------------------------------------------------------------
        DIRECT CONVERSATION

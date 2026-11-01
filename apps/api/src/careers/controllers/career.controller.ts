@@ -1,4 +1,6 @@
+
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -8,124 +10,177 @@ import {
   Post,
   Query,
   Req,
+  UnauthorizedException,
+  UseGuards,
 } from "@nestjs/common";
 
-import {
-  CareerService,
-} from "../services/career.service";
+import type { Request } from "express";
 
-import {
-  CreateJobDto,
-} from "../dto/create-job.dto";
+import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
+import { CareerService } from "../services/career.service";
+import { CreateJobDto } from "../dto/create-job.dto";
+import { UpdateJobDto } from "../dto/update-job.dto";
 
-import {
-  UpdateJobDto,
-} from "../dto/update-job.dto";
+interface AuthenticatedUser {
+  [key: string]: unknown;
+  id?: string;
+  _id?: string;
+  userId?: string;
+  sub?: string;
+}
+
+type AuthenticatedRequest = Request & {
+  user?: AuthenticatedUser;
+};
+
+interface FindJobsQuery {
+  search?: string;
+  country?: string;
+  city?: string;
+  type?: string;
+  workplaceType?: string;
+  remote?: boolean;
+}
 
 @Controller("careers")
 export class CareerController {
   constructor(
-    private readonly careerService:
-      CareerService,
+    private readonly careerService: CareerService,
   ) {}
 
-  /*
-   * PUBLIC JOB SEARCH
-   *
+  /**
    * GET /careers
+   * Public job search.
    */
   @Get()
-  findAll(
+  async findAll(
     @Query("search") search?: string,
     @Query("country") country?: string,
     @Query("city") city?: string,
     @Query("type") type?: string,
-    @Query("workplaceType")
-    workplaceType?: string,
+    @Query("workplaceType") workplaceType?: string,
     @Query("remote") remote?: string,
   ) {
-    return this.careerService.findAll({
-      search,
-      country,
-      city,
-      type,
-      workplaceType,
-      remote:
-        remote === undefined
-          ? undefined
-          : remote === "true",
-    });
+    const filters: FindJobsQuery = {
+      search: search?.trim() || undefined,
+      country: country?.trim() || undefined,
+      city: city?.trim() || undefined,
+      type: type?.trim() || undefined,
+      workplaceType: workplaceType?.trim() || undefined,
+    };
+
+    if (remote !== undefined) {
+      const normalizedRemote = remote.trim().toLowerCase();
+
+      if (
+        normalizedRemote !== "true" &&
+        normalizedRemote !== "false"
+      ) {
+        throw new BadRequestException(
+          'The "remote" parameter must be true or false.',
+        );
+      }
+
+      filters.remote = normalizedRemote === "true";
+    }
+
+    return this.careerService.findAll(filters);
   }
 
-  /*
-   * EMPLOYER'S JOBS
-   *
+  /**
    * GET /careers/my-jobs
+   * Authenticated employer's jobs.
    */
+  @UseGuards(JwtAuthGuard)
   @Get("my-jobs")
-  findMine(
-    @Req() req: any,
+  async findMine(
+    @Req() req: AuthenticatedRequest,
   ) {
-    return this.careerService.findMine(
-      req.user.id,
-    );
+    const userId = this.getAuthenticatedUserId(req);
+
+    return this.careerService.findMine(userId);
   }
 
-  /*
+  /**
    * GET /careers/:id
+   * Public job details.
    */
   @Get(":id")
-  findOne(
+  async findOne(
     @Param("id") id: string,
   ) {
     return this.careerService.findOne(id);
   }
 
-  /*
-   * CREATE JOB
-   *
+  /**
    * POST /careers
-   *
-   * The employer is taken from JWT.
+   * Create a job using the authenticated user's identity.
    */
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(
-    @Req() req: any,
+  async create(
+    @Req() req: AuthenticatedRequest,
     @Body() dto: CreateJobDto,
   ) {
-    return this.careerService.create(
-      req.user.id,
-      dto,
-    );
+    const userId = this.getAuthenticatedUserId(req);
+
+    return this.careerService.create(userId, dto);
   }
 
-  /*
-   * UPDATE OWN JOB
+  /**
+   * PATCH /careers/:id
+   * Update an employer's own job.
    */
+  @UseGuards(JwtAuthGuard)
   @Patch(":id")
-  update(
-    @Req() req: any,
+  async update(
+    @Req() req: AuthenticatedRequest,
     @Param("id") id: string,
     @Body() dto: UpdateJobDto,
   ) {
-    return this.careerService.update(
-      id,
-      req.user.id,
-      dto,
-    );
+    const userId = this.getAuthenticatedUserId(req);
+
+    return this.careerService.update(id, userId, dto);
   }
 
-  /*
-   * DELETE OWN JOB
+  /**
+   * DELETE /careers/:id
+   * Delete an employer's own job.
    */
+  @UseGuards(JwtAuthGuard)
   @Delete(":id")
-  remove(
-    @Req() req: any,
+  async remove(
+    @Req() req: AuthenticatedRequest,
     @Param("id") id: string,
   ) {
-    return this.careerService.remove(
-      id,
-      req.user.id,
-    );
+    const userId = this.getAuthenticatedUserId(req);
+
+    return this.careerService.remove(id, userId);
+  }
+
+  /**
+   * Resolve the authenticated user's ID from the JWT payload.
+   */
+  private getAuthenticatedUserId(
+    req: AuthenticatedRequest,
+  ): string {
+    const user = req.user;
+
+    const possibleId =
+      user?.id ??
+      user?._id ??
+      user?.userId ??
+      user?.sub;
+
+    if (
+      typeof possibleId !== "string" ||
+      !possibleId.trim()
+    ) {
+      throw new UnauthorizedException(
+        "You must be logged in to perform this action.",
+      );
+    }
+
+    return possibleId.trim();
   }
 }

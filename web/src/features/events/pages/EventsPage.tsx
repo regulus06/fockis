@@ -1,23 +1,59 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CalendarClock, Flame, Globe, LocateFixed, MapPin, Radio, Sparkles, Sun } from "lucide-react";
+import { CalendarDays, SlidersHorizontal, X } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 
-import EventDiscoverySection from "../components/EventDiscoverySection";
 import EventEmptyState from "../components/EventEmptyState";
-import EventFilters, {
-  DEFAULT_EVENT_FILTERS,
-  isFiltered,
-  type EventFilterValues,
-} from "../components/EventFilters";
-import EventCard from "../components/EventCard";
+import { DEFAULT_EVENT_FILTERS, type EventFilterValues } from "../components/EventFilters";
 import EventSkeleton from "../components/EventSkeleton";
 import EventsShell from "../components/EventsShell";
-import { useActiveEvents } from "../hooks/useEventClock";
+import CreateEventCard from "../components/discover/CreateEventCard";
+import EventCalendar from "../components/discover/EventCalendar";
+import EventCategoryBar from "../components/discover/EventCategoryBar";
+import EventsHero from "../components/discover/EventsHero";
+import FeaturedEventsCarousel from "../components/discover/FeaturedEventsCarousel";
+import UpcomingEventRow from "../components/discover/UpcomingEventRow";
+import YourEventsCard from "../components/discover/YourEventsCard";
+import { useActiveEvents, useEventClock } from "../hooks/useEventClock";
 import { useViewerLocation } from "../hooks/useViewerLocation";
+import { useYourEvents } from "../hooks/useYourEvents";
 import { eventsApi, isAbortError } from "../services/eventsApi";
-import type { EventSections, FockisEvent } from "../types/event.types";
+import type {
+  EventAvailability,
+  EventFormat,
+  EventSections,
+  EventSort,
+  EventWhen,
+  FockisEvent,
+} from "../types/event.types";
+import { eventCover } from "../utils/eventMedia";
+import { eventDayKey, eventsByDay, isSameMonth, longDayLabel, parseDayKey } from "../utils/eventCalendar";
+
+/* ============================================================================
+   FOCKIS EVENTS — DISCOVER
+
+   Hero search · categories · Featured carousel · Upcoming list with
+   Upcoming / This Week / This Month / My Interests · right rail with
+   Create, a month calendar and Your Events.
+
+   Everything is backed by the existing Events API:
+     GET /events/sections   → Featured (falls back to recommended/upcoming)
+     GET /events/discover   → Upcoming list (paged) and calendar dots
+     GET /events/my-rsvps + /events/my-events → Your Events, My Interests
+   All filters live in the URL so a filtered view can be shared.
+============================================================================ */
+
+type View = "upcoming" | "week" | "month" | "interests";
+
+const VIEWS: Array<[View, string]> = [
+  ["upcoming", "Upcoming"],
+  ["week", "This Week"],
+  ["month", "This Month"],
+  ["interests", "My Interests"],
+];
 
 const PAGE_SIZE = 18;
+const CALENDAR_PAGE = 50;
+const CALENDAR_PAGES = 3;
 const REVALIDATE_MS = 5 * 60_000;
 
 const EMPTY_SECTIONS: EventSections = {
@@ -31,22 +67,30 @@ const EMPTY_SECTIONS: EventSections = {
   serverTime: "",
 };
 
-function readFilters(params: URLSearchParams): EventFilterValues {
+interface PageState extends EventFilterValues {
+  view: View;
+  date: string;
+}
+
+function readState(params: URLSearchParams): PageState {
   const radius = Number(params.get("radiusKm"));
+  const view = params.get("view") as View | null;
 
   return {
     ...DEFAULT_EVENT_FILTERS,
     q: params.get("q") ?? "",
     category: (params.get("category") as EventFilterValues["category"]) ?? "",
-    when: (params.get("when") as EventFilterValues["when"]) || "any",
-    format: (params.get("format") as EventFilterValues["format"]) || "any",
-    availability: (params.get("availability") as EventFilterValues["availability"]) || "any",
-    sort: (params.get("sort") as EventFilterValues["sort"]) || "relevance",
+    when: (params.get("when") as EventWhen) || "any",
+    format: (params.get("format") as EventFormat) || "any",
+    availability: (params.get("availability") as EventAvailability) || "any",
+    sort: (params.get("sort") as EventSort) || "relevance",
     radiusKm: Number.isFinite(radius) && radius > 0 ? radius : "",
+    view: view && VIEWS.some(([id]) => id === view) ? view : "upcoming",
+    date: parseDayKey(params.get("date")) ? (params.get("date") as string) : "",
   };
 }
 
-function writeFilters(values: EventFilterValues): URLSearchParams {
+function writeState(values: PageState): URLSearchParams {
   const params = new URLSearchParams();
 
   if (values.q.trim()) params.set("q", values.q.trim());
@@ -56,56 +100,76 @@ function writeFilters(values: EventFilterValues): URLSearchParams {
   if (values.availability !== "any") params.set("availability", values.availability);
   if (values.sort !== "relevance") params.set("sort", values.sort);
   if (values.radiusKm !== "") params.set("radiusKm", String(values.radiusKm));
+  if (values.view !== "upcoming") params.set("view", values.view);
+  if (values.date) params.set("date", values.date);
 
   return params;
 }
 
-function useDebounced<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value);
+function matchesText(event: FockisEvent, q: string): boolean {
+  const needle = q.trim().toLowerCase();
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => setDebounced(value), delay);
+  if (!needle) return true;
 
-    return () => window.clearTimeout(timer);
-  }, [value, delay]);
+  return [event.title, event.description, event.locationName, event.address, event.category]
+    .filter(Boolean)
+    .some((value) => String(value).toLowerCase().includes(needle));
+}
 
-  return debounced;
+function dedupe(...lists: FockisEvent[][]): FockisEvent[] {
+  const seen = new Set<string>();
+
+  return lists.flat().filter((event) => {
+    if (seen.has(event.id)) return false;
+    seen.add(event.id);
+    return true;
+  });
 }
 
 export default function EventsPage() {
   const [params, setParams] = useSearchParams();
-  const filters = useMemo(() => readFilters(params), [params]);
-  const [draftQuery, setDraftQuery] = useState(filters.q);
-  const debouncedQuery = useDebounced(draftQuery, 300);
+  const state = useMemo(() => readState(params), [params]);
+  const [draftQuery, setDraftQuery] = useState(state.q);
+  const [showFilters, setShowFilters] = useState(
+    state.format !== "any" || state.availability !== "any" || state.sort !== "relevance" || state.when !== "any",
+  );
+  const upcomingRef = useRef<HTMLElement>(null);
   const { location, status: locationStatus, request: requestLocation, clear: clearLocation } = useViewerLocation();
 
-  const updateFilters = useCallback(
-    (patch: Partial<EventFilterValues>) => {
-      if (patch.q !== undefined) {
-        setDraftQuery(patch.q);
-        return;
-      }
+  // Keep the hero input in sync when the URL changes elsewhere (top bar, back button).
+  useEffect(() => setDraftQuery(state.q), [state.q]);
 
-      setParams(writeFilters({ ...filters, ...patch }), { replace: true });
-    },
-    [filters, setParams],
+  const update = useCallback(
+    (patch: Partial<PageState>) => setParams(writeState({ ...readState(params), ...patch }), { replace: true }),
+    [params, setParams],
   );
 
-  // Commit the debounced search text to the URL.
+  const nearbyActive = Boolean(location) && (state.radiusKm !== "" || state.sort === "distance");
+
+  /* --------------------------------------------------- revalidation tick */
+
+  const [revalidate, setRevalidate] = useState(0);
+
   useEffect(() => {
-    if (debouncedQuery !== filters.q) {
-      setParams(writeFilters({ ...filters, q: debouncedQuery }), { replace: true });
-    }
-  }, [debouncedQuery, filters, setParams]);
+    const bump = () => setRevalidate((value) => value + 1);
+    const interval = window.setInterval(bump, REVALIDATE_MS);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") bump();
+    };
 
-  const filtered = isFiltered(filters);
+    document.addEventListener("visibilitychange", onVisible);
 
-  /* ------------------------------------------------------------- sections */
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
+
+  /* ------------------------------------------------------------ sections */
 
   const [sections, setSections] = useState<EventSections>(EMPTY_SECTIONS);
   const [sectionsLoading, setSectionsLoading] = useState(true);
   const [sectionsError, setSectionsError] = useState("");
-  const [revalidate, setRevalidate] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -126,24 +190,10 @@ export default function EventsPage() {
     return () => controller.abort();
   }, [location, revalidate]);
 
-  // Revalidate periodically and when the tab becomes visible again, so new
-  // events appear and server-side eligibility (cancellations) is picked up.
-  useEffect(() => {
-    const bump = () => setRevalidate((value) => value + 1);
-    const interval = window.setInterval(bump, REVALIDATE_MS);
-    const onVisible = () => {
-      if (document.visibilityState === "visible") bump();
-    };
+  /* ------------------------------------------------ upcoming (paged list) */
 
-    document.addEventListener("visibilitychange", onVisible);
-
-    return () => {
-      window.clearInterval(interval);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
-  }, []);
-
-  /* ------------------------------------------------------- paged results */
+  const serverWhen: EventWhen =
+    state.view === "week" ? "this-week" : state.view === "month" ? "next-30-days" : state.when;
 
   const [results, setResults] = useState<FockisEvent[]>([]);
   const [page, setPage] = useState(1);
@@ -152,9 +202,17 @@ export default function EventsPage() {
   const [resultsLoading, setResultsLoading] = useState(true);
   const [resultsError, setResultsError] = useState("");
   const controllerRef = useRef<AbortController | null>(null);
-  const sentinel = useRef<HTMLDivElement>(null);
 
-  const queryKey = JSON.stringify({ filters, location: filters.radiusKm !== "" || filters.sort === "distance" ? location : null });
+  const queryKey = JSON.stringify({
+    q: state.q,
+    category: state.category,
+    when: serverWhen,
+    format: state.format,
+    availability: state.availability,
+    sort: state.sort,
+    radiusKm: state.radiusKm,
+    location: nearbyActive ? location : null,
+  });
 
   const loadPage = useCallback(
     async (nextPage: number) => {
@@ -166,20 +224,19 @@ export default function EventsPage() {
       setResultsLoading(true);
       setResultsError("");
 
-      const useLocation = Boolean(location) && (filters.radiusKm !== "" || filters.sort === "distance");
-
       try {
         const result = await eventsApi.discover(
           {
-            q: filters.q || undefined,
-            category: filters.category || undefined,
-            when: filters.when,
-            format: filters.format,
-            availability: filters.availability,
-            sort: filtered ? filters.sort : "date",
-            radiusKm: useLocation && filters.radiusKm !== "" ? filters.radiusKm : undefined,
-            lat: useLocation ? location?.latitude : undefined,
-            lng: useLocation ? location?.longitude : undefined,
+            q: state.q || undefined,
+            category: state.category || undefined,
+            when: serverWhen,
+            format: state.format,
+            availability: state.availability,
+            // Upcoming is chronological unless the viewer picked a sort.
+            sort: state.sort === "relevance" && !state.q ? "date" : state.sort,
+            radiusKm: nearbyActive && state.radiusKm !== "" ? state.radiusKm : undefined,
+            lat: nearbyActive ? location?.latitude : undefined,
+            lng: nearbyActive ? location?.longitude : undefined,
             page: nextPage,
             limit: PAGE_SIZE,
           },
@@ -189,7 +246,6 @@ export default function EventsPage() {
         setResults((previous) => {
           if (nextPage === 1) return result.items;
 
-          // Deduplicate across pages (an event can shift when new ones arrive).
           const seen = new Set(previous.map((event) => event.id));
 
           return [...previous, ...result.items.filter((event) => !seen.has(event.id))];
@@ -203,179 +259,374 @@ export default function EventsPage() {
         if (controllerRef.current === controller) setResultsLoading(false);
       }
     },
-    // queryKey captures filters + relevant location.
+    // queryKey captures every input of the request.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queryKey, filtered],
+    [queryKey],
   );
 
   useEffect(() => {
+    if (state.view === "interests") return;
+
     void loadPage(1);
 
     return () => controllerRef.current?.abort();
-  }, [loadPage, revalidate]);
+  }, [loadPage, revalidate, state.view]);
+
+  /* ---------------------------------------------- calendar (dots + days) */
+
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const selected = parseDayKey(state.date);
+    const base = selected ?? new Date();
+
+    return new Date(base.getFullYear(), base.getMonth(), 1);
+  });
+  const [calendarEvents, setCalendarEvents] = useState<FockisEvent[]>([]);
+  const [calendarLoading, setCalendarLoading] = useState(true);
 
   useEffect(() => {
-    const element = sentinel.current;
+    const controller = new AbortController();
 
-    if (!element || !hasMore || typeof IntersectionObserver === "undefined") return;
+    setCalendarLoading(true);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting && !resultsLoading) void loadPage(page + 1);
-      },
-      { rootMargin: "600px 0px" },
-    );
+    (async () => {
+      const collected: FockisEvent[] = [];
 
-    observer.observe(element);
+      for (let index = 1; index <= CALENDAR_PAGES; index += 1) {
+        const result = await eventsApi.discover(
+          {
+            q: state.q || undefined,
+            category: state.category || undefined,
+            sort: "date",
+            page: index,
+            limit: CALENDAR_PAGE,
+          },
+          controller.signal,
+        );
 
-    return () => observer.disconnect();
-  }, [hasMore, resultsLoading, loadPage, page]);
+        collected.push(...result.items);
 
-  const { active: activeResults, now } = useActiveEvents(results);
+        if (!result.hasMore) break;
+      }
 
-  // Each event appears in the first section that has it, not in several.
-  const deduped = useMemo(() => {
-    const seen = new Set<string>();
-    const take = (list: FockisEvent[]) =>
-      list.filter((event) => {
-        if (seen.has(event.id)) return false;
-        seen.add(event.id);
-        return true;
+      return collected;
+    })()
+      .then((items) => setCalendarEvents(dedupe(items)))
+      .catch(() => {
+        // Calendar dots are a convenience; the list shows its own errors.
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setCalendarLoading(false);
       });
 
-    return {
-      happeningNow: take(sections.happeningNow),
-      featured: take(sections.featured),
-      recommended: take(sections.recommended),
-      today: take(sections.today),
-      nearby: take(sections.nearby),
-      online: take(sections.online),
-    };
-  }, [sections]);
+    return () => controller.abort();
+  }, [state.q, state.category, revalidate]);
+
+  /* ----------------------------------------------------- your events */
+
+  const yours = useYourEvents(revalidate);
+
+  /* ------------------------------------------------------- derived lists */
+
+  const { active: activeResults, now } = useActiveEvents(results);
+  const clockNow = useEventClock(calendarEvents);
+  const activeCalendar = useMemo(
+    () => calendarEvents.filter((event) => !event.isCancelled && new Date(event.endDate).getTime() > clockNow),
+    [calendarEvents, clockNow],
+  );
+
+  const eventDays = useMemo(() => {
+    const counts = new Map<string, number>();
+
+    eventsByDay(activeCalendar).forEach((list, key) => counts.set(key, list.length));
+
+    return counts;
+  }, [activeCalendar]);
+
+  const featured = useMemo(() => {
+    const pool = sections.featured.length
+      ? dedupe(sections.happeningNow, sections.featured)
+      : dedupe(sections.happeningNow, sections.recommended, sections.upcoming, sections.today);
+
+    return pool
+      .filter((event) => !state.category || event.category === state.category)
+      .filter((event) => matchesText(event, state.q))
+      .filter((event) => !event.isCancelled && new Date(event.endDate).getTime() > now)
+      .slice(0, 12);
+  }, [sections, state.category, state.q, now]);
+
+  const listed = useMemo(() => {
+    if (state.date) {
+      return activeCalendar.filter((event) => eventDayKey(event) === state.date);
+    }
+
+    if (state.view === "interests") {
+      return yours.events
+        .filter((event) => !event.isCancelled && new Date(event.endDate).getTime() > now)
+        .filter((event) => !state.category || event.category === state.category)
+        .filter((event) => matchesText(event, state.q));
+    }
+
+    if (state.view === "month") {
+      const month = new Date(now);
+
+      return activeResults.filter((event) => isSameMonth(event.startDate, month));
+    }
+
+    return activeResults;
+  }, [state.date, state.view, state.category, state.q, activeCalendar, yours.events, activeResults, now]);
+
+  const listLoading = state.date
+    ? calendarLoading && calendarEvents.length === 0
+    : state.view === "interests"
+      ? yours.loading && yours.events.length === 0
+      : resultsLoading;
+  const listError = state.date ? "" : state.view === "interests" ? yours.error : resultsError;
+  const paged = !state.date && state.view !== "interests";
+  const filtered = Boolean(state.q || state.category || state.radiusKm !== "" || state.date);
+  const heroCover = featured.map((event) => eventCover(event)).find((cover) => cover.type === "image")?.url;
+
+  const resetAll = () => {
+    setDraftQuery("");
+    setParams(new URLSearchParams(), { replace: true });
+  };
+
+  const scrollToList = () =>
+    window.requestAnimationFrame(() => upcomingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
 
   /* --------------------------------------------------------------- render */
 
-  return (
-    <EventsShell>
-      <header className="fke-hero">
-        <div className="fke-hero__text">
-          <span className="fke-eyebrow fke-eyebrow--gold">Fockis Events</span>
-          <h1>Discover what's happening</h1>
-          <p>Concerts, meetups, classes and games from your community — find something to do today.</p>
-        </div>
-        <div className="fke-hero__actions">
-          {location ? (
-            <button type="button" className="fke-pill fke-pill--location" onClick={clearLocation} title="Stop using my location">
-              <MapPin size={15} aria-hidden="true" /> Using your location
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="fke-btn fke-btn--glass"
-              onClick={requestLocation}
-              disabled={locationStatus === "locating"}
-            >
-              <LocateFixed size={16} aria-hidden="true" />
-              {locationStatus === "locating" ? "Locating…" : "Show events near me"}
-            </button>
-          )}
-          <Link to="/events/create" className="fke-btn fke-btn--gold">
-            Create event
-          </Link>
-        </div>
-        {locationStatus === "denied" && (
-          <p className="fke-hero__note" role="status">
-            Location is blocked for this site. You can still browse and search all events.
-          </p>
-        )}
-      </header>
+  const rightRail = (
+    <>
+      <CreateEventCard />
+      <EventCalendar
+        month={calendarMonth}
+        onMonthChange={setCalendarMonth}
+        eventDays={eventDays}
+        selected={state.date}
+        loading={calendarLoading}
+        onSelect={(key) => {
+          update({ date: key });
+          if (key) scrollToList();
+        }}
+      />
+      <YourEventsCard events={yours.events} loading={yours.loading} error={yours.error} now={now} />
+    </>
+  );
 
-      <EventFilters
-        value={{ ...filters, q: draftQuery }}
-        onChange={updateFilters}
-        onReset={() => {
-          setDraftQuery("");
-          setParams(new URLSearchParams(), { replace: true });
+  return (
+    <EventsShell
+      hideTabs
+      rightRail={rightRail}
+      onSearch={(text) => {
+        setDraftQuery(text);
+        update({ q: text, date: "" });
+        scrollToList();
+      }}
+    >
+      <EventsHero
+        query={draftQuery}
+        onQueryChange={setDraftQuery}
+        onSubmit={() => {
+          update({ q: draftQuery.trim(), date: "" });
+          scrollToList();
         }}
         hasLocation={Boolean(location)}
-        locating={locationStatus === "locating"}
+        locationStatus={locationStatus}
+        radiusKm={location ? state.radiusKm : ""}
         onRequestLocation={requestLocation}
+        onRadiusChange={(radiusKm) => update({ radiusKm, sort: radiusKm === "" && state.sort === "distance" ? "relevance" : state.sort })}
+        onClearLocation={() => {
+          clearLocation();
+          update({ radiusKm: "", sort: state.sort === "distance" ? "relevance" : state.sort });
+        }}
+        backgroundUrl={heroCover}
       />
 
-      {!filtered && (
-        <>
-          {sectionsError && (
-            <EventEmptyState
-              tone="error"
-              title="Events couldn't load"
-              body={sectionsError}
-              action={
-                <button type="button" className="fke-btn fke-btn--primary" onClick={() => setRevalidate((value) => value + 1)}>
-                  Try again
-                </button>
-              }
-            />
-          )}
+      <EventCategoryBar value={state.category} onChange={(category) => update({ category })} />
 
-          <EventDiscoverySection id="live" title="Happening now" icon={Radio} events={deduped.happeningNow} loading={sectionsLoading} />
-          <EventDiscoverySection id="featured" title="Featured" subtitle="Popular in the next 30 days" icon={Flame} events={deduped.featured} loading={sectionsLoading} />
-          <EventDiscoverySection id="recommended" title="Recommended for you" subtitle="Based on events you've joined" icon={Sparkles} events={deduped.recommended} loading={sectionsLoading} />
-          <EventDiscoverySection id="today" title="Later today" icon={Sun} events={deduped.today} loading={sectionsLoading} />
-          {location && (
-            <EventDiscoverySection
-              id="nearby"
-              title="Near you"
-              subtitle="Within 50 km"
-              icon={MapPin}
-              events={deduped.nearby}
-              loading={sectionsLoading}
-              hideWhenEmpty={false}
-              empty={<p className="fke-muted">No in-person events near you right now.</p>}
-            />
-          )}
-          <EventDiscoverySection id="online" title="Online" icon={Globe} events={deduped.online} loading={sectionsLoading} />
-        </>
+      {sectionsError && !sectionsLoading && (
+        <EventEmptyState
+          tone="error"
+          title="Featured events couldn't load"
+          body={sectionsError}
+          action={
+            <button type="button" className="fke-btn fke-btn--primary" onClick={() => setRevalidate((value) => value + 1)}>
+              Try again
+            </button>
+          }
+        />
       )}
 
-      <section className="fke-section fke-section--grid" aria-labelledby="fke-results-title">
-        <header className="fke-section__header">
-          <h2 id="fke-results-title">
-            <span className="fke-section__icon" aria-hidden="true">
-              <CalendarClock size={18} />
-            </span>
-            {filtered ? "Results" : "All upcoming events"}
-          </h2>
-          {filtered && !resultsLoading && <p>{total.toLocaleString()} {total === 1 ? "event" : "events"}</p>}
+      <FeaturedEventsCarousel
+        events={featured}
+        loading={sectionsLoading && sections.featured.length === 0 && sections.upcoming.length === 0}
+        now={now}
+        onViewAll={() => {
+          update({ view: "upcoming", sort: "popularity", date: "" });
+          setShowFilters(true);
+          scrollToList();
+        }}
+      />
+
+      <section className="fkd-section fkd-upcoming" aria-labelledby="fkd-upcoming-title" ref={upcomingRef}>
+        <header className="fkd-section__head fkd-upcoming__head">
+          <span className="fkd-section__icon fkd-section__icon--box" aria-hidden="true">
+            <CalendarDays size={22} />
+          </span>
+          <div>
+            <h2 id="fkd-upcoming-title">{filtered && !state.date ? "Matching Events" : "Upcoming Events"}</h2>
+            <p>
+              {state.date
+                ? `Events on ${longDayLabel(state.date)}`
+                : nearbyActive && state.radiusKm !== ""
+                  ? `Within ${state.radiusKm} km of you`
+                  : "Events coming up in your area"}
+              {paged && filtered && !resultsLoading ? ` · ${total.toLocaleString()} found` : ""}
+            </p>
+          </div>
+
+          <div className="fkd-tabs" role="tablist" aria-label="Show">
+            {VIEWS.map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={!state.date && state.view === id}
+                className={`fkd-tab ${!state.date && state.view === id ? "is-active" : ""}`}
+                onClick={() => update({ view: id, date: "" })}
+              >
+                {label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={`fkd-tab fkd-tab--icon ${showFilters ? "is-open" : ""}`}
+              aria-expanded={showFilters}
+              aria-controls="fkd-more-filters"
+              aria-label="More filters"
+              title="More filters"
+              onClick={() => setShowFilters((open) => !open)}
+            >
+              <SlidersHorizontal size={17} aria-hidden="true" />
+            </button>
+          </div>
         </header>
 
-        {resultsError && (
+        {showFilters && (
+          <div className="fkd-filters" id="fkd-more-filters">
+            {state.view === "upcoming" && (
+              <label>
+                <span>When</span>
+                <select value={state.when} onChange={(changeEvent) => update({ when: changeEvent.target.value as EventWhen, date: "" })}>
+                  <option value="any">Any time</option>
+                  <option value="live">Happening now</option>
+                  <option value="today">Today</option>
+                  <option value="tomorrow">Tomorrow</option>
+                  <option value="this-weekend">This weekend</option>
+                  <option value="next-30-days">Next 30 days</option>
+                </select>
+              </label>
+            )}
+            <label>
+              <span>Format</span>
+              <select value={state.format} onChange={(changeEvent) => update({ format: changeEvent.target.value as EventFormat })}>
+                <option value="any">In person &amp; online</option>
+                <option value="in-person">In person</option>
+                <option value="online">Online</option>
+              </select>
+            </label>
+            <label>
+              <span>Availability</span>
+              <select
+                value={state.availability}
+                onChange={(changeEvent) => update({ availability: changeEvent.target.value as EventAvailability })}
+              >
+                <option value="any">Any</option>
+                <option value="open">Spots available</option>
+              </select>
+            </label>
+            <label>
+              <span>Sort by</span>
+              <select value={state.sort} onChange={(changeEvent) => update({ sort: changeEvent.target.value as EventSort })}>
+                <option value="relevance">Date</option>
+                <option value="popularity">Most popular</option>
+                <option value="distance" disabled={!location}>
+                  Nearest{location ? "" : " (share location)"}
+                </option>
+              </select>
+            </label>
+          </div>
+        )}
+
+        {filtered && (
+          <div className="fkd-active-filters" aria-label="Active filters">
+            {state.date && (
+              <button type="button" className="fkd-chip" onClick={() => update({ date: "" })}>
+                {longDayLabel(state.date)} <X size={14} aria-label="Remove" />
+              </button>
+            )}
+            {state.q && (
+              <button type="button" className="fkd-chip" onClick={() => update({ q: "" })}>
+                “{state.q}” <X size={14} aria-label="Remove" />
+              </button>
+            )}
+            {state.category && (
+              <button type="button" className="fkd-chip" onClick={() => update({ category: "" })}>
+                {state.category.charAt(0).toUpperCase() + state.category.slice(1)} <X size={14} aria-label="Remove" />
+              </button>
+            )}
+            {state.radiusKm !== "" && location && (
+              <button type="button" className="fkd-chip" onClick={() => update({ radiusKm: "" })}>
+                Within {state.radiusKm} km <X size={14} aria-label="Remove" />
+              </button>
+            )}
+            <button type="button" className="fkd-chip fkd-chip--clear" onClick={resetAll}>
+              Clear all
+            </button>
+          </div>
+        )}
+
+        {listError && (
           <EventEmptyState
             tone="error"
             title="Something went wrong"
-            body={resultsError}
+            body={listError}
             action={
-              <button type="button" className="fke-btn fke-btn--primary" onClick={() => void loadPage(1)}>
+              <button
+                type="button"
+                className="fke-btn fke-btn--primary"
+                onClick={() => (state.view === "interests" ? yours.refresh() : void loadPage(1))}
+              >
                 Try again
               </button>
             }
           />
         )}
 
-        {!resultsError && !resultsLoading && activeResults.length === 0 && (
+        {!listError && !listLoading && listed.length === 0 && (
           <EventEmptyState
-            title={filtered ? "No events match" : "No upcoming events yet"}
-            body={filtered ? "Try a different search or fewer filters." : "Be the first to put something on the calendar."}
+            title={
+              state.view === "interests" && !state.date
+                ? "Nothing saved yet"
+                : state.date
+                  ? "No events on this day"
+                  : filtered
+                    ? "No events match"
+                    : "No upcoming events yet"
+            }
+            body={
+              state.view === "interests" && !state.date
+                ? "Tap Interested or Going on any event and it will be listed here."
+                : state.date
+                  ? "Pick another day in the calendar, or browse everything coming up."
+                  : filtered
+                    ? "Try a different search, category or distance."
+                    : "Be the first to put something on the calendar."
+            }
             action={
               filtered ? (
-                <button
-                  type="button"
-                  className="fke-btn fke-btn--ghost"
-                  onClick={() => {
-                    setDraftQuery("");
-                    setParams(new URLSearchParams(), { replace: true });
-                  }}
-                >
-                  Clear filters
+                <button type="button" className="fke-btn fke-btn--ghost" onClick={resetAll}>
+                  Show all events
                 </button>
               ) : (
                 <Link to="/events/create" className="fke-btn fke-btn--primary">
@@ -386,19 +637,17 @@ export default function EventsPage() {
           />
         )}
 
-        <div className="fke-grid" role="list">
-          {activeResults.map((event) => (
-            <div className="fke-grid__item" role="listitem" key={event.id}>
-              <EventCard event={event} now={now} />
+        <div className="fkd-rows" role="list">
+          {listed.map((event) => (
+            <div role="listitem" key={event.id}>
+              <UpcomingEventRow event={event} now={now} />
             </div>
           ))}
-          {resultsLoading && <EventSkeleton variant="card" count={page === 1 ? 6 : 3} />}
+          {listLoading && <EventSkeleton variant="feed" count={page === 1 ? 4 : 2} />}
         </div>
 
-        <div ref={sentinel} className="fke-sentinel" aria-hidden="true" />
-
-        {hasMore && !resultsLoading && (
-          <button type="button" className="fke-btn fke-btn--ghost fke-btn--block" onClick={() => void loadPage(page + 1)}>
+        {paged && hasMore && !resultsLoading && (
+          <button type="button" className="fkd-loadmore" onClick={() => void loadPage(page + 1)}>
             Load more events
           </button>
         )}

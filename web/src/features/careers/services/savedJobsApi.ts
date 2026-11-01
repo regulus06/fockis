@@ -1,125 +1,51 @@
-// web/src/features/careers/services/savedJobsApi.ts
+import { apiClient } from './apiClient';
+import { normalizeJob, type BackendJob } from './careersApi';
+import type { Job } from '../types';
 
-import { apiClient } from "./apiClient";
+/**
+ * SAVED JOBS
+ *
+ * GET    /careers/saved-jobs
+ * POST   /careers/saved-jobs/:jobId
+ * DELETE /careers/saved-jobs/:jobId
+ */
 
-import type {
-  Job,
-  SavedJob,
-} from "../types";
-
-/* ============================================================
-   SAVED JOBS API
-
-   Backend routes:
-
-   GET    /careers/saved-jobs
-   GET    /careers/saved-jobs/:jobId/status
-   POST   /careers/saved-jobs/:jobId
-   DELETE /careers/saved-jobs/:jobId
-
-   All routes require authentication.
-============================================================ */
-
-/* ============================================================
-   SAVED JOB WITH DETAILS
-============================================================ */
-
-export interface SavedJobWithDetails
-  extends SavedJob {
-  job?: Job;
+export interface SavedJobEntry {
+  id: string;
+  jobId: string;
+  savedAt: string;
+  /** null when the job was removed or is no longer public. */
+  job: Job | null;
 }
 
-/* ============================================================
-   SAVED JOB STATUS
-============================================================ */
-
-export interface SavedJobStatus {
-  saved: boolean;
+interface BackendSavedJob {
+  _id?: string;
+  jobId?: BackendJob | string | null;
+  createdAt?: string;
 }
 
-/* ============================================================
-   SAVED JOBS API
-============================================================ */
+const path = (jobId: string) => {
+  const id = jobId?.trim();
+  if (!id) throw new Error('Job ID is required.');
+  return encodeURIComponent(id);
+};
 
 export const savedJobsApi = {
-  /* ==========================================================
-     GET SAVED JOBS
-
-     GET /careers/saved-jobs
-  ========================================================== */
-
-  getSavedJobs:
-    async (): Promise<SavedJobWithDetails[]> => {
-      return apiClient.get<
-        SavedJobWithDetails[]
-      >(
-        "/careers/saved-jobs",
-      );
-    },
-
-  /* ==========================================================
-     CHECK WHETHER JOB IS SAVED
-
-     GET /careers/saved-jobs/:jobId/status
-  ========================================================== */
-
-  isJobSaved:
-    async (
-      jobId: string,
-    ): Promise<boolean> => {
-      if (!jobId) {
-        throw new Error(
-          "Job ID is required",
-        );
-      }
-
-      const response =
-        await apiClient.get<SavedJobStatus>(
-          `/careers/saved-jobs/${jobId}/status`,
-        );
-
-      return response.saved;
-    },
-
-  /* ==========================================================
-     SAVE JOB
-
-     POST /careers/saved-jobs/:jobId
-  ========================================================== */
-
-  saveJob:
-    async (
-      jobId: string,
-    ): Promise<SavedJob> => {
-      if (!jobId) {
-        throw new Error(
-          "Job ID is required",
-        );
-      }
-
-      return apiClient.post<SavedJob>(
-        `/careers/saved-jobs/${jobId}`,
-      );
-    },
-
-  /* ==========================================================
-     UNSAVE JOB
-
-     DELETE /careers/saved-jobs/:jobId
-  ========================================================== */
-
-  unsaveJob:
-    async (
-      jobId: string,
-    ): Promise<void> => {
-      if (!jobId) {
-        throw new Error(
-          "Job ID is required",
-        );
-      }
-
-      await apiClient.delete<void>(
-        `/careers/saved-jobs/${jobId}`,
-      );
-    },
+  getSavedJobs: async (): Promise<SavedJobEntry[]> => {
+    const response = await apiClient.get<BackendSavedJob[]>('/careers/saved-jobs');
+    if (!Array.isArray(response)) throw new Error('Invalid saved jobs response from server.');
+    return response.map((item) => {
+      const populated = item.jobId && typeof item.jobId === 'object' ? item.jobId : null;
+      return {
+        id: String(item._id ?? ''),
+        jobId: populated ? String(populated._id ?? '') : String(item.jobId ?? ''),
+        savedAt: item.createdAt ?? '',
+        job: populated ? normalizeJob(populated) : null,
+      };
+    });
+  },
+  saveJob: (jobId: string) => apiClient.post(`/careers/saved-jobs/${path(jobId)}`),
+  unsaveJob: (jobId: string) => apiClient.delete<void>(`/careers/saved-jobs/${path(jobId)}`),
 };
+
+export default savedJobsApi;

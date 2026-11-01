@@ -34,6 +34,27 @@
   }
 }
 
+/* The feed page also styles a global .fk-shell (styles/FockisFeedPage.scss:
+   centred 1480px grid with padding). Once that stylesheet is loaded it would
+   squeeze the Admin Center, so the admin shell resets those properties. */
+.fk-shell.fk-admin-shell {
+  display: flex;
+  grid-template-columns: none;
+  justify-content: normal;
+  align-items: stretch;
+  column-gap: 0;
+
+  max-width: none;
+  margin: 0;
+  padding: 0;
+
+  overflow: visible;
+
+  &.fk-shell--full {
+    display: block;
+  }
+}
+
 .fk-shell .fk-main {
   display: flex;
   flex: 1 1 auto;

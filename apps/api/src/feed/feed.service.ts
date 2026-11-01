@@ -42,6 +42,7 @@ import {
   parseFeedMode,
   rankFeed,
 } from './feed-ranking';
+import { mutedUserIds } from '../policy-center/privacy-enforcement';
 
 /*
 |--------------------------------------------------------------------------
@@ -1323,6 +1324,19 @@ export class FeedService {
 
       relationships.friendIds = Array.from(friends);
       relationships.blockedIds = Array.from(blocked);
+    }
+
+    // Muted accounts (Policy Center) are left out of the feed like blocks.
+    const muted = await mutedUserIds(this.connection, viewerId).catch(
+      () => [] as string[],
+    );
+    if (muted.length) {
+      relationships.blockedIds = Array.from(
+        new Set([...relationships.blockedIds, ...muted]),
+      );
+      relationships.friendIds = relationships.friendIds.filter(
+        (id) => !muted.includes(id),
+      );
     }
 
     relationships.followedIds = relationships.followedIds.filter(

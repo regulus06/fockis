@@ -1,3 +1,4 @@
+
 import {
   Injectable,
   NotFoundException,
@@ -12,6 +13,7 @@ import {
 } from "mongoose";
 
 import {
+  ApplicationMethod,
   Job,
   JobDocument,
   JobType,
@@ -19,127 +21,110 @@ import {
 } from "../schemas/job.schema";
 
 import { CreateJobDto } from "../dto/create-job.dto";
-
 import { UpdateJobDto } from "../dto/update-job.dto";
+
+interface JobFilters {
+  search?: string;
+  country?: string;
+  city?: string;
+  type?: string;
+  workplaceType?: string;
+  remote?: boolean;
+}
 
 @Injectable()
 export class CareerService {
   constructor(
-    @InjectModel(Job.name)
+    @InjectModel("FockisCareerJob")
     private readonly jobModel: Model<JobDocument>,
   ) {}
 
-  /*
-   * ============================================================
+  /**
    * CREATE JOB
-   * ============================================================
+   * New jobs require admin approval before becoming public.
    */
+  async create(employerId: string, data: CreateJobDto) {
+    this.validateObjectId(employerId, "employer");
 
-  async create(
-    employerId: string,
-    data: CreateJobDto,
-  ) {
-    if (!Types.ObjectId.isValid(employerId)) {
+    if (!data.title?.trim()) {
+      throw new BadRequestException("Job title is required");
+    }
+
+    if (!data.description?.trim()) {
+      throw new BadRequestException("Job description is required");
+    }
+
+    if (!data.company?.trim()) {
+      throw new BadRequestException("Company name is required");
+    }
+
+    const workplaceType = this.resolveWorkplaceType(
+      data.workplaceType,
+    );
+
+    const jobType = this.resolveJobType(data.type);
+
+    const applicationDeadline = this.parseDeadline(
+      data.applicationDeadline,
+    );
+
+    const remote =
+      data.remote ?? workplaceType === WorkplaceType.REMOTE;
+
+    this.assertSalaryRange(data.salaryMin, data.salaryMax);
+
+    const application = this.resolveApplication(
+      data.applicationMethod,
+      data.applicationUrl,
+    );
+
+    if (remote && workplaceType === WorkplaceType.ONSITE) {
       throw new BadRequestException(
-        "Invalid employer ID",
+        "An onsite job cannot be marked as remote",
       );
     }
 
-    const workplaceType =
-      data.workplaceType === "remote"
-        ? WorkplaceType.REMOTE
-        : data.workplaceType === "hybrid"
-          ? WorkplaceType.HYBRID
-          : WorkplaceType.ONSITE;
-
     const job = await this.jobModel.create({
-      title: data.title,
-
-      employerId:
-        new Types.ObjectId(employerId),
-
-      company: data.company,
-
-      companyDescription:
-        data.companyDescription,
-
-      companyWebsite:
-        data.companyWebsite,
-
-      country: data.country,
-
-      city: data.city,
-
-      stateProvince:
-        data.stateProvince,
-
-      location:
-        data.location,
-
-      type:
-        data.type as JobType,
-
+      title: data.title.trim(),
+      employerId: new Types.ObjectId(employerId),
+      company: data.company.trim(),
+      companyDescription: data.companyDescription?.trim(),
+      companyWebsite: data.companyWebsite?.trim(),
+      country: data.country?.trim(),
+      city: data.city?.trim(),
+      stateProvince: data.stateProvince?.trim(),
+      location: data.location?.trim(),
+      type: jobType,
       workplaceType,
-
-      description:
-        data.description,
-
-      salary:
-        data.salary,
-
-      currency:
-        data.currency,
-
-      salaryPeriod:
-        data.salaryPeriod,
-
-      remote:
-        data.remote ??
-        workplaceType === WorkplaceType.REMOTE,
-
-      applicationDeadline:
-        data.applicationDeadline
-          ? new Date(data.applicationDeadline)
-          : undefined,
-
-      skills:
-        data.skills ?? [],
-
-      benefits:
-        data.benefits ?? [],
-
+      description: data.description.trim(),
+      salary: data.salary,
+      currency: data.currency,
+      salaryPeriod: data.salaryPeriod,
+      salaryMin: data.salaryMin,
+      salaryMax: data.salaryMax,
+      applicationMethod: application.method,
+      applicationUrl: application.url,
+      employmentType: data.employmentType,
+      experienceLevel: data.experienceLevel,
+      remote,
+      applicationDeadline,
+      skills: this.cleanStringArray(data.skills),
+      benefits: this.cleanStringArray(data.benefits),
       isActive: true,
-
-      isApproved: true,
+      isApproved: false,
     });
 
     return job;
   }
 
-  /*
-   * ============================================================
+  /**
    * FIND ALL PUBLIC JOBS
-   * ============================================================
    */
-
-  async findAll(
-    filters?: {
-      search?: string;
-      country?: string;
-      city?: string;
-      type?: string;
-      workplaceType?: string;
-      remote?: boolean;
-    },
-  ) {
+  async findAll(filters?: JobFilters) {
     const query: Record<string, any> = {
       isActive: true,
       isApproved: true,
     };
-
-    /*
-     * Search
-     */
 
     if (filters?.search?.trim()) {
       query.$text = {
@@ -147,278 +132,286 @@ export class CareerService {
       };
     }
 
-    /*
-     * Country
-     */
-
     if (filters?.country?.trim()) {
       query.country = new RegExp(
-        `^${this.escapeRegex(
-          filters.country.trim(),
-        )}$`,
+        `^${this.escapeRegex(filters.country.trim())}$`,
         "i",
       );
     }
-
-    /*
-     * City
-     */
 
     if (filters?.city?.trim()) {
       query.city = new RegExp(
-        this.escapeRegex(
-          filters.city.trim(),
-        ),
+        this.escapeRegex(filters.city.trim()),
         "i",
       );
     }
 
-    /*
-     * Job type
-     */
-
-    if (
-      filters?.type &&
-      Object.values(JobType).includes(
-        filters.type as JobType,
-      )
-    ) {
-      query.type =
-        filters.type as JobType;
+    if (filters?.type?.trim()) {
+      query.type = this.resolveJobType(filters.type);
     }
 
-    /*
-     * Workplace type
-     */
-
-    if (
-      filters?.workplaceType &&
-      Object.values(
-        WorkplaceType,
-      ).includes(
-        filters.workplaceType as WorkplaceType,
-      )
-    ) {
-      query.workplaceType =
-        filters.workplaceType as WorkplaceType;
+    if (filters?.workplaceType?.trim()) {
+      query.workplaceType = this.resolveWorkplaceType(
+        filters.workplaceType,
+      );
     }
 
-    /*
-     * Remote
-     */
-
-    if (
-      filters?.remote !== undefined
-    ) {
+    if (filters?.remote !== undefined) {
       query.remote = filters.remote;
     }
 
     return this.jobModel
       .find(query)
-      .sort({
-        createdAt: -1,
-      })
+      .sort({ createdAt: -1 })
       .exec();
   }
 
-  /*
-   * ============================================================
-   * FIND BY TYPE
-   * ============================================================
+  /**
+   * FIND JOBS BY TYPE
    */
-
-  async findByType(
-    type: string,
-  ) {
-    if (
-      !Object.values(JobType).includes(
-        type as JobType,
-      )
-    ) {
-      throw new BadRequestException(
-        `Invalid job type: ${type}`,
-      );
-    }
+  async findByType(type: string) {
+    const jobType = this.resolveJobType(type);
 
     return this.jobModel
       .find({
-        type: type as JobType,
-
+        type: jobType,
         isActive: true,
-
         isApproved: true,
       })
-      .sort({
-        createdAt: -1,
-      })
+      .sort({ createdAt: -1 })
       .exec();
   }
 
-  /*
-   * ============================================================
-   * FIND ONE JOB
-   * ============================================================
+  /**
+   * FIND ONE PUBLIC JOB
+   * Only active and approved jobs can be viewed publicly.
    */
+  async findOne(id: string) {
+    this.validateObjectId(id, "job");
 
-  async findOne(
-    id: string,
-  ) {
-    if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestException(
-        "Invalid job ID",
-      );
-    }
-
-    const job =
-      await this.jobModel.findById(id);
+    const job = await this.jobModel
+      .findOneAndUpdate(
+        {
+          _id: new Types.ObjectId(id),
+          isActive: true,
+          isApproved: true,
+        },
+        { $inc: { viewCount: 1 } },
+        { new: true },
+      )
+      .exec();
 
     if (!job) {
-      throw new NotFoundException(
-        `Job ${id} not found`,
-      );
+      throw new NotFoundException(`Job ${id} not found`);
     }
 
     return job;
   }
 
-  /*
-   * ============================================================
+  /**
    * FIND EMPLOYER'S JOBS
-   * ============================================================
+   * Includes pending approval jobs belonging to the employer.
    */
-
-  async findMine(
-    employerId: string,
-  ) {
-    if (
-      !Types.ObjectId.isValid(
-        employerId,
-      )
-    ) {
-      throw new BadRequestException(
-        "Invalid employer ID",
-      );
-    }
+  async findMine(employerId: string) {
+    this.validateObjectId(employerId, "employer");
 
     return this.jobModel
       .find({
-        employerId:
-          new Types.ObjectId(
-            employerId,
-          ),
+        employerId: new Types.ObjectId(employerId),
       })
-      .sort({
-        createdAt: -1,
-      })
+      .sort({ createdAt: -1 })
       .exec();
   }
 
-  /*
-   * ============================================================
-   * UPDATE JOB
-   * ============================================================
+  /**
+   * UPDATE OWN JOB
    */
-
   async update(
     id: string,
     employerId: string,
     data: UpdateJobDto,
   ) {
-    if (
-      !Types.ObjectId.isValid(id) ||
-      !Types.ObjectId.isValid(
-        employerId,
-      )
-    ) {
-      throw new BadRequestException(
-        "Invalid job or employer ID",
-      );
-    }
+    this.validateObjectId(id, "job");
+    this.validateObjectId(employerId, "employer");
 
-    const updateData: Record<
-      string,
-      any
-    > = {
-      ...data,
-    };
+    const updateData: Record<string, unknown> = {};
 
-    /*
-     * Convert workplace type to enum.
-     */
-
-    if (data.workplaceType) {
-      if (
-        !Object.values(
-          WorkplaceType,
-        ).includes(
-          data.workplaceType as WorkplaceType,
-        )
-      ) {
+    if (data.title !== undefined) {
+      if (!data.title.trim()) {
         throw new BadRequestException(
-          "Invalid workplace type",
+          "Job title cannot be empty",
         );
       }
 
+      updateData.title = data.title.trim();
+    }
+
+    if (data.company !== undefined) {
+      if (!data.company.trim()) {
+        throw new BadRequestException(
+          "Company name cannot be empty",
+        );
+      }
+
+      updateData.company = data.company.trim();
+    }
+
+    if (data.companyDescription !== undefined) {
+      updateData.companyDescription =
+        data.companyDescription?.trim();
+    }
+
+    if (data.companyWebsite !== undefined) {
+      updateData.companyWebsite =
+        data.companyWebsite?.trim();
+    }
+
+    if (data.country !== undefined) {
+      updateData.country = data.country?.trim();
+    }
+
+    if (data.city !== undefined) {
+      updateData.city = data.city?.trim();
+    }
+
+    if (data.stateProvince !== undefined) {
+      updateData.stateProvince =
+        data.stateProvince?.trim();
+    }
+
+    if (data.location !== undefined) {
+      updateData.location = data.location?.trim();
+    }
+
+    if (data.description !== undefined) {
+      if (!data.description.trim()) {
+        throw new BadRequestException(
+          "Job description cannot be empty",
+        );
+      }
+
+      updateData.description = data.description.trim();
+    }
+
+    if (data.type !== undefined) {
+      updateData.type = this.resolveJobType(data.type);
+    }
+
+    if (data.workplaceType !== undefined) {
       updateData.workplaceType =
-        data.workplaceType as WorkplaceType;
+        this.resolveWorkplaceType(data.workplaceType);
     }
 
-    /*
-     * Convert job type to enum.
-     */
+    if (data.salary !== undefined) {
+      updateData.salary = data.salary;
+    }
 
-    if (data.type) {
-      if (
-        !Object.values(
-          JobType,
-        ).includes(
-          data.type as JobType,
-        )
-      ) {
-        throw new BadRequestException(
-          "Invalid job type",
+    if (data.currency !== undefined) {
+      updateData.currency = data.currency;
+    }
+
+    if (data.salaryPeriod !== undefined) {
+      updateData.salaryPeriod = data.salaryPeriod;
+    }
+
+    if (data.remote !== undefined) {
+      updateData.remote = data.remote;
+    }
+
+    if (data.applicationDeadline !== undefined) {
+      updateData.applicationDeadline =
+        this.parseDeadline(data.applicationDeadline);
+    }
+
+    if (data.skills !== undefined) {
+      updateData.skills = this.cleanStringArray(data.skills);
+    }
+
+    if (data.benefits !== undefined) {
+      updateData.benefits = this.cleanStringArray(data.benefits);
+    }
+
+    if (data.employmentType !== undefined) {
+      updateData.employmentType = data.employmentType;
+    }
+
+    if (data.experienceLevel !== undefined) {
+      updateData.experienceLevel = data.experienceLevel;
+    }
+
+    if (data.salaryMin !== undefined) {
+      updateData.salaryMin = data.salaryMin;
+    }
+
+    if (data.salaryMax !== undefined) {
+      updateData.salaryMax = data.salaryMax;
+    }
+
+    const unset: Record<string, ""> = {};
+
+    if (
+      data.applicationMethod !== undefined ||
+      data.applicationUrl !== undefined ||
+      data.salaryMin !== undefined ||
+      data.salaryMax !== undefined
+    ) {
+      const existing = await this.jobModel
+        .findOne({
+          _id: new Types.ObjectId(id),
+          employerId: new Types.ObjectId(employerId),
+        })
+        .select("applicationMethod applicationUrl salaryMin salaryMax")
+        .lean()
+        .exec();
+
+      if (!existing) {
+        throw new NotFoundException(
+          "Job not found or you do not own this job",
         );
       }
 
-      updateData.type =
-        data.type as JobType;
-    }
+      this.assertSalaryRange(
+        data.salaryMin ?? existing.salaryMin,
+        data.salaryMax ?? existing.salaryMax,
+      );
 
-    /*
-     * Convert deadline.
-     */
-
-    if (
-      data.applicationDeadline
-    ) {
-      updateData.applicationDeadline =
-        new Date(
-          data.applicationDeadline,
+      if (
+        data.applicationMethod !== undefined ||
+        data.applicationUrl !== undefined
+      ) {
+        const application = this.resolveApplication(
+          data.applicationMethod ??
+            (existing.applicationMethod as string | undefined),
+          data.applicationUrl ?? existing.applicationUrl,
         );
+
+        updateData.applicationMethod = application.method;
+
+        if (application.url) {
+          updateData.applicationUrl = application.url;
+        } else {
+          unset.applicationUrl = "";
+        }
+      }
     }
 
-    const job =
-      await this.jobModel.findOneAndUpdate(
+    // Employers cannot modify employerId, isApproved, or other
+    // protected moderation fields through this endpoint.
+    const job = await this.jobModel
+      .findOneAndUpdate(
         {
-          _id:
-            new Types.ObjectId(id),
-
-          employerId:
-            new Types.ObjectId(
-              employerId,
-            ),
+          _id: new Types.ObjectId(id),
+          employerId: new Types.ObjectId(employerId),
         },
-
-        {
-          $set: updateData,
-        },
-
+        Object.keys(unset).length
+          ? { $set: updateData, $unset: unset }
+          : { $set: updateData },
         {
           new: true,
-
           runValidators: true,
         },
-      );
+      )
+      .exec();
 
     if (!job) {
       throw new NotFoundException(
@@ -429,37 +422,19 @@ export class CareerService {
     return job;
   }
 
-  /*
-   * ============================================================
-   * DELETE JOB
-   * ============================================================
+  /**
+   * DELETE OWN JOB
    */
+  async remove(id: string, employerId: string) {
+    this.validateObjectId(id, "job");
+    this.validateObjectId(employerId, "employer");
 
-  async remove(
-    id: string,
-    employerId: string,
-  ) {
-    if (
-      !Types.ObjectId.isValid(id) ||
-      !Types.ObjectId.isValid(
-        employerId,
-      )
-    ) {
-      throw new BadRequestException(
-        "Invalid job or employer ID",
-      );
-    }
-
-    const job =
-      await this.jobModel.findOneAndDelete({
-        _id:
-          new Types.ObjectId(id),
-
-        employerId:
-          new Types.ObjectId(
-            employerId,
-          ),
-      });
+    const job = await this.jobModel
+      .findOneAndDelete({
+        _id: new Types.ObjectId(id),
+        employerId: new Types.ObjectId(employerId),
+      })
+      .exec();
 
     if (!job) {
       throw new NotFoundException(
@@ -468,56 +443,247 @@ export class CareerService {
     }
 
     return {
-      message:
-        "Job deleted successfully",
+      message: "Job deleted successfully",
     };
   }
 
-  /*
-   * ============================================================
-   * CHECK JOB OWNERSHIP
-   * ============================================================
+  /**
+   * PAUSE / ACTIVATE OWN JOB
    */
+  async setActive(
+    id: string,
+    employerId: string,
+    isActive: boolean,
+  ) {
+    this.validateObjectId(id, "job");
+    this.validateObjectId(employerId, "employer");
 
+    const job = await this.jobModel
+      .findOneAndUpdate(
+        {
+          _id: new Types.ObjectId(id),
+          employerId: new Types.ObjectId(employerId),
+        },
+        { $set: { isActive } },
+        { new: true },
+      )
+      .exec();
+
+    if (!job) {
+      throw new NotFoundException(
+        "Job not found or you do not own this job",
+      );
+    }
+
+    return job;
+  }
+
+  /**
+   * CHECK JOB OWNERSHIP
+   */
   async isEmployerForJob(
     jobId: string,
     userId: string,
-  ) {
+  ): Promise<boolean> {
     if (
-      !Types.ObjectId.isValid(
-        jobId,
-      ) ||
-      !Types.ObjectId.isValid(
-        userId,
-      )
+      !Types.ObjectId.isValid(jobId) ||
+      !Types.ObjectId.isValid(userId)
     ) {
       return false;
     }
 
-    const job =
-      await this.jobModel.findOne({
-        _id:
-          new Types.ObjectId(jobId),
-
-        employerId:
-          new Types.ObjectId(userId),
-      });
+    const job = await this.jobModel
+      .exists({
+        _id: new Types.ObjectId(jobId),
+        employerId: new Types.ObjectId(userId),
+      })
+      .exec();
 
     return !!job;
   }
 
-  /*
-   * ============================================================
-   * ESCAPE REGEX
-   * ============================================================
+  /**
+   * VALIDATE MONGODB OBJECT ID
    */
+  private validateObjectId(
+    id: string,
+    fieldName: string,
+  ): void {
+    if (
+      !id ||
+      typeof id !== "string" ||
+      !Types.ObjectId.isValid(id)
+    ) {
+      throw new BadRequestException(
+        `Invalid ${fieldName} ID`,
+      );
+    }
+  }
 
-  private escapeRegex(
-    value: string,
-  ): string {
-    return value.replace(
-      /[.*+?^${}()|[\]\\]/g,
-      "\\$&",
+  /**
+   * RESOLVE JOB TYPE
+   */
+  private resolveJobType(value: string): JobType {
+    const normalized = String(value ?? "")
+      .trim()
+      .toLowerCase();
+
+    const match = Object.values(JobType).find(
+      (item) => String(item).toLowerCase() === normalized,
     );
+
+    if (!match) {
+      throw new BadRequestException(
+        `Invalid job type: ${value}`,
+      );
+    }
+
+    return match as JobType;
+  }
+
+  /**
+   * RESOLVE WORKPLACE TYPE
+   */
+  private resolveWorkplaceType(
+    value?: string,
+  ): WorkplaceType {
+    const normalized = String(value ?? "onsite")
+      .trim()
+      .toLowerCase();
+
+    const match = Object.values(WorkplaceType).find(
+      (item) => String(item).toLowerCase() === normalized,
+    );
+
+    if (!match) {
+      throw new BadRequestException(
+        `Invalid workplace type: ${value}`,
+      );
+    }
+
+    return match as WorkplaceType;
+  }
+
+  /**
+   * VALIDATE APPLICATION DEADLINE
+   */
+  private parseDeadline(
+    value?: string | Date,
+  ): Date | undefined {
+    if (!value) {
+      return undefined;
+    }
+
+    const deadline = new Date(value);
+
+    if (Number.isNaN(deadline.getTime())) {
+      throw new BadRequestException(
+        "Invalid application deadline",
+      );
+    }
+
+    if (deadline.getTime() < Date.now()) {
+      throw new BadRequestException(
+        "Application deadline cannot be in the past",
+      );
+    }
+
+    return deadline;
+  }
+
+  /**
+   * RESOLVE APPLICATION METHOD + URL
+   */
+  private resolveApplication(
+    method?: string,
+    url?: string,
+  ): { method: ApplicationMethod; url?: string } {
+    const normalized = String(method ?? ApplicationMethod.FOCKIS)
+      .trim()
+      .toLowerCase();
+
+    if (normalized === ApplicationMethod.FOCKIS) {
+      return { method: ApplicationMethod.FOCKIS };
+    }
+
+    if (normalized !== ApplicationMethod.EXTERNAL) {
+      throw new BadRequestException(
+        `Invalid application method: ${method}`,
+      );
+    }
+
+    const trimmed = url?.trim();
+
+    if (!trimmed) {
+      throw new BadRequestException(
+        "An external application URL is required when applying on the company website",
+      );
+    }
+
+    let parsed: URL;
+
+    try {
+      parsed = new URL(trimmed);
+    } catch {
+      throw new BadRequestException(
+        "External application URL must be a valid URL",
+      );
+    }
+
+    if (
+      parsed.protocol !== "https:" &&
+      parsed.protocol !== "http:"
+    ) {
+      throw new BadRequestException(
+        "External application URL must start with http:// or https://",
+      );
+    }
+
+    return {
+      method: ApplicationMethod.EXTERNAL,
+      url: parsed.toString(),
+    };
+  }
+
+  private assertSalaryRange(min?: number, max?: number): void {
+    if (
+      typeof min === "number" &&
+      typeof max === "number" &&
+      min > max
+    ) {
+      throw new BadRequestException(
+        "Minimum salary cannot be greater than maximum salary",
+      );
+    }
+  }
+
+  /**
+   * CLEAN STRING ARRAYS
+   */
+  private cleanStringArray(
+    values?: string[],
+  ): string[] {
+    if (!Array.isArray(values)) {
+      return [];
+    }
+
+    return [
+      ...new Set(
+        values
+          .filter(
+            (value): value is string =>
+              typeof value === "string",
+          )
+          .map((value) => value.trim())
+          .filter(Boolean),
+      ),
+    ];
+  }
+
+  /**
+   * ESCAPE REGEX CHARACTERS
+   */
+  private escapeRegex(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 }

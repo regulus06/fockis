@@ -25,6 +25,9 @@ import ModerationOverviewPage from "../moderation/pages/ModerationOverviewPage";
 import ModerationQueuePage from "../moderation/pages/ModerationQueuePage";
 import ModerationCaseDetailsPage from "../moderation/pages/ModerationCaseDetailsPage";
 import ModerationSettingsPage from "../moderation/pages/ModerationSettingsPage";
+import SupportModRoutes from "../support/SupportModRoutes";
+import LegalRoutes from "../legal/LegalRoutes";
+import PolicyComplianceRoutes from "../policy-compliance/PolicyComplianceRoutes";
 
 /* ================================================================
    SUBSCRIPTION PLAN MANAGEMENT
@@ -320,14 +323,32 @@ export function AdminRoutes(): React.ReactElement {
               SUPPORT / RECOVERY
           ====================================================== */}
 
+          {/* Support & Moderation (feedback, tickets, reports, hidden
+              posts, history, help articles, live support). The pages and
+              the API check the support.* / moderation.* permissions. */}
           <Route
-            path="support/cases"
+            path="support/*"
             element={guarded(
-              [P.SUPPORT_VIEW],
-              <ModulePendingPage
-                title="Support Cases"
-                description="Support tickets raised by platform users."
-              />,
+              [P.SUPPORT_VIEW, P.MODERATION_VIEW, P.HELP_CONTENT_MANAGE],
+              <SupportModRoutes />,
+            )}
+          />
+
+          {/* Legal & Evidence (restricted: legal.* permissions only). */}
+          <Route
+            path="legal/*"
+            element={guarded(
+              [P.LEGAL_VIEW],
+              <LegalRoutes />,
+            )}
+          />
+
+          {/* Policy & Compliance (policy.* permissions). */}
+          <Route
+            path="policy-compliance/*"
+            element={guarded(
+              [P.POLICY_VIEW],
+              <PolicyComplianceRoutes />,
             )}
           />
 

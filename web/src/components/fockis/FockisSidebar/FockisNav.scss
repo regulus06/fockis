@@ -1,0 +1,411 @@
+/* ============================================================================
+   FOCKIS USER SIDEBAR
+   Root keeps the .fk-sidebar class (fixed rail + mobile drawer behaviour from
+   FockisSidebar.scss); the look comes from .fk-nav. Selectors are doubled
+   (.fk-sidebar.fk-nav) so page-level re-skins of the old sidebar don't leak in.
+============================================================================ */
+
+aside.fk-sidebar.fk-nav {
+  --nav-bg-top: #0f1b3d;
+  --nav-bg: #0a1530;
+  --nav-bg-bottom: #08112a;
+  --nav-text: #e8eefc;
+  --nav-text-dim: #a9b6d6;
+  --nav-hover: rgba(255, 255, 255, 0.07);
+  --nav-active: linear-gradient(90deg, #1f66f2 0%, #2f7bff 100%);
+  --nav-line: rgba(255, 255, 255, 0.12);
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 12px 14px;
+  background: linear-gradient(180deg, var(--nav-bg-top) 0%, var(--nav-bg) 50%, var(--nav-bg-bottom) 100%);
+  color: var(--nav-text);
+  box-shadow: none;
+  font-family: Inter, "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  text-align: left;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  a {
+    text-decoration: none;
+  }
+}
+
+/* ---------------- brand ---------------- */
+
+.fk-sidebar.fk-nav .fk-nav__brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 10px;
+}
+
+.fk-sidebar.fk-nav .fk-nav__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #ffffff;
+}
+
+.fk-sidebar.fk-nav .fk-nav__logo-mark {
+  position: relative;
+  display: block;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.fk-sidebar.fk-nav .fk-nav__logo-text {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: #ffffff;
+}
+
+.fk-sidebar.fk-nav .fk-nav__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--nav-hover);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+/* ---------------- list ---------------- */
+
+.fk-sidebar.fk-nav .fk-nav__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+.fk-sidebar.fk-nav .fk-nav__group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fk-sidebar.fk-nav .fk-nav__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--nav-text);
+  font: inherit;
+  font-size: 15.5px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease;
+
+  svg {
+    flex-shrink: 0;
+    color: currentColor;
+  }
+
+  &:hover {
+    background: var(--nav-hover);
+    color: #ffffff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #6aa2ff;
+    outline-offset: 1px;
+  }
+
+  &.is-active {
+    background: var(--nav-active);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 6px 16px rgba(31, 102, 242, 0.35);
+  }
+}
+
+.fk-sidebar.fk-nav .fk-nav__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.fk-sidebar.fk-nav .fk-nav__badge {
+  flex-shrink: 0;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #1f66f2;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+
+  &--alert {
+    background: #ef3b45;
+  }
+}
+
+.fk-sidebar.fk-nav .fk-nav__more {
+  color: var(--nav-text-dim);
+  font-size: 15px;
+
+  .fk-nav__chevron {
+    transition: transform 160ms ease;
+  }
+
+  &.is-open .fk-nav__chevron {
+    transform: rotate(180deg);
+  }
+}
+
+.fk-sidebar.fk-nav .fk-nav__sub {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 8px;
+  margin-left: 14px;
+  border-left: 1px solid var(--nav-line);
+
+  .fk-nav__item {
+    min-height: 40px;
+    padding: 8px 12px;
+    font-size: 15px;
+    gap: 12px;
+  }
+}
+
+.fk-sidebar.fk-nav .fk-nav__divider {
+  width: calc(100% - 20px);
+  margin: 10px auto;
+  border: 0;
+  border-top: 1px solid var(--nav-line);
+}
+
+/* ---------------- account panel ---------------- */
+
+.fk-sidebar.fk-nav .fk-nav__account {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--nav-line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.fk-sidebar.fk-nav .fk-nav__profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 4px 4px 10px;
+  border: 0;
+  border-bottom: 1px solid var(--nav-line);
+  background: transparent;
+  color: #ffffff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid #6aa2ff;
+    border-radius: 10px;
+  }
+}
+
+.fk-sidebar.fk-nav .fk-nav__avatar {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #1f66f2;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.fk-sidebar.fk-nav .fk-nav__who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  strong {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+
+    > span {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+
+  small {
+    color: var(--nav-text-dim);
+    font-size: 14px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+
+.fk-sidebar.fk-nav .fk-nav__verified {
+  flex-shrink: 0;
+  color: #ffffff;
+  fill: #2f7bff;
+}
+
+.fk-sidebar.fk-nav .fk-nav__item--plain {
+  min-height: 42px;
+  font-size: 16px;
+}
+
+.fk-sidebar.fk-nav .fk-nav__logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  font: inherit;
+  font-size: 16.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease;
+
+  &:hover {
+    background: rgba(239, 59, 69, 0.14);
+    border-color: rgba(239, 59, 69, 0.5);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #6aa2ff;
+    outline-offset: 1px;
+  }
+}
+
+.fk-sidebar.fk-nav .fk-nav__guest {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fk-sidebar.fk-nav .fk-nav__guest-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: #ffffff;
+  font-weight: 600;
+
+  &--primary {
+    border-color: transparent;
+    background: var(--nav-active);
+  }
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+}
+
+/* Short screens: tighter rows so the account panel stays visible. */
+@media (max-height: 920px) and (min-width: 768px) {
+  .fk-sidebar.fk-nav .fk-nav__item {
+    min-height: 40px;
+    padding: 8px 14px;
+  }
+
+  .fk-sidebar.fk-nav .fk-nav__avatar {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (max-width: 767px) {
+  aside.fk-sidebar.fk-nav {
+    background: linear-gradient(180deg, var(--nav-bg-top) 0%, var(--nav-bg) 50%, var(--nav-bg-bottom) 100%);
+    padding: 16px 12px calc(14px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Collapsed rail (used by a few pages). */
+.fk-sidebar.fk-nav.fk-sidebar--collapsed {
+  .fk-nav__label,
+  .fk-nav__logo-text,
+  .fk-nav__who,
+  .fk-nav__badge,
+  .fk-nav__chevron,
+  .fk-nav__logout span {
+    display: none;
+  }
+
+  .fk-nav__item {
+    justify-content: center;
+    padding: 10px;
+  }
+}
+
+/* The feed page's mobile drawer forces a light surface on its sidebar; keep
+   the navy design (and readable text) there as well. */
+.fk-shell__left aside.fk-sidebar.fk-nav {
+  background: linear-gradient(180deg, #0f1b3d 0%, #0a1530 50%, #08112a 100%) !important;
+  color: #e8eefc !important;
+}
+
+@media (max-width: 900px) {
+  .fk-shell__left aside.fk-sidebar.fk-nav {
+    padding: 16px 12px calc(14px + env(safe-area-inset-bottom)) !important;
+  }
+}

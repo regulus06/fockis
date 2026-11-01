@@ -1,0 +1,360 @@
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\components\cart\CartItem.tsx
+LINE: 3
+import type { CartLineItem } from "../../types/cart.types";
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\components\cart\CartItem.tsx
+LINE: 8
+export function CartItem({ item }: { item: CartLineItem }) {
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\components\cart\CartSellerGroup.tsx
+LINE: 14
+* CartLineItem does NOT contain selection state.
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\components\home\BundleSection.tsx
+LINE: 50
+addItem({
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\components\home\BundleSection.tsx
+LINE: 51
+productId: product.id,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\components\products\FrequentlyBoughtTogether.tsx
+LINE: 70
+addItem({
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\components\products\FrequentlyBoughtTogether.tsx
+LINE: 71
+productId: product.id,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\components\products\ProductActions.tsx
+LINE: 120
+productId: product.id,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\components\products\ProductActions.tsx
+LINE: 137
+await addItem({
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\components\products\ProductActions.tsx
+LINE: 138
+productId: product.id,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\components\products\ProductCard.tsx
+LINE: 211
+await addItem({
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\components\products\ProductCard.tsx
+LINE: 213
+productId: product.id,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts
+LINE: 35
+import type { CartLineItem } from "../types/cart.types";
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts
+LINE: 169
+productId: string;
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts
+LINE: 199
+items: CartLineItem[];
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts
+LINE: 801
+function toCheckoutCartItem(
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts
+LINE: 803
+item: CartLineItem,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts
+LINE: 811
+productId:
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts
+LINE: 889
+items: CartLineItem[],
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts
+LINE: 917
+productId:
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts
+LINE: 1003
+productId:
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts
+LINE: 1465
+productId:
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts
+LINE: 2005
+toCheckoutCartItem,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\pages\ShopProductPage.tsx
+LINE: 34
+const { productId } = useParams<{ productId: string }>();
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\cartApi.ts
+LINE: 3
+import type { CartLineItem } from "../types/cart.types";
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\cartApi.ts
+LINE: 210
+productId: string;
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\cartApi.ts
+LINE: 250
+productId: string,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\cartApi.ts
+LINE: 263
+productId: string,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\cartApi.ts
+LINE: 278
+productId: string,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\cartApi.ts
+LINE: 295
+items: CartLineItem[],
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\cartApi.ts
+LINE: 308
+(item as CartLineItem & {
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\cartApi.ts
+LINE: 312
+(item as CartLineItem & {
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\cartApi.ts
+LINE: 315
+(item as CartLineItem & {
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\cartApi.ts
+LINE: 322
+(item as CartLineItem & { quantity?: number }).quantity ?? 0,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\checkoutApi.ts
+LINE: 3
+import type { CartLineItem } from "../types/cart.types";
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\checkoutApi.ts
+LINE: 43
+items: CartLineItem[];
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\checkoutApi.ts
+LINE: 421
+function getCartStoreIds(items: CartLineItem[]): string[] {
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\checkoutApi.ts
+LINE: 563
+* shippingWeight, shippingLength, shippingWidth, shippingHeight.
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\checkoutApi.ts
+LINE: 582
+* Legacy shippingWeight/weight and shippingLength/length/etc. are also
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\checkoutApi.ts
+LINE: 585
+function getStoreParcel(items: CartLineItem[]): ShippoParcel {
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\checkoutApi.ts
+LINE: 628
+const record = item as CartLineItem & Record<string, unknown>;
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\checkoutApi.ts
+LINE: 664
+["shippingWeight"],
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\checkoutApi.ts
+LINE: 667
+["product", "shippingWeight"],
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\checkoutApi.ts
+LINE: 816
+items: CartLineItem[],
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\orderApi.ts
+LINE: 230
+productId: asString(firstDefined(item, ["productId", "product_id", "id", "_id"])),
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\productApi.ts
+LINE: 1203
+productId: string,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\productApi.ts
+LINE: 1278
+productId: string,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\productApi.ts
+LINE: 1309
+productId: string,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\cartStore.ts
+LINE: 5
+import type { CartLineItem } from "../types/cart.types";
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\cartStore.ts
+LINE: 29
+productId: string;
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\cartStore.ts
+LINE: 51
+variant?: CartLineItem["variant"];
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\cartStore.ts
+LINE: 78
+items: CartLineItem[];
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\cartStore.ts
+LINE: 230
+productId: string,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\cartStore.ts
+LINE: 262
+item: CartLineItem,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\cartStore.ts
+LINE: 462
+productId: string,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\cartStore.ts
+LINE: 605
+type CartLineItemWithShipping = CartLineItem & {
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\cartStore.ts
+LINE: 726
+productId: unknown;
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\cartStore.ts
+LINE: 732
+localItems: CartLineItem[],
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\cartStore.ts
+LINE: 734
+): CartLineItem[] {
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\cartStore.ts
+LINE: 742
+CartLineItem
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\cartStore.ts
+LINE: 762
+const merged: CartLineItemWithShipping[] =
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\cartStore.ts
+LINE: 1307
+: (item as CartLineItemWithShipping).shipping,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\cartStore.ts
+LINE: 1425
+const newItem: CartLineItemWithShipping =
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\cartStore.ts
+LINE: 1431
+productId:
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\cartStore.ts
+LINE: 2678
+? (state.items as CartLineItem[]).filter(
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\wishlistStore.ts
+LINE: 6
+toggle: (productId: string) => void;
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\store\wishlistStore.ts
+LINE: 7
+has: (productId: string) => boolean;
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\types\cart.types.ts
+LINE: 9
+* Cart selection is intentionally NOT stored on CartLineItem.
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\types\cart.types.ts
+LINE: 39
+export interface CartLineItemVariant {
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\types\cart.types.ts
+LINE: 64
+export interface CartLineItemShipping {
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\types\cart.types.ts
+LINE: 78
+export interface CartLineItem {
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\types\cart.types.ts
+LINE: 90
+productId: string;
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\types\cart.types.ts
+LINE: 161
+variant?: CartLineItemVariant | null;
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\types\cart.types.ts
+LINE: 174
+shipping?: CartLineItemShipping | null;
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\types\cart.types.ts
+LINE: 285
+items: CartLineItem[];
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\types\checkout.types.ts
+LINE: 2
+import type { CartLineItem } from './cart.types';
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\types\checkout.types.ts
+LINE: 22
+productId: string;
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\types\checkout.types.ts
+LINE: 82
+apiCartItems: CartLineItem[];
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\types\order.types.ts
+LINE: 14
+productId: string;
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\types\product.types.ts
+LINE: 179
+productId: string;
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\utils\checkout.ts
+LINE: 1
+import type { CartLineItem } from '../types/cart.types';
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\utils\checkout.ts
+LINE: 411
+// every field required by CartLineItem.
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\utils\checkout.ts
+LINE: 413
+// We normalize it into the complete CartLineItem shape.
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\utils\checkout.ts
+LINE: 416
+// CartLineItem does NOT contain checkout-selection state.
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\utils\checkout.ts
+LINE: 435
+): CartLineItem {
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\utils\checkout.ts
+LINE: 441
+productId: item.productId,
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\utils\pricing.ts
+LINE: 2
+import type { CartLineItem, CartSellerGroup, CartTotals } from '../types/cart.types';
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\utils\pricing.ts
+LINE: 13
+export function lineItemTotal(item: CartLineItem): number {
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\utils\pricing.ts
+LINE: 17
+export function groupSubtotal(items: CartLineItem[]): number {
+
+FILE: C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\utils\pricing.ts
+LINE: 26
+items: CartLineItem[],

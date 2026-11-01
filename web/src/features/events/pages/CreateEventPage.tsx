@@ -12,7 +12,8 @@ export default function CreateEventPage() {
       <div className="fke-editor">
         <EventCreateForm
           mode="create"
-          submitLabel="Create event"
+          heading="Create event"
+          submitLabel="Publish event"
           onCancel={() => navigate(-1)}
           onSubmit={async (values) => {
             const created = await eventsApi.create(values);

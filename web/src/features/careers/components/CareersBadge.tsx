@@ -1,10 +1,18 @@
+
 import styles from '../styles/CareersBadge.module.scss';
 
-export type BadgeVariant = 'internship' | 'coop' | 'remote' | 'paid' | 'fulltime';
+export type BadgeVariant =
+  | 'internship'
+  | 'coop'
+  | 'remote'
+  | 'paid'
+  | 'fulltime';
 
 interface CareersBadgeProps {
   variant: BadgeVariant;
   label: string;
+  className?: string;
+  title?: string;
 }
 
 const VARIANT_CLASS: Record<BadgeVariant, string> = {
@@ -15,6 +23,26 @@ const VARIANT_CLASS: Record<BadgeVariant, string> = {
   fulltime: styles.fulltime,
 };
 
-export function CareersBadge({ variant, label }: CareersBadgeProps) {
-  return <span className={`${styles.badge} ${VARIANT_CLASS[variant]}`}>{label}</span>;
+export function CareersBadge({
+  variant,
+  label,
+  className,
+  title,
+}: CareersBadgeProps) {
+  const variantClass = VARIANT_CLASS[variant] ?? '';
+
+  return (
+    <span
+      className={[
+        styles.badge,
+        variantClass,
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      title={title ?? label}
+    >
+      {label}
+    </span>
+  );
 }

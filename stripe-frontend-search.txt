@@ -1,0 +1,138 @@
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\admin\users\payments\user-payments.service.ts:232: x.stripePaymentIntentId,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\admin\users\payments\user-payments.service.ts:234: stripePaymentIntentId:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\admin\users\payments\user-payments.service.ts:235: x.stripePaymentIntentId,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\content-monetization\schemas\content-purchase.schema.ts:91: stripePaymentIntentId?: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\content-monetization\schemas\content-purchase.schema.ts:134: stripePaymentIntentId: 1,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\content-monetization\services\content-purchase.service.ts:496: purchase.stripePaymentIntentId =
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\fockis-shop\orders\dto\create-order.dto.ts:309: paymentIntentId?: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\fockis-shop\orders\schemas\order.schema.ts:423: paymentIntentId!: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\fockis-shop\orders\services\orders.service.ts:305: !dto.paymentIntentId
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\fockis-shop\orders\services\orders.service.ts:882: dto.paymentIntentId,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\fockis-shop\orders\services\orders.service.ts:985: paymentIntentId:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\fockis-shop\orders\services\orders.service.ts:986: dto.paymentIntentId ??
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\fockis-shop\orders\services\orders.service.ts:1656: async confirmPayment(
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\fockis-shop\orders\services\orders.service.ts:1658: paymentIntentId?: string,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\fockis-shop\orders\services\orders.service.ts:1693: if (paymentIntentId) {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\fockis-shop\orders\services\orders.service.ts:1694: order.paymentIntentId =
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\fockis-shop\orders\services\orders.service.ts:1695: paymentIntentId;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\music\schemas\music-purchase.schema.ts:59: stripePaymentIntentId!: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\music\services\music-purchase.service.ts:341: stripePaymentIntentId:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\music\services\music-purchase.service.ts:393: paymentIntentId:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\music\services\music-purchase.service.ts:396: clientSecret:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\music\services\music-purchase.service.ts:419: stripePaymentIntentId: string,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\music\services\music-purchase.service.ts:421: if (!stripePaymentIntentId) {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\music\services\music-purchase.service.ts:431: stripePaymentIntentId,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\music\services\music-purchase.service.ts:436: `Webhook confirm: no MusicPurchase found for PI ${stripePaymentIntentId}`,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\music\services\music-purchase.service.ts:576: stripePaymentIntentId: string,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\music\services\music-purchase.service.ts:579: if (!stripePaymentIntentId) {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\music\services\music-purchase.service.ts:585: stripePaymentIntentId,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\music\services\music-purchase.service.ts:600: `Music payment failed: ${stripePaymentIntentId} - ${reason}`,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\music\services\music-purchase.service.ts:656: !purchase.stripePaymentIntentId
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\music\services\music-purchase.service.ts:667: purchase.stripePaymentIntentId,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\payments.controller.ts:11: import { ConfirmPaymentDto } from './dto/confirm-payment.dto';
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\payments.controller.ts:49: @Body() dto: ConfirmPaymentDto,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\payments.controller.ts:51: return this.payments.confirmPayment(
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\payments.controller.ts:53: dto.paymentIntentId,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\dto\confirm-payment.dto.ts:3: export class ConfirmPaymentDto {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\dto\confirm-payment.dto.ts:6: paymentIntentId!: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\schemas\payment.schema.ts:95: stripePaymentIntentId!: string | null;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\schemas\payment.schema.ts:143: stripePaymentIntentId: 1,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:184: clientSecret: string | null,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:189: clientSecret,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:217: stripePaymentIntentId:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:218: payment.stripePaymentIntentId ??
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:291: existing.stripePaymentIntentId
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:296: existing.stripePaymentIntentId,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:384: stripePaymentIntentId:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:447: payment.stripePaymentIntentId =
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:507: async confirmPayment(
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:509: paymentIntentId: string,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:513: paymentIntentId || '',
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:528: stripePaymentIntentId:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:863: !payment.stripePaymentIntentId
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:920: payment.stripePaymentIntentId,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:1047: stripePaymentIntentId:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:1080: stripePaymentIntentId:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:1114: stripePaymentIntentId:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\wallet\wallet.controller.ts:130: //   "paymentIntentId": "pi_xxxxxxxxx"
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\wallet\wallet.controller.ts:143: paymentIntentId?: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\wallet\wallet.controller.ts:149: if (!body.paymentIntentId) {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\wallet\wallet.controller.ts:157: body.paymentIntentId,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\wallet\wallet.service.ts:210: clientSecret:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\wallet\wallet.service.ts:213: paymentIntentId:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\wallet\wallet.service.ts:230: paymentIntentId: string,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\wallet\wallet.service.ts:235: !paymentIntentId ||
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\wallet\wallet.service.ts:236: !paymentIntentId.startsWith("pi_")
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\wallet\wallet.service.ts:245: paymentIntentId,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\admin\finance\pages\PaymentsPage.tsx:143: paymentIntentId?: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\admin\finance\pages\PaymentsPage.tsx:153: value.paymentIntentId,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\admin\users\types\adminUsers.types.ts:290: stripePaymentIntentId?: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:71: paymentIntentId: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:72: clientSecret: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:1754: const clientSecret =
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:1756: paymentObject.clientSecret ||
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:1760: const paymentIntentId =
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:1762: paymentObject.stripePaymentIntentId ||
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:1763: paymentObject.paymentIntentId ||
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:1767: if (!clientSecret) {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:1773: await stripe.confirmCardPayment(
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:1774: clientSecret,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:1865: paymentIntentId:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:1903: paymentIntentId:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:1905: clientSecret,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:2090: let paymentIntentId:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:2099: paymentIntentId =
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:2100: paymentResult.paymentIntentId;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:2102: !paymentIntentId
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:2216: ...(paymentIntentId
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\hooks\useCheckout.ts:2218: paymentIntentId,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\checkoutApi.ts:43: paymentIntentId?: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\checkoutApi.ts:591: !requestData.paymentIntentId
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\fockis-shop\services\orderApi.ts:345: paymentIntentId: asString(firstDefined(raw, ["paymentIntentId", "paymentIntent", "payment_intent_id"])),
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\music\components\MusicUnlockButton.tsx:46: clientSecret,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\music\components\MusicUnlockButton.tsx:119: async function handleConfirmPayment() {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\music\components\MusicUnlockButton.tsx:127: if (!clientSecret) {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\music\components\MusicUnlockButton.tsx:168: await stripe.confirmCardPayment(
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\music\components\MusicUnlockButton.tsx:169: clientSecret,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\music\components\MusicUnlockButton.tsx:278: if (!clientSecret) {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\music\components\MusicUnlockButton.tsx:359: handleConfirmPayment
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\music\hooks\useMusicPurchase.ts:8: * PaymentIntent was created and the frontend should hand `clientSecret` to
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\music\hooks\useMusicPurchase.ts:16: const [clientSecret, setClientSecret] = useState<string | null>(null);
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\music\hooks\useMusicPurchase.ts:24: setClientSecret(result.clientSecret);
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\music\hooks\useMusicPurchase.ts:42: setClientSecret(null);
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\music\hooks\useMusicPurchase.ts:46: return { status, clientSecret, error, startPurchase, reset };
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\music\types\music.types.ts:430: clientSecret: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\orders\services\orderApi.ts:76: paymentIntentId?: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\pages\CheckoutPage.tsx:60: payment: ConfirmPaymentResponse,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\pages\CheckoutPage.tsx:69: clientSecret?: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\pages\CheckoutPage.tsx:70: paymentIntentId?: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\pages\CheckoutPage.tsx:76: export interface ConfirmPaymentResponse {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\pages\CheckoutPage.tsx:79: paymentIntentId?: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\pages\CheckoutPage.tsx:675: !payment.clientSecret
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\pages\CheckoutPage.tsx:687: await stripe.confirmCardPayment(
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\pages\CheckoutPage.tsx:688: payment.clientSecret,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\pages\CheckoutPage.tsx:753: await api.post<ConfirmPaymentResponse>(
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\pages\CheckoutPage.tsx:756: paymentIntentId:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\pages\CheckoutPage.tsx:814: paymentIntentId:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\services\stripeService.ts:7: clientSecret: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\services\stripeService.ts:8: paymentIntentId?: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\services\stripeService.ts:24: paymentIntentId: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\services\stripeService.ts:93: paymentIntentId: string,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\services\stripeService.ts:95: if (!paymentIntentId?.trim()) {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\services\stripeService.ts:105: paymentIntentId:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\services\stripeService.ts:106: paymentIntentId.trim(),
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\services\universalPaymentApi.ts:6: ConfirmPaymentResponse,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\services\universalPaymentApi.ts:34: paymentIntentId: string,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\services\universalPaymentApi.ts:35: ): Promise<ConfirmPaymentResponse> {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\services\universalPaymentApi.ts:36: const response = await api.post<ConfirmPaymentResponse>(
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\services\universalPaymentApi.ts:39: paymentIntentId,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\types\universalPayment.ts:121: clientSecret: string | null;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\types\universalPayment.ts:182: stripePaymentIntentId: string | null;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\payments\types\universalPayment.ts:188: export type ConfirmPaymentResponse = UniversalPaymentResponse;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\wallet\services\walletApi.ts:78: clientSecret: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\wallet\services\walletApi.ts:80: paymentIntentId: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\wallet\services\walletApi.ts:135: paymentIntentId?: string;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\wallet\services\walletApi.ts:290: paymentIntentId: string,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\wallet\services\walletApi.ts:292: if (!paymentIntentId) {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\wallet\services\walletApi.ts:302: paymentIntentId,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\messages\pages\FockisIdPage.tsx:33: paymentIntentId?: string;

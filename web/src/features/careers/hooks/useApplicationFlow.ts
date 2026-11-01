@@ -1,3 +1,4 @@
+
 import { create } from "zustand";
 
 import {
@@ -21,7 +22,7 @@ interface ApplicationFlowState {
   goBack: () => void;
 
   updatePayload: (
-    patch: Partial<ApplicationPayload>
+    patch: Partial<ApplicationPayload>,
   ) => void;
 
   submit: () => Promise<void>;
@@ -29,14 +30,23 @@ interface ApplicationFlowState {
   resetFlow: (jobId: string) => void;
 }
 
-const lastStepIndex =
-  APPLICATION_STEPS.length - 1;
+interface ApplicationResponse {
+  id?: string;
+  _id?: string;
+}
 
-const reviewStepIndex =
-  APPLICATION_STEPS.length - 2;
+const lastStepIndex = Math.max(
+  APPLICATION_STEPS.length - 1,
+  0,
+);
 
-export const useApplicationFlow =
-  create<ApplicationFlowState>((set, get) => ({
+const reviewStepIndex = Math.max(
+  APPLICATION_STEPS.length - 2,
+  0,
+);
+
+export const useApplicationFlow = create<ApplicationFlowState>(
+  (set, get) => ({
     currentStep: 0,
 
     payload: {},
@@ -47,44 +57,106 @@ export const useApplicationFlow =
 
     submittedApplicationId: null,
 
+    /* ======================================================
+       NEXT STEP
+    ====================================================== */
+
     goNext: () => {
-      const { currentStep } = get();
+      const {
+        currentStep,
+        isSubmitting,
+        submittedApplicationId,
+        submit,
+      } = get();
+
+      if (isSubmitting || submittedApplicationId) {
+        return;
+      }
 
       if (currentStep === reviewStepIndex) {
-        void get().submit();
+        void submit();
         return;
       }
 
       if (currentStep < lastStepIndex) {
         set({
           currentStep: currentStep + 1,
+          submitError: null,
         });
       }
     },
+
+    /* ======================================================
+       PREVIOUS STEP
+    ====================================================== */
 
     goBack: () => {
-      const { currentStep } = get();
+      const {
+        currentStep,
+        isSubmitting,
+        submittedApplicationId,
+      } = get();
 
-      if (currentStep > 0) {
-        set({
-          currentStep: currentStep - 1,
-        });
+      if (
+        isSubmitting ||
+        submittedApplicationId ||
+        currentStep <= 0
+      ) {
+        return;
       }
+
+      set({
+        currentStep: currentStep - 1,
+        submitError: null,
+      });
     },
 
+    /* ======================================================
+       UPDATE APPLICATION DATA
+    ====================================================== */
+
     updatePayload: (
-      patch: Partial<ApplicationPayload>
+      patch: Partial<ApplicationPayload>,
     ) => {
+      if (get().isSubmitting || get().submittedApplicationId) {
+        return;
+      }
+
       set((state) => ({
         payload: {
           ...state.payload,
           ...patch,
         },
+        submitError: null,
       }));
     },
 
+    /* ======================================================
+       SUBMIT APPLICATION
+
+       POST /careers/applications
+    ====================================================== */
+
     submit: async () => {
-      const { payload } = get();
+      const {
+        payload,
+        isSubmitting,
+        submittedApplicationId,
+      } = get();
+
+      if (isSubmitting || submittedApplicationId) {
+        return;
+      }
+
+      if (
+        typeof payload.jobId !== "string" ||
+        !payload.jobId.trim()
+      ) {
+        set({
+          submitError: "A valid job is required before submitting.",
+        });
+        return;
+      }
 
       set({
         isSubmitting: true,
@@ -94,18 +166,23 @@ export const useApplicationFlow =
       try {
         const application =
           await applicationsApi.submitApplication(
-            payload as ApplicationPayload
+            payload as ApplicationPayload,
+          ) as ApplicationResponse;
+
+        const applicationId =
+          application?.id ??
+          application?._id;
+
+        if (!applicationId) {
+          throw new Error(
+            "The application was submitted, but the server did not return an application ID.",
           );
+        }
 
         set({
-          submittedApplicationId:
-            application.id,
-
-          currentStep:
-            lastStepIndex,
-
+          submittedApplicationId: applicationId,
+          currentStep: lastStepIndex,
           isSubmitting: false,
-
           submitError: null,
         });
       } catch (err: unknown) {
@@ -113,12 +190,15 @@ export const useApplicationFlow =
           submitError:
             err instanceof Error
               ? err.message
-              : "Could not submit application",
-
+              : "Could not submit application.",
           isSubmitting: false,
         });
       }
     },
+
+    /* ======================================================
+       RESET APPLICATION FLOW
+    ====================================================== */
 
     resetFlow: (jobId: string) => {
       set({
@@ -135,4 +215,5 @@ export const useApplicationFlow =
         submittedApplicationId: null,
       });
     },
-  }));
+  }),
+);

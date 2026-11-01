@@ -1,0 +1,1916 @@
+
+========== web\src\features\fockis-shop\components\checkout\CheckoutForm.tsx ==========
+import {
+
+  FormEvent,
+
+  useCallback,
+
+  useMemo,
+
+  useRef,
+
+} from "react";
+
+import { Link } from "react-router-dom";
+
+import { useElements, useStripe } from "@stripe/react-stripe-js";
+
+import { ShippingAddressForm } from "./ShippingAddressForm";
+
+import { ShippingMethodSelector } from "./ShippingMethodSelector";
+
+import { PaymentMethod } from "./PaymentMethod";
+
+import { OrderReview } from "./OrderReview";
+
+import { CheckoutSummary } from "./CheckoutSummary";
+
+import type { CheckoutController } from "../../hooks/useCheckout";
+
+import type { CountryConfig as SharedCountryConfig } from "../../types/checkout.types";
+
+type Props = {
+
+  checkout: CheckoutController;
+
+};
+
+export function CheckoutForm({ checkout }: Props) {
+
+  const stripe = useStripe();
+
+  const elements = useElements();
+
+  // Synchronous guard prevents concurrent submits before React rerenders.
+
+  const submitInFlightRef = useRef(false);
+
+  /**
+
+   * Convert the backend-only "cod" payment method into
+
+   * the UI payment method name "cash_on_delivery".
+
+   */
+
+  const uiCountryConfig = useMemo<SharedCountryConfig>(() => {
+
+    return {
+
+      ...checkout.countryConfig,
+
+      paymentMethods: checkout.countryConfig.paymentMethods.map(
+
+        (method) => {
+
+          if (method === "cod") {
+
+            return "cash_on_delivery";
+
+          }
+
+          return method;
+
+        },
+
+      ),
+
+    };
+
+  }, [checkout.countryConfig]);
+
+  const handleCheckoutSubmit = useCallback(
+
+    async (event: FormEvent<HTMLFormElement>) => {
+
+      event.preventDefault();
+
+      if (submitInFlightRef.current || checkout.placing) {
+
+        return;
+
+      }
+
+      submitInFlightRef.current = true;
+
+      try {
+
+        await checkout.submitOrder();
+
+      } catch (error) {
+
+        console.error(
+
+          "[CHECKOUT FORM] checkout.submitOrder() failed:",
+
+          error,
+
+        );
+
+      } finally {
+
+        submitInFlightRef.current = false;
+
+      }
+
+    },
+
+    [checkout],
+
+  );
+
+  const selectedShippingSummary =
+
+    checkout.shippingEstimates.length > 0
+
+      ? checkout.shippingEstimates
+
+          .map((estimate) => {
+
+            const selectedOptionId =
+
+              checkout.shippingSelections[estimate.storeId] ??
+
+              estimate.selectedOptionId ??
+
+              estimate.options[0]?.id ??
+
+              "";
+
+            if (!selectedOptionId) {
+
+              return null;
+
+            }
+
+            const option = estimate.options.find(
+
+              (candidate) => candidate.id === selectedOptionId,
+
+            );
+
+            if (!option) {
+
+              return null;
+
+            }
+
+            return {
+
+              id: `${estimate.storeId}:${option.id}`,
+
+              storeId: estimate.storeId,
+
+              storeName:
+
+                checkout.storeNameById[estimate.storeId] ??
+
+                estimate.storeId,
+
+              optionId: option.id,
+
+              optionName: option.label ?? option.id,
+
+              price: option.price,
+
+            };
+
+          })
+
+          .filter(
+
+            (
+
+              value,
+
+            ): value is {
+
+              id: string;
+
+              storeId: string;
+
+              storeName: string;
+
+              optionId: string;
+
+              optionName: string;
+
+              price: number;
+
+            } => Boolean(value),
+
+          )
+
+      : [];
+
+  return (
+
+    <section className="tight">
+
+      <div className="wrap">
+
+        <div className="section-head">
+
+          <div>
+
+            <h1>Checkout</h1>
+
+            <p>
+
+              Complete your shipping, delivery, payment, and optional tip
+
+              information.
+
+            </p>
+
+          </div>
+
+          <Link to="/shop/cart" className="section-link">
+
+            ← Back to cart
+
+          </Link>
+
+        </div>
+
+        <div
+
+          style={{
+
+            marginBottom: 20,
+
+            padding: "14px 16px",
+
+            border: "1px solid var(--line)",
+
+            borderRadius: 6,
+
+            background: "var(--paper)",
+
+            display: "flex",
+
+            alignItems: "center",
+
+            justifyContent: "space-between",
+
+            gap: 16,
+
+            flexWrap: "wrap",
+
+          }}
+
+        >
+
+          <div>
+
+            <strong>
+
+              🌎 Shipping to: {checkout.countryConfig.name}
+
+            </strong>
+
+            <div
+
+              style={{
+
+                marginTop: 4,
+
+                fontSize: 12,
+
+                color: "var(--slate)",
+
+              }}
+
+            >
+
+              Prices, tips, and order totals shown in{" "}
+
+              <strong>
+
+                {checkout.countryConfig.currency}
+
+              </strong>
+
+            </div>
+
+          </div>
+
+          <div
+
+            className="mono"
+
+            style={{
+
+              fontWeight: 700,
+
+            }}
+
+          >
+
+            {checkout.countryConfig.currency}
+
+          </div>
+
+        </div>
+
+        {(checkout.checkoutError || checkout.shippingError) && (
+
+          <div
+
+            className="shop-state-panel"
+
+            style={{
+
+              marginBottom: 20,
+
+              padding: 16,
+
+              textAlign: "left",
+
+            }}
+
+          >
+
+            <strong>Checkout could not be completed</strong>
+
+            <p
+
+              style={{
+
+                marginTop: 5,
+
+                marginBottom: 0,
+
+              }}
+
+            >
+
+              {checkout.checkoutError ||
+
+                checkout.shippingError}
+
+            </p>
+
+          </div>
+
+        )}
+
+        <form
+
+          className="checkout-layout"
+
+          onSubmit={handleCheckoutSubmit}
+
+          noValidate
+
+        >
+
+          <div className="checkout-main">
+            <section
+              aria-labelledby="checkout-contact-heading"
+              style={{
+                marginBottom: 20,
+                padding: 16,
+                border: "1px solid var(--line)",
+                borderRadius: 8,
+                background: "var(--paper)",
+              }}
+            >
+              <h2
+                id="checkout-contact-heading"
+                style={{ margin: "0 0 12px", fontSize: 16 }}
+              >
+                Contact information
+              </h2>
+              <label
+                htmlFor="checkout-email"
+                style={{
+                  display: "block",
+                  marginBottom: 6,
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                Email address <span aria-hidden="true" style={{ color: "#c2410c" }}>*</span>
+              </label>
+              <input
+                id="checkout-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                inputMode="email"
+                required
+                value={checkout.address.email ?? ""}
+                onChange={(event) => {
+                  const email = event.currentTarget.value;
+                  checkout.setAddress((current) => ({
+                    ...current,
+                    email,
+                  }));
+                  if (checkout.checkoutError) {
+                    checkout.setCheckoutError("");
+                  }
+                }}
+                placeholder="you@example.com"
+                aria-describedby="checkout-email-help"
+                style={{
+                  display: "block",
+                  boxSizing: "border-box",
+                  width: "100%",
+                  minHeight: 44,
+                  padding: "10px 12px",
+                  border: "1px solid var(--line)",
+                  borderRadius: 6,
+                  background: "var(--paper)",
+                  color: "inherit",
+                  font: "inherit",
+                }}
+              />
+              <p
+                id="checkout-email-help"
+                style={{
+                  margin: "6px 0 0",
+                  fontSize: 12,
+                  color: "var(--slate)",
+                }}
+              >
+                We’ll use this address for your order confirmation.
+              </p>
+            </section>
+            <ShippingAddressForm
+
+              address={checkout.address}
+
+              countryConfig={uiCountryConfig}
+
+              isHaiti={checkout.isHaiti}
+
+              onAddressChange={(nextAddress) => {
+
+                checkout.setAddress((current) => ({
+
+                  ...current,
+
+                  fullName:
+
+                    nextAddress.fullName ??
+
+                    current.fullName,
+
+                  email:
+
+                    current.email,
+
+                  line1:
+
+                    nextAddress.line1 ??
+
+                    current.line1,
+
+                  line2:
+
+                    nextAddress.line2 ??
+
+                    current.line2,
+
+                  city:
+
+                    nextAddress.city ??
+
+                    current.city,
+
+                  state:
+
+                    nextAddress.state ??
+
+                    current.state,
+
+                  postalCode:
+
+                    nextAddress.postalCode ??
+
+                    current.postalCode,
+
+                  country:
+
+                    nextAddress.country ??
+
+                    current.country,
+
+                  countryCode:
+
+                    nextAddress.countryCode ??
+
+                    current.countryCode,
+
+                  phone:
+
+                    nextAddress.phone ??
+
+                    current.phone,
+
+                }));
+
+              }}
+
+              onCountryChange={(country) => {
+
+                checkout.handleCountryChange(country);
+
+              }}
+
+            />
+
+            <ShippingMethodSelector
+
+              estimates={checkout.shippingEstimates}
+
+              shippingError={checkout.shippingError}
+
+              shippingSelections={
+
+                checkout.shippingSelections
+
+              }
+
+              storeNameById={
+
+                checkout.storeNameById
+
+              }
+
+              formatPrice={(value: number) =>
+
+                checkout.formatCheckoutPrice(value)
+
+              }
+
+              onSelect={(storeId, optionId) => {
+                if (!storeId || !optionId) {
+                  return;
+                }
+
+                checkout.selectShipping(storeId, optionId);
+              }}
+
+            />
+
+            <PaymentMethod
+
+              paymentMethod={
+
+                checkout.paymentMethod
+
+              }
+
+              supportedPaymentMethods={
+
+                checkout.supportedPaymentMethods
+
+              }
+
+              countryConfig={uiCountryConfig}
+
+              isHaiti={checkout.isHaiti}
+
+              orderTotal={
+
+                checkout.totals.total
+
+              }
+
+              tipAmount={
+
+                checkout.tipAmount
+
+              }
+
+              stripeReady={
+
+                Boolean(stripe)
+
+              }
+
+              elementsReady={
+
+                Boolean(elements)
+
+              }
+
+              cardComplete={
+
+                checkout.cardComplete
+
+              }
+
+              formatPrice={(value: number) =>
+
+                checkout.formatCheckoutPrice(value)
+
+              }
+
+              onPaymentMethodChange={
+
+                checkout.selectPaymentMethod
+
+              }
+
+              onCardComplete={
+
+                checkout.setCardComplete
+
+              }
+
+              onError={(error) => {
+
+                checkout.setCheckoutError(
+
+                  error ?? "",
+
+                );
+
+              }}
+
+              tipOption={
+
+                checkout.tipOption
+
+              }
+
+              customTip={
+
+                checkout.customTip
+
+              }
+
+              onTipOptionChange={
+
+                checkout.setTipOption
+
+              }
+
+              onCustomTipChange={
+
+                checkout.setCustomTip
+
+              }
+
+            />
+
+            <OrderReview
+
+              groups={
+
+                checkout.checkoutSellerGroups
+
+              }
+
+              formatPrice={(value: number) =>
+
+                checkout.formatCheckoutPrice(value)
+
+              }
+
+            />
+
+          </div>
+
+          <CheckoutSummary
+
+            groups={
+
+              checkout.checkoutSellerGroups
+
+            }
+
+            totals={checkout.totals}
+
+            countryName={
+
+              checkout.countryConfig.name
+
+            }
+
+            currency={
+
+              checkout.countryConfig.currency
+
+            }
+
+            paymentMethod={
+
+              checkout.paymentMethod
+
+            }
+
+            isHaiti={checkout.isHaiti}
+
+            tipAmount={
+
+              checkout.tipAmount
+
+            }
+
+            orderTotal={
+
+              checkout.orderTotal
+
+            }
+
+            addressComplete={
+
+              checkout.addressComplete
+
+            }
+
+            shippingComplete={
+
+              checkout.shippingComplete
+
+            }
+
+            cardComplete={
+
+              checkout.cardComplete
+
+            }
+
+            placing={
+
+              checkout.placing
+
+            }
+
+            canPlaceOrder={
+
+              checkout.canPlaceOrder
+
+            }
+
+            formatPrice={(value: number) =>
+
+              checkout.formatCheckoutPrice(value)
+
+            }
+
+          />
+
+        </form>
+
+        {selectedShippingSummary.length > 0 && (
+
+          <div
+
+            style={{
+
+              marginTop: 20,
+
+              padding: 16,
+
+              border: "1px solid var(--line)",
+
+              borderRadius: 6,
+
+              background: "var(--paper)",
+
+            }}
+
+          >
+
+            <strong>
+
+              Selected delivery methods
+
+            </strong>
+
+            <div
+
+              style={{
+
+                marginTop: 10,
+
+                display: "grid",
+
+                gap: 8,
+
+              }}
+
+            >
+
+              {selectedShippingSummary.map(
+
+                (selection) => (
+
+                  <div
+
+                    key={selection.id}
+
+                    style={{
+
+                      display: "flex",
+
+                      justifyContent:
+
+                        "space-between",
+
+                      gap: 16,
+
+                      fontSize: 14,
+
+                    }}
+
+                  >
+
+                    <span>
+
+                      {selection.storeName} —{" "}
+
+                      {selection.optionName}
+
+                    </span>
+
+                    <span className="mono">
+
+                      {checkout.formatCheckoutPrice(
+
+                        Number(selection.price),
+
+                      )}
+
+                    </span>
+
+                  </div>
+
+                ),
+
+              )}
+
+            </div>
+
+          </div>
+
+        )}
+
+      </div>
+
+    </section>
+
+  );
+
+}
+
+export default CheckoutForm;
+
+========== web\src\features\fockis-shop\services\checkoutApi.ts ==========
+import { FOCKIS_API_URL } from "../../../config/fockisConfig";
+
+import type { CartLineItem } from "../types/cart.types";
+
+import type {
+
+  Order,
+
+  OrderShippingAddress,
+
+} from "../types/order.types";
+
+import type {
+
+  ShippingEstimate,
+
+  ShippingMethodOption,
+
+} from "../types/shipping.types";
+
+const API_BASE_URL = (
+
+  import.meta.env.VITE_API_URL ||
+
+  import.meta.env.VITE_API_BASE_URL ||
+
+  FOCKIS_API_URL
+
+).replace(/\/+$/, "");
+
+export type CheckoutPaymentMethod =
+
+  | "card"
+
+  | "moncash"
+
+  | "natcash"
+
+  | "cod";
+
+export interface PlaceOrderRequest {
+
+  items: CartLineItem[];
+
+  subtotal: number;
+
+  shippingCost: number;
+
+  tax: number;
+
+  totalAmount: number;
+
+  shippingAddress: OrderShippingAddress;
+
+  paymentMethod: CheckoutPaymentMethod;
+
+  currency?: string;
+
+  discount?: number;
+
+  deliveryMethod?: string;
+
+  paymentStatus?: "paid" | "pending" | "failed" | "cancelled";
+
+  paymentIntentId?: string;
+
+  moncashTransactionId?: string;
+
+  natcashTransactionId?: string;
+
+}
+
+export interface ShippoCheckoutDestination {
+
+  fullName: string;
+
+  street: string;
+
+  apartment?: string;
+
+  city: string;
+
+  state: string;
+
+  zipCode: string;
+
+  country: string;
+
+  email: string;
+
+  phone?: string;
+
+}
+
+interface BackendShippingEstimate {
+
+  country: string;
+
+  weight: number;
+
+  price: number;
+
+  eta: string;
+
+  carrier: string;
+
+}
+
+interface ShippoCheckoutRate {
+
+  rateId: string;
+
+  carrier: string;
+
+  service: string;
+
+  amount: number;
+
+  currency: string;
+
+  estimatedDays: number | null;
+
+}
+
+interface ShippoCheckoutRatesResponse {
+
+  storeId: string;
+
+  shippoShipmentId: string;
+
+  rates: ShippoCheckoutRate[];
+
+}
+
+interface ShippoParcel {
+
+  weight: number;
+
+  massUnit: "lb";
+
+  length: number;
+
+  width: number;
+
+  height: number;
+
+  distanceUnit: "in";
+
+}
+
+function getAuthToken(): string | null {
+
+  const keys = [
+
+    "access_token",
+
+    "accessToken",
+
+    "token",
+
+    "authToken",
+
+    "jwt",
+
+    "fockis_token",
+
+    "fockis_auth_token",
+
+  ];
+
+  for (const key of keys) {
+
+    const value = localStorage.getItem(key);
+
+    if (value?.trim()) {
+
+      return value.trim();
+
+    }
+
+  }
+
+  return null;
+
+}
+
+function buildUrl(path: string): string {
+
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+
+  return `${API_BASE_URL}${normalizedPath}`;
+
+}
+
+async function extractErrorMessage(response: Response): Promise<string> {
+
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+
+    try {
+
+      const body: unknown = await response.json();
+
+      if (body && typeof body === "object") {
+
+        const record = body as Record<string, unknown>;
+
+        if (typeof record.message === "string") {
+
+          return record.message;
+
+        }
+
+        if (Array.isArray(record.message)) {
+
+          return record.message.join(", ");
+
+        }
+
+        if (typeof record.error === "string") {
+
+          return record.error;
+
+        }
+
+      }
+
+    } catch {
+
+      // Ignore invalid JSON.
+
+    }
+
+  } else {
+
+    try {
+
+      const text = await response.text();
+
+      if (text) return text;
+
+    } catch {
+
+      // Ignore response parsing errors.
+
+    }
+
+  }
+
+  return `Request failed with status ${response.status}`;
+
+}
+
+async function post<T>(
+
+  path: string,
+
+  body: unknown,
+
+  authenticated = true,
+
+): Promise<T> {
+
+  const token = authenticated ? getAuthToken() : null;
+
+  if (authenticated && !token) {
+
+    throw new Error("UNAUTHORIZED");
+
+  }
+
+  const headers = new Headers({
+
+    Accept: "application/json",
+
+    "Content-Type": "application/json",
+
+  });
+
+  if (token) {
+
+    headers.set("Authorization", `Bearer ${token}`);
+
+  }
+
+  const response = await fetch(buildUrl(path), {
+
+    method: "POST",
+
+    headers,
+
+    credentials: "include",
+
+    body: JSON.stringify(body),
+
+  });
+
+  if (!response.ok) {
+
+    if (response.status === 401) {
+
+      throw new Error("UNAUTHORIZED");
+
+    }
+
+    if (response.status === 403) {
+
+      throw new Error("FORBIDDEN");
+
+    }
+
+    if (response.status === 404) {
+
+      throw new Error("CHECKOUT_ENDPOINT_NOT_FOUND");
+
+    }
+
+    throw new Error(await extractErrorMessage(response));
+
+  }
+
+  if (response.status === 204) {
+
+    return undefined as T;
+
+  }
+
+  const contentType = response.headers.get("content-type") || "";
+
+  if (!contentType.includes("application/json")) {
+
+    const text = await response.text();
+
+    return text as T;
+
+  }
+
+  return response.json() as Promise<T>;
+
+}
+
+function getNestedString(
+
+  value: unknown,
+
+  keys: string[],
+
+): string | undefined {
+
+  if (!value || typeof value !== "object") {
+
+    return undefined;
+
+  }
+
+  const record = value as Record<string, unknown>;
+
+  for (const key of keys) {
+
+    const candidate = record[key];
+
+    if (typeof candidate === "string" && candidate.trim()) {
+
+      return candidate.trim();
+
+    }
+
+  }
+
+  return undefined;
+
+}
+
+function getNestedNumber(
+
+  value: unknown,
+
+  keys: string[],
+
+): number | undefined {
+
+  if (!value || typeof value !== "object") {
+
+    return undefined;
+
+  }
+
+  const record = value as Record<string, unknown>;
+
+  for (const key of keys) {
+
+    const candidate = record[key];
+
+    if (typeof candidate === "number" && Number.isFinite(candidate)) {
+
+      return candidate;
+
+    }
+
+    if (
+
+      typeof candidate === "string" &&
+
+      candidate.trim() &&
+
+      Number.isFinite(Number(candidate))
+
+    ) {
+
+      return Number(candidate);
+
+    }
+
+  }
+
+  return undefined;
+
+}
+
+function getCartStoreIds(items: CartLineItem[]): string[] {
+
+  const storeIds = new Set<string>();
+
+  for (const item of items) {
+
+    const storeId = String(item.storeId || "").trim();
+
+    if (storeId) {
+
+      storeIds.add(storeId);
+
+    }
+
+  }
+
+  if (storeIds.size === 0) {
+
+    throw new Error(
+
+      "Your cart is missing its seller store ID. Refresh your cart and try again.",
+
+    );
+
+  }
+
+  return Array.from(storeIds);
+
+}
+
+function parseEta(eta: string): { min: number; max: number } {
+
+  const normalizedEta = String(eta || "").trim();
+
+  const range = normalizedEta.match(/(\d+)\s*-\s*(\d+)/);
+
+  if (range) {
+
+    return {
+
+      min: Number(range[1]),
+
+      max: Number(range[2]),
+
+    };
+
+  }
+
+  const single = normalizedEta.match(/(\d+)/);
+
+  if (single) {
+
+    const days = Number(single[1]);
+
+    return { min: days, max: days };
+
+  }
+
+  return { min: 2, max: 4 };
+
+}
+
+function createShippingOption(
+
+  estimate: BackendShippingEstimate,
+
+  storeId: string,
+
+): ShippingMethodOption {
+
+  const country = String(estimate.country || "")
+
+    .trim()
+
+    .toLowerCase();
+
+  const domestic = [
+
+    "us",
+
+    "usa",
+
+    "united states",
+
+    "united states of america",
+
+  ].includes(country);
+
+  const eta = String(estimate.eta || "").trim() || "2-4 days";
+
+  return {
+
+    id: "standard",
+
+    storeId,
+
+    type: domestic ? "national_delivery" : "international",
+
+    label: estimate.carrier
+
+      ? `${estimate.carrier} · ${eta}`
+
+      : `Standard Shipping · ${eta}`,
+
+    price: Number(estimate.price) || 0,
+
+    estimatedDays: parseEta(eta),
+
+  };
+
+}
+
+function createShippingEstimate(
+
+  estimate: BackendShippingEstimate,
+
+  storeId: string,
+
+): ShippingEstimate {
+
+  const option = createShippingOption(estimate, storeId);
+
+  return {
+
+    storeId,
+
+    options: [option],
+
+    selectedOptionId: option.id,
+
+  };
+
+}
+
+/**
+
+ * Creates an approximate parcel for each seller.
+
+ *
+
+ * Product shipping fields can be supplied on cart items as:
+
+ * shippingWeight, shippingLength, shippingWidth, shippingHeight.
+
+ * Generic weight/length/width/height fields are also accepted.
+
+ *
+
+ * Values are assumed to be pounds and inches. Confirm the units
+
+ * used by your product form before enabling live rates.
+
+ */
+
+/**
+ * Builds a Shippo parcel for one seller's cart items.
+ *
+ * Preferred product schema:
+ *   weightKg: kilograms
+ *   dimensionsCm: { length, width, height } in centimeters
+ *
+ * Legacy shippingWeight/weight and shippingLength/length/etc. are also
+ * supported and are interpreted as pounds and inches.
+ */
+function getStoreParcel(items: CartLineItem[]): ShippoParcel {
+  const readPathNumber = (
+    source: unknown,
+    path: string[],
+  ): number | undefined => {
+    let current: unknown = source;
+
+    for (const key of path) {
+      if (!current || typeof current !== "object") {
+        return undefined;
+      }
+      current = (current as Record<string, unknown>)[key];
+    }
+
+    if (typeof current === "number" && Number.isFinite(current)) {
+      return current;
+    }
+
+    if (typeof current === "string" && current.trim() !== "") {
+      const parsed = Number(current);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+
+    return undefined;
+  };
+
+  const firstNumber = (
+    source: unknown,
+    paths: string[][],
+  ): number | undefined => {
+    for (const path of paths) {
+      const value = readPathNumber(source, path);
+      if (value !== undefined) return value;
+    }
+    return undefined;
+  };
+
+  let weight = 0;
+  let length = 0;
+  let width = 0;
+  let height = 0;
+
+  for (const item of items) {
+    const record = item as CartLineItem & Record<string, unknown>;
+    const quantity = Math.max(
+      1,
+      Math.floor(readPathNumber(record, ["quantity"]) ?? 1),
+    );
+
+    const metricWeightKg = firstNumber(record, [
+      ["weightKg"],
+      ["shipping", "weightKg"],
+      ["product", "weightKg"],
+      ["product", "shipping", "weightKg"],
+    ]);
+    const metricLengthCm = firstNumber(record, [
+      ["dimensionsCm", "length"],
+      ["shipping", "dimensionsCm", "length"],
+      ["product", "dimensionsCm", "length"],
+      ["product", "shipping", "dimensionsCm", "length"],
+    ]);
+    const metricWidthCm = firstNumber(record, [
+      ["dimensionsCm", "width"],
+      ["shipping", "dimensionsCm", "width"],
+      ["product", "dimensionsCm", "width"],
+      ["product", "shipping", "dimensionsCm", "width"],
+    ]);
+    const metricHeightCm = firstNumber(record, [
+      ["dimensionsCm", "height"],
+      ["shipping", "dimensionsCm", "height"],
+      ["product", "dimensionsCm", "height"],
+      ["product", "shipping", "dimensionsCm", "height"],
+    ]);
+
+    // Product metric fields are converted to Shippo's lb/in units.
+    const itemWeight =
+      metricWeightKg !== undefined
+        ? metricWeightKg * 2.2046226218
+        : firstNumber(record, [
+            ["shippingWeight"],
+            ["weight"],
+            ["productWeight"],
+            ["product", "shippingWeight"],
+            ["product", "weight"],
+            ["product", "productWeight"],
+          ]);
+
+    const itemLength =
+      metricLengthCm !== undefined
+        ? metricLengthCm / 2.54
+        : firstNumber(record, [
+            ["shippingLength"],
+            ["length"],
+            ["product", "shippingLength"],
+            ["product", "length"],
+          ]);
+
+    const itemWidth =
+      metricWidthCm !== undefined
+        ? metricWidthCm / 2.54
+        : firstNumber(record, [
+            ["shippingWidth"],
+            ["width"],
+            ["product", "shippingWidth"],
+            ["product", "width"],
+          ]);
+
+    const itemHeight =
+      metricHeightCm !== undefined
+        ? metricHeightCm / 2.54
+        : firstNumber(record, [
+            ["shippingHeight"],
+            ["height"],
+            ["product", "shippingHeight"],
+            ["product", "height"],
+          ]);
+
+    if (
+      itemWeight === undefined ||
+      itemWeight <= 0 ||
+      itemLength === undefined ||
+      itemLength <= 0 ||
+      itemWidth === undefined ||
+      itemWidth <= 0 ||
+      itemHeight === undefined ||
+      itemHeight <= 0
+    ) {
+      const name =
+        typeof record.productName === "string"
+          ? record.productName
+          : "a product";
+
+      throw new Error(
+        `Shipping weight and dimensions are missing for ${name}. ` +
+          "Add valid product package weight and dimensions before calculating live rates.",
+      );
+    }
+
+    weight += itemWeight * quantity;
+    length = Math.max(length, itemLength);
+    width = Math.max(width, itemWidth);
+    height += itemHeight * quantity;
+  }
+
+  if (
+    !Number.isFinite(weight) ||
+    !Number.isFinite(length) ||
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    weight <= 0 ||
+    length <= 0 ||
+    width <= 0 ||
+    height <= 0
+  ) {
+    throw new Error("Valid shipping package dimensions are required.");
+  }
+
+  return {
+    weight: Number(weight.toFixed(4)),
+    massUnit: "lb",
+    length: Number(length.toFixed(4)),
+    width: Number(width.toFixed(4)),
+    height: Number(height.toFixed(4)),
+    distanceUnit: "in",
+  };
+}
+
+function normalizeShippoRate(
+
+  rate: ShippoCheckoutRate,
+
+  storeId: string,
+
+): ShippingMethodOption {
+
+  const days =
+
+    typeof rate.estimatedDays === "number" &&
+
+    Number.isFinite(rate.estimatedDays) &&
+
+    rate.estimatedDays > 0
+
+      ? rate.estimatedDays
+
+      : null;
+
+  const etaLabel = days
+
+    ? `${days} day${days === 1 ? "" : "s"}`
+
+    : "delivery time varies";
+
+  return {
+
+    id: rate.rateId,
+
+    storeId,
+
+    type: "national_delivery",
+
+    label: [rate.carrier, rate.service, etaLabel]
+
+      .filter(Boolean)
+
+      .join(" · "),
+
+    price: rate.amount,
+
+    estimatedDays: {
+
+      min: days ?? 0,
+
+      max: days ?? 0,
+
+    },
+
+  };
+
+}
+
+/**
+
+ * Requests real Shippo checkout rates, separately for each seller.
+
+ * The backend must implement POST /fockis-shop/shipping/shippo/checkout-rates.
+
+ */
+
+export async function getShippingEstimates(
+
+  items: CartLineItem[],
+
+  destination?: ShippoCheckoutDestination,
+
+): Promise<ShippingEstimate[]> {
+
+  if (!items.length) {
+
+    return [];
+
+  }
+
+  if (!destination) {
+
+    throw new Error(
+
+      "Enter your delivery address to calculate live shipping rates.",
+
+    );
+
+  }
+
+  const requiredAddress = [
+
+    destination.fullName,
+
+    destination.street,
+
+    destination.city,
+
+    destination.state,
+
+    destination.zipCode,
+
+    destination.country,
+
+    destination.email,
+
+  ];
+
+  if (requiredAddress.some((value) => !String(value ?? "").trim())) {
+
+    throw new Error(
+
+      "Complete your name, street address, city, state, postal code, country, and email to calculate shipping.",
+
+    );
+
+  }
+
+  const storeIds = getCartStoreIds(items);
+
+  if (
+
+    storeIds.some(
+
+      (storeId) =>
+
+        storeId === "fockis-shop" ||
+
+        !/^[a-f\d]{24}$/i.test(storeId),
+
+    )
+
+  ) {
+
+    throw new Error(
+
+      "A valid seller store ID is missing from your cart. Refresh your cart and try again.",
+
+    );
+
+  }
+
+  const estimates = await Promise.all(
+
+    storeIds.map(async (storeId): Promise<ShippingEstimate> => {
+
+      const storeItems = items.filter(
+
+        (item) => String(item.storeId || "").trim() === storeId,
+
+      );
+
+      const parcel = getStoreParcel(storeItems);
+
+      const response = await post<ShippoCheckoutRatesResponse>(
+
+        "/fockis-shop/shipping/shippo/checkout-rates",
+
+        {
+
+          storeId,
+
+          destination,
+
+          parcel,
+
+        },
+
+        true,
+
+      );
+
+      const options = (response.rates ?? [])
+
+        .filter(
+
+          (rate) =>
+
+            Boolean(rate.rateId) &&
+
+            Number.isFinite(rate.amount) &&
+
+            rate.amount >= 0,
+
+        )
+
+        .map((rate) => normalizeShippoRate(rate, storeId));
+
+      if (!options.length) {
+
+        throw new Error(
+
+          `Shippo returned no shipping options for seller ${storeId}. Check the seller's shipping origin and the delivery address.`,
+
+        );
+
+      }
+
+      return {
+
+        storeId,
+
+        options,
+
+        selectedOptionId: options[0].id,
+
+      };
+
+    }),
+
+  );
+
+  return estimates;
+
+}
+
+export async function placeOrder(
+
+  requestData: PlaceOrderRequest,
+
+): Promise<Order> {
+
+  if (!requestData.items.length) {
+
+    throw new Error("CART_EMPTY");
+
+  }
+
+  if (
+
+    !Number.isFinite(requestData.subtotal) ||
+
+    requestData.subtotal < 0
+
+  ) {
+
+    throw new Error("INVALID_SUBTOTAL");
+
+  }
+
+  if (
+
+    !Number.isFinite(requestData.shippingCost) ||
+
+    requestData.shippingCost < 0
+
+  ) {
+
+    throw new Error("INVALID_SHIPPING_COST");
+
+  }
+
+  if (!Number.isFinite(requestData.tax) || requestData.tax < 0) {
+
+    throw new Error("INVALID_TAX");
+
+  }
+
+  if (
+
+    !Number.isFinite(requestData.totalAmount) ||
+
+    requestData.totalAmount < 0
+
+  ) {
+
+    throw new Error("INVALID_TOTAL");
+
+  }
+
+  if (
+
+    requestData.paymentMethod === "card" &&
+
+    !requestData.paymentIntentId
+
+  ) {
+
+    throw new Error("PAYMENT_INTENT_REQUIRED");
+
+  }
+
+  return post<Order>(
+
+    "/fockis-shop/orders",
+
+    requestData,
+
+    true,
+
+  );
+
+}
+
+export const checkoutApi = {
+
+  getShippingEstimates,
+
+  placeOrder,
+
+};
+
+export default checkoutApi;
+

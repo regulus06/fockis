@@ -1,396 +1,170 @@
-import { FOCKIS_API_URL } from "../../../config/fockisConfig";
 
-// web/src/features/careers/services/apiClient.ts
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL || 'http://localhost:3000'
+).replace(/\/+$/, '');
 
-/*
- * ============================================================
- * FOCKIS API CLIENT
- *
- * Shared frontend API client used by:
- *   - Careers
- *   - Music
- *   - Organization Identity
- *   - Other frontend features
- *
- * Supports:
- *   - JSON requests
- *   - FormData / file uploads
- *   - JWT authentication
- *   - Cookie authentication
- *   - NestJS validation errors
- *   - Multiple legacy JWT storage keys
- * ============================================================
- */
+/** Error thrown for non-2xx responses; carries the HTTP status. */
+export class ApiError extends Error {
+  readonly status: number;
 
-const API_BASE = (
-  import.meta.env.VITE_API_URL ||
-  FOCKIS_API_URL
-)
-  .trim()
-  .replace(/\/+$/, "");
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
 
-/* ============================================================
-   TOKEN HELPERS
-============================================================ */
+export const isUnauthorized = (error: unknown) =>
+  error instanceof ApiError && (error.status === 401 || error.status === 403);
 
-/**
- * Get the currently stored JWT.
- *
- * Fockis has used multiple authentication storage keys.
- *
- * We check:
- *   1. access_token
- *   2. token
- *   3. jwt
- *   4. authToken
- *   5. auth_token
- *
- * The token itself is NEVER logged.
- */
-function getAuthToken(): string | null {
-  if (
-    typeof window === "undefined" ||
-    typeof localStorage === "undefined"
-  ) {
+type RequestOptions = Omit<RequestInit, 'body'> & {
+  body?: unknown;
+};
+
+class ApiClient {
+  private getToken(): string | null {
+    const tokenKeys = [
+      'access_token',
+      'token',
+      'jwt',
+      'authToken',
+      'auth_token',
+    ];
+
+    for (const key of tokenKeys) {
+      const token = localStorage.getItem(key);
+
+      if (token) {
+        return token;
+      }
+    }
+
     return null;
   }
 
-  const tokenKeys = [
-    "access_token",
-    "token",
-    "jwt",
-    "authToken",
-    "auth_token",
-  ];
+  async request<T = unknown>(
+    endpoint: string,
+    options: RequestOptions = {},
+  ): Promise<T> {
+    const {
+      headers: customHeaders,
+      body,
+      ...requestOptions
+    } = options;
 
-  for (const key of tokenKeys) {
-    try {
-      const value =
-        localStorage.getItem(key);
+    const headers = new Headers(customHeaders);
+    const token = this.getToken();
 
-      if (
-        typeof value === "string" &&
-        value.trim().length > 0
-      ) {
-        return value.trim();
-      }
-    } catch {
-      // Ignore localStorage access errors.
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
     }
-  }
 
-  return null;
-}
+    const isFormData =
+      typeof FormData !== 'undefined' && body instanceof FormData;
 
-/* ============================================================
-   REQUEST HELPER
-============================================================ */
+    if (body !== undefined && !isFormData) {
+      headers.set('Content-Type', 'application/json');
+    }
 
-async function request<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
-  const token =
-    getAuthToken();
-
-  const headers =
-    new Headers(options.headers);
-
-  /*
-   * ==========================================================
-   * CONTENT TYPE
-   *
-   * For FormData uploads we MUST NOT manually set
-   * Content-Type.
-   *
-   * The browser automatically creates:
-   *
-   * multipart/form-data; boundary=...
-   *
-   * NestJS/Multer needs that boundary.
-   * ==========================================================
-   */
-
-  const isFormData =
-    typeof FormData !== "undefined" &&
-    options.body instanceof FormData;
-
-  if (
-    !isFormData &&
-    !headers.has("Content-Type")
-  ) {
-    headers.set(
-      "Content-Type",
-      "application/json",
-    );
-  }
-
-  /*
-   * ==========================================================
-   * JWT AUTHENTICATION
-   * ==========================================================
-   *
-   * NestJS JwtAuthGuard expects:
-   *
-   * Authorization: Bearer <JWT>
-   *
-   * Never send:
-   *
-   * Authorization: Bearer null
-   * Authorization: Bearer undefined
-   */
-
-  if (token) {
-    headers.set(
-      "Authorization",
-      `Bearer ${token}`,
-    );
-  } else {
-    headers.delete(
-      "Authorization",
-    );
-  }
-
-  /*
-   * ==========================================================
-   * DEBUG INFORMATION
-   *
-   * We intentionally DO NOT print the JWT.
-   *
-   * This only tells us whether a token was found.
-   * ==========================================================
-   */
-
-  if (
-    import.meta.env.DEV &&
-    path.includes("/music/studio/upload")
-  ) {
-    console.log(
-      "[FOCKIS API] Music Studio upload auth:",
+    const response = await fetch(
+      `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`,
       {
-        hasToken: Boolean(token),
-        hasAuthorizationHeader:
-          headers.has("Authorization"),
-        apiBase: API_BASE,
-      },
-    );
-  }
-
-  /*
-   * ==========================================================
-   * REQUEST
-   * ==========================================================
-   */
-
-  const response =
-    await fetch(
-      `${API_BASE}${path}`,
-      {
-        ...options,
+        ...requestOptions,
         headers,
-
-        /*
-         * Keep cookies enabled for authentication flows
-         * that use cookies in addition to JWT.
-         */
-        credentials: "include",
+        body:
+          body === undefined
+            ? undefined
+            : isFormData
+              ? body
+              : JSON.stringify(body),
+        credentials: 'include',
       },
     );
 
-  /* ==========================================================
-     ERROR HANDLING
-  ========================================================== */
+    if (response.status === 204) {
+      return undefined as T;
+    }
 
-  if (!response.ok) {
-    const body =
-      await response
-        .text()
-        .catch(() => "");
+    const contentType = response.headers.get('content-type') || '';
 
-    let message =
-      body ||
-      response.statusText ||
-      "Unknown error";
+    let responseData: unknown;
 
-    /*
-     * NestJS commonly returns:
-     *
-     * {
-     *   "statusCode": 401,
-     *   "message": "Unauthorized"
-     * }
-     *
-     * Validation errors may return:
-     *
-     * {
-     *   "message": [
-     *     "field must be ..."
-     *   ]
-     * }
-     */
+    if (contentType.includes('application/json')) {
+      responseData = await response.json();
+    } else {
+      responseData = await response.text();
+    }
 
-    try {
-      const parsed =
-        JSON.parse(body);
+    if (!response.ok) {
+      const errorData = responseData as {
+        message?: string | string[];
+        error?: string;
+      } | null;
 
-      if (
-        parsed &&
-        parsed.message !== undefined
-      ) {
-        message =
-          Array.isArray(
-            parsed.message,
-          )
-            ? parsed.message.join(", ")
-            : String(
-                parsed.message,
-              );
+      let message = `Request failed (${response.status})`;
+
+      if (errorData && typeof errorData === 'object') {
+        if (Array.isArray(errorData.message)) {
+          message = errorData.message.join(', ');
+        } else if (errorData.message) {
+          message = errorData.message;
+        } else if (errorData.error) {
+          message = errorData.error;
+        }
+      } else if (typeof responseData === 'string' && responseData) {
+        message = responseData;
       }
-    } catch {
-      /*
-       * Response was not JSON.
-       * Keep the original response body.
-       */
+
+      throw new ApiError(message, response.status);
     }
 
-    /*
-     * Make authentication failures clearer.
-     */
-    if (response.status === 401) {
-      message =
-        message ||
-        "Authentication required. Please sign in again.";
-    }
-
-    /*
-     * Helpful producer authorization message.
-     *
-     * The Music Studio backend separately checks whether
-     * the authenticated account is an approved producer.
-     */
-    if (response.status === 403) {
-      message =
-        message ||
-        "You are authenticated, but your account is not authorized for this Music Studio action.";
-    }
-
-    throw new Error(
-      `API error ${response.status}: ${message}`,
-    );
+    return responseData as T;
   }
 
-  /* ==========================================================
-     EMPTY RESPONSE
-  ========================================================== */
-
-  if (
-    response.status === 204
-  ) {
-    return undefined as T;
+  get<T = unknown>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'GET',
+    });
   }
 
-  const text =
-    await response.text();
-
-  if (!text) {
-    return undefined as T;
+  post<T = unknown>(
+    endpoint: string,
+    body?: unknown,
+  ): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body,
+    });
   }
 
-  /* ==========================================================
-     JSON RESPONSE
-  ========================================================== */
+  patch<T = unknown>(
+    endpoint: string,
+    body?: unknown,
+  ): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PATCH',
+      body,
+    });
+  }
 
-  try {
-    return JSON.parse(
-      text,
-    ) as T;
-  } catch {
-    throw new Error(
-      "API returned an invalid JSON response.",
-    );
+  put<T = unknown>(
+    endpoint: string,
+    body?: unknown,
+  ): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PUT',
+      body,
+    });
+  }
+
+  delete<T = unknown>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'DELETE',
+    });
   }
 }
 
-/* ============================================================
-   API CLIENT
-============================================================ */
+const apiClient = new ApiClient();
 
-export const apiClient = {
-  /* ==========================================================
-     GET
-  ========================================================== */
-
-  get: <T>(
-    path: string,
-  ): Promise<T> =>
-    request<T>(
-      path,
-      {
-        method: "GET",
-      },
-    ),
-
-  /* ==========================================================
-     POST
-  ========================================================== */
-
-  post: <T>(
-    path: string,
-    body?: unknown,
-  ): Promise<T> =>
-    request<T>(
-      path,
-      {
-        method: "POST",
-
-        body:
-          body instanceof FormData
-            ? body
-            : body !== undefined
-              ? JSON.stringify(body)
-              : undefined,
-      },
-    ),
-
-  /* ==========================================================
-     PATCH
-  ========================================================== */
-
-  patch: <T>(
-    path: string,
-    body?: unknown,
-  ): Promise<T> =>
-    request<T>(
-      path,
-      {
-        method: "PATCH",
-
-        body:
-          body instanceof FormData
-            ? body
-            : body !== undefined
-              ? JSON.stringify(body)
-              : undefined,
-      },
-    ),
-
-  /* ==========================================================
-     DELETE
-  ========================================================== */
-
-  delete: <T>(
-    path: string,
-  ): Promise<T> =>
-    request<T>(
-      path,
-      {
-        method: "DELETE",
-      },
-    ),
-};
-
-/* ============================================================
-   DEFAULT EXPORT
-============================================================ */
-
+export { apiClient };
 export default apiClient;

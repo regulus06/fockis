@@ -1,0 +1,305 @@
+
+========== .\web\src\my-live\api.ts ==========
+1160: 
+1161:       const deleted =
+1162:         result?.deleted === true;
+1163: 
+1164:       const deletedId =
+1165:         result?.id ||
+1166:         result?._id ||
+1167:         id;
+1168: 
+1169:       if (!deleted) {
+1170:         throw new Error(
+1171:           result?.message ||
+1172:             "The LIVE stream was not deleted by the API.",
+1173:         );
+1174:       }
+1175: 
+1176:       return {
+1177:         deleted: true,
+1178:         id: deletedId,
+1179:       };
+1180:     },
+1181: 
+1182:   downloadRecording:
+1183:     async (
+1184:       sessionId: string,
+1185:     ): Promise<void> => {
+1186:       const id =
+1187:         requireId(sessionId);
+1188: 
+1189:       const response =
+1190:         await requestBlob(
+1191:           `/live/${encodeId(id)}/recording`,
+1192:         );
+1193: 
+1194:       const blob =
+1195:         await response.blob();
+1196: 
+1197:       const contentDisposition =
+1198:         response.headers.get(
+1199:           "content-disposition",
+1200:         );
+1201: 
+1202:       let filename =
+1203:         `fockis-live-${id}.webm`;
+1204: 
+1205:       if (contentDisposition) {
+1206:         const match =
+1207:           contentDisposition.match(
+1208:             /filename\*?=(?:UTF-8'')?["']?([^"';]+)["']?/i,
+1209:           );
+1210: 
+1211:         if (match?.[1]) {
+1212:           filename =
+1213:             decodeURIComponent(
+1214:               match[1],
+1215:             );
+1216:         }
+1217:       }
+1218: 
+1219:       const objectUrl =
+1220:         window.URL.createObjectURL(
+1221:           blob,
+1222:         );
+1223: 
+1224:       const anchor =
+1225:         document.createElement("a");
+1226: 
+1227:       anchor.href = objectUrl;
+1228:       anchor.download = filename;
+1229: 
+1230:       document.body.appendChild(
+1231:         anchor,
+1232:       );
+1233: 
+1234:       anchor.click();
+1235:       anchor.remove();
+1236: 
+1237:       window.setTimeout(() => {
+1238:         window.URL.revokeObjectURL(
+1239:           objectUrl,
+1240:         );
+1241:       }, 1000);
+1242:     },
+1243: 
+1244:   // ==========================================================================
+1245:   // LIVE GUESTS
+1246:   // ==========================================================================
+1247: 
+1248:   inviteGuest:
+1249:     async (
+1250:       sessionId: string,
+1251:       guestUserId: string,
+1252:       message?: string,
+1253:     ): Promise<LiveGuestDTO> => {
+1254:       const id = requireId(sessionId);
+1255:       const guestId = requireId(guestUserId);
+1256: 
+1257:       const payload = {
+1258:         guestUserId: guestId,
+1259:         ...(message?.trim()
+
+========== .\apps\api\src\my-live\services\live-recording.service.ts ==========
+1180: 
+1181:     const rec = stream.recording;
+1182: 
+1183:     if (!rec || rec.status === "none" || rec.status === "deleted") {
+1184:       throw new BadRequestException("There is no recording to delete.");
+1185:     }
+1186: 
+1187:     if (["starting", "recording", "processing"].includes(rec.status)) {
+1188:       throw new BadRequestException(
+1189:         "The recording is still being saved. Try again once it is ready.",
+1190:       );
+1191:     }
+1192: 
+1193:     if (rec.publishing) {
+1194:       throw new ConflictException(
+1195:         "The recording is being published. Try again in a moment.",
+1196:       );
+1197:     }
+1198: 
+1199:     if (rec.objectKey) {
+1200:       await this.storage.deleteObject(rec.objectKey);
+1201:     }
+1202: 
+1203:     await this.liveModel.updateOne(
+1204:       { _id: stream._id },
+1205:       {
+1206:         $set: {
+1207:           "recording.status": "deleted",
+1208:           "recording.objectKey": "",
+1209:           "recording.sizeBytes": 0,
+1210:           "recording.deletedAt": new Date(),
+1211:         },
+1212:       },
+1213:     );
+1214: 
+1215:     return {
+1216:       deleted: true,
+1217:       id: streamId,
+1218:       publishedPostId: rec.publishedPostId || "",
+1219:     };
+1220:   }
+1221: 
+1222:   /**
+1223:    * Best-effort cleanup when the whole LIVE is deleted.
+1224:    */
+1225:   async cleanupForDeletedStream(stream: {
+1226:     _id: unknown;
+1227:     recording?: { egressId?: string; status?: string; objectKey?: string };
+1228:   }) {
+1229:     const id = String(stream._id);
+1230: 
+1231:     const timer = this.startTimers.get(id);
+1232: 
+1233:     if (timer) {
+1234:       clearTimeout(timer);
+1235:       this.startTimers.delete(id);
+1236:     }
+1237: 
+1238:     const rec = stream.recording;
+1239: 
+1240:     if (!rec) {
+1241:       return;
+1242:     }
+1243: 
+1244:     if (
+1245:       rec.egressId &&
+1246:       (rec.status === "starting" || rec.status === "recording") &&
+1247:       !this.getConfigurationProblem()
+1248:     ) {
+1249:       try {
+1250:         await this.getEgressClient().stopEgress(rec.egressId);
+1251:       } catch {
+1252:         /* already stopped */
+1253:       }
+1254:     }
+1255: 
+1256:     if (rec.objectKey) {
+1257:       try {
+1258:         await this.storage.deleteObject(rec.objectKey);
+1259:       } catch (error) {
+1260:         this.logger.warn(
+1261:           `Could not delete recording file for ${id}: ${String(error)}`,
+1262:         );
+1263:       }
+1264:     }
+1265:   }
+1266: }
+
+========== .\web\src\my-live\manager\LiveManagerPage.tsx ==========
+370:         window.alert(
+371:           err instanceof Error
+372:             ? err.message
+373:             : "Unable to delete this livestream.",
+374:         );
+375:       } finally {
+376:         setDeletingId(null);
+377:       }
+378:     },
+379:     [getId],
+380:   );
+381: 
+382:   const handleDownload = useCallback(
+383:     async (live: LiveRecord) => {
+384:       const id = getId(live);
+385: 
+386:       if (!id) {
+387:         return;
+388:       }
+389: 
+390:       if (live.recordingUrl) {
+391:         window.open(
+392:           String(
+393:             live.recordingUrl,
+394:           ),
+395:           "_blank",
+396:           "noopener,noreferrer",
+397:         );
+398: 
+399:         return;
+400:       }
+401: 
+402:       if (live.replayUrl) {
+403:         window.open(
+404:           String(
+405:             live.replayUrl,
+406:           ),
+407:           "_blank",
+408:           "noopener,noreferrer",
+409:         );
+410: 
+411:         return;
+412:       }
+413: 
+414:       try {
+415:         await api.downloadRecording(id);
+416:       } catch (err) {
+417:         console.error(
+418:           "[FOCKIS LIVE MANAGER] Recording download failed:",
+419:           err,
+420:         );
+421: 
+422:         window.alert(
+423:           err instanceof Error
+424:             ? err.message
+425:             : "No recording is available for this livestream.",
+426:         );
+427:       }
+428:     },
+429:     [getId],
+430:   );
+431: 
+432:   const handleView = useCallback(
+433:     (live: LiveRecord) => {
+434:       const id = getId(live);
+
+========== .\web\src\my-live\manager\LiveRecordingView.tsx ==========
+225:     if (
+226:       previousStatus.current !== status &&
+227:       previousStatus.current !== "none"
+228:     ) {
+229:       onChanged();
+230:     }
+231: 
+232:     previousStatus.current = status;
+233:   }, [status, onChanged]);
+234: 
+235:   // ==========================================================================
+236:   // ACTIONS
+237:   // ==========================================================================
+238: 
+239:   const handleDownload = async () => {
+240:     if (!isReady || downloading) {
+241:       return;
+242:     }
+243: 
+244:     setDownloading(true);
+245:     setNotice(null);
+246: 
+247:     try {
+248:       await api.downloadRecording(streamId);
+249:     } catch (error) {
+250:       setNotice({
+251:         tone: "error",
+252:         text:
+253:           error instanceof Error
+254:             ? error.message
+255:             : "The download could not be started.",
+256:       });
+257:     } finally {
+258:       setDownloading(false);
+259:     }
+260:   };
+261: 
+262:   const handlePublish = async (
+263:     caption: string,
+264:   ) => {
+265:     if (publishInFlight.current) {
+266:       return;
+267:     }
+268: 
+269:     publishInFlight.current = true;

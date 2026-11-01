@@ -1,0 +1,57 @@
+@use './tokens' as *;
+
+.layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+
+  @include ec-tablet {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nav {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid $ec-border;
+  border-radius: $ec-radius-lg;
+  background: $ec-surface;
+  box-shadow: $ec-shadow;
+
+  @include ec-tablet {
+    display: flex;
+    overflow-x: auto;
+  }
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: $ec-text-2;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    background: $ec-surface-2;
+  }
+
+  &[aria-current='page'] {
+    background: $ec-primary-50;
+    color: $ec-primary;
+  }
+
+  &:focus-visible {
+    @include ec-focus;
+  }
+}

@@ -1,0 +1,590 @@
+@use '../../employer/styles/tokens' as *;
+
+// ============================================================
+// FOCKIS CAREERS — job-seeker workspace (Overview, Applications,
+// Saved Jobs, Profile/Resume, Alerts, Resources, Companies)
+// ============================================================
+
+.page {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+
+  h1 {
+    margin: 0;
+    color: $ec-text;
+    font-family: $ec-font;
+    font-size: 24px;
+    font-weight: 780;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: $ec-muted;
+    font-size: 14px;
+  }
+}
+
+.welcome {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  padding: 24px 26px;
+  border-radius: $ec-radius-lg;
+  background: linear-gradient(120deg, #0b1a3a 0%, #133a7c 60%, #1677e8 100%);
+  color: #fff;
+
+  h1 {
+    margin: 0;
+    color: #fff;
+    font-family: $ec-font;
+    font-size: 24px;
+    font-weight: 780;
+  }
+
+  p {
+    margin: 6px 0 0;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 14px;
+  }
+
+  @media (max-width: $ec-bp-mobile) {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+}
+
+.welcomeActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  a:last-child {
+    border-color: rgba(255, 255, 255, 0.45);
+    background: transparent;
+    color: #fff;
+  }
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+
+  @media (max-width: 1100px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.twoCol {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+  gap: 18px;
+  align-items: start;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.stack {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+
+  h2 {
+    margin: 0;
+    color: $ec-text;
+    font-family: $ec-font;
+    font-size: 16px;
+    font-weight: 720;
+  }
+
+  a,
+  button {
+    font-size: 13px;
+  }
+}
+
+/* ---------- list rows (applications, saved jobs, alerts) ---------- */
+
+.rows {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rowItem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 0;
+  border-top: 1px solid $ec-border;
+  text-align: left;
+
+  &:first-child {
+    border-top: 0;
+  }
+
+  @media (max-width: $ec-bp-mobile) {
+    grid-template-columns: auto minmax(0, 1fr);
+
+    > :last-child {
+      grid-column: 1 / -1;
+      justify-content: flex-start;
+    }
+  }
+}
+
+.rowMain {
+  min-width: 0;
+
+  strong,
+  a.rowTitle {
+    display: block;
+    overflow: hidden;
+    color: $ec-text;
+    font-size: 14.5px;
+    font-weight: 680;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  a.rowTitle:hover {
+    color: $ec-primary;
+  }
+
+  span {
+    display: block;
+    margin-top: 3px;
+    overflow: hidden;
+    color: $ec-muted;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.rowEnd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ---------- progress / completeness ---------- */
+
+.meter {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: $ec-neutral-bg;
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: $ec-primary;
+  }
+}
+
+.meterLabel {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: $ec-text-2;
+  font-size: 13px;
+
+  strong {
+    color: $ec-text;
+    font-size: 22px;
+    font-weight: 780;
+  }
+}
+
+.checklist {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: $ec-text-2;
+    font-size: 13.5px;
+  }
+}
+
+.done {
+  color: $ec-success;
+}
+
+.todo {
+  color: $ec-border-strong;
+}
+
+/* ---------- application timeline ---------- */
+
+.timeline {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 6px 0 2px;
+}
+
+.timelineStep {
+  display: grid;
+  gap: 6px;
+  color: $ec-muted;
+  font-size: 12px;
+  font-weight: 600;
+
+  &::before {
+    content: '';
+    height: 4px;
+    border-radius: 999px;
+    background: $ec-neutral-bg;
+  }
+}
+
+.timelineReached {
+  color: $ec-primary;
+
+  &::before {
+    background: $ec-primary;
+  }
+}
+
+.timelineRejected {
+  color: $ec-danger;
+
+  &::before {
+    background: $ec-danger;
+  }
+}
+
+.history {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    color: $ec-text-2;
+    font-size: 13.5px;
+  }
+}
+
+/* ---------- profile editor ---------- */
+
+.profileHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: center;
+}
+
+.profileHeadText {
+  flex: 1;
+  min-width: 200px;
+
+  h2 {
+    margin: 0;
+    color: $ec-text;
+    font-family: $ec-font;
+    font-size: 20px;
+    font-weight: 760;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: $ec-text-2;
+    font-size: 14px;
+  }
+}
+
+.entry {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid $ec-border;
+  border-radius: $ec-radius;
+  background: $ec-surface-2;
+}
+
+.entryHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: $ec-text;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.entries {
+  display: grid;
+  gap: 12px;
+}
+
+.resumeBox {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  padding: 18px;
+  border: 1px dashed $ec-border-strong;
+  border-radius: $ec-radius;
+  background: $ec-surface-2;
+}
+
+.resumeIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: $ec-primary-50;
+  color: $ec-primary;
+}
+
+.resumeText {
+  flex: 1;
+  min-width: 180px;
+
+  strong {
+    display: block;
+    color: $ec-text;
+    font-size: 14.5px;
+    word-break: break-word;
+  }
+
+  span {
+    color: $ec-muted;
+    font-size: 13px;
+  }
+}
+
+.saveBar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  border: 1px solid $ec-border;
+  border-radius: $ec-radius;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: $ec-shadow;
+
+  @media (max-width: 900px) {
+    bottom: 72px;
+  }
+}
+
+/* ---------- resources ---------- */
+
+.resourceNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.resourceSection {
+  scroll-margin-top: 90px;
+
+  h2 {
+    margin: 0 0 4px;
+    color: $ec-text;
+    font-family: $ec-font;
+    font-size: 19px;
+    font-weight: 740;
+  }
+
+  h3 {
+    margin: 16px 0 8px;
+    color: $ec-text;
+    font-family: $ec-font;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  ul {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding-left: 20px;
+    list-style: disc;
+    color: $ec-text-2;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+}
+
+.resourceHead {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+/* ---------- companies ---------- */
+
+.companyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.companyCard {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding: 18px;
+  border: 1px solid $ec-border;
+  border-radius: $ec-radius;
+  background: $ec-surface;
+  box-shadow: $ec-shadow;
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+  transition: border-color 0.15s, transform 0.15s;
+
+  &:hover {
+    border-color: $ec-primary-100;
+    transform: translateY(-1px);
+  }
+
+  h3 {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin: 0;
+    color: $ec-text;
+    font-family: $ec-font;
+    font-size: 16px;
+    font-weight: 720;
+  }
+
+  p {
+    margin: 0;
+    color: $ec-text-2;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+}
+
+.companyMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  color: $ec-muted;
+  font-size: 12.5px;
+
+  span {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+  }
+}
+
+.companyCover {
+  height: 170px;
+  border-radius: $ec-radius-lg $ec-radius-lg 0 0;
+  background: linear-gradient(120deg, #0b1a3a 0%, #133a7c 55%, #1677e8 100%) center / cover no-repeat;
+
+  @media (max-width: $ec-bp-mobile) {
+    height: 120px;
+  }
+}
+
+.companyHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  margin-top: -44px;
+  padding: 0 24px 20px;
+
+  > :first-child {
+    border: 4px solid #fff;
+    border-radius: 16px;
+  }
+
+  h1 {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 0;
+    color: $ec-text;
+    font-family: $ec-font;
+    font-size: 24px;
+    font-weight: 780;
+  }
+
+  @media (max-width: $ec-bp-mobile) {
+    padding: 0 16px 16px;
+  }
+}
+
+.companyHeaderText {
+  flex: 1;
+  min-width: 200px;
+  padding-top: 48px;
+}
+
+.media {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+
+  figure {
+    margin: 0;
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: $ec-radius-sm;
+    object-fit: cover;
+  }
+
+  figcaption {
+    margin-top: 4px;
+    color: $ec-muted;
+    font-size: 12px;
+  }
+}

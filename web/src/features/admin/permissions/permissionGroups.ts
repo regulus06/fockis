@@ -88,13 +88,14 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "Support",
     anyOf: [
       P.SUPPORT_VIEW,
+      P.MODERATION_VIEW,
       P.USERS_RECOVERY,
     ],
     children: [
       {
-        label: "Support Cases",
-        path: "/admin/support/cases",
-        anyOf: [P.SUPPORT_VIEW],
+        label: "Support & Moderation",
+        path: "/admin/support",
+        anyOf: [P.SUPPORT_VIEW, P.MODERATION_VIEW],
       },
       {
         label: "Account Recovery",
@@ -102,6 +103,22 @@ export const NAV_SECTIONS: NavSection[] = [
         anyOf: [P.USERS_RECOVERY],
       },
     ],
+  },
+
+  // ============================================================
+  // LEGAL & EVIDENCE
+  // ============================================================
+
+  {
+    label: "Legal & Evidence",
+    path: "/admin/legal",
+    anyOf: [P.LEGAL_VIEW],
+  },
+
+  {
+    label: "Policy & Compliance",
+    path: "/admin/policy-compliance",
+    anyOf: [P.POLICY_VIEW],
   },
 
   // ============================================================

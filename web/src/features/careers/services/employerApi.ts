@@ -1,29 +1,33 @@
-import { apiClient } from "./apiClient";
 
-import type {
-  EmployerJobSummary,
-  EmployerStats,
-  Job,
-} from "../types";
+import { apiClient } from "./apiClient";
+import type { Job } from "../types";
+
+/* ============================================================
+   EMPLOYER TYPES
+============================================================ */
+
+export interface EmployerJobSummary {
+  id: string;
+  title: string;
+  jobType: string;
+  status: "live" | "closed";
+  applicantCount: number;
+  viewCount: number;
+}
+
+export interface EmployerStats {
+  openJobs: number;
+  totalApplicants: number;
+  inInterview: number;
+  hireRate: number;
+}
 
 /* ============================================================
    EMPLOYER API
-
-   Backend routes:
-
-   GET    /careers/my-jobs
-   POST   /careers
-   PATCH  /careers/:id
-   DELETE /careers/:id
-============================================================ */
-
-/* ============================================================
-   CREATE / UPDATE JOB PAYLOAD
 ============================================================ */
 
 export interface PostJobPayload {
   title: string;
-
   company: string;
   companyDescription?: string;
   companyWebsite?: string;
@@ -33,15 +37,9 @@ export interface PostJobPayload {
   stateProvince?: string;
   location?: string;
 
-  type:
-    | "job"
-    | "internship"
-    | "coop";
+  type: "job" | "internship" | "coop";
 
-  workplaceType?:
-    | "remote"
-    | "hybrid"
-    | "onsite";
+  workplaceType?: "remote" | "hybrid" | "onsite";
 
   description: string;
 
@@ -50,222 +48,132 @@ export interface PostJobPayload {
   salaryPeriod?: string;
 
   remote?: boolean;
-
   applicationDeadline?: string;
 
   skills?: string[];
-
   benefits?: string[];
 }
-
-/* ============================================================
-   BACKEND EMPLOYER JOB
-============================================================ */
 
 interface BackendEmployerJob {
   _id?: string;
   id?: string;
-
   title?: string;
-
-  type?:
-    | "job"
-    | "internship"
-    | "coop"
-    | string;
-
+  type?: "job" | "internship" | "coop" | string;
   isActive?: boolean;
-
   applicantCount?: number;
   viewCount?: number;
-
   [key: string]: unknown;
 }
 
 /* ============================================================
-   RESPONSE NORMALIZATION
+   HELPERS
 ============================================================ */
+
+function getJobPath(id: string): string {
+  const normalizedId = id?.trim();
+
+  if (!normalizedId) {
+    throw new Error("Job ID is required.");
+  }
+
+  return encodeURIComponent(normalizedId);
+}
 
 function normalizeEmployerJob(
   job: BackendEmployerJob,
 ): EmployerJobSummary {
   const jobType =
-    job.type === "coop"
-      ? "co-op"
-      : job.type ?? "job";
+    job.type === "coop" ? "co-op" : job.type ?? "job";
 
   return {
-    id: String(
-      job.id ??
-        job._id ??
-        "",
-    ),
-
-    title:
-      job.title ??
-      "",
-
+    id: String(job.id ?? job._id ?? ""),
+    title: job.title ?? "",
     jobType,
-
-    status:
-      job.isActive === false
-        ? "closed"
-        : "live",
-
-    applicantCount:
-      Number(
-        job.applicantCount ??
-          0,
-      ),
-
-    viewCount:
-      Number(
-        job.viewCount ??
-          0,
-      ),
+    status: job.isActive === false ? "closed" : "live",
+    applicantCount: Number(job.applicantCount ?? 0),
+    viewCount: Number(job.viewCount ?? 0),
   };
 }
 
 /* ============================================================
-   EMPLOYER API
+   EMPLOYER API METHODS
 ============================================================ */
 
 export const employerApi = {
-  /* ==========================================================
-     GET EMPLOYER JOBS
+  /**
+   * GET /careers/my-jobs
+   *
+   * The backend identifies the employer using
+   * the authenticated JWT.
+   */
+  getEmployerJobs: async (): Promise<EmployerJobSummary[]> => {
+    const response = await apiClient.get<BackendEmployerJob[]>(
+      "/careers/my-jobs",
+    );
 
-     GET /careers/my-jobs
-
-     The backend determines the employer from:
-
-       req.user.id
-
-     Therefore no employer ID is sent
-     from the frontend.
-  ========================================================== */
-
-  getEmployerJobs:
-    async (): Promise<
-      EmployerJobSummary[]
-    > => {
-      const response =
-        await apiClient.get<
-          BackendEmployerJob[]
-        >(
-          "/careers/my-jobs",
-        );
-
-      return response.map(
-        normalizeEmployerJob,
+    if (!Array.isArray(response)) {
+      throw new Error(
+        "Invalid employer jobs response from server.",
       );
-    },
+    }
 
-  /* ==========================================================
-     EMPLOYER STATS
+    return response.map(normalizeEmployerJob);
+  },
 
-     There is currently no dedicated backend
-     statistics endpoint.
+  /**
+   * Calculate employer statistics from existing jobs.
+   */
+  getEmployerStats: async (): Promise<EmployerStats> => {
+    const jobs = await employerApi.getEmployerJobs();
 
-     Calculate the available statistics from
-     the employer's jobs.
-  ========================================================== */
+    const openJobs = jobs.filter(
+      (job) => job.status === "live",
+    ).length;
 
-  getEmployerStats:
-    async (): Promise<EmployerStats> => {
-      const jobs =
-        await employerApi.getEmployerJobs();
+    const totalApplicants = jobs.reduce(
+      (total, job) =>
+        total + Number(job.applicantCount ?? 0),
+      0,
+    );
 
-      const openJobs =
-        jobs.filter(
-          (job) =>
-            job.status ===
-            "live",
-        ).length;
+    return {
+      openJobs,
+      totalApplicants,
+      inInterview: 0,
+      hireRate: 0,
+    };
+  },
 
-      const totalApplicants =
-        jobs.reduce(
-          (
-            total,
-            job,
-          ) =>
-            total +
-            Number(
-              job.applicantCount ??
-                0,
-            ),
-          0,
-        );
+  /**
+   * POST /careers
+   */
+  postJob: async (
+    payload: PostJobPayload,
+  ): Promise<Job> => {
+    return apiClient.post<Job>("/careers", payload);
+  },
 
-      return {
-        openJobs,
+  /**
+   * PATCH /careers/:id
+   */
+  updateJob: async (
+    id: string,
+    payload: Partial<PostJobPayload>,
+  ): Promise<Job> => {
+    return apiClient.patch<Job>(
+      `/careers/${getJobPath(id)}`,
+      payload,
+    );
+  },
 
-        totalApplicants,
-
-        inInterview: 0,
-
-        hireRate: 0,
-      };
-    },
-
-  /* ==========================================================
-     CREATE JOB
-
-     POST /careers
-
-     Authentication:
-       JWT
-
-     Backend:
-       req.user.id
-  ========================================================== */
-
-  postJob:
-    async (
-      payload: PostJobPayload,
-    ): Promise<Job> => {
-      return apiClient.post<Job>(
-        "/careers",
-        payload,
-      );
-    },
-
-  /* ==========================================================
-     UPDATE JOB
-
-     PATCH /careers/:id
-
-     Backend verifies that the authenticated
-     employer owns the job.
-  ========================================================== */
-
-  updateJob:
-    async (
-      id: string,
-      payload:
-        Partial<PostJobPayload>,
-    ): Promise<Job> => {
-      return apiClient.patch<Job>(
-        `/careers/${id}`,
-        payload,
-      );
-    },
-
-  /* ==========================================================
-     DELETE JOB
-
-     DELETE /careers/:id
-  ========================================================== */
-
-  deleteJob:
-    async (
-      id: string,
-    ): Promise<{
-      message: string;
-    }> => {
-      return apiClient.delete<{
-        message: string;
-      }>(
-        `/careers/${id}`,
-      );
-    },
+  /**
+   * DELETE /careers/:id
+   */
+  deleteJob: async (
+    id: string,
+  ): Promise<{ message: string }> => {
+    return apiClient.delete<{ message: string }>(
+      `/careers/${getJobPath(id)}`,
+    );
+  },
 };

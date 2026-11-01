@@ -597,4 +597,14 @@ export class UsersService {
       id,
     );
   }
-}
+
+  async deleteOwnAccount(
+    id: string,
+    currentPassword: string,
+  ) {
+    return this.userProfileService.deleteOwnAccount(
+      id,
+      currentPassword,
+    );
+  }
+}

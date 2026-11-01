@@ -1,47 +1,105 @@
-import { create } from "zustand";
 
-import {
-  APPLICATION_STEPS,
-} from "../types";
+import { create } from 'zustand';
 
-import type {
-  ApplicationPayload,
-} from "../types";
+import { APPLICATION_STEPS } from '../types';
 
-import { applicationsApi } from "../services/applicationsApi";
+import type { ApplicationPayload } from '../types';
+
+import { applicationsApi } from '../services/applicationsApi';
 
 interface ApplicationFlowState {
   currentStep: number;
-
   payload: Partial<ApplicationPayload>;
-
   isSubmitting: boolean;
-
   submitError: string | null;
-
   submittedApplicationId: string | null;
 
   goNext: () => void;
-
   goBack: () => void;
 
   updatePayload: (
-    patch: Partial<ApplicationPayload>
+    patch: Partial<ApplicationPayload>,
   ) => void;
 
   submit: () => Promise<void>;
-
   resetFlow: (jobId: string) => void;
 }
 
-const lastStepIndex =
-  APPLICATION_STEPS.length - 1;
+interface ApplicationResponse {
+  id?: string;
+  _id?: string;
+}
 
-const reviewStepIndex =
-  APPLICATION_STEPS.indexOf("Review");
+const lastStepIndex = Math.max(0, APPLICATION_STEPS.length - 1);
 
-export const useApplicationFlow =
-  create<ApplicationFlowState>((set, get) => ({
+const reviewStepIndex = APPLICATION_STEPS.indexOf('Review');
+
+function validateApplication(
+  payload: Partial<ApplicationPayload>,
+): string | null {
+  if (!payload.jobId?.trim()) {
+    return 'Job ID is missing.';
+  }
+
+  if (!payload.fullName?.trim()) {
+    return 'Full name is required.';
+  }
+
+  if (!payload.email?.trim()) {
+    return 'Email address is required.';
+  }
+
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailPattern.test(payload.email.trim())) {
+    return 'Please enter a valid email address.';
+  }
+
+  if (!payload.phone?.trim()) {
+    return 'Phone number is required.';
+  }
+
+  if (!payload.location?.trim()) {
+    return 'Location is required.';
+  }
+
+  if (!payload.education) {
+    return 'Education information is required.';
+  }
+
+  if (!payload.education.school?.trim()) {
+    return 'Please provide your school or institution.';
+  }
+
+  if (!payload.education.major?.trim()) {
+    return 'Please provide your major or field of study.';
+  }
+
+  if (!payload.education.graduationDate?.trim()) {
+    return 'Please provide your graduation date.';
+  }
+
+  if (payload.workAuthorized === undefined) {
+    return 'Please provide your work authorization status.';
+  }
+
+  return null;
+}
+
+function getApplicationId(
+  response: unknown,
+): string | null {
+  if (!response || typeof response !== 'object') {
+    return null;
+  }
+
+  const application = response as ApplicationResponse;
+
+  return application.id || application._id || null;
+}
+
+export const useApplicationFlow = create<ApplicationFlowState>(
+  (set, get) => ({
     currentStep: 0,
 
     payload: {},
@@ -54,7 +112,7 @@ export const useApplicationFlow =
 
     /*
      * ============================================================
-     * NEXT
+     * NEXT STEP
      * ============================================================
      */
 
@@ -62,46 +120,29 @@ export const useApplicationFlow =
       const {
         currentStep,
         isSubmitting,
+        submittedApplicationId,
       } = get();
 
-      /*
-       * Prevent duplicate submissions.
-       */
-
-      if (isSubmitting) {
+      if (isSubmitting || submittedApplicationId) {
         return;
       }
 
-      /*
-       * Review -> Submit
-       */
-
-      if (
-        currentStep ===
-        reviewStepIndex
-      ) {
+      if (currentStep === reviewStepIndex) {
         void get().submit();
         return;
       }
 
-      /*
-       * Move to next step.
-       */
-
-      if (
-        currentStep <
-        lastStepIndex
-      ) {
+      if (currentStep < lastStepIndex) {
         set({
-          currentStep:
-            currentStep + 1,
+          currentStep: currentStep + 1,
+          submitError: null,
         });
       }
     },
 
     /*
      * ============================================================
-     * BACK
+     * PREVIOUS STEP
      * ============================================================
      */
 
@@ -109,35 +150,41 @@ export const useApplicationFlow =
       const {
         currentStep,
         isSubmitting,
+        submittedApplicationId,
       } = get();
 
-      if (isSubmitting) {
+      if (isSubmitting || submittedApplicationId) {
         return;
       }
 
       if (currentStep > 0) {
         set({
-          currentStep:
-            currentStep - 1,
+          currentStep: currentStep - 1,
+          submitError: null,
         });
       }
     },
 
     /*
      * ============================================================
-     * UPDATE APPLICATION
+     * UPDATE APPLICATION DATA
      * ============================================================
      */
 
-    updatePayload: (
-      patch: Partial<ApplicationPayload>
-    ) => {
-      set((state) => ({
-        payload: {
-          ...state.payload,
-          ...patch,
-        },
-      }));
+    updatePayload: (patch) => {
+      set((state) => {
+        if (state.isSubmitting || state.submittedApplicationId) {
+          return state;
+        }
+
+        return {
+          payload: {
+            ...state.payload,
+            ...patch,
+          },
+          submitError: null,
+        };
+      });
     },
 
     /*
@@ -150,83 +197,18 @@ export const useApplicationFlow =
       const {
         payload,
         isSubmitting,
+        submittedApplicationId,
       } = get();
 
-      /*
-       * Prevent duplicate requests.
-       */
-
-      if (isSubmitting) {
+      if (isSubmitting || submittedApplicationId) {
         return;
       }
 
-      /*
-       * Basic client-side validation.
-       *
-       * The backend DTO remains the final authority.
-       */
+      const validationError = validateApplication(payload);
 
-      if (!payload.jobId) {
+      if (validationError) {
         set({
-          submitError:
-            "Job ID is missing.",
-        });
-
-        return;
-      }
-
-      if (!payload.fullName) {
-        set({
-          submitError:
-            "Full name is required.",
-        });
-
-        return;
-      }
-
-      if (!payload.email) {
-        set({
-          submitError:
-            "Email is required.",
-        });
-
-        return;
-      }
-
-      if (!payload.phone) {
-        set({
-          submitError:
-            "Phone number is required.",
-        });
-
-        return;
-      }
-
-      if (!payload.location) {
-        set({
-          submitError:
-            "Location is required.",
-        });
-
-        return;
-      }
-
-      if (!payload.education) {
-        set({
-          submitError:
-            "Education information is required.",
-        });
-
-        return;
-      }
-
-      if (
-        payload.workAuthorized ===
-        undefined
-      ) {
-        set({
-          submitError:
-            "Please provide your work authorization status.",
+          submitError: validationError,
         });
 
         return;
@@ -238,29 +220,30 @@ export const useApplicationFlow =
       });
 
       try {
-        const application =
-          await applicationsApi.submitApplication(
-            payload as ApplicationPayload
+        const response = await applicationsApi.submitApplication(
+          payload as ApplicationPayload,
+        );
+
+        const applicationId = getApplicationId(response);
+
+        if (!applicationId) {
+          throw new Error(
+            'The application was submitted, but the server did not return an application ID. Please check your applications before submitting again.',
           );
+        }
 
         set({
-          submittedApplicationId:
-            application.id,
-
-          currentStep:
-            lastStepIndex,
-
+          submittedApplicationId: applicationId,
+          currentStep: lastStepIndex,
           isSubmitting: false,
-
           submitError: null,
         });
-      } catch (err: unknown) {
+      } catch (error: unknown) {
         set({
           submitError:
-            err instanceof Error
-              ? err.message
-              : "Could not submit application.",
-
+            error instanceof Error
+              ? error.message
+              : 'Could not submit your application. Please try again.',
           isSubmitting: false,
         });
       }
@@ -268,13 +251,15 @@ export const useApplicationFlow =
 
     /*
      * ============================================================
-     * RESET APPLICATION FLOW
+     * RESET APPLICATION
      * ============================================================
      */
 
-    resetFlow: (
-      jobId: string
-    ) => {
+    resetFlow: (jobId) => {
+      if (get().isSubmitting) {
+        return;
+      }
+
       set({
         currentStep: 0,
 
@@ -289,4 +274,5 @@ export const useApplicationFlow =
         submittedApplicationId: null,
       });
     },
-  }));
+  }),
+);

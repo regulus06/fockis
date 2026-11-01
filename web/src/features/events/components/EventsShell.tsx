@@ -5,21 +5,27 @@ import { NavLink, useNavigate } from "react-router-dom";
 import FockisSidebar from "../../../components/fockis/FockisSidebar/FockisSidebar";
 import FockisBottomNav from "../../../components/fockis/FockisBottomNav";
 import { useEventsTheme } from "../hooks/useEventsTheme";
+import EventsTopBar from "./discover/EventsTopBar";
 
 import "../../../styles/FockisFeedPage.scss";
 import "../styles/EventsPage.scss";
+import "../styles/EventsDiscover.scss";
 
 interface Props {
   children: ReactNode;
   /** Hide the Discover / My events / Create tabs (e.g. editor pages). */
   hideTabs?: boolean;
+  /** Right-hand column (Create card, calendar, Your Events). */
+  rightRail?: ReactNode;
+  /** Global search in the top bar (defaults to Events search). */
+  onSearch?: (query: string) => void;
 }
 
 /**
- * Same frame as the feed (Fockis sidebar, mobile header, bottom nav) with
- * a wider centre column for event grids.
+ * Same frame as the feed (Fockis sidebar, mobile header, bottom nav).
+ * Desktop: sidebar · [top bar over main content + optional right rail].
  */
-export default function EventsShell({ children, hideTabs = false }: Props) {
+export default function EventsShell({ children, hideTabs = false, rightRail, onSearch }: Props) {
   const theme = useEventsTheme();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -90,22 +96,34 @@ export default function EventsShell({ children, hideTabs = false }: Props) {
           />
         </aside>
 
-        <main className="fke-main">
-          {!hideTabs && (
-            <nav className="fke-nav" aria-label="Events">
-              <NavLink end to="/events" className={({ isActive }) => `fke-nav__item ${isActive ? "is-active" : ""}`}>
-                <Compass size={17} aria-hidden="true" /> Discover
-              </NavLink>
-              <NavLink to="/events/my-events" className={({ isActive }) => `fke-nav__item ${isActive ? "is-active" : ""}`}>
-                <CalendarDays size={17} aria-hidden="true" /> My events
-              </NavLink>
-              <NavLink to="/events/create" className="fke-nav__item fke-nav__item--cta">
-                <CalendarPlus size={17} aria-hidden="true" /> Create event
-              </NavLink>
-            </nav>
-          )}
-          {children}
-        </main>
+        <div className={`fke-stage ${rightRail ? "fke-stage--rail" : ""}`}>
+          <EventsTopBar onSearch={onSearch} />
+
+          <div className="fke-stage__body">
+            <main className="fke-main">
+              {!hideTabs && (
+                <nav className="fke-nav" aria-label="Events">
+                  <NavLink end to="/events" className={({ isActive }) => `fke-nav__item ${isActive ? "is-active" : ""}`}>
+                    <Compass size={17} aria-hidden="true" /> Discover
+                  </NavLink>
+                  <NavLink to="/events/my-events" className={({ isActive }) => `fke-nav__item ${isActive ? "is-active" : ""}`}>
+                    <CalendarDays size={17} aria-hidden="true" /> My events
+                  </NavLink>
+                  <NavLink to="/events/create" className="fke-nav__item fke-nav__item--cta">
+                    <CalendarPlus size={17} aria-hidden="true" /> Create event
+                  </NavLink>
+                </nav>
+              )}
+              {children}
+            </main>
+
+            {rightRail && (
+              <aside className="fke-rail-col" aria-label="Your events and calendar">
+                {rightRail}
+              </aside>
+            )}
+          </div>
+        </div>
       </div>
 
       <FockisBottomNav />

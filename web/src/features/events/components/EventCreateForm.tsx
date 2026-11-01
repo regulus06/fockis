@@ -10,12 +10,14 @@ import type {
 } from "../types/event.types";
 import { eventMediaUrl } from "../utils/eventMedia";
 import { fromLocalInputValue, toLocalInputValue, viewerTimeZone } from "../utils/eventTime";
-import EventCard from "./EventCard";
+import FeaturedEventCard from "./discover/FeaturedEventCard";
 import EventDateTimeFields from "./EventDateTimeFields";
 
 interface Props {
   initialValues?: Partial<CreateEventInput>;
   submitLabel?: string;
+  /** Page heading; defaults to submitLabel. */
+  heading?: string;
   organizationName?: string;
   mode?: "create" | "edit";
   onSubmit: (values: CreateEventInput) => Promise<void>;
@@ -53,6 +55,7 @@ function numberOrNull(value: string): number | null {
 export default function EventCreateForm({
   initialValues = {},
   submitLabel = "Create event",
+  heading,
   organizationName,
   mode = "create",
   onSubmit,
@@ -280,10 +283,15 @@ export default function EventCreateForm({
       <header className="fke-form__header">
         <div>
           <span className="fke-eyebrow">{mode === "edit" ? "Edit event" : "New event"}</span>
-          <h1>{submitLabel}</h1>
+          <h1>{heading ?? submitLabel}</h1>
           {organizationName && <p>For {organizationName}</p>}
         </div>
-        <button type="button" className="fke-btn fke-btn--ghost" onClick={() => setPreview((value) => !value)} aria-pressed={preview}>
+        <button
+          type="button"
+          className="fke-btn fke-btn--ghost fke-form__preview-toggle"
+          onClick={() => setPreview((value) => !value)}
+          aria-pressed={preview}
+        >
           {preview ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
           {preview ? "Hide preview" : "Preview"}
         </button>
@@ -300,11 +308,13 @@ export default function EventCreateForm({
         </div>
       )}
 
-      {preview && (
-        <div className="fke-form__preview" aria-label="Preview">
-          <EventCard event={previewEvent} onOpen={() => undefined} footer={<span className="fke-muted">Preview</span>} />
-        </div>
-      )}
+      {/* Live preview: always beside the form on wide screens, toggled
+          with the Preview button on narrow ones. */}
+      <aside className={`fke-form__live ${preview ? "is-open" : ""}`} aria-label="Live preview">
+        <span className="fke-form__live-label">Live preview</span>
+        <FeaturedEventCard event={previewEvent} now={Date.now()} preview />
+        <p className="fke-muted">This is how your event appears in Featured Events and search.</p>
+      </aside>
 
       <section className="fke-form__section">
         <label className="fke-field">

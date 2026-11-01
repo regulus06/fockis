@@ -1,7 +1,7 @@
 export interface CareerResource {
   id: string;
-  icon: string;
   title: string;
-  description: string;
-  href: string;
+  summary: string;
+  category: 'resume' | 'interview' | 'advice' | 'certifications' | 'search';
+  sections: { heading: string; points: string[] }[];
 }

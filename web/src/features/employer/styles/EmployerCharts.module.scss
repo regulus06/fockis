@@ -1,0 +1,225 @@
+@use './tokens' as *;
+
+.chart {
+  position: relative;
+  width: 100%;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+
+  text {
+    fill: $ec-muted;
+    font-family: $ec-font;
+    font-size: 11px;
+
+    // The SVG scales down on phones; keep axis labels legible.
+    @include ec-mobile {
+      font-size: 20px;
+    }
+  }
+}
+
+.grid {
+  stroke: #eceef5;
+  stroke-width: 1;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 5;
+  padding: 8px 10px;
+  border: 1px solid $ec-border;
+  border-radius: 8px;
+  background: $ec-surface;
+  box-shadow: $ec-shadow-lg;
+  color: $ec-text;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 10px));
+
+  strong {
+    display: block;
+    font-size: 13px;
+  }
+
+  span {
+    color: $ec-muted;
+  }
+}
+
+.donutWrap {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+
+  @include ec-mobile {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.donut {
+  position: relative;
+  flex-shrink: 0;
+  width: 160px;
+  height: 160px;
+  margin: 0 auto;
+
+  svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  circle {
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+}
+
+.donutCenter {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+
+  strong {
+    color: $ec-text;
+    font-size: 26px;
+    font-weight: 750;
+    line-height: 1;
+  }
+
+  span {
+    color: $ec-muted;
+    font-size: 12px;
+  }
+}
+
+.legend {
+  display: grid;
+  flex: 1;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: $ec-text-2;
+    font-size: 13px;
+  }
+
+  b {
+    margin-left: auto;
+    color: $ec-text;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: 3px;
+}
+
+.bars {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.barRow {
+  display: grid;
+  gap: 6px;
+}
+
+.barLabel {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: $ec-text;
+  font-size: 13px;
+  font-weight: 600;
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  b {
+    color: $ec-text;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.barTrack {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eef0f7;
+}
+
+.barFill {
+  height: 100%;
+  min-width: 4px;
+  border-radius: 999px;
+  background: $ec-gradient;
+}
+
+.funnel {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.funnelRow {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) 90px;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+
+  @include ec-mobile {
+    grid-template-columns: 80px minmax(0, 1fr) 70px;
+  }
+}
+
+.funnelName {
+  color: $ec-text-2;
+  font-weight: 600;
+}
+
+.funnelBar {
+  height: 28px;
+  min-width: 4px;
+  border-radius: 6px;
+}
+
+.funnelValue {
+  color: $ec-text;
+  font-weight: 650;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+
+  small {
+    display: block;
+    color: $ec-muted;
+    font-size: 11px;
+    font-weight: 500;
+  }
+}

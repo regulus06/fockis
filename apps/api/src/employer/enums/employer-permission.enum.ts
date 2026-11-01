@@ -1,0 +1,1 @@
+export enum EmployerPermission { PROFILE_READ='profile:read', PROFILE_UPDATE='profile:update', JOBS_READ='jobs:read', JOBS_CREATE='jobs:create', JOBS_UPDATE='jobs:update', APPLICANTS_READ='applicants:read', APPLICANTS_UPDATE='applicants:update', TEAM_MANAGE='team:manage', ANALYTICS_READ='analytics:read', BILLING_READ='billing:read' }

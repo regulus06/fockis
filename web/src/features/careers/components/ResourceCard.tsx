@@ -1,4 +1,5 @@
-import styles from "../styles/ResourceCard.module.scss";
+
+import styles from '../styles/ResourceCard.module.scss';
 
 export interface CareerResource {
   id: string;
@@ -17,14 +18,19 @@ export function ResourceCard({
   resource,
   onOpen,
 }: ResourceCardProps) {
+  const handleOpen = () => {
+    onOpen(resource);
+  };
+
   return (
     <button
       type="button"
       className={styles.card}
-      onClick={() => onOpen(resource)}
+      onClick={handleOpen}
+      aria-label={`Open ${resource.title}: ${resource.description}`}
     >
-      <div className={styles.icon}>
-        {resource.icon}
+      <div className={styles.icon} aria-hidden="true">
+        {resource.icon || '📚'}
       </div>
 
       <div className={styles.title}>

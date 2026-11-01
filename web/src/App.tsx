@@ -24,6 +24,10 @@ import { SellerRoutes } from "./routes/SellerRoutes";
 import { AdminRoutes } from "./features/admin/routes/AdminRoutes";
 import { RealestateRoutes } from "./routes/RealestateRoutes";
 import { CareersRoutes } from "./routes/CareersRoutes";
+import { HelpRoutes } from "./routes/HelpRoutes";
+import { PolicyCenterRoutes } from "./routes/PolicyCenterRoutes";
+import NotificationsPage from "./features/notifications/pages/NotificationsPage";
+import { EmployerRoutes } from "./features/employer/routes/EmployerRoutes";
 
 // ============================================================================
 // FOCKIS SHOP
@@ -189,6 +193,7 @@ import BuyCoinsPage from "./features/wallet/pages/BuyCoinsPage";
 // ============================================================================
 
 import MusicHomePage from "./features/music/pages/MusicHomePage";
+import MyPlaylistsPage from "./features/playlists/pages/MyPlaylistsPage";
 import MusicChartsPage from "./features/music/pages/MusicChartsPage";
 import MusicContentDetailsPage from "./features/music/pages/MusicContentDetailsPage";
 import MusicProducerDashboardPage from "./features/music/pages/MusicProducerDashboardPage";
@@ -2014,6 +2019,25 @@ function App(): React.JSX.Element {
         />
 
         {/* ==================================================================
+            HELP & SUPPORT: /help/*
+        ================================================================== */}
+
+        {HelpRoutes()}
+
+        {/* ==================================================================
+            POLICY, PRIVACY & SAFETY: /settings/policy/* and /policies/*
+        ================================================================== */}
+
+        {PolicyCenterRoutes()}
+
+        {/* NOTIFICATIONS */}
+
+        <Route
+          path="/notifications"
+          element={<NotificationsPage />}
+        />
+
+        {/* ==================================================================
             BUSINESSES
         ================================================================== */}
 
@@ -2145,6 +2169,15 @@ function App(): React.JSX.Element {
         <Route
           path="/friends/blocked"
           element={<FockisBlockedUsersPage />}
+        />
+
+        {/* ==================================================================
+            CREATOR PLAYLISTS
+        ================================================================== */}
+
+        <Route
+          path="/creator/playlists"
+          element={<MyPlaylistsPage />}
         />
 
         {/* ==================================================================
@@ -2415,6 +2448,12 @@ function App(): React.JSX.Element {
         ================================================================== */}
 
         {CareersRoutes()}
+
+        {/* EMPLOYER CENTER: /careers/employer/* */}
+        <Route
+          path="/careers/employer/*"
+          element={<EmployerRoutes />}
+        />
 
         {/* ==================================================================
             SELLER

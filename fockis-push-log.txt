@@ -1,0 +1,7 @@
+[deploy-fockis-frontend 9b7c10d] Sidebar: add Business, Marketing and Ads Manager links
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+To https://github.com/regulus06/fockis.git
+   b652e12..9b7c10d  deploy-fockis-frontend -> deploy-fockis-frontend
+9b7c10d Sidebar: add Business, Marketing and Ads Manager links
+b652e12 Registration: accept the policies listed on the sign-up form
+=== DONE ===

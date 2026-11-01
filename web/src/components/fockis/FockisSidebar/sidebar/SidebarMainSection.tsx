@@ -1,3 +1,4 @@
+
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { useAdminSessionStore } from "../../../../features/admin/store/adminSessionStore";
@@ -48,13 +49,14 @@ function isSuperAdmin(user: SidebarUser | null): boolean {
   );
 }
 
-/** The saved login user (written at login). Read fresh on every render. */
 function readStoredUser(): SidebarUser | null {
   try {
     const raw = localStorage.getItem("user");
     const parsed: unknown = raw ? JSON.parse(raw) : null;
 
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+    return parsed &&
+      typeof parsed === "object" &&
+      !Array.isArray(parsed)
       ? (parsed as SidebarUser)
       : null;
   } catch {
@@ -62,7 +64,6 @@ function readStoredUser(): SidebarUser | null {
   }
 }
 
-/** The role inside the login token (the backend puts it there). */
 function readTokenUser(): SidebarUser | null {
   try {
     const token = (
@@ -76,13 +77,13 @@ function readTokenUser(): SidebarUser | null {
 
     const payload = token.split(".")[1];
 
-    if (!payload) {
-      return null;
-    }
+    if (!payload) return null;
 
-    const json = atob(
-      payload.replace(/-/g, "+").replace(/_/g, "/"),
-    );
+    const normalized = payload
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+
+    const json = atob(normalized);
 
     return JSON.parse(json) as SidebarUser;
   } catch {
@@ -97,8 +98,6 @@ export default function SidebarMainSection({
     (state) => state.currentAdmin
   );
 
-  // Checked on every render (the sidebar re-renders on navigation), so
-  // logging in as a Super Admin shows the link without a page reload.
   const showAdminDashboard =
     isSuperAdmin(currentAdmin as SidebarUser | null) ||
     isSuperAdmin(readStoredUser()) ||
@@ -122,18 +121,23 @@ export default function SidebarMainSection({
 
   const navigationItems = [
     { to: "/fockis-preview", label: "Feed", icon: "🏠" },
-    { to: "/settings", label: "Account Settings", icon: "⚙️" },
     { to: "/music", label: "Fockis Music", icon: "🎵" },
     { to: "/meetings", label: "Meetings", icon: "🎥" },
     { to: "/my-live", label: "My Live", icon: "🔴" },
     { to: "/events", label: "Events", icon: "📅" },
     { to: "/businesses", label: "Businesses", icon: "🏢" },
 
-    // Manager pages
-    { to: "/business/manager", label: "Business Manager", icon: "📊" },
-    { to: "/marketing/dashboard", label: "Marketing Manager", icon: "📣" },
-    { to: "/ads", label: "Ads Manager", icon: "📢" },
+    // Job seekers
+    { to: "/careers/search", label: "Find Jobs", icon: "💼" },
 
+    // Employers
+    {
+      to: "/careers/employer",
+      label: "Employer Center",
+      icon: "👔",
+    },
+
+    { to: "/ads", label: "Ads Manager", icon: "📢" },
     { to: "/shop", label: "Fockis Shop", icon: "🛍️" },
     { to: "/seller", label: "Seller Center", icon: "🏪" },
     { to: "/travel", label: "Fockis Travel", icon: "✈️" },

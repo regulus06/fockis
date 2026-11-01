@@ -1,6 +1,8 @@
+
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -26,10 +28,7 @@ interface UseJobsResult {
   refetch: () => void;
 }
 
-type Mode =
-  | "jobs"
-  | "internships"
-  | "coops";
+type Mode = "jobs" | "internships" | "coops";
 
 /* ============================================================
    HOOK
@@ -38,95 +37,73 @@ type Mode =
 export function useJobs(
   mode: Mode = "jobs",
 ): UseJobsResult {
-  const filters =
-    useJobFilters(
-      (state) => state.filters,
-    );
+  const filters = useJobFilters(
+    (state) => state.filters,
+  );
 
-  const [result, setResult] =
-    useState<JobSearchResult | null>(
-      null,
-    );
+  const [result, setResult] = useState<JobSearchResult | null>(
+    null,
+  );
 
-  const [isLoading, setIsLoading] =
-    useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [error, setError] =
-    useState<string | null>(null);
+  const requestIdRef = useRef(0);
 
   /* ==========================================================
      FETCH JOBS
   ========================================================== */
 
-  const fetchJobs =
-    useCallback(
-      async (
-        currentFilters: JobFilters,
-      ) => {
-        setIsLoading(true);
-        setError(null);
+  const fetchJobs = useCallback(
+    async (currentFilters: JobFilters) => {
+      const requestId = ++requestIdRef.current;
 
-        try {
-          let data: JobSearchResult;
+      setIsLoading(true);
+      setError(null);
 
-          /*
-           * ----------------------------------------------------
-           * INTERNSHIPS
-           * ----------------------------------------------------
-           */
+      try {
+        let data: JobSearchResult;
 
-          if (
-            mode === "internships"
-          ) {
-            data =
-              await careersApi.searchInternships(
-                currentFilters,
-              );
-          }
-
-          /*
-           * ----------------------------------------------------
-           * CO-OPS
-           * ----------------------------------------------------
-           */
-
-          else if (
-            mode === "coops"
-          ) {
-            data =
-              await careersApi.searchCoops(
-                currentFilters,
-              );
-          }
-
-          /*
-           * ----------------------------------------------------
-           * NORMAL JOBS
-           * ----------------------------------------------------
-           */
-
-          else {
-            data =
-              await careersApi.searchJobs(
-                currentFilters,
-              );
-          }
-
-          setResult(data);
-        } catch (
-          err: unknown
-        ) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : "Failed to load jobs",
+        if (mode === "internships") {
+          data = await careersApi.searchInternships(
+            currentFilters,
           );
-        } finally {
+        } else if (mode === "coops") {
+          data = await careersApi.searchCoops(
+            currentFilters,
+          );
+        } else {
+          data = await careersApi.searchJobs(
+            currentFilters,
+          );
+        }
+
+        // Ignore responses from older requests.
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
+
+        setResult(data);
+      } catch (err: unknown) {
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to load jobs.",
+        );
+
+        setResult(null);
+      } finally {
+        if (requestId === requestIdRef.current) {
           setIsLoading(false);
         }
-      },
-      [mode],
-    );
+      }
+    },
+    [mode],
+  );
 
   /* ==========================================================
      LOAD WHEN FILTERS CHANGE
@@ -134,38 +111,30 @@ export function useJobs(
 
   useEffect(() => {
     void fetchJobs(filters);
-  }, [
-    filters,
-    fetchJobs,
-  ]);
+
+    return () => {
+      // Invalidate any request still running after cleanup.
+      requestIdRef.current += 1;
+    };
+  }, [filters, fetchJobs]);
 
   /* ==========================================================
      REFETCH
   ========================================================== */
 
-  const refetch =
-    useCallback(() => {
-      void fetchJobs(filters);
-    }, [
-      fetchJobs,
-      filters,
-    ]);
+  const refetch = useCallback(() => {
+    void fetchJobs(filters);
+  }, [fetchJobs, filters]);
 
   /* ==========================================================
      RESULT
   ========================================================== */
 
   return {
-    jobs:
-      result?.items ?? [],
-
-    total:
-      result?.total ?? 0,
-
+    jobs: result?.items ?? [],
+    total: result?.total ?? 0,
     isLoading,
-
     error,
-
     refetch,
   };
 }

@@ -116,6 +116,8 @@ $acc-tablet: 1199px;
 ============================================================================ */
 
 .fk-account-shell {
+  position: relative;
+  display: block;
   min-height: 100vh;
   width: 100%;
 
@@ -135,9 +137,28 @@ $acc-tablet: 1199px;
   }
 }
 
+/*
+  Keep the sidebar out of normal document flow. Without this, the sidebar
+  can occupy a full column-height above the page content and push the top bar
+  down, creating the large blank area seen on /settings.
+*/
+.fk-account-shell > .fk-sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  width: var(--acc-sidebar-width) !important;
+  height: 100vh !important;
+  min-height: 100vh;
+  margin: 0 !important;
+  z-index: 1000;
+}
+
 .fk-account-shell__main {
+  position: relative;
   min-width: 0;
-  margin-left: var(--acc-sidebar-width);
+  width: calc(100% - var(--acc-sidebar-width));
+  margin: 0 0 0 var(--acc-sidebar-width);
 }
 
 /* ============================================================================
@@ -1124,8 +1145,19 @@ $acc-tablet: 1199px;
 ============================================================================ */
 
 @media (max-width: $acc-mobile) {
+  .fk-account-shell > .fk-sidebar {
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: min(310px, 86vw) !important;
+    height: 100dvh !important;
+    min-height: 100dvh;
+    margin: 0 !important;
+  }
+
   .fk-account-shell__main {
-    margin-left: 0;
+    width: 100%;
+    margin: 0;
   }
 
   .fk-account-shell .fk-sidebar {

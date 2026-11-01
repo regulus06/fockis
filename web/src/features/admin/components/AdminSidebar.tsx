@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowLeft, ChevronDown, PanelLeftOpen, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, Database, ExternalLink, FileClock, FilePen, PanelLeftOpen, ScrollText, X } from "lucide-react";
 
 import FockisMark from "../../../components/fockis/FockisMark";
 import { useAdminAccess } from "../permissions/adminAccess";
+import { PERMISSIONS } from "../permissions/permission.constants";
+import { usePolicyBadge } from "../policy-compliance/policyAdminApi";
 import {
   ADMIN_NAV,
   bestMatchingPath,
@@ -48,6 +50,9 @@ export function AdminSidebar({
   const { can } = useAdminAccess();
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const asideRef = useRef<HTMLElement | null>(null);
+
+  const pendingPolicies = usePolicyBadge((s) => s.pending);
+  const showPolicyLinks = pathname.startsWith("/admin/policy-compliance") && can([PERMISSIONS.POLICY_VIEW]);
 
   const isRail = variant === "rail";
   const isDrawer = variant === "drawer";
@@ -264,6 +269,49 @@ export function AdminSidebar({
             );
           })}
         </ul>
+
+        {showPolicyLinks && !isRail && (
+          <div className="admin-sidebar__quick">
+            <span className="admin-sidebar__quick-title">Quick Links</span>
+            <ul className="admin-sidebar__list">
+              <li>
+                <a href="/policies" target="_blank" rel="noreferrer" className="admin-sidebar__link" onClick={onNavigate}>
+                  <ExternalLink className="admin-sidebar__icon" size={18} aria-hidden="true" />
+                  <span className="admin-sidebar__label">View Policies (Public)</span>
+                </a>
+              </li>
+              <li>
+                <Link to="/admin/policy-compliance/policies" className="admin-sidebar__link" onClick={onNavigate}>
+                  <FilePen className="admin-sidebar__icon" size={18} aria-hidden="true" />
+                  <span className="admin-sidebar__label">Policy Change Center</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/admin/policy-compliance/approvals" className="admin-sidebar__link" onClick={onNavigate}>
+                  <FileClock className="admin-sidebar__icon" size={18} aria-hidden="true" />
+                  <span className="admin-sidebar__label">Approval Requests</span>
+                  {pendingPolicies > 0 && <span className="admin-sidebar__badge">{pendingPolicies}</span>}
+                </Link>
+              </li>
+              {can([PERMISSIONS.POLICY_AUDIT_VIEW]) && (
+                <li>
+                  <Link to="/admin/policy-compliance/audit" className="admin-sidebar__link" onClick={onNavigate}>
+                    <ScrollText className="admin-sidebar__icon" size={18} aria-hidden="true" />
+                    <span className="admin-sidebar__label">Audit Logs</span>
+                  </Link>
+                </li>
+              )}
+              {can([PERMISSIONS.LEGAL_VIEW]) && (
+                <li>
+                  <Link to="/admin/legal/retention" className="admin-sidebar__link" onClick={onNavigate}>
+                    <Database className="admin-sidebar__icon" size={18} aria-hidden="true" />
+                    <span className="admin-sidebar__label">Retention Settings</span>
+                  </Link>
+                </li>
+              )}
+            </ul>
+          </div>
+        )}
       </nav>
 
       {/* ---------- footer ---------- */}

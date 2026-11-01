@@ -8,6 +8,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { isValidObjectId, Model } from "mongoose";
 import { User, UserDocument } from "../user.schema";
 import { BlockVisibilityService } from "../../friends/services/block-visibility.service";
+import { unsearchableUserIds } from "../../policy-center/privacy-enforcement";
 
 const FOCKIS_COUNTRIES: Record<
   string,
@@ -156,8 +157,15 @@ export class UserSearchService {
     currentUserId: string,
   ) {
     const visible: any[] = [];
+    // People who turned off "appear in search" (Policy Center privacy).
+    const hidden = await unsearchableUserIds(
+      this.userModel.db,
+      users.map((user) => String(user._id)),
+    );
 
     for (const user of users) {
+      if (hidden.has(String(user._id))) continue;
+
       const allowed = await this.blockVisibilityService.canView(
         currentUserId,
         String(user._id),

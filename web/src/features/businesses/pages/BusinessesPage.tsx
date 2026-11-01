@@ -1,60 +1,35 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type FormEvent,
-} from "react";
-
-import {
-  Link,
-  useSearchParams,
-} from "react-router-dom";
-
-import {
-  ArrowRight,
-  Building2,
-  LayoutGrid,
-  Loader2,
-  LocateFixed,
-  MapPin,
-  Plus,
-  Search,
-  Settings,
-  ShoppingBag,
-  X,
-} from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { ArrowRight, Building2, LayoutGrid, Loader2, LocateFixed, Plus, ShoppingBag, X } from "lucide-react";
 
 import { businessesApi } from "../services/businessesApi";
 import { listStores } from "../../fockis-shop/services/storeApi";
 import { resolveProductImageUrl } from "../../fockis-shop/utils/productImage";
 
-import type {
-  Business,
-  BusinessCategory,
-  BusinessSort,
-} from "../types/business.types";
+import type { Business, BusinessCategory, BusinessSort } from "../types/business.types";
 import type { Store } from "../../fockis-shop/types/store.types";
 
-import BusinessSpotlight from "../components/BusinessSpotlight";
-import BusinessSpotlightCard from "../components/BusinessSpotlightCard";
 import SpotlightDealsRail from "../components/SpotlightDealsRail";
+import { BusinessCardSkeletonGrid, EmptyState, ErrorState } from "../components/BusinessUi";
+import BusinessesShell from "../components/discover/BusinessesShell";
+import BusinessesHero from "../components/discover/BusinessesHero";
+import BusinessCategoryBar from "../components/discover/BusinessCategoryBar";
+import BusinessFilterBar, { type DiscoverSort } from "../components/discover/BusinessFilterBar";
+import FeaturedBusinessesRail from "../components/discover/FeaturedBusinessesRail";
+import FeaturedBusinessCard from "../components/discover/FeaturedBusinessCard";
+import NearbyBusinesses, { type NearbyItem } from "../components/discover/NearbyBusinesses";
 import {
-  BusinessCardSkeletonGrid,
-  EmptyState,
-  ErrorState,
-  RailNav,
-  useRailScroll,
-} from "../components/BusinessUi";
+  JoinBusinessCard,
+  MyBusinessesCard,
+  PromoteBusinessCard,
+  TrendingCategoriesCard,
+} from "../components/discover/BusinessRailCards";
+import { openLabel, shortDistance } from "../components/discover/discoverUtils";
 
 import {
-  BUSINESS_CATEGORIES,
-  BUSINESS_MANAGER_ROUTE,
   CREATE_BUSINESS_ROUTE,
   dedupeById,
   distanceKm,
-  formatDistance,
   getActiveDeals,
   getCategoryLabel,
   getStoreRoute,
@@ -63,42 +38,38 @@ import {
   isBusinessCategory,
 } from "../utils/businessUtils";
 
-import "../styles/BusinessUi.scss";
-import "../styles/BusinessesPage.scss";
-
-
 /* ============================================================================
    BUSINESSES DISCOVERY PAGE
 
    Data sources (all existing endpoints):
-   - GET /businesses               directory (server-side search/filter/paging)
-   - GET /businesses/spotlight     Spotlight rail
-   - GET /stores                   first page of Fockis Shop stores
+   - GET /businesses             directory (server search/category/city/sort,
+                                 paging) and a 100-item sample used for the
+                                 city list, Nearby, and Trending Categories
+   - GET /businesses/spotlight   Featured Businesses
+   - GET /businesses/mine        My Businesses (signed-in owners)
+   - GET /stores                 Fockis Shop storefronts
 
-   Filters are kept in the URL (?q=&category=&city=&sort=) so results can be
-   shared and the back button restores them.
+   Filters live in the URL (?q=&category=&city=&sort=&open=1) so a view can
+   be shared and the back button restores it. The API has no geo, rating or
+   popularity query: "Nearby" sorts by distance and "Most Popular" by profile
+   views on the client, over the largest page the API allows (100).
 ============================================================================ */
 
 const PAGE_SIZE = 24;
-
-const SORT_OPTIONS: Array<{ value: BusinessSort | "nearest"; label: string }> = [
-  { value: "featured", label: "Featured" },
-  { value: "newest", label: "Newest" },
-  { value: "name", label: "Name (A–Z)" },
-  { value: "nearest", label: "Nearest to me" },
-];
-
-type SortValue = BusinessSort | "nearest";
+const SAMPLE_SIZE = 100;
+const SORTS: DiscoverSort[] = ["featured", "popular", "newest", "name", "nearest"];
 
 interface Coordinates {
   lat: number;
   lng: number;
 }
 
-function readSort(value: string | null): SortValue {
-  return SORT_OPTIONS.some((option) => option.value === value)
-    ? (value as SortValue)
-    : "featured";
+function hasToken(): boolean {
+  try {
+    return Boolean(localStorage.getItem("access_token") || localStorage.getItem("token") || localStorage.getItem("jwt"));
+  } catch {
+    return false;
+  }
 }
 
 export default function BusinessesPage() {
@@ -106,17 +77,13 @@ export default function BusinessesPage() {
 
   const query = searchParams.get("q") ?? "";
   const categoryParam = searchParams.get("category");
-  const category: BusinessCategory | undefined = isBusinessCategory(categoryParam)
-    ? categoryParam
-    : undefined;
+  const category: BusinessCategory | undefined = isBusinessCategory(categoryParam) ? categoryParam : undefined;
   const city = searchParams.get("city") ?? "";
-  const sort = readSort(searchParams.get("sort"));
-
-  const hasFilters = Boolean(query || category || city);
-
-  /* --------------------------------------------------------------------------
-     URL STATE
-  -------------------------------------------------------------------------- */
+  const sortParam = searchParams.get("sort") as DiscoverSort | null;
+  const sort: DiscoverSort = sortParam && SORTS.includes(sortParam) ? sortParam : "featured";
+  const openNow = searchParams.get("open") === "1";
+  const hasFilters = Boolean(query || category || city || openNow);
+  const directoryRef = useRef<HTMLElement>(null);
 
   const updateParams = useCallback(
     (changes: Record<string, string | undefined>) => {
@@ -125,11 +92,8 @@ export default function BusinessesPage() {
           const next = new URLSearchParams(previous);
 
           for (const [key, value] of Object.entries(changes)) {
-            if (value) {
-              next.set(key, value);
-            } else {
-              next.delete(key);
-            }
+            if (value) next.set(key, value);
+            else next.delete(key);
           }
 
           return next;
@@ -140,60 +104,33 @@ export default function BusinessesPage() {
     [setSearchParams],
   );
 
-  /* --------------------------------------------------------------------------
-     SEARCH INPUT (debounced into the URL)
-  -------------------------------------------------------------------------- */
+  const scrollTo = (element: HTMLElement | null) =>
+    window.requestAnimationFrame(() => element?.scrollIntoView({ behavior: "smooth", block: "start" }));
+
+  /* ------------------------------------------------------------- search box */
 
   const [searchInput, setSearchInput] = useState(query);
-  const [cityInput, setCityInput] = useState(city);
 
   useEffect(() => setSearchInput(query), [query]);
-  useEffect(() => setCityInput(city), [city]);
 
-  useEffect(() => {
-    if (searchInput.trim() === query) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      updateParams({ q: searchInput.trim() || undefined });
-    }, 350);
-
-    return () => window.clearTimeout(timer);
-  }, [searchInput, query, updateParams]);
-
-  const submitCity = (event: FormEvent) => {
-    event.preventDefault();
-    updateParams({ city: cityInput.trim() || undefined });
+  const submitSearch = (text = searchInput) => {
+    updateParams({ q: text.trim() || undefined });
+    scrollTo(directoryRef.current);
   };
 
   const clearFilters = () => {
     setSearchInput("");
-    setCityInput("");
-    updateParams({ q: undefined, category: undefined, city: undefined });
+    updateParams({ q: undefined, category: undefined, city: undefined, open: undefined });
   };
 
-  /* --------------------------------------------------------------------------
-     NEAREST TO ME (browser geolocation, only when the visitor asks)
-  -------------------------------------------------------------------------- */
+  /* ---------------------------------------------- location (on request only) */
 
   const [coords, setCoords] = useState<Coordinates | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (sort !== "nearest") {
-      if (locationError) {
-        setLocationError(null);
-      }
-
-      return;
-    }
-
-    // Ask once per visit to the "nearest" sort; a denial is not retried.
-    if (coords || locating || locationError) {
-      return;
-    }
+  const requestLocation = useCallback(() => {
+    if (coords || locating) return;
 
     if (!("geolocation" in navigator)) {
       setLocationError("Your browser does not support location sharing.");
@@ -209,16 +146,30 @@ export default function BusinessesPage() {
         setLocating(false);
       },
       () => {
-        setLocationError("Location access was not granted, so results are not sorted by distance.");
+        setLocationError("Location access was not granted, so results aren't sorted by distance.");
         setLocating(false);
       },
       { enableHighAccuracy: false, timeout: 10_000, maximumAge: 300_000 },
     );
-  }, [sort, coords, locating, locationError]);
+  }, [coords, locating]);
 
-  /* --------------------------------------------------------------------------
-     DIRECTORY
-  -------------------------------------------------------------------------- */
+  useEffect(() => {
+    if (sort === "nearest") requestLocation();
+  }, [sort, requestLocation]);
+
+  const distanceTo = useCallback(
+    (business: Business) =>
+      coords && hasCoordinates(business)
+        ? distanceKm(coords.lat, coords.lng, business.latitude!, business.longitude!)
+        : undefined,
+    [coords],
+  );
+
+  /* -------------------------------------------------------------- directory */
+
+  const clientSort = sort === "nearest" || sort === "popular";
+  const serverSort: BusinessSort = clientSort ? "featured" : sort;
+  const pageSize = clientSort ? SAMPLE_SIZE : PAGE_SIZE;
 
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [page, setPage] = useState(1);
@@ -229,11 +180,6 @@ export default function BusinessesPage() {
   const [reloadKey, setReloadKey] = useState(0);
   const requestId = useRef(0);
 
-  // "Nearest" loads the largest page the API allows and sorts by distance
-  // locally, because the API has no geo query.
-  const serverSort: BusinessSort = sort === "nearest" ? "featured" : sort;
-  const pageSize = sort === "nearest" ? 100 : PAGE_SIZE;
-
   useEffect(() => {
     const id = ++requestId.current;
 
@@ -243,29 +189,23 @@ export default function BusinessesPage() {
     businessesApi
       .list({ q: query, category, city, sort: serverSort, page: 1, limit: pageSize })
       .then((data) => {
-        if (id !== requestId.current) {
-          return;
-        }
+        if (id !== requestId.current) return;
 
         setBusinesses(data);
         setPage(1);
-        setHasMore(sort !== "nearest" && data.length === pageSize);
+        setHasMore(!clientSort && data.length === pageSize);
       })
       .catch((err: unknown) => {
-        if (id !== requestId.current) {
-          return;
-        }
+        if (id !== requestId.current) return;
 
         setBusinesses([]);
         setHasMore(false);
         setError(err instanceof Error ? err.message : "Unable to load businesses.");
       })
       .finally(() => {
-        if (id === requestId.current) {
-          setLoading(false);
-        }
+        if (id === requestId.current) setLoading(false);
       });
-  }, [query, category, city, serverSort, pageSize, sort, reloadKey]);
+  }, [query, category, city, serverSort, pageSize, clientSort, reloadKey]);
 
   const loadMore = async () => {
     const id = requestId.current;
@@ -274,18 +214,9 @@ export default function BusinessesPage() {
     setLoadingMore(true);
 
     try {
-      const data = await businessesApi.list({
-        q: query,
-        category,
-        city,
-        sort: serverSort,
-        page: nextPage,
-        limit: PAGE_SIZE,
-      });
+      const data = await businessesApi.list({ q: query, category, city, sort: serverSort, page: nextPage, limit: PAGE_SIZE });
 
-      if (id !== requestId.current) {
-        return;
-      }
+      if (id !== requestId.current) return;
 
       setBusinesses((previous) => dedupeById([...previous, ...data]));
       setPage(nextPage);
@@ -298,29 +229,25 @@ export default function BusinessesPage() {
   };
 
   const directory = useMemo(() => {
-    const unique = dedupeById(businesses);
+    let list = dedupeById(businesses);
 
-    if (sort !== "nearest" || !coords) {
-      return unique.map((business) => ({ business, distance: undefined as number | undefined }));
+    if (openNow) list = list.filter((business) => openLabel(business)?.status === "open");
+
+    if (sort === "popular") {
+      list = [...list].sort((a, b) => (b.views ?? 0) - (a.views ?? 0));
+    } else if (sort === "nearest" && coords) {
+      list = [...list].sort((a, b) => (distanceTo(a) ?? Infinity) - (distanceTo(b) ?? Infinity));
     }
 
-    return unique
-      .map((business) => ({
-        business,
-        distance: hasCoordinates(business)
-          ? distanceKm(coords.lat, coords.lng, business.latitude!, business.longitude!)
-          : undefined,
-      }))
-      .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
-  }, [businesses, sort, coords]);
+    return list;
+  }, [businesses, openNow, sort, coords, distanceTo]);
 
-  /* --------------------------------------------------------------------------
-     SPOTLIGHT + RECENT (only on the unfiltered landing view)
-  -------------------------------------------------------------------------- */
+  /* ------------------------------------------------- spotlight + sample */
 
   const [spotlight, setSpotlight] = useState<Business[]>([]);
   const [spotlightLoading, setSpotlightLoading] = useState(true);
-  const [recent, setRecent] = useState<Business[]>([]);
+  const [sample, setSample] = useState<Business[]>([]);
+  const [sampleLoading, setSampleLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -332,31 +259,100 @@ export default function BusinessesPage() {
       .finally(() => mounted && setSpotlightLoading(false));
 
     businessesApi
-      .list({ sort: "newest", limit: 8 })
-      .then((data) => mounted && setRecent(data))
-      .catch(() => mounted && setRecent([]));
+      .list({ sort: "featured", limit: SAMPLE_SIZE })
+      .then((data) => mounted && setSample(dedupeById(data)))
+      .catch(() => mounted && setSample([]))
+      .finally(() => mounted && setSampleLoading(false));
 
     return () => {
       mounted = false;
     };
   }, []);
 
-  // Only show "New on Fockis" when the directory is large enough that the
-  // rail adds something the grid below does not already show.
-  const showRecent =
-    !hasFilters && sort === "featured" && hasMore && recent.length >= 4;
+  const cities = useMemo(() => {
+    const counts = new Map<string, number>();
 
-  const dealBusinesses = useMemo(
-    () =>
-      dedupeById([...spotlight, ...businesses]).filter(
-        (business) => getActiveDeals(business).length > 0,
-      ),
-    [spotlight, businesses],
+    sample.forEach((business) => {
+      const name = business.city?.trim();
+
+      if (name) counts.set(name, (counts.get(name) ?? 0) + 1);
+    });
+
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([name]) => name);
+  }, [sample]);
+
+  const trending = useMemo(() => {
+    const counts = new Map<BusinessCategory, number>();
+
+    sample.forEach((business) => counts.set(business.category, (counts.get(business.category) ?? 0) + 1));
+
+    return [...counts.entries()]
+      .filter(([value]) => value !== "OTHER")
+      .sort((a, b) => b[1] - a[1])
+      .map(([value, count]) => ({ category: value, count }));
+  }, [sample]);
+
+  const matches = useCallback(
+    (business: Business) =>
+      (!category || business.category === category) &&
+      (!city || business.city?.toLowerCase() === city.toLowerCase()) &&
+      (!openNow || openLabel(business)?.status === "open") &&
+      (!query ||
+        [business.name, business.tagline, business.description]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(query.toLowerCase()))),
+    [category, city, openNow, query],
   );
 
-  /* --------------------------------------------------------------------------
-     FOCKIS SHOP STORES (first page only)
-  -------------------------------------------------------------------------- */
+  // Spotlight first, topped up with verified businesses from the sample.
+  const featured = useMemo(() => {
+    const pool = dedupeById([...spotlight, ...sample.filter((business) => business.verified)]);
+
+    return pool.filter(matches).slice(0, 12);
+  }, [spotlight, sample, matches]);
+
+  const nearby: NearbyItem[] = useMemo(() => {
+    const withPlace = sample.filter(
+      (business) => matches(business) && (hasCoordinates(business) || business.city || business.address),
+    );
+
+    if (!coords) return withPlace.map((business) => ({ business }));
+
+    return withPlace
+      .map((business) => ({ business, distanceKm: distanceTo(business) }))
+      .sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+  }, [sample, matches, coords, distanceTo]);
+
+  const [nearbyView, setNearbyView] = useState<"list" | "map">("list");
+
+  const dealBusinesses = useMemo(
+    () => dedupeById([...spotlight, ...sample, ...businesses]).filter((business) => getActiveDeals(business).length > 0),
+    [spotlight, sample, businesses],
+  );
+
+  /* ------------------------------------------------------------ mine */
+
+  const signedIn = hasToken();
+  const [mine, setMine] = useState<Business[]>([]);
+  const [mineLoading, setMineLoading] = useState(signedIn);
+
+  useEffect(() => {
+    if (!signedIn) return;
+
+    let mounted = true;
+
+    businessesApi
+      .getMine()
+      .then((data) => mounted && setMine(data))
+      .catch(() => mounted && setMine([]))
+      .finally(() => mounted && setMineLoading(false));
+
+    return () => {
+      mounted = false;
+    };
+  }, [signedIn]);
+
+  /* ------------------------------------------------------------- stores */
 
   const [stores, setStores] = useState<Store[]>([]);
   const [storesLoading, setStoresLoading] = useState(true);
@@ -369,12 +365,7 @@ export default function BusinessesPage() {
         if (mounted) {
           setStores(
             dedupeById(result.items ?? [])
-              .filter(
-                (store) =>
-                  Boolean(store.slug) &&
-                  store.status !== "suspended" &&
-                  store.status !== "closed",
-              )
+              .filter((store) => Boolean(store.slug) && store.status !== "suspended" && store.status !== "closed")
               .slice(0, 8),
           );
         }
@@ -387,352 +378,216 @@ export default function BusinessesPage() {
     };
   }, []);
 
-  /* --------------------------------------------------------------------------
-     RENDER
-  -------------------------------------------------------------------------- */
+  /* ------------------------------------------------------------- render */
 
+  const distanceLabel = (business: Business) => {
+    const km = distanceTo(business);
+
+    return km !== undefined ? shortDistance(km) : undefined;
+  };
+
+  const directoryTitle = category ? getCategoryLabel(category) : hasFilters ? "Search Results" : "All Businesses";
   const resultLabel = loading
     ? "Loading businesses…"
     : `${directory.length}${hasMore ? "+" : ""} ${directory.length === 1 ? "business" : "businesses"}`;
 
-  const directoryTitle = category
-    ? getCategoryLabel(category)
-    : hasFilters
-      ? "Search results"
-      : "All businesses";
+  const rightRail = (
+    <>
+      <JoinBusinessCard />
+      <MyBusinessesCard businesses={mine} loading={mineLoading} signedIn={signedIn} />
+      <TrendingCategoriesCard
+        counts={trending}
+        complete={!sampleLoading && sample.length < SAMPLE_SIZE}
+        onSelect={(value) => {
+          updateParams({ category: value });
+          scrollTo(directoryRef.current);
+        }}
+      />
+      <PromoteBusinessCard />
+    </>
+  );
 
   return (
-    <main className="fkb fkb-page fkb-discover">
-      <div className="fkb-container">
-        {/* ==============================================================
-            HEADER
-        ============================================================== */}
+    <BusinessesShell
+      rightRail={rightRail}
+      onSearch={(text) => {
+        setSearchInput(text);
+        submitSearch(text);
+      }}
+    >
+      <BusinessesHero
+        query={searchInput}
+        onQueryChange={setSearchInput}
+        onSubmit={() => submitSearch()}
+        city={city}
+        cities={cities}
+        onCityChange={(value) => updateParams({ city: value || undefined, sort: sort === "nearest" ? undefined : searchParams.get("sort") ?? undefined })}
+        nearMe={sort === "nearest" && Boolean(coords)}
+        locating={locating}
+        onNearMe={() => {
+          updateParams({ sort: "nearest", city: undefined });
+          requestLocation();
+        }}
+        // No backgroundUrl: business covers carry their own branding (logos,
+        // storefront text), so the hero keeps the plain Fockis design.
+      />
 
-        <header className="fkb-discover__header">
-          <div className="fkb-discover__intro">
-            <span className="fkb-eyebrow">Fockis Businesses</span>
-            <h1>Discover Businesses</h1>
-            <p>
-              Find local services, retailers, restaurants and companies on
-              Fockis — see what they offer, their current deals and where to
-              shop.
+      <BusinessCategoryBar value={category} onChange={(value) => updateParams({ category: value })} />
+
+      <BusinessFilterBar
+        city={city}
+        cities={cities}
+        onCityChange={(value) => updateParams({ city: value || undefined })}
+        sort={sort}
+        onSortChange={(value) => updateParams({ sort: value === "featured" ? undefined : value })}
+        openNow={openNow}
+        onOpenNowChange={(value) => updateParams({ open: value ? "1" : undefined })}
+      />
+
+      {sort === "nearest" && locationError && (
+        <div className="fkb-alert fkb-alert--warning" role="status">
+          <LocateFixed size={16} aria-hidden="true" />
+          <span>{locationError}</span>
+        </div>
+      )}
+
+      <FeaturedBusinessesRail
+        businesses={featured}
+        loading={spotlightLoading && sampleLoading}
+        distanceFor={distanceLabel}
+        onViewAll={() => {
+          updateParams({ sort: undefined });
+          scrollTo(directoryRef.current);
+        }}
+      />
+
+      <NearbyBusinesses
+        items={nearby}
+        loading={sampleLoading}
+        view={nearbyView}
+        onViewChange={setNearbyView}
+        hasLocation={Boolean(coords)}
+        locating={locating}
+        locationError={locationError}
+        onRequestLocation={requestLocation}
+        center={coords}
+        onViewAll={() => {
+          updateParams({ sort: "nearest" });
+          scrollTo(directoryRef.current);
+        }}
+      />
+
+      {!hasFilters && dealBusinesses.length > 0 && (
+        <div className="fkbd-section fkbd-deals">
+          <SpotlightDealsRail businesses={dealBusinesses} title="Deals & Promotions" eyebrow="Current offers" dealsOnly />
+        </div>
+      )}
+
+      <section className="fkbd-section fkbd-directory" aria-labelledby="fkbd-directory-title" ref={directoryRef}>
+        <header className="fkbd-section__head">
+          <span className="fkbd-section__box" aria-hidden="true">
+            <LayoutGrid size={20} />
+          </span>
+          <div>
+            <h2 id="fkbd-directory-title">{directoryTitle}</h2>
+            <p aria-live="polite">
+              {resultLabel}
+              {query && ` for “${query}”`}
+              {city && ` in ${city}`}
+              {openNow && " · open now"}
             </p>
           </div>
-
-          <div className="fkb-discover__header-actions">
-            <Link to={BUSINESS_MANAGER_ROUTE} className="fkb-btn fkb-btn--secondary">
-              <Settings size={16} aria-hidden="true" />
-              Manage my businesses
-            </Link>
-            <Link to={CREATE_BUSINESS_ROUTE} className="fkb-btn fkb-btn--dark">
-              <Plus size={16} aria-hidden="true" />
-              Add a business
-            </Link>
-          </div>
+          {hasFilters && (
+            <button type="button" className="fkbd-viewall" onClick={clearFilters}>
+              <X size={15} aria-hidden="true" /> Clear filters
+            </button>
+          )}
         </header>
 
-        {/* ==============================================================
-            SEARCH & FILTERS
-        ============================================================== */}
-
-        <section className="fkb-discover__filters" aria-label="Search and filter businesses">
-          <div className="fkb-discover__search-row">
-            <div className="fkb-input-group fkb-discover__search">
-              <Search size={18} aria-hidden="true" />
-              <label htmlFor="fkb-search" className="fkb-visually-hidden">
-                Search businesses
-              </label>
-              <input
-                id="fkb-search"
-                type="search"
-                className="fkb-input"
-                placeholder="Search by name, description or service"
-                value={searchInput}
-                onChange={(event) => setSearchInput(event.target.value)}
-                maxLength={100}
-                autoComplete="off"
-              />
-            </div>
-
-            <form className="fkb-input-group fkb-discover__city" onSubmit={submitCity} role="search">
-              <MapPin size={18} aria-hidden="true" />
-              <label htmlFor="fkb-city" className="fkb-visually-hidden">
-                City
-              </label>
-              <input
-                id="fkb-city"
-                type="text"
-                className="fkb-input"
-                placeholder="City"
-                value={cityInput}
-                onChange={(event) => setCityInput(event.target.value)}
-                onBlur={() => {
-                  if (cityInput.trim() !== city) {
-                    updateParams({ city: cityInput.trim() || undefined });
-                  }
-                }}
-                maxLength={100}
-                autoComplete="address-level2"
-              />
-            </form>
-
-            <div className="fkb-discover__sort">
-              <label htmlFor="fkb-sort" className="fkb-visually-hidden">
-                Sort businesses
-              </label>
-              <select
-                id="fkb-sort"
-                className="fkb-input"
-                value={sort}
-                onChange={(event) =>
-                  updateParams({
-                    sort: event.target.value === "featured" ? undefined : event.target.value,
-                  })
-                }
-              >
-                {SORT_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    Sort: {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="fkb-discover__chips" role="group" aria-label="Filter by category">
-            <button
-              type="button"
-              className="fkb-chip"
-              aria-pressed={!category}
-              onClick={() => updateParams({ category: undefined })}
-            >
-              <LayoutGrid size={15} aria-hidden="true" />
-              All
-            </button>
-
-            {BUSINESS_CATEGORIES.map(({ value, label, icon: Icon }) => (
-              <button
-                key={value}
-                type="button"
-                className="fkb-chip"
-                aria-pressed={category === value}
-                onClick={() =>
-                  updateParams({ category: category === value ? undefined : value })
-                }
-              >
-                <Icon size={15} aria-hidden="true" />
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {sort === "nearest" && (locating || locationError) && (
-            <div
-              className={`fkb-alert ${locationError ? "fkb-alert--warning" : "fkb-alert--info"}`}
-              role="status"
-            >
-              {locating ? (
-                <Loader2 size={16} className="fkb-spin" aria-hidden="true" />
-              ) : (
-                <LocateFixed size={16} aria-hidden="true" />
-              )}
-              <span>{locationError ?? "Finding your location…"}</span>
-            </div>
-          )}
-        </section>
-
-        {/* ==============================================================
-            SPOTLIGHT
-        ============================================================== */}
-
-        {!hasFilters && (
-          <div className="fkb-section">
-            <BusinessSpotlight
-              businesses={spotlight}
-              loading={spotlightLoading}
-              description="Businesses featured by Fockis."
-              showViewAll={false}
-            />
-          </div>
-        )}
-
-        {/* ==============================================================
-            DEALS
-        ============================================================== */}
-
-        {!hasFilters && dealBusinesses.length > 0 && (
-          <div className="fkb-section">
-            <SpotlightDealsRail
-              businesses={dealBusinesses}
-              title="Deals & promotions"
-              eyebrow="Current offers"
-              dealsOnly
-            />
-          </div>
-        )}
-
-        {/* ==============================================================
-            RECENTLY ADDED
-        ============================================================== */}
-
-        {showRecent && <RecentRail businesses={recent} />}
-
-        {/* ==============================================================
-            DIRECTORY
-        ============================================================== */}
-
-        <section className="fkb-section" aria-labelledby="fkb-directory-title">
-          <div className="fkb-section-head">
-            <div>
-              <h2 id="fkb-directory-title">{directoryTitle}</h2>
-              <p aria-live="polite">
-                {resultLabel}
-                {query && ` for “${query}”`}
-                {city && ` in ${city}`}
-              </p>
-            </div>
-
-            {hasFilters && (
-              <div className="fkb-section-head__actions">
-                <button type="button" className="fkb-btn fkb-btn--ghost fkb-btn--sm" onClick={clearFilters}>
-                  <X size={16} aria-hidden="true" />
+        {loading ? (
+          <BusinessCardSkeletonGrid count={6} />
+        ) : error ? (
+          <ErrorState
+            title="Businesses could not be loaded"
+            message="Check your connection and try again."
+            onRetry={() => setReloadKey((value) => value + 1)}
+          />
+        ) : directory.length === 0 ? (
+          <EmptyState
+            icon={<Building2 size={24} />}
+            title={hasFilters ? "No businesses match your search" : "No businesses yet"}
+            message={
+              openNow && !query && !category && !city
+                ? "Nothing is open right now among businesses that list their hours."
+                : hasFilters
+                  ? "Try a different name, category or city."
+                  : "Published businesses will appear here. Be the first to add yours."
+            }
+            actions={
+              hasFilters ? (
+                <button type="button" className="fkbd-btn fkbd-btn--outline" onClick={clearFilters}>
                   Clear filters
+                </button>
+              ) : (
+                <Link to={CREATE_BUSINESS_ROUTE} className="fkbd-btn fkbd-btn--blue">
+                  <Plus size={16} aria-hidden="true" /> Add your business
+                </Link>
+              )
+            }
+          />
+        ) : (
+          <>
+            <div className="fkbd-grid">
+              {directory.map((business) => (
+                <FeaturedBusinessCard key={business.id} business={business} distance={distanceLabel(business)} />
+              ))}
+            </div>
+
+            {hasMore && (
+              <div className="fkbd-more">
+                <button type="button" className="fkbd-loadmore" onClick={loadMore} disabled={loadingMore}>
+                  {loadingMore && <Loader2 size={16} className="fkb-spin" aria-hidden="true" />}
+                  {loadingMore ? "Loading…" : "Load more businesses"}
                 </button>
               </div>
             )}
-          </div>
+          </>
+        )}
+      </section>
 
-          {loading ? (
-            <BusinessCardSkeletonGrid count={6} />
-          ) : error ? (
-            <ErrorState
-              title="Businesses could not be loaded"
-              message="Check your connection and try again."
-              onRetry={() => setReloadKey((value) => value + 1)}
-            />
-          ) : directory.length === 0 ? (
-            <EmptyState
-              icon={<Building2 size={24} />}
-              title={hasFilters ? "No businesses match your search" : "No businesses yet"}
-              message={
-                hasFilters
-                  ? "Try a different name, category or city."
-                  : "Published businesses will appear here. Be the first to add yours."
-              }
-              actions={
-                hasFilters ? (
-                  <button type="button" className="fkb-btn fkb-btn--secondary" onClick={clearFilters}>
-                    Clear filters
-                  </button>
-                ) : (
-                  <Link to={CREATE_BUSINESS_ROUTE} className="fkb-btn fkb-btn--primary">
-                    <Plus size={16} aria-hidden="true" />
-                    Add your business
-                  </Link>
-                )
-              }
-            />
+      {!hasFilters && (storesLoading || stores.length > 0) && (
+        <section className="fkbd-section" aria-labelledby="fkbd-stores-title">
+          <header className="fkbd-section__head">
+            <span className="fkbd-section__box" aria-hidden="true">
+              <ShoppingBag size={20} />
+            </span>
+            <div>
+              <h2 id="fkbd-stores-title">Shop from Businesses</h2>
+              <p>Storefronts selling on Fockis Shop.</p>
+            </div>
+            <Link to="/shop/stores" className="fkbd-viewall">
+              Browse all stores <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+          </header>
+
+          {storesLoading ? (
+            <div className="fkb-store-grid" role="status" aria-label="Loading stores">
+              {Array.from({ length: 4 }, (_, index) => (
+                <div key={index} className="fkb-skeleton fkb-store-tile--skeleton" />
+              ))}
+            </div>
           ) : (
-            <>
-              <div className="fkb-grid">
-                {directory.map(({ business, distance }) => (
-                  <BusinessSpotlightCard
-                    key={business.id}
-                    business={business}
-                    distanceLabel={distance !== undefined ? formatDistance(distance) : undefined}
-                  />
-                ))}
-              </div>
-
-              {hasMore && (
-                <div className="fkb-discover__more">
-                  <button
-                    type="button"
-                    className="fkb-btn fkb-btn--secondary fkb-btn--lg"
-                    onClick={loadMore}
-                    disabled={loadingMore}
-                  >
-                    {loadingMore && <Loader2 size={16} className="fkb-spin" aria-hidden="true" />}
-                    {loadingMore ? "Loading…" : "Load more businesses"}
-                  </button>
-                </div>
-              )}
-            </>
+            <div className="fkb-store-grid">
+              {stores.map((store) => (
+                <StoreTile key={store.id} store={store} />
+              ))}
+            </div>
           )}
         </section>
-
-        {/* ==============================================================
-            FOCKIS SHOP STORES
-        ============================================================== */}
-
-        {!hasFilters && (storesLoading || stores.length > 0) && (
-          <section className="fkb-section" aria-labelledby="fkb-stores-title">
-            <div className="fkb-section-head">
-              <div>
-                <span className="fkb-eyebrow">Fockis Shop</span>
-                <h2 id="fkb-stores-title">Shop from businesses</h2>
-                <p>Storefronts selling on Fockis Shop.</p>
-              </div>
-
-              <div className="fkb-section-head__actions">
-                <Link to="/shop/stores" className="fkb-link">
-                  Browse all stores
-                  <ArrowRight size={16} aria-hidden="true" />
-                </Link>
-              </div>
-            </div>
-
-            {storesLoading ? (
-              <div className="fkb-store-grid" role="status" aria-label="Loading stores">
-                {Array.from({ length: 4 }, (_, index) => (
-                  <div key={index} className="fkb-skeleton fkb-store-tile--skeleton" />
-                ))}
-              </div>
-            ) : (
-              <div className="fkb-store-grid">
-                {stores.map((store) => (
-                  <StoreTile key={store.id} store={store} />
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-      </div>
-    </main>
+      )}
+    </BusinessesShell>
   );
 }
-
-
-/* ============================================================================
-   RECENTLY ADDED RAIL
-============================================================================ */
-
-function RecentRail({ businesses }: { businesses: Business[] }) {
-  const { trackRef, canPrev, canNext, scrollBy } = useRailScroll();
-
-  return (
-    <section className="fkb-section" aria-labelledby="fkb-recent-title">
-      <div className="fkb-section-head">
-        <div>
-          <h2 id="fkb-recent-title">New on Fockis</h2>
-          <p>Recently added businesses.</p>
-        </div>
-        <div className="fkb-section-head__actions">
-          <RailNav label="new businesses" canPrev={canPrev} canNext={canNext} onScroll={scrollBy} />
-        </div>
-      </div>
-
-      <div className="fkb-rail">
-        <div ref={trackRef} className="fkb-rail__track">
-          {dedupeById(businesses).map((business) => (
-            <BusinessSpotlightCard key={business.id} business={business} variant="compact" />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 
 /* ============================================================================
    STORE TILE
@@ -751,12 +606,7 @@ function StoreTile({ store }: { store: Store }) {
       <span className="fkb-store-tile__text">
         <strong>{store.name}</strong>
         <span>
-          {[
-            location,
-            store.productCount > 0
-              ? `${store.productCount} ${store.productCount === 1 ? "product" : "products"}`
-              : "",
-          ]
+          {[location, store.productCount > 0 ? `${store.productCount} ${store.productCount === 1 ? "product" : "products"}` : ""]
             .filter(Boolean)
             .join(" · ") || "Fockis Shop store"}
         </span>

@@ -158,7 +158,7 @@ export default function SidebarAccountSection({
 
       {/* HELP & SUPPORT */}
       <SidebarNavItem
-        to="/privacy-policy"
+        to="/help"
         label="Help & Support"
         icon={<IconHelp size={20} />}
         onNavigate={handleNavigation}

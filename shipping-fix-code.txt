@@ -1,0 +1,1813 @@
+
+========== .\web\src\features\fockis-shop\types\cart.types.ts ==========
+
+1: /**
+2:  * ============================================================================
+3:  * FOCKIS SHOP — CART TYPES
+4:  * ============================================================================
+5:  *
+6:  * IMPORTANT:
+7:  * This is a multi-seller marketplace cart.
+8:  *
+9:  * Cart selection is intentionally NOT stored on CartLineItem.
+10:  * Selection is maintained separately by cartStore.ts through:
+11:  *
+12:  *   selectedLineIds: string[]
+13:  *
+14:  * Every line item preserves product, seller, store, pricing, quantity,
+15:  * variant, and shipping-package information.
+16:  *
+17:  * Shipping data is required by checkout to request accurate carrier rates.
+18:  * It should come from the product's saved shipping settings; do not invent
+19:  * package weight or dimensions when those values are missing.
+20:  *
+21:  * The canonical fields remain:
+22:  * - productName
+23:  * - unitPrice
+24:  *
+25:  * Compatibility aliases are also included because existing Shop pages,
+26:  * Checkout, Orders, and marketplace integrations may use:
+27:  * - name
+28:  * - title
+29:  * - price
+30:  * - sellerId
+31:  * - sellerName
+32:  * ============================================================================
+33:  */
+34: 
+35: // ============================================================================
+36: // CART LINE ITEM VARIANT
+37: // ============================================================================
+38: 
+39: export interface CartLineItemVariant {
+40:   /**
+41:    * Product variant identifier.
+42:    */
+43:   variantId: string;
+44: 
+45:   /**
+46:    * Precomputed display label.
+47:    *
+48:    * Example:
+49:    * "Color: Navy / Size: L"
+50:    */
+51:   optionsLabel: string;
+52: }
+53: 
+54: // ============================================================================
+55: // CART SHIPPING PACKAGE
+56: // ============================================================================
+57: 
+58: /**
+59:  * Product package information used by checkout when requesting carrier rates.
+60:  *
+61:  * Values should be copied from the product's saved shipping configuration.
+62:  * Weight is in kilograms; dimensions are in centimeters.
+63:  */
+64: export interface CartLineItemShipping {
+65:   weightKg?: number | null;
+66: 
+67:   dimensionsCm?: {
+68:     length: number;
+69:     width: number;
+70:     height: number;
+71:   } | null;
+72: }
+73: 
+74: // ============================================================================
+75: // CART LINE ITEM
+76: // ============================================================================
+77: 
+78: export interface CartLineItem {
+79:   /**
+80:    * Stable cart-line identifier.
+81:    *
+82:    * Usually generated from:
+83:    * productId + variantId
+84:    */
+85:   id: string;
+86: 
+87:   /**
+88:    * Product identifier.
+89:    */
+90:   productId: string;
+91: 
+92:   /**
+93:    * Product URL slug.
+94:    */
+95:   productSlug: string;
+96: 
+97:   /**
+98:    * Canonical product display name.
+99:    */
+100:   productName: string;
+101: 
+102:   /**
+103:    * Compatibility alias for productName.
+104:    */
+105:   name?: string;
+106: 
+107:   /**
+108:    * Compatibility alias for productName.
+109:    */
+110:   title?: string;
+111: 
+112:   /**
+113:    * Product image.
+114:    */
+115:   productImageUrl?: string;
+116: 
+117:   /**
+118:    * Product emoji fallback.
+119:    */
+120:   productEmoji?: string;
+121: 
+122:   // --------------------------------------------------------------------------
+123:   // SELLER
+124:   // --------------------------------------------------------------------------
+125: 
+126:   /**
+127:    * Seller/user identifier.
+128:    *
+129:    * Optional because some products may only have store-level ownership.
+130:    */
+131:   sellerId?: string | null;
+132: 
+133:   /**
+134:    * Seller display name.
+135:    */
+136:   sellerName?: string | null;
+137: 
+138:   // --------------------------------------------------------------------------
+139:   // STORE
+140:   // --------------------------------------------------------------------------
+141: 
+142:   /**
+143:    * Marketplace store identifier.
+144:    */
+145:   storeId: string;
+146: 
+147:   /**
+148:    * Store URL slug.
+149:    */
+150:   storeSlug: string;
+151: 
+152:   /**
+153:    * Store display name.
+154:    */
+155:   storeName: string;
+156: 
+157:   // --------------------------------------------------------------------------
+158:   // VARIANT
+159:   // --------------------------------------------------------------------------
+160: 
+161:   variant?: CartLineItemVariant | null;
+162: 
+163:   // --------------------------------------------------------------------------
+164:   // SHIPPING
+165:   // --------------------------------------------------------------------------
+166: 
+167:   /**
+168:    * Saved package details used to request carrier-calculated shipping rates.
+169:    *
+170:    * These values are optional because older products may not have shipping
+171:    * settings yet. Checkout should show a useful validation error if required
+172:    * package values are missing rather than sending fabricated measurements.
+173:    */
+174:   shipping?: CartLineItemShipping | null;
+175: 
+176:   // --------------------------------------------------------------------------
+177:   // PRICING
+178:   // --------------------------------------------------------------------------
+179: 
+180:   /**
+
+========== .\web\src\features\fockis-shop\store\cartStore.ts ==========
+
+
+--- Lines 300-430 ---
+300:     return null;
+301: 
+302:   }
+303: 
+304:   return value as Record<
+305: 
+306:     string,
+307: 
+308:     unknown
+309: 
+310:   >;
+311: 
+312: }
+313: 
+314: function getServerProductId(
+315: 
+316:   value: unknown,
+317: 
+318: ): string | null {
+319: 
+320:   if (
+321: 
+322:     typeof value === "string"
+323: 
+324:   ) {
+325: 
+326:     return value;
+327: 
+328:   }
+329: 
+330:   const product =
+331: 
+332:     getServerProduct(value);
+333: 
+334:   if (!product) {
+335: 
+336:     return null;
+337: 
+338:   }
+339: 
+340:   const id =
+341: 
+342:     product._id ??
+343: 
+344:     product.id;
+345: 
+346:   if (
+347: 
+348:     typeof id === "string" &&
+349: 
+350:     id.trim()
+351: 
+352:   ) {
+353: 
+354:     return id;
+355: 
+356:   }
+357: 
+358:   return null;
+359: 
+360: }
+361: 
+362: function getRelationId(value: unknown): string | null {
+363: 
+364:   if (typeof value === "string" && value.trim()) return value.trim();
+365: 
+366:   if (!value || typeof value !== "object") return null;
+367: 
+368:   const relation = value as Record<string, unknown>;
+369: 
+370:   const id = relation._id ?? relation.id;
+371: 
+372:   return typeof id === "string" && id.trim() ? id.trim() : null;
+373: 
+374: }
+375: 
+376: function getServerSellerId(product: Record<string, unknown> | null): string | null {
+377: 
+378:   if (!product) return null;
+379: 
+380:   // Accept the common populated and unpopulated API response shapes.
+381: 
+382:   const direct =
+383: 
+384:     getRelationId(product.sellerId) ??
+385: 
+386:     getRelationId(product.seller) ??
+387: 
+388:     getRelationId(product.userId) ??
+389: 
+390:     getRelationId(product.ownerId);
+391: 
+392:   if (direct) return direct;
+393: 
+394:   const store = getServerProduct(product.storeId ?? product.store);
+395: 
+396:   if (store) {
+397: 
+398:     return (
+399: 
+400:       getRelationId(store.sellerId) ??
+401: 
+402:       getRelationId(store.seller) ??
+403: 
+404:       getRelationId(store.ownerId) ??
+405: 
+406:       getRelationId(store.userId)
+407: 
+408:     );
+409: 
+410:   }
+411: 
+412:   return null;
+413: 
+414: }
+415: 
+416: function getServerStoreId(product: Record<string, unknown> | null): string | null {
+417: 
+418:   if (!product) return null;
+419: 
+420:   return getRelationId(product.storeId) ?? getRelationId(product.store);
+421: 
+422: }
+423: 
+424: function getServerProductName(
+425: 
+426:   product:
+427: 
+428:     | Record<string, unknown>
+429: 
+430:     | null,
+
+--- Lines 580-760 ---
+580:       rawPrice,
+581: 
+582:     ) &&
+583: 
+584:     rawPrice >= 0
+585: 
+586:   ) {
+587: 
+588:     return rawPrice;
+589: 
+590:   }
+591: 
+592:   return 0;
+593: 
+594: }
+595: 
+596: type CartShippingInfo = {
+597:   weightKg?: number | null;
+598:   dimensionsCm?: {
+599:     length: number;
+600:     width: number;
+601:     height: number;
+602:   } | null;
+603: };
+604: 
+605: type CartLineItemWithShipping = CartLineItem & {
+606:   shipping?: CartShippingInfo;
+607: };
+608: 
+609: function getServerProductShipping(
+610:   product: Record<string, unknown> | null,
+611: ): CartShippingInfo | undefined {
+612:   if (!product) return undefined;
+613: 
+614:   const rawShipping =
+615:     product.shipping && typeof product.shipping === "object"
+616:       ? (product.shipping as Record<string, unknown>)
+617:       : null;
+618: 
+619:   const rawDimensions =
+620:     rawShipping?.dimensionsCm && typeof rawShipping.dimensionsCm === "object"
+621:       ? (rawShipping.dimensionsCm as Record<string, unknown>)
+622:       : null;
+623: 
+624:   const numberOrNull = (value: unknown): number | null => {
+625:     if (typeof value === "number" && Number.isFinite(value)) return value;
+626:     if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) {
+627:       return Number(value);
+628:     }
+629:     return null;
+630:   };
+631: 
+632:   const weightKg = numberOrNull(rawShipping?.weightKg);
+633:   const length = numberOrNull(rawDimensions?.length);
+634:   const width = numberOrNull(rawDimensions?.width);
+635:   const height = numberOrNull(rawDimensions?.height);
+636: 
+637:   return {
+638:     weightKg,
+639:     dimensionsCm:
+640:       length !== null && width !== null && height !== null
+641:         ? { length, width, height }
+642:         : null,
+643:   };
+644: }
+645: 
+646: function getServerProductImage(
+647: 
+648:   product:
+649: 
+650:     | Record<string, unknown>
+651: 
+652:     | null,
+653: 
+654: ): string | undefined {
+655: 
+656:   const images =
+657: 
+658:     product?.images;
+659: 
+660:   if (
+661: 
+662:     Array.isArray(images)
+663: 
+664:   ) {
+665: 
+666:     const firstImage =
+667: 
+668:       images[0];
+669: 
+670:     if (
+671: 
+672:       typeof firstImage ===
+673: 
+674:         "string" &&
+675: 
+676:       firstImage.trim()
+677: 
+678:     ) {
+679: 
+680:       return firstImage;
+681: 
+682:     }
+683: 
+684:   }
+685: 
+686:   const image =
+687: 
+688:     product?.image;
+689: 
+690:   if (
+691: 
+692:     typeof image === "string" &&
+693: 
+694:     image.trim()
+695: 
+696:   ) {
+697: 
+698:     return image;
+699: 
+700:   }
+701: 
+702:   return undefined;
+703: 
+704: }
+705: 
+706: // ============================================================================
+707: 
+708: // MERGE SERVER CART
+709: 
+710: // ============================================================================
+711: 
+712: //
+713: 
+714: // `serverItems` is intentionally typed from the function argument rather
+715: 
+716: // than introducing another conflicting ServerCartItem declaration.
+717: 
+718: // The backend cart response is normalized here.
+719: 
+720: // ============================================================================
+721: 
+722: function mergeServerCart(
+723: 
+724:   serverItems: Array<{
+725: 
+726:     productId: unknown;
+727: 
+728:     quantity: number;
+729: 
+730:   }>,
+731: 
+732:   localItems: CartLineItem[],
+733: 
+734: ): CartLineItem[] {
+735: 
+736:   const localByProductId =
+737: 
+738:     new Map<
+739: 
+740:       string,
+741: 
+742:       CartLineItem
+743: 
+744:     >();
+745: 
+746:   for (
+747: 
+748:     const item of localItems
+749: 
+750:   ) {
+751: 
+752:     localByProductId.set(
+753: 
+754:       item.productId,
+755: 
+756:       item,
+757: 
+758:     );
+759: 
+760:   }
+
+--- Lines 1120-1280 ---
+1120:               const selectedLineIds =
+1121: 
+1122:                 currentSelected.length >
+1123: 
+1124:                 0
+1125: 
+1126:                   ? currentSelected.filter(
+1127: 
+1128:                       (id) =>
+1129: 
+1130:                         validIds.has(
+1131: 
+1132:                           id,
+1133: 
+1134:                         ),
+1135: 
+1136:                     )
+1137: 
+1138:                   : mergedItems.map(
+1139: 
+1140:                       (item) =>
+1141: 
+1142:                         item.id,
+1143: 
+1144:                     );
+1145: 
+1146:               set({
+1147: 
+1148:                 items:
+1149: 
+1150:                   mergedItems,
+1151: 
+1152:                 selectedLineIds,
+1153: 
+1154:               });
+1155: 
+1156:             } catch (error) {
+1157: 
+1158:               console.error(
+1159: 
+1160:                 "[CartStore] Failed to hydrate server cart:",
+1161: 
+1162:                 error,
+1163: 
+1164:               );
+1165: 
+1166:             } finally {
+1167: 
+1168:               set({
+1169: 
+1170:                 isHydrating: false,
+1171: 
+1172:               });
+1173: 
+1174:             }
+1175: 
+1176:           },
+1177: 
+1178:         // ====================================================================
+1179: 
+1180:         // ADD ITEM
+1181: 
+1182:         // ====================================================================
+1183: 
+1184:         addItem:
+1185: 
+1186:           async (input) => {
+1187: 
+1188:             const sellerId =
+1189: 
+1190:         typeof input.sellerId === "string" ? input.sellerId.trim() : "";
+1191: 
+1192:       if (!sellerId) {
+1193: 
+1194:         throw new Error(
+1195: 
+1196:           "Cannot add this product to the cart because its seller ID is missing. Refresh the product and try again.",
+1197: 
+1198:         );
+1199: 
+1200:       }
+1201: 
+1202:       const id =
+1203: 
+1204:               getLineId(
+1205: 
+1206:                 input.productId,
+1207: 
+1208:                 input.variant
+1209: 
+1210:                   ?.variantId,
+1211: 
+1212:               );
+1213: 
+1214:             const currentItems =
+1215: 
+1216:               get().items;
+1217: 
+1218:             const currentSelected =
+1219: 
+1220:               get()
+1221: 
+1222:                 .selectedLineIds;
+1223: 
+1224:             const existing =
+1225: 
+1226:               currentItems.find(
+1227: 
+1228:                 (item) =>
+1229: 
+1230:                   item.id === id,
+1231: 
+1232:               );
+1233: 
+1234:             const quantityToAdd =
+1235: 
+1236:               Math.max(
+1237: 
+1238:                 1,
+1239: 
+1240:                 Number(
+1241: 
+1242:                   input.quantity ??
+1243: 
+1244:                     1,
+1245: 
+1246:                 ) || 1,
+1247: 
+1248:               );
+1249: 
+1250:             const authenticated =
+1251: 
+1252:               hasAuthToken();
+1253: 
+1254:             // ----------------------------------------------------------------
+1255: 
+1256:             // EXISTING ITEM
+1257: 
+1258:             // ----------------------------------------------------------------
+1259: 
+1260:             if (existing) {
+1261: 
+1262:               const previousItems =
+1263: 
+1264:                 currentItems;
+1265: 
+1266:               const previousSelected =
+1267: 
+1268:                 currentSelected;
+1269: 
+1270:               const newQuantity =
+1271: 
+1272:                 Math.min(
+1273: 
+1274:                   existing.quantity +
+1275: 
+1276:                     quantityToAdd,
+1277: 
+1278:                   existing.maxQuantity,
+1279: 
+1280:                 );
+
+========== .\web\src\features\fockis-shop\hooks\useCheckout.ts ==========
+
+
+--- Lines 780-860 ---
+780: 
+781: phone: phone || undefined,
+782: 
+783: ...({
+784: 
+785: houseOrApartmentNumber,
+786: 
+787: neighborhood: "",
+788: 
+789: street,
+790: 
+791: apartment: line2,
+792: 
+793: zipCode: postalCode,
+794: 
+795: } as Record<string, string>),
+796: 
+797: };
+798: 
+799: }
+800: 
+801: function toCheckoutCartItem(
+802: 
+803: item: CartLineItem,
+804: 
+805: ): CheckoutCartItem {
+806: 
+807: return {
+808: 
+809: id: item.id,
+810: 
+811: productId:
+812: 
+813: item.productId,
+814: 
+815: productName:
+816: 
+817: item.productName ||
+818: 
+819: item.name ||
+820: 
+821: item.title ||
+822: 
+823: "Product",
+824: 
+825: productEmoji:
+826: 
+827: item.productEmoji,
+828: 
+829: productImageUrl:
+830: 
+831: item.productImageUrl,
+832: 
+833: quantity: Math.max(
+834: 
+835: 1,
+836: 
+837: Math.floor(
+838: 
+839: numberValue(
+840: 
+841: item.quantity,
+842: 
+843: ),
+844: 
+845: ),
+846: 
+847: ),
+848: 
+849: unitPrice:
+850: 
+851: money(item.unitPrice),
+852: 
+853: storeId:
+854: 
+855: item.storeId,
+856: 
+857: storeName:
+858: 
+859: item.storeName ||
+860: 
+
+--- Lines 880-950 ---
+880: 
+881: item.variant ?? null,
+882: 
+883: };
+884: 
+885: }
+886: 
+887: function buildOrderItems(
+888: 
+889: items: CartLineItem[],
+890: 
+891: ): BackendOrderItem[] {
+892: 
+893: return items.map((item) => {
+894: 
+895: const quantity = Math.max(
+896: 
+897: 1,
+898: 
+899: Math.floor(
+900: 
+901: numberValue(
+902: 
+903: item.quantity,
+904: 
+905: ),
+906: 
+907: ),
+908: 
+909: );
+910: 
+911: const unitPrice =
+912: 
+913: money(item.unitPrice);
+914: 
+915: const result: BackendOrderItem = {
+916: 
+917: productId:
+918: 
+919: String(item.productId),
+920: 
+921: productName:
+922: 
+923: String(
+924: 
+925: item.productName ||
+926: 
+927: item.name ||
+928: 
+929: item.title ||
+930: 
+931: "Product",
+932: 
+933: ),
+934: 
+935: quantity,
+936: 
+937: unitPrice,
+938: 
+939: };
+940: 
+941: if (
+942: 
+943: item.sellerId !== undefined &&
+944: 
+945: item.sellerId !== null &&
+946: 
+947: String(
+948: 
+949: item.sellerId,
+950: 
+
+========== .\web\src\features\fockis-shop\components\products\ProductActions.tsx ==========
+
+1: import { useState } from "react";
+2: import { Link, useNavigate } from "react-router-dom";
+3: import { Heart, Lock, Truck } from "lucide-react";
+4: 
+5: import type { Product } from "../../types/product.types";
+6: import { useCart } from "../../hooks/useCart";
+7: import { useWishlist } from "../../hooks/useWishlist";
+8: import { useCartToastStore } from "../../store/cartToastStore";
+9: import { effectivePrice } from "../../utils/pricing";
+10: import { formatPrice } from "../../utils/currency";
+11: import {
+12:   getPrimaryProductImage,
+13: } from "../../utils/productMedia";
+14: 
+15: type UnknownRecord = Record<string, unknown>;
+16: 
+17: function asRecord(value: unknown): UnknownRecord | null {
+18:   return value !== null && typeof value === "object"
+19:     ? (value as UnknownRecord)
+20:     : null;
+21: }
+22: 
+23: function readId(value: unknown): string | null {
+24:   if (typeof value === "string" && value.trim()) {
+25:     return value.trim();
+26:   }
+27: 
+28:   const record = asRecord(value);
+29:   if (!record) return null;
+30: 
+31:   const id = record._id ?? record.id;
+32: 
+33:   return typeof id === "string" && id.trim()
+34:     ? id.trim()
+35:     : null;
+36: }
+37: 
+38: function resolveSellerId(product: Product): string | null {
+39:   const data = asRecord(product);
+40:   if (!data) return null;
+41: 
+42:   const directSellerId =
+43:     readId(data.sellerId) ??
+44:     readId(data.seller) ??
+45:     readId(data.userId) ??
+46:     readId(data.ownerId);
+47: 
+48:   if (directSellerId) return directSellerId;
+49: 
+50:   const store = asRecord(data.storeId) ?? asRecord(data.store);
+51: 
+52:   if (store) {
+53:     return (
+54:       readId(store.sellerId) ??
+55:       readId(store.seller) ??
+56:       readId(store.ownerId) ??
+57:       readId(store.userId)
+58:     );
+59:   }
+60: 
+61:   return null;
+62: }
+63: 
+64: /**
+65:  * Product buy box.
+66:  *
+67:  * The product price is displayed by ProductInfo, so it is
+68:  * intentionally not repeated here.
+69:  *
+70:  * Shipping costs are calculated during checkout. This component
+71:  * does not assume a buyer's destination or invent delivery details.
+72:  */
+73: export function ProductActions({
+74:   product,
+75: }: {
+76:   product: Product;
+77: }) {
+78:   const navigate = useNavigate();
+79:   const { addItem } = useCart();
+80:   const { has, toggle } = useWishlist();
+81:   const showAddedToast = useCartToastStore((state) => state.show);
+82: 
+83:   const [quantity, setQuantity] = useState(1);
+84:   const [status, setStatus] = useState<
+85:     "idle" | "adding" | "added" | "error"
+86:   >("idle");
+87:   const [errorMessage, setErrorMessage] = useState("");
+88: 
+89:   const unavailable =
+90:     product.stockStatus === "out_of_stock" ||
+91:     (typeof product.stockQuantity === "number" &&
+92:       product.stockQuantity <= 0);
+93: 
+94:   const lowStock =
+95:     !unavailable && product.stockStatus === "low_stock";
+96: 
+97:   const maxQuantity =
+98:     typeof product.stockQuantity === "number" &&
+99:     product.stockQuantity > 0
+100:       ? Math.min(product.stockQuantity, 99)
+101:       : 99;
+102: 
+103:   const price = effectivePrice(product);
+104:   const hasPrice = Number(price) > 0;
+105:   const canBuy = !unavailable && hasPrice;
+106:   const saved = has(product.id);
+107: 
+108:   async function addToCart(): Promise<boolean> {
+109:     if (!canBuy || status === "adding") return false;
+110: 
+111:     setStatus("adding");
+112:     setErrorMessage("");
+113: 
+114:     const sellerId = resolveSellerId(product);
+115: 
+116:     if (!sellerId) {
+117:       console.error(
+118:         "[ProductActions] Seller ID missing from product data.",
+119:         {
+120:           productId: product.id,
+121:           storeId: product.storeId,
+122:           availableProductFields: Object.keys(
+123:             asRecord(product) ?? {},
+124:           ),
+125:         },
+126:       );
+127: 
+128:       setStatus("error");
+129:       setErrorMessage(
+130:         "Seller information is missing for this product. Please refresh the page or contact the store.",
+131:       );
+132: 
+133:       return false;
+134:     }
+135: 
+136:     try {
+137:       await addItem({
+138:         productId: product.id,
+139:         productSlug: product.slug,
+140:         productName: product.name,
+141:         productEmoji: product.emoji,
+142:         productImageUrl: getPrimaryProductImage(product)?.src,
+143:         sellerId,
+144:         storeId: product.storeId,
+145:         storeSlug: product.storeSlug,
+146:         storeName: product.storeName,
+147:         unitPrice: price,
+148:         maxQuantity,
+149:         quantity,
+150:       });
+151: 
+152:       setStatus("added");
+153:       return true;
+154:     } catch (error) {
+155:       console.error(
+156:         "[ProductActions] Failed to add to cart:",
+157:         error,
+158:       );
+159: 
+160:       setStatus("error");
+161:       setErrorMessage(
+162:         error instanceof Error
+163:           ? error.message
+164:           : "Could not add this product to your cart. Please try again.",
+165:       );
+166: 
+167:       return false;
+168:     }
+169:   }
+170: 
+171:   async function handleBuyNow() {
+172:     if (await addToCart()) {
+173:       navigate("/shop/checkout");
+174:     }
+175:   }
+176: 
+177:   return (
+178:     <aside className="pdp-buybox" aria-label="Buy options">
+179:       <div className="pdp-buybox__delivery">
+180:         <Truck size={16} aria-hidden="true" />
+181: 
+182:         <span>
+183:           Shipping calculated at checkout
+184:           <small>
+185:             Available delivery options and shipping costs are confirmed
+186:             during checkout.
+187:           </small>
+188:         </span>
+189:       </div>
+190: 
+191:       <div
+192:         className={`pdp-buybox__stock${
+193:           unavailable ? " is-out" : lowStock ? " is-low" : ""
+194:         }`}
+195:       >
+196:         {unavailable
+197:           ? "Currently unavailable"
+198:           : lowStock
+199:             ? `Only ${product.stockQuantity} left in stock`
+200:             : "In stock"}
+201:       </div>
+202: 
+203:       {canBuy && (
+204:         <label className="pdp-buybox__qty">
+205:           <span>Quantity</span>
+206: 
+207:           <select
+208:             className="shop-select"
+209:             value={quantity}
+210:             onChange={(event) => {
+211:               setQuantity(Number(event.target.value));
+212:               setStatus("idle");
+213:               setErrorMessage("");
+214:             }}
+215:           >
+216:             {Array.from(
+217:               { length: Math.min(maxQuantity, 30) },
+218:               (_, index) => index + 1,
+219:             ).map((value) => (
+220:               <option key={value} value={value}>
+221:                 {value}
+222:               </option>
+223:             ))}
+224:           </select>
+225:         </label>
+226:       )}
+227: 
+228:       <button
+229:         type="button"
+230:         className="fk-btn fk-btn--cart fk-btn--block"
+231:         onClick={async () => {
+232:           if (await addToCart()) {
+233:             showAddedToast({
+234:               name: product.name,
+235:               imageUrl: getPrimaryProductImage(product)?.src,
+236:               emoji: product.emoji,
+237:               unitPrice: price,
+238:               quantity,
+239:             });
+240:           }
+241:         }}
+242:         disabled={!canBuy || status === "adding"}
+243:       >
+244:         {unavailable
+245:           ? "Out of stock"
+246:           : !hasPrice
+247:             ? "Price unavailable"
+248:             : status === "adding"
+249:               ? "Adding…"
+250:               : status === "added"
+251:                 ? "Add again"
+252:                 : "Add to Cart"}
+253:       </button>
+254: 
+255:       {canBuy && (
+256:         <button
+257:           type="button"
+258:           className="fk-btn fk-btn--buy fk-btn--block"
+259:           onClick={() => void handleBuyNow()}
+260:           disabled={status === "adding"}
+261:         >
+262:           Buy Now
+263:         </button>
+264:       )}
+265: 
+266:       {status === "added" && (
+267:         <p className="pdp-buybox__feedback" role="status">
+268:           Added to cart.{" "}
+269:           <Link to="/shop/cart">View cart</Link>
+270:         </p>
+271:       )}
+272: 
+273:       {status === "error" && (
+274:         <p
+275:           className="pdp-buybox__feedback is-error"
+276:           role="alert"
+277:         >
+278:           {errorMessage}
+279:         </p>
+280:       )}
+281: 
+282:       <dl className="pdp-buybox__meta">
+283:         <div>
+284:           <dt>Ships from</dt>
+285:           <dd>{product.storeName || "Seller details unavailable"}</dd>
+286:         </div>
+287: 
+288:         <div>
+289:           <dt>Sold by</dt>
+290:           <dd>
+291:             {product.storeSlug ? (
+292:               <Link to={`/shop/store/${product.storeSlug}`}>
+293:                 {product.storeName || "Visit store"}
+294:               </Link>
+295:             ) : (
+296:               "Seller details unavailable"
+297:             )}
+298:           </dd>
+299:         </div>
+300: 
+301:         <div>
+302:           <dt>Payment</dt>
+303:           <dd>
+304:             <Lock size={12} aria-hidden="true" />
+305:             Secure checkout
+306:           </dd>
+307:         </div>
+308:       </dl>
+309: 
+310:       <button
+311:         type="button"
+312:         className={`fk-btn fk-btn--outline fk-btn--block${
+313:           saved ? " is-saved" : ""
+314:         }`}
+315:         onClick={() => toggle(product.id)}
+316:         aria-pressed={saved}
+317:       >
+318:         <Heart
+319:           size={16}
+320:           fill={saved ? "currentColor" : "none"}
+321:           aria-hidden="true"
+322:         />
+323: 
+324:         {saved ? "Saved to wishlist" : "Add to wishlist"}
+325:       </button>
+326:     </aside>
+327:   );
+328: }
+
+========== .\web\src\features\fockis-shop\components\products\ProductCard.tsx ==========
+
+1: import { useEffect, useRef, useState } from "react";
+2: 
+3: import { Link, useNavigate } from "react-router-dom";
+4: 
+5: import { Heart, Play, ShoppingCart, Truck } from "lucide-react";
+6: 
+7: 
+8: 
+9: import type { Product } from "../../types/product.types";
+10: 
+11: import { effectivePrice } from "../../utils/pricing";
+12: 
+13: import { formatPrice } from "../../utils/currency";
+14: 
+15: import { shippingBadges } from "../../utils/shipping";
+16: 
+17: import {
+18: 
+19:   getDeliveryEstimate,
+20: 
+21:   getPrimaryProductImage,
+22: 
+23:   getProductVideo,
+24: 
+25:   getRealDiscount,
+26: 
+27:   getRealRating,
+28: 
+29: } from "../../utils/productMedia";
+30: 
+31: import { useWishlist } from "../../hooks/useWishlist";
+32: 
+33: import { useCart } from "../../hooks/useCart";
+34: 
+35: import { useCartToastStore } from "../../store/cartToastStore";
+36: 
+37: import { Stars } from "../common/Stars";
+38: 
+39: 
+40: 
+41: /**
+42: 
+43:  * ============================================================================
+44: 
+45:  * FOCKIS SHOP — PRODUCT CARD
+46: 
+47:  * ============================================================================
+48: 
+49:  *
+50: 
+51:  * Shared by grids, horizontal rails, wishlist, store pages and related items.
+52: 
+53:  * Everything shown comes from the product record:
+54: 
+55:  *   - rating only when the API returned one, count only when > 0
+56: 
+57:  *   - discount only when a real lower sale price exists
+58: 
+59:  *   - delivery text only from real shipping data
+60: 
+61:  *
+62: 
+63:  * Add to Cart and Buy Now both go through the existing Zustand cart store
+64: 
+65:  * (useCart → cartStore → cartApi). Buy Now then opens the existing checkout.
+66: 
+67:  * ============================================================================
+68: 
+69:  */
+70: 
+71: 
+72: 
+73: interface ProductCardProps {
+74: 
+75:   product: Product;
+76: 
+77:   /**
+78: 
+79:    * "grid"    listing pages
+80: 
+81:    * "rail"    horizontal scrollers
+82: 
+83:    * "deal"    big card inside the pink "Today's deals" panel
+84: 
+85:    * "compact" image-left card (Recently viewed / New arrivals rows)
+86: 
+87:    */
+88: 
+89:   variant?: "grid" | "rail" | "deal" | "compact";
+90: 
+91:   /** Hide the action buttons (e.g. compact recommendation strips). */
+92: 
+93:   showActions?: boolean;
+94: 
+95: }
+96: 
+97: 
+98: 
+99: export function ProductCard({
+100: 
+101:   product,
+102: 
+103:   variant = "grid",
+104: 
+105:   showActions = true,
+106: 
+107: }: ProductCardProps) {
+108: 
+109:   const navigate = useNavigate();
+110: 
+111:   const { has, toggle } = useWishlist();
+112: 
+113:   const { addItem } = useCart();
+114: 
+115:   const showAddedToast = useCartToastStore((state) => state.show);
+116: 
+117: 
+118: 
+119:   const [imageFailed, setImageFailed] = useState(false);
+120: 
+121:   const [status, setStatus] = useState<"idle" | "adding" | "added" | "error">(
+122: 
+123:     "idle",
+124: 
+125:   );
+126: 
+127:   const resetTimer = useRef<number | undefined>(undefined);
+128: 
+129: 
+130: 
+131:   useEffect(() => () => window.clearTimeout(resetTimer.current), []);
+132: 
+133: 
+134: 
+135:   const title = product.name?.trim() || "Product details unavailable";
+136: 
+137:   const storeName = product.storeName?.trim() || "Seller details unavailable";
+138: 
+139:   const productHref = `/shop/product/${product.slug || product.id}`;
+140: 
+141: 
+142: 
+143:   const image = getPrimaryProductImage(product);
+144: 
+145:   const hasVideo = Boolean(getProductVideo(product));
+146: 
+147:   const showImage = Boolean(image) && !imageFailed;
+148: 
+149: 
+150: 
+151:   const price = effectivePrice(product);
+152: 
+153:   const hasPrice = Number.isFinite(Number(price)) && Number(price) > 0;
+154: 
+155:   const discount = getRealDiscount(product);
+156: 
+157:   const rating = getRealRating(product);
+158: 
+159:   // shippingBadges() prefixes an emoji; the card shows its own truck icon.
+160: 
+161:   const delivery =
+162: 
+163:     getDeliveryEstimate(product) ??
+164: 
+165:     (product.shipping
+166: 
+167:       ? shippingBadges(product.shipping)[0]?.replace(/^[^\p{L}\p{N}]+/u, "")
+168: 
+169:       : undefined) ??
+170: 
+171:     null;
+172: 
+173: 
+174: 
+175:   const saved = has(product.id);
+176: 
+177:   const outOfStock =
+178: 
+179:     product.stockStatus === "out_of_stock" ||
+180: 
+181:     (typeof product.stockQuantity === "number" && product.stockQuantity <= 0);
+182: 
+183:   const lowStock =
+184: 
+185:     !outOfStock &&
+186: 
+187:     (product.stockStatus === "low_stock" ||
+188: 
+189:       (typeof product.stockQuantity === "number" && product.stockQuantity <= 5));
+190: 
+191:   const isDeal = variant === "deal";
+192: 
+193:   const isCompact = variant === "compact";
+194: 
+195:   const canBuy = !outOfStock && hasPrice;
+196: 
+197: 
+198: 
+199:   async function addToCart(): Promise<boolean> {
+200: 
+201:     if (!canBuy) return false;
+202: 
+203: 
+204: 
+205:     setStatus("adding");
+206: 
+207: 
+208: 
+209:     try {
+210: 
+211:       await addItem({
+212: 
+213:         productId: product.id,
+214: 
+215:         productSlug: product.slug,
+216: 
+217:         productName: product.name,
+218: 
+219:         productEmoji: product.emoji,
+220: 
+221:         productImageUrl: image?.src,
+222: 
+223:         sellerId: product.sellerId,
+224: 
+225:         storeId: product.storeId,
+226: 
+227:         storeSlug: product.storeSlug,
+228: 
+229:         storeName: product.storeName,
+230: 
+231:         unitPrice: price,
+232: 
+233:         maxQuantity: product.stockQuantity,
+234:         // Preserve package data so checkout can request real Shippo rates.
+235:         shipping: product.shipping,
+236: 
+237:       });
+238: 
+239: 
+240: 
+241:       setStatus("added");
+242: 
+243:       window.clearTimeout(resetTimer.current);
+244: 
+245:       resetTimer.current = window.setTimeout(() => setStatus("idle"), 2200);
+246: 
+247:       return true;
+248: 
+249:     } catch (error) {
+250: 
+251:       console.error("[ProductCard] Failed to add to cart:", error);
+252: 
+253:       setStatus("error");
+254: 
+255:       return false;
+256: 
+257:     }
+258: 
+259:   }
+260: 
+261: 
+262: 
+263:   async function handleAddToCart(event: React.MouseEvent<HTMLButtonElement>) {
+264: 
+265:     event.preventDefault();
+266: 
+267:     event.stopPropagation();
+268: 
+269:     if (await addToCart()) {
+270: 
+271:       showAddedToast({
+272: 
+273:         name: title,
+274: 
+275:         imageUrl: image?.src,
+276: 
+277:         emoji: product.emoji,
+278: 
+279:         unitPrice: price,
+280: 
+281:         quantity: 1,
+282: 
+283:       });
+284: 
+285:     }
+286: 
+287:   }
+288: 
+289: 
+290: 
+291:   async function handleBuyNow(event: React.MouseEvent<HTMLButtonElement>) {
+292: 
+293:     event.preventDefault();
+294: 
+295:     event.stopPropagation();
+296: 
+297:     const added = await addToCart();
+298: 
+299:     if (added) navigate("/shop/checkout");
+300: 
+301:   }
+302: 
+303: 
+304: 
+305:   function handleToggleWishlist(event: React.MouseEvent<HTMLButtonElement>) {
+306: 
+307:     event.preventDefault();
+308: 
+309:     event.stopPropagation();
+310: 
+311:     toggle(product.id);
+312: 
+313:   }
+314: 
+315: 
+316: 
+317:   return (
+318: 
+319:     <article
+320: 
+321:       className={`fk-card fk-card--${variant}${outOfStock ? " is-unavailable" : ""}`}
+322: 
+323:       role={variant === "grid" ? undefined : "listitem"}
+324: 
+325:     >
+326: 
+327:       <Link to={productHref} className="fk-card__media" aria-label={title}>
+328: 
+329:         {showImage ? (
+330: 
+331:           <img
+332: 
+333:             src={image!.src}
+334: 
+335:             alt={image!.alt}
+336: 
+337:             loading="lazy"
+338: 
+339:             decoding="async"
+340: 
+341:             onError={() => setImageFailed(true)}
+342: 
+343:           />
+344: 
+345:         ) : (
+346: 
+347:           <span className="fk-card__placeholder" role="img" aria-label="No product image available">
+348: 
+349:             <span aria-hidden="true">{product.emoji || "📦"}</span>
+350: 
+351:             <small>No image</small>
+352: 
+353:           </span>
+354: 
+355:         )}
+356: 
+357: 
+358: 
+359:         {discount > 0 && (
+360: 
+361:           <span className="fk-card__discount">-{discount}%</span>
+362: 
+363:         )}
+364: 
+365: 
+366: 
+367:         {hasVideo && (
+368: 
+369:           <span className="fk-card__video-flag">
+370: 
+371:             <Play size={11} fill="currentColor" aria-hidden="true" /> Video
+372: 
+373:           </span>
+374: 
+375:         )}
+376: 
+377:       </Link>
+378: 
+379: 
+380: 
+381:       {!isCompact && (
+382: 
+383:       <button
+384: 
+385:         type="button"
+386: 
+387:         className={`fk-card__wish${saved ? " is-saved" : ""}`}
+388: 
+389:         aria-label={saved ? `Remove ${title} from wishlist` : `Save ${title} to wishlist`}
+390: 
+391:         aria-pressed={saved}
+392: 
+393:         onClick={handleToggleWishlist}
+394: 
+395:       >
+396: 
+397:         <Heart size={17} fill={saved ? "currentColor" : "none"} aria-hidden="true" />
+398: 
+399:       </button>
+400: 
+401:       )}
+402: 
+403: 
+404: 
+405:       <div className="fk-card__body">
+406: 
+407:         <Link to={productHref} className="fk-card__title">
+408: 
+409:           {title}
+410: 
+411:         </Link>
+412: 
+413: 
+414: 
+415:         {rating && !isDeal && !isCompact && (
+416: 
+417:           <Stars rating={rating.average} reviews={rating.count ?? undefined} />
+418: 
+419:         )}
+420: 
+421: 
+422: 
+423:         <div className="fk-card__price-row">
+424: 
+425:           {hasPrice ? (
+426: 
+427:             <>
+428: 
+429:               <span className="fk-card__price">{formatPrice(price)}</span>
+430: 
+431:               {discount > 0 && (
+432: 
+433:                 <span className="fk-card__was">
+434: 
+435:                   {isDeal || isCompact ? null : "List: "}
+436: 
+437:                   <s>{formatPrice(product.price)}</s>
+438: 
+439:                 </span>
+440: 
+441:               )}
+442: 
+443:             </>
+444: 
+445:           ) : (
+446: 
+447:             <span className="fk-card__price fk-card__price--na">Price unavailable</span>
+448: 
+449:           )}
+450: 
+451:         </div>
+452: 
+453: 
+454: 
+455:         {delivery && !isDeal && !isCompact && (
+456: 
+457:           <div className="fk-card__delivery">
+458: 
+459:             <Truck size={13} aria-hidden="true" /> {delivery}
+460: 
+461:           </div>
+462: 
+463:         )}
+464: 
+465: 
+466: 
+467:         {!isDeal && (isCompact ? outOfStock || lowStock : true) && (
+468: 
+469:         <div
+470: 
+471:           className={`fk-card__stock${
+472: 
+473:             outOfStock ? " is-out" : lowStock ? " is-low" : " is-in"
+474: 
+475:           }`}
+476: 
+477:         >
+478: 
+479:           {outOfStock
+480: 
+481:             ? "Out of stock"
+482: 
+483:             : lowStock
+484: 
+485:               ? typeof product.stockQuantity === "number"
+486: 
+487:                 ? `Only ${product.stockQuantity} left`
+488: 
+489:                 : "Low stock"
+490: 
+491:               : "In stock"}
+492: 
+493:         </div>
+494: 
+495:         )}
+496: 
+497: 
+498: 
+499:         {!isDeal && (
+500: 
+501:         <Link
+502: 
+503:           to={`/shop/store/${product.storeSlug}`}
+504: 
+505:           className="fk-card__seller"
+506: 
+507:           onClick={(event) => {
+508: 
+509:             if (!product.storeSlug) event.preventDefault();
+510: 
+511:           }}
+512: 
+513:         >
+514: 
+515:           {product.storeCountryFlag && (
+516: 
+517:             <span aria-hidden="true">{product.storeCountryFlag} </span>
+518: 
+519:           )}
+520: 
+521:           {storeName}
+522: 
+523:         </Link>
+524: 
+525:         )}
+526: 
+527: 
+528: 
+529:         {showActions && isDeal && (
+530: 
+531:           <div className="fk-card__actions">
+532: 
+533:             <button
+534: 
+535:               type="button"
+536: 
+537:               className="fk-btn fk-btn--cart"
+538: 
+539:               disabled={!canBuy || status === "adding"}
+540: 
+541:               onClick={handleAddToCart}
+542: 
+543:             >
+544: 
+545:               <ShoppingCart size={16} aria-hidden="true" />
+546: 
+547:               {outOfStock
+548: 
+549:                 ? "Out of stock"
+550: 
+551:                 : status === "adding"
+552: 
+553:                   ? "Adding…"
+554: 
+555:                   : status === "added"
+556: 
+557:                     ? "Added ✓"
+558: 
+559:                     : "Add to cart"}
+560: 
+561:             </button>
+562: 
+563:           </div>
+564: 
+565:         )}
+566: 
+567: 
+568: 
+569:         {showActions && !isDeal && (
+570: 
+571:           <div className="fk-card__actions">
+572: 
+573:             <button
+574: 
+575:               type="button"
+576: 
+577:               className="fk-btn fk-btn--cart"
+578: 
+579:               disabled={!canBuy || status === "adding"}
+580: 
+581:               onClick={handleAddToCart}
+582: 
+583:             >
+584: 
+585:               {isCompact && canBuy && status === "idle" && (
+586: 
+587:                 <ShoppingCart size={13} aria-hidden="true" />
+588: 
+589:               )}
+590: 
+591:               {outOfStock
+592: 
+593:                 ? "Out of stock"
+594: 
+595:                 : status === "adding"
+596: 
+597:                   ? "Adding…"
+598: 
+599:                   : status === "added"
+600: 
+601:                     ? "Added ✓"
+602: 
+603:                     : "Add to Cart"}
+604: 
+605:             </button>
+606: 
+607: 
+608: 
+609:             {canBuy && (
+610: 
+611:               <button
+612: 
+613:                 type="button"
+614: 
+615:                 className="fk-btn fk-btn--buy"
+616: 
+617:                 disabled={status === "adding"}
+618: 
+619:                 onClick={handleBuyNow}
+620: 
+621:               >
+622: 
+623:                 Buy Now
+624: 
+625:               </button>
+626: 
+627:             )}
+628: 
+629:           </div>
+630: 
+631:         )}
+632: 
+633: 
+634: 
+635:         {status === "error" && (
+636: 
+637:           <p className="fk-card__error" role="alert">
+638: 
+639:             Couldn’t add to cart. Please try again.
+640: 
+641:           </p>
+642: 
+643:         )}
+644: 
+645:       </div>
+646: 
+647:     </article>
+648: 
+649:   );
+650: 
+651: }
+652: 
+653: 
+654: 
+655: export default ProductCard;

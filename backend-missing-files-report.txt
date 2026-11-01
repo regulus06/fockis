@@ -1,0 +1,6413 @@
+===== BUSINESSES TREE =====
+Folder PATH listing for volume Acer
+Volume serial number is CEDE-7976
+C:\USERS\ELINC\ONEDRIVE\DESKTOP\MY-SOCIAL-APP1\APPS\API\SRC\BUSINESSES
+ª   businesses.controller.ts
+ª   businesses.module.ts
+ª   businesses.service.ts
+ª   
++---dto
+ª       create-business-deal.dto.ts
+ª       create-business.dto.ts
+ª       publish-business.dto.ts
+ª       update-business-deal.dto.ts
+ª       update-business.dto.ts
+ª       
++---enums
+ª       business-category.enum.ts
+ª       business-status.enum.ts
+ª       
++---schemas
+        business-deal.schema.ts
+        business.schema.ts
+        
+
+===== EVENTS TREE =====
+Folder PATH listing for volume Acer
+Volume serial number is CEDE-7976
+C:\USERS\ELINC\ONEDRIVE\DESKTOP\MY-SOCIAL-APP1\APPS\API\SRC\EVENTS
+ª   events.module.ts
+ª   
++---controllers
+ª       events.controller.ts
+ª       
++---dto
+ª       create-event.dto.ts
+ª       rsvp-event.dto.ts
+ª       update-event.dto.ts
+ª       
++---schemas
+ª       event.schema.ts
+ª       
++---services
+ª       events.service.ts
+ª       
++---utils
+
+===== MY-LIVE TREE =====
+Folder PATH listing for volume Acer
+Volume serial number is CEDE-7976
+C:\USERS\ELINC\ONEDRIVE\DESKTOP\MY-SOCIAL-APP1\APPS\API\SRC\MY-LIVE
+ª   live.module.ts
+ª   
++---controllers
+ª       live.controller.ts
+ª       
++---dto
+ª       create-live.dto.ts
+ª       end-live.dto.ts
+ª       join-live.dto.ts
+ª       live-comment.dto.ts
+ª       live-guest.dto.ts
+ª       live-like.dto.ts
+ª       
++---gateways
+ª       live.gateway.ts
+ª       
++---guards
+ª       live-jwt.guard.ts
+ª       
++---schemas
+ª       live-comment.schema.ts
+ª       live-guest.schema.ts
+ª       live-stream.schema.ts
+ª       live-view.schema.ts
+ª       
++---services
+ª       live-comment.service.ts
+ª       live-discovery.service.ts
+ª       live-guest.service.ts
+ª       live-like.service.ts
+ª       live-token.service.ts
+ª       live-viewer.service.ts
+ª       live.service.ts
+ª       
++---types
+ª       live.types.ts
+ª       
++---utils
+        live-room.util.ts
+        
+
+===== FILE: apps/api/src/businesses/dto/create-business.dto.ts =====
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsBoolean,
+  IsEmail,
+  IsEnum,
+  IsInt,
+  IsLatitude,
+  IsLongitude,
+  IsMongoId,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+  ValidateNested,
+} from "class-validator";
+
+import {
+  Type,
+} from "class-transformer";
+
+import {
+  BusinessCategory,
+} from "../enums/business-category.enum";
+
+import {
+  BusinessPrimaryAction,
+  BusinessSize,
+} from "../schemas/business.schema";
+
+import {
+  BusinessHoursEntryDto,
+  IsOptionalHttpUrl,
+} from "./business-fields.dto";
+
+
+/* ============================================================================
+   SOCIAL LINKS
+============================================================================ */
+
+export class BusinessSocialLinksDto {
+
+  @IsOptionalHttpUrl()
+  @MaxLength(500)
+  facebook?: string;
+
+
+  @IsOptionalHttpUrl()
+  @MaxLength(500)
+  instagram?: string;
+
+
+  @IsOptionalHttpUrl()
+  @MaxLength(500)
+  tiktok?: string;
+
+
+  @IsOptionalHttpUrl()
+  @MaxLength(500)
+  youtube?: string;
+
+
+  @IsOptionalHttpUrl()
+  @MaxLength(500)
+  linkedin?: string;
+}
+
+
+/* ============================================================================
+   CREATE BUSINESS DTO
+============================================================================ */
+
+export class CreateBusinessDto {
+
+  @IsString()
+  @MaxLength(120)
+  name!: string;
+
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
+
+
+  @IsEnum(BusinessCategory)
+  category!: BusinessCategory;
+
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(160)
+  tagline?: string;
+
+
+  @IsOptional()
+  @IsInt()
+  @Min(1800)
+  @Max(2100)
+  foundedYear?: number;
+
+
+  @IsOptional()
+  @IsEnum(BusinessSize)
+  businessSize?: BusinessSize;
+
+
+  /* ==========================================================================
+     IMAGES
+
+     Uploaded images are attached after creation through
+     POST /businesses/:id/logo and POST /businesses/:id/cover-image.
+  ========================================================================== */
+
+  @IsOptionalHttpUrl()
+  @MaxLength(2000)
+  logoUrl?: string;
+
+
+  @IsOptionalHttpUrl()
+  @MaxLength(2000)
+  coverImageUrl?: string;
+
+
+  /* ==========================================================================
+     CONTACT
+  ========================================================================== */
+
+  @IsOptionalHttpUrl()
+  @MaxLength(2000)
+  websiteUrl?: string;
+
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  phone?: string;
+
+
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(254)
+  email?: string;
+
+
+  /* ==========================================================================
+     FOCKIS SHOP / BUSINESS CARD LINKS
+  ========================================================================== */
+
+  @IsOptional()
+  @IsMongoId()
+  storeId?: string | null;
+
+
+  @IsOptional()
+  @IsEnum(BusinessPrimaryAction)
+  primaryAction?: BusinessPrimaryAction | null;
+
+
+  /* ==========================================================================
+     ADDRESS
+  ========================================================================== */
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  address?: string;
+
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  city?: string;
+
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  state?: string;
+
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  zipCode?: string;
+
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  country?: string;
+
+
+  @IsOptional()
+  @IsLatitude()
+  latitude?: number;
+
+
+  @IsOptional()
+  @IsLongitude()
+  longitude?: number;
+
+
+  /* ==========================================================================
+     OPENING HOURS
+  ========================================================================== */
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(7)
+  @ValidateNested({
+    each: true,
+  })
+  @Type(() => BusinessHoursEntryDto)
+  hours?: BusinessHoursEntryDto[];
+
+
+  @IsOptional()
+  @IsBoolean()
+  byAppointmentOnly?: boolean;
+
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  timeZone?: string;
+
+
+  /* ==========================================================================
+     SOCIAL
+  ========================================================================== */
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => BusinessSocialLinksDto)
+  socialLinks?: BusinessSocialLinksDto;
+}
+
+===== FILE: apps/api/src/businesses/dto/update-business.dto.ts =====
+
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsBoolean,
+  IsEmail,
+  IsEnum,
+  IsInt,
+  IsLatitude,
+  IsLongitude,
+  IsMongoId,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+  ValidateIf,
+  ValidateNested,
+} from "class-validator";
+
+import { Type } from "class-transformer";
+
+import { BusinessCategory } from "../enums/business-category.enum";
+
+import {
+  BusinessPrimaryAction,
+  BusinessSize,
+} from "../schemas/business.schema";
+
+import {
+  BusinessHoursEntryDto,
+  IsOptionalHttpUrl,
+} from "./business-fields.dto";
+
+/*
+ * "" and null mean "clear this value" for optional fields.
+ */
+const hasValue = (
+  _object: unknown,
+  value: unknown,
+) =>
+  value !== "" &&
+  value !== null &&
+  value !== undefined;
+
+/* ============================================================================
+   SOCIAL LINKS
+============================================================================ */
+
+export class UpdateBusinessSocialLinksDto {
+  @IsOptionalHttpUrl()
+  @MaxLength(500)
+  facebook?: string;
+
+  @IsOptionalHttpUrl()
+  @MaxLength(500)
+  instagram?: string;
+
+  @IsOptionalHttpUrl()
+  @MaxLength(500)
+  tiktok?: string;
+
+  @IsOptionalHttpUrl()
+  @MaxLength(500)
+  youtube?: string;
+
+  @IsOptionalHttpUrl()
+  @MaxLength(500)
+  linkedin?: string;
+}
+
+/* ============================================================================
+   UPDATE BUSINESS DTO
+============================================================================ */
+
+export class UpdateBusinessDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
+
+  @IsOptional()
+  @IsEnum(BusinessCategory)
+  category?: BusinessCategory;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(160)
+  tagline?: string;
+
+  @IsOptional()
+  @ValidateIf(hasValue)
+  @IsInt()
+  @Min(1800)
+  @Max(2100)
+  foundedYear?: number | null;
+
+  @IsOptional()
+  @ValidateIf(hasValue)
+  @IsEnum(BusinessSize)
+  businessSize?: BusinessSize | "" | null;
+
+  // IMAGES
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  logoUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  coverImageUrl?: string;
+
+  // WEBSITE / CONTACT
+
+  @IsOptionalHttpUrl()
+  @MaxLength(2000)
+  websiteUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  phone?: string;
+
+  @IsOptional()
+  @ValidateIf(hasValue)
+  @IsEmail()
+  @MaxLength(255)
+  email?: string;
+
+  // FOCKIS SHOP / BUSINESS CARD LINKS
+
+  @IsOptional()
+  @ValidateIf(hasValue)
+  @IsMongoId()
+  storeId?: string | null;
+
+  @IsOptional()
+  @ValidateIf(hasValue)
+  @IsEnum(BusinessPrimaryAction)
+  primaryAction?: BusinessPrimaryAction | "" | null;
+
+  // ADDRESS
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  address?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  state?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  zipCode?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  country?: string;
+
+  // LOCATION
+
+  @IsOptional()
+  @ValidateIf(hasValue)
+  @IsLatitude()
+  latitude?: number | null;
+
+  @IsOptional()
+  @ValidateIf(hasValue)
+  @IsLongitude()
+  longitude?: number | null;
+
+  // OPENING HOURS
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(7)
+  @ValidateNested({ each: true })
+  @Type(() => BusinessHoursEntryDto)
+  hours?: BusinessHoursEntryDto[];
+
+  @IsOptional()
+  @IsBoolean()
+  byAppointmentOnly?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  timeZone?: string;
+
+  // SOCIAL LINKS
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UpdateBusinessSocialLinksDto)
+  socialLinks?: UpdateBusinessSocialLinksDto;
+
+  // MAIN FOCKIS FEED
+
+  @IsOptional()
+  @IsBoolean()
+  feedEnabled?: boolean;
+
+  // SPOTLIGHT — INDEPENDENT OF THE MAIN FEED
+
+  @IsOptional()
+  @IsBoolean()
+  spotlightEnabled?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(1000)
+  spotlightPriority?: number;
+}
+
+===== FILE: apps/api/src/events/dto/create-event.dto.ts =====
+import {
+  IsBoolean,
+  IsDateString,
+  IsEnum,
+  IsInt,
+  IsLatitude,
+  IsLongitude,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Matches,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+  ValidateIf,
+} from "class-validator";
+
+import {
+  EventCategory,
+  EventCoverMediaType,
+  EventVisibility,
+} from "../schemas/event.schema";
+
+import {
+  EmptyToUndefined,
+  NullableNumber,
+  OptionalBoolean,
+  Trimmed,
+} from "./event-dto.helpers";
+
+/** IANA zone such as "America/New_York" or "UTC". */
+export const TIME_ZONE_PATTERN = /^(?:UTC|[A-Za-z_]+(?:\/[A-Za-z0-9_+\-]+){1,2})$/;
+
+export class CreateEventDto {
+  @Trimmed()
+  @IsString()
+  @IsNotEmpty({ message: "Give your event a title." })
+  @MinLength(2, { message: "The title must be at least 2 characters." })
+  @MaxLength(150, { message: "The title can be at most 150 characters." })
+  title!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(5000, { message: "The description can be at most 5,000 characters." })
+  description?: string;
+
+  @IsOptional()
+  @IsEnum(EventCategory, { message: "Choose a valid category." })
+  category?: EventCategory;
+
+  @IsOptional()
+  @IsEnum(EventVisibility, { message: "Choose a valid visibility." })
+  visibility?: EventVisibility;
+
+  @IsDateString({}, { message: "Enter a valid start date and time." })
+  startDate!: string;
+
+  @IsDateString({}, { message: "Enter a valid end date and time." })
+  endDate!: string;
+
+  @IsOptional()
+  @EmptyToUndefined()
+  @IsString()
+  @MaxLength(64)
+  @Matches(TIME_ZONE_PATTERN, { message: "Invalid time zone." })
+  timeZone?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  locationName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  address?: string;
+
+  @IsOptional()
+  @NullableNumber()
+  @ValidateIf((_, value) => value !== null)
+  @IsLatitude({ message: "Latitude must be between -90 and 90." })
+  latitude?: number | null;
+
+  @IsOptional()
+  @NullableNumber()
+  @ValidateIf((_, value) => value !== null)
+  @IsLongitude({ message: "Longitude must be between -180 and 180." })
+  longitude?: number | null;
+
+  @IsOptional()
+  @OptionalBoolean()
+  @IsBoolean()
+  isOnline?: boolean;
+
+  @IsOptional()
+  @EmptyToUndefined()
+  @IsUrl({ require_protocol: true, protocols: ["http", "https"] }, { message: "The online meeting link must start with http:// or https://." })
+  @MaxLength(2000)
+  onlineUrl?: string;
+
+  @IsOptional()
+  @NullableNumber()
+  @ValidateIf((_, value) => value !== null)
+  @IsInt({ message: "Capacity must be a whole number." })
+  @Min(1, { message: "Capacity must be at least 1." })
+  @Max(1_000_000)
+  capacity?: number | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  coverImageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  coverVideoUrl?: string;
+
+  @IsOptional()
+  @IsEnum(EventCoverMediaType)
+  coverMediaType?: EventCoverMediaType;
+}
+
+===== FILE: apps/api/src/events/dto/rsvp-event.dto.ts =====
+import { IsBoolean, IsEnum, IsOptional } from "class-validator";
+
+import { EventRsvpStatus } from "../schemas/event.schema";
+import { OptionalBoolean } from "./event-dto.helpers";
+
+/**
+ * POST /events/:id/rsvp
+ *
+ *   {}                         -> Going (original behaviour)
+ *   { "status": "going" }      -> Going
+ *   { "status": "interested" } -> Interested
+ *   { "interested": true }     -> Interested (legacy field)
+ */
+export class RsvpEventDto {
+  @IsOptional()
+  @IsEnum(EventRsvpStatus, { message: "status must be 'going' or 'interested'." })
+  status?: EventRsvpStatus;
+
+  @IsOptional()
+  @OptionalBoolean()
+  @IsBoolean()
+  interested?: boolean;
+}
+
+===== FILE: apps/api/src/events/controllers/events.controller.ts =====
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Header,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from "@nestjs/common";
+
+import type { Request } from "express";
+
+import { FileFieldsInterceptor } from "@nestjs/platform-express";
+import type { MulterOptions } from "@nestjs/platform-express/multer/interfaces/multer-options.interface";
+
+import { diskStorage } from "multer";
+import { extname } from "path";
+import { randomUUID } from "crypto";
+
+import { EventsService } from "../services/events.service";
+
+import { CreateEventDto } from "../dto/create-event.dto";
+import { UpdateEventDto } from "../dto/update-event.dto";
+import { RsvpEventDto } from "../dto/rsvp-event.dto";
+import { CancelEventDto } from "../dto/cancel-event.dto";
+import { InviteEventDto } from "../dto/invite-event.dto";
+import {
+  DiscoverEventsQueryDto,
+  EventSectionsQueryDto,
+  ListEventsQueryDto,
+} from "../dto/discover-events.dto";
+
+import { EventRsvpStatus } from "../schemas/event.schema";
+
+import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
+
+/* ============================================================================
+   AUTHENTICATED REQUEST
+============================================================================ */
+
+interface AuthenticatedRequest extends Request {
+  user: {
+    id?: string;
+    _id?: string;
+    userId?: string;
+    sub?: string;
+  };
+}
+
+interface EventUploadedFiles {
+  coverImageFile?: Express.Multer.File[];
+  eventVideoFile?: Express.Multer.File[];
+  videoFile?: Express.Multer.File[];
+}
+
+/* ============================================================================
+   UPLOADS
+   Same convention as before: files are written by Multer to
+   ./uploads/events and served by the static /uploads handler in main.ts.
+============================================================================ */
+
+const ALLOWED_IMAGES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_VIDEOS = [
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+  "video/x-msvideo",
+  "video/x-matroska",
+];
+
+const EVENT_UPLOAD_FIELDS = [
+  { name: "coverImageFile", maxCount: 1 },
+  { name: "eventVideoFile", maxCount: 1 },
+  { name: "videoFile", maxCount: 1 },
+];
+
+const EVENT_UPLOAD_OPTIONS: MulterOptions = {
+  storage: diskStorage({
+    destination: "./uploads/events",
+    filename: (_req, file, callback) => {
+      callback(null, `${Date.now()}-${randomUUID()}${extname(file.originalname).toLowerCase()}`);
+    },
+  }),
+  limits: {
+    // Per-type limits (10 MB images, 100 MB videos) are enforced in the service.
+    fileSize: 100 * 1024 * 1024,
+    files: 2,
+  },
+  fileFilter: (_req, file, callback) => {
+    if (file.fieldname === "coverImageFile") {
+      return ALLOWED_IMAGES.includes(file.mimetype)
+        ? callback(null, true)
+        : callback(new BadRequestException("Cover image must be JPG, PNG, or WebP."), false);
+    }
+
+    if (file.fieldname === "eventVideoFile" || file.fieldname === "videoFile") {
+      return ALLOWED_VIDEOS.includes(file.mimetype)
+        ? callback(null, true)
+        : callback(
+            new BadRequestException("Event video must be MP4, WebM, MOV, AVI, or MKV."),
+            false,
+          );
+    }
+
+    return callback(
+      new BadRequestException(`Unsupported event upload field: ${file.fieldname}`),
+      false,
+    );
+  },
+};
+
+function positiveInt(value: string | undefined, fallback: number): number {
+  const parsed = Number(value);
+
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+/* ============================================================================
+   EVENTS CONTROLLER
+
+   Every response that reflects an event's lifecycle is sent with
+   Cache-Control: no-store, so no browser or proxy cache can serve an
+   event after it has ended or been cancelled.
+============================================================================ */
+
+@Controller("events")
+@UseGuards(JwtAuthGuard)
+export class EventsController {
+  constructor(private readonly eventsService: EventsService) {}
+
+  private getUserId(req: AuthenticatedRequest): string {
+    const userId = req.user?.id ?? req.user?._id ?? req.user?.userId ?? req.user?.sub;
+
+    if (!userId) {
+      throw new BadRequestException("Authenticated user ID was not found.");
+    }
+
+    return String(userId);
+  }
+
+  /* ---------------------------------------------------------------- create */
+
+  @Post()
+  @UseInterceptors(FileFieldsInterceptor(EVENT_UPLOAD_FIELDS, EVENT_UPLOAD_OPTIONS))
+  create(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: CreateEventDto,
+    @UploadedFiles() files: EventUploadedFiles,
+  ) {
+    return this.eventsService.create(
+      this.getUserId(req),
+      dto,
+      files?.coverImageFile?.[0],
+      files?.eventVideoFile?.[0] ?? files?.videoFile?.[0],
+    );
+  }
+
+  /* ------------------------------------------------------------ discovery */
+
+  @Get()
+  @Header("Cache-Control", "no-store")
+  findAll(@Req() req: AuthenticatedRequest, @Query() query: ListEventsQueryDto) {
+    return this.eventsService.findAll(this.getUserId(req), Boolean(query.includeEnded));
+  }
+
+  @Get("upcoming")
+  @Header("Cache-Control", "no-store")
+  upcoming(@Req() req: AuthenticatedRequest) {
+    return this.eventsService.findUpcoming(this.getUserId(req));
+  }
+
+  @Get("discover")
+  @Header("Cache-Control", "no-store")
+  discover(@Req() req: AuthenticatedRequest, @Query() query: DiscoverEventsQueryDto) {
+    return this.eventsService.discover(this.getUserId(req), query);
+  }
+
+  @Get("sections")
+  @Header("Cache-Control", "no-store")
+  sections(@Req() req: AuthenticatedRequest, @Query() query: EventSectionsQueryDto) {
+    return this.eventsService.sections(this.getUserId(req), query);
+  }
+
+  @Get("nearby")
+  @Header("Cache-Control", "no-store")
+  nearby(
+    @Req() req: AuthenticatedRequest,
+    @Query("latitude") latitude: string,
+    @Query("longitude") longitude: string,
+    @Query("radiusKm") radiusKm?: string,
+  ) {
+    const lat = Number(latitude);
+    const lon = Number(longitude);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+      throw new BadRequestException("Valid latitude and longitude are required.");
+    }
+
+    const radius = radiusKm ? Number(radiusKm) : 50;
+
+    return this.eventsService.findNearby(
+      lat,
+      lon,
+      Number.isFinite(radius) ? radius : 50,
+      this.getUserId(req),
+    );
+  }
+
+  /* -------------------------------------------------------------- my lists */
+
+  @Get("my-events")
+  @Header("Cache-Control", "no-store")
+  myEvents(@Req() req: AuthenticatedRequest) {
+    return this.eventsService.myEvents(this.getUserId(req));
+  }
+
+  @Get("my-rsvps")
+  @Header("Cache-Control", "no-store")
+  myRsvps(@Req() req: AuthenticatedRequest) {
+    return this.eventsService.myRsvps(this.getUserId(req));
+  }
+
+  /* --------------------------------------------------------------- details */
+
+  @Get(":id/attendees")
+  @Header("Cache-Control", "no-store")
+  attendees(
+    @Req() req: AuthenticatedRequest,
+    @Param("id") id: string,
+    @Query("status") status?: string,
+    @Query("page") page?: string,
+    @Query("limit") limit?: string,
+  ) {
+    return this.eventsService.attendees(id, this.getUserId(req), {
+      status,
+      page: positiveInt(page, 1),
+      limit: positiveInt(limit, 30),
+    });
+  }
+
+  @Get(":id/related")
+  @Header("Cache-Control", "no-store")
+  related(
+    @Req() req: AuthenticatedRequest,
+    @Param("id") id: string,
+    @Query("limit") limit?: string,
+  ) {
+    return this.eventsService.related(id, this.getUserId(req), positiveInt(limit, 6));
+  }
+
+  @Get(":id")
+  @Header("Cache-Control", "no-store")
+  findOne(@Req() req: AuthenticatedRequest, @Param("id") id: string) {
+    return this.eventsService.findOne(id, this.getUserId(req));
+  }
+
+  /* ------------------------------------------------------- owner actions */
+
+  @Patch(":id")
+  @UseInterceptors(FileFieldsInterceptor(EVENT_UPLOAD_FIELDS, EVENT_UPLOAD_OPTIONS))
+  update(
+    @Req() req: AuthenticatedRequest,
+    @Param("id") id: string,
+    @Body() dto: UpdateEventDto,
+    @UploadedFiles() files: EventUploadedFiles,
+  ) {
+    return this.eventsService.update(
+      this.getUserId(req),
+      id,
+      dto,
+      files?.coverImageFile?.[0],
+      files?.eventVideoFile?.[0] ?? files?.videoFile?.[0],
+    );
+  }
+
+  @Patch(":id/cancel")
+  cancel(
+    @Req() req: AuthenticatedRequest,
+    @Param("id") id: string,
+    @Body() dto: CancelEventDto,
+  ) {
+    return this.eventsService.cancel(this.getUserId(req), id, dto?.reason);
+  }
+
+  @Delete(":id")
+  remove(@Req() req: AuthenticatedRequest, @Param("id") id: string) {
+    return this.eventsService.remove(this.getUserId(req), id);
+  }
+
+  @Post(":id/invite")
+  invite(
+    @Req() req: AuthenticatedRequest,
+    @Param("id") id: string,
+    @Body() dto: InviteEventDto,
+  ) {
+    return this.eventsService.invite(this.getUserId(req), id, dto.userIds);
+  }
+
+  /* ------------------------------------------------------------------ RSVP */
+
+  @Post(":id/rsvp")
+  rsvp(
+    @Req() req: AuthenticatedRequest,
+    @Param("id") id: string,
+    @Body() dto: RsvpEventDto,
+  ) {
+    const status =
+      dto?.status ?? (dto?.interested ? EventRsvpStatus.INTERESTED : EventRsvpStatus.GOING);
+
+    return this.eventsService.rsvp(this.getUserId(req), id, status);
+  }
+
+  @Delete(":id/rsvp")
+  cancelRsvp(@Req() req: AuthenticatedRequest, @Param("id") id: string) {
+    return this.eventsService.cancelRsvp(this.getUserId(req), id);
+  }
+}
+
+===== FILE: apps/api/src/events/services/events.service.ts =====
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
+
+import { InjectConnection, InjectModel } from "@nestjs/mongoose";
+
+import { Connection, Model, PipelineStage, Types } from "mongoose";
+
+import { promises as fs } from "fs";
+
+import {
+  Event,
+  EventCategory,
+  EventCoverMediaType,
+  EventDocument,
+  EventRsvpStatus,
+  EventStatus,
+  EventVisibility,
+} from "../schemas/event.schema";
+
+import { CreateEventDto } from "../dto/create-event.dto";
+import { UpdateEventDto } from "../dto/update-event.dto";
+import type {
+  DiscoverEventsQueryDto,
+  EventSectionsQueryDto,
+} from "../dto/discover-events.dto";
+
+import {
+  activeEventFilter,
+  getEventStatus,
+  isEventActive,
+} from "../utils/event-lifecycle";
+
+import {
+  buildEventVisibilityFilter,
+  canViewEvent,
+} from "../utils/event-visibility";
+
+import {
+  EMPTY_RELATIONSHIPS,
+  EventViewerRelationships,
+  loadEventViewerRelationships,
+} from "../utils/viewer-relationships";
+
+import {
+  EVENT_RECOMMENDATION_CONFIG,
+  haversineKm,
+  rankEvents,
+  RecommendableEvent,
+} from "../utils/event-recommendation";
+
+/* ============================================================================
+   TYPES
+============================================================================ */
+
+type Filter = Record<string, any>;
+
+/** Lean event document as returned by .lean() / aggregate(). */
+export type EventLean = Omit<Event, never> & {
+  _id: Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+
+export interface EventOrganizer {
+  id: string;
+  username: string;
+  name: string;
+  avatar: string;
+  verified: boolean;
+}
+
+export interface SerializedEvent {
+  id: string;
+  creatorId: string;
+  organizer: EventOrganizer | null;
+  title: string;
+  description: string;
+  category: EventCategory;
+  visibility: EventVisibility;
+  startDate: string;
+  endDate: string;
+  timeZone: string;
+  locationName: string;
+  address: string;
+  latitude: number | null;
+  longitude: number | null;
+  isOnline: boolean;
+  /** Only returned to people who can join (organizer, Going, Interested). */
+  onlineUrl: string;
+  coverImageUrl: string;
+  coverVideoUrl: string;
+  coverMediaType: EventCoverMediaType;
+  attendeeCount: number;
+  interestedCount: number;
+  capacity: number | null;
+  spotsLeft: number | null;
+  isFull: boolean;
+  isGoing: boolean;
+  isInterested: boolean;
+  isInvited: boolean;
+  viewerRsvp: EventRsvpStatus | null;
+  isOwner: boolean;
+  status: EventStatus;
+  isCancelled: boolean;
+  cancelledAt: string | null;
+  cancellationReason: string;
+  canRsvp: boolean;
+  distanceKm?: number;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface RsvpResult {
+  success: true;
+  eventId: string;
+  status: EventRsvpStatus | null;
+  going: boolean;
+  interested: boolean;
+  attendeeCount: number;
+  interestedCount: number;
+}
+
+export interface FeedEventRecommendationOptions {
+  viewerId?: string;
+  relationships: EventViewerRelationships;
+  excludeIds?: string[];
+  /** Restrict organizers (Following / Friends feed modes). */
+  organizerIds?: string[];
+  limit: number;
+  latitude?: number;
+  longitude?: number;
+  radiusKm?: number;
+  now?: Date;
+}
+
+/* ============================================================================
+   CONSTANTS
+============================================================================ */
+
+const DAY_MS = 86_400_000;
+const MAX_EVENT_DURATION_MS = 90 * DAY_MS;
+const MAX_LIST = 200;
+const MAX_HISTORY = 500;
+const ORGANIZER_FIELDS = "username firstName lastName profilePicture verified";
+
+/* ============================================================================
+   HELPERS
+============================================================================ */
+
+function and(...filters: Filter[]): Filter {
+  const parts = filters.filter((filter) => filter && Object.keys(filter).length);
+
+  if (parts.length === 0) {
+    return {};
+  }
+
+  return parts.length === 1 ? parts[0] : { $and: parts };
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function idList(values: unknown): string[] {
+  return Array.isArray(values) ? values.map((value) => String(value)) : [];
+}
+
+function toObjectIds(ids: string[]): Types.ObjectId[] {
+  return ids
+    .filter((id) => Types.ObjectId.isValid(id))
+    .map((id) => new Types.ObjectId(id));
+}
+
+function isoOrNull(value: unknown): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const date = value instanceof Date ? value : new Date(String(value));
+
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function boundingBox(latitude: number, longitude: number, radiusKm: number) {
+  const latDelta = radiusKm / 111.32;
+  const cos = Math.max(0.01, Math.cos((latitude * Math.PI) / 180));
+  const lngDelta = radiusKm / (111.32 * cos);
+
+  return {
+    latitude: { $gte: latitude - latDelta, $lte: latitude + latDelta },
+    longitude: { $gte: longitude - lngDelta, $lte: longitude + lngDelta },
+  };
+}
+
+/** Weekday (0 = Sunday) of an instant in an IANA zone; UTC on failure. */
+function weekdayIn(instant: Date, timeZone?: string): number {
+  try {
+    const name = new Intl.DateTimeFormat("en-US", {
+      weekday: "short",
+      timeZone: timeZone || "UTC",
+    }).format(instant);
+
+    return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(name);
+  } catch {
+    return instant.getUTCDay();
+  }
+}
+
+/* ============================================================================
+   SERVICE
+============================================================================ */
+
+@Injectable()
+export class EventsService {
+  private readonly logger = new Logger(EventsService.name);
+
+  constructor(
+    @InjectModel(Event.name)
+    private readonly eventModel: Model<EventDocument>,
+
+    @InjectConnection()
+    private readonly connection: Connection,
+  ) {}
+
+  /* ==========================================================================
+     IDS
+  ========================================================================== */
+
+  private objectId(id: string, label = "event"): Types.ObjectId {
+    if (!id || !Types.ObjectId.isValid(id)) {
+      throw new BadRequestException(`Invalid ${label} ID.`);
+    }
+
+    return new Types.ObjectId(id);
+  }
+
+  /* ==========================================================================
+     VIEWER CONTEXT
+  ========================================================================== */
+
+  async loadRelationships(viewerId?: string): Promise<EventViewerRelationships> {
+    try {
+      return await loadEventViewerRelationships(this.connection, viewerId, this.logger);
+    } catch (error) {
+      this.logger.warn(`Relationship lookup failed: ${String(error)}`);
+      return { ...EMPTY_RELATIONSHIPS };
+    }
+  }
+
+  private async visibleFilter(viewerId: string) {
+    const relationships = await this.loadRelationships(viewerId);
+
+    return {
+      relationships,
+      filter: buildEventVisibilityFilter(viewerId, relationships),
+    };
+  }
+
+  /**
+   * Loads one event the viewer is allowed to see. Events the viewer may
+   * not see are reported as "not found" so their existence is not leaked.
+   */
+  private async loadVisible(
+    eventId: string,
+    viewerId: string,
+  ): Promise<{ event: EventLean; relationships: EventViewerRelationships }> {
+    const _id = this.objectId(eventId);
+
+    const [event, relationships] = await Promise.all([
+      this.eventModel.findById(_id).lean<EventLean>().exec(),
+      this.loadRelationships(viewerId),
+    ]);
+
+    if (!event || !canViewEvent(event, viewerId, relationships)) {
+      throw new NotFoundException("Event not found.");
+    }
+
+    return { event, relationships };
+  }
+
+  /* ==========================================================================
+     ORGANIZERS
+  ========================================================================== */
+
+  private async loadOrganizers(events: EventLean[]): Promise<Map<string, EventOrganizer>> {
+    const organizers = new Map<string, EventOrganizer>();
+    const ids = Array.from(new Set(events.map((event) => String(event.creatorId))));
+    const userModel = this.connection.models["User"];
+
+    if (!userModel || ids.length === 0) {
+      return organizers;
+    }
+
+    try {
+      const users = await userModel
+        .find({ _id: { $in: toObjectIds(ids) } })
+        .select(ORGANIZER_FIELDS)
+        .lean()
+        .exec();
+
+      for (const user of users as any[]) {
+        organizers.set(String(user._id), this.toPerson(user));
+      }
+    } catch (error) {
+      this.logger.warn(`Could not load organizers: ${String(error)}`);
+    }
+
+    return organizers;
+  }
+
+  private toPerson(user: any): EventOrganizer {
+    const name = [user?.firstName, user?.lastName]
+      .map((part) => String(part ?? "").trim())
+      .filter(Boolean)
+      .join(" ");
+
+    return {
+      id: String(user?._id ?? ""),
+      username: String(user?.username ?? ""),
+      name: name || String(user?.username ?? ""),
+      avatar: String(user?.profilePicture ?? ""),
+      verified: Boolean(user?.verified),
+    };
+  }
+
+  /* ==========================================================================
+     SERIALIZE
+  ========================================================================== */
+
+  serialize(
+    event: EventLean,
+    viewerId?: string,
+    organizers?: Map<string, EventOrganizer>,
+    now: Date = new Date(),
+    extras: { distanceKm?: number } = {},
+  ): SerializedEvent {
+    const creatorId = String(event.creatorId);
+    const attendees = idList(event.attendeeIds);
+    const interested = idList(event.interestedIds);
+    const invited = idList(event.invitedIds);
+
+    const isOwner = Boolean(viewerId && viewerId === creatorId);
+    const isGoing = Boolean(viewerId && attendees.includes(viewerId));
+    const isInterested = Boolean(viewerId && !isGoing && interested.includes(viewerId));
+    const isInvited = Boolean(viewerId && invited.includes(viewerId));
+
+    const status = getEventStatus(event, now);
+    const capacity =
+      typeof event.capacity === "number" && event.capacity > 0 ? event.capacity : null;
+    const spotsLeft = capacity === null ? null : Math.max(0, capacity - attendees.length);
+    const isFull = spotsLeft === 0;
+    const active = status === EventStatus.UPCOMING || status === EventStatus.LIVE;
+
+    const coverMediaType = event.coverMediaType ?? EventCoverMediaType.IMAGE;
+
+    return {
+      id: String(event._id),
+      creatorId,
+      organizer: organizers?.get(creatorId) ?? null,
+      title: event.title,
+      description: event.description ?? "",
+      category: event.category ?? EventCategory.GENERAL,
+      visibility: event.visibility ?? EventVisibility.PUBLIC,
+      startDate: new Date(event.startDate).toISOString(),
+      endDate: new Date(event.endDate).toISOString(),
+      timeZone: event.timeZone ?? "",
+      locationName: event.locationName ?? "",
+      address: event.address ?? "",
+      latitude: typeof event.latitude === "number" ? event.latitude : null,
+      longitude: typeof event.longitude === "number" ? event.longitude : null,
+      isOnline: Boolean(event.isOnline),
+      onlineUrl: isOwner || isGoing || isInterested ? event.onlineUrl ?? "" : "",
+      coverImageUrl: event.coverImageUrl ?? "",
+      coverVideoUrl: event.coverVideoUrl ?? "",
+      coverMediaType,
+      attendeeCount: attendees.length,
+      interestedCount: interested.length,
+      capacity,
+      spotsLeft,
+      isFull,
+      isGoing,
+      isInterested,
+      isInvited,
+      viewerRsvp: isGoing
+        ? EventRsvpStatus.GOING
+        : isInterested
+          ? EventRsvpStatus.INTERESTED
+          : null,
+      isOwner,
+      status,
+      isCancelled: Boolean(event.isCancelled),
+      cancelledAt: isoOrNull(event.cancelledAt),
+      cancellationReason: event.cancellationReason ?? "",
+      canRsvp: active && !isOwner && (!isFull || isGoing),
+      ...(typeof extras.distanceKm === "number"
+        ? { distanceKm: Math.round(extras.distanceKm * 10) / 10 }
+        : {}),
+      createdAt: isoOrNull(event.createdAt),
+      updatedAt: isoOrNull(event.updatedAt),
+    };
+  }
+
+  private async serializeMany(
+    events: EventLean[],
+    viewerId?: string,
+    now: Date = new Date(),
+    distanceFrom?: { latitude: number; longitude: number },
+  ): Promise<SerializedEvent[]> {
+    const organizers = await this.loadOrganizers(events);
+
+    return events.map((event) => {
+      const distanceKm =
+        distanceFrom &&
+        typeof event.latitude === "number" &&
+        typeof event.longitude === "number"
+          ? haversineKm(
+              distanceFrom.latitude,
+              distanceFrom.longitude,
+              event.latitude,
+              event.longitude,
+            )
+          : undefined;
+
+      return this.serialize(event, viewerId, organizers, now, { distanceKm });
+    });
+  }
+
+  /* ==========================================================================
+     VALIDATION
+  ========================================================================== */
+
+  private validateDateRange(startDate: Date, endDate: Date) {
+    if (Number.isNaN(startDate.getTime())) {
+      throw new BadRequestException("Invalid start date.");
+    }
+
+    if (Number.isNaN(endDate.getTime())) {
+      throw new BadRequestException("Invalid end date.");
+    }
+
+    if (endDate.getTime() <= startDate.getTime()) {
+      throw new BadRequestException("The end date/time must be after the start date/time.");
+    }
+
+    if (endDate.getTime() - startDate.getTime() > MAX_EVENT_DURATION_MS) {
+      throw new BadRequestException("An event can last at most 90 days.");
+    }
+  }
+
+  private validateLocation(values: {
+    isOnline: boolean;
+    onlineUrl: string;
+    locationName: string;
+    address: string;
+    latitude?: number | null;
+    longitude?: number | null;
+  }) {
+    const hasLat = typeof values.latitude === "number";
+    const hasLng = typeof values.longitude === "number";
+
+    if (hasLat !== hasLng) {
+      throw new BadRequestException("Provide both latitude and longitude, or neither.");
+    }
+
+    if (values.isOnline && !values.onlineUrl.trim()) {
+      throw new BadRequestException("Add the online meeting link for an online event.");
+    }
+
+    if (!values.isOnline && !values.locationName.trim() && !values.address.trim()) {
+      throw new BadRequestException("Add a venue name or address for an in-person event.");
+    }
+  }
+
+  private validateMediaFile(file?: Express.Multer.File) {
+    if (!file) {
+      return;
+    }
+
+    const isImage = file.mimetype.startsWith("image/");
+    const isVideo = file.mimetype.startsWith("video/");
+
+    if (!isImage && !isVideo) {
+      throw new BadRequestException("Event media must be an image or video.");
+    }
+
+    if (isImage && file.size > 10 * 1024 * 1024) {
+      throw new BadRequestException("Event images must be 10 MB or smaller.");
+    }
+
+    if (isVideo && file.size > 100 * 1024 * 1024) {
+      throw new BadRequestException("Event videos must be 100 MB or smaller.");
+    }
+  }
+
+  private mediaTypeOf(file?: Express.Multer.File): EventCoverMediaType | undefined {
+    if (!file) {
+      return undefined;
+    }
+
+    if (file.mimetype.startsWith("video/")) {
+      return EventCoverMediaType.VIDEO;
+    }
+
+    if (file.mimetype.startsWith("image/")) {
+      return EventCoverMediaType.IMAGE;
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Public URL of a file Multer stored on disk under ./uploads/events.
+   * There is deliberately no fallback: a file that was not stored has no
+   * URL, and pretending otherwise would save a broken link.
+   */
+  private mediaUrlOf(file?: Express.Multer.File): string | undefined {
+    if (!file) {
+      return undefined;
+    }
+
+    this.validateMediaFile(file);
+
+    if (!file.filename) {
+      throw new InternalServerErrorException("The uploaded file could not be stored.");
+    }
+
+    return `/uploads/events/${file.filename}`;
+  }
+
+  /** Removes files Multer already wrote when the request is rejected. */
+  async discardUploads(...files: Array<Express.Multer.File | undefined>) {
+    await Promise.all(
+      files
+        .filter((file): file is Express.Multer.File => Boolean(file?.path))
+        .map((file) =>
+          fs.unlink(file.path).catch((error: unknown) => {
+            this.logger.warn(`Could not remove rejected upload ${file.path}: ${String(error)}`);
+          }),
+        ),
+    );
+  }
+
+  /* ==========================================================================
+     CREATE
+  ========================================================================== */
+
+  async create(
+    userId: string,
+    dto: CreateEventDto,
+    coverImageFile?: Express.Multer.File,
+    coverVideoFile?: Express.Multer.File,
+  ): Promise<SerializedEvent> {
+    try {
+      const creatorId = this.objectId(userId, "user");
+      const startDate = new Date(dto.startDate);
+      const endDate = new Date(dto.endDate);
+
+      this.validateDateRange(startDate, endDate);
+
+      if (endDate.getTime() <= Date.now()) {
+        throw new BadRequestException("The event's end time is already in the past.");
+      }
+
+      const isOnline = dto.isOnline ?? false;
+      const onlineUrl = isOnline ? dto.onlineUrl?.trim() ?? "" : "";
+      const locationName = dto.locationName?.trim() ?? "";
+      const address = dto.address?.trim() ?? "";
+
+      this.validateLocation({
+        isOnline,
+        onlineUrl,
+        locationName,
+        address,
+        latitude: dto.latitude,
+        longitude: dto.longitude,
+      });
+
+      if (coverImageFile && coverVideoFile) {
+        throw new BadRequestException("Choose either an image or a video, not both.");
+      }
+
+      const uploaded = coverImageFile ?? coverVideoFile;
+      const uploadedUrl = this.mediaUrlOf(uploaded);
+      const uploadedType = this.mediaTypeOf(uploaded);
+
+      const coverImageUrl =
+        uploadedType === EventCoverMediaType.IMAGE
+          ? uploadedUrl
+          : uploadedType
+            ? ""
+            : dto.coverImageUrl?.trim() ?? "";
+
+      const coverVideoUrl =
+        uploadedType === EventCoverMediaType.VIDEO
+          ? uploadedUrl
+          : uploadedType
+            ? ""
+            : dto.coverVideoUrl?.trim() ?? "";
+
+      const coverMediaType =
+        uploadedType ??
+        (coverVideoUrl ? EventCoverMediaType.VIDEO : EventCoverMediaType.IMAGE);
+
+      const event = await this.eventModel.create({
+        creatorId,
+        title: dto.title.trim(),
+        description: dto.description?.trim() ?? "",
+        category: dto.category ?? EventCategory.GENERAL,
+        visibility: dto.visibility ?? EventVisibility.PUBLIC,
+        startDate,
+        endDate,
+        timeZone: dto.timeZone ?? "",
+        locationName: isOnline ? "" : locationName,
+        address: isOnline ? "" : address,
+        latitude: isOnline ? undefined : dto.latitude ?? undefined,
+        longitude: isOnline ? undefined : dto.longitude ?? undefined,
+        isOnline,
+        onlineUrl,
+        capacity: dto.capacity ?? null,
+        coverImageUrl,
+        coverVideoUrl,
+        coverMediaType,
+        attendeeIds: [creatorId],
+        interestedIds: [],
+        invitedIds: [],
+        isCancelled: false,
+      });
+
+      const [serialized] = await this.serializeMany(
+        [event.toObject() as unknown as EventLean],
+        userId,
+      );
+
+      return serialized;
+    } catch (error) {
+      await this.discardUploads(coverImageFile, coverVideoFile);
+      throw error;
+    }
+  }
+
+  /* ==========================================================================
+     LISTS (legacy endpoints, now expiry-aware)
+  ========================================================================== */
+
+  /**
+   * GET /events
+   * Active events the viewer may see, soonest first. Ended events are
+   * excluded unless includeEnded is set (history views).
+   */
+  async findAll(viewerId: string, includeEnded = false): Promise<SerializedEvent[]> {
+    const now = new Date();
+    const { filter } = await this.visibleFilter(viewerId);
+
+    const events = await this.eventModel
+      .find(
+        and(
+          filter,
+          includeEnded ? { isCancelled: { $ne: true } } : activeEventFilter(now),
+        ),
+      )
+      .sort({ startDate: 1, _id: 1 })
+      .limit(MAX_LIST)
+      .lean<EventLean[]>()
+      .exec();
+
+    return this.serializeMany(events, viewerId, now);
+  }
+
+  /** GET /events/upcoming — active (upcoming or live) events. */
+  async findUpcoming(viewerId: string): Promise<SerializedEvent[]> {
+    return this.findAll(viewerId, false);
+  }
+
+  /** GET /events/nearby */
+  async findNearby(
+    latitude: number,
+    longitude: number,
+    radiusKm = 50,
+    viewerId?: string,
+  ): Promise<SerializedEvent[]> {
+    const now = new Date();
+    const radius = Math.min(500, Math.max(1, radiusKm));
+    const relationships = await this.loadRelationships(viewerId);
+
+    const events = await this.eventModel
+      .find(
+        and(
+          buildEventVisibilityFilter(viewerId, relationships),
+          activeEventFilter(now),
+          { isOnline: { $ne: true } },
+          boundingBox(latitude, longitude, radius),
+        ),
+      )
+      .sort({ startDate: 1 })
+      .limit(MAX_LIST)
+      .lean<EventLean[]>()
+      .exec();
+
+    const within = events
+      .map((event) => ({
+        event,
+        distance: haversineKm(latitude, longitude, event.latitude as number, event.longitude as number),
+      }))
+      .filter((item) => item.distance <= radius)
+      .sort((a, b) => a.distance - b.distance);
+
+    return this.serializeMany(
+      within.map((item) => item.event),
+      viewerId,
+      now,
+      { latitude, longitude },
+    );
+  }
+
+  /* ==========================================================================
+     DISCOVER
+  ========================================================================== */
+
+  private dayWindow(dayStart?: string) {
+    const parsed = dayStart ? new Date(dayStart) : null;
+
+    if (parsed && !Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+
+    const now = new Date();
+
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  }
+
+  private whenFilter(
+    when: string | undefined,
+    now: Date,
+    dayStart: Date,
+    timeZone?: string,
+  ): Filter {
+    const start = dayStart.getTime();
+
+    switch (when) {
+      case "live":
+        return { startDate: { $lte: now } };
+      case "today":
+        return { startDate: { $lt: new Date(start + DAY_MS) } };
+      case "tomorrow":
+        return {
+          startDate: { $lt: new Date(start + 2 * DAY_MS) },
+          endDate: { $gt: new Date(start + DAY_MS) },
+        };
+      case "this-week":
+        return { startDate: { $lt: new Date(start + 7 * DAY_MS) } };
+      case "this-weekend": {
+        // Saturday 00:00 to Monday 00:00 in the viewer's calendar.
+        const weekday = weekdayIn(new Date(start + 12 * 3_600_000), timeZone);
+        const weekendStart =
+          weekday === 0 ? start - DAY_MS : start + ((6 - weekday + 7) % 7) * DAY_MS;
+
+        return {
+          startDate: { $lt: new Date(weekendStart + 2 * DAY_MS) },
+          endDate: { $gt: new Date(Math.max(weekendStart, now.getTime())) },
+        };
+      }
+      case "next-30-days":
+        return { startDate: { $lt: new Date(now.getTime() + 30 * DAY_MS) } };
+      default:
+        return {};
+    }
+  }
+
+  /**
+   * GET /events/discover
+   * Search + filters + sorting, paginated, executed entirely in MongoDB.
+   */
+  async discover(
+    viewerId: string,
+    query: DiscoverEventsQueryDto,
+  ) {
+    const now = new Date();
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 18;
+    const { filter: visibility } = await this.visibleFilter(viewerId);
+    const dayStart = this.dayWindow(query.dayStart);
+
+    const filters: Filter[] = [visibility, activeEventFilter(now)];
+
+    const q = query.q?.trim();
+
+    if (q) {
+      const pattern = new RegExp(escapeRegex(q), "i");
+      const matchesCategory = (Object.values(EventCategory) as string[]).filter((category) =>
+        pattern.test(category),
+      );
+
+      filters.push({
+        $or: [
+          { title: pattern },
+          { description: pattern },
+          { locationName: pattern },
+          { address: pattern },
+          ...(matchesCategory.length ? [{ category: { $in: matchesCategory } }] : []),
+        ],
+      });
+    }
+
+    if (query.category) {
+      filters.push({ category: query.category });
+    }
+
+    filters.push(this.whenFilter(query.when, now, dayStart, query.tz));
+
+    if (query.from) {
+      filters.push({ startDate: { $gte: new Date(query.from) } });
+    }
+
+    if (query.to) {
+      filters.push({ startDate: { $lte: new Date(query.to) } });
+    }
+
+    if (query.format === "online") {
+      filters.push({ isOnline: true });
+    } else if (query.format === "in-person") {
+      filters.push({ isOnline: { $ne: true } });
+    }
+
+    if (query.availability === "open") {
+      filters.push({
+        $or: [
+          { capacity: null },
+          { $expr: { $lt: [{ $size: { $ifNull: ["$attendeeIds", []] } }, "$capacity"] } },
+        ],
+      });
+    }
+
+    const hasPoint = typeof query.lat === "number" && typeof query.lng === "number";
+    const radiusKm = query.radiusKm;
+
+    if (hasPoint && radiusKm) {
+      filters.push({ isOnline: { $ne: true } });
+      filters.push(boundingBox(query.lat as number, query.lng as number, radiusKm));
+    }
+
+    let sort = query.sort ?? (q ? "relevance" : "date");
+
+    if (sort === "distance" && !hasPoint) {
+      sort = "date";
+    }
+
+    if (sort === "distance") {
+      filters.push({ latitude: { $type: "number" }, longitude: { $type: "number" } });
+    }
+
+    const computed: Record<string, unknown> = {
+      _pop: {
+        $add: [
+          { $size: { $ifNull: ["$attendeeIds", []] } },
+          { $multiply: [0.5, { $size: { $ifNull: ["$interestedIds", []] } }] },
+        ],
+      },
+    };
+
+    if (q) {
+      computed._titleHit = {
+        $cond: [{ $regexMatch: { input: "$title", regex: escapeRegex(q), options: "i" } }, 1, 0],
+      };
+    }
+
+    if (hasPoint) {
+      const cos = Math.cos(((query.lat as number) * Math.PI) / 180);
+
+      computed._dist2 = {
+        $cond: [
+          { $and: [{ $isNumber: "$latitude" }, { $isNumber: "$longitude" }] },
+          {
+            $add: [
+              { $pow: [{ $subtract: ["$latitude", query.lat] }, 2] },
+              { $pow: [{ $multiply: [{ $subtract: ["$longitude", query.lng] }, cos] }, 2] },
+            ],
+          },
+          1e9,
+        ],
+      };
+    }
+
+    const sortStage: Record<string, 1 | -1> =
+      sort === "popularity"
+        ? { _pop: -1, startDate: 1, _id: 1 }
+        : sort === "distance"
+          ? { _dist2: 1, startDate: 1, _id: 1 }
+          : sort === "relevance"
+            ? { ...(q ? { _titleHit: -1 as const } : {}), startDate: 1, _pop: -1, _id: 1 }
+            : { startDate: 1, _id: 1 };
+
+    const pipeline: PipelineStage[] = [
+      { $match: and(...filters) },
+      { $addFields: computed },
+      { $sort: sortStage },
+      {
+        $facet: {
+          items: [{ $skip: (page - 1) * limit }, { $limit: limit }],
+          total: [{ $count: "count" }],
+        },
+      },
+    ];
+
+    const [result] = await this.eventModel.aggregate(pipeline).exec();
+    const items = (result?.items ?? []) as EventLean[];
+    const total = Number(result?.total?.[0]?.count ?? 0);
+
+    return {
+      items: await this.serializeMany(
+        items,
+        viewerId,
+        now,
+        hasPoint ? { latitude: query.lat as number, longitude: query.lng as number } : undefined,
+      ),
+      page,
+      limit,
+      total,
+      hasMore: page * limit < total,
+      serverTime: now.toISOString(),
+    };
+  }
+
+  /* ==========================================================================
+     SECTIONS (Discover page)
+  ========================================================================== */
+
+  async sections(viewerId: string, query: EventSectionsQueryDto) {
+    const now = new Date();
+    const limit = query.limit ?? 12;
+    const { filter: visibility } = await this.visibleFilter(viewerId);
+    const base = and(visibility, activeEventFilter(now));
+    const dayStart = this.dayWindow(query.dayStart);
+    const hasPoint = typeof query.lat === "number" && typeof query.lng === "number";
+    const radius = query.radiusKm ?? 50;
+
+    const find = (filter: Filter, sort: Record<string, 1 | -1>, max = limit) =>
+      this.eventModel
+        .find(and(base, filter))
+        .sort(sort)
+        .limit(max)
+        .lean<EventLean[]>()
+        .exec();
+
+    const popular = (filter: Filter, max = limit) =>
+      this.eventModel
+        .aggregate([
+          { $match: and(base, filter) },
+          {
+            $addFields: {
+              _pop: {
+                $add: [
+                  { $size: { $ifNull: ["$attendeeIds", []] } },
+                  { $multiply: [0.5, { $size: { $ifNull: ["$interestedIds", []] } }] },
+                ],
+              },
+            },
+          },
+          { $sort: { _pop: -1, startDate: 1, _id: 1 } },
+          { $limit: max },
+        ])
+        .exec() as Promise<EventLean[]>;
+
+    const affinity = await this.categoryAffinity(viewerId);
+    const topCategories = Array.from(affinity.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([category]) => category);
+
+    const viewer = Types.ObjectId.isValid(viewerId) ? new Types.ObjectId(viewerId) : null;
+    const notMine = viewer
+      ? { creatorId: { $ne: viewer }, attendeeIds: { $ne: viewer }, interestedIds: { $ne: viewer } }
+      : {};
+
+    const [happeningNow, today, featured, recommendedRaw, nearbyRaw, online, upcoming] =
+      await Promise.all([
+        find({ startDate: { $lte: now } }, { endDate: 1 }),
+        find(
+          { startDate: { $gt: now, $lt: new Date(dayStart.getTime() + DAY_MS) } },
+          { startDate: 1 },
+        ),
+        popular({ startDate: { $lt: new Date(now.getTime() + 30 * DAY_MS) } }, 8),
+        topCategories.length
+          ? popular({ ...notMine, category: { $in: topCategories } }, limit * 2)
+          : popular(notMine, limit * 2),
+        hasPoint
+          ? find(
+              { isOnline: { $ne: true }, ...boundingBox(query.lat as number, query.lng as number, radius) },
+              { startDate: 1 },
+              MAX_LIST,
+            )
+          : Promise.resolve([] as EventLean[]),
+        find({ isOnline: true }, { startDate: 1 }),
+        find({ startDate: { $gt: now } }, { startDate: 1 }),
+      ]);
+
+    const nearby = hasPoint
+      ? nearbyRaw
+          .map((event) => ({
+            event,
+            distance: haversineKm(
+              query.lat as number,
+              query.lng as number,
+              event.latitude as number,
+              event.longitude as number,
+            ),
+          }))
+          .filter((item) => item.distance <= radius)
+          .sort((a, b) => a.distance - b.distance)
+          .slice(0, limit)
+          .map((item) => item.event)
+      : [];
+
+    const relationships = await this.loadRelationships(viewerId);
+    const recommended = rankEvents(
+      recommendedRaw.map((event) => this.toRecommendable(event)),
+      {
+        viewerId,
+        categoryAffinity: affinity,
+        friendIds: new Set(relationships.friendIds),
+        followedIds: new Set(relationships.followedIds),
+        latitude: query.lat,
+        longitude: query.lng,
+        radiusKm: radius,
+      },
+      now,
+    )
+      .slice(0, limit)
+      .map((item) => recommendedRaw.find((event) => String(event._id) === item.event.id))
+      .filter((event): event is EventLean => Boolean(event));
+
+    const all = [...happeningNow, ...today, ...featured, ...recommended, ...nearby, ...online, ...upcoming];
+    const organizers = await this.loadOrganizers(all);
+    const point = hasPoint ? { latitude: query.lat as number, longitude: query.lng as number } : undefined;
+
+    const out = (events: EventLean[]) =>
+      events.map((event) =>
+        this.serialize(event, viewerId, organizers, now, {
+          distanceKm:
+            point && typeof event.latitude === "number" && typeof event.longitude === "number"
+              ? haversineKm(point.latitude, point.longitude, event.latitude, event.longitude)
+              : undefined,
+        }),
+      );
+
+    return {
+      happeningNow: out(happeningNow),
+      today: out(today),
+      featured: out(featured),
+      recommended: out(recommended),
+      nearby: out(nearby),
+      online: out(online),
+      upcoming: out(upcoming),
+      serverTime: now.toISOString(),
+    };
+  }
+
+  /* ==========================================================================
+     DETAILS
+  ========================================================================== */
+
+  /**
+   * GET /events/:id
+   * Readable after it ended or was cancelled (history), as long as the
+   * viewer may see it.
+   */
+  async findOne(id: string, viewerId: string): Promise<SerializedEvent> {
+    const { event } = await this.loadVisible(id, viewerId);
+    const [serialized] = await this.serializeMany([event], viewerId);
+
+    return serialized;
+  }
+
+  /** GET /events/:id/related — active events in the same category or by the same organizer. */
+  async related(id: string, viewerId: string, limit = 6): Promise<SerializedEvent[]> {
+    const { event, relationships } = await this.loadVisible(id, viewerId);
+    const now = new Date();
+
+    const events = await this.eventModel
+      .find(
+        and(
+          buildEventVisibilityFilter(viewerId, relationships),
+          activeEventFilter(now),
+          { _id: { $ne: event._id } },
+          { $or: [{ category: event.category }, { creatorId: event.creatorId }] },
+        ),
+      )
+      .sort({ startDate: 1 })
+      .limit(Math.min(12, Math.max(1, limit)))
+      .lean<EventLean[]>()
+      .exec();
+
+    return this.serializeMany(events, viewerId, now);
+  }
+
+  /* ==========================================================================
+     UPDATE
+  ========================================================================== */
+
+  async update(
+    userId: string,
+    eventId: string,
+    dto: UpdateEventDto,
+    coverImageFile?: Express.Multer.File,
+    coverVideoFile?: Express.Multer.File,
+  ): Promise<SerializedEvent> {
+    try {
+      const event = await this.eventModel.findById(this.objectId(eventId)).exec();
+
+      if (!event) {
+        throw new NotFoundException("Event not found.");
+      }
+
+      if (!event.creatorId.equals(this.objectId(userId, "user"))) {
+        throw new ForbiddenException("Only the event creator can update this event.");
+      }
+
+      if (event.isCancelled) {
+        throw new BadRequestException("A cancelled event can no longer be edited.");
+      }
+
+      const startDate = dto.startDate ? new Date(dto.startDate) : event.startDate;
+      const endDate = dto.endDate ? new Date(dto.endDate) : event.endDate;
+
+      this.validateDateRange(startDate, endDate);
+
+      const datesChanged =
+        startDate.getTime() !== event.startDate.getTime() ||
+        endDate.getTime() !== event.endDate.getTime();
+
+      if (datesChanged && endDate.getTime() <= Date.now()) {
+        throw new BadRequestException("The new end time is already in the past.");
+      }
+
+      const isOnline = dto.isOnline ?? event.isOnline;
+      const onlineUrl = isOnline ? (dto.onlineUrl ?? event.onlineUrl ?? "").trim() : "";
+      const locationName = isOnline ? "" : (dto.locationName ?? event.locationName ?? "").trim();
+      const address = isOnline ? "" : (dto.address ?? event.address ?? "").trim();
+
+      const latitude =
+        isOnline ? null : dto.latitude !== undefined ? dto.latitude : event.latitude ?? null;
+      const longitude =
+        isOnline ? null : dto.longitude !== undefined ? dto.longitude : event.longitude ?? null;
+
+      this.validateLocation({ isOnline, onlineUrl, locationName, address, latitude, longitude });
+
+      if (coverImageFile && coverVideoFile) {
+        throw new BadRequestException("Choose either an image or a video, not both.");
+      }
+
+      const uploaded = coverImageFile ?? coverVideoFile;
+
+      if (uploaded) {
+        const url = this.mediaUrlOf(uploaded) ?? "";
+        const type = this.mediaTypeOf(uploaded);
+
+        event.coverImageUrl = type === EventCoverMediaType.IMAGE ? url : "";
+        event.coverVideoUrl = type === EventCoverMediaType.VIDEO ? url : "";
+        event.coverMediaType = type ?? EventCoverMediaType.IMAGE;
+      } else if (dto.coverVideoUrl !== undefined && dto.coverVideoUrl.trim()) {
+        event.coverVideoUrl = dto.coverVideoUrl.trim();
+        event.coverImageUrl = "";
+        event.coverMediaType = EventCoverMediaType.VIDEO;
+      } else if (dto.coverImageUrl !== undefined) {
+        // An explicit empty string removes the cover.
+        event.coverImageUrl = dto.coverImageUrl.trim();
+        event.coverVideoUrl = "";
+        event.coverMediaType = EventCoverMediaType.IMAGE;
+      }
+
+      if (dto.title !== undefined) event.title = dto.title.trim();
+      if (dto.description !== undefined) event.description = dto.description.trim();
+      if (dto.category !== undefined) event.category = dto.category;
+      if (dto.visibility !== undefined) event.visibility = dto.visibility;
+      if (dto.timeZone !== undefined) event.timeZone = dto.timeZone;
+      if (dto.capacity !== undefined) event.capacity = dto.capacity;
+
+      event.startDate = startDate;
+      event.endDate = endDate;
+      event.isOnline = isOnline;
+      event.onlineUrl = onlineUrl;
+      event.locationName = locationName;
+      event.address = address;
+      event.set("latitude", latitude ?? undefined);
+      event.set("longitude", longitude ?? undefined);
+
+      await event.save();
+
+      const [serialized] = await this.serializeMany(
+        [event.toObject() as unknown as EventLean],
+        userId,
+      );
+
+      return serialized;
+    } catch (error) {
+      await this.discardUploads(coverImageFile, coverVideoFile);
+      throw error;
+    }
+  }
+
+  /* ==========================================================================
+     CANCEL (soft, keeps the document and RSVP history)
+  ========================================================================== */
+
+  async cancel(userId: string, eventId: string, reason?: string) {
+    const event = await this.eventModel.findById(this.objectId(eventId)).exec();
+
+    if (!event) {
+      throw new NotFoundException("Event not found.");
+    }
+
+    if (!event.creatorId.equals(this.objectId(userId, "user"))) {
+      throw new ForbiddenException("Only the event creator can cancel this event.");
+    }
+
+    if (event.isCancelled) {
+      const [serialized] = await this.serializeMany([event.toObject() as unknown as EventLean], userId);
+
+      return { success: true, cancelled: true, message: "Event is already cancelled.", event: serialized };
+    }
+
+    if (getEventStatus(event) === EventStatus.ENDED) {
+      throw new BadRequestException("This event has already ended.");
+    }
+
+    event.isCancelled = true;
+    event.cancelledAt = new Date();
+    event.cancellationReason = reason?.trim() ?? "";
+
+    await event.save();
+
+    const [serialized] = await this.serializeMany([event.toObject() as unknown as EventLean], userId);
+
+    return { success: true, cancelled: true, message: "Event cancelled successfully.", event: serialized };
+  }
+
+  /* ==========================================================================
+     DELETE (permanent, creator only)
+  ========================================================================== */
+
+  async remove(userId: string, eventId: string) {
+    const event = await this.eventModel.findById(this.objectId(eventId)).exec();
+
+    if (!event) {
+      throw new NotFoundException("Event not found.");
+    }
+
+    if (!event.creatorId.equals(this.objectId(userId, "user"))) {
+      throw new ForbiddenException("Only the event creator can delete this event.");
+    }
+
+    const result = await event.deleteOne();
+
+    if (!result || (typeof result.deletedCount === "number" && result.deletedCount !== 1)) {
+      throw new InternalServerErrorException("The event could not be deleted.");
+    }
+
+    return { success: true, message: "Event deleted successfully." };
+  }
+
+  /* ==========================================================================
+     RSVP
+     Atomic and idempotent: repeating a request leaves the same state and
+     never creates duplicates ($addToSet). Going and Interested are
+     mutually exclusive. Ended and cancelled events are rejected by the
+     update filter itself, so a race with cancellation or expiry cannot
+     sneak an RSVP in.
+  ========================================================================== */
+
+  private rsvpResult(event: EventLean, userId: string): RsvpResult {
+    const attendees = idList(event.attendeeIds);
+    const interested = idList(event.interestedIds);
+    const going = attendees.includes(userId);
+    const isInterested = !going && interested.includes(userId);
+
+    return {
+      success: true,
+      eventId: String(event._id),
+      status: going ? EventRsvpStatus.GOING : isInterested ? EventRsvpStatus.INTERESTED : null,
+      going,
+      interested: isInterested,
+      attendeeCount: attendees.length,
+      interestedCount: interested.length,
+    };
+  }
+
+  /** Explains why a conditional RSVP update matched nothing. */
+  private async explainRsvpFailure(eventId: Types.ObjectId, userId: string): Promise<never> {
+    const event = await this.eventModel.findById(eventId).lean<EventLean>().exec();
+
+    if (!event) {
+      throw new NotFoundException("Event not found.");
+    }
+
+    const status = getEventStatus(event);
+
+    if (status === EventStatus.CANCELLED) {
+      throw new BadRequestException("This event has been cancelled.");
+    }
+
+    if (status === EventStatus.ENDED) {
+      throw new BadRequestException("This event has already ended.");
+    }
+
+    if (
+      typeof event.capacity === "number" &&
+      idList(event.attendeeIds).length >= event.capacity &&
+      !idList(event.attendeeIds).includes(userId)
+    ) {
+      throw new ConflictException("This event is full.");
+    }
+
+    throw new ConflictException("Your RSVP could not be updated. Please try again.");
+  }
+
+  async rsvp(
+    userId: string,
+    eventId: string,
+    status: EventRsvpStatus = EventRsvpStatus.GOING,
+  ): Promise<RsvpResult> {
+    const { event } = await this.loadVisible(eventId, userId);
+    const user = this.objectId(userId, "user");
+
+    if (!isEventActive(event)) {
+      return this.explainRsvpFailure(event._id, userId);
+    }
+
+    if (String(event.creatorId) === userId) {
+      // The organizer is always Going.
+      return this.rsvpResult(event, userId);
+    }
+
+    const now = new Date();
+    const base = { _id: event._id, ...activeEventFilter(now) };
+
+    const updated =
+      status === EventRsvpStatus.INTERESTED
+        ? await this.eventModel
+            .findOneAndUpdate(
+              base,
+              { $addToSet: { interestedIds: user }, $pull: { attendeeIds: user } },
+              { returnDocument: "after" },
+            )
+            .lean<EventLean>()
+            .exec()
+        : await this.eventModel
+            .findOneAndUpdate(
+              {
+                ...base,
+                $or: [
+                  { capacity: null },
+                  { attendeeIds: user },
+                  {
+                    $expr: {
+                      $lt: [{ $size: { $ifNull: ["$attendeeIds", []] } }, "$capacity"],
+                    },
+                  },
+                ],
+              },
+              { $addToSet: { attendeeIds: user }, $pull: { interestedIds: user } },
+              { returnDocument: "after" },
+            )
+            .lean<EventLean>()
+            .exec();
+
+    if (!updated) {
+      return this.explainRsvpFailure(event._id, userId);
+    }
+
+    return this.rsvpResult(updated, userId);
+  }
+
+  /** DELETE /events/:id/rsvp — leaves Going and Interested. */
+  async cancelRsvp(userId: string, eventId: string): Promise<RsvpResult> {
+    const { event } = await this.loadVisible(eventId, userId);
+    const user = this.objectId(userId, "user");
+
+    if (String(event.creatorId) === userId) {
+      return this.rsvpResult(event, userId);
+    }
+
+    if (!isEventActive(event)) {
+      // RSVP history of ended/cancelled events is kept as it was.
+      return this.explainRsvpFailure(event._id, userId);
+    }
+
+    const updated = await this.eventModel
+      .findOneAndUpdate(
+        { _id: event._id, ...activeEventFilter(new Date()) },
+        { $pull: { attendeeIds: user, interestedIds: user } },
+        { returnDocument: "after" },
+      )
+      .lean<EventLean>()
+      .exec();
+
+    if (!updated) {
+      return this.explainRsvpFailure(event._id, userId);
+    }
+
+    return this.rsvpResult(updated, userId);
+  }
+
+  /* ==========================================================================
+     INVITES (organizer only; grants access to private events)
+  ========================================================================== */
+
+  async invite(userId: string, eventId: string, userIds: string[]) {
+    const event = await this.eventModel.findById(this.objectId(eventId)).lean<EventLean>().exec();
+
+    if (!event) {
+      throw new NotFoundException("Event not found.");
+    }
+
+    if (String(event.creatorId) !== userId) {
+      throw new ForbiddenException("Only the event creator can invite people.");
+    }
+
+    if (!isEventActive(event)) {
+      throw new BadRequestException("You can only invite people to upcoming or live events.");
+    }
+
+    const relationships = await this.loadRelationships(userId);
+    const blocked = new Set(relationships.blockedIds);
+    const ids = Array.from(new Set(userIds))
+      .filter((id) => Types.ObjectId.isValid(id) && id !== userId && !blocked.has(id))
+      .slice(0, 100);
+
+    if (!ids.length) {
+      throw new BadRequestException("Choose at least one person to invite.");
+    }
+
+    const updated = await this.eventModel
+      .findOneAndUpdate(
+        { _id: event._id },
+        { $addToSet: { invitedIds: { $each: toObjectIds(ids) } } },
+        { returnDocument: "after" },
+      )
+      .lean<EventLean>()
+      .exec();
+
+    if (!updated) {
+      throw new NotFoundException("Event not found.");
+    }
+
+    return { success: true, invitedCount: idList(updated.invitedIds).length, invited: ids };
+  }
+
+  /* ==========================================================================
+     ATTENDEES
+  ========================================================================== */
+
+  async attendees(
+    eventId: string,
+    viewerId: string,
+    options: { status?: string; page?: number; limit?: number } = {},
+  ) {
+    const { event, relationships } = await this.loadVisible(eventId, viewerId);
+    const status =
+      options.status === EventRsvpStatus.INTERESTED
+        ? EventRsvpStatus.INTERESTED
+        : EventRsvpStatus.GOING;
+    const page = Math.max(1, Math.floor(options.page ?? 1));
+    const limit = Math.min(100, Math.max(1, Math.floor(options.limit ?? 30)));
+
+    const all = idList(status === EventRsvpStatus.GOING ? event.attendeeIds : event.interestedIds);
+    const blocked = new Set(relationships.blockedIds);
+    const visibleIds = all.filter((id) => !blocked.has(id));
+
+    // Organizer first, then friends, then everyone else (stable).
+    const friends = new Set(relationships.friendIds);
+    const creator = String(event.creatorId);
+    const ordered = [...visibleIds].sort(
+      (a, b) =>
+        Number(b === creator) - Number(a === creator) ||
+        Number(friends.has(b)) - Number(friends.has(a)),
+    );
+
+    const pageIds = ordered.slice((page - 1) * limit, page * limit);
+    const userModel = this.connection.models["User"];
+    const users = userModel && pageIds.length
+      ? ((await userModel
+          .find({ _id: { $in: toObjectIds(pageIds) } })
+          .select(ORGANIZER_FIELDS)
+          .lean()
+          .exec()) as any[])
+      : [];
+
+    const byId = new Map(users.map((user) => [String(user._id), user]));
+
+    return {
+      eventId: String(event._id),
+      status,
+      attendeeCount: idList(event.attendeeIds).length,
+      interestedCount: idList(event.interestedIds).length,
+      // Legacy field kept for older clients: the IDs on this page.
+      attendeeIds: pageIds,
+      attendees: pageIds
+        .map((id) => byId.get(id))
+        .filter(Boolean)
+        .map((user) => ({
+          ...this.toPerson(user),
+          isOrganizer: String(user._id) === creator,
+          isFriend: friends.has(String(user._id)),
+        })),
+      friendsGoingCount: idList(event.attendeeIds).filter((id) => friends.has(id)).length,
+      page,
+      limit,
+      hasMore: page * limit < ordered.length,
+    };
+  }
+
+  /* ==========================================================================
+     MY EVENTS (history included)
+  ========================================================================== */
+
+  /** Events the user created: upcoming, live, ended and cancelled. */
+  async myEvents(userId: string): Promise<SerializedEvent[]> {
+    const events = await this.eventModel
+      .find({ creatorId: this.objectId(userId, "user") })
+      .sort({ startDate: -1 })
+      .limit(MAX_HISTORY)
+      .lean<EventLean[]>()
+      .exec();
+
+    return this.serializeMany(events, userId);
+  }
+
+  /**
+   * Events the user is Going to or Interested in, including ended and
+   * cancelled ones so history stays visible. Events the user created are
+   * listed under myEvents instead.
+   */
+  async myRsvps(userId: string): Promise<SerializedEvent[]> {
+    const user = this.objectId(userId, "user");
+    const relationships = await this.loadRelationships(userId);
+
+    const events = await this.eventModel
+      .find(
+        and(
+          { creatorId: { $ne: user } },
+          { $or: [{ attendeeIds: user }, { interestedIds: user }] },
+          relationships.blockedIds.length
+            ? { creatorId: { $nin: toObjectIds(relationships.blockedIds) } }
+            : {},
+        ),
+      )
+      .sort({ startDate: 1 })
+      .limit(MAX_HISTORY)
+      .lean<EventLean[]>()
+      .exec();
+
+    return this.serializeMany(events, userId);
+  }
+
+  /* ==========================================================================
+     FEED RECOMMENDATIONS
+  ========================================================================== */
+
+  private toRecommendable(event: EventLean): RecommendableEvent {
+    return {
+      id: String(event._id),
+      creatorId: String(event.creatorId),
+      category: String(event.category ?? EventCategory.GENERAL),
+      startDate: event.startDate,
+      endDate: event.endDate,
+      isCancelled: Boolean(event.isCancelled),
+      isOnline: Boolean(event.isOnline),
+      latitude: typeof event.latitude === "number" ? event.latitude : null,
+      longitude: typeof event.longitude === "number" ? event.longitude : null,
+      attendeeIds: idList(event.attendeeIds),
+      interestedIds: idList(event.interestedIds),
+      capacity: typeof event.capacity === "number" ? event.capacity : null,
+    };
+  }
+
+  /** Categories of events the viewer went to or was interested in (last year). */
+  async categoryAffinity(viewerId?: string): Promise<Map<string, number>> {
+    const affinity = new Map<string, number>();
+
+    if (!viewerId || !Types.ObjectId.isValid(viewerId)) {
+      return affinity;
+    }
+
+    const viewer = new Types.ObjectId(viewerId);
+
+    try {
+      const rows = await this.eventModel
+        .aggregate([
+          {
+            $match: {
+              creatorId: { $ne: viewer },
+              startDate: { $gte: new Date(Date.now() - 365 * DAY_MS) },
+              $or: [{ attendeeIds: viewer }, { interestedIds: viewer }],
+            },
+          },
+          { $sort: { startDate: -1 } },
+          { $limit: 300 },
+          {
+            $group: {
+              _id: "$category",
+              score: {
+                $sum: { $cond: [{ $in: [viewer, { $ifNull: ["$attendeeIds", []] }] }, 2, 1] },
+              },
+            },
+          },
+        ])
+        .exec();
+
+      for (const row of rows) {
+        if (row._id) {
+          affinity.set(String(row._id), Number(row.score) || 0);
+        }
+      }
+    } catch (error) {
+      this.logger.warn(`Could not load event category affinity: ${String(error)}`);
+    }
+
+    return affinity;
+  }
+
+  /**
+   * Ranked, eligible events for one feed page. Only active events the
+   * viewer may see are ever loaded (the expiry and visibility rules are in
+   * the query). Events in excludeIds (already shown or dismissed in this
+   * scrolling session) are skipped.
+   */
+  async recommendForFeed(options: FeedEventRecommendationOptions): Promise<SerializedEvent[]> {
+    const now = options.now ?? new Date();
+    const limit = Math.max(0, Math.min(10, options.limit));
+
+    if (limit === 0) {
+      return [];
+    }
+
+    const viewerId = options.viewerId;
+    const exclude = toObjectIds(options.excludeIds ?? []);
+    const viewer = viewerId && Types.ObjectId.isValid(viewerId) ? new Types.ObjectId(viewerId) : null;
+
+    const filter = and(
+      buildEventVisibilityFilter(viewerId, options.relationships),
+      activeEventFilter(now),
+      {
+        startDate: {
+          $lt: new Date(now.getTime() + EVENT_RECOMMENDATION_CONFIG.horizonDays * DAY_MS),
+        },
+      },
+      exclude.length ? { _id: { $nin: exclude } } : {},
+      viewer ? { creatorId: { $ne: viewer }, attendeeIds: { $ne: viewer } } : {},
+      options.organizerIds
+        ? { creatorId: { $in: toObjectIds(options.organizerIds) } }
+        : {},
+    );
+
+    const [candidates, affinity] = await Promise.all([
+      this.eventModel
+        .find(filter)
+        .sort({ startDate: 1, _id: 1 })
+        .limit(150)
+        .lean<EventLean[]>()
+        .exec(),
+      this.categoryAffinity(viewerId),
+    ]);
+
+    if (candidates.length === 0) {
+      return [];
+    }
+
+    const ranked = rankEvents(
+      candidates.map((event) => this.toRecommendable(event)),
+      {
+        viewerId,
+        categoryAffinity: affinity,
+        friendIds: new Set(options.relationships.friendIds),
+        followedIds: new Set(options.relationships.followedIds),
+        latitude: options.latitude,
+        longitude: options.longitude,
+        radiusKm: options.radiusKm,
+      },
+      now,
+    ).slice(0, limit);
+
+    const byId = new Map(candidates.map((event) => [String(event._id), event]));
+    const chosen = ranked
+      .map((item) => byId.get(item.event.id))
+      .filter((event): event is EventLean => Boolean(event));
+
+    const point =
+      typeof options.latitude === "number" && typeof options.longitude === "number"
+        ? { latitude: options.latitude, longitude: options.longitude }
+        : undefined;
+
+    return this.serializeMany(chosen, viewerId, now, point);
+  }
+}
+
+===== FILE: apps/api/src/feed/feed-events.ts =====
+/* ============================================================================
+   FEED EVENT SLOTS
+   apps/api/src/feed/feed-events.ts
+
+   Events are mixed into GET /feed WITHOUT turning them into posts:
+
+     {
+       feed:   [ ...posts, unchanged ],
+       events: [
+         { type: "event", key: "event:<id>", afterPostId, afterIndex, event },
+         ...
+       ]
+     }
+
+   `feed` keeps exactly the shape older clients (web, mobile) already
+   parse, so nothing that ignores `events` breaks. Clients that understand
+   `events` render each card right after the post `afterPostId`.
+
+   Repetition control
+   - The client sends ?excludeEvents=<id,id,...> with the events it has
+     already shown or dismissed in the current scrolling session.
+   - For You additionally remembers, per (viewer, session), which events
+     this server already served, so a client that sends nothing still
+     does not see the same event twice in one session.
+============================================================================ */
+
+import type { SerializedEvent } from "../events/services/events.service";
+import { planEventSlots } from "../events/utils/event-recommendation";
+
+export interface FeedEventSlot {
+  type: "event";
+  key: string;
+  afterPostId: string;
+  afterIndex: number;
+  event: SerializedEvent;
+}
+
+export function buildFeedEventSlots(
+  postIds: string[],
+  events: SerializedEvent[],
+): FeedEventSlot[] {
+  const slots = planEventSlots(postIds.length);
+  const placed: FeedEventSlot[] = [];
+  const used = new Set<string>();
+
+  for (const afterIndex of slots) {
+    const event = events.find((item) => !used.has(item.id));
+
+    if (!event) {
+      break;
+    }
+
+    used.add(event.id);
+    placed.push({
+      type: "event",
+      key: `event:${event.id}`,
+      afterPostId: postIds[afterIndex],
+      afterIndex,
+      event,
+    });
+  }
+
+  return placed;
+}
+
+/** Bounded, expiring memory of events served per feed session. */
+export class ServedEventsStore {
+  private readonly entries = new Map<string, { ids: Set<string>; touchedAt: number }>();
+
+  constructor(
+    private readonly ttlMs = 30 * 60_000,
+    private readonly maxEntries = 5_000,
+    private readonly maxIdsPerEntry = 200,
+  ) {}
+
+  get(key: string | undefined, now = Date.now()): string[] {
+    if (!key) {
+      return [];
+    }
+
+    const entry = this.entries.get(key);
+
+    if (!entry) {
+      return [];
+    }
+
+    if (now - entry.touchedAt > this.ttlMs) {
+      this.entries.delete(key);
+      return [];
+    }
+
+    return Array.from(entry.ids);
+  }
+
+  add(key: string | undefined, ids: string[], now = Date.now()) {
+    if (!key || ids.length === 0) {
+      return;
+    }
+
+    const entry = this.entries.get(key) ?? { ids: new Set<string>(), touchedAt: now };
+
+    for (const id of ids) {
+      entry.ids.add(id);
+    }
+
+    while (entry.ids.size > this.maxIdsPerEntry) {
+      const oldest = entry.ids.values().next().value;
+
+      if (oldest === undefined) {
+        break;
+      }
+
+      entry.ids.delete(oldest);
+    }
+
+    entry.touchedAt = now;
+    this.entries.delete(key);
+    this.entries.set(key, entry);
+
+    while (this.entries.size > this.maxEntries) {
+      const oldestKey = this.entries.keys().next().value;
+
+      if (oldestKey === undefined) {
+        break;
+      }
+
+      this.entries.delete(oldestKey);
+    }
+  }
+}
+
+===== FILE: apps/api/src/feed/feed.service.ts =====
+import {
+  Injectable,
+  Logger,
+} from '@nestjs/common';
+
+import {
+  InjectConnection,
+  InjectModel,
+} from '@nestjs/mongoose';
+
+import {
+  Connection,
+  Model,
+  Types,
+} from 'mongoose';
+
+import {
+  Post,
+  PostDocument,
+} from '../posts/post.schema';
+
+import { StoriesService } from '../stories/stories.service';
+import { BlockVisibilityService } from '../friends/services/block-visibility.service';
+import { EventsService } from '../events/services/events.service';
+import { parseEventIdList } from '../events/utils/event-recommendation';
+
+import {
+  FeedEventSlot,
+  ServedEventsStore,
+  buildFeedEventSlots,
+} from './feed-events';
+
+import {
+  FEED_RANKING_CONFIG,
+  FeedMode,
+  FeedSnapshotStore,
+  MediaKind,
+  RankablePost,
+  ViewerSignals,
+  emptyViewerSignals,
+  extractHashtags,
+  parseFeedMode,
+  rankFeed,
+} from './feed-ranking';
+
+/*
+|--------------------------------------------------------------------------
+| FEED SERVICE
+|--------------------------------------------------------------------------
+|
+| GET /feed?page=&limit=&mode=&session=&cursor=
+|
+| `cursor` is optional and only used by the chronological modes; the
+| response carries `nextCursor` for it. Clients that keep sending only
+| `page` get the original skip-based paging.
+|
+| Modes:
+|   for-you    (default) personalized ranking, see feed-ranking.ts
+|   following  newest first, accounts the viewer follows
+|   friends    newest first, accepted friends
+|   latest     newest first, everything the viewer may see
+|
+| Visibility is decided BEFORE anything is ranked:
+|   - public posts
+|   - "friends" posts only from accepted friends (and the viewer's own)
+|   - private posts never appear in the feed
+|   - authors in a blocked relationship with the viewer (either
+|     direction) are excluded in the query, then every author on the
+|     returned page is re-checked with BlockVisibilityService
+|   - deleted posts no longer exist, and later pages re-fetch posts by
+|     ID with the same filter, so a deleted or newly-restricted post
+|     drops out instead of being served from the snapshot
+|
+| No mute, hide or "Not interested" data exists in this codebase yet, so
+| only blocks are applied as negative feedback.
+|
+| Events
+|   The response also carries `events`: recommended events placed between
+|   the posts of this page (see feed-events.ts). They are real Event
+|   documents, never stored as posts, and the query that loads them only
+|   matches active events (endDate > now, not cancelled) the viewer may
+|   see. `feed` itself is unchanged, so older clients are unaffected.
+|
+*/
+
+type LeanPost = Record<string, any>;
+
+type Filter = Record<string, any>;
+
+interface GetFeedOptions {
+  viewerId?: string;
+  page?: number;
+  limit?: number;
+  mode?: string;
+  session?: string;
+  /**
+   * Opaque keyset cursor for the chronological modes (nextCursor from the
+   * previous page). When present it replaces page-based skipping, so new
+   * posts arriving at the top cannot shift later pages.
+   */
+  cursor?: string;
+  /** Comma-separated event IDs already shown/dismissed this session. */
+  excludeEvents?: string;
+  /** Viewer location, only sent when the user allowed it. */
+  latitude?: number;
+  longitude?: number;
+}
+
+interface ViewerRelationships {
+  followedIds: string[];
+  friendIds: string[];
+  blockedIds: string[];
+}
+
+interface FeedPage {
+  posts: LeanPost[];
+  total: number;
+  hasMore: boolean;
+  scores?: Record<string, number>;
+  nextCursor?: string;
+}
+
+const MAX_PAGE_SIZE = 50;
+const HISTORY_SAMPLE_SIZE = 500;
+const MAX_SESSION_LENGTH = 100;
+const BLOCK_CHECK_CONCURRENCY = 25;
+
+/*
+ * Models registered by FollowsModule and FriendsModule. They are read
+ * through the shared Mongoose connection so this module does not depend
+ * on those modules exporting their models or services.
+ */
+const FOLLOW_MODEL_NAME = 'Follow';
+const FRIENDSHIP_MODEL_NAME = 'Friendship';
+
+/* ============================================================================
+   MEDIA HELPERS (unchanged from the previous FeedService)
+============================================================================ */
+
+function extractMediaValue(value: any): string {
+  if (!value) {
+    return '';
+  }
+
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+
+  if (typeof value === 'object') {
+    const possibleValues = [
+      value.url,
+      value.path,
+      value.src,
+      value.fileUrl,
+      value.filePath,
+      value.filename,
+      value.fileName,
+      value.location,
+      value.key,
+    ];
+
+    for (const item of possibleValues) {
+      if (typeof item === 'string' && item.trim()) {
+        return item.trim();
+      }
+    }
+  }
+
+  return '';
+}
+
+function getRawMedia(post: any): string {
+  if (!post) {
+    return '';
+  }
+
+  if (Array.isArray(post.media)) {
+    for (const item of post.media) {
+      const media = extractMediaValue(item);
+
+      if (media) {
+        return media;
+      }
+    }
+  } else {
+    const media = extractMediaValue(post.media);
+
+    if (media) {
+      return media;
+    }
+  }
+
+  const possibleFields = [
+    post.image,
+    post.imageUrl,
+    post.file,
+    post.fileUrl,
+    post.filePath,
+    post.photo,
+    post.photoUrl,
+    post.attachment,
+    post.attachmentUrl,
+    post.src,
+    post.url,
+    post.video,
+    post.videoUrl,
+  ];
+
+  for (const value of possibleFields) {
+    const media = extractMediaValue(value);
+
+    if (media) {
+      return media;
+    }
+  }
+
+  for (const list of [
+    post.images,
+    post.imageUrls,
+    post.attachments,
+    post.files,
+  ]) {
+    if (Array.isArray(list)) {
+      for (const item of list) {
+        const media = extractMediaValue(item);
+
+        if (media) {
+          return media;
+        }
+      }
+    }
+  }
+
+  return '';
+}
+
+function detectMediaType(
+  media: string,
+  post: any,
+): 'image' | 'video' | 'none' {
+  if (!media) {
+    return 'none';
+  }
+
+  const backendType = String(
+    post?.mediaType ||
+      post?.mimeType ||
+      post?.mime ||
+      post?.fileType ||
+      post?.type ||
+      '',
+  ).toLowerCase();
+
+  if (
+    backendType.includes('video') ||
+    backendType.includes('mp4') ||
+    backendType.includes('webm') ||
+    backendType.includes('mov')
+  ) {
+    return 'video';
+  }
+
+  const videoExtensions = [
+    '.mp4',
+    '.webm',
+    '.mov',
+    '.m4v',
+    '.avi',
+    '.mkv',
+    '.3gp',
+    '.ogv',
+  ];
+
+  const lowerMedia = media.toLowerCase();
+
+  if (videoExtensions.some((extension) => lowerMedia.includes(extension))) {
+    return 'video';
+  }
+
+  return 'image';
+}
+
+/* ============================================================================
+   SMALL HELPERS
+============================================================================ */
+
+function idOf(value: any): string {
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  if (typeof value === 'object') {
+    return String(value._id ?? value.id ?? value.toString?.() ?? '');
+  }
+
+  return String(value);
+}
+
+function ownerIdOf(post: LeanPost): string {
+  return idOf(post?.user);
+}
+
+function toNumber(value: unknown): number {
+  const number = Number(value);
+
+  return Number.isFinite(number) && number > 0 ? number : 0;
+}
+
+function distinctUsers(
+  values: unknown,
+  exclude: string,
+): number {
+  if (!Array.isArray(values)) {
+    return 0;
+  }
+
+  const users = new Set<string>();
+
+  for (const value of values) {
+    const id = idOf(value);
+
+    if (id && id !== exclude) {
+      users.add(id);
+    }
+  }
+
+  return users.size;
+}
+
+function and(...filters: Filter[]): Filter {
+  const parts = filters.filter(
+    (filter) => filter && Object.keys(filter).length > 0,
+  );
+
+  if (parts.length === 0) {
+    return {};
+  }
+
+  if (parts.length === 1) {
+    return parts[0];
+  }
+
+  return { $and: parts };
+}
+
+function toObjectIds(ids: string[]): Types.ObjectId[] {
+  return ids
+    .filter((id) => Types.ObjectId.isValid(id))
+    .map((id) => new Types.ObjectId(id));
+}
+
+/* ----------------------------------------------------------------------------
+   Keyset cursor for chronological pages: "<createdAt ms>_<ObjectId>".
+---------------------------------------------------------------------------- */
+
+function encodeCursor(post: LeanPost): string | undefined {
+  const created = post?.createdAt ? new Date(post.createdAt).getTime() : NaN;
+  const id = idOf(post?._id);
+
+  if (!Number.isFinite(created) || !Types.ObjectId.isValid(id)) {
+    return undefined;
+  }
+
+  return `${created}_${id}`;
+}
+
+function decodeCursor(
+  value: string | undefined,
+): { createdAt: Date; id: Types.ObjectId } | undefined {
+  if (typeof value !== 'string' || value.length > 64) {
+    return undefined;
+  }
+
+  const match = /^(\d{1,15})_([a-f0-9]{24})$/i.exec(value.trim());
+
+  if (!match) {
+    return undefined;
+  }
+
+  const createdAt = new Date(Number(match[1]));
+
+  if (Number.isNaN(createdAt.getTime())) {
+    return undefined;
+  }
+
+  return { createdAt, id: new Types.ObjectId(match[2]) };
+}
+
+/* ============================================================================
+   SERVICE
+============================================================================ */
+
+@Injectable()
+export class FeedService {
+  private readonly logger = new Logger(FeedService.name);
+
+  private readonly snapshots = new FeedSnapshotStore(
+    FEED_RANKING_CONFIG.snapshot.ttlMs,
+    FEED_RANKING_CONFIG.snapshot.maxEntries,
+  );
+
+  private readonly servedEvents = new ServedEventsStore();
+
+  constructor(
+    @InjectModel(Post.name)
+    private readonly postModel: Model<PostDocument>,
+
+    @InjectConnection()
+    private readonly connection: Connection,
+
+    private readonly storiesService: StoriesService,
+
+    private readonly blockVisibilityService: BlockVisibilityService,
+
+    private readonly eventsService: EventsService,
+  ) {}
+
+  /* ==========================================================================
+     GET FEED
+  ========================================================================== */
+
+  async getFeed(options: GetFeedOptions = {}) {
+    const page = Math.max(1, Math.floor(Number(options.page) || 1));
+
+    const limit = Math.min(
+      MAX_PAGE_SIZE,
+      Math.max(1, Math.floor(Number(options.limit) || 20)),
+    );
+
+    const mode = parseFeedMode(options.mode);
+    const viewerId = options.viewerId ? String(options.viewerId) : undefined;
+    const session = this.cleanSession(options.session);
+
+    const relationships = await this.loadViewerRelationships(viewerId);
+
+    const visibilityFilter = this.buildVisibilityFilter(
+      viewerId,
+      relationships,
+    );
+
+    const result =
+      mode === 'for-you'
+        ? await this.getRankedPage(
+            viewerId,
+            session,
+            relationships,
+            visibilityFilter,
+            page,
+            limit,
+          )
+        : await this.getChronologicalPage(
+            mode,
+            relationships,
+            visibilityFilter,
+            page,
+            limit,
+            options.cursor,
+          );
+
+    const visiblePosts = await this.filterByBlockVisibility(
+      viewerId,
+      result.posts,
+    );
+
+    const [stories, events] = await Promise.all([
+      this.storiesService.findAll(),
+      this.loadFeedEvents({
+        viewerId,
+        mode,
+        session,
+        relationships,
+        postIds: visiblePosts.map((post) => idOf(post._id)),
+        excludeEvents: options.excludeEvents,
+        latitude: options.latitude,
+        longitude: options.longitude,
+      }),
+    ]);
+
+    return {
+      feed: visiblePosts.map((post) =>
+        this.toFeedItem(post, result.scores?.[idOf(post._id)]),
+      ),
+
+      // Recommended events for this page, placed after specific posts.
+      events,
+
+      serverTime: new Date().toISOString(),
+
+      stories: (stories || []).map((story: any) => {
+        const obj = story?.toObject?.() || story || {};
+
+        return {
+          ...obj,
+          _id: obj._id?.toString?.() || obj.id,
+          id: obj._id?.toString?.() || obj.id,
+          createdAt: obj.createdAt || new Date(),
+        };
+      }),
+
+      products: [],
+
+      page,
+
+      limit,
+
+      total: result.total,
+
+      hasMore: result.hasMore,
+
+      // Chronological modes only; pass back as ?cursor= for the next page.
+      nextCursor: result.nextCursor,
+
+      mode,
+
+      session: mode === 'for-you' ? session : undefined,
+    };
+  }
+
+  /* ==========================================================================
+     EVENTS BETWEEN POSTS
+  ========================================================================== */
+
+  /**
+   * Never fails the feed: if anything goes wrong the page is served with
+   * no events.
+   */
+  private async loadFeedEvents(input: {
+    viewerId?: string;
+    mode: FeedMode;
+    session?: string;
+    relationships: ViewerRelationships;
+    postIds: string[];
+    excludeEvents?: string;
+    latitude?: number;
+    longitude?: number;
+  }): Promise<FeedEventSlot[]> {
+    if (!input.viewerId || input.postIds.length === 0) {
+      return [];
+    }
+
+    let organizerIds: string[] | undefined;
+
+    if (input.mode === 'following') {
+      organizerIds = input.relationships.followedIds;
+    } else if (input.mode === 'friends') {
+      organizerIds = input.relationships.friendIds;
+    }
+
+    if (organizerIds && organizerIds.length === 0) {
+      return [];
+    }
+
+    const memoryKey =
+      input.mode === 'for-you' && input.session
+        ? `${input.viewerId}:${input.session}`
+        : undefined;
+
+    const exclude = Array.from(
+      new Set([
+        ...parseEventIdList(input.excludeEvents),
+        ...this.servedEvents.get(memoryKey),
+      ]),
+    );
+
+    try {
+      const recommended = await this.eventsService.recommendForFeed({
+        viewerId: input.viewerId,
+        relationships: input.relationships,
+        excludeIds: exclude,
+        organizerIds,
+        limit: 3,
+        latitude: input.latitude,
+        longitude: input.longitude,
+      });
+
+      const slots = buildFeedEventSlots(input.postIds, recommended);
+
+      this.servedEvents.add(
+        memoryKey,
+        slots.map((slot) => slot.event.id),
+      );
+
+      return slots;
+    } catch (error) {
+      this.logger.warn(`Could not load feed events: ${String(error)}`);
+      return [];
+    }
+  }
+
+  /* ==========================================================================
+     FOR YOU
+  ========================================================================== */
+
+  private async getRankedPage(
+    viewerId: string | undefined,
+    session: string | undefined,
+    relationships: ViewerRelationships,
+    visibilityFilter: Filter,
+    page: number,
+    limit: number,
+  ): Promise<FeedPage> {
+    const snapshotKey = session
+      ? `${viewerId ?? 'anonymous'}:${session}`
+      : undefined;
+
+    /*
+     * Page 1 always ranks fresh. Later pages reuse the order stored for
+     * this session so pages are consecutive slices of one list.
+     */
+    let snapshot =
+      page > 1 && snapshotKey
+        ? this.snapshots.get(snapshotKey)
+        : undefined;
+
+    if (!snapshot) {
+      const startedAt = Date.now();
+
+      let candidates = await this.loadCandidatePool(visibilityFilter);
+
+      /*
+       * Apply the canonical block rule to every candidate author before
+       * ranking, so nothing the viewer may not see is ever scored. The
+       * Friendship query above already removed known blocks; this catches
+       * anything else BlockVisibilityService enforces.
+       */
+      candidates = await this.filterByBlockVisibility(
+        viewerId,
+        candidates,
+      );
+
+      const rankable = candidates.map((post) =>
+        this.toRankable(post, viewerId),
+      );
+
+      const authorIds = Array.from(
+        new Set(rankable.map((post) => post.authorId).filter(Boolean)),
+      );
+
+      const [signals, followerCounts] = await Promise.all([
+        this.loadViewerSignals(viewerId, relationships),
+        this.loadFollowerCounts(authorIds),
+      ]);
+
+      const ranked = rankFeed(
+        rankable,
+        signals,
+        followerCounts,
+        new Date(),
+        FEED_RANKING_CONFIG,
+        { explorationSeed: this.explorationSeed(viewerId, session) },
+      );
+
+      const postIds = ranked.map((item) => item.post.id);
+
+      const scores: Record<string, number> = {};
+
+      for (const item of ranked) {
+        scores[item.post.id] = Number(item.score.toFixed(4));
+      }
+
+      if (snapshotKey) {
+        this.snapshots.set(snapshotKey, postIds, scores);
+      }
+
+      snapshot = {
+        postIds,
+        scores,
+        touchedAt: Date.now(),
+      };
+
+      this.logger.debug(
+        `Ranked ${postIds.length} posts for ${viewerId ?? 'anonymous'} in ${
+          Date.now() - startedAt
+        }ms`,
+      );
+    }
+
+    const skip = (page - 1) * limit;
+    const pageIds = snapshot.postIds.slice(skip, skip + limit);
+
+    /*
+     * Re-read the page by ID with the visibility filter applied again.
+     * Counts are current, and anything deleted or no longer visible since
+     * ranking is dropped rather than served.
+     */
+    const docs = pageIds.length
+      ? ((await this.postModel
+          .find(
+            and(visibilityFilter, {
+              _id: { $in: toObjectIds(pageIds) },
+            }),
+          )
+          .lean()
+          .exec()) as LeanPost[])
+      : [];
+
+    const byId = new Map(docs.map((doc) => [idOf(doc._id), doc]));
+
+    return {
+      posts: pageIds
+        .map((id) => byId.get(id))
+        .filter((doc): doc is LeanPost => Boolean(doc)),
+      total: snapshot.postIds.length,
+      hasMore: skip + limit < snapshot.postIds.length,
+      scores: snapshot.scores,
+    };
+  }
+
+  /**
+   * Candidate pool for one ranking pass:
+   *   1. the most recent visible posts (candidatePoolSize)
+   *   2. when that pool is full, older visible posts with the highest
+   *      stored engagement score (Post.score), so relevant evergreen posts
+   *      are not excluded just because they are old
+   * Both queries carry the same visibility filter. Two bounded queries,
+   * never a full collection scan into memory.
+   */
+  private async loadCandidatePool(
+    visibilityFilter: Filter,
+  ): Promise<LeanPost[]> {
+    const recent = (await this.postModel
+      .find(visibilityFilter)
+      .sort({ createdAt: -1, _id: -1 })
+      .limit(FEED_RANKING_CONFIG.candidatePoolSize)
+      .lean()
+      .exec()) as LeanPost[];
+
+    const evergreenSize = FEED_RANKING_CONFIG.evergreenPoolSize;
+
+    if (
+      evergreenSize <= 0 ||
+      recent.length < FEED_RANKING_CONFIG.candidatePoolSize
+    ) {
+      return recent;
+    }
+
+    const oldest = recent[recent.length - 1]?.createdAt;
+
+    if (!oldest) {
+      return recent;
+    }
+
+    try {
+      const evergreen = (await this.postModel
+        .find(
+          and(visibilityFilter, {
+            createdAt: { $lt: new Date(oldest) },
+            score: { $gt: 0 },
+          }),
+        )
+        .sort({ score: -1, _id: -1 })
+        .limit(evergreenSize)
+        .lean()
+        .exec()) as LeanPost[];
+
+      const known = new Set(recent.map((post) => idOf(post._id)));
+
+      return [
+        ...recent,
+        ...evergreen.filter((post) => !known.has(idOf(post._id))),
+      ];
+    } catch (error) {
+      this.logger.warn(`Could not load evergreen posts: ${String(error)}`);
+      return recent;
+    }
+  }
+
+  /**
+   * Seed for the bounded exploration component. Same viewer + session
+   * gives the same order (so a recomputed snapshot matches); a new
+   * session gives a different mix. Without a session the seed changes
+   * once per hour.
+   */
+  private explorationSeed(
+    viewerId: string | undefined,
+    session: string | undefined,
+  ): string {
+    const scope = session ?? `h${Math.floor(Date.now() / 3_600_000)}`;
+
+    return `${viewerId ?? 'anonymous'}:${scope}`;
+  }
+
+  /* ==========================================================================
+     FOLLOWING / FRIENDS / LATEST
+  ========================================================================== */
+
+  private async getChronologicalPage(
+    mode: Exclude<FeedMode, 'for-you'>,
+    relationships: ViewerRelationships,
+    visibilityFilter: Filter,
+    page: number,
+    limit: number,
+    cursor?: string,
+  ): Promise<FeedPage> {
+    let modeFilter: Filter = {};
+
+    if (mode === 'following') {
+      modeFilter = { user: { $in: relationships.followedIds } };
+    }
+
+    if (mode === 'friends') {
+      modeFilter = { user: { $in: relationships.friendIds } };
+    }
+
+    if (
+      (mode === 'following' && relationships.followedIds.length === 0) ||
+      (mode === 'friends' && relationships.friendIds.length === 0)
+    ) {
+      return { posts: [], total: 0, hasMore: false };
+    }
+
+    const filter = and(visibilityFilter, modeFilter);
+    const parsedCursor = decodeCursor(cursor);
+
+    /*
+     * Keyset pagination when the client sends a cursor: "older than the
+     * last post I have", ordered by (createdAt, _id). New posts at the top
+     * cannot shift it. Without a cursor the original page/skip behaviour
+     * is kept for older clients.
+     */
+    const skip = parsedCursor ? 0 : (page - 1) * limit;
+
+    const pageFilter = parsedCursor
+      ? and(filter, {
+          $or: [
+            { createdAt: { $lt: parsedCursor.createdAt } },
+            {
+              createdAt: parsedCursor.createdAt,
+              _id: { $lt: parsedCursor.id },
+            },
+          ],
+        })
+      : filter;
+
+    // One extra row tells us whether another page exists.
+    const [rows, total] = await Promise.all([
+      this.postModel
+        .find(pageFilter)
+        .sort({ createdAt: -1, _id: -1 })
+        .skip(skip)
+        .limit(limit + 1)
+        .lean()
+        .exec() as Promise<LeanPost[]>,
+
+      this.postModel.countDocuments(filter).exec(),
+    ]);
+
+    const hasMore = rows.length > limit;
+    const posts = hasMore ? rows.slice(0, limit) : rows;
+    const last = posts[posts.length - 1];
+
+    return {
+      posts,
+      total,
+      hasMore,
+      nextCursor: hasMore && last ? encodeCursor(last) : undefined,
+    };
+  }
+
+  /* ==========================================================================
+     VISIBILITY
+  ========================================================================== */
+
+  private buildVisibilityFilter(
+    viewerId: string | undefined,
+    relationships: ViewerRelationships,
+  ): Filter {
+    const audience: Filter[] = [{ audience: 'public' }];
+
+    if (viewerId) {
+      audience.push({ audience: 'friends', user: viewerId });
+
+      if (relationships.friendIds.length > 0) {
+        audience.push({
+          audience: 'friends',
+          user: { $in: relationships.friendIds },
+        });
+      }
+    }
+
+    const filters: Filter[] = [
+      { $or: audience },
+      // Posts removed by moderation are never shown.
+      { moderationStatus: { $ne: 'removed' } },
+    ];
+
+    if (relationships.blockedIds.length > 0) {
+      filters.push({ user: { $nin: relationships.blockedIds } });
+    }
+
+    return and(...filters);
+  }
+
+  /**
+   * Final authorization check with the same rule profiles and single-post
+   * views use. One call per distinct author, never per post. Fails closed.
+   */
+  private async filterByBlockVisibility(
+    viewerId: string | undefined,
+    posts: LeanPost[],
+  ): Promise<LeanPost[]> {
+    if (!viewerId || posts.length === 0) {
+      return posts;
+    }
+
+    const authors = Array.from(
+      new Set(
+        posts
+          .map((post) => ownerIdOf(post))
+          .filter((authorId) => authorId && authorId !== viewerId),
+      ),
+    );
+
+    const allowed = new Map<string, boolean>();
+
+    for (
+      let start = 0;
+      start < authors.length;
+      start += BLOCK_CHECK_CONCURRENCY
+    ) {
+      await Promise.all(
+        authors
+          .slice(start, start + BLOCK_CHECK_CONCURRENCY)
+          .map(async (authorId) => {
+            try {
+              allowed.set(
+                authorId,
+                await this.blockVisibilityService.canView(viewerId, authorId),
+              );
+            } catch (error) {
+              this.logger.warn(
+                `Block check failed for author ${authorId}; hiding their posts. ${String(error)}`,
+              );
+              allowed.set(authorId, false);
+            }
+          }),
+      );
+    }
+
+    return posts.filter((post) => {
+      const authorId = ownerIdOf(post);
+
+      return !authorId || authorId === viewerId || allowed.get(authorId) === true;
+    });
+  }
+
+  /* ==========================================================================
+     VIEWER DATA
+  ========================================================================== */
+
+  private async loadViewerRelationships(
+    viewerId: string | undefined,
+  ): Promise<ViewerRelationships> {
+    const relationships: ViewerRelationships = {
+      followedIds: [],
+      friendIds: [],
+      blockedIds: [],
+    };
+
+    if (!viewerId || !Types.ObjectId.isValid(viewerId)) {
+      return relationships;
+    }
+
+    const viewerObjectId = new Types.ObjectId(viewerId);
+
+    const followModel = this.connection.models[FOLLOW_MODEL_NAME];
+    const friendshipModel = this.connection.models[FRIENDSHIP_MODEL_NAME];
+
+    const [follows, friendships] = await Promise.all([
+      followModel
+        ? followModel
+            .find({ followerId: viewerObjectId })
+            .select('followingId')
+            .lean()
+            .exec()
+            .catch((error: unknown) => {
+              this.logger.warn(`Could not load follows: ${String(error)}`);
+              return null;
+            })
+        : Promise.resolve(null),
+
+      friendshipModel
+        ? friendshipModel
+            .find({
+              status: { $in: ['accepted', 'blocked'] },
+              $or: [
+                { requester: viewerObjectId },
+                { receiver: viewerObjectId },
+              ],
+            })
+            .select('requester receiver status')
+            .lean()
+            .exec()
+            .catch((error: unknown) => {
+              this.logger.warn(`Could not load friendships: ${String(error)}`);
+              return null;
+            })
+        : Promise.resolve(null),
+    ]);
+
+    if (!followModel || !friendshipModel) {
+      this.logger.warn(
+        `Relationship models not registered (Follow: ${Boolean(
+          followModel,
+        )}, Friendship: ${Boolean(friendshipModel)}).`,
+      );
+    }
+
+    if (Array.isArray(follows)) {
+      relationships.followedIds = Array.from(
+        new Set(
+          follows.map((item: any) => idOf(item.followingId)).filter(Boolean),
+        ),
+      );
+    }
+
+    if (Array.isArray(friendships)) {
+      const friends = new Set<string>();
+      const blocked = new Set<string>();
+
+      for (const item of friendships as any[]) {
+        const requester: string = idOf(item.requester);
+        const receiver: string = idOf(item.receiver);
+        const other: string = requester === viewerId ? receiver : requester;
+
+        if (!other || other === viewerId) {
+          continue;
+        }
+
+        // A block in either direction hides both users from each other.
+        if (item.status === 'blocked') {
+          blocked.add(other);
+        } else if (item.status === 'accepted') {
+          friends.add(other);
+        }
+      }
+
+      for (const id of blocked) {
+        friends.delete(id);
+      }
+
+      relationships.friendIds = Array.from(friends);
+      relationships.blockedIds = Array.from(blocked);
+    }
+
+    relationships.followedIds = relationships.followedIds.filter(
+      (id) => !relationships.blockedIds.includes(id),
+    );
+
+    return relationships;
+  }
+
+  /**
+   * Interest signals come only from what the viewer has actually done:
+   * likes, comments, reposts and shares on other people's posts.
+   */
+  private async loadViewerSignals(
+    viewerId: string | undefined,
+    relationships: ViewerRelationships,
+  ): Promise<ViewerSignals> {
+    const signals = emptyViewerSignals(viewerId);
+
+    const result: ViewerSignals = {
+      ...signals,
+      followedAuthorIds: new Set(relationships.followedIds),
+      friendAuthorIds: new Set(relationships.friendIds),
+    };
+
+    if (!viewerId) {
+      return result;
+    }
+
+    let history: LeanPost[] = [];
+
+    try {
+      history = await this.postModel
+        .aggregate([
+          {
+            $match: {
+              user: { $ne: viewerId },
+              $or: [
+                { likedBy: viewerId },
+                { repostedBy: viewerId },
+                { 'comments.userId': viewerId },
+                { 'shareEvents.userId': viewerId },
+              ],
+            },
+          },
+          { $sort: { createdAt: -1 } },
+          { $limit: HISTORY_SAMPLE_SIZE },
+          {
+            $project: {
+              user: 1,
+              content: 1,
+              media: 1,
+              type: 1,
+              liked: {
+                $cond: [
+                  { $in: [viewerId, { $ifNull: ['$likedBy', []] }] },
+                  1,
+                  0,
+                ],
+              },
+              reposted: {
+                $size: {
+                  $filter: {
+                    input: { $ifNull: ['$repostedBy', []] },
+                    cond: { $eq: ['$$this', viewerId] },
+                  },
+                },
+              },
+              commented: {
+                $size: {
+                  $filter: {
+                    input: { $ifNull: ['$comments', []] },
+                    cond: { $eq: ['$$this.userId', viewerId] },
+                  },
+                },
+              },
+              shared: {
+                $size: {
+                  $filter: {
+                    input: { $ifNull: ['$shareEvents', []] },
+                    cond: { $eq: ['$$this.userId', viewerId] },
+                  },
+                },
+              },
+            },
+          },
+        ])
+        .exec();
+    } catch (error) {
+      this.logger.warn(`Could not load interaction history: ${String(error)}`);
+      return result;
+    }
+
+    const weights = FEED_RANKING_CONFIG.history;
+
+    const authorAffinity = new Map<string, number>();
+    const hashtagAffinity = new Map<string, number>();
+    const mediaKindAffinity = new Map<MediaKind, number>();
+
+    let interactedPosts = 0;
+
+    for (const item of history) {
+      // Cap repeat actions so spamming one post cannot dominate affinity.
+      const weight =
+        (item.liked ? weights.like : 0) +
+        Math.min(toNumber(item.commented), 3) * weights.comment +
+        Math.min(toNumber(item.reposted), 1) * weights.repost +
+        Math.min(toNumber(item.shared), 1) * weights.share;
+
+      if (weight <= 0) {
+        continue;
+      }
+
+      interactedPosts += 1;
+
+      const author = ownerIdOf(item);
+
+      if (author && author !== viewerId) {
+        authorAffinity.set(author, (authorAffinity.get(author) ?? 0) + weight);
+      }
+
+      for (const tag of extractHashtags(item.content)) {
+        hashtagAffinity.set(tag, (hashtagAffinity.get(tag) ?? 0) + weight);
+      }
+
+      const kind = this.mediaKindOf(item);
+
+      mediaKindAffinity.set(kind, (mediaKindAffinity.get(kind) ?? 0) + weight);
+    }
+
+    return {
+      ...result,
+      authorAffinity,
+      hashtagAffinity,
+      mediaKindAffinity,
+      historyInteractions: interactedPosts,
+    };
+  }
+
+  private async loadFollowerCounts(
+    authorIds: string[],
+  ): Promise<Map<string, number>> {
+    const counts = new Map<string, number>();
+    const followModel = this.connection.models[FOLLOW_MODEL_NAME];
+    const objectIds = toObjectIds(authorIds);
+
+    if (!followModel || objectIds.length === 0) {
+      return counts;
+    }
+
+    try {
+      const rows = await followModel
+        .aggregate([
+          { $match: { followingId: { $in: objectIds } } },
+          { $group: { _id: '$followingId', count: { $sum: 1 } } },
+        ])
+        .exec();
+
+      for (const row of rows) {
+        counts.set(idOf(row._id), toNumber(row.count));
+      }
+    } catch (error) {
+      this.logger.warn(`Could not load follower counts: ${String(error)}`);
+    }
+
+    return counts;
+  }
+
+  /* ==========================================================================
+     MAPPING
+  ========================================================================== */
+
+  private mediaKindOf(post: LeanPost): MediaKind {
+    const media = getRawMedia(post);
+
+    if (!media) {
+      return 'text';
+    }
+
+    return detectMediaType(media, post) === 'video' ? 'video' : 'image';
+  }
+
+  private toRankable(post: LeanPost, viewerId?: string): RankablePost {
+    const authorId = ownerIdOf(post);
+
+    const meaningfulCommenters = new Set<string>();
+
+    if (Array.isArray(post.comments)) {
+      for (const comment of post.comments) {
+        const commenter = idOf(comment?.userId);
+        const text = String(comment?.content ?? '').trim();
+
+        if (commenter && commenter !== authorId && text.length >= 2) {
+          meaningfulCommenters.add(commenter);
+        }
+      }
+    }
+
+    const sharers = Array.isArray(post.shareEvents)
+      ? post.shareEvents.map((event: any) => event?.userId)
+      : [];
+
+    const createdAt = post.createdAt ? new Date(post.createdAt) : new Date(0);
+
+    return {
+      id: idOf(post._id),
+      authorId,
+      createdAt: Number.isNaN(createdAt.getTime()) ? new Date(0) : createdAt,
+      mediaKind: this.mediaKindOf(post),
+      hashtags: extractHashtags(post.content),
+      likes: Array.isArray(post.likedBy)
+        ? distinctUsers(post.likedBy, authorId)
+        : toNumber(post.likes),
+      meaningfulComments: meaningfulCommenters.size,
+      reposts: distinctUsers(post.repostedBy, authorId),
+      shares: sharers.length
+        ? distinctUsers(sharers, authorId)
+        : toNumber(post.shares),
+      gifts: toNumber(post.giftsCount),
+      views: Math.max(
+        toNumber(post.views),
+        Array.isArray(post.viewedBy) ? post.viewedBy.length : 0,
+      ),
+      seenByViewer: Boolean(
+        viewerId &&
+          Array.isArray(post.viewedBy) &&
+          post.viewedBy.some((id: unknown) => idOf(id) === viewerId),
+      ),
+    };
+  }
+
+  /**
+   * Same response shape as before, plus the fields the client already
+   * reads but this endpoint used to drop (likedBy, repostedBy, viewedBy,
+   * reposts, views, userPhoto). Without likedBy the client could not tell
+   * a post was already liked, so tapping like would un-like it.
+   */
+  private toFeedItem(post: LeanPost, score?: number) {
+    const rawMedia = getRawMedia(post);
+    const id = idOf(post._id);
+
+    const user = typeof post.user === 'object' ? post.user : null;
+
+    return {
+      _id: id,
+      id,
+
+      user: ownerIdOf(post) || undefined,
+
+      username:
+        post.username ||
+        user?.username ||
+        post.author?.username ||
+        post.name ||
+        'Unknown',
+
+      userPhoto: post.userPhoto || user?.avatar || undefined,
+
+      content: post.content || post.caption || post.text || '',
+
+      media: rawMedia || null,
+
+      mediaType: detectMediaType(rawMedia, post),
+
+      type: 'post',
+
+      audience: post.audience || 'public',
+
+      likes: post.likes || 0,
+      shares: post.shares || 0,
+      reposts: post.reposts || 0,
+      views: post.views || 0,
+      giftsCount: post.giftsCount || 0,
+
+      likedBy: Array.isArray(post.likedBy) ? post.likedBy : [],
+      repostedBy: Array.isArray(post.repostedBy) ? post.repostedBy : [],
+      viewedBy: Array.isArray(post.viewedBy) ? post.viewedBy : [],
+
+      comments: post.comments || [],
+
+      createdAt: post.createdAt ? new Date(post.createdAt) : new Date(0),
+
+      score: typeof score === 'number' ? score : undefined,
+    };
+  }
+
+  private cleanSession(value: unknown): string | undefined {
+    if (typeof value !== 'string') {
+      return undefined;
+    }
+
+    const session = value.trim();
+
+    if (
+      !session ||
+      session.length > MAX_SESSION_LENGTH ||
+      !/^[A-Za-z0-9_-]+$/.test(session)
+    ) {
+      return undefined;
+    }
+
+    return session;
+  }
+}
+
+===== FILE: apps/api/src/my-live/live.module.ts =====
+import {
+  Module,
+} from "@nestjs/common";
+
+import {
+  MongooseModule,
+} from "@nestjs/mongoose";
+
+import {
+  LiveController,
+} from "./controllers/live.controller";
+
+import {
+  LiveGateway,
+} from "./gateways/live.gateway";
+
+import {
+  LiveStream,
+  LiveStreamSchema,
+} from "./schemas/live-stream.schema";
+
+import {
+  LiveComment,
+  LiveCommentSchema,
+} from "./schemas/live-comment.schema";
+
+import {
+  LiveView,
+  LiveViewSchema,
+} from "./schemas/live-view.schema";
+
+import {
+  LiveGuest,
+  LiveGuestSchema,
+} from "./schemas/live-guest.schema";
+
+import {
+  User,
+  UserSchema,
+} from "../users/user.schema";
+
+import {
+  LiveService,
+} from "./services/live.service";
+
+import {
+  LiveTokenService,
+} from "./services/live-token.service";
+
+import {
+  LiveCommentService,
+} from "./services/live-comment.service";
+
+import {
+  LiveDiscoveryService,
+} from "./services/live-discovery.service";
+
+import {
+  LiveLikeService,
+} from "./services/live-like.service";
+
+import {
+  LiveViewerService,
+} from "./services/live-viewer.service";
+
+import {
+  LiveGuestService,
+} from "./services/live-guest.service";
+
+import {
+  AuthModule,
+} from "../auth/auth.module";
+
+import {
+  LiveRecordingController,
+} from "./controllers/live-recording.controller";
+
+import {
+  LiveRecordingService,
+} from "./services/live-recording.service";
+
+import {
+  UploadsModule,
+} from "../uploads/uploads.module";
+
+import {
+  PostsModule,
+} from "../posts/posts.module";
+
+import {
+  ReportsModule,
+} from "../reports/reports.module";
+
+
+@Module({
+  imports: [
+
+    AuthModule,
+
+    // Recording storage (GCS), feed publishing and posting restrictions.
+    UploadsModule,
+
+    PostsModule,
+
+    ReportsModule,
+
+    MongooseModule.forFeature([
+      {
+        name: LiveStream.name,
+        schema: LiveStreamSchema,
+      },
+
+      {
+        name: LiveComment.name,
+        schema: LiveCommentSchema,
+      },
+
+      {
+        name: LiveView.name,
+        schema: LiveViewSchema,
+      },
+
+      {
+        name: LiveGuest.name,
+        schema: LiveGuestSchema,
+      },
+
+      {
+        name: User.name,
+        schema: UserSchema,
+      },
+    ]),
+
+  ],
+
+  controllers: [
+    LiveRecordingController,
+    LiveController,
+  ],
+
+  providers: [
+    LiveService,
+    LiveTokenService,
+    LiveCommentService,
+    LiveDiscoveryService,
+    LiveLikeService,
+    LiveViewerService,
+
+    LiveGuestService,
+
+    LiveRecordingService,
+
+    LiveGateway,
+  ],
+
+  exports: [
+    LiveService,
+    LiveTokenService,
+    LiveLikeService,
+    LiveViewerService,
+    LiveGuestService,
+    LiveRecordingService,
+  ],
+})
+export class LiveModule {}
+
+===== FILE: apps/api/src/my-live/controllers/live.controller.ts =====
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from "@nestjs/common";
+
+import { LiveJwtGuard } from "../guards/live-jwt.guard";
+
+import { LiveService } from "../services/live.service";
+import { LiveTokenService } from "../services/live-token.service";
+import { LiveCommentService } from "../services/live-comment.service";
+import { LiveDiscoveryService } from "../services/live-discovery.service";
+import { LiveGuestService } from "../services/live-guest.service";
+import { LiveRecordingService } from "../services/live-recording.service";
+
+import {
+  CreateLiveDto,
+  LiveProductDto,
+} from "../dto/create-live.dto";
+
+import {
+  InviteLiveGuestDto,
+  RespondLiveGuestDto,
+} from "../dto/live-guest.dto";
+
+import { getUserId } from "../utils/live-room.util";
+
+@Controller("live")
+export class LiveController {
+  constructor(
+    private readonly liveService: LiveService,
+    private readonly tokenService: LiveTokenService,
+    private readonly commentService: LiveCommentService,
+    private readonly discoveryService: LiveDiscoveryService,
+    private readonly liveGuestService: LiveGuestService,
+    private readonly recordingService: LiveRecordingService,
+  ) {}
+
+  @UseGuards(LiveJwtGuard)
+  @Post()
+  async create(
+    @Req() req: any,
+    @Body() dto: CreateLiveDto,
+  ) {
+    const userId = getUserId(req.user);
+
+    if (!userId) {
+      throw new BadRequestException(
+        "Unable to determine authenticated user.",
+      );
+    }
+
+    return this.liveService.create(
+      userId,
+      dto,
+    );
+  }
+
+  @Get("public")
+  async publicLiveStreams() {
+    return this.discoveryService.discoverPublic();
+  }
+
+  @Get()
+  async discover(
+    @Query("category") category?: string,
+  ) {
+    return this.discoveryService.discover(
+      category,
+    );
+  }
+
+  @Get("trending")
+  async trending() {
+    return this.discoveryService.trending();
+  }
+
+  @UseGuards(LiveJwtGuard)
+  @Get("mine")
+  async mine(
+    @Req() req: any,
+  ) {
+    const userId =
+      getUserId(req.user);
+
+    if (!userId) {
+      throw new BadRequestException(
+        "Unable to determine authenticated user.",
+      );
+    }
+
+    return this.liveService.getMyLiveStreams(
+      userId,
+    );
+  }
+
+  /*
+   * ============================================================================
+   * GUESTS
+   * ============================================================================
+   */
+
+  /**
+   * Host invites a user to join
+   * the current LIVE as a guest.
+   *
+   * POST /live/:id/guests/invite
+   */
+  @UseGuards(LiveJwtGuard)
+  @Post(":id/guests/invite")
+  async inviteGuest(
+    @Req() req: any,
+    @Param("id") id: string,
+    @Body() dto: InviteLiveGuestDto,
+  ) {
+    const userId =
+      getUserId(req.user);
+
+    if (!userId) {
+      throw new BadRequestException(
+        "Authentication required.",
+      );
+    }
+
+    return this.liveGuestService.invite(
+      userId,
+      id,
+      dto,
+    );
+  }
+
+  /**
+   * Get guests/invitations for
+   * a LIVE owned by the current host.
+   *
+   * GET /live/:id/guests
+   */
+  @UseGuards(LiveJwtGuard)
+  @Get(":id/guests")
+  async getGuests(
+    @Req() req: any,
+    @Param("id") id: string,
+  ) {
+    const userId =
+      getUserId(req.user);
+
+    if (!userId) {
+      throw new BadRequestException(
+        "Authentication required.",
+      );
+    }
+
+    return this.liveGuestService.getGuests(
+      userId,
+      id,
+    );
+  }
+
+  /**
+   * Get guest invitations received
+   * by the current user.
+   *
+   * GET /live/guests/invitations
+   *
+   * IMPORTANT:
+   * This route is intentionally above
+   * /:id routes.
+   */
+  @UseGuards(LiveJwtGuard)
+  @Get("guests/invitations")
+  async getMyGuestInvitations(
+    @Req() req: any,
+  ) {
+    const userId =
+      getUserId(req.user);
+
+    if (!userId) {
+      throw new BadRequestException(
+        "Authentication required.",
+      );
+    }
+
+    return this.liveGuestService.getMyInvitations(
+      userId,
+    );
+  }
+
+  /**
+   * Guest accepts or declines
+   * an invitation.
+   *
+   * POST /live/guests/:invitationId/respond
+   */
+  @UseGuards(LiveJwtGuard)
+  @Post("guests/:invitationId/respond")
+  async respondToGuestInvitation(
+    @Req() req: any,
+    @Param("invitationId")
+    invitationId: string,
+    @Body()
+    dto: RespondLiveGuestDto,
+  ) {
+    const userId =
+      getUserId(req.user);
+
+    if (!userId) {
+      throw new BadRequestException(
+        "Authentication required.",
+      );
+    }
+
+    return this.liveGuestService.respond(
+      userId,
+      invitationId,
+      dto.status,
+    );
+  }
+
+  /**
+   * Host removes a guest from
+   * the LIVE.
+   *
+   * DELETE /live/:id/guests/:guestUserId
+   */
+  @UseGuards(LiveJwtGuard)
+  @Delete(":id/guests/:guestUserId")
+  async removeGuest(
+    @Req() req: any,
+    @Param("id") id: string,
+    @Param("guestUserId")
+    guestUserId: string,
+  ) {
+    const userId =
+      getUserId(req.user);
+
+    if (!userId) {
+      throw new BadRequestException(
+        "Authentication required.",
+      );
+    }
+
+    return this.liveGuestService.remove(
+      userId,
+      id,
+      guestUserId,
+    );
+  }
+
+  /**
+   * Mark an accepted guest as
+   * connected to the LIVE.
+   *
+   * POST /live/:id/guests/connect
+   */
+  @UseGuards(LiveJwtGuard)
+  @Post(":id/guests/connect")
+  async connectGuest(
+    @Req() req: any,
+    @Param("id") id: string,
+  ) {
+    const userId =
+      getUserId(req.user);
+
+    if (!userId) {
+      throw new BadRequestException(
+        "Authentication required.",
+      );
+    }
+
+    return this.liveGuestService.markConnected(
+      userId,
+      id,
+    );
+  }
+
+  /**
+   * Mark a guest as having left
+   * the LIVE.
+   *
+   * POST /live/:id/guests/leave
+   */
+  @UseGuards(LiveJwtGuard)
+  @Post(":id/guests/leave")
+  async leaveGuest(
+    @Req() req: any,
+    @Param("id") id: string,
+  ) {
+    const userId =
+      getUserId(req.user);
+
+    if (!userId) {
+      throw new BadRequestException(
+        "Authentication required.",
+      );
+    }
+
+    return this.liveGuestService.markLeft(
+      userId,
+      id,
+    );
+  }
+
+  @Get(":id/comments")
+  async comments(
+    @Param("id") id: string,
+  ) {
+    return this.commentService.findLatest(
+      id,
+    );
+  }
+
+  @UseGuards(LiveJwtGuard)
+  @Post(":id/comments")
+  async createComment(
+    @Req() req: any,
+    @Param("id") id: string,
+    @Body("message") message: string,
+  ) {
+    const userId =
+      getUserId(req.user);
+
+    if (!userId) {
+      throw new BadRequestException(
+        "Authentication required.",
+      );
+    }
+
+    if (
+      typeof message !== "string" ||
+      !message.trim()
+    ) {
+      throw new BadRequestException(
+        "Message is required.",
+      );
+    }
+
+    const comment =
+      await this.commentService.create({
+        streamId: id,
+        userId,
+        message:
+          message.trim(),
+        userName:
+          req.user?.name ||
+          req.user?.username ||
+          "Fockis User",
+        userAvatar:
+          req.user?.avatar ||
+          req.user?.avatarUrl ||
+          "",
+      });
+
+    await this.liveService.incrementComment(
+      id,
+    );
+
+    return comment;
+  }
+
+  @UseGuards(LiveJwtGuard)
+  @Post(":id/join")
+  async join(
+    @Req() req: any,
+    @Param("id") id: string,
+  ) {
+    const userId =
+      getUserId(req.user);
+
+    if (!userId) {
+      throw new BadRequestException(
+        "Authentication required.",
+      );
+    }
+
+    const stream =
+      await this.liveService.findById(
+        id,
+      );
+
+    if (
+      stream.status !== "live"
+    ) {
+      throw new BadRequestException(
+        "This LIVE stream is not currently live.",
+      );
+    }
+
+    const isHost =
+      String(stream.hostId) ===
+      String(userId);
+
+    /*
+     * A guest is allowed to publish only
+     * after accepting an invitation.
+     */
+    const guestInvitation =
+      !isHost
+        ? await this.liveGuestService
+            .getGuestsForUser(
+              userId,
+              id,
+            )
+        : null;
+
+    const isGuest =
+      Boolean(
+        guestInvitation,
+      );
+
+    const canPublish =
+      isHost || isGuest;
+
+    const token =
+      await this.tokenService.createToken({
+        userId,
+        userName:
+          req.user?.name ||
+          req.user?.username ||
+          "Fockis User",
+        roomName:
+          stream.roomName,
+        canPublish,
+        canSubscribe: true,
+      });
+
+    if (isGuest) {
+      await this.liveGuestService.markConnected(
+        userId,
+        id,
+      );
+    }
+
+    /*
+     * Start the cloud recording once the host's client has had a
+     * moment to connect to the LiveKit room. Idempotent: reconnects
+     * never start a second recording.
+     */
+    if (isHost) {
+      this.recordingService.scheduleStart(id);
+    }
+
+    /*
+     * Viewer counts are owned by LiveGateway + LiveViewerService,
+     * which deduplicates users across sockets/tabs and handles disconnects.
+     * Do not increment here: the same client may also emit live:join,
+     * which would count that viewer twice.
+     */
+    return {
+      stream,
+      token,
+      serverUrl:
+        process.env.LIVEKIT_URL || "",
+      role: isHost
+        ? "host"
+        : isGuest
+          ? "guest"
+          : "viewer",
+      canPublish,
+    };
+  }
+
+  @UseGuards(LiveJwtGuard)
+  @Post(":id/leave")
+  async leave(
+    @Req() req: any,
+    @Param("id") id: string,
+  ) {
+    const userId =
+      getUserId(req.user);
+
+    if (!userId) {
+      throw new BadRequestException(
+        "Authentication required.",
+      );
+    }
+
+    const stream =
+      await this.liveService.findById(
+        id,
+      );
+
+    const isHost =
+      String(stream.hostId) ===
+      String(userId);
+
+    if (isHost) {
+      return {
+        viewerCount:
+          stream.viewerCount,
+        peakViewerCount:
+          stream.peakViewerCount,
+      };
+    }
+
+    /*
+     * Guests should leave the guest
+     * participation instead of being
+     * counted as normal viewers.
+     */
+    const guest =
+      await this.liveGuestService
+        .getGuestsForUser(
+          userId,
+          id,
+        );
+
+    if (guest) {
+      return this.liveGuestService.markLeft(
+        userId,
+        id,
+      );
+    }
+
+    /*
+     * Do not decrement from REST. The Socket.IO live:leave event
+     * and disconnect cleanup are the single source of truth for viewer
+     * counts; decrementing here as well can subtract a different viewer.
+     */
+    return {
+      viewerCount: Math.max(0, Number(stream.viewerCount || 0)),
+      peakViewerCount: Math.max(0, Number(stream.peakViewerCount || 0)),
+    };
+  }
+
+  @UseGuards(LiveJwtGuard)
+  @Post(":id/end")
+  async end(
+    @Req() req: any,
+    @Param("id") id: string,
+  ) {
+    const userId =
+      getUserId(req.user);
+
+    if (!userId) {
+      throw new BadRequestException(
+        "Authentication required.",
+      );
+    }
+
+    const result =
+      await this.liveService.end(
+        userId,
+        id,
+      );
+
+    await this.liveGuestService.endStream(
+      id,
+    );
+
+    return result;
+  }
+
+  @UseGuards(LiveJwtGuard)
+  @Delete(":id")
+  async delete(
+    @Req() req: any,
+    @Param("id") id: string,
+  ) {
+    const userId =
+      getUserId(req.user);
+
+    if (!userId) {
+      throw new BadRequestException(
+        "Authentication required.",
+      );
+    }
+
+    return this.liveService.delete(
+      userId,
+      id,
+    );
+  }
+
+  @Post(":id/share")
+  async share(
+    @Param("id") id: string,
+  ) {
+    return this.liveService.incrementShare(
+      id,
+    );
+  }
+
+  @UseGuards(LiveJwtGuard)
+  @Post(":id/like")
+  async like(
+    @Param("id") id: string,
+    @Body("amount") amount?: number,
+  ) {
+    const normalizedAmount =
+      amount === undefined
+        ? 1
+        : Number(amount);
+
+    if (
+      !Number.isFinite(
+        normalizedAmount,
+      ) ||
+      normalizedAmount <= 0
+    ) {
+      throw new BadRequestException(
+        "Like amount must be greater than zero.",
+      );
+    }
+
+    return this.liveService.incrementLike(
+      id,
+      normalizedAmount,
+    );
+  }
+
+  @Post(":id/comment-count")
+  async commentCount(
+    @Param("id") id: string,
+  ) {
+    return this.liveService.incrementComment(
+      id,
+    );
+  }
+
+  @UseGuards(LiveJwtGuard)
+  @Post(":id/viewers")
+  async setViewerCount(
+    @Param("id") id: string,
+    @Body("count") count: number,
+  ) {
+    const normalizedCount =
+      Number(count);
+
+    if (
+      !Number.isFinite(
+        normalizedCount,
+      ) ||
+      normalizedCount < 0
+    ) {
+      throw new BadRequestException(
+        "Viewer count must be a non-negative number.",
+      );
+    }
+
+    return this.liveService.setViewerCount(
+      id,
+      normalizedCount,
+    );
+  }
+
+  @UseGuards(LiveJwtGuard)
+  @Post(":id/products")
+  async addProduct(
+    @Req() req: any,
+    @Param("id") id: string,
+    @Body() product: LiveProductDto,
+  ) {
+    const userId =
+      getUserId(req.user);
+
+    if (!userId) {
+      throw new BadRequestException(
+        "Authentication required.",
+      );
+    }
+
+    return this.liveService.addProduct(
+      userId,
+      id,
+      product,
+    );
+  }
+
+  @UseGuards(LiveJwtGuard)
+  @Delete(":id/products/:productId")
+  async removeProduct(
+    @Req() req: any,
+    @Param("id") id: string,
+    @Param("productId") productId: string,
+  ) {
+    const userId =
+      getUserId(req.user);
+
+    if (!userId) {
+      throw new BadRequestException(
+        "Authentication required.",
+      );
+    }
+
+    return this.liveService.removeProduct(
+      userId,
+      id,
+      productId,
+    );
+  }
+
+  @Get(":id")
+  async get(
+    @Param("id") id: string,
+  ) {
+    return this.liveService.findById(
+      id,
+    );
+  }
+}
+
+===== FILE: apps/api/src/my-live/services/live.service.ts =====
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+
+import { InjectModel } from "@nestjs/mongoose";
+
+import {
+  Model,
+  isValidObjectId,
+} from "mongoose";
+
+import {
+  LiveProduct,
+  LiveStream,
+  LiveStreamDocument,
+} from "../schemas/live-stream.schema";
+
+import {
+  User,
+  UserDocument,
+} from "../../users/user.schema";
+
+import {
+  CreateLiveDto,
+  LiveProductDto,
+} from "../dto/create-live.dto";
+
+import {
+  createLiveRoomName,
+} from "../utils/live-room.util";
+
+import {
+  LiveRecordingService,
+} from "./live-recording.service";
+
+// ============================================================================
+// HOST INFO SHAPE
+// ============================================================================
+
+interface HostInfo {
+  username?: string;
+  displayName?: string;
+  avatarUrl?: string;
+}
+
+@Injectable()
+export class LiveService {
+  constructor(
+    @InjectModel(LiveStream.name)
+    private readonly liveModel: Model<LiveStreamDocument>,
+
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
+
+    private readonly recordingService: LiveRecordingService,
+  ) {}
+
+  // ===========================================================================
+  // CREATE
+  // ===========================================================================
+
+  async create(
+    userId: string,
+    dto: CreateLiveDto,
+  ) {
+    if (!userId) {
+      throw new ForbiddenException(
+        "Authentication required.",
+      );
+    }
+
+    const title = dto.title?.trim();
+
+    if (!title) {
+      throw new BadRequestException(
+        "LIVE title is required.",
+      );
+    }
+
+    const stream = new this.liveModel({
+      hostId: userId,
+
+      roomName: "",
+
+      title,
+
+      description:
+        dto.description?.trim() || "",
+
+      category:
+        dto.category?.trim() || "General",
+
+      thumbnailUrl:
+        dto.thumbnailUrl?.trim() || "",
+
+      products:
+        dto.products || [],
+
+      status: "live",
+
+      viewerCount: 0,
+
+      peakViewerCount: 0,
+
+      likeCount: 0,
+
+      commentCount: 0,
+
+      shareCount: 0,
+
+      startedAt: new Date(),
+    });
+
+    stream.roomName = createLiveRoomName(
+      String(stream._id),
+    );
+
+    try {
+      await stream.save();
+    } catch (error: any) {
+      if (error?.code === 11000) {
+        throw new ConflictException(
+          "Unable to create a unique LIVE room.",
+        );
+      }
+
+      throw error;
+    }
+
+    const hostInfo =
+      await this.getHostInfo(userId);
+
+    return this.serialize(
+      stream,
+      hostInfo,
+    );
+  }
+
+  // ===========================================================================
+  // FIND BY ID
+  // ===========================================================================
+
+  async findById(
+    streamId: string,
+  ) {
+    this.assertObjectId(streamId);
+
+    const stream =
+      await this.liveModel
+        .findById(streamId)
+        .lean();
+
+    if (!stream) {
+      throw new NotFoundException(
+        "LIVE stream not found.",
+      );
+    }
+
+    const hostInfo =
+      await this.getHostInfo(
+        String(stream.hostId),
+      );
+
+    return this.serialize(
+      stream,
+      hostInfo,
+    );
+  }
+
+  // ===========================================================================
+  // GET LIVE STREAM DOCUMENT
+  // ===========================================================================
+
+  async getLiveStreamDocument(
+    streamId: string,
+  ): Promise<LiveStreamDocument> {
+    this.assertObjectId(streamId);
+
+    const stream =
+      await this.liveModel.findById(
+        streamId,
+      );
+
+    if (!stream) {
+      throw new NotFoundException(
+        "LIVE stream not found.",
+      );
+    }
+
+    return stream;
+  }
+
+  // ===========================================================================
+  // DISCOVERY
+  // ===========================================================================
+
+  async getLiveStreams(
+    category?: string,
+  ) {
+    const filter: Record<string, unknown> = {
+      status: "live",
+    };
+
+    const normalizedCategory =
+      category?.trim();
+
+    if (normalizedCategory) {
+      filter.category =
+        normalizedCategory;
+    }
+
+    const streams =
+      await this.liveModel
+        .find(filter)
+        .sort({
+          viewerCount: -1,
+          createdAt: -1,
+        })
+        .limit(100)
+        .lean();
+
+    const hostInfoMap =
+      await this.getHostInfoMap(
+        streams.map(
+          (stream) =>
+            String(stream.hostId),
+        ),
+      );
+
+    return streams.map(
+      (stream) =>
+        this.serialize(
+          stream,
+          hostInfoMap.get(
+            String(stream.hostId),
+          ),
+        ),
+    );
+  }
+
+  // ===========================================================================
+  // MY LIVE STREAMS
+  // ===========================================================================
+
+  async getMyLiveStreams(
+    userId: string,
+  ) {
+    if (!userId) {
+      throw new ForbiddenException(
+        "Authentication required.",
+      );
+    }
+
+    const streams =
+      await this.liveModel
+        .find({
+          hostId: userId,
+        })
+        .sort({
+          createdAt: -1,
+        })
+        .limit(100)
+        .lean();
+
+    const hostInfo =
+      await this.getHostInfo(userId);
+
+    /*
+     * Settle recordings that are still being finalized so the
+     * Live Manager moves from "processing" to "ready"/"failed"
+     * even when the LiveKit webhook is not configured.
+     */
+    const pending = streams.filter((stream) =>
+      ["starting", "recording", "processing"].includes(
+        String(stream.recording?.status || ""),
+      ),
+    );
+
+    let current = streams;
+
+    if (pending.length) {
+      for (const stream of pending) {
+        await this.recordingService.syncStream(
+          String(stream._id),
+        );
+      }
+
+      current =
+        await this.liveModel
+          .find({
+            hostId: userId,
+          })
+          .sort({
+            createdAt: -1,
+          })
+          .limit(100)
+          .lean();
+    }
+
+    const views =
+      await this.recordingService.countViews(
+        current.map((stream) =>
+          String(stream._id),
+        ),
+      );
+
+    return Promise.all(
+      current.map(async (stream) => ({
+        ...this.serialize(
+          stream,
+          hostInfo,
+        ),
+
+        totalViews:
+          views.get(String(stream._id)) || 0,
+
+        recording:
+          await this.recordingService.summarize(
+            stream,
+          ),
+      })),
+    );
+  }
+
+  // ===========================================================================
+  // END LIVE
+  // ===========================================================================
+
+  async end(
+    userId: string,
+    streamId: string,
+    _reason?: string,
+  ) {
+    if (!userId) {
+      throw new ForbiddenException(
+        "Authentication required.",
+      );
+    }
+
+    this.assertObjectId(streamId);
+
+    const stream =
+      await this.liveModel.findById(
+        streamId,
+      );
+
+    if (!stream) {
+      throw new NotFoundException(
+        "LIVE stream not found.",
+      );
+    }
+
+    this.assertHost(
+      stream,
+      userId,
+    );
+
+    if (stream.status === "ended") {
+      return this.serialize(stream);
+    }
+
+    stream.status = "ended";
+
+    stream.endedAt = new Date();
+
+    stream.viewerCount = 0;
+
+    await stream.save();
+
+    /*
+     * Finalize the LiveKit recording. This runs in the background
+     * so ending the LIVE is never blocked by the recording provider;
+     * the recording moves to "processing" and later "ready"/"failed".
+     */
+    void this.recordingService
+      .stopForStream(streamId)
+      .catch(() => undefined);
+
+    return this.serialize(stream);
+  }
+
+  // ===========================================================================
+  // DELETE
+  // ===========================================================================
+
+  async delete(
+    userId: string,
+    streamId: string,
+  ) {
+    if (!userId) {
+      throw new ForbiddenException(
+        "Authentication required.",
+      );
+    }
+
+    this.assertObjectId(streamId);
+
+    const stream =
+      await this.liveModel.findById(
+        streamId,
+      );
+
+    if (!stream) {
+      throw new NotFoundException(
+        "LIVE stream not found.",
+      );
+    }
+
+    this.assertHost(
+      stream,
+      userId,
+    );
+
+    // Stop any running recording and remove its private file.
+    // Feed posts published from it are independent copies and stay.
+    await this.recordingService.cleanupForDeletedStream(
+      stream,
+    );
+
+    await this.liveModel.deleteOne({
+      _id: streamId,
+    });
+
+    return {
+      deleted: true,
+      id: streamId,
+    };
+  }
+
+  // ===========================================================================
+  // SHARE
+  // ===========================================================================
+
+  async incrementShare(
+    streamId: string,
+  ) {
+    this.assertObjectId(streamId);
+
+    const result =
+      await this.liveModel.findOneAndUpdate(
+        {
+          _id: streamId,
+          status: "live",
+        },
+        {
+          $inc: {
+            shareCount: 1,
+          },
+        },
+        {
+          new: true,
+        },
+      );
+
+    if (!result) {
+      throw new NotFoundException(
+        "LIVE stream not found.",
+      );
+    }
+
+    return {
+      shareCount:
+        Number(
+          result.shareCount || 0,
+        ),
+    };
+  }
+
+  // ===========================================================================
+  // LIKE
+  // ===========================================================================
+
+  async incrementLike(
+    streamId: string,
+    amount = 1,
+  ) {
+    this.assertObjectId(streamId);
+
+    const safeAmount = Math.trunc(
+      Number(amount),
+    );
+
+    if (
+      !Number.isFinite(safeAmount) ||
+      safeAmount === 0
+    ) {
+      const existing =
+        await this.liveModel
+          .findById(streamId)
+          .select("likeCount")
+          .lean();
+
+      if (!existing) {
+        throw new NotFoundException(
+          "LIVE stream not found.",
+        );
+      }
+
+      return {
+        likeCount:
+          Number(
+            existing.likeCount || 0,
+          ),
+      };
+    }
+
+    if (safeAmount < 0) {
+      const result =
+        await this.liveModel.findOneAndUpdate(
+          {
+            _id: streamId,
+            status: "live",
+            likeCount: {
+              $gt: 0,
+            },
+          },
+          {
+            $inc: {
+              likeCount: safeAmount,
+            },
+          },
+          {
+            new: true,
+          },
+        );
+
+      if (!result) {
+        const existing =
+          await this.liveModel
+            .findById(streamId)
+            .select("likeCount")
+            .lean();
+
+        if (!existing) {
+          throw new NotFoundException(
+            "LIVE stream not found.",
+          );
+        }
+
+        return {
+          likeCount:
+            Number(
+              existing.likeCount || 0,
+            ),
+        };
+      }
+
+      return {
+        likeCount:
+          Math.max(
+            0,
+            Number(
+              result.likeCount || 0,
+            ),
+          ),
+      };
+    }
+
+    const result =
+      await this.liveModel.findOneAndUpdate(
+        {
+          _id: streamId,
+          status: "live",
+        },
+        {
+          $inc: {
+            likeCount: safeAmount,
+          },
+        },
+        {
+          new: true,
+        },
+      );
+
+    if (!result) {
+      throw new NotFoundException(
+        "LIVE stream not found.",
+      );
+    }
+
+    return {
+      likeCount:
+        Math.max(
+          0,
+          Number(
+            result.likeCount || 0,
+          ),
+        ),
+    };
+  }
+
+  // ===========================================================================
+  // COMMENT
+  // ===========================================================================
+
+  async incrementComment(
+    streamId: string,
+  ) {
+    this.assertObjectId(streamId);
+
+    const result =
+      await this.liveModel.findOneAndUpdate(
+        {
+          _id: streamId,
+          status: "live",
+        },
+        {
+          $inc: {
+            commentCount: 1,
+          },
+        },
+        {
+          new: true,
+        },
+      );
+
+    if (!result) {
+      throw new NotFoundException(
+        "LIVE stream not found.",
+      );
+    }
+
+    return {
+      commentCount:
+        Number(
+          result.commentCount || 0,
+        ),
+    };
+  }
+
+  // ===========================================================================
+  // VIEWER COUNT
+  // ===========================================================================
+
+  async setViewerCount(
+    streamId: string,
+    count: number,
+  ) {
+    this.assertObjectId(streamId);
+
+    const safeCount =
+      Math.max(
+        0,
+        Math.floor(
+          Number(count) || 0,
+        ),
+      );
+
+    const result =
+      await this.liveModel.findOneAndUpdate(
+        {
+          _id: streamId,
+          status: "live",
+        },
+        {
+          $set: {
+            viewerCount: safeCount,
+          },
+
+          $max: {
+            peakViewerCount: safeCount,
+          },
+        },
+        {
+          new: true,
+        },
+      );
+
+    if (!result) {
+      throw new NotFoundException(
+        "LIVE stream not found.",
+      );
+    }
+
+    return {
+      viewerCount:
+        Math.max(
+          0,
+          Number(
+            result.viewerCount || 0,
+          ),
+        ),
+
+      peakViewerCount:
+        Math.max(
+          0,
+          Number(
+            result.peakViewerCount || 0,
+          ),
+        ),
+    };
+  }
+
+  async incrementViewer(
+    streamId: string,
+    amount = 1,
+  ) {
+    this.assertObjectId(streamId);
+
+    const safeAmount =
+      Math.max(
+        1,
+        Math.trunc(
+          Number(amount) || 1,
+        ),
+      );
+
+    const result =
+      await this.liveModel.findOneAndUpdate(
+        {
+          _id: streamId,
+          status: "live",
+        },
+        {
+          $inc: {
+            viewerCount: safeAmount,
+          },
+
+          $max: {
+            peakViewerCount: safeAmount,
+          },
+        },
+        {
+          new: true,
+        },
+      );
+
+    if (!result) {
+      throw new NotFoundException(
+        "LIVE stream not found.",
+      );
+    }
+
+    const viewerCount =
+      Math.max(
+        0,
+        Number(
+          result.viewerCount || 0,
+        ),
+      );
+
+    // Ensure peakViewerCount reflects the resulting viewer count.
+    if (
+      viewerCount >
+      Number(
+        result.peakViewerCount || 0,
+      )
+    ) {
+      const corrected =
+        await this.liveModel.findOneAndUpdate(
+          {
+            _id: streamId,
+            status: "live",
+          },
+          {
+            $max: {
+              peakViewerCount:
+                viewerCount,
+            },
+          },
+          {
+            new: true,
+          },
+        );
+
+      if (corrected) {
+        return {
+          viewerCount,
+
+          peakViewerCount:
+            Math.max(
+              0,
+              Number(
+                corrected.peakViewerCount ||
+                  0,
+              ),
+            ),
+        };
+      }
+    }
+
+    return {
+      viewerCount,
+
+      peakViewerCount:
+        Math.max(
+          0,
+          Number(
+            result.peakViewerCount || 0,
+          ),
+        ),
+    };
+  }
+
+  async decrementViewer(
+    streamId: string,
+    amount = 1,
+  ) {
+    this.assertObjectId(streamId);
+
+    const safeAmount =
+      Math.max(
+        1,
+        Math.trunc(
+          Number(amount) || 1,
+        ),
+      );
+
+    const result =
+      await this.liveModel.findOneAndUpdate(
+        {
+          _id: streamId,
+          status: "live",
+          viewerCount: {
+            $gt: 0,
+          },
+        },
+        {
+          $inc: {
+            viewerCount: -safeAmount,
+          },
+        },
+        {
+          new: true,
+        },
+      );
+
+    if (!result) {
+      const existing =
+        await this.liveModel
+          .findById(streamId)
+          .select(
+            "viewerCount peakViewerCount",
+          )
+          .lean();
+
+      if (!existing) {
+        throw new NotFoundException(
+          "LIVE stream not found.",
+        );
+      }
+
+      return {
+        viewerCount:
+          Math.max(
+            0,
+            Number(
+              existing.viewerCount || 0,
+            ),
+          ),
+
+        peakViewerCount:
+          Math.max(
+            0,
+            Number(
+              existing.peakViewerCount || 0,
+            ),
+          ),
+      };
+    }
+
+    if (result.viewerCount < 0) {
+      result.viewerCount = 0;
+
+      await result.save();
+    }
+
+    return {
+      viewerCount:
+        Math.max(
+          0,
+          Number(
+            result.viewerCount || 0,
+          ),
+        ),
+
+      peakViewerCount:
+        Math.max(
+          0,
+          Number(
+            result.peakViewerCount || 0,
+          ),
+        ),
+    };
+  }
+
+  // ===========================================================================
+  // ADD PRODUCT
+  // ===========================================================================
+
+  async addProduct(
+    userId: string,
+    streamId: string,
+    product: LiveProductDto,
+  ) {
+    if (!userId) {
+      throw new ForbiddenException(
+        "Authentication required.",
+      );
+    }
+
+    this.assertObjectId(streamId);
+
+    if (!product?.productId?.trim()) {
+      throw new BadRequestException(
+        "Product ID is required.",
+      );
+    }
+
+    if (!product?.name?.trim()) {
+      throw new BadRequestException(
+        "Product name is required.",
+      );
+    }
+
+    const stream =
+      await this.liveModel.findById(
+        streamId,
+      );
+
+    if (!stream) {
+      throw new NotFoundException(
+        "LIVE stream not found.",
+      );
+    }
+
+    this.assertHost(
+      stream,
+      userId,
+    );
+
+    if (stream.status !== "live") {
+      throw new BadRequestException(
+        "Products can only be modified while LIVE.",
+      );
+    }
+
+    const exists =
+      stream.products.some(
+        (item) =>
+          String(item.productId) ===
+          String(product.productId),
+      );
+
+    if (exists) {
+      return this.serialize(stream);
+    }
+
+    const liveProduct: LiveProduct = {
+      productId:
+        product.productId.trim(),
+
+      name:
+        product.name.trim(),
+
+      imageUrl:
+        product.imageUrl?.trim() || "",
+
+      price:
+        Number(product.price),
+
+      ...(product.salePrice !==
+      undefined
+        ? {
+            salePrice:
+              Number(
+                product.salePrice,
+              ),
+          }
+        : {}),
+    };
+
+    stream.products.push(
+      liveProduct,
+    );
+
+    await stream.save();
+
+    return this.serialize(stream);
+  }
+
+  // ===========================================================================
+  // REMOVE PRODUCT
+  // ===========================================================================
+
+  async removeProduct(
+    userId: string,
+    streamId: string,
+    productId: string,
+  ) {
+    if (!userId) {
+      throw new ForbiddenException(
+        "Authentication required.",
+      );
+    }
+
+    this.assertObjectId(streamId);
+
+    const normalizedProductId =
+      productId?.trim();
+
+    if (!normalizedProductId) {
+      throw new BadRequestException(
+        "Product ID is required.",
+      );
+    }
+
+    const stream =
+      await this.liveModel.findById(
+        streamId,
+      );
+
+    if (!stream) {
+      throw new NotFoundException(
+        "LIVE stream not found.",
+      );
+    }
+
+    this.assertHost(
+      stream,
+      userId,
+    );
+
+    if (stream.status !== "live") {
+      throw new BadRequestException(
+        "Products can only be modified while LIVE.",
+      );
+    }
+
+    stream.products =
+      stream.products.filter(
+        (product) =>
+          String(product.productId) !==
+          String(normalizedProductId),
+      );
+
+    await stream.save();
+
+    return this.serialize(stream);
+  }
+
+  // ===========================================================================
+  // HOST INFO — SINGLE
+  // ===========================================================================
+
+  private async getHostInfo(
+    hostId: string,
+  ): Promise<HostInfo | undefined> {
+    if (
+      !hostId ||
+      !isValidObjectId(hostId)
+    ) {
+      return undefined;
+    }
+
+    const user =
+      await this.userModel
+        .findById(hostId)
+        .select(
+          "username firstName lastName profilePicture",
+        )
+        .lean();
+
+    if (!user) {
+      return undefined;
+    }
+
+    return this.mapHostInfo(user);
+  }
+
+  // ===========================================================================
+  // HOST INFO — BATCH
+  // ===========================================================================
+
+  private async getHostInfoMap(
+    hostIds: string[],
+  ): Promise<Map<string, HostInfo>> {
+    const uniqueIds =
+      Array.from(
+        new Set(
+          hostIds.filter(
+            (id) =>
+              id &&
+              isValidObjectId(id),
+          ),
+        ),
+      );
+
+    const map =
+      new Map<string, HostInfo>();
+
+    if (uniqueIds.length === 0) {
+      return map;
+    }
+
+    const users =
+      await this.userModel
+        .find({
+          _id: {
+            $in: uniqueIds,
+          },
+        })
+        .select(
+          "username firstName lastName profilePicture",
+        )
+        .lean();
+
+    for (const user of users) {
+      map.set(
+        String(user._id),
+        this.mapHostInfo(user),
+      );
+    }
+
+    return map;
+  }
+
+  // ===========================================================================
+  // HOST INFO — MAPPER
+  // ===========================================================================
+
+  private mapHostInfo(
+    user: any,
+  ): HostInfo {
+    const displayName =
+      [
+        user.firstName,
+        user.lastName,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+
+    return {
+      username:
+        user.username || "",
+
+      displayName:
+        displayName ||
+        user.username ||
+        "",
+
+      avatarUrl:
+        user.profilePicture || "",
+    };
+  }
+
+  // ===========================================================================
+  // SERIALIZE
+  // ===========================================================================
+
+  private serialize(
+    stream: any,
+    hostInfo?: HostInfo,
+  ) {
+    const viewerCount =
+      Number(
+        stream.viewerCount || 0,
+      );
+
+    const likeCount =
+      Number(
+        stream.likeCount || 0,
+      );
+
+    return {
+      _id: String(stream._id),
+
+      id: String(stream._id),
+
+      hostId: String(stream.hostId),
+
+      // ----------------------------------------------------------------------
+      // HOST IDENTITY
+      // ----------------------------------------------------------------------
+
+      username:
+        hostInfo?.username || "",
+
+      displayName:
+        hostInfo?.displayName || "",
+
+      avatarUrl:
+        hostInfo?.avatarUrl || "",
+
+      roomName:
+        stream.roomName || "",
+
+      title:
+        stream.title || "",
+
+      description:
+        stream.description || "",
+
+      category:
+        stream.category || "General",
+
+      thumbnailUrl:
+        stream.thumbnailUrl || "",
+
+      // Compatibility alias — some frontend surfaces read `thumbnail`.
+      thumbnail:
+        stream.thumbnailUrl || "",
+
+      status:
+        stream.status,
+
+      products:
+        stream.products || [],
+
+      viewerCount,
+
+      peakViewerCount:
+        Number(
+          stream.peakViewerCount || 0,
+        ),
+
+      likeCount,
+
+      commentCount:
+        Number(
+          stream.commentCount || 0,
+        ),
+
+      shareCount:
+        Number(
+          stream.shareCount || 0,
+        ),
+
+      // Compatibility aliases — the public feed rail reads these names.
+      viewers: viewerCount,
+
+      likes: likeCount,
+
+      startedAt:
+        stream.startedAt || null,
+
+      endedAt:
+        stream.endedAt || null,
+
+      duration:
+        this.getDurationSeconds(stream),
+
+      createdAt:
+        stream.createdAt,
+
+      updatedAt:
+        stream.updatedAt,
+    };
+  }
+
+  // ===========================================================================
+  // HELPERS
+  // ===========================================================================
+
+  private getDurationSeconds(
+    stream: any,
+  ): number {
+    const recorded = Number(
+      stream.recording?.durationSeconds || 0,
+    );
+
+    if (recorded > 0) {
+      return recorded;
+    }
+
+    const start = stream.startedAt
+      ? new Date(stream.startedAt).getTime()
+      : 0;
+
+    const end = stream.endedAt
+      ? new Date(stream.endedAt).getTime()
+      : stream.status === "live"
+        ? Date.now()
+        : 0;
+
+    return start && end && end > start
+      ? Math.round((end - start) / 1000)
+      : 0;
+  }
+
+  private assertObjectId(
+    value: string,
+  ): void {
+    if (
+      !value ||
+      !/^[a-fA-F0-9]{24}$/.test(value)
+    ) {
+      throw new BadRequestException(
+        "Invalid LIVE stream ID.",
+      );
+    }
+  }
+
+  private assertHost(
+    stream: LiveStreamDocument,
+    userId: string,
+  ): void {
+    if (
+      String(stream.hostId) !==
+      String(userId)
+    ) {
+      throw new ForbiddenException(
+        "You cannot modify this LIVE stream.",
+      );
+    }
+  }
+}

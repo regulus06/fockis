@@ -1,56 +1,53 @@
-import { apiClient } from "./apiClient";
+import { apiClient } from './apiClient';
+import { normalizeJob, type BackendJob } from './careersApi';
+import type { ApplicationPayload, ApplicationStatus, MyApplication } from '../types';
 
-import type {
-  Application,
-  ApplicationPayload,
-} from "../types";
+/**
+ * FOCKIS CAREERS — APPLICATIONS (job seeker)
+ *
+ * GET  /careers/applications       my applications
+ * GET  /careers/applications/:id   one of my applications
+ * POST /careers/applications       apply (Fockis jobs only)
+ */
 
-/* ============================================================
-   APPLICATIONS API
-============================================================ */
+interface BackendApplication {
+  _id?: string;
+  id?: string;
+  jobId?: BackendJob | string | null;
+  status?: ApplicationStatus;
+  createdAt?: string;
+  updatedAt?: string;
+  resumeFileName?: string;
+  coverLetter?: string;
+  statusHistory?: { status: ApplicationStatus; changedAt: string }[];
+}
+
+function normalize(raw: BackendApplication): MyApplication {
+  const job = raw.jobId && typeof raw.jobId === 'object' ? normalizeJob(raw.jobId) : null;
+  return {
+    id: String(raw._id ?? raw.id ?? ''),
+    status: raw.status ?? 'applied',
+    appliedAt: raw.createdAt ?? '',
+    updatedAt: raw.updatedAt ?? raw.createdAt ?? '',
+    job,
+    resumeFileName: raw.resumeFileName ?? null,
+    coverLetter: raw.coverLetter ?? null,
+    statusHistory: raw.statusHistory ?? [],
+  };
+}
 
 export const applicationsApi = {
-  /* ==========================================================
-     GET MY APPLICATIONS
+  getMyApplications: async (): Promise<MyApplication[]> => {
+    const response = await apiClient.get<BackendApplication[]>('/careers/applications');
+    if (!Array.isArray(response)) throw new Error('Invalid applications response from server.');
+    return response.map(normalize);
+  },
 
-     GET /careers/applications
-  ========================================================== */
+  getApplicationById: async (id: string): Promise<MyApplication> =>
+    normalize(await apiClient.get<BackendApplication>(`/careers/applications/${encodeURIComponent(id.trim())}`)),
 
-  getMyApplications:
-    async (): Promise<Application[]> => {
-      return apiClient.get<Application[]>(
-        "/careers/applications",
-      );
-    },
-
-  /* ==========================================================
-     SUBMIT APPLICATION
-
-     POST /careers/applications
-  ========================================================== */
-
-  submitApplication:
-    async (
-      payload: ApplicationPayload,
-    ): Promise<Application> => {
-      return apiClient.post<Application>(
-        "/careers/applications",
-        payload,
-      );
-    },
-
-  /* ==========================================================
-     GET APPLICATION BY ID
-
-     GET /careers/applications/:id
-  ========================================================== */
-
-  getApplicationById:
-    async (
-      id: string,
-    ): Promise<Application> => {
-      return apiClient.get<Application>(
-        `/careers/applications/${id}`,
-      );
-    },
+  submitApplication: async (payload: ApplicationPayload): Promise<MyApplication> =>
+    normalize(await apiClient.post<BackendApplication>('/careers/applications', payload)),
 };
+
+export default applicationsApi;

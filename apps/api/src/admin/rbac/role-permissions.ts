@@ -38,6 +38,11 @@ export const RolePermissions: Record<Role, Permission[]> = {
     Permission.MODERATION_RESTRICT,
     Permission.MODERATION_RESTORE,
     Permission.MODERATION_APPEALS,
+
+    // Help & Support: moderators could already answer tickets; keep that.
+    Permission.SUPPORT_VIEW,
+    Permission.SUPPORT_RESPOND,
+    Permission.SUPPORT_RESOLVE,
   ],
 
   // ========================================================================
@@ -135,6 +140,21 @@ export const RolePermissions: Record<Role, Permission[]> = {
     Permission.MODERATION_RESTORE,
     Permission.MODERATION_APPEALS,
     Permission.MODERATION_SETTINGS,
+
+    // Help & Support
+    Permission.SUPPORT_VIEW,
+    Permission.SUPPORT_RESPOND,
+    Permission.SUPPORT_ASSIGN,
+    Permission.SUPPORT_RESOLVE,
+    Permission.SUPPORT_SETTINGS,
+    Permission.HELP_CONTENT_MANAGE,
+
+    // Policy & Compliance (approval, publishing and sensitive records stay
+    // with super admins and the seeded Policy Approver / Compliance roles)
+    Permission.POLICY_VIEW,
+    Permission.POLICY_EDIT,
+    Permission.POLICY_RULES_MANAGE,
+    Permission.POLICY_AUDIT_VIEW,
   ],
 
   // ========================================================================

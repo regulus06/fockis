@@ -3,6 +3,8 @@ import {
   ArrowLeft,
   Ban,
   CalendarClock,
+  CalendarPlus,
+  MessageCircle,
   ExternalLink,
   Globe,
   Lock,
@@ -21,6 +23,7 @@ import EventDiscoverySection from "../components/EventDiscoverySection";
 import EventEmptyState from "../components/EventEmptyState";
 import EventInviteDialog from "../components/EventInviteDialog";
 import EventOrganizer from "../components/EventOrganizer";
+import EventPromotePanel from "../components/EventPromotePanel";
 import EventRsvpActions from "../components/EventRsvpActions";
 import EventShareButton from "../components/EventShareButton";
 import EventSkeleton from "../components/EventSkeleton";
@@ -32,6 +35,8 @@ import { publishEventPatch, useSyncedEvent } from "../hooks/eventSync";
 import { useEventClock } from "../hooks/useEventClock";
 import { eventsApi, EventsApiError, isAbortError } from "../services/eventsApi";
 import type { FockisEvent } from "../types/event.types";
+import { downloadIcs } from "../utils/eventCalendar";
+import { absoluteEventUrl } from "../utils/eventMedia";
 import {
   countdown,
   differsFromViewerZone,
@@ -198,6 +203,20 @@ function Details({ initial, onChanged }: { initial: FockisEvent; onChanged: (eve
             <div className="fke-details__actions">
               <EventRsvpActions event={event} now={now} />
               <EventShareButton event={event} />
+              {active && (
+                <button
+                  type="button"
+                  className="fke-btn fke-btn--ghost"
+                  onClick={() => downloadIcs(event, absoluteEventUrl(event.id))}
+                >
+                  <CalendarPlus size={16} aria-hidden="true" /> Add to calendar
+                </button>
+              )}
+              {!event.isOwner && event.creatorId && (
+                <Link to={`/messages/profile/${encodeURIComponent(event.creatorId)}`} className="fke-btn fke-btn--ghost">
+                  <MessageCircle size={16} aria-hidden="true" /> Message organizer
+                </Link>
+              )}
               {event.isOwner && active && (
                 <button type="button" className="fke-btn fke-btn--ghost" onClick={() => setInviting(true)}>
                   <UserPlus size={16} aria-hidden="true" /> Invite
@@ -282,6 +301,8 @@ function Details({ initial, onChanged }: { initial: FockisEvent; onChanged: (eve
           <section className="fke-panel">
             <EventOrganizer organizer={event.organizer} creatorId={event.creatorId} isOwner={event.isOwner} />
           </section>
+
+          {event.isOwner && active && <EventPromotePanel event={event} now={now} />}
 
           {event.isOwner && (
             <section className="fke-panel fke-owner">

@@ -1,0 +1,16 @@
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\earnings\earnings.service.ts:61: process.env.STRIPE_SECRET_KEY;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\earnings\earnings.service.ts:65: "STRIPE_SECRET_KEY is not configured.",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\earnings\earnings.service.ts:69: this.stripe = new Stripe(
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\earnings\earnings.service.ts:610: // CREATE NEW STRIPE EXPRESS ACCOUNT
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\fockis-travel-backend\travel-src\payments\payments.service.ts:1: import {BadRequestException,Injectable} from '@nestjs/common'; import Stripe from 'stripe'; @Injectable() export class PaymentsService{private stripe?:Stripe; constructor(){if(process.env.STRIPE_SECRET_KEY)this.stripe=new Stripe(process.env.STRIPE_SECRET_KEY);}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\music\services\music-purchase.service.ts:250: await this.stripeService.client.paymentIntents.create(
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\payment.service.ts:419: await this.stripeService.client.paymentIntents.create(
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\stripe.service.ts:13: const key = process.env.STRIPE_SECRET_KEY?.trim();
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\stripe.service.ts:17: 'STRIPE_SECRET_KEY is not configured.',
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\stripe.service.ts:30: 'STRIPE_SECRET_KEY must be a valid Stripe secret or restricted key.',
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\payments\services\stripe.service.ts:34: this.stripe = new Stripe(key, {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\wallet\wallet.service.ts:46: process.env.STRIPE_SECRET_KEY;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\wallet\wallet.service.ts:50: "STRIPE_SECRET_KEY is not configured.",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\wallet\wallet.service.ts:54: this.stripe = new Stripe(
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\apps\api\src\wallet\wallet.service.ts:172: await this.stripe.paymentIntents.create({
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\admin\fockismail\pages\MarketingSettingsPage.tsx:224: ["STRIPE_SECRET_KEY", "Revenue attribution from payments"],
