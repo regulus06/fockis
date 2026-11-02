@@ -1,0 +1,83 @@
+/* ============================================================================
+   FOCKIS APP THEME — Lumière / Sombre
+   One set of tokens for the whole app, driven by <html data-fk-theme>
+   (written by index.html at startup and by ThemeContext on change).
+
+     --fkt-bg            page background
+     --fkt-surface       cards, sheets, menus
+     --fkt-surface-2     raised / hover surfaces, chips
+     --fkt-sunken        inputs, wells
+     --fkt-text          primary text
+     --fkt-text-2        secondary text
+     --fkt-text-3        hints, placeholders
+     --fkt-border        hairlines
+     --fkt-border-strong
+     --fkt-primary       Fockis blue (#2583F7)
+     --fkt-primary-soft
+     --fkt-accent        Fockis purple
+     --fkt-accent-soft
+     --fkt-nav-bg        navigation bars
+     --fkt-nav-text      inactive navigation items
+     --fkt-shadow        card shadow
+     --fkt-shadow-pop    menus, dialogs
+
+   Modules opt in by reading these tokens; nothing is repainted implicitly.
+============================================================================ */
+
+:root,
+:root[data-fk-theme="light"] {
+  --fkt-bg: #f4f6fb;
+  --fkt-surface: #ffffff;
+  --fkt-surface-2: #f1f4fa;
+  --fkt-sunken: #eef2f8;
+  --fkt-text: #0f1b33;
+  --fkt-text-2: #4a5876;
+  --fkt-text-3: #8a94a6;
+  --fkt-border: #e3e8f1;
+  --fkt-border-strong: #cfd8e7;
+  --fkt-primary: #2583f7;
+  --fkt-primary-strong: #1667e8;
+  --fkt-primary-soft: #e6f0fe;
+  --fkt-accent: #7c5cff;
+  --fkt-accent-soft: #efeaff;
+  --fkt-nav-bg: #ffffff;
+  --fkt-nav-text: #6b778f;
+  --fkt-danger: #e5304a;
+  --fkt-shadow: 0 1px 2px rgba(16, 33, 63, 0.05), 0 8px 24px rgba(16, 33, 63, 0.06);
+  --fkt-shadow-pop: 0 18px 44px rgba(16, 33, 63, 0.18);
+}
+
+:root[data-fk-theme="dark"] {
+  --fkt-bg: #070e1f;
+  --fkt-surface: #0e1a33;
+  --fkt-surface-2: #14244a;
+  --fkt-sunken: #0a1428;
+  --fkt-text: #eaf1ff;
+  --fkt-text-2: #a9b7d8;
+  --fkt-text-3: #7486ab;
+  --fkt-border: rgba(124, 164, 255, 0.14);
+  --fkt-border-strong: rgba(124, 172, 255, 0.28);
+  --fkt-primary: #2583f7;
+  --fkt-primary-strong: #4c9bff;
+  --fkt-primary-soft: rgba(37, 131, 247, 0.18);
+  --fkt-accent: #9b7dff;
+  --fkt-accent-soft: rgba(139, 92, 246, 0.2);
+  --fkt-nav-bg: #101827;
+  --fkt-nav-text: #8a94a6;
+  --fkt-danger: #ff5a6e;
+  --fkt-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 14px 32px rgba(0, 4, 18, 0.45);
+  --fkt-shadow-pop: 0 24px 60px rgba(0, 4, 18, 0.6);
+}
+
+html,
+body {
+  background-color: var(--fkt-bg);
+  transition: background-color 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body {
+    transition: none;
+  }
+}

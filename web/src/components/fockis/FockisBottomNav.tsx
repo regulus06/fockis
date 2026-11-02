@@ -11,7 +11,8 @@ import "../../styles/FockisNavigation.scss";
    Home · Waves · Maps · (Create) · Shop · Messages · Profile
 
    - Phones only (≤ 767 px); desktop uses the sidebar.
-   - Active tab: blue icon + label (#2583F7); others #8A94A6 on #101827.
+   - Active tab: blue icon + label (#2583F7); others grey. Dark bar
+     (#101827) in Sombre, white bar in Lumière (see FockisNavigation.scss).
    - Red badge with the number of unread chats on Messages (9+ above 9).
    - Hidden during full-screen experiences: Waves player (body.fk-reel-open),
      an open chat, a call, turn-by-turn navigation… Screens ask for that with
@@ -45,7 +46,7 @@ function WavesIcon({ active }: IconProps) {
   return (
     <SVG>
       <rect x="3" y="3.5" width="18" height="17" rx="5" fill={active ? "currentColor" : "none"} />
-      <path d="M10 8.6v6.8l5.6-3.4z" fill={active ? "#101827" : "currentColor"} stroke={active ? "#101827" : "currentColor"} strokeWidth="1.4" />
+      <path d="M10 8.6v6.8l5.6-3.4z" className={active ? "fk-bnav-cut" : undefined} fill="currentColor" stroke="currentColor" strokeWidth="1.4" />
     </SVG>
   );
 }
@@ -54,7 +55,7 @@ function MapsIcon({ active }: IconProps) {
   return active ? (
     <SVG>
       <path d="M3 6.2 8.7 4l6.6 2.4L21 4.2v13.6L15.3 20l-6.6-2.4L3 19.8z" fill="currentColor" />
-      <path d="M8.7 4v13.6M15.3 6.4V20" stroke="#101827" strokeWidth="1.6" />
+      <path className="fk-bnav-cut" d="M8.7 4v13.6M15.3 6.4V20" strokeWidth="1.6" />
     </SVG>
   ) : (
     <SVG>
@@ -77,7 +78,7 @@ function MessagesIcon({ active }: IconProps) {
   return (
     <SVG>
       <path d="M12 3.5c-5 0-8.8 3.4-8.8 7.8 0 2.3 1 4.3 2.7 5.8L5 20.5l4-1.6c.9.3 2 .4 3 .4 5 0 8.8-3.4 8.8-7.9S17 3.5 12 3.5z" fill={active ? "currentColor" : "none"} />
-      <g fill={active ? "#101827" : "currentColor"} stroke="none">
+      <g className={active ? "fk-bnav-cut" : undefined} fill="currentColor" stroke="none">
         <circle cx="8.3" cy="11.4" r="1.15" />
         <circle cx="12" cy="11.4" r="1.15" />
         <circle cx="15.7" cy="11.4" r="1.15" />

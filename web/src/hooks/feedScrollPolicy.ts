@@ -34,12 +34,18 @@ export const FEED_SCROLL_CONFIG = {
   maxCaughtUpCooldownMs: 5 * 60_000,
 
   /**
-   * For You only: once a whole ranked cycle produced nothing unseen, real
-   * posts already shown can come back, but only if at least this many
-   * other posts were shown since. Smaller pools simply end in
-   * "You're all caught up" instead of repeating.
+   * Every tab keeps scrolling: when a cycle has nothing unseen left, real
+   * posts already shown come back. A post returns only after at least
+   * recycleGapFor(pool) other cards were shown since — at most this many.
    */
   recycleMinGap: 30,
+
+  /**
+   * Fewer distinct posts than this and the feed ends in "You're all caught
+   * up" (with a Refresh action) instead of showing the same cards again
+   * and again.
+   */
+  minRecyclePool: 3,
 
   /** Background check for new posts while the tab is visible. */
   pollIntervalMs: 60_000,
@@ -275,6 +281,25 @@ export function selectRecyclable<T extends HasId>(
   }
 
   return chosen;
+}
+
+/**
+ * How many other cards must pass before a post may come back. Grows with
+ * the number of distinct posts, so a small pool still cycles (5 posts →
+ * gap 3) and a large one never repeats soon (capped at recycleMinGap).
+ */
+export function recycleGapFor(poolSize: number, config = FEED_SCROLL_CONFIG): number {
+  return Math.max(2, Math.min(config.recycleMinGap, Math.floor(poolSize * 0.6)));
+}
+
+/** Fisher–Yates shuffle on a copy, so a recycled batch isn't a replay. */
+export function shuffleItems<T>(items: readonly T[], random: () => number = Math.random): T[] {
+  const out = items.slice();
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
 }
 
 /* ============================================================================

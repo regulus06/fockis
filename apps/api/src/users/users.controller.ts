@@ -321,10 +321,10 @@ export class UsersController {
       typeof body?.currentPassword !== "string" ||
       typeof body?.newPassword !== "string" ||
       !body.currentPassword ||
-      body.newPassword.length < 8
+      body.newPassword.length < 12
     ) {
       throw new BadRequestException(
-        "Provide your current password and a new password of at least 8 characters.",
+        "Provide your current password and a new password of at least 12 characters.",
       );
     }
 

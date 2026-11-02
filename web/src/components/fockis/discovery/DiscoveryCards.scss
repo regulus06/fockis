@@ -1,0 +1,488 @@
+/* Feed discovery cards. Colours come from the app theme tokens
+   (styles/fockis-app-theme.scss), so they follow Lumière / Sombre. */
+
+.fkd-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--fkt-border);
+  border-radius: 18px;
+  background: var(--fkt-surface);
+  box-shadow: var(--fkt-shadow);
+  color: var(--fkt-text);
+  text-align: left;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  h2 {
+    flex: 1;
+    margin: 0;
+    font-family: inherit;
+    color: var(--fkt-text);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: normal;
+  }
+  button {
+    font: inherit;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--fkt-primary-soft);
+    color: var(--fkt-primary);
+  }
+}
+
+.fkd-link {
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--fkt-primary);
+  font-size: 13.5px !important;
+  font-weight: 600;
+  cursor: pointer;
+  &:hover {
+    background: var(--fkt-primary-soft);
+  }
+}
+
+.fkd-error {
+  margin: 0;
+  color: var(--fkt-danger);
+  font-size: 13px;
+}
+
+.fkd-skeleton {
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, var(--fkt-surface-2) 0%, var(--fkt-sunken) 50%, var(--fkt-surface-2) 100%);
+  background-size: 200% 100%;
+  animation: fkd-shimmer 1.2s linear infinite;
+  &--row {
+    height: 56px;
+  }
+}
+@keyframes fkd-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ---------------------------------------------------------------- trending */
+
+.fkd-trends {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &.is-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+}
+.fkd-trend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 6px;
+  border-radius: 12px;
+
+  .is-grid & {
+    background: var(--fkt-surface-2);
+  }
+  &__thumb {
+    flex: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: var(--fkt-surface-2);
+    &.is-rank,
+    &.is-video {
+      display: grid;
+      place-items: center;
+      color: var(--fkt-primary);
+      font-weight: 800;
+    }
+    &.is-rank {
+      background: linear-gradient(135deg, var(--fkt-primary-soft), var(--fkt-accent-soft));
+    }
+  }
+  &__body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    strong {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      overflow: hidden;
+      font-size: 14.5px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      svg {
+        flex: none;
+        color: var(--fkt-primary);
+      }
+    }
+    small {
+      color: var(--fkt-text-2);
+      font-size: 12.5px;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------- people */
+
+.fkd-people {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &.is-scroll {
+    flex-direction: row;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+.fkd-person {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  &__who {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  &__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    strong {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14.5px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    small {
+      overflow: hidden;
+      color: var(--fkt-text-2);
+      font-size: 12.5px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+  &__x {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--fkt-surface);
+    color: var(--fkt-text-2);
+    cursor: pointer;
+  }
+
+  /* Inline: vertical cards in a row. */
+  .is-scroll & {
+    flex: 0 0 158px;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 10px 12px;
+    border: 1px solid var(--fkt-border);
+    border-radius: 16px;
+    background: var(--fkt-surface-2);
+    scroll-snap-align: start;
+    .fkd-person__who {
+      flex-direction: column;
+      text-align: center;
+    }
+    .fkd-person__text {
+      align-items: center;
+      width: 100%;
+      strong {
+        justify-content: center;
+        max-width: 100%;
+      }
+      small {
+        max-width: 100%;
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        min-height: 2.6em;
+      }
+    }
+    .fkd-avatar {
+      width: 64px;
+      height: 64px;
+      font-size: 24px;
+    }
+    .fkd-follow {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+.fkd-verified {
+  flex: none;
+  color: var(--fkt-primary);
+}
+.fkd-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--fkt-primary), var(--fkt-accent));
+  color: #fff;
+  font-weight: 700;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+.fkd-follow {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--fkt-primary);
+  color: #fff;
+  font-size: 13.5px !important;
+  font-weight: 700;
+  cursor: pointer;
+  &:hover:not(:disabled) {
+    background: var(--fkt-primary-strong);
+  }
+  &.is-done {
+    background: var(--fkt-primary-soft);
+    color: var(--fkt-primary);
+    cursor: default;
+  }
+}
+
+/* ---------------------------------------------------------------- explore */
+
+.fkd-explore {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  .is-inline & {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    @media (max-width: 520px) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 8px;
+    border-radius: 12px;
+    background: var(--fkt-surface-2);
+    color: var(--fkt-text);
+    font-size: 13.5px;
+    font-weight: 600;
+    text-decoration: none;
+    .is-inline & {
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px 4px;
+      font-size: 12px;
+      text-align: center;
+    }
+    &:hover {
+      background: var(--fkt-primary-soft);
+      color: var(--fkt-primary);
+    }
+  }
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border-radius: 10px;
+    background: var(--fkt-surface);
+    color: var(--fkt-primary);
+  }
+}
+
+/* ---------------------------------------------------------------- placement */
+
+.fkd-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* In-feed cards are for phones/tablets; desktop has the sidebar. */
+.fkd-inline {
+  margin: 12px 0;
+  @media (min-width: 901px) {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------- "⋯" panel */
+
+.fkd-menu-button {
+  display: none;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  &:hover,
+  &:focus-visible {
+    background: rgba(255, 255, 255, 0.12);
+  }
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 1px;
+  }
+  /* Same breakpoint where the feed hides its right sidebar. */
+  @media (max-width: 900px) {
+    display: grid;
+  }
+}
+
+.fkd-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 100200;
+  display: flex;
+  justify-content: flex-end;
+
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    padding: 0;
+    border: 0;
+    background: rgba(4, 10, 24, 0.55);
+    animation: fkd-fade 0.18s ease;
+    cursor: default;
+  }
+  &__panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(400px, 92vw);
+    height: 100%;
+    background: var(--fkt-bg);
+    box-shadow: var(--fkt-shadow-pop);
+    animation: fkd-slide 0.22s ease;
+  }
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: max(14px, env(safe-area-inset-top)) 16px 12px;
+    border-bottom: 1px solid var(--fkt-border);
+    background: var(--fkt-surface);
+    h2 {
+      margin: 0;
+      color: var(--fkt-text);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 19px;
+      font-weight: 800;
+    }
+  }
+  &__close {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--fkt-surface-2);
+    color: var(--fkt-text);
+    cursor: pointer;
+  }
+  &__body {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 14px 14px max(20px, env(safe-area-inset-bottom));
+  }
+}
+
+@keyframes fkd-slide {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes fkd-fade {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fkd-drawer__panel,
+  .fkd-drawer__backdrop {
+    animation: none;
+  }
+}

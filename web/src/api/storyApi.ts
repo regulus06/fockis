@@ -97,7 +97,25 @@ function normalizeStoryMedia(value: unknown): string {
   return `uploads/${path}`;
 }
 
+// Folders the API's public /post-media/:file route streams from.
+const POST_MEDIA_FOLDERS = ["posts", "posts/images", "posts/videos", "post-media", "stories", "story-media"];
+
 function extractUploadedMedia(response: any): string {
+  /*
+   * The upload returns a *signed* Google Cloud link, which expires and can be
+   * refused by the bucket. Prefer a stable path the API streams itself, the
+   * same way post photos and videos load: posts/images/<file> →
+   * post-media/<file>.
+   */
+  const storageKey = String(response?.storageKey ?? response?.data?.storageKey ?? "").replace(/^\/+/, "");
+  if (storageKey) {
+    const parts = storageKey.split("/");
+    const fileName = parts.pop() ?? "";
+    if (fileName && POST_MEDIA_FOLDERS.includes(parts.join("/"))) {
+      return `post-media/${fileName}`;
+    }
+  }
+
   const candidates = [
     response?.media,
     response?.url,
@@ -164,9 +182,16 @@ export const storyApi = {
     const formData = new FormData();
     formData.append("file", file);
 
+    // The shared client defaults to JSON; a file upload must be multipart
+    // (axios adds the boundary).
     const response = await api.post(
       "/uploads?context=story",
       formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
     );
 
     const media = extractUploadedMedia(response.data);
@@ -273,4 +298,4 @@ export const storyApi = {
   },
 };
 
-export default storyApi;
+export default storyApi;

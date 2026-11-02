@@ -8,6 +8,7 @@ import {
 
 import { Request } from 'express';
 import { FeedService } from './feed.service';
+import { FeedDiscoveryService } from './feed-discovery.service';
 
 /**
  * Authenticated feed endpoint.
@@ -32,7 +33,38 @@ import { FeedService } from './feed.service';
 export class FeedController {
   constructor(
     private readonly feedService: FeedService,
+    private readonly discovery: FeedDiscoveryService,
   ) {}
+
+  private viewerOf(request: Request & { user?: { id?: string; _id?: string; userId?: string; sub?: string } }): string | undefined {
+    const user = request.user;
+    const id = user?.userId ?? user?.id ?? user?._id ?? user?.sub;
+    return id ? String(id) : undefined;
+  }
+
+  /**
+   * GET /feed/discover/trending?limit=8
+   * Hashtags from recent posts the viewer may see, with real post counts.
+   */
+  @Get('discover/trending')
+  @Header('Cache-Control', 'no-store')
+  trending(@Req() request: Request, @Query('limit') limit?: string) {
+    return this.discovery.trending(this.viewerOf(request as any), Number(limit) || 8);
+  }
+
+  /**
+   * GET /feed/discover/people?limit=6&exclude=<id,id>
+   * Accounts to follow: mutual connections first, never already-followed,
+   * blocked or the viewer. `exclude` = cards already shown or dismissed.
+   */
+  @Get('discover/people')
+  @Header('Cache-Control', 'no-store')
+  people(@Req() request: Request, @Query('limit') limit?: string, @Query('exclude') exclude?: string) {
+    return this.discovery.people(this.viewerOf(request as any), {
+      limit: Number(limit) || 6,
+      exclude: String(exclude ?? '').split(',').map((s) => s.trim()).filter(Boolean).slice(0, 200),
+    });
+  }
 
   @Get()
   @Header('Cache-Control', 'no-store')

@@ -48,6 +48,8 @@ import FockisSidebar from "../../../components/fockis/FockisSidebar/FockisSideba
 
 import FockisTopBar from "../../../components/fockis/FockisTopBar";
 
+import AppearanceSettings from "../components/AppearanceSettings";
+
 import "./AccountSettingsPage.scss";
 
 /* ============================================================================
@@ -114,7 +116,7 @@ type MfaState =
 
  *============================================================================ */
 
-const MIN_PASSWORD_LENGTH = 8;
+const MIN_PASSWORD_LENGTH = 12;
 
 const EMAIL_CODE_LENGTH = 6;
 
@@ -1395,6 +1397,9 @@ export default function AccountSettingsPage() {
             <p>Manage your account information and security.</p>
 
           </header>
+
+          {/* Lumière / Sombre — always available, even before the account loads. */}
+          <AppearanceSettings />
 
           {loading ? (
 

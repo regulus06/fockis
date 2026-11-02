@@ -8,6 +8,26 @@
     <meta name="theme-color" content="#0b1d3a" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Fockis</title>
+    <script>
+      /* Apply the saved Fockis theme (Lumière / Sombre / device) before the
+         app loads, so the page never flashes the wrong theme. Same rules as
+         src/context/ThemeContext.tsx. */
+      (function () {
+        var pref = "dark";
+        try {
+          var saved = localStorage.getItem("fockis-theme");
+          if (saved === "light" || saved === "dark" || saved === "system") pref = saved;
+        } catch (e) {}
+        var theme = pref;
+        if (pref === "system") {
+          try { theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } catch (e) { theme = "dark"; }
+        }
+        var root = document.documentElement;
+        root.setAttribute("data-fk-theme", theme);
+        root.style.colorScheme = theme;
+        root.style.backgroundColor = theme === "dark" ? "#070e1f" : "#f4f6fb";
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

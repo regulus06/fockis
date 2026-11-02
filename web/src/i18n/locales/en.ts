@@ -891,6 +891,17 @@ const en = {
       },
     },
   },
+  appearance: {
+    title: "Appearance",
+    subtitle: "Choose how Fockis looks.",
+    light: "Light",
+    lightDesc: "Bright, clean theme",
+    dark: "Dark",
+    darkDesc: "Dark, restful theme",
+    system: "Follow device theme",
+    systemDesc: "Use your device's light or dark setting automatically.",
+    current: "Current theme",
+  },
 } as const;
 
-export default en;
+export default en;

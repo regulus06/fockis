@@ -18,15 +18,20 @@ import {
   Play,
   Plus,
   Radio,
+  Send,
   ShoppingBag,
   Volume2,
   VolumeX,
   X,
 } from "lucide-react";
 
+import { createPortal } from "react-dom";
 import { FOCKIS_API_URL } from "../../config/fockisConfig";
 
+import { conversationsService, messagesService } from "../../messages/inbox/inboxApi";
+import { useHideBottomNav } from "./FockisBottomNav";
 import "../../styles/FockisStoriesRail.scss";
+import "../../styles/FockisStoriesBubbles.scss";
 
 /* ============================================================================
    CONFIG
@@ -103,6 +108,8 @@ export interface FockisStoriesRailProps {
   liveStreams?: FockisStoryLiveStream[];
   /** Opens a live stream (optional; Live cards only render when provided). */
   onOpenLive?: (streamId: string) => void;
+  /** Shows placeholder circles until the stories have loaded. */
+  loading?: boolean;
 }
 
 interface StoryGroup {
@@ -171,6 +178,7 @@ function isExpired(story: FockisStory, now: number): boolean {
 function groupStories(
   stories: FockisStory[],
   currentUserId?: string,
+  seen?: Set<string>,
 ): StoryGroup[] {
   const groups = new Map<string, StoryGroup>();
   const now = Date.now();
@@ -205,6 +213,10 @@ function groupStories(
 
   const result = Array.from(groups.values()).map((group) => ({
     ...group,
+    // Ring state: unseen = some story in the group not opened on this device.
+    hasUnseen: seen
+      ? !group.isOwn && group.stories.some((story) => !seen.has(story.id))
+      : group.hasUnseen,
     stories: [...group.stories].sort((a, b) => {
       const aTime = a.createdAt ? Date.parse(a.createdAt) : 0;
       const bTime = b.createdAt ? Date.parse(b.createdAt) : 0;
@@ -247,6 +259,126 @@ function initialOf(name?: string): string {
    STORY VIEWER
 ============================================================================ */
 
+/* ============================================================================
+   SEEN STORIES (this device)
+   The rail shows bright rings for stories you haven't opened and muted rings
+   for ones you have. Opened story ids are remembered per account here.
+============================================================================ */
+
+const SEEN_KEY = "fockis-seen-stories";
+const SEEN_MAX = 500;
+
+function seenKey(): string {
+  try {
+    return `${SEEN_KEY}:${localStorage.getItem("userId") || "guest"}`;
+  } catch {
+    return SEEN_KEY;
+  }
+}
+
+function readSeen(): Set<string> {
+  try {
+    const raw = JSON.parse(localStorage.getItem(seenKey()) || "[]");
+    return new Set(Array.isArray(raw) ? raw.map(String) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function markSeen(id: string) {
+  if (!id) return;
+  try {
+    const list = Array.from(readSeen()).filter((x) => x !== id);
+    list.push(id);
+    localStorage.setItem(seenKey(), JSON.stringify(list.slice(-SEEN_MAX)));
+  } catch {
+    /* seen state is a nicety */
+  }
+}
+
+const QUICK_REACTIONS = ["❤️", "😂", "😮", "😢", "🔥", "👏"];
+
+/**
+ * Reply / react to a story. Uses the existing Messages system: the reply
+ * arrives in a direct chat with the story's author.
+ */
+function StoryReplyBar({
+  toUserId,
+  toName,
+  onFocusChange,
+}: {
+  toUserId: string;
+  toName: string;
+  onFocusChange: (focused: boolean) => void;
+}) {
+  const [text, setText] = useState("");
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [burst, setBurst] = useState<string | null>(null);
+
+  const send = async (body: string, reaction?: string) => {
+    if (!body.trim() || state === "sending") return;
+    setState("sending");
+    if (reaction) setBurst(reaction);
+    try {
+      const conversation = await conversationsService.openDirect(toUserId);
+      await messagesService.send({ conversationId: conversation.id, type: "text", text: body.trim() });
+      setText("");
+      setState("sent");
+      window.setTimeout(() => setState((v) => (v === "sent" ? "idle" : v)), 2200);
+    } catch {
+      setState("error");
+    } finally {
+      window.setTimeout(() => setBurst(null), 900);
+    }
+  };
+
+  return (
+    <div className="fk-story-reply" onPointerDown={(e) => e.stopPropagation()}>
+      {burst && (
+        <span className="fk-story-reply__burst" aria-hidden="true">
+          {burst}
+        </span>
+      )}
+      <div className="fk-story-reply__reactions" role="group" aria-label={`React to ${toName}'s story`}>
+        {QUICK_REACTIONS.map((emoji) => (
+          <button
+            key={emoji}
+            type="button"
+            onClick={() => void send(`${emoji} Reacted to your story`, emoji)}
+            disabled={state === "sending"}
+            aria-label={`React ${emoji}`}
+          >
+            {emoji}
+          </button>
+        ))}
+      </div>
+      <form
+        className="fk-story-reply__form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void send(`Replied to your story: ${text}`);
+        }}
+      >
+        <input
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          onFocus={() => onFocusChange(true)}
+          onBlur={() => onFocusChange(false)}
+          maxLength={1000}
+          placeholder={`Reply to ${toName}…`}
+          aria-label={`Reply to ${toName}`}
+        />
+        <button type="submit" disabled={!text.trim() || state === "sending"} aria-label="Send reply">
+          {state === "sending" ? <LoaderCircle size={18} className="fk-stories__spin" /> : <Send size={18} />}
+        </button>
+      </form>
+      <p className="fk-story-reply__status" role="status" aria-live="polite">
+        {state === "sent" ? "Sent — it's in your messages." : state === "error" ? "Couldn't send. Try again." : ""}
+      </p>
+    </div>
+  );
+}
+
 function StoryViewer({
   groups,
   startGroup,
@@ -277,7 +409,11 @@ function StoryViewer({
 
   const group = groups[groupIndex];
   const story = group?.stories[storyIndex];
-  const isPaused = paused || holding;
+  // Typing a reply pauses the story.
+  const [replying, setReplying] = useState(false);
+  // Full screen: no bottom navigation over the story.
+  useHideBottomNav(true);
+  const isPaused = paused || holding || replying;
 
   const src = useMemo(() => (story ? storyMediaCandidates(story)[0] || "" : ""), [story]);
 
@@ -313,6 +449,7 @@ function StoryViewer({
 
   useEffect(() => {
     if (!story) return;
+    markSeen(story.id);
     onStoryClick?.(story, storyIndex);
   }, [story, storyIndex, onStoryClick]);
 
@@ -366,6 +503,12 @@ function StoryViewer({
   // Keyboard + scroll lock + initial focus.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      // Let the reply box have its keys (space, arrows, k…).
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        if (event.key === "Escape") target.blur();
+        return;
+      }
       if (event.key === "Escape") onClose();
       if (event.key === "ArrowLeft") previous();
       if (event.key === "ArrowRight") next();
@@ -600,6 +743,15 @@ function StoryViewer({
             <strong>{story.product.price}</strong>
           </div>
         )}
+
+        {!group.isOwn && group.userId && (
+          <StoryReplyBar
+            key={story.id}
+            toUserId={group.userId}
+            toName={group.username}
+            onFocusChange={setReplying}
+          />
+        )}
       </div>
 
       <button
@@ -627,36 +779,23 @@ export default function FockisStoriesRail({
   onClose,
   liveStreams = [],
   onOpenLive,
+  loading = false,
 }: FockisStoriesRailProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
-
   const [viewerGroup, setViewerGroup] = useState<number | null>(null);
-  const [filter, setFilter] = useState<StoryFilter>("all");
+  const [browsing, setBrowsing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const groups = useMemo(() => groupStories(stories, currentUser?.id), [stories, currentUser?.id]);
+  // Bumped when the viewer closes so rings pick up what was just seen.
+  const [seenVersion, setSeenVersion] = useState(0);
+  const seen = useMemo(() => readSeen(), [seenVersion, stories]); // eslint-disable-line react-hooks/exhaustive-deps
+  const groups = useMemo(() => groupStories(stories, currentUser?.id, seen), [stories, currentUser?.id, seen]);
   const lives = onOpenLive ? liveStreams : [];
-  const ownGroups = groups.filter((group) => group.isOwn);
-
-  const visibleGroups =
-    filter === "live" ? [] : filter === "yours" ? ownGroups : groups;
-  const visibleLives = filter === "all" || filter === "live" ? lives : [];
-
-  const filters: { id: StoryFilter; label: string; count: number }[] = [
-    { id: "all", label: "All", count: groups.length + lives.length },
-  ];
-  if (lives.length > 0) filters.push({ id: "live", label: "Live", count: lives.length });
-  if (ownGroups.length > 0) filters.push({ id: "yours", label: "Yours", count: ownGroups.length });
-
-  // Reset to All if the selected filter no longer has anything to show.
-  useEffect(() => {
-    if (filter === "live" && lives.length === 0) setFilter("all");
-    if (filter === "yours" && ownGroups.length === 0) setFilter("all");
-  }, [filter, lives.length, ownGroups.length]);
+  // Unseen first (own story stays first), then seen.
+  const ordered = useMemo(() => groups, [groups]);
 
   const updateScrollState = useCallback(() => {
     const list = listRef.current;
@@ -672,20 +811,17 @@ export default function FockisStoriesRail({
     const observer = new ResizeObserver(updateScrollState);
     observer.observe(list);
     return () => observer.disconnect();
-  }, [updateScrollState, visibleGroups.length, visibleLives.length]);
+  }, [updateScrollState, ordered.length, lives.length]);
 
   const selectStoryFile = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-
     setUploadError("");
-
     if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
       setUploadError("Choose a photo or video for your story.");
       return;
     }
-
     try {
       setUploading(true);
       await onCreateStory?.(file);
@@ -703,99 +839,49 @@ export default function FockisStoriesRail({
 
   function handleListKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
     if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
-    const cards = Array.from(
-      listRef.current?.querySelectorAll<HTMLButtonElement>(".fk-story-card") || [],
-    );
-    const index = cards.indexOf(document.activeElement as HTMLButtonElement);
+    const items = Array.from(listRef.current?.querySelectorAll<HTMLButtonElement>(".fk-sb") || []);
+    const index = items.indexOf(document.activeElement as HTMLButtonElement);
     if (index === -1) return;
     event.preventDefault();
-    const target = cards[index + (event.key === "ArrowRight" ? 1 : -1)];
+    const target = items[index + (event.key === "ArrowRight" ? 1 : -1)];
     target?.focus();
     target?.scrollIntoView({ inline: "nearest", block: "nearest", behavior: "smooth" });
   }
 
   function openGroup(group: StoryGroup) {
     const index = groups.indexOf(group);
-    if (index !== -1) setViewerGroup(index);
+    if (index !== -1) {
+      setBrowsing(false);
+      setViewerGroup(index);
+    }
   }
 
-  const firstPlayable = groups.findIndex((group) => !group.isOwn) >= 0
-    ? groups.findIndex((group) => !group.isOwn)
-    : groups.length > 0
-      ? 0
-      : -1;
+  const hasAnything = groups.length > 0 || lives.length > 0;
 
   return (
     <>
-      <section className="fk-stories" aria-labelledby="fk-stories-title">
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*,video/*"
-          hidden
-          onChange={(event) => void selectStoryFile(event)}
-        />
+      <section className="fk-stories fk-stories--bubbles" aria-labelledby="fk-stories-title">
+        <input ref={inputRef} type="file" accept="image/*,video/*" hidden onChange={(event) => void selectStoryFile(event)} />
 
         <div className="fk-stories__head">
           <div className="fk-stories__brand">
             <span className="fk-stories__mark" aria-hidden="true">
-              <svg viewBox="0 0 32 32" width="30" height="30">
-                <path
-                  d="M4 19c3.5 0 3.5-5 7-5s3.5 5 7 5 3.5-5 7-5 3 3 3 3"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-                <circle cx="9" cy="9" r="3" fill="currentColor" />
-              </svg>
+              <Play size={16} fill="currentColor" />
             </span>
             <div>
               <h2 id="fk-stories-title">Fockis Stories</h2>
               <p>Real moments. Real people. Your world.</p>
             </div>
           </div>
-
           <div className="fk-stories__tools">
-            {filters.length > 1 && (
-              <div className="fk-stories__filters" role="tablist" aria-label="Filter stories">
-                {filters.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={filter === item.id}
-                    className={`fk-stories__filter${filter === item.id ? " is-active" : ""}${
-                      item.id === "live" ? " fk-stories__filter--live" : ""
-                    }`}
-                    onClick={() => setFilter(item.id)}
-                  >
-                    {item.id === "live" && <span className="fk-stories__live-dot" aria-hidden="true" />}
-                    {item.label}
-                    <span className="fk-stories__filter-count">{item.count}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {firstPlayable >= 0 && (
-              <button
-                type="button"
-                className="fk-stories__see-all"
-                onClick={() => setViewerGroup(firstPlayable)}
-              >
-                Watch all
+            {hasAnything && (
+              <button type="button" className="fk-stories__see-all" onClick={() => setBrowsing(true)}>
+                See all
                 <ChevronRight size={16} aria-hidden="true" />
               </button>
             )}
-
             {onClose && (
-              <button
-                type="button"
-                className="fk-stories__close"
-                onClick={onClose}
-                aria-label="Close stories"
-              >
+              <button type="button" className="fk-stories__close" onClick={onClose} aria-label="Close stories">
                 <X size={17} />
               </button>
             )}
@@ -804,188 +890,70 @@ export default function FockisStoriesRail({
 
         <div className="fk-stories__viewport">
           {canScrollLeft && (
-            <button
-              type="button"
-              className="fk-stories__arrow fk-stories__arrow--left"
-              onClick={() => scroll(-1)}
-              aria-label="Scroll stories left"
-            >
+            <button type="button" className="fk-stories__arrow fk-stories__arrow--left" onClick={() => scroll(-1)} aria-label="Scroll stories left">
               <ChevronLeft size={20} />
             </button>
           )}
-
-          <div
-            className="fk-stories__list"
-            ref={listRef}
-            onScroll={updateScrollState}
-            onKeyDown={handleListKeyDown}
-            aria-label="Stories"
-          >
-            {filter !== "live" && (
-              <button
-                type="button"
-                className="fk-story-card fk-story-card--create"
-                onClick={() => inputRef.current?.click()}
-                disabled={uploading || !onCreateStory}
-                aria-label={uploading ? "Uploading your story" : "Create a story"}
-              >
-                <span className="fk-story-card__create-art" aria-hidden="true">
-                  {currentUser?.avatar && (
-                    <img
-                      src={mediaUrl(currentUser.avatar)}
-                      alt=""
-                      onError={(event) => {
-                        event.currentTarget.style.display = "none";
-                      }}
-                    />
-                  )}
-                </span>
-                <span className="fk-story-card__create-button" aria-hidden="true">
+          <div className="fk-stories__list fk-sb-list" ref={listRef} onScroll={updateScrollState} onKeyDown={handleListKeyDown} aria-label="Stories">
+            <button
+              type="button"
+              className="fk-sb fk-sb--create"
+              onClick={() => inputRef.current?.click()}
+              disabled={uploading || !onCreateStory}
+              aria-label={uploading ? "Uploading your story" : "Create a story"}
+            >
+              <span className="fk-sb__create" aria-hidden="true">
+                <span className="fk-sb__plus">
                   {uploading ? <LoaderCircle size={22} className="fk-stories__spin" /> : <Plus size={24} strokeWidth={2.6} />}
                 </span>
-                <span className="fk-story-card__caption">
-                  <strong>{uploading ? "Uploading…" : "Create Story"}</strong>
-                  <span>Photo or video</span>
-                </span>
-              </button>
-            )}
+                <span className="fk-sb__create-label">{uploading ? "Uploading…" : "Create story"}</span>
+              </span>
+            </button>
 
-            {visibleLives.map((stream) => {
+            {lives.map((stream) => {
               const name = stream.displayName || stream.username || "Fockis live";
-              const cover = stream.thumbnailUrl || stream.thumbnail || stream.avatarUrl || stream.avatar || "";
-              const avatar = stream.avatarUrl || stream.avatar || "";
+              const avatar = stream.avatarUrl || stream.avatar || stream.thumbnailUrl || stream.thumbnail || "";
               return (
                 <button
                   key={`live-${stream.id}`}
                   type="button"
-                  className="fk-story-card fk-story-card--live"
+                  className="fk-sb fk-sb--live"
                   onClick={() => onOpenLive?.(stream.id)}
-                  aria-label={`Watch ${name} live${stream.title ? `: ${stream.title}` : ""}`}
+                  aria-label={`Watch ${name} live${stream.title ? `: ${stream.title}` : ""}, ${formatViewers(stream.viewers)} watching`}
                 >
-                  <span className="fk-story-card__media">
-                    {cover ? <img src={cover} alt="" loading="lazy" /> : <span className="fk-story-card__placeholder"><Radio size={28} /></span>}
+                  <span className="fk-sb__ring">
+                    <span className="fk-sb__photo">{avatar ? <img src={avatar} alt="" loading="lazy" /> : initialOf(name)}</span>
+                    <span className="fk-sb__live">Live</span>
                   </span>
-                  <span className="fk-story-card__badge fk-story-card__badge--live">
-                    <span className="fk-stories__live-dot" aria-hidden="true" />
-                    Live
-                  </span>
-                  <span className="fk-story-card__viewers">
-                    <Eye size={12} aria-hidden="true" />
-                    {formatViewers(stream.viewers)}
-                  </span>
-                  <span className="fk-story-card__avatar">
-                    {avatar ? <img src={avatar} alt="" /> : initialOf(name)}
-                  </span>
-                  <span className="fk-story-card__caption">
-                    <strong>{name}</strong>
-                    {stream.title && <span>{stream.title}</span>}
-                  </span>
+                  <strong className="fk-sb__name">{name}</strong>
+                  <small className="fk-sb__meta">
+                    <Eye size={11} aria-hidden="true" /> {formatViewers(stream.viewers)}
+                  </small>
                 </button>
               );
             })}
 
-            {visibleGroups.map((group, index) => {
-              const latest = group.stories[group.stories.length - 1];
-              const coverCandidates = storyMediaCandidates(latest);
-              const cover = coverCandidates[0] || "";
-              const age = formatAge(latest?.createdAt);
-              const variant = group.isOwn ? "own" : `v${index % 4}`;
+            {ordered.map((group) => (
+              <StoryBubble key={group.key} group={group} onOpen={() => openGroup(group)} />
+            ))}
 
-              return (
-                <button
-                  type="button"
-                  key={group.key}
-                  className={[
-                    "fk-story-card",
-                    `fk-story-card--${variant}`,
-                    group.hasUnseen && !group.isOwn ? "is-unseen" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  onClick={() => openGroup(group)}
-                  aria-label={`${group.isOwn ? "Your story" : `Story from ${group.username}`}${
-                    group.stories.length > 1 ? `, ${group.stories.length} updates` : ""
-                  }${group.hasUnseen && !group.isOwn ? ", new" : ""}`}
-                >
-                  <span className="fk-story-card__media">
-                    {cover ? (
-                      latest?.type === "video" ? (
-                        <video src={cover} muted playsInline preload="metadata" />
-                      ) : (
-                        <img
-                          src={cover}
-                          alt=""
-                          loading="lazy"
-                          decoding="async"
-                          onError={(event) => {
-                            const element = event.currentTarget;
-                            const nextIndex = Number(element.dataset.fallbackIndex || "0") + 1;
-                            const nextSrc = coverCandidates[nextIndex];
-                            if (nextSrc) {
-                              element.dataset.fallbackIndex = String(nextIndex);
-                              element.src = nextSrc;
-                            } else {
-                              element.style.display = "none";
-                            }
-                          }}
-                        />
-                      )
-                    ) : group.avatar ? (
-                      <img src={mediaUrl(group.avatar)} alt="" />
-                    ) : (
-                      <span className="fk-story-card__placeholder">{initialOf(group.username)}</span>
-                    )}
-                  </span>
+            {loading && (
+              <>
+                <span className="fk-sb fk-sb--skeleton" aria-hidden="true" />
+                <span className="fk-sb fk-sb--skeleton" aria-hidden="true" />
+                <span className="fk-sb fk-sb--skeleton" aria-hidden="true" />
+              </>
+            )}
 
-                  {group.isOwn && <span className="fk-story-card__badge">Yours</span>}
-
-                  {!group.isOwn && group.hasUnseen && (
-                    <span className="fk-story-card__new" aria-hidden="true" />
-                  )}
-
-                  <span className="fk-story-card__chips">
-                    {latest?.type === "video" && (
-                      <span className="fk-story-card__chip" title="Video story">
-                        <Play size={11} fill="currentColor" aria-hidden="true" />
-                      </span>
-                    )}
-                    {group.isSeller && (
-                      <span className="fk-story-card__chip" title="Shop story">
-                        <ShoppingBag size={11} aria-hidden="true" />
-                      </span>
-                    )}
-                    {group.stories.length > 1 && (
-                      <span className="fk-story-card__chip">{group.stories.length}</span>
-                    )}
-                  </span>
-
-                  <span className="fk-story-card__avatar">
-                    {group.avatar ? <img src={mediaUrl(group.avatar)} alt="" /> : initialOf(group.username)}
-                  </span>
-
-                  <span className="fk-story-card__caption">
-                    <strong>{group.isOwn ? "Your Story" : group.username}</strong>
-                    {age && <span>{age}</span>}
-                  </span>
-                </button>
-              );
-            })}
-
-            {visibleGroups.length === 0 && visibleLives.length === 0 && filter === "all" && (
+            {!loading && !hasAnything && (
               <div className="fk-stories__empty">
                 <strong>No stories yet</strong>
-                <span>Be the first to share a moment today.</span>
+                <span>Share a photo or video — it stays up for 24 hours.</span>
               </div>
             )}
           </div>
-
           {canScrollRight && (
-            <button
-              type="button"
-              className="fk-stories__arrow fk-stories__arrow--right"
-              onClick={() => scroll(1)}
-              aria-label="Scroll stories right"
-            >
+            <button type="button" className="fk-stories__arrow fk-stories__arrow--right" onClick={() => scroll(1)} aria-label="Scroll stories right">
               <ChevronRight size={20} />
             </button>
           )}
@@ -998,14 +966,196 @@ export default function FockisStoriesRail({
         )}
       </section>
 
-      {viewerGroup !== null && (
+      {/* Portals: the feed column creates its own stacking context, which
+          let the app's top bar cover the full-screen viewer on phones. */}
+      {browsing && createPortal(
+        <StoriesBrowser
+          groups={groups}
+          lives={lives}
+          onOpen={openGroup}
+          onOpenLive={(id) => {
+            setBrowsing(false);
+            onOpenLive?.(id);
+          }}
+          onCreate={onCreateStory ? () => inputRef.current?.click() : undefined}
+          onClose={() => setBrowsing(false)}
+        />,
+        document.body,
+      )}
+
+      {viewerGroup !== null && createPortal(
         <StoryViewer
           groups={groups}
           startGroup={viewerGroup}
-          onClose={() => setViewerGroup(null)}
+          onClose={() => {
+            setViewerGroup(null);
+            setSeenVersion((v) => v + 1);
+          }}
           onStoryClick={onStoryClick}
-        />
+        />,
+        document.body,
       )}
     </>
+  );
+}
+
+/* ============================================================================
+   STORY BUBBLE (circle with gradient ring)
+============================================================================ */
+
+function StoryBubble({ group, onOpen }: { group: StoryGroup; onOpen: () => void }) {
+  const latest = group.stories[group.stories.length - 1];
+  const cover = latest ? storyMediaCandidates(latest)[0] || "" : "";
+  const photo = group.avatar ? mediaUrl(group.avatar) : latest?.type === "video" ? "" : cover;
+  const [failed, setFailed] = useState(false);
+  const age = formatAge(latest?.createdAt);
+  const state = group.isOwn ? "own" : group.hasUnseen ? "unseen" : "seen";
+  return (
+    <button
+      type="button"
+      className={`fk-sb is-${state}`}
+      onClick={onOpen}
+      aria-label={`${group.isOwn ? "Your story" : `Story from ${group.username}`}${group.stories.length > 1 ? `, ${group.stories.length} updates` : ""}${
+        state === "unseen" ? ", new" : ""
+      }${age ? `, ${age} ago` : ""}`}
+    >
+      <span className="fk-sb__ring">
+        <span className="fk-sb__photo">
+          {photo && !failed ? <img src={photo} alt="" loading="lazy" decoding="async" onError={() => setFailed(true)} /> : initialOf(group.username)}
+        </span>
+        {latest?.type === "video" && (
+          <span className="fk-sb__chip" title="Video story">
+            <Play size={10} fill="currentColor" aria-hidden="true" />
+          </span>
+        )}
+        {group.isSeller && !latest?.type?.startsWith("video") && (
+          <span className="fk-sb__chip" title="Shop story">
+            <ShoppingBag size={10} aria-hidden="true" />
+          </span>
+        )}
+      </span>
+      <strong className="fk-sb__name">{group.isOwn ? "Your story" : group.username}</strong>
+      {age && <small className="fk-sb__meta">{age}</small>}
+    </button>
+  );
+}
+
+/* ============================================================================
+   SEE ALL — every active story in a grid, unseen first
+============================================================================ */
+
+function StoriesBrowser({
+  groups,
+  lives,
+  onOpen,
+  onOpenLive,
+  onCreate,
+  onClose,
+}: {
+  groups: StoryGroup[];
+  lives: FockisStoryLiveStream[];
+  onOpen: (group: StoryGroup) => void;
+  onOpenLive: (id: string) => void;
+  onCreate?: () => void;
+  onClose: () => void;
+}) {
+  const closeRef = useRef<HTMLButtonElement | null>(null);
+  useHideBottomNav(true);
+  const unseen = groups.filter((g) => !g.isOwn && g.hasUnseen);
+  const rest = groups.filter((g) => g.isOwn || !g.hasUnseen);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    closeRef.current?.focus();
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
+  const tile = (group: StoryGroup) => {
+    const latest = group.stories[group.stories.length - 1];
+    const cover = latest ? storyMediaCandidates(latest)[0] || "" : "";
+    return (
+      <li key={group.key}>
+        <button type="button" className={`fk-sbx__tile${group.hasUnseen && !group.isOwn ? " is-unseen" : ""}`} onClick={() => onOpen(group)}>
+          <span className="fk-sbx__media">
+            {cover ? latest?.type === "video" ? <video src={cover} muted playsInline preload="metadata" /> : <img src={cover} alt="" loading="lazy" /> : null}
+          </span>
+          <span className="fk-sbx__who">
+            <span className="fk-sbx__avatar">{group.avatar ? <img src={mediaUrl(group.avatar)} alt="" /> : initialOf(group.username)}</span>
+            <span>
+              <strong>{group.isOwn ? "Your story" : group.username}</strong>
+              <small>
+                {formatAge(latest?.createdAt)}
+                {group.stories.length > 1 ? ` · ${group.stories.length} updates` : ""}
+              </small>
+            </span>
+          </span>
+        </button>
+      </li>
+    );
+  };
+
+  return (
+    <div className="fk-sbx" role="dialog" aria-modal="true" aria-labelledby="fk-sbx-title">
+      <div className="fk-sbx__panel">
+        <header className="fk-sbx__head">
+          <h2 id="fk-sbx-title">Stories</h2>
+          {onCreate && (
+            <button type="button" className="fk-sbx__create" onClick={onCreate}>
+              <Plus size={16} /> Create
+            </button>
+          )}
+          <button ref={closeRef} type="button" className="fk-sbx__close" onClick={onClose} aria-label="Close">
+            <X size={20} />
+          </button>
+        </header>
+        <div className="fk-sbx__body">
+          {lives.length > 0 && (
+            <>
+              <h3>Live now</h3>
+              <ul className="fk-sbx__grid">
+                {lives.map((stream) => (
+                  <li key={stream.id}>
+                    <button type="button" className="fk-sbx__tile is-live" onClick={() => onOpenLive(stream.id)}>
+                      <span className="fk-sbx__media">
+                        {stream.thumbnailUrl || stream.thumbnail ? <img src={stream.thumbnailUrl || stream.thumbnail} alt="" loading="lazy" /> : null}
+                        <span className="fk-sbx__live">Live · {formatViewers(stream.viewers)}</span>
+                      </span>
+                      <span className="fk-sbx__who">
+                        <span className="fk-sbx__avatar">{initialOf(stream.displayName || stream.username)}</span>
+                        <span>
+                          <strong>{stream.displayName || stream.username || "Fockis live"}</strong>
+                          {stream.title && <small>{stream.title}</small>}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {unseen.length > 0 && (
+            <>
+              <h3>New</h3>
+              <ul className="fk-sbx__grid">{unseen.map(tile)}</ul>
+            </>
+          )}
+          {rest.length > 0 && (
+            <>
+              <h3>{unseen.length ? "Seen" : "All stories"}</h3>
+              <ul className="fk-sbx__grid">{rest.map(tile)}</ul>
+            </>
+          )}
+          {groups.length === 0 && lives.length === 0 && <p className="fk-sbx__empty">No stories right now.</p>}
+        </div>
+      </div>
+    </div>
   );
 }

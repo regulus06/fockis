@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { FeedController } from './feed.controller';
 import { FeedService } from './feed.service';
+import { FeedDiscoveryService } from './feed-discovery.service';
 
 import { Post, PostSchema } from '../posts/post.schema';
 import {
@@ -31,7 +32,7 @@ import { EventsModule } from '../events/events.module';
     EventsModule,
   ],
   controllers: [FeedController],
-  providers: [FeedService],
+  providers: [FeedService, FeedDiscoveryService],
   exports: [FeedService],
 })
 export class FeedModule {}

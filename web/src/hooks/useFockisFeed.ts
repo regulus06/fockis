@@ -8,8 +8,10 @@ import {
   classifyFeedError,
   createdAtMs,
   pickNewPosts,
+  recycleGapFor,
   selectRecyclable,
   shouldRetry,
+  shuffleItems,
   uniqueById,
 } from "./feedScrollPolicy";
 import { storyApi } from "../api/storyApi";
@@ -97,6 +99,9 @@ type LoadReason = "initial" | "scroll" | "continue" | "manual";
 export function useFockisFeed(mode: FeedMode = "for-you") {
   const [posts, setPosts] = useState<FockisPost[]>([]);
   const [stories, setStories] = useState<FockisStory[]>([]);
+
+  // Shows loading placeholders in the Stories rail until the first answer.
+  const [storiesLoaded, setStoriesLoaded] = useState(false);
   const [products, setProducts] = useState<Record<string, any>[]>([]);
 
   const [notifications, setNotifications] =
@@ -339,6 +344,7 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
         mapStories(rawStories);
 
       setStories(mappedStories);
+      setStoriesLoaded(true);
     } catch (error) {
       console.error(
         "Fockis Stories error:",
@@ -346,6 +352,7 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
       );
 
       setStories([]);
+      setStoriesLoaded(true);
     }
   }, []);
 
@@ -764,22 +771,19 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
 
       const isForYou = mode === "for-you";
 
-      // The current list is exhausted.
+      // The current list is exhausted: start another cycle instead of
+      // stopping. For You gets a fresh ranked session; Following, Latest
+      // and Friends restart from their newest page. Posts that were already
+      // shown come back as recycled cards (see below), so scrolling goes on
+      // for as long as the tab has eligible posts.
       if (!hasMoreRef.current) {
-        if (!isForYou) {
-          // Chronological modes really end here. New posts still arrive
-          // through the background check.
-          setFeedStatus(
-            renderedCountRef.current > 0 ? "caught-up" : "empty",
-          );
-          return;
-        }
-
-        // For You: start a fresh ranked cycle with a new session.
         cycleRef.current += 1;
         cycleAddedRef.current = 0;
         emptyPagesRef.current = 0;
-        sessionIdRef.current = createFeedSessionId();
+        if (isForYou) {
+          sessionIdRef.current = createFeedSessionId();
+        }
+        cursorRef.current = undefined;
         pageRef.current = 1;
         hasMoreRef.current = true;
       }
@@ -878,22 +882,25 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
           cycleAddedRef.current += unseen.length;
           exhaustedStreakRef.current = 0;
         } else if (
-          isForYou &&
           cycleRef.current > 0 &&
-          exhaustedStreakRef.current > 0
+          displayedIdsRef.current.size >= FEED_SCROLL_CONFIG.minRecyclePool
         ) {
-          // A whole earlier cycle had nothing unseen: allow real posts to
-          // come back, spaced out, instead of a dead end.
+          // A later cycle: nothing unseen is left, so real posts that were
+          // already shown come back — shuffled, and never one of the last
+          // few cards (the gap grows with the pool, up to recycleMinGap).
           const recycled = selectRecyclable(
-            pagePosts.filter((post) => !pendingIdsRef.current.has(post.id)),
+            shuffleItems(
+              pagePosts.filter((post) => !pendingIdsRef.current.has(post.id)),
+            ),
             lastShownAtRef.current,
             renderedCountRef.current,
-            FEED_SCROLL_CONFIG.recycleMinGap,
+            recycleGapFor(displayedIdsRef.current.size),
           );
 
           if (recycled.length > 0) {
             appendPosts(recycled, true);
             added = recycled.length;
+            cycleAddedRef.current += recycled.length;
           }
         }
 
@@ -902,7 +909,6 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
         // A refresh cycle that keeps returning only posts already shown
         // is cut short instead of being paged through to the end.
         if (
-          isForYou &&
           cycleRef.current > 0 &&
           cycleAddedRef.current === 0 &&
           added === 0 &&
@@ -912,7 +918,11 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
         }
 
         if (!hasMoreRef.current) {
-          if (isForYou && cycleAddedRef.current === 0 && added === 0) {
+          if (cycleAddedRef.current === 0 && added === 0) {
+            // A whole cycle added nothing (no posts at all, or too few to
+            // repeat without showing the same card again right away). Wait
+            // before the next cycle instead of looping requests, and look
+            // for brand-new posts meanwhile.
             exhaustedStreakRef.current += 1;
             gateKindRef.current = "cooldown";
             nextAllowedAtRef.current =
@@ -920,16 +930,12 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
             setFeedStatus(
               renderedCountRef.current > 0 ? "caught-up" : "empty",
             );
-            // Nothing unseen in the ranking: look for brand-new posts.
             void checkForNewPostsRef.current();
-          } else if (isForYou) {
+          } else {
+            // The next scroll starts another cycle straight away.
             gateKindRef.current = "none";
             nextAllowedAtRef.current = 0;
             setFeedStatus("idle");
-          } else {
-            setFeedStatus(
-              renderedCountRef.current > 0 ? "caught-up" : "empty",
-            );
           }
         } else if (emptyPagesRef.current >= FEED_SCROLL_CONFIG.maxEmptyPagesInARow) {
           // Several pages in a row added nothing: slow down.
@@ -2731,6 +2737,7 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
   return {
     posts,
     stories,
+    storiesLoaded,
     products,
 
     notifications,
@@ -2794,4 +2801,4 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
     dismissFeedEvent,
     markEventsShown,
   };
-}
+}
