@@ -28,6 +28,18 @@ import {
   UserSchema,
 } from "../users/user.schema";
 
+import { NotificationsModule } from "../notifications/notifications.module";
+import { LiveTokenService } from "../my-live/services/live-token.service";
+import {
+  CallRecord,
+  CallRecordSchema,
+  UserDevice,
+  UserDeviceSchema,
+} from "./calls/call.schemas";
+import { CallPushService } from "./calls/call-push.service";
+import { CallsService } from "./calls/calls.service";
+import { CallsController, DevicesController } from "./calls/calls.controller";
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -43,7 +55,17 @@ import {
         name: User.name,
         schema: UserSchema,
       },
+      {
+        name: CallRecord.name,
+        schema: CallRecordSchema,
+      },
+      {
+        name: UserDevice.name,
+        schema: UserDeviceSchema,
+      },
     ]),
+
+    NotificationsModule,
 
     JwtModule.register({
       secret:
@@ -57,6 +79,8 @@ import {
     ConversationsController,
     ConversationMessagesController,
     UploadsController,
+    CallsController,
+    DevicesController,
   ],
 
   providers: [
@@ -64,12 +88,16 @@ import {
     ConversationsService,
     UploadsService,
     MessagesGateway,
+    CallPushService,
+    CallsService,
+    LiveTokenService,
   ],
 
   exports: [
     MessagesService,
     ConversationsService,
     UploadsService,
+    CallsService,
   ],
 })
 export class MessagesModule {}

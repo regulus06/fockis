@@ -1,0 +1,211 @@
+/* ============================================================================
+   ADMIN · ADDRESS VERIFICATION (on top of SupportMod.scss's .fksm kit)
+============================================================================ */
+
+.fkav {
+  .fkav-intro {
+    margin: -4px 0 14px;
+    max-width: 820px;
+  }
+
+  .fkav-count {
+    display: inline-block;
+    min-width: 20px;
+    margin-left: 6px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--sm-gray-soft);
+    color: var(--sm-muted);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 19px;
+    text-align: center;
+
+    &.is-hot {
+      background: var(--sm-amber-soft);
+      color: #a15c00;
+    }
+  }
+
+  .fkav-cc {
+    width: 130px;
+    text-transform: uppercase;
+  }
+
+  .fkav-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--sm-blue);
+    }
+  }
+
+  .fkav-detail {
+    grid-template-columns: minmax(0, 1fr) 340px;
+
+    @media (max-width: 1200px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .fkav-sub {
+    margin: 16px 0 6px;
+    color: var(--sm-ink);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .fkav-landmarks {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      padding: 6px 0;
+      border-bottom: 1px solid var(--sm-line-soft);
+    }
+    span {
+      display: inline-block;
+      min-width: 92px;
+      color: var(--sm-muted);
+      font-size: 13px;
+    }
+  }
+
+  .fkav-directions {
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--sm-blue-faint);
+    white-space: pre-wrap;
+  }
+
+  .fkav-checks {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0 0 14px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .fkav-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .fkav-hint {
+    margin-top: 6px;
+    font-size: 12.5px;
+  }
+
+  .fkav-nearby {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+    span {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--sm-muted);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  /* ---- map ---- */
+
+  .fkav-map {
+    margin-top: 14px;
+    overflow: hidden;
+    border: 1px solid var(--sm-line);
+    border-radius: 14px;
+
+    &__canvas,
+    &__error {
+      height: 420px;
+      background: #e9eef5;
+    }
+    &__error {
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      color: var(--sm-muted);
+      text-align: center;
+    }
+    &__bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--sm-line);
+      background: #fff;
+      font-size: 13px;
+    }
+    &__links {
+      display: flex;
+      gap: 14px;
+    }
+  }
+
+  .fkav-seg {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: 10px;
+    background: var(--sm-gray-soft);
+
+    button {
+      padding: 5px 12px;
+      border: 0;
+      border-radius: 8px;
+      background: none;
+      color: var(--sm-muted);
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+
+      &.is-on {
+        background: #fff;
+        color: var(--sm-ink);
+        box-shadow: 0 1px 3px rgba(15, 30, 61, 0.12);
+      }
+    }
+  }
+}
+
+/* Markers live in the map container, outside the scoped tree's flow. */
+.fkav-pin {
+  width: 30px;
+  height: 40px;
+  background: no-repeat center / contain
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 40'%3E%3Cpath d='M15 0C6.7 0 0 6.6 0 14.8 0 25.9 15 40 15 40s15-14.1 15-25.2C30 6.6 23.3 0 15 0z' fill='%23e5304a'/%3E%3Ccircle cx='15' cy='14.5' r='5.5' fill='%23fff'/%3E%3C/svg%3E");
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+}
+
+.fkav-near {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}

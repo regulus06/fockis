@@ -8,6 +8,7 @@ import {
   Headset,
   Landmark,
   LayoutDashboard,
+  MapPinned,
   Megaphone,
   Scale,
   ScrollText,
@@ -150,6 +151,14 @@ export const ADMIN_NAV: AdminNavItem[] = [
       { label: "Moderation History", path: "/admin/support/history", anyOf: [P.MODERATION_VIEW] },
       { label: "Help Articles", path: "/admin/support/articles", anyOf: [P.HELP_CONTENT_MANAGE] },
       { label: "Live Support", path: "/admin/support/live", anyOf: [P.SUPPORT_VIEW] },
+    ],
+  },
+  {
+    label: "Maps",
+    icon: MapPinned,
+    path: "/admin/map/addresses",
+    children: [
+      { label: "Address Verification", path: "/admin/map/addresses", anyOf: [P.MAP_ADDRESSES_VIEW] },
     ],
   },
   {

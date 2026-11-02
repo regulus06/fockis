@@ -306,6 +306,13 @@ export enum Permission {
   HELP_CONTENT_MANAGE = "help.content.manage",
 
   // ========================================================================
+  // MAPS — Smart Address verification
+  // ========================================================================
+
+  MAP_ADDRESSES_VIEW = "map.addresses.view",
+  MAP_ADDRESSES_VERIFY = "map.addresses.verify",
+
+  // ========================================================================
   // LEGAL & EVIDENCE (restricted: not granted to ordinary admins)
   // ========================================================================
 
@@ -488,4 +495,4 @@ export enum Permission {
 
   MARKETING_AUDIT_VIEW =
     "marketing.audit.view",
-}
+}

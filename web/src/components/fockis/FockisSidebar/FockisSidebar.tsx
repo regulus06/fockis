@@ -199,6 +199,10 @@ export default function FockisSidebar({ collapsed = false, mobileOpen = false, o
   }
 
   async function handleLogout() {
+    // In the Fockis app: stop this phone ringing for this account's calls.
+    await import("../../../messages/calls/nativeBridge")
+      .then((m) => m.unregisterThisPhone())
+      .catch(() => undefined);
     await disconnectRealtime();
     try {
       for (const key of ["token", "accessToken", "access_token", "refreshToken", "userId", "user", "currentUser"]) {

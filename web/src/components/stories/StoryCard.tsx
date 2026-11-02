@@ -1,4 +1,5 @@
 import "./ProductStory.scss";
+import { FOCKIS_API_URL } from "../../config/fockisConfig";
 
 type Props = {
   story:any;

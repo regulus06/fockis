@@ -149,6 +149,10 @@ export const RolePermissions: Record<Role, Permission[]> = {
     Permission.SUPPORT_SETTINGS,
     Permission.HELP_CONTENT_MANAGE,
 
+    // Maps: review Smart Addresses people add
+    Permission.MAP_ADDRESSES_VIEW,
+    Permission.MAP_ADDRESSES_VERIFY,
+
     // Policy & Compliance (approval, publishing and sensitive records stay
     // with super admins and the seeded Policy Approver / Compliance roles)
     Permission.POLICY_VIEW,
@@ -162,4 +166,4 @@ export const RolePermissions: Record<Role, Permission[]> = {
   // ========================================================================
 
   [Role.SUPER_ADMIN]: Object.values(Permission),
-};
+};

@@ -1,115 +1,159 @@
 import { api } from "./api";
-import { buildFockisUploadUrl } from "../config/fockisConfig";
 
 /* ============================================================================
-   CREATE STORY DATA
+   STORY TYPES
 ============================================================================ */
 
 export interface CreateStoryData {
   userId: string;
-
   username?: string;
-
   avatar?: string | null;
-
   media: string;
-
   type?: "image" | "video";
-
   isProductStory?: boolean;
-
   productId?: string | null;
-
   productName?: string | null;
-
   productImage?: string | null;
-
   price?: number | null;
-
   shopLink?: string | null;
-
   sellerId?: string | null;
 }
 
-/* ============================================================================
-   STORY RESPONSE
-============================================================================ */
-
 export interface Story {
   _id: string;
-
+  id?: string;
   userId: string;
-
   username: string;
-
   avatar?: string | null;
-
   media: string;
-
   type: "image" | "video";
-
   isProductStory?: boolean;
-
   productId?: string | null;
-
   productName?: string | null;
-
   productImage?: string | null;
-
   price?: number | null;
-
   shopLink?: string | null;
-
   sellerId?: string | null;
-
   expiresAt: string;
-
   createdAt?: string;
-
   updatedAt?: string;
 }
 
 /* ============================================================================
-   STORY EVENT
+   EVENTS
 ============================================================================ */
 
-export const FOCKIS_STORY_CREATED_EVENT =
-  "fockis:story-created";
+export const FOCKIS_STORY_CREATED_EVENT = "fockis:story-created";
+export const FOCKIS_STORY_DELETED_EVENT = "fockis:story-deleted";
 
-export const FOCKIS_STORY_DELETED_EVENT =
-  "fockis:story-deleted";
+/* ============================================================================
+   MEDIA PATH NORMALIZATION
+
+   IMPORTANT:
+   - Preserve post-media paths.
+   - Preserve uploads paths.
+   - Preserve absolute storage URLs.
+   - Only use uploads for a bare filename.
+============================================================================ */
+
+function normalizeStoryMedia(value: unknown): string {
+  if (typeof value !== "string") return "";
+
+  let path = value.trim();
+
+  if (
+    !path ||
+    path === "undefined" ||
+    path === "null"
+  ) {
+    return "";
+  }
+
+  // Do not modify absolute, blob, or data URLs.
+  if (/^(https?:\/\/|blob:|data:)/i.test(path)) {
+    return path;
+  }
+
+  path = path
+    .replace(/\\/g, "/")
+    .replace(/^\.\/+/, "")
+    .replace(/^\/+/, "");
+
+  if (!path) return "";
+
+  // Preserve the public post-media route.
+  if (/^post-media\//i.test(path)) {
+    return path;
+  }
+
+  // Preserve existing upload and media routes.
+  if (
+    /^(uploads|upload|media|public\/uploads|api\/uploads)\//i.test(path)
+  ) {
+    return path;
+  }
+
+  // Bare filenames belong to the uploads directory.
+  return `uploads/${path}`;
+}
+
+function extractUploadedMedia(response: any): string {
+  const candidates = [
+    response?.media,
+    response?.url,
+    response?.path,
+    response?.fileUrl,
+    response?.filePath,
+    response?.filename,
+    response?.data?.media,
+    response?.data?.url,
+    response?.data?.path,
+    response?.data?.fileUrl,
+    response?.data?.filePath,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      return normalizeStoryMedia(candidate);
+    }
+  }
+
+  throw new Error(
+    "The upload completed, but the server did not return a usable media URL.",
+  );
+}
 
 /* ============================================================================
    STORY API
 ============================================================================ */
 
 export const storyApi = {
-  /* ==========================================================================
+  /* --------------------------------------------------------------------------
      GET ACTIVE STORIES
-
      GET /stories
-  ========================================================================== */
+  -------------------------------------------------------------------------- */
 
   async getStories(): Promise<Story[]> {
-    const response =
-      await api.get<Story[]>(
-        "/stories",
-      );
+    const response = await api.get<Story[]>("/stories");
 
-    return response.data;
+    const stories = Array.isArray(response.data)
+      ? response.data
+      : [];
+
+    return stories.map((story) => ({
+      ...story,
+      media: normalizeStoryMedia(story.media),
+      avatar: story.avatar
+        ? normalizeStoryMedia(story.avatar)
+        : story.avatar,
+      id: story.id || story._id,
+    }));
   },
 
-  /* ==========================================================================
+  /* --------------------------------------------------------------------------
      UPLOAD STORY MEDIA
-
      POST /uploads?context=story
-
-     IMPORTANT:
-     Story uploads use the normal /uploads/ route.
-
-     We convert the returned path to the full Fockis backend URL here so
-     newly-created Stories never get treated as legacy /post-media/ files.
-  ========================================================================== */
+  -------------------------------------------------------------------------- */
 
   async uploadStoryMedia(
     file: File,
@@ -117,44 +161,23 @@ export const storyApi = {
     media: string;
     type: "image" | "video";
   }> {
-    const formData =
-      new FormData();
+    const formData = new FormData();
+    formData.append("file", file);
 
-    formData.append(
-      "file",
-      file,
+    const response = await api.post(
+      "/uploads?context=story",
+      formData,
     );
 
-    const response =
-      await api.post(
-        "/uploads?context=story",
-        formData,
-        {
-          headers: {
-            "Content-Type":
-              "multipart/form-data",
-          },
-        },
-      );
+    const media = extractUploadedMedia(response.data);
 
-    const rawMedia =
-      response.data?.media ||
-      response.data?.url ||
-      response.data?.path ||
-      "";
+    const returnedType = response.data?.type;
 
-    const media =
-      buildFockisUploadUrl(
-        rawMedia,
-      );
-
-    const type =
-      response.data?.type ||
-      (
-        file.type.startsWith("video/")
-          ? "video"
-          : "image"
-      );
+    const type: "image" | "video" =
+      returnedType === "video" ||
+      file.type.startsWith("video/")
+        ? "video"
+        : "image";
 
     return {
       media,
@@ -162,130 +185,88 @@ export const storyApi = {
     };
   },
 
-  /* ==========================================================================
+  /* --------------------------------------------------------------------------
      CREATE STORY
-
      POST /stories
-
-     IMPORTANT:
-     After successful creation we dispatch a browser event.
-     FockisFeedPage listens for this event and reloads the Story Rail.
-  ========================================================================== */
+  -------------------------------------------------------------------------- */
 
   async createStory(
     data: CreateStoryData,
   ): Promise<Story> {
-    /*
-     * Normalize the media one more time before saving the Story.
-     *
-     * This protects us if another part of the frontend passes:
-     *
-     *   /uploads/file.jpg
-     *   uploads/file.jpg
-     *   file.jpg
-     *
-     * All new uploads resolve to the backend /uploads/ route.
-     */
     const normalizedData: CreateStoryData = {
       ...data,
-      media: buildFockisUploadUrl(
-        data.media,
-      ),
+      media: normalizeStoryMedia(data.media),
+      avatar: data.avatar
+        ? normalizeStoryMedia(data.avatar)
+        : data.avatar,
+      productImage: data.productImage
+        ? normalizeStoryMedia(data.productImage)
+        : data.productImage,
     };
 
-    const response =
-      await api.post<Story>(
-        "/stories",
-        normalizedData,
-      );
+    if (!normalizedData.media) {
+      throw new Error("Story media URL is missing.");
+    }
 
-    const story =
-      response.data;
+    const response = await api.post<Story>(
+      "/stories",
+      normalizedData,
+    );
 
-    /*
-     * Tell every mounted Fockis feed that
-     * a new story exists.
-     */
+    const story: Story = {
+      ...response.data,
+      media: normalizeStoryMedia(response.data.media),
+      id: response.data.id || response.data._id,
+    };
+
     window.dispatchEvent(
-      new CustomEvent(
-        FOCKIS_STORY_CREATED_EVENT,
-        {
-          detail: story,
-        },
-      ),
+      new CustomEvent(FOCKIS_STORY_CREATED_EVENT, {
+        detail: story,
+      }),
     );
 
     return story;
   },
 
-  /* ==========================================================================
+  /* --------------------------------------------------------------------------
      DELETE ONE STORY
-
      DELETE /stories/:id
-  ========================================================================== */
+  -------------------------------------------------------------------------- */
 
-  async deleteStory(
-    id: string,
-    userId: string,
-  ) {
-    const response =
-      await api.delete(
-        `/stories/${id}`,
-        {
-          data: {
-            userId,
-          },
-        },
-      );
+  async deleteStory(id: string, userId: string) {
+    const response = await api.delete(
+      `/stories/${id}`,
+      {
+        data: { userId },
+      },
+    );
 
-    /*
-     * Tell the feed to refresh.
-     */
     window.dispatchEvent(
-      new CustomEvent(
-        FOCKIS_STORY_DELETED_EVENT,
-        {
-          detail: {
-            id,
-          },
-        },
-      ),
+      new CustomEvent(FOCKIS_STORY_DELETED_EVENT, {
+        detail: { id },
+      }),
     );
 
     return response.data;
   },
 
-  /* ==========================================================================
-     DELETE ALL CURRENT USER STORIES
-
+  /* --------------------------------------------------------------------------
+     DELETE ALL USER STORIES
      DELETE /stories/user/all
-  ========================================================================== */
+  -------------------------------------------------------------------------- */
 
-  async deleteAllStories(
-    userId: string,
-  ) {
-    const response =
-      await api.delete(
-        "/stories/user/all",
-        {
-          data: {
-            userId,
-          },
-        },
-      );
+  async deleteAllStories(userId: string) {
+    const response = await api.delete(
+      "/stories/user/all",
+      {
+        data: { userId },
+      },
+    );
 
-    /*
-     * Tell the feed to refresh.
-     */
     window.dispatchEvent(
-      new CustomEvent(
-        FOCKIS_STORY_DELETED_EVENT,
-        {
-          detail: {
-            userId,
-          },
-        },
-      ),
+      new CustomEvent(FOCKIS_STORY_DELETED_EVENT, {
+        detail: { userId },
+      }),
     );
 
     return response.data;

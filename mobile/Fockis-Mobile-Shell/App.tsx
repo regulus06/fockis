@@ -1,3 +1,6 @@
+// Must come first: registers the background handlers for incoming calls.
+import "./src/calls/background";
+
 import {
   SafeAreaView,
   StatusBar,

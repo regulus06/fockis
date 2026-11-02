@@ -121,6 +121,12 @@ export const NAV_SECTIONS: NavSection[] = [
     anyOf: [P.POLICY_VIEW],
   },
 
+  {
+    label: "Address Verification",
+    path: "/admin/map/addresses",
+    anyOf: [P.MAP_ADDRESSES_VIEW],
+  },
+
   // ============================================================
   // MARKETPLACE
   // ============================================================
