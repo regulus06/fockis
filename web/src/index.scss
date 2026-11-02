@@ -33,11 +33,14 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
+/* Follows the Fockis theme setting (Lumière / Sombre / device), applied on
+   <html data-fk-theme> by index.html and ThemeContext — not the device's
+   setting on its own. */
+:root[data-fk-theme="dark"] {
+  & {
     --text: #9ca3af;
     --text-h: #f3f4f6;
-    --bg: #16171d;
+    --bg: #070e1f;
     --border: #2e303a;
     --code-bg: #1f2028;
     --accent: #c084fc;

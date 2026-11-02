@@ -62,7 +62,7 @@ import FockisPostCard, {
 
 import FockisSidebar from "../components/fockis/FockisSidebar/FockisSidebar";
 
-import FockisRightRail from "../components/fockis/FockisRightRail";
+import { DiscoveryMenuButton, DiscoverySidebar, InlineDiscovery } from "../components/fockis/discovery/DiscoveryCards";
 
 import FockisBottomNav from "../components/fockis/FockisBottomNav";
 
@@ -648,6 +648,9 @@ function FeedInner() {
 
         </div>
 
+        {/* Small screens: Trending, People you may follow, Explore more. */}
+        <DiscoveryMenuButton />
+
       </header>
 
       {mobileSidebarOpen && (
@@ -734,6 +737,8 @@ function FeedInner() {
             />
 
             <FockisStoriesRail
+              loading={!feed.storiesLoaded}
+
 
               stories={
 
@@ -933,8 +938,8 @@ function FeedInner() {
                           className="fk-feed-status fk-feed-status--done fk-feed-status--recycled"
                           role="note"
                         >
-                          <strong>You're all caught up</strong>
-                          <span>Here are posts from earlier you might want to revisit.</span>
+                          <strong>You're all caught up — showing more posts</strong>
+                          <span>Posts you've already seen, so you can keep scrolling.</span>
                         </div>
                       )}
 
@@ -1189,6 +1194,9 @@ function FeedInner() {
 
                     />
 
+                    {/* Phones: one discovery card every so often. */}
+                    <InlineDiscovery position={index + 1} />
+
                     {adForSlot && (
 
                       <SponsoredFeedAd
@@ -1329,10 +1337,18 @@ function FeedInner() {
                 <div className="fk-feed-status fk-feed-status--done" role="status">
                   <strong>You're all caught up</strong>
                   <span>
-                    {feedMode === "for-you"
-                      ? "We'll keep looking for posts you haven't seen."
-                      : "New posts will appear here as they're shared."}
+                    {/* Only small feeds end here: bigger ones keep cycling. */}
+                    New posts will appear here as they're shared.
                   </span>
+                  <button
+                    type="button"
+                    className="fk-feed-status__retry"
+                    onClick={() => void feed.refreshFeed()}
+                    disabled={feed.loading}
+                  >
+                    <RefreshCw size={14} aria-hidden="true" />
+                    Refresh
+                  </button>
                 </div>
               )}
 
@@ -1374,27 +1390,9 @@ function FeedInner() {
 
         <aside className="fk-shell__right">
 
-          <FockisRightRail
-
-            onTrendClick={
-
-              feed.handleTrendClick
-
-            }
-
-            onFollow={
-
-              feed.handleFollow
-
-            }
-
-            onProductClick={
-
-              feed.handleProductClick
-
-            }
-
-          />
+          {/* Real discovery data (trending hashtags, people to follow,
+              explore shortcuts). The old rail showed placeholder lists. */}
+          <DiscoverySidebar />
 
         </aside>
 

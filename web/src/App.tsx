@@ -1968,6 +1968,11 @@ function App(): React.JSX.Element {
           element={<AccountSettingsPage />}
         />
 
+        <Route
+          path="/settings/appearance"
+          element={<AccountSettingsPage />}
+        />
+
         {/* ==================================================================
             MEETINGS
         ================================================================== */}

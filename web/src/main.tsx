@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 // GLOBAL STYLES
 // ============================================================================
 
+import "./styles/fockis-app-theme.scss";
 import "./styles/imageSystem.scss";
 import "./index.scss";
 import "./features/careers/styles/global.scss";

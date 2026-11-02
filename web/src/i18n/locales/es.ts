@@ -966,6 +966,17 @@ const es = {
       },
     },
   },
+  appearance: {
+    title: "Apariencia",
+    subtitle: "Elige cómo se ve Fockis.",
+    light: "Claro",
+    lightDesc: "Tema claro y luminoso",
+    dark: "Oscuro",
+    darkDesc: "Tema oscuro y relajante",
+    system: "Usar el tema del dispositivo",
+    systemDesc: "Usar automáticamente el tema de tu dispositivo.",
+    current: "Tema actual",
+  },
 } as const;
 
-export default es;
+export default es;

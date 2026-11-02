@@ -847,6 +847,17 @@ groups: {
 },
 
 },
+  appearance: {
+    title: "Aparans",
+    subtitle: "Chwazi jan Fockis parèt.",
+    light: "Limyè",
+    lightDesc: "Tèm klè e limine",
+    dark: "Fènwa",
+    darkDesc: "Tèm fènwa ki repoze je",
+    system: "Swiv tèm aparèy la",
+    systemDesc: "Itilize tèm aparèy ou otomatikman.",
+    current: "Tèm kounye a",
+  },
 } as const;
 
-export default ht;
+export default ht;

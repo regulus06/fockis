@@ -1418,6 +1418,17 @@ groups: {
   },
 },
 },
+  appearance: {
+    title: "Apparence",
+    subtitle: "Choisissez le thème de l'application Fockis.",
+    light: "Lumière",
+    lightDesc: "Thème clair et lumineux",
+    dark: "Sombre",
+    darkDesc: "Thème sombre et reposant",
+    system: "Suivre le thème de l'appareil",
+    systemDesc: "Utiliser automatiquement le thème de votre appareil.",
+    current: "Thème actuel",
+  },
 } as const;
 
 export default fr;

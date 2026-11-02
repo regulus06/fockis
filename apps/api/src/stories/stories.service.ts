@@ -14,6 +14,8 @@ import {
   Story,
 } from "./story.schema";
 
+import { canonicalStoryMedia } from "./story-media";
+
 @Injectable()
 export class StoriesService {
   constructor(
@@ -26,7 +28,7 @@ export class StoriesService {
   // ==========================================================================
 
   async findAll() {
-    return this.model
+    const stories = await this.model
       .find({
         expiresAt: {
           $gt: new Date(),
@@ -37,6 +39,14 @@ export class StoriesService {
       })
       .lean()
       .exec();
+
+    // Stories saved before this fix hold signed Google Cloud links; serve
+    // them through the API's own media route instead.
+    return stories.map((story: any) => ({
+      ...story,
+      media: canonicalStoryMedia(story.media),
+      productImage: story.productImage ? canonicalStoryMedia(story.productImage) : story.productImage,
+    }));
   }
 
   // ==========================================================================
@@ -71,7 +81,7 @@ export class StoriesService {
         null,
 
       media:
-        data.media,
+        canonicalStoryMedia(data.media),
 
       type:
         data.type ===
@@ -144,4 +154,4 @@ export class StoriesService {
         ),
     });
   }
-}
+}

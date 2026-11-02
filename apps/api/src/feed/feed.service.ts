@@ -86,7 +86,7 @@ import { mutedUserIds } from '../policy-center/privacy-enforcement';
 
 type LeanPost = Record<string, any>;
 
-type Filter = Record<string, any>;
+export type Filter = Record<string, any>;
 
 interface GetFeedOptions {
   viewerId?: string;
@@ -107,7 +107,7 @@ interface GetFeedOptions {
   longitude?: number;
 }
 
-interface ViewerRelationships {
+export interface ViewerRelationships {
   followedIds: string[];
   friendIds: string[];
   blockedIds: string[];
@@ -191,7 +191,7 @@ function extractMediaValue(value: any): string {
   return '';
 }
 
-function getRawMedia(post: any): string {
+export function getRawMedia(post: any): string {
   if (!post) {
     return '';
   }
@@ -256,7 +256,7 @@ function getRawMedia(post: any): string {
   return '';
 }
 
-function detectMediaType(
+export function detectMediaType(
   media: string,
   post: any,
 ): 'image' | 'video' | 'none' {
@@ -1230,6 +1230,16 @@ export class FeedService {
   /* ==========================================================================
      VIEWER DATA
   ========================================================================== */
+
+  /** Follows, friends and blocks of a viewer (used by feed discovery). */
+  relationshipsFor(viewerId: string | undefined): Promise<ViewerRelationships> {
+    return this.loadViewerRelationships(viewerId);
+  }
+
+  /** The same audience / moderation / block rules the feed applies. */
+  visibilityFilterFor(viewerId: string | undefined, relationships: ViewerRelationships): Filter {
+    return this.buildVisibilityFilter(viewerId, relationships);
+  }
 
   private async loadViewerRelationships(
     viewerId: string | undefined,
