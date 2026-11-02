@@ -32,13 +32,16 @@ function LayoutInner() {
     pathname === "/shop" ||
     pathname.startsWith("/shop/");
 
-  const hidesGlobalBottomNav =
-    isRealEstatePage || isMessagesPage;
+  // Real Estate has its own bottom bar. Maps and Messages show the main
+  // navigation and hide it themselves for full-screen moments (an open
+  // chat, turn-by-turn navigation) with useHideBottomNav.
+  const hidesGlobalBottomNav = isRealEstatePage;
 
   const contentClasses = [
     "fk-app-content",
     isRealEstatePage ? "fk-app-content--realestate" : "",
     isMapPage ? "fk-app-content--map" : "",
+    isMessagesPage ? "fk-app-content--messages" : "",
     isShopPage ? "fk-app-content--shop" : "",
   ]
     .filter(Boolean)

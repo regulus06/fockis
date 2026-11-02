@@ -504,6 +504,42 @@ function FeedInner() {
   }
 
   /*
+   * Waves tab in the bottom navigation: /waves → /fockis-preview?waves=1
+   * (first video) or ?waves=<postId>. Opens the full-screen player once the
+   * feed has posts; if there are no videos yet the feed simply stays open.
+   */
+  const [, setWaveParams] = useSearchParams();
+  const wavesRequest = searchParams.get("waves");
+
+  useEffect(() => {
+    if (!wavesRequest) {
+      return;
+    }
+
+    const videos = uniqueFeedPosts.filter((post) =>
+      buildMediaList(post).some((item) => item.type === "video"),
+    );
+
+    if (videos.length === 0 && (feed.loading || feed.posts.length === 0) && feed.feedStatus !== "error" && feed.feedStatus !== "blocked" && feed.feedStatus !== "empty") {
+      return; // still loading
+    }
+
+    setWaveParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("waves");
+        return next;
+      },
+      { replace: true },
+    );
+
+    if (videos.length > 0) {
+      const wanted = videos.find((post) => post.id === wavesRequest);
+      setVideoReelPostId((wanted ?? videos[0]).id);
+    }
+  }, [wavesRequest, uniqueFeedPosts, feed.loading, feed.posts.length, feed.feedStatus, setWaveParams]);
+
+  /*
 
    * When opening the reel, explicitly pause
 

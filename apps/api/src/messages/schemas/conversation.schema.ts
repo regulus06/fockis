@@ -108,6 +108,34 @@ export class Conversation {
   mutedBy!: Map<string, boolean>;
 
   // ============================================================
+  // ARCHIVED BY USER
+  // ============================================================
+  @Prop({
+    type: Map,
+    of: Boolean,
+    default: {},
+  })
+  archivedBy!: Map<string, boolean>;
+
+  // ============================================================
+  // MARKED UNREAD BY USER ("Mark as unread")
+  // ============================================================
+  @Prop({
+    type: Map,
+    of: Boolean,
+    default: {},
+  })
+  markedUnreadBy!: Map<string, boolean>;
+
+  /** userId -> true once the user accepted a message request from a non-friend. */
+  @Prop({
+    type: Map,
+    of: Boolean,
+    default: {},
+  })
+  requestAcceptedBy!: Map<string, boolean>;
+
+  // ============================================================
   // MONGOOSE TIMESTAMPS
   // ============================================================
 

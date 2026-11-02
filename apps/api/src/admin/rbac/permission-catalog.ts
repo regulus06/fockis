@@ -693,6 +693,23 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
     description: "Create, edit, publish and archive Help Center articles and FAQs.",
     module: "support",
   },
+
+  // ============================================================
+  // MAPS
+  // ============================================================
+
+  {
+    key: "map.addresses.view",
+    label: "View Address Requests",
+    description: "See Smart Addresses people add, with their pin, details and owner, to review them.",
+    module: "maps",
+  },
+  {
+    key: "map.addresses.verify",
+    label: "Verify Addresses",
+    description: "Approve, reject or ask for more information on Smart Addresses.",
+    module: "maps",
+  },
   {
     key: "legal.view",
     label: "View Legal & Evidence",
@@ -813,4 +830,4 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
       "Manage platform settings.",
     module: "system",
   },
-];
+];

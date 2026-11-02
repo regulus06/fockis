@@ -1,95 +1,55 @@
 /* ============================================================================
    FOCKIS MOBILE BOTTOM NAVIGATION
+   Home · Waves · Maps · Create · Shop · Messages · Profile
 
-   Layout:
-   Feed → Marketplace → Cart → Create → Real Estate → Messages → Profile
+   Colours (design spec):
+     active      #2583F7
+     inactive    #8A94A6
+     background  #101827
+     badge       red, white text (unread chats; 9+)
 
-   Behavior:
-   - Mobile only
-   - Safe-area support
-   - Create button centered after Cart
-   - Scroll hide/show controlled by FockisBottomNav.tsx
-   - Hidden automatically while a Reel is open
+   - Phones only (≤ 767 px). Desktop uses the sidebar.
+   - 44 px+ touch targets, safe-area aware.
+   - Hidden on full-screen experiences: body.fk-reel-open (Waves player),
+     body.fk-hide-bottom-nav (useHideBottomNav: open chat, call, turn-by-turn).
+   - While shown, body.fk-bnav-on is set and --fk-bnav-h holds its height so
+     full-height screens (Maps, Messages) can leave room for it.
 ============================================================================ */
 
-
-/* ============================================================================
-   MAIN NAVIGATION
-============================================================================ */
+:root {
+  --fk-bnav-bg: #101827;
+  --fk-bnav-active: #2583f7;
+  --fk-bnav-inactive: #8a94a6;
+  --fk-bnav-badge: #f0343a;
+  --fk-bnav-h: calc(68px + env(safe-area-inset-bottom, 0px));
+}
 
 .fk-bottom-nav {
   position: fixed;
-
   left: 0;
   right: 0;
-
-  /*
-   * IMPORTANT:
-   * Keep bottom at 0.
-   *
-   * The safe-area padding below creates the extra space
-   * needed above the Android/iOS system navigation area.
-   */
   bottom: 0;
-
-  display: none;
-
-  width: 100%;
-
-  box-sizing: border-box;
-
-  /*
-   * Safe-area support.
-   *
-   * This prevents the Fockis navigation from sitting
-   * underneath the phone's system navigation/gesture area.
-   */
-  padding:
-    10px
-    10px
-    calc(
-      10px + env(safe-area-inset-bottom, 0px)
-    );
-
-  background: var(--fk-fjord);
-
-  border: 0;
-
-  box-shadow:
-    inset 0 3px 0 0 var(--fk-amber-bright),
-    0 -6px 20px rgba(6, 21, 48, 0.25);
-
   z-index: 10001;
-
-  /*
-   * Default visible state.
-   *
-   * FockisBottomNav.tsx controls the actual
-   * hide/show animation with inline styles.
-   */
+  display: none;
+  box-sizing: border-box;
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+  background: var(--fk-bnav-bg);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 -8px 24px rgba(6, 12, 28, 0.28);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   transform: translateY(0);
-
-  opacity: 1;
-
-  visibility: visible;
-
-  pointer-events: auto;
-
   transition:
     transform 220ms ease,
     opacity 180ms ease,
     visibility 220ms ease;
 
-  /*
-   * Make sure padding is included inside width.
-   */
-  overflow: visible;
+  &.is-scrolled-away {
+    transform: translateY(calc(100% + 24px));
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
 }
-
-
-/* ============================================================================
-   MOBILE ONLY
-============================================================================ */
 
 @media (max-width: 767px) {
   .fk-bottom-nav {
@@ -97,472 +57,157 @@
   }
 }
 
-
-/* ============================================================================
-   DESKTOP
-============================================================================ */
-
-@media (min-width: 768px) {
-  .fk-bottom-nav {
-    display: none !important;
-  }
-}
-
-
-/* ============================================================================
-   HIDDEN STATE
-============================================================================
-
-   This class is still supported as a backup.
-
-   The current FockisBottomNav.tsx also controls the same
-   behavior directly with inline styles.
-============================================================================ */
-
-@media (max-width: 767px) {
-  .fk-bottom-nav.fk-bottom-nav--hidden {
-    transform:
-      translateY(
-        calc(
-          100% + env(safe-area-inset-bottom, 0px)
-        )
-      );
-
-    opacity: 0;
-
-    visibility: hidden;
-
-    pointer-events: none;
-  }
-}
-
-
-/* ============================================================================
-   REEL / WAVES OPEN
-============================================================================ */
-
-body.fk-reel-open .fk-bottom-nav {
+/* Full-screen experiences. */
+body.fk-reel-open .fk-bottom-nav,
+body.fk-hide-bottom-nav .fk-bottom-nav {
   display: none !important;
-
-  visibility: hidden !important;
-
-  opacity: 0 !important;
-
-  pointer-events: none !important;
-
-  transform: translateY(100%) !important;
 }
-
-
-/* ============================================================================
-   NAVIGATION INNER
-============================================================================ */
 
 .fk-bottom-nav__inner {
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  gap: 2px;
-
-  width: 100%;
-
+  display: grid;
+  /* The Create column is a little narrower than its raised circle: the
+     circle overflows upward, so the labels keep as much room as possible. */
+  grid-template-columns: repeat(3, minmax(0, 1fr)) 58px repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 1px;
   max-width: 560px;
-
   margin: 0 auto;
 }
 
-
-/* ============================================================================
-   NAVIGATION ITEM
-============================================================================ */
+/* ---------------------------------------------------------------- item */
 
 .fk-bottom-nav__item {
   position: relative;
-
   display: flex;
-
   flex-direction: column;
-
   align-items: center;
-
   justify-content: center;
-
-  gap: 4px;
-
-  flex: 1 1 0;
-
+  gap: 3px;
   min-width: 0;
-
-  min-height: 44px;
-
-  padding: 4px 2px;
-
-  box-sizing: border-box;
-
-  border: 0;
-
-  border-radius: var(--fk-r-sm);
-
-  background: transparent;
-
-  color: rgba(255, 255, 255, 0.65);
-
-  text-decoration: none;
-
+  min-height: 54px;
+  padding: 5px 0 4px;
+  border-radius: 14px;
+  /* !important: page-level link colours (feed social theme) must not leak in. */
+  color: var(--fk-bnav-inactive) !important;
+  text-decoration: none !important;
+  -webkit-tap-highlight-color: transparent;
   transition:
     color 150ms ease,
-    transform 150ms ease;
+    background-color 150ms ease,
+    transform 120ms ease;
 
-  order: 1;
+  &:active {
+    transform: scale(0.94);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--fk-bnav-active);
+    outline-offset: 1px;
+  }
 
-  /*
-   * Prevent browser tap highlighting from
-   * creating a strange rectangle.
-   */
-  -webkit-tap-highlight-color: transparent;
+  &.is-active {
+    color: var(--fk-bnav-active) !important;
+    background: rgba(37, 131, 247, 0.13);
+  }
 }
-
-
-/* ============================================================================
-   NAVIGATION ORDER
-
-   1. Feed
-   2. Marketplace
-   3. Cart
-   4. Create
-   5. Real Estate
-   6. Messages
-   7. Profile
-============================================================================ */
-
-.fk-bottom-nav__item:nth-child(1) {
-  order: 1;
-}
-
-.fk-bottom-nav__item:nth-child(2) {
-  order: 2;
-}
-
-.fk-bottom-nav__item:nth-child(3) {
-  order: 3;
-}
-
-.fk-bottom-nav__item--create {
-  order: 4 !important;
-}
-
-.fk-bottom-nav__item:nth-child(5) {
-  order: 5;
-}
-
-.fk-bottom-nav__item:nth-child(6) {
-  order: 6;
-}
-
-.fk-bottom-nav__item:nth-child(7) {
-  order: 7;
-}
-
-
-/* ============================================================================
-   ACTIVE ITEM
-============================================================================ */
-
-.fk-bottom-nav__item--active {
-  background: transparent;
-
-  color: var(--fk-amber-bright);
-}
-
-
-/* ============================================================================
-   PRESS EFFECT
-============================================================================ */
-
-.fk-bottom-nav__item:active {
-  transform: scale(0.94);
-}
-
-
-/* ============================================================================
-   ICON CONTAINER
-============================================================================ */
 
 .fk-bottom-nav__icon {
   position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 26px;
 
-  width: 24px;
-
-  height: 24px;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  flex-shrink: 0;
-
-  color: inherit;
+  svg {
+    display: block;
+  }
 }
-
-
-/* ============================================================================
-   ICON
-============================================================================ */
-
-.fk-bottom-nav__icon svg {
-  display: block;
-
-  width: 22px;
-
-  height: 22px;
-
-  color: inherit;
-
-  stroke-width: 1.8;
-}
-
-
-/* ============================================================================
-   LABEL
-============================================================================ */
 
 .fk-bottom-nav__label {
   max-width: 100%;
-
   overflow: hidden;
-
-  color: inherit;
-
   font-size: 10.5px;
-
   font-weight: 600;
-
-  line-height: 1.1;
-
+  line-height: 1.15;
+  letter-spacing: -0.01em;
   white-space: nowrap;
-
   text-overflow: ellipsis;
 }
 
-
-/* ============================================================================
-   CART BADGE
-============================================================================ */
+/* ---------------------------------------------------------------- badge */
 
 .fk-bottom-nav__badge {
   position: absolute;
-
-  top: -4px;
-
-  right: -8px;
-
-  min-width: 16px;
-
-  height: 16px;
-
+  top: -6px;
+  right: -9px;
+  min-width: 18px;
+  height: 18px;
   padding: 0 4px;
-
-  display: inline-flex;
-
-  align-items: center;
-
-  justify-content: center;
-
   box-sizing: border-box;
-
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--fk-bnav-bg);
   border-radius: 999px;
-
-  border: 2px solid var(--fk-fjord);
-
-  background: var(--fk-amber-bright);
-
-  color: var(--fk-fjord-dark);
-
-  font-size: 9px;
-
+  background: var(--fk-bnav-badge);
+  color: #fff;
+  font-size: 10px;
   font-weight: 800;
-
   line-height: 1;
 }
 
-
-/* ============================================================================
-   CREATE BUTTON
-============================================================================ */
+/* ---------------------------------------------------------------- create */
 
 .fk-bottom-nav__item--create {
+  overflow: visible;
+  color: var(--fk-bnav-active) !important;
   background: transparent !important;
 
-  background-color: transparent !important;
-
-  background-image: none !important;
-
-  box-shadow: none !important;
-
-  border: none !important;
-
-  border-radius: 0 !important;
-
-  color: var(--fk-fjord-dark) !important;
-
-  flex: 1 1 0;
-}
-
-
-/* ============================================================================
-   CREATE BUTTON SQUARE
-============================================================================ */
-
-.fk-bottom-nav__item--create
   .fk-bottom-nav__icon {
-  width: 40px !important;
+    width: 54px;
+    height: 54px;
+    margin-top: -24px;
+    border-radius: 50%;
+    background: var(--fk-bnav-active);
+    color: #fff !important;
+    box-shadow:
+      0 0 0 4px var(--fk-bnav-bg),
+      0 8px 20px rgba(37, 131, 247, 0.5);
+    transition:
+      transform 150ms ease,
+      box-shadow 150ms ease;
+  }
 
-  height: 40px !important;
-
-  border-radius: var(--fk-r-sm) !important;
-
-  background: var(--fk-amber-bright) !important;
-
-  color: var(--fk-fjord-dark) !important;
-
-  box-shadow:
-    0 6px 14px rgba(6, 21, 48, 0.3);
-
-  border: none !important;
+  &.is-active .fk-bottom-nav__icon,
+  &:hover .fk-bottom-nav__icon {
+    box-shadow:
+      0 0 0 4px var(--fk-bnav-bg),
+      0 10px 26px rgba(37, 131, 247, 0.65);
+  }
+  &:active .fk-bottom-nav__icon {
+    transform: scale(0.95);
+  }
 }
 
+/* ---------------------------------------------------------------- small phones */
 
-/* ============================================================================
-   CREATE ICON
-============================================================================ */
-
-.fk-bottom-nav__item--create
-  .fk-bottom-nav__icon
-  svg {
-  width: 20px;
-
-  height: 20px;
-
-  stroke-width: 2.2;
-}
-
-
-/* ============================================================================
-   HIDE CREATE LABEL
-============================================================================ */
-
-.fk-bottom-nav__item--create
+@media (max-width: 360px) {
+  .fk-bottom-nav {
+    padding-left: 2px;
+    padding-right: 2px;
+  }
   .fk-bottom-nav__label {
-  display: none;
+    font-size: 9.5px;
+  }
+  .fk-bottom-nav__item--create .fk-bottom-nav__icon {
+    width: 50px;
+    height: 50px;
+  }
 }
-
-
-/* ============================================================================
-   CREATE PRESS EFFECT
-============================================================================ */
-
-.fk-bottom-nav__item--create:active
-  .fk-bottom-nav__icon {
-  transform: scale(0.94);
-}
-
-
-/* ============================================================================
-   ACCESSIBILITY
-============================================================================ */
 
 @media (prefers-reduced-motion: reduce) {
   .fk-bottom-nav,
   .fk-bottom-nav__item,
-  .fk-bottom-nav__item--create
-    .fk-bottom-nav__icon {
-    transition: none !important;
-  }
-}
-
-
-/* ============================================================================
-   SMALL PHONES
-============================================================================ */
-
-@media (max-width: 390px) {
-  .fk-bottom-nav {
-    padding-left: 6px;
-
-    padding-right: 6px;
-
-    padding-bottom:
-      calc(
-        8px + env(safe-area-inset-bottom, 0px)
-      );
-  }
-
-  .fk-bottom-nav__inner {
-    gap: 0;
-  }
-
-  .fk-bottom-nav__item {
-    min-height: 42px;
-
-    padding-left: 1px;
-
-    padding-right: 1px;
-  }
-
-  .fk-bottom-nav__label {
-    font-size: 9px;
-  }
-
-  .fk-bottom-nav__icon {
-    width: 22px;
-
-    height: 22px;
-  }
-
-  .fk-bottom-nav__icon svg {
-    width: 20px;
-
-    height: 20px;
-  }
-
-  .fk-bottom-nav__item--create
-    .fk-bottom-nav__icon {
-    width: 38px !important;
-
-    height: 38px !important;
-  }
-}
-
-
-/* ============================================================================
-   VERY SMALL PHONES
-============================================================================ */
-
-@media (max-width: 340px) {
-  .fk-bottom-nav__label {
-    font-size: 8px;
-  }
-
-  .fk-bottom-nav__item--create
-    .fk-bottom-nav__icon {
-    width: 36px !important;
-
-    height: 36px !important;
-  }
-}
-
-
-/* ============================================================================
-   REEL SAFETY
-============================================================================ */
-
-@media (max-width: 767px) {
-  body.fk-reel-open .fk-bottom-nav {
-    display: none !important;
+  .fk-bottom-nav__item--create .fk-bottom-nav__icon {
+    transition: none;
   }
 }

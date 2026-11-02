@@ -83,6 +83,13 @@ export const PERMISSIONS = {
   HELP_CONTENT_MANAGE: "help.content.manage",
 
   // ============================================================
+  // MAPS
+  // ============================================================
+
+  MAP_ADDRESSES_VIEW: "map.addresses.view",
+  MAP_ADDRESSES_VERIFY: "map.addresses.verify",
+
+  // ============================================================
   // LEGAL & EVIDENCE (restricted)
   // ============================================================
 
@@ -320,4 +327,4 @@ export const REASON_REQUIRED_ACTIONS = new Set<string>([
   "CHANGE_ADMIN_ROLE",
   "CHANGE_PERMISSIONS",
   "EMERGENCY_ACTION",
-]);
+]);

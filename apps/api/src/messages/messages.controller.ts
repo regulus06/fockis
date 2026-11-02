@@ -2,9 +2,11 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from "@nestjs/common";
@@ -19,6 +21,7 @@ import { UpdateMessageDto } from "./dto/update-message.dto";
 import { ReactionDto } from "./dto/reaction.dto";
 import { ForwardMessageDto } from "./dto/forward-message.dto";
 import { SearchMessagesDto } from "./dto/search-messages.dto";
+import { BulkDeleteMessagesDto } from "./dto/message-actions.dto";
 
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 
@@ -205,16 +208,24 @@ export class MessagesController {
   ============================================================ */
 
   @Post(":id/reactions")
-  react(
+  async react(
     @Req() req: Request,
     @Param("id") id: string,
     @Body() dto: ReactionDto,
   ) {
-    return this.messagesService.react(
-      id,
-      this.userId(req),
-      dto.emoji,
+    const userId =
+      this.userId(req);
+    const message =
+      await this.messagesService.react(
+        id,
+        userId,
+        dto.emoji,
+      );
+    await this.messagesGateway.broadcastMessageUpdated(
+      message,
+      userId,
     );
+    return message;
   }
 
   /* ============================================================
@@ -279,15 +290,99 @@ export class MessagesController {
   ============================================================ */
 
   @Post("forward")
-  forward(
+  async forward(
     @Req() req: Request,
     @Body() dto: ForwardMessageDto,
   ) {
-    return this.messagesService.forward(
+    const userId =
+      this.userId(req);
+    const created =
+      await this.messagesService.forward(
+        userId,
+        dto.messageId,
+        dto.conversationIds,
+        dto.caption,
+      );
+    for (const message of Array.isArray(created) ? created : []) {
+      await this.messagesGateway.broadcastNewMessage(
+        message,
+        userId,
+      );
+    }
+    return created;
+  }
+
+  /* ============================================================
+     STARRED
+     GET /messages/starred
+  ============================================================ */
+
+  @Get("starred")
+  starred(
+    @Req() req: Request,
+    @Query("limit") limit?: string,
+  ) {
+    return this.messagesService.listStarred(
       this.userId(req),
-      dto.messageId,
-      dto.conversationIds,
-      dto.caption,
+      Number(limit) || 100,
     );
+  }
+
+  /* ============================================================
+     PIN / UNPIN
+     POST /messages/:id/pin
+  ============================================================ */
+
+  @Post(":id/pin")
+  async togglePin(
+    @Req() req: Request,
+    @Param("id") id: string,
+  ) {
+    const userId =
+      this.userId(req);
+    const message =
+      await this.messagesService.togglePin(
+        id,
+        userId,
+      );
+    await this.messagesGateway.broadcastMessageUpdated(
+      message,
+      userId,
+    );
+    return message;
+  }
+
+  /* ============================================================
+     DELETE SEVERAL
+     POST /messages/bulk-delete
+  ============================================================ */
+
+  @Post("bulk-delete")
+  async bulkDelete(
+    @Req() req: Request,
+    @Body() dto: BulkDeleteMessagesDto,
+  ) {
+    const userId =
+      this.userId(req);
+    const result =
+      await this.messagesService.bulkDelete(
+        userId,
+        dto.messageIds,
+        dto.scope,
+      );
+    if (dto.scope === "everyone") {
+      for (const message of result.messages) {
+        await this.messagesGateway.broadcastMessageDeletedForEveryone(
+          message,
+        );
+      }
+    } else {
+      this.messagesGateway.notifyUser(
+        userId,
+        "message:deleted-for-me",
+        { messageIds: result.deletedIds },
+      );
+    }
+    return result;
   }
 }

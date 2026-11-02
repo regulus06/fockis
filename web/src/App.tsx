@@ -111,6 +111,7 @@ import LegalPolicyPage from "./pages/legal/LegalPolicyPage";
 
 import MessagesPage from "./messages/pages/MessagesPage";
 import FockisIdPage from "./messages/pages/FockisIdPage";
+import CallLayer from "./messages/calls/CallLayer";
 
 // ============================================================================
 // MEETINGS
@@ -124,6 +125,7 @@ import MeetingJoinPage from "./features/meetings/pages/MeetingJoinPage";
 // ============================================================================
 
 import { FockisMap } from "./map/FockisMap";
+import MapsApp from "./map/maps/MapsApp";
 
 // ============================================================================
 // FRIENDS
@@ -927,8 +929,17 @@ function TestCheckoutRoute(): React.JSX.Element {
 // APP
 // ============================================================================
 
+/** /waves/:postId → that video in the feed's Waves player. */
+function WaveRedirect() {
+  const { postId = "" } = useParams();
+  return <Navigate to={`/fockis-preview?waves=${encodeURIComponent(postId || "1")}`} replace />;
+}
+
 function App(): React.JSX.Element {
   return (
+    <>
+    {/* Incoming / outgoing calls ring on every page, not only in Messages. */}
+    <CallLayer />
     <Routes>
       {/* ====================================================================
           AUTH
@@ -1684,6 +1695,23 @@ function App(): React.JSX.Element {
           element={<FockisFeedPage />}
         />
 
+        {/* WAVES: the feed's full-screen video player (bottom navigation tab) */}
+
+        <Route
+          path="/waves"
+          element={
+            <Navigate
+              to="/fockis-preview?waves=1"
+              replace
+            />
+          }
+        />
+
+        <Route
+          path="/waves/:postId"
+          element={<WaveRedirect />}
+        />
+
         {/* SHOP */}
 
         {shopRoutes.map((route) => (
@@ -2117,6 +2145,17 @@ function App(): React.JSX.Element {
 
         <Route
           path="/map"
+          element={<MapsApp />}
+        />
+
+        <Route
+          path="/map/p/:token"
+          element={<MapsApp />}
+        />
+
+        {/* The previous Mapbox-based map, kept during the switch to MapLibre. */}
+        <Route
+          path="/map/classic"
           element={<FockisMap />}
         />
 
@@ -2524,6 +2563,7 @@ function App(): React.JSX.Element {
         }
       />
     </Routes>
+    </>
   );
 }
 

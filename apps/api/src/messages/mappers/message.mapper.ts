@@ -159,5 +159,27 @@ export function mapMessage(
             message.systemLabel,
         }
       : {}),
+    pinned:
+      Boolean(
+        message.pinned,
+      ) && !message.deletedForEveryone,
+    ...(message.pinnedAt
+      ? {
+          pinnedAt:
+            new Date(
+              message.pinnedAt,
+            ).toISOString(),
+        }
+      : {}),
+    forwarded:
+      Boolean(
+        message.forwarded,
+      ),
+    ...(message.callId
+      ? {
+          callId:
+            String(message.callId),
+        }
+      : {}),
   };
 }

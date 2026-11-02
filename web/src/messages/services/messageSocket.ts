@@ -282,6 +282,25 @@ class MessageSocket {
     );
 
     /* ========================================================================
+       ANY EVENT (used by listen(); covers events added after this client)
+    ======================================================================== */
+
+    socket.onAny(
+      (event: string, payload: unknown) => {
+        this.anyListeners[event]?.forEach((listener) => {
+          try {
+            listener(payload);
+          } catch (error) {
+            console.error(`[FOCKIS MESSAGES] Listener error for ${event}:`, error);
+          }
+        });
+      },
+    );
+
+    socket.on("connect", () => this.setConnectionState(true));
+    socket.on("disconnect", () => this.setConnectionState(false));
+
+    /* ========================================================================
        STANDARD MESSAGE / PRESENCE EVENTS
     ======================================================================== */
 
@@ -540,6 +559,48 @@ class MessageSocket {
 
   isConnected(): boolean {
     return this.socket?.connected === true;
+  }
+
+  /* ==========================================================================
+     GENERIC LISTENERS / ACKNOWLEDGED REQUESTS
+  ========================================================================== */
+
+  private anyListeners: Record<string, Set<(payload: any) => void>> = {};
+  private connectionListeners = new Set<(connected: boolean) => void>();
+
+  private setConnectionState(connected: boolean): void {
+    this.connectionListeners.forEach((listener) => listener(connected));
+  }
+
+  /** Subscribe to any server event by name. Returns an unsubscribe function. */
+  listen(event: string, callback: (payload: any) => void): () => void {
+    (this.anyListeners[event] ??= new Set()).add(callback);
+    return () => {
+      this.anyListeners[event]?.delete(callback);
+    };
+  }
+
+  /** Called with true/false whenever the socket connects or disconnects. */
+  onConnectionChange(callback: (connected: boolean) => void): () => void {
+    this.connectionListeners.add(callback);
+    return () => {
+      this.connectionListeners.delete(callback);
+    };
+  }
+
+  /** Emits an event and resolves with the server's acknowledgement. */
+  request<T = any>(event: string, payload: unknown, timeoutMs = 10000): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      const socket = this.socket;
+      if (!socket?.connected) {
+        reject(new Error("You're offline. Reconnecting…"));
+        return;
+      }
+      socket.timeout(timeoutMs).emit(event, payload, (error: unknown, response: T) => {
+        if (error) reject(new Error("The server didn't respond. Try again."));
+        else resolve(response);
+      });
+    });
   }
 
   /* ==========================================================================

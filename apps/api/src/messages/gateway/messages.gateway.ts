@@ -21,16 +21,16 @@ import {
 } from "socket.io";
 
 import {
-  randomUUID,
-} from "crypto";
-
-import {
   MessagesService,
 } from "../messages.service";
 
 import {
   ConversationsService,
 } from "../conversations.service";
+
+import {
+  CallsService,
+} from "../calls/calls.service";
 
 /* ============================================================================
    FOCKIS MESSAGES GATEWAY
@@ -201,7 +201,63 @@ export class MessagesGateway {
 
     private readonly conversationsService:
       ConversationsService,
-  ) {}
+
+    private readonly callsService:
+      CallsService,
+  ) {
+    // The calls service reaches clients through this gateway.
+    this.callsService.bindSignals({
+      notifyUser: (userId, event, payload) => {
+        this.trackCallEvent(event, payload);
+        return this.emitToUser(userId, event, payload);
+      },
+      hasConnectedSocket: (userId) => this.isUserOnline(String(userId)),
+      broadcastNewMessage: (message, senderId) => this.broadcastNewMessage(message, senderId),
+    });
+  }
+
+  /**
+   * Keeps the in-memory registry used by the legacy WebRTC relays in step
+   * with the persisted call state (CallsService is the source of truth).
+   */
+  private trackCallEvent(
+    event: string,
+    payload: any,
+  ): void {
+    const callId = payload?.callId ? String(payload.callId) : "";
+    if (!callId) return;
+    if (event === "call:incoming") {
+      this.activeCalls.set(callId, {
+        callId,
+        callerId: String(payload.callerId),
+        receiverId: String(payload.receiverId),
+        type: payload.type,
+        createdAt: String(payload.createdAt ?? new Date().toISOString()),
+      });
+    } else if (event === "call:accepted") {
+      const call = this.activeCalls.get(callId);
+      if (call) call.acceptedAt = String(payload.acceptedAt ?? new Date().toISOString());
+    } else if (event === "call:ended") {
+      this.activeCalls.delete(callId);
+    }
+  }
+
+  /** Turns a CallsService exception into the socket ack shape. */
+  private callError(
+    error: any,
+  ): {
+    success: false;
+    message: string;
+    callId?: string;
+  } {
+    const response = typeof error?.getResponse === "function" ? error.getResponse() : null;
+    const message =
+      (typeof response === "object" && response && (Array.isArray((response as any).message) ? (response as any).message[0] : (response as any).message)) ||
+      error?.message ||
+      "The call could not be completed.";
+    const callId = typeof response === "object" && response ? (response as any).callId : undefined;
+    return { success: false, message: String(message), ...(callId ? { callId: String(callId) } : {}) };
+  }
 
   /* ==========================================================================
      USER ROOM
@@ -627,6 +683,73 @@ export class MessagesGateway {
   }
 
   /* ==========================================================================
+     PUBLIC HELPERS (used by REST controllers and the calls service)
+  ========================================================================== */
+
+  /** Emits to every socket of one user. Returns false when the user is offline. */
+  notifyUser(
+    userId: string,
+    event: string,
+    payload: unknown,
+  ): boolean {
+    return this.emitToUser(
+      String(userId),
+      event,
+      payload,
+    );
+  }
+
+  /** True when the user has at least one connected socket. */
+  hasConnectedSocket(
+    userId: string,
+  ): boolean {
+    return this.isUserOnline(
+      String(userId),
+    );
+  }
+
+  /* ==========================================================================
+     BROADCAST MESSAGE UPDATED (reactions, pin)
+
+     Clients merge only shared fields (reactions, pinned, pinnedAt); the
+     per-user fields in the payload (starred, deletedForMe) belong to the
+     acting user and are ignored by other participants.
+  ========================================================================== */
+
+  async broadcastMessageUpdated(
+    message: any,
+    actorId: string,
+  ): Promise<void> {
+    if (
+      !message ||
+      !message.conversationId
+    ) {
+      return;
+    }
+
+    const conversationId =
+      String(message.conversationId);
+
+    const participants =
+      await this.conversationsService.getParticipantIds(
+        conversationId,
+      );
+
+    const payload = {
+      message,
+      actorId: String(actorId),
+    };
+
+    for (const participantId of participants) {
+      this.emitToUser(
+        String(participantId),
+        "message:updated",
+        payload,
+      );
+    }
+  }
+
+  /* ==========================================================================
      BROADCAST MESSAGE DELETED FOR EVERYONE
   ========================================================================== */
 
@@ -752,6 +875,10 @@ export class MessagesGateway {
       room,
     );
 
+    this.callsService.handleUserOnline(
+      normalizedUserId,
+    );
+
     this.logger.log(
       `[FOCKIS SOCKET] User ${normalizedUserId} joined private room ${room}`,
     );
@@ -818,72 +945,18 @@ export class MessagesGateway {
         normalizedUserId,
       )
     ) {
-      this.endCallsForDisconnectedUser(
-        normalizedUserId,
-      );
+      // Accepted calls end after a grace period if the user doesn't
+      // reconnect; ringing calls keep ringing their phones (push).
+      void this.callsService
+        .handleUserOffline(normalizedUserId)
+        .catch((error) =>
+          this.logger.warn(`[FOCKIS CALL] offline handling failed: ${String(error)}`),
+        );
     }
 
     this.logger.log(
       `[FOCKIS SOCKET] Message socket disconnected: user=${normalizedUserId} socket=${client.id}`,
     );
-  }
-
-  /* ==========================================================================
-     END CALLS FOR DISCONNECTED USER
-  ========================================================================== */
-
-  private endCallsForDisconnectedUser(
-    userId: string,
-  ): void {
-    const normalizedUserId =
-      String(userId);
-
-    for (
-      const call
-      of this.activeCalls.values()
-    ) {
-      const participant =
-        call.callerId ===
-          normalizedUserId ||
-        call.receiverId ===
-          normalizedUserId;
-
-      if (!participant) {
-        continue;
-      }
-
-      const otherUserId =
-        call.callerId ===
-          normalizedUserId
-          ? call.receiverId
-          : call.callerId;
-
-      this.emitToUser(
-        otherUserId,
-        "call:ended",
-        {
-          callId:
-            call.callId,
-
-          userId:
-            normalizedUserId,
-
-          endedAt:
-            new Date().toISOString(),
-
-          reason:
-            "participant_disconnected",
-        },
-      );
-
-      this.activeCalls.delete(
-        call.callId,
-      );
-
-      this.logger.log(
-        `[FOCKIS CALL] Call ${call.callId} ended because user ${normalizedUserId} disconnected`,
-      );
-    }
   }
 
   /* ==========================================================================
@@ -1639,7 +1712,7 @@ export class MessagesGateway {
   }
 
   /* ==========================================================================
-     START VOICE / VIDEO CALL
+     CALLS (persisted by CallsService; same event names and ack shapes)
   ========================================================================== */
 
   @SubscribeMessage(
@@ -1652,199 +1725,32 @@ export class MessagesGateway {
     @MessageBody()
     payload: {
       receiverId: string;
-
-      type:
-        | "voice"
-        | "video";
+      type: CallType;
+      deviceId?: string;
     },
   ): Promise<{
     success: boolean;
     callId?: string;
     message?: string;
+    call?: unknown;
   }> {
-    const callerId =
-      client.data?.userId;
-
-    if (!callerId) {
-      return {
-        success: false,
-
-        message:
-          "Unauthorized",
-      };
-    }
-
-    if (
-      !payload?.receiverId
-    ) {
-      return {
-        success: false,
-
-        message:
-          "Receiver ID is required",
-      };
-    }
-
-    if (
-      payload.type !== "voice" &&
-      payload.type !== "video"
-    ) {
-      return {
-        success: false,
-
-        message:
-          "Invalid call type",
-      };
-    }
-
-    const normalizedCallerId =
-      String(callerId);
-
-    const receiverId =
-      String(
-        payload.receiverId,
+    const callerId = client.data?.userId;
+    if (!callerId) return { success: false, message: "Unauthorized" };
+    try {
+      const call = await this.callsService.start(
+        String(callerId),
+        String(payload?.receiverId ?? ""),
+        payload?.type,
+        String(payload?.deviceId ?? ""),
       );
-
-    if (
-      receiverId ===
-      normalizedCallerId
-    ) {
-      return {
-        success: false,
-
-        message:
-          "You cannot call yourself",
-      };
-    }
-
-    const receiverSockets =
-      this.getUserSocketIds(
-        receiverId,
-      );
-
-    if (
-      receiverSockets.length === 0
-    ) {
-      this.logger.warn(
-        `[FOCKIS CALL] Call rejected: receiver ${receiverId} has no sockets`,
-      );
-
-      return {
-        success: false,
-
-        message:
-          "The user is currently offline",
-      };
-    }
-
-    this.logger.log(
-      `[FOCKIS CALL] Receiver ${receiverId} is online on socket(s): ${receiverSockets.join(", ")}`,
-    );
-
-    for (
-      const existingCall
-      of this.activeCalls.values()
-    ) {
-      const samePair =
-        (
-          existingCall.callerId ===
-            normalizedCallerId &&
-          existingCall.receiverId ===
-            receiverId
-        ) ||
-        (
-          existingCall.callerId ===
-            receiverId &&
-          existingCall.receiverId ===
-            normalizedCallerId
-        );
-
-      if (samePair) {
-        return {
-          success: false,
-
-          callId:
-            existingCall.callId,
-
-          message:
-            "A call is already active between these users",
-        };
+      if (call.status === "busy") {
+        return { success: false, callId: call.callId, message: "This person is on another call.", call };
       }
+      return { success: true, callId: call.callId, call };
+    } catch (error) {
+      return this.callError(error);
     }
-
-    const callId =
-      randomUUID();
-
-    const createdAt =
-      new Date().toISOString();
-
-    const call: ActiveCall = {
-      callId,
-
-      callerId:
-        normalizedCallerId,
-
-      receiverId,
-
-      type:
-        payload.type,
-
-      createdAt,
-    };
-
-    this.activeCalls.set(
-      callId,
-      call,
-    );
-
-    const delivered =
-      this.emitToUser(
-        receiverId,
-
-        "call:incoming",
-
-        {
-          callId,
-
-          callerId:
-            normalizedCallerId,
-
-          receiverId,
-
-          type:
-            payload.type,
-
-          createdAt,
-        },
-      );
-
-    if (!delivered) {
-      this.activeCalls.delete(
-        callId,
-      );
-
-      return {
-        success: false,
-
-        message:
-          "The receiver went offline before the call could be delivered",
-      };
-    }
-
-    this.logger.log(
-      `[FOCKIS CALL] INCOMING CALL DELIVERED | call=${callId} | caller=${normalizedCallerId} | receiver=${receiverId} | type=${payload.type}`,
-    );
-
-    return {
-      success: true,
-
-      callId,
-    };
   }
-
-  /* ==========================================================================
-     ACCEPT CALL
-  ========================================================================== */
 
   @SubscribeMessage(
     "call:accept",
@@ -1857,116 +1763,29 @@ export class MessagesGateway {
     payload: {
       callId: string;
       callerId?: string;
+      deviceId?: string;
     },
   ): Promise<{
     success: boolean;
     message?: string;
+    call?: unknown;
   }> {
-    const receiverId =
-      client.data?.userId;
-
-    if (!receiverId) {
-      return {
-        success: false,
-
-        message:
-          "Unauthorized",
-      };
-    }
-
-    if (
-      !payload?.callId
-    ) {
-      return {
-        success: false,
-
-        message:
-          "Call ID is required",
-      };
-    }
-
-    const call =
-      this.activeCalls.get(
-        String(payload.callId),
+    const receiverId = client.data?.userId;
+    if (!receiverId) return { success: false, message: "Unauthorized" };
+    try {
+      const call = await this.callsService.accept(
+        String(receiverId),
+        String(payload?.callId ?? ""),
+        String(payload?.deviceId ?? client.id),
       );
-
-    if (!call) {
-      return {
-        success: false,
-
-        message:
-          "Call no longer exists",
-      };
+      if (payload?.callerId && String(payload.callerId) !== call.callerId) {
+        return { success: false, message: "Caller does not match this call" };
+      }
+      return { success: true, call };
+    } catch (error) {
+      return this.callError(error);
     }
-
-    if (
-      call.receiverId !==
-      String(receiverId)
-    ) {
-      return {
-        success: false,
-
-        message:
-          "You are not the receiver of this call",
-      };
-    }
-
-    if (
-      payload.callerId &&
-      String(payload.callerId) !==
-        call.callerId
-    ) {
-      return {
-        success: false,
-
-        message:
-          "Caller does not match this call",
-      };
-    }
-
-    call.acceptedAt =
-      new Date().toISOString();
-
-    this.activeCalls.set(
-      call.callId,
-      call,
-    );
-
-    this.emitToUser(
-      call.callerId,
-
-      "call:accepted",
-
-      {
-        callId:
-          call.callId,
-
-        callerId:
-          call.callerId,
-
-        receiverId:
-          call.receiverId,
-
-        type:
-          call.type,
-
-        acceptedAt:
-          call.acceptedAt,
-      },
-    );
-
-    this.logger.log(
-      `[FOCKIS CALL] ACCEPTED | call=${call.callId} | caller=${call.callerId} | receiver=${call.receiverId}`,
-    );
-
-    return {
-      success: true,
-    };
   }
-
-  /* ==========================================================================
-     REJECT CALL
-  ========================================================================== */
 
   @SubscribeMessage(
     "call:reject",
@@ -1984,86 +1803,14 @@ export class MessagesGateway {
     success: boolean;
     message?: string;
   }> {
-    const receiverId =
-      client.data?.userId;
-
-    if (!receiverId) {
-      return {
-        success: false,
-
-        message:
-          "Unauthorized",
-      };
+    const userId = client.data?.userId;
+    if (!userId) return { success: false, message: "Unauthorized" };
+    try {
+      await this.callsService.decline(String(userId), String(payload?.callId ?? ""));
+      return { success: true };
+    } catch (error) {
+      return this.callError(error);
     }
-
-    if (
-      !payload?.callId
-    ) {
-      return {
-        success: false,
-
-        message:
-          "Call ID is required",
-      };
-    }
-
-    const call =
-      this.activeCalls.get(
-        String(payload.callId),
-      );
-
-    if (!call) {
-      return {
-        success: false,
-
-        message:
-          "Call no longer exists",
-      };
-    }
-
-    if (
-      call.receiverId !==
-      String(receiverId)
-    ) {
-      return {
-        success: false,
-
-        message:
-          "You are not the receiver of this call",
-      };
-    }
-
-    this.emitToUser(
-      call.callerId,
-
-      "call:rejected",
-
-      {
-        callId:
-          call.callId,
-
-        callerId:
-          call.callerId,
-
-        receiverId:
-          call.receiverId,
-
-        rejectedAt:
-          new Date().toISOString(),
-      },
-    );
-
-    this.activeCalls.delete(
-      call.callId,
-    );
-
-    this.logger.log(
-      `[FOCKIS CALL] REJECTED | call=${call.callId}`,
-    );
-
-    return {
-      success: true,
-    };
   }
 
   /* ==========================================================================
@@ -2479,94 +2226,13 @@ export class MessagesGateway {
     success: boolean;
     message?: string;
   }> {
-    const participantId =
-      client.data?.userId;
-
-    if (!participantId) {
-      return {
-        success: false,
-
-        message:
-          "Unauthorized",
-      };
+    const participantId = client.data?.userId;
+    if (!participantId) return { success: false, message: "Unauthorized" };
+    try {
+      await this.callsService.end(String(participantId), String(payload?.callId ?? ""));
+      return { success: true };
+    } catch (error) {
+      return this.callError(error);
     }
-
-    if (
-      !payload?.callId
-    ) {
-      return {
-        success: false,
-
-        message:
-          "Call ID is required",
-      };
-    }
-
-    const call =
-      this.activeCalls.get(
-        String(payload.callId),
-      );
-
-    if (!call) {
-      return {
-        success: false,
-
-        message:
-          "Call no longer exists",
-      };
-    }
-
-    const normalizedParticipantId =
-      String(participantId);
-
-    const isParticipant =
-      call.callerId ===
-        normalizedParticipantId ||
-      call.receiverId ===
-        normalizedParticipantId;
-
-    if (!isParticipant) {
-      return {
-        success: false,
-
-        message:
-          "You are not a participant in this call",
-      };
-    }
-
-    const otherUserId =
-      call.callerId ===
-        normalizedParticipantId
-        ? call.receiverId
-        : call.callerId;
-
-    this.emitToUser(
-      otherUserId,
-
-      "call:ended",
-
-      {
-        callId:
-          call.callId,
-
-        userId:
-          normalizedParticipantId,
-
-        endedAt:
-          new Date().toISOString(),
-      },
-    );
-
-    this.activeCalls.delete(
-      call.callId,
-    );
-
-    this.logger.log(
-      `[FOCKIS CALL] ENDED | call=${call.callId} | by=${normalizedParticipantId}`,
-    );
-
-    return {
-      success: true,
-    };
   }
 }
