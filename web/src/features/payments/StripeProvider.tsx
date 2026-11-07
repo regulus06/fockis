@@ -7,6 +7,8 @@ import {
   type Stripe,
 } from '@stripe/stripe-js';
 
+import './styles/CheckoutPage.scss';
+
 interface Props {
   children: React.ReactNode;
 }
@@ -84,25 +86,16 @@ const StripeProvider: React.FC<Props> = ({ children }) => {
     return (
       <div
         role="alert"
-        style={{
-          margin: '20px 0',
-          padding: 18,
-          border: '1px solid #dc2626',
-          borderRadius: 8,
-          background: '#fff7f7',
-          color: '#991b1b',
-        }}
+        className="fockis-stripe-state fockis-stripe-state--error"
       >
-        <strong>Stripe payment unavailable</strong>
+        <span className="fockis-stripe-state__icon" aria-hidden="true">
+          !
+        </span>
 
-        <p
-          style={{
-            margin: '8px 0 0',
-            fontSize: 13,
-          }}
-        >
-          {error}
-        </p>
+        <div>
+          <strong>Secure payment unavailable</strong>
+          <p>{error}</p>
+        </div>
       </div>
     );
   }
@@ -111,14 +104,17 @@ const StripeProvider: React.FC<Props> = ({ children }) => {
     return (
       <div
         role="status"
-        style={{
-          margin: '20px 0',
-          padding: 12,
-          color: '#6b7280',
-          fontSize: 13,
-        }}
+        aria-live="polite"
+        className="fockis-stripe-state"
       >
-        Initializing secure payment…
+        <span className="fockis-stripe-state__icon" aria-hidden="true">
+          <span className="fockis-stripe-state__spinner" />
+        </span>
+
+        <div>
+          <strong>Preparing secure checkout…</strong>
+          <p>Connecting to Stripe. This only takes a moment.</p>
+        </div>
       </div>
     );
   }

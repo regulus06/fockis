@@ -27,6 +27,7 @@ import ModerationCaseDetailsPage from "../moderation/pages/ModerationCaseDetails
 import ModerationSettingsPage from "../moderation/pages/ModerationSettingsPage";
 import SupportModRoutes from "../support/SupportModRoutes";
 import AddressVerificationRoutes from "../map-addresses/AddressVerificationPages";
+import PublicPlacesReviewRoutes from "../map-addresses/PublicPlacesReviewPages";
 import LegalRoutes from "../legal/LegalRoutes";
 import PolicyComplianceRoutes from "../policy-compliance/PolicyComplianceRoutes";
 
@@ -339,6 +340,12 @@ export function AdminRoutes(): React.ReactElement {
           <Route
             path="map/addresses/*"
             element={guarded([P.MAP_ADDRESSES_VIEW], <AddressVerificationRoutes />)}
+          />
+
+          {/* Maps: places people add for everyone's map (same map.addresses.* permissions). */}
+          <Route
+            path="map/places/*"
+            element={guarded([P.MAP_ADDRESSES_VIEW], <PublicPlacesReviewRoutes />)}
           />
 
           {/* Legal & Evidence (restricted: legal.* permissions only). */}

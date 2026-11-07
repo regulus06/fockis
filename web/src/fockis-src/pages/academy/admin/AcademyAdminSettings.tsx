@@ -9,6 +9,7 @@ import {
 } from "../../../lib/academyApi";
 
 import { useAcademyAdminAuth } from "../../../lib/academyAdminAuth";
+import InstitutionSiteSettings from "../../../components/academy/admin/InstitutionSiteSettings";
 
 // ============================================================================
 // TYPES
@@ -1261,158 +1262,10 @@ export default function AcademyAdminSettings() {
           {/* ============================================================ */}
 
           {activeSection === "institution" && (
-            <>
-              <div
-                className="card"
-                style={{
-                  padding: 24,
-                  marginBottom: 18,
-                }}
-              >
-                <h3>Institution Information</h3>
-
-                <div
-                  className="form-grid"
-                  style={{
-                    marginTop: 16,
-                  }}
-                >
-                  <div className="field">
-                    <label>
-                      Academy Name
-                    </label>
-
-                    <input
-                      defaultValue="FAFockis Academy"
-                      placeholder="Academy name"
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label>
-                      Website
-                    </label>
-
-                    <input
-                      placeholder="https://..."
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label>
-                      Contact Email
-                    </label>
-
-                    <input
-                      type="email"
-                      placeholder="academy@example.com"
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label>
-                      Contact Phone
-                    </label>
-
-                    <input
-                      placeholder="Phone number"
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label>
-                      Address
-                    </label>
-
-                    <input
-                      placeholder="Street address"
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label>
-                      City / State
-                    </label>
-
-                    <input
-                      placeholder="City, State"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  style={{
-                    marginTop: 18,
-                  }}
-                  onClick={() =>
-                    window.alert(
-                      "Connect this form to GET/PATCH /academy/settings.",
-                    )
-                  }
-                >
-                  Save Institution Settings
-                </button>
-              </div>
-
-              <div
-                className="card"
-                style={{
-                  padding: 24,
-                }}
-              >
-                <h3>Branding</h3>
-
-                <div
-                  className="form-grid"
-                  style={{
-                    marginTop: 16,
-                  }}
-                >
-                  <div className="field">
-                    <label>
-                      Academy Logo
-                    </label>
-
-                    <input
-                      type="file"
-                      accept="image/*"
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label>
-                      Primary Color
-                    </label>
-
-                    <input
-                      type="color"
-                      defaultValue="#111111"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  className="btn"
-                  style={{
-                    marginTop: 18,
-                  }}
-                  onClick={() =>
-                    window.alert(
-                      "Branding persistence will use the AcademySettings backend.",
-                    )
-                  }
-                >
-                  Save Branding
-                </button>
-              </div>
-            </>
+            // Real, saved settings: Contact page, footer, social links, Campus page.
+            <InstitutionSiteSettings />
           )}
 
-          {/* ============================================================ */}
-          {/* PLATFORM */}
           {/* ============================================================ */}
 
           {activeSection === "platform" && (

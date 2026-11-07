@@ -12,6 +12,7 @@ import {
   Landmark as LandmarkIcon,
   Loader2,
   MapPin,
+  MapPinPlus,
   MoreVertical,
   Navigation,
   Pencil,
@@ -26,6 +27,7 @@ import { HAITI_DEPARTMENTS, plusCode } from "../geo";
 import { mapsApi, type Landmark, type LocationKind, type SavedLocation } from "../mapsApi";
 import { getMap, useMaps, type Selection } from "../mapsStore";
 import { directionsTo, directionsLink, shareLink, startGps } from "../navigation";
+import { PublicPlaceFacts, startPublicPlace } from "./PublicPlaces";
 
 /* ============================================================================
    SELECTED LOCATION PANEL + SMART ADDRESS EDITOR
@@ -85,7 +87,16 @@ function PlaceImage({ lat, lon }: { lat: number; lon: number }) {
 
   const satellite = useMemo(() => {
     const key = config?.styles.satellite?.match(/[?&]key=([^&]+)/)?.[1];
-    return key ? `https://api.maptiler.com/maps/satellite/static/${lon.toFixed(6)},${lat.toFixed(6)},18/240x180.png?key=${key}&attribution=false` : "";
+    if (key) return `https://api.maptiler.com/maps/satellite/static/${lon.toFixed(6)},${lat.toFixed(6)},18/240x180.png?key=${key}&attribution=false`;
+    // Esri imagery: the zoom-18 tile that contains the place.
+    const tile = config?.satelliteRaster?.tiles[0];
+    if (!tile) return "";
+    const z = 18;
+    const n = 2 ** z;
+    const x = Math.floor(((lon + 180) / 360) * n);
+    const rad = (lat * Math.PI) / 180;
+    const y = Math.floor(((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2) * n);
+    return tile.replace("{z}", String(z)).replace("{x}", String(x)).replace("{y}", String(y));
   }, [config, lat, lon]);
 
   if (street) {
@@ -230,6 +241,22 @@ export function PlacePanel({ selection }: { selection: Selection }) {
   const [menu, setMenu] = useState(false);
   const [busy, setBusy] = useState(false);
   const saved = selection.saved;
+  const community = selection.publicPlace;
+  // Opened from search or a link: fetch the community place's details.
+  useEffect(() => {
+    if (!selection.publicId || selection.publicPlace) return;
+    let alive = true;
+    mapsApi
+      .publicPlace(selection.publicId)
+      .then((p) => {
+        const current = st().selected;
+        if (alive && current?.publicId === p.id) st().set({ selected: { ...current, publicPlace: p, name: p.name } });
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [selection.publicId, selection.publicPlace]);
   const r = selection.reverse;
   const coords = `${selection.lat.toFixed(4)}, ${selection.lon.toFixed(4)}`;
   const area = saved
@@ -285,8 +312,8 @@ export function PlacePanel({ selection }: { selection: Selection }) {
   return (
     <section className="fkm-card fkm-place" aria-label="Selected location">
       <header className="fkm-card__head">
-        <Home size={22} className="fkm-accent" />
-        <h2>Selected Location</h2>
+        {selection.publicId ? <MapPin size={22} className="fkm-accent" /> : <Home size={22} className="fkm-accent" />}
+        <h2>{selection.publicId ? "Place" : "Selected Location"}</h2>
         <div className="fkm-menu-anchor">
           <button type="button" className="fkm-icon" onClick={() => setMenu((v) => !v)} aria-label="More options" aria-expanded={menu}>
             <MoreVertical size={20} />
@@ -302,6 +329,11 @@ export function PlacePanel({ selection }: { selection: Selection }) {
               <button type="button" role="menuitem" onClick={() => (setMenu(false), edit())}>
                 {saved ? <Pencil size={16} /> : <Plus size={16} />} {saved ? "Edit Smart Address" : "Save as Smart Address"}
               </button>
+              {!saved && !selection.publicId && (
+                <button type="button" role="menuitem" onClick={() => (setMenu(false), startPublicPlace({ lat: selection.lat, lon: selection.lon, name: selection.name }))}>
+                  <MapPinPlus size={16} /> Add this place to the map
+                </button>
+              )}
               {saved?.shared && (
                 <button
                   type="button"
@@ -332,7 +364,7 @@ export function PlacePanel({ selection }: { selection: Selection }) {
       <div className="fkm-place__hero">
         <PlaceImage lat={selection.lat} lon={selection.lon} />
         <div>
-          <h3>{saved?.label ?? selection.name}</h3>
+          <h3>{saved?.label ?? community?.name ?? selection.name}</h3>
           <button type="button" className="fkm-coords" onClick={() => void copy(`${selection.lat.toFixed(6)}, ${selection.lon.toFixed(6)}`, "Coordinates copied")} title="Copy coordinates">
             {coords} <Copy size={16} />
           </button>
@@ -349,20 +381,33 @@ export function PlacePanel({ selection }: { selection: Selection }) {
           <Copy size={18} />
         </button>
       ) : null}
-      {saved ? (
+      {community ? (
+        <PublicPlaceFacts place={community} />
+      ) : selection.publicId ? (
+        <Loader2 className="fkm-spin fkm-center" />
+      ) : saved ? (
         <VerificationBox place={saved} onEdit={edit} />
       ) : (
-        <button type="button" className="fkm-smart fkm-smart--new" onClick={edit}>
-          <Plus size={20} />
-          <span>
-            <small>No street address needed</small>
-            <strong>Save as Smart Address</strong>
-          </span>
-        </button>
+        <div className="fkm-newplace">
+          <button type="button" className="fkm-smart fkm-smart--new" onClick={edit}>
+            <Plus size={20} />
+            <span>
+              <small>Private · only you and people you share with</small>
+              <strong>Save as my Smart Address</strong>
+            </span>
+          </button>
+          <button type="button" className="fkm-smart fkm-smart--new fkm-smart--public" onClick={() => startPublicPlace({ lat: selection.lat, lon: selection.lon, name: selection.name })}>
+            <MapPinPlus size={20} />
+            <span>
+              <small>Shop, church, school… missing from the map?</small>
+              <strong>Add this place for everyone</strong>
+            </span>
+          </button>
+        </div>
       )}
 
       <ul className="fkm-facts">
-        {area && (
+        {area && !community && (
           <li>
             <MapPin size={19} /> {area}
           </li>

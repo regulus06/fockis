@@ -80,7 +80,12 @@ function tabClassName(active: boolean): string {
    FEED TABS
 ============================================================================ */
 
-export default function FockisFeedTab() {
+export default function FockisFeedTab({
+  onActiveTabClick,
+}: {
+  /** Tapping the tab that is already open (e.g. For You) refreshes it. */
+  onActiveTabClick?: () => void;
+} = {}) {
   const location = useLocation();
 
   const onFeedPage = location.pathname === FEED_PATH;
@@ -114,6 +119,12 @@ export default function FockisFeedTab() {
               aria-current={active ? "page" : undefined}
               className={tabClassName(active)}
               aria-label={tab.label}
+              onClick={(event) => {
+                if (active && onActiveTabClick) {
+                  event.preventDefault();
+                  onActiveTabClick();
+                }
+              }}
             >
               {tab.label}
             </Link>

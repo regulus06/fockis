@@ -1,28 +1,32 @@
+import { Link } from 'react-router-dom';
 import PageHero from '../../components/academy/PageHero';
+import { FeatureCard, StateLine, asItems } from '../../components/academy/market/FaBlocks';
 import { useContentSection } from '../../lib/useContentSection';
 
+/** /academy/student-life — CMS section "student-life-items". */
 export default function AcademyStudentLife() {
   const { items, loading, error } = useContentSection('student-life-items');
+  const list = asItems(items);
 
   return (
-    <>
-      <PageHero crumb="Student Life" title="Life at Fockis Academy" subtitle="A campus community built around belonging, leadership, and hands-on experience." />
-      <section className="section">
-        <div className="wrap">
-          {loading && <p>Loading…</p>}
-          {!loading && error && <p>Couldn&apos;t load this section right now.</p>}
-          {!loading && !error && (
-            <div className="grid grid-3">
-              {items.map((i) => (
-                <div className="card" style={{ padding: 24 }} key={i._id ?? i.title}>
-                  <h3 style={{ fontSize: 16 }}>{i.title}</h3>
-                  {i.description && <p style={{ marginTop: 8, fontSize: 14 }}>{i.description}</p>}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-    </>
+    <div className="fa-root fa-page">
+      <PageHero
+        crumb="Student Life"
+        title="Life at Fockis Academy"
+        subtitle="A community built around belonging, leadership, and hands-on experience — on campus and online."
+        icon="users"
+        actions={<Link className="fa-btn fa-btn--primary" to="/academy/calendar">See Upcoming Events</Link>}
+      />
+      <div className="fa-container fa-section">
+        <StateLine loading={loading} error={!loading && error} empty={!loading && !error && list.length === 0} />
+        {!loading && !error && (
+          <div className="fa-fgrid fa-fgrid--3">
+            {list.map((c, i) => (
+              <FeatureCard key={c._id ?? c.title} index={i + 3} title={c.title} text={c.description} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

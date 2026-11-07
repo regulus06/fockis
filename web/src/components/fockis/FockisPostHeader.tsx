@@ -17,6 +17,8 @@ import {
 
 import { Globe, Lock, Users } from "lucide-react";
 
+import { useRelativeNow } from "../../hooks/useRelativeNow";
+
 import {
   fockisFollowApi,
 } from "../../features/gifts/fockisprofile/service/fockisFollowApi";
@@ -70,15 +72,29 @@ const HOUR =
 const DAY =
   24 * HOUR;
 
-const MONTH =
-  30.44 * DAY;
+const WEEK =
+  7 * DAY;
 
-const YEAR =
-  365.25 * DAY;
+/** Weeks are shown up to this age; older posts show their date. */
+const MAX_WEEKS_MS =
+  4 * WEEK;
 
 
+/**
+ * Facebook-style post age, always from the post's creation time:
+ *   < 1 min   "Just now"
+ *   < 1 h     "1m" … "59m"
+ *   < 1 day   "1h" … "23h"
+ *   < 1 week  "1d" … "6d"
+ *   < 4 weeks "1w" … "3w"
+ *   older     "Mar 5" (this year) or "Mar 5, 2025"
+ *
+ * `now` is optional so existing callers keep working; post headers pass
+ * the shared 60-second clock (useRelativeNow) so labels stay current.
+ */
 export function formatRelativeTime(
   value?: string,
+  now: number = Date.now(),
 ): string {
 
   if (!value) {
@@ -99,64 +115,76 @@ export function formatRelativeTime(
   }
 
 
-  const diffMs =
-    Date.now() -
-    date.getTime();
-
-
+  // Small clock skew between server and device must not show "-1m".
   const elapsed =
     Math.max(
-      diffMs,
+      now - date.getTime(),
       0,
     );
 
 
-  if (
-    elapsed < MINUTE
-  ) {
-    return "now";
+  if (elapsed < MINUTE) {
+    return "Just now";
+  }
+
+  if (elapsed < HOUR) {
+    return `${Math.floor(elapsed / MINUTE)}m`;
+  }
+
+  if (elapsed < DAY) {
+    return `${Math.floor(elapsed / HOUR)}h`;
+  }
+
+  if (elapsed < WEEK) {
+    return `${Math.floor(elapsed / DAY)}d`;
+  }
+
+  if (elapsed < MAX_WEEKS_MS) {
+    return `${Math.floor(elapsed / WEEK)}w`;
   }
 
 
-  if (
-    elapsed < HOUR
-  ) {
-    return `${Math.floor(
-      elapsed / MINUTE,
-    )}m`;
-  }
+  const sameYear =
+    date.getFullYear() ===
+    new Date(now).getFullYear();
 
 
-  if (
-    elapsed < DAY
-  ) {
-    return `${Math.floor(
-      elapsed / HOUR,
-    )}h`;
-  }
+  return date.toLocaleDateString(
+    undefined,
+    sameYear
+      ? { month: "short", day: "numeric" }
+      : { month: "short", day: "numeric", year: "numeric" },
+  );
+}
 
 
-  if (
-    elapsed < MONTH
-  ) {
-    return `${Math.floor(
-      elapsed / DAY,
-    )}d`;
-  }
+/**
+ * The post's age label. Subscribes to the shared clock itself, so only
+ * this <time> element re-renders each minute, not the post card.
+ */
+function PostTime({
+  createdAt,
+  title,
+}: {
+  createdAt?: string;
+  title?: string;
+}) {
+
+  const now =
+    useRelativeNow();
 
 
-  if (
-    elapsed < YEAR
-  ) {
-    return `${Math.floor(
-      elapsed / MONTH,
-    )}mo`;
-  }
-
-
-  return `${Math.floor(
-    elapsed / YEAR,
-  )}y`;
+  return (
+    <time
+      dateTime={createdAt}
+      title={title}
+    >
+      {formatRelativeTime(
+        createdAt,
+        now,
+      )}
+    </time>
+  );
 }
 
 
@@ -568,12 +596,6 @@ export default function FockisPostHeader({
      TIME
   ========================================================================== */
 
-  const relativeTime =
-    formatRelativeTime(
-      createdAt,
-    );
-
-
   const absoluteTime =
     formatAbsoluteTime(
       createdAt,
@@ -678,12 +700,10 @@ export default function FockisPostHeader({
           className="fk-post__meta"
         >
 
-          <time
-            dateTime={createdAt}
+          <PostTime
+            createdAt={createdAt}
             title={absoluteTime}
-          >
-            {relativeTime}
-          </time>
+          />
 
           {audienceInfo && (
             <>

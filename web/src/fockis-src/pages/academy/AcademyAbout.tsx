@@ -1,61 +1,64 @@
+import { Link } from 'react-router-dom';
 import PageHero from '../../components/academy/PageHero';
+import { FeatureCard, SectionHead, StateLine, asItems } from '../../components/academy/market/FaBlocks';
+import { Person } from '../../components/academy/market/Shared';
 import { useContentSection } from '../../lib/useContentSection';
 
+/** /academy/about — CMS sections "about-pillars", "about-facts", "about-leadership". */
 export default function AcademyAbout() {
   const pillars = useContentSection('about-pillars');
   const facts = useContentSection('about-facts');
   const leadership = useContentSection('about-leadership');
+  const p = asItems(pillars.items);
+  const f = asItems(facts.items);
+  const l = asItems(leadership.items);
 
   return (
-    <>
-      <PageHero crumb="About" title="About Fockis Academy" subtitle="A modern, career-focused institution built for students entering a changing workforce." />
-      <section className="section">
-        <div className="wrap">
-          {pillars.loading && <p>Loading…</p>}
-          {!pillars.loading && pillars.error && <p>Couldn&apos;t load this section right now.</p>}
-          {!pillars.loading && !pillars.error && (
-            <div className="grid grid-2" style={{ marginBottom: 16 }}>
-              {pillars.items.map((p) => (
-                <div className="card" style={{ padding: 26 }} key={p._id ?? p.title}>
-                  <h3>{p.title}</h3>
-                  <p style={{ marginTop: 10 }}>{p.description}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {!facts.loading && !facts.error && (
-            <div className="grid grid-3">
-              {facts.items.map((f) => (
-                <div className="card" style={{ padding: 24 }} key={f._id ?? f.title}>
-                  <h3 style={{ fontSize: 15.5 }}>{f.title}</h3>
-                  <p style={{ marginTop: 8, fontSize: 14 }}>{f.description}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="divider"></div>
-
-          <div className="section-head">
-            <div className="eyebrow">Leadership</div>
-            <h2>Institutional Leadership</h2>
+    <div className="fa-root fa-page">
+      <PageHero
+        crumb="About"
+        title="About Fockis Academy"
+        subtitle="A modern, career-focused institution and learning marketplace built for a changing workforce."
+        icon="building"
+        actions={<Link className="fa-btn fa-btn--primary" to="/academy/teach">Teach With Us</Link>}
+      />
+      <div className="fa-container fa-section">
+        <StateLine loading={pillars.loading} error={!pillars.loading && pillars.error} />
+        {!pillars.loading && !pillars.error && (
+          <div className="fa-fgrid fa-fgrid--2">
+            {p.map((x, i) => (
+              <FeatureCard key={x._id ?? x.title} index={i} icon={['globe', 'heart'][i % 2]} title={x.title} text={x.description} />
+            ))}
           </div>
-          {leadership.loading && <p>Loading…</p>}
-          {!leadership.loading && leadership.error && <p>Couldn&apos;t load this section right now.</p>}
+        )}
+
+        {!facts.loading && !facts.error && f.length > 0 && (
+          <div className="fa-section">
+            <SectionHead eyebrow="At a glance" title="Facts about Fockis Academy" />
+            <div className="fa-fgrid fa-fgrid--3">
+              {f.map((x, i) => (
+                <FeatureCard key={x._id ?? x.title} index={i + 2} title={x.title} text={x.description} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="fa-section">
+          <SectionHead eyebrow="Leadership" title="Institutional Leadership" />
+          <StateLine loading={leadership.loading} error={!leadership.loading && leadership.error} empty={!leadership.loading && !leadership.error && l.length === 0} />
           {!leadership.loading && !leadership.error && (
-            <div className="grid grid-3">
-              {leadership.items.map((l) => (
-                <div className="card faculty-card" key={l._id ?? l.title}>
-                  <div className="faculty-photo">{l.meta?.initials ?? l.title.slice(0, 2).toUpperCase()}</div>
-                  <h3 style={{ fontSize: 15.5 }}>{l.title}</h3>
-                  <p style={{ fontSize: 13.5, marginTop: 4 }}>{l.description}</p>
+            <div className="fa-fgrid fa-fgrid--3">
+              {l.map((x, i) => (
+                <div key={x._id ?? x.title} className="fa-card fa-person-card">
+                  <Person look={{ skin: (i * 2) % 6, hair: i % 6, shirt: ['#1d5ee8', '#0b1f4d', '#7c3aed'][i % 3], style: i % 2 ? 'long' : 'short', glasses: i % 3 === 0 }} size={72} />
+                  <b>{x.title}</b>
+                  {x.description && <p>{x.description}</p>}
                 </div>
               ))}
             </div>
           )}
         </div>
-      </section>
-    </>
+      </div>
+    </div>
   );
 }

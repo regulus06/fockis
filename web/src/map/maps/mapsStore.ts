@@ -7,14 +7,14 @@ import type { Footprint, MapsConfig, PlaceResult, ReverseResult, RoutePlan, Save
    FOCKIS MAPS STATE
 ============================================================================ */
 
-export type MapsView = "map" | "navigation" | "delivery" | "locations" | "saved" | "businesses" | "couriers" | "orders" | "settings";
+export type MapsView = "map" | "navigation" | "delivery" | "locations" | "saved" | "businesses" | "couriers" | "orders" | "settings" | "contributions";
 
 export interface Selection {
   lat: number;
   lon: number;
   name: string;
   address?: string;
-  source: "click" | "search" | "saved" | "business" | "poi" | "gps" | "shared";
+  source: "click" | "search" | "saved" | "business" | "poi" | "gps" | "shared" | "public";
   category?: string;
   saved?: SavedLocation;
   footprint?: Footprint | null;
@@ -22,6 +22,9 @@ export interface Selection {
   reverse?: ReverseResult | null;
   logoUrl?: string;
   businessId?: string;
+  /** A community place (added by people, approved by Fockis). */
+  publicId?: string;
+  publicPlace?: import("./mapsApi").PublicPlace;
 }
 
 export interface Endpoint {
@@ -86,7 +89,25 @@ interface State {
   places: SavedLocation[];
   placesLoaded: boolean;
   savedRoutes: SavedRoute[];
-  editor: { id?: string; kind?: import("./mapsApi").LocationKind; lat: number; lon: number; footprint?: Footprint | null; osmId?: string; captureMethod: SavedLocation["captureMethod"]; accuracyM?: number } | null;
+  /**
+   * Pin being placed: a private Smart Address (purpose "address", default) or
+   * a place for everyone's map (purpose "public", reviewed by Fockis).
+   */
+  editor: {
+    id?: string;
+    kind?: import("./mapsApi").LocationKind;
+    purpose?: "address" | "public";
+    /** Prefill for the public-place form (name from the tapped spot, or the place being edited). */
+    draft?: Partial<import("./mapsApi").PublicPlace>;
+    lat: number;
+    lon: number;
+    footprint?: Footprint | null;
+    osmId?: string;
+    captureMethod: SavedLocation["captureMethod"];
+    accuracyM?: number;
+  } | null;
+  /** Approved community places in the visible area. */
+  publicPlaces: import("./mapsApi").PublicPlace[];
   origin: Endpoint | null;
   destination: Endpoint | null;
   mode: TravelMode;
@@ -138,6 +159,7 @@ export const useMaps = create<State>((set, get) => ({
   placesLoaded: false,
   savedRoutes: [],
   editor: null,
+  publicPlaces: [],
   origin: null,
   destination: null,
   mode: loadSettings().defaultMode,

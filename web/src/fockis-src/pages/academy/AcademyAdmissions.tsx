@@ -1,76 +1,81 @@
 import { Link } from 'react-router-dom';
 import PageHero from '../../components/academy/PageHero';
-import StepCard from '../../components/academy/StepCard';
-import Accordion from '../../components/academy/Accordion';
+import { FaAccordion, SectionHead, StateLine, asItems } from '../../components/academy/market/FaBlocks';
+import { Icon } from '../../components/academy/market/Icon';
 import { useContentSection } from '../../lib/useContentSection';
 
-// Purely navigational (not editorial content) — every link just routes to
-// an existing page, so it's kept as static config rather than CMS content.
-const LINKS: { label: string; href: string }[] = [
-  { label: 'How to Apply', href: '/academy/admissions' },
-  { label: 'Admission Requirements', href: '/academy/admissions' },
-  { label: 'Application Deadlines', href: '/academy/admissions' },
-  { label: 'Tuition & Fees', href: '/academy/financial-aid' },
-  { label: 'Financial Aid', href: '/academy/financial-aid' },
-  { label: 'Scholarships', href: '/academy/financial-aid' },
-  { label: 'Transfer Students', href: '/academy/admissions' },
-  { label: 'International Students', href: '/academy/admissions' },
-  { label: 'Veterans', href: '/academy/admissions' },
-  { label: 'Returning Students', href: '/academy/admissions' },
+// Purely navigational — every link routes to an existing page.
+const LINKS: { label: string; href: string; icon: string }[] = [
+  { label: 'How to Apply', href: '#steps', icon: 'clipboard' },
+  { label: 'Admission Requirements', href: '#faq', icon: 'checkCircle' },
+  { label: 'Tuition & Fees', href: '/academy/financial-aid', icon: 'dollar' },
+  { label: 'Financial Aid & Scholarships', href: '/academy/financial-aid', icon: 'wallet' },
+  { label: 'Programs', href: '/academy/programs', icon: 'layers' },
+  { label: 'Online Learning', href: '/academy/online-learning', icon: 'monitor' },
+  { label: 'Academic Calendar', href: '/academy/calendar', icon: 'calendar' },
+  { label: 'Contact Admissions', href: '/academy/contact', icon: 'message' },
 ];
 
+/** /academy/admissions — CMS sections "admissions-steps" and "admissions-faq". */
 export default function AcademyAdmissions() {
   const steps = useContentSection('admissions-steps');
   const faq = useContentSection('admissions-faq');
+  const stepList = asItems(steps.items);
+  const faqList = asItems(faq.items);
 
   return (
-    <>
+    <div className="fa-root fa-page">
       <PageHero
         crumb="Admissions"
         title="Your Journey Starts Here"
         subtitle="Everything you need to apply, enroll, and register for your first term at Fockis Academy."
+        icon="clipboard"
+        actions={
+          <>
+            <Link className="fa-btn fa-btn--primary" to="/academy/contact">Start Your Application</Link>
+            <Link className="fa-btn fa-btn--white" to="/academy/financial-aid">Tuition & Aid</Link>
+          </>
+        }
       />
-      <section className="section">
-        <div className="wrap">
-          <div className="grid grid-4" style={{ marginBottom: 48 }}>
-            {LINKS.map((l) => (
-              <Link className="card" style={{ padding: '18px 20px', fontWeight: 600, fontSize: 14.5 }} to={l.href} key={l.label}>
-                {l.label}
+      <div className="fa-container fa-section">
+        <div className="fa-linkgrid">
+          {LINKS.map((l) =>
+            l.href.startsWith('#') ? (
+              <a key={l.label} className="fa-card fa-linkcard" href={l.href}>
+                <Icon name={l.icon} size={18} /> {l.label} <Icon name="right" size={14} />
+              </a>
+            ) : (
+              <Link key={l.label} className="fa-card fa-linkcard" to={l.href}>
+                <Icon name={l.icon} size={18} /> {l.label} <Icon name="right" size={14} />
               </Link>
-            ))}
-          </div>
+            ),
+          )}
+        </div>
 
-          <div className="section-head">
-            <div className="eyebrow">Process</div>
-            <h2>Five Steps to Enrollment</h2>
-          </div>
-          {steps.loading && <p>Loading…</p>}
-          {!steps.loading && steps.error && <p>Couldn&apos;t load this section right now.</p>}
+        <div id="steps" className="fa-section">
+          <SectionHead eyebrow="Process" title="Steps to Enrollment" />
+          <StateLine loading={steps.loading} error={!steps.loading && steps.error} empty={!steps.loading && !steps.error && stepList.length === 0} />
           {!steps.loading && !steps.error && (
-            <div className="steps-row">
-              {steps.items.map((s, i) => (
-                <StepCard key={s._id ?? s.title} step={`STEP ${i + 1}`} title={s.title} desc={s.description ?? ''} />
+            <ol className="fa-steps">
+              {stepList.map((s, i) => (
+                <li key={s._id ?? s.title} className="fa-card">
+                  <span className="fa-steps__n">{i + 1}</span>
+                  <b>{s.title}</b>
+                  {s.description && <p>{s.description}</p>}
+                </li>
               ))}
-            </div>
+            </ol>
           )}
+        </div>
 
-          <div className="divider"></div>
-
-          <div className="section-head">
-            <div className="eyebrow">Frequently Asked</div>
-            <h2>Admission Requirements</h2>
-          </div>
-          {faq.loading && <p>Loading…</p>}
-          {!faq.loading && faq.error && <p>Couldn&apos;t load this section right now.</p>}
-          {!faq.loading && !faq.error && (
-            <Accordion items={faq.items.map((f) => ({ q: f.title, a: f.description ?? '' }))} />
-          )}
-
-          <div style={{ marginTop: 36 }}>
-            <Link className="btn btn-gold" to="/academy/contact">Start Your Application</Link>
+        <div id="faq" className="fa-section fa-two-col">
+          <SectionHead eyebrow="Frequently asked" title="Admission Requirements" sub="Can't find your answer? Our admissions team replies within one business day." action={<Link className="fa-btn fa-btn--outline fa-btn--sm" to="/academy/contact">Ask a question</Link>} />
+          <div>
+            <StateLine loading={faq.loading} error={!faq.loading && faq.error} empty={!faq.loading && !faq.error && faqList.length === 0} />
+            {!faq.loading && !faq.error && <FaAccordion items={faqList.map((f) => ({ q: f.title, a: f.description ?? '' }))} />}
           </div>
         </div>
-      </section>
-    </>
+      </div>
+    </div>
   );
 }

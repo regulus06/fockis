@@ -8,6 +8,10 @@ import {
   AcademyUserSchema,
 } from "./schemas/academy-user.schema";
 
+import {
+  AcademyInstitution,
+  AcademyInstitutionSchema,
+} from "../institutions/schemas/institution.schema";
 import { AuthController } from "./controllers/auth.controller";
 import { AuthService } from "./services/auth.service";
 import { JwtStrategy } from "./strategies/jwt.strategy";
@@ -26,6 +30,11 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
       {
         name: AcademyUser.name,
         schema: AcademyUserSchema,
+      },
+      // read-only here: sign-in checks whether a student's school is blocked
+      {
+        name: AcademyInstitution.name,
+        schema: AcademyInstitutionSchema,
       },
     ]),
 

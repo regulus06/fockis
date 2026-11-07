@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from "react";
-import { Map as MapLibreMap, Marker, NavigationControl, setWorkerUrl, type GeoJSONSource } from "maplibre-gl";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Map as MapLibreMap, Marker, NavigationControl, setWorkerUrl, type GeoJSONSource, type StyleSpecification } from "maplibre-gl";
 // MapLibre runs its tile parser in a Web Worker; Vite must bundle it.
 // eslint-disable-next-line import/no-unresolved
 import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { mapsApi, type MapsConfig } from "../../../map/maps/mapsApi";
-import type { AddressDetail, AddressStatus } from "./addressAdminApi";
+import type { AddressDetail } from "./addressAdminApi";
 
 setWorkerUrl(maplibreWorkerUrl);
 
@@ -16,19 +16,40 @@ const loadConfig = () => (configPromise ??= mapsApi.config().catch((e) => {
   throw e;
 }));
 
-const NEARBY_COLOR: Record<AddressStatus, string> = {
+const NEARBY_COLOR: Record<string, string> = {
   pending: "#e58a00",
   verified: "#1f6bf0",
+  approved: "#1f6bf0",
   needs_info: "#e58a00",
   rejected: "#e5484d",
 };
+
+/** What the review map needs: a Smart Address, or a place someone added to the map. */
+export interface ReviewMapSubject {
+  label: string;
+  latitude: number;
+  longitude: number;
+  building?: AddressDetail["building"];
+  nearby: Array<{ latitude: number; longitude: number; status: string; distanceM: number; label: string; smartAddressId?: string }>;
+}
+
+/** Imagery only (Esri World Imagery) when the server has no satellite style. */
+function imageryStyle(config: MapsConfig): StyleSpecification | null {
+  const r = config.satelliteRaster;
+  if (!r) return null;
+  return {
+    version: 8,
+    sources: { imagery: { type: "raster", tiles: r.tiles, tileSize: r.tileSize, maxzoom: r.maxzoom, attribution: r.attribution } },
+    layers: [{ id: "imagery", type: "raster", source: "imagery" }],
+  };
+}
 
 /**
  * The reviewer's map: the owner's pin, the building outline they picked,
  * other saved addresses within 30 m (small dots), and a satellite view when
  * the map provider offers one.
  */
-export default function AddressReviewMap({ address }: { address: AddressDetail }) {
+export default function AddressReviewMap({ address }: { address: ReviewMapSubject }) {
   const box = useRef<HTMLDivElement>(null);
   const map = useRef<MapLibreMap | null>(null);
   const [config, setConfig] = useState<MapsConfig | null>(null);
@@ -41,7 +62,11 @@ export default function AddressReviewMap({ address }: { address: AddressDetail }
       .catch(() => setError("The map couldn't load. Use the Google Maps link to check the location."));
   }, []);
 
-  const styleUrl = config ? (base === "satellite" && config.styles.satellite ? config.styles.satellite : config.styles.streets) : null;
+  const styleUrl = useMemo<string | StyleSpecification | null>(() => {
+    if (!config) return null;
+    if (base !== "satellite") return config.styles.streets;
+    return config.styles.satellite ?? imageryStyle(config) ?? config.styles.streets;
+  }, [config, base]);
 
   // Create the map once the style is known; switch style in place afterwards.
   useEffect(() => {
@@ -82,8 +107,8 @@ export default function AddressReviewMap({ address }: { address: AddressDetail }
     for (const n of address.nearby) {
       const dot = document.createElement("div");
       dot.className = "fkav-near";
-      dot.style.background = NEARBY_COLOR[n.status];
-      dot.title = `${n.smartAddressId} · ${n.label} (${n.distanceM} m)`;
+      dot.style.background = NEARBY_COLOR[n.status] ?? "#6b778f";
+      dot.title = `${n.smartAddressId ? `${n.smartAddressId} · ` : ""}${n.label} (${n.distanceM} m)`;
       markers.push(new Marker({ element: dot }).setLngLat([n.longitude, n.latitude]).addTo(m));
     }
     markers.push(new Marker({ element: pin, anchor: "bottom" }).setLngLat([address.longitude, address.latitude]).addTo(m));
@@ -130,7 +155,7 @@ export default function AddressReviewMap({ address }: { address: AddressDetail }
             </button>
           </div>
         ) : (
-          config && <span className="fksm-muted">Satellite needs a MapTiler key — use Google Maps to check imagery.</span>
+          config && <span className="fksm-muted">Satellite needs a MapTiler or Esri key — use Google Maps to check imagery.</span>
         )}
         <span className="fkav-map__links">
           <a className="fksm-link" href={`https://www.google.com/maps/@?api=1&map_action=map&center=${lat},${lon}&zoom=20&basemap=satellite`} target="_blank" rel="noreferrer">

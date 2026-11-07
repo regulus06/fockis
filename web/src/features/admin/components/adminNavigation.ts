@@ -159,6 +159,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
     path: "/admin/map/addresses",
     children: [
       { label: "Address Verification", path: "/admin/map/addresses", anyOf: [P.MAP_ADDRESSES_VIEW] },
+      { label: "Places Added", path: "/admin/map/places", anyOf: [P.MAP_ADDRESSES_VIEW] },
     ],
   },
   {

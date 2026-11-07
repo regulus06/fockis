@@ -197,6 +197,30 @@ export class AcademyUser {
   })
   isActive!: boolean;
 
+  // --------------------------------------------------------------------------
+  // SCHOOL ACCOUNTS
+  // Students created by an approved school get a login like
+  // amara.j@bellbakery.fockis.com (stored in `email`) and a temporary password
+  // they must change at first sign-in.
+  // --------------------------------------------------------------------------
+  @Prop({ type: Types.ObjectId, ref: "AcademyInstitution", index: true })
+  institutionId?: Types.ObjectId;
+
+  /** Account created and managed by a school (not self-registered). */
+  @Prop({ default: false })
+  managed!: boolean;
+
+  @Prop({ default: false })
+  mustChangePassword!: boolean;
+
+  /** The student's own email, used to send credentials once email delivery is connected. */
+  @Prop({ trim: true, lowercase: true })
+  personalEmail?: string;
+
+  /** Why a school suspended this account (shown on sign-in). */
+  @Prop({ trim: true })
+  suspendedReason?: string;
+
   @Prop({
     default: false,
   })

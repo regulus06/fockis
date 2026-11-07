@@ -7,7 +7,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 
 setWorkerUrl(maplibreWorkerUrl);
 
-import { API_BASE, authToken, mapsApi, type Footprint } from "./mapsApi";
+import { API_BASE, authToken, mapsApi, type Footprint, type MapsConfig, type PublicPlace } from "./mapsApi";
 import { setMapInstance, useMaps, type Selection } from "./mapsStore";
 
 /* ============================================================================
@@ -22,6 +22,121 @@ const FLIGHT_SRC = "fk-flight";
 const TRAFFIC_SRC = "fk-traffic";
 const TERRAIN_SRC = "fk-terrain";
 const BUILDINGS_3D = "fk-3d-buildings";
+const SATELLITE_SRC = "fk-satellite";
+
+/** Style to load: the satellite style when the server gives one, otherwise streets (Esri imagery is added on top). */
+function styleUrlFor(config: MapsConfig, base: "map" | "satellite") {
+  return base === "satellite" && config.styles.satellite ? config.styles.satellite : config.styles.streets;
+}
+
+/** Esri World Imagery when satellite is on and the server has no satellite style. */
+function rasterSatellite() {
+  const { base, config } = useMaps.getState();
+  if (base !== "satellite" || !config || config.styles.satellite) return null;
+  return config.satelliteRaster ?? null;
+}
+
+/**
+ * "Satellite with labels" from the street style: imagery under the place and
+ * road names, roads kept as faint lines, everything else hidden.
+ */
+function applySatellite(map: MapLibreMap) {
+  const raster = rasterSatellite();
+  if (!raster || map.getSource(SATELLITE_SRC)) return;
+  const layers = map.getStyle().layers ?? [];
+  map.addSource(SATELLITE_SRC, { type: "raster", tiles: raster.tiles, tileSize: raster.tileSize, maxzoom: raster.maxzoom, attribution: raster.attribution });
+  const firstContent = layers.find((l) => l.type !== "background")?.id;
+  map.addLayer({ id: SATELLITE_SRC, type: "raster", source: SATELLITE_SRC, paint: { "raster-fade-duration": 150 } }, firstContent);
+  for (const l of layers) {
+    if (l.id.startsWith("fk-")) continue;
+    const sourceLayer = (l as { "source-layer"?: string })["source-layer"];
+    try {
+      if (l.type === "background" || l.type === "fill" || l.type === "fill-extrusion" || l.type === "hillshade" || l.type === "raster") {
+        map.setLayoutProperty(l.id, "visibility", "none");
+      } else if (l.type === "line") {
+        if (sourceLayer === "transportation" && !/casing|outline|tunnel|rail/i.test(l.id)) map.setPaintProperty(l.id, "line-opacity", 0.45);
+        else map.setLayoutProperty(l.id, "visibility", "none");
+      } else if (l.type === "symbol" && l.layout && "text-field" in l.layout) {
+        map.setPaintProperty(l.id, "text-color", "#ffffff");
+        map.setPaintProperty(l.id, "text-halo-color", "rgba(0, 0, 0, 0.82)");
+        map.setPaintProperty(l.id, "text-halo-width", 1.4);
+      }
+    } catch {
+      /* a layer this style doesn't let us change */
+    }
+  }
+}
+
+/* ---------- community places in view ---------- */
+
+let publicTimer = 0;
+let publicKey = "";
+
+/** Loads approved community places for the visible area (debounced, skipped when zoomed far out). */
+function loadPublicPlaces(map: MapLibreMap) {
+  window.clearTimeout(publicTimer);
+  publicTimer = window.setTimeout(() => {
+    if (map.getZoom() < 11) {
+      if (useMaps.getState().publicPlaces.length) useMaps.getState().set({ publicPlaces: [] });
+      publicKey = "";
+      return;
+    }
+    const b = map.getBounds();
+    const r = (n: number) => n.toFixed(3);
+    const bounds = { south: Number(r(b.getSouth())), west: Number(r(b.getWest())), north: Number(r(b.getNorth())), east: Number(r(b.getEast())) };
+    const key = `${bounds.south},${bounds.west},${bounds.north},${bounds.east}`;
+    if (key === publicKey) return;
+    publicKey = key;
+    mapsApi
+      .publicPlaces(bounds)
+      .then((items) => {
+        if (publicKey === key) useMaps.getState().set({ publicPlaces: items });
+      })
+      .catch(() => {
+        // Older API without community places, or offline: the map works without them.
+        publicKey = "";
+      });
+  }, 450);
+}
+
+/** Forces a reload of community places (after adding or editing one). */
+export function refreshPublicPlaces() {
+  publicKey = "";
+  if (mapInstanceRef) loadPublicPlaces(mapInstanceRef);
+}
+let mapInstanceRef: MapLibreMap | null = null;
+
+const CATEGORY_GLYPH: Record<string, string> = {
+  restaurant: "🍽",
+  shop: "🛍",
+  market: "🧺",
+  hospital: "✚",
+  pharmacy: "℞",
+  school: "🎓",
+  church: "⛪",
+  bank: "🏦",
+  hotel: "🛏",
+  gas: "⛽",
+  transport: "🚌",
+  government: "🏛",
+  office: "🏢",
+  landmark: "★",
+  other: "●",
+};
+export const categoryGlyph = (c: string) => CATEGORY_GLYPH[c] ?? "●";
+
+export function selectPublicPlace(p: PublicPlace) {
+  selectPoint({
+    lat: p.latitude,
+    lon: p.longitude,
+    name: p.name,
+    address: [p.addressText, p.neighborhood, p.commune].filter(Boolean).join(", "),
+    source: "public",
+    category: p.category,
+    publicId: p.id,
+    publicPlace: p,
+  });
+}
 
 const PIN_SVG = `<svg viewBox="0 0 40 52" width="40" height="52" aria-hidden="true"><path d="M20 51s17-17.3 17-30A17 17 0 0 0 3 21c0 12.7 17 30 17 30z" fill="currentColor" stroke="#fff" stroke-width="3"/><circle cx="20" cy="20" r="7" fill="#fff"/></svg>`;
 
@@ -56,6 +171,7 @@ function emptyFC() {
 /** Adds Fockis overlays after every style load (setStyle removes them). */
 function addOverlays(map: MapLibreMap) {
   const s = useMaps.getState();
+  applySatellite(map);
   const firstSymbol = map.getStyle().layers?.find((l) => l.type === "symbol")?.id;
 
   if (!map.getSource(BUILDING_SRC)) map.addSource(BUILDING_SRC, { type: "geojson", data: emptyFC() });
@@ -227,7 +343,7 @@ async function describe(selection: Selection) {
 
 export function selectPoint(selection: Selection) {
   useMaps.getState().set({ selected: { ...selection, reverse: selection.reverse ?? null }, poi: useMaps.getState().poi, mobileSheet: "half" });
-  if (!selection.saved && selection.source !== "business") void describe(selection);
+  if (!selection.saved && selection.source !== "business" && selection.source !== "public") void describe(selection);
 }
 
 export default function MapCanvas() {
@@ -253,8 +369,8 @@ export default function MapCanvas() {
   useEffect(() => {
     if (!config || !container.current || mapRef.current) return;
     const s = useMaps.getState();
-    const url = s.base === "satellite" && config.styles.satellite ? config.styles.satellite : config.styles.streets;
-    if (s.base === "satellite" && !config.styles.satellite) s.set({ base: "map" });
+    if (s.base === "satellite" && !config.satellite) s.set({ base: "map" });
+    const url = styleUrlFor(config, useMaps.getState().base);
     const map = new MapLibreMap({
       container: container.current,
       style: url,
@@ -272,6 +388,7 @@ export default function MapCanvas() {
       },
     });
     mapRef.current = map;
+    mapInstanceRef = map;
     setMapInstance(map);
 
     map.on("style.load", () => addOverlays(map));
@@ -280,6 +397,8 @@ export default function MapCanvas() {
       if (/style|Failed to fetch/i.test(message) && !map.isStyleLoaded()) useMaps.getState().set({ configError: "The map couldn't load. Check your connection." });
     });
     map.on("dragstart", () => useMaps.getState().set({ following: false }));
+    map.on("moveend", () => loadPublicPlaces(map));
+    map.once("load", () => loadPublicPlaces(map));
 
     map.on("click", (e) => {
       const st = useMaps.getState();
@@ -320,8 +439,11 @@ export default function MapCanvas() {
     });
 
     return () => {
+      window.clearTimeout(publicTimer);
+      publicKey = "";
       map.remove();
       mapRef.current = null;
+      mapInstanceRef = null;
       setMapInstance(null);
     };
   }, [config]);
@@ -335,8 +457,9 @@ export default function MapCanvas() {
       firstBase.current = false;
       return;
     }
-    const url = base === "satellite" && config.styles.satellite ? config.styles.satellite : config.styles.streets;
-    map.setStyle(url as string | StyleSpecification);
+    // A full reload (no diff): switching between streets and Esri satellite
+    // uses the same style URL, and our changes to it must be undone.
+    map.setStyle(styleUrlFor(config, base) as string | StyleSpecification, { diff: false });
   }, [base, config]);
 
   /* ---------- 3D, traffic, routes, building ---------- */
@@ -427,7 +550,9 @@ export default function MapCanvas() {
     markers.current.editor?.remove();
     markers.current.editor = undefined;
     if (!editor) return;
-    const marker = new Marker({ element: pinElement("is-editor", "Drag to adjust"), anchor: "bottom", draggable: true }).setLngLat([editor.lon, editor.lat]).addTo(map);
+    const marker = new Marker({ element: pinElement(editor.purpose === "public" ? "is-editor is-public" : "is-editor", "Drag to adjust"), anchor: "bottom", draggable: true })
+      .setLngLat([editor.lon, editor.lat])
+      .addTo(map);
     marker.on("dragend", () => {
       const p = marker.getLngLat();
       const st = useMaps.getState();
@@ -473,6 +598,31 @@ export default function MapCanvas() {
         return new Marker({ element: el }).setLngLat([p.longitude, p.latitude]).addTo(map);
       });
   }, [places, selected]);
+
+  const publicPlaces = useMaps((s) => s.publicPlaces);
+  const publicMarkers = useRef<Marker[]>([]);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    publicMarkers.current.forEach((m) => m.remove());
+    publicMarkers.current = publicPlaces
+      .filter((p) => p.id !== selected?.publicId && p.id !== editor?.draft?.id)
+      .map((p) => {
+        const el = document.createElement("button");
+        el.type = "button";
+        el.className = `fkm-community fkm-community--${p.category}`;
+        el.title = p.name;
+        el.setAttribute("aria-label", p.name);
+        el.innerHTML = `<span aria-hidden="true">${categoryGlyph(p.category)}</span><em></em>`;
+        (el.querySelector("em") as HTMLElement).textContent = p.name;
+        el.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          if (useMaps.getState().editor) return;
+          selectPublicPlace(p);
+        });
+        return new Marker({ element: el, anchor: "bottom" }).setLngLat([p.longitude, p.latitude]).addTo(map);
+      });
+  }, [publicPlaces, selected, editor]);
 
   return <div ref={container} className="fkm-canvas" aria-label="Map" role="region" />;
 }

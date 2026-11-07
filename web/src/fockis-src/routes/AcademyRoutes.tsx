@@ -1,6 +1,6 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
-import AcademyLayout from "../components/academy/AcademyLayout";
+import AcademyLayout, { AcademyFullPage } from "../components/academy/AcademyLayout";
 
 import AcademyHome from "../pages/academy/AcademyHome";
 import AcademyPrograms from "../pages/academy/AcademyPrograms";
@@ -10,7 +10,6 @@ import AcademyFinancialAid from "../pages/academy/AcademyFinancialAid";
 import AcademyStudentLife from "../pages/academy/AcademyStudentLife";
 import AcademyOnlineLearning from "../pages/academy/AcademyOnlineLearning";
 import AcademyPortal from "../pages/academy/AcademyPortal";
-import AcademyLms from "../pages/academy/AcademyLms";
 import AcademyCareer from "../pages/academy/AcademyCareer";
 import AcademyEmployers from "../pages/academy/AcademyEmployers";
 import AcademyFaculty from "../pages/academy/AcademyFaculty";
@@ -18,6 +17,46 @@ import AcademyLibrary from "../pages/academy/AcademyLibrary";
 import AcademyCalendar from "../pages/academy/AcademyCalendar";
 import AcademyAbout from "../pages/academy/AcademyAbout";
 import AcademyContact from "../pages/academy/AcademyContact";
+
+// ============================================================================
+// LEARNING MARKETPLACE (2026-11 redesign)
+// ============================================================================
+
+import AcademyCampus from "../pages/academy/AcademyCampus";
+import CourseExplore from "../pages/academy/learn/CourseExplore";
+import CourseDetails from "../pages/academy/learn/CourseDetails";
+import InstructorDashboard from "../pages/academy/learn/InstructorDashboard";
+import CreatorStudio, { StudioNew } from "../pages/academy/studio/CreatorStudio";
+import StudioEditor from "../pages/academy/studio/StudioEditor";
+import AcademyCheckout from "../pages/academy/studio/AcademyCheckout";
+import RegisterSchool from "../pages/academy/institutions/RegisterSchool";
+import SchoolDashboard, { MySchools } from "../pages/academy/institutions/SchoolDashboard";
+import { SchoolPage, SchoolsDirectory } from "../pages/academy/institutions/SchoolPages";
+import ChangePassword from "../pages/academy/ChangePassword";
+import AcademyAdminInstitutions from "../pages/academy/admin/AcademyAdminInstitutions";
+import { useAcademySession } from "../lib/academySession";
+
+/**
+ * Accounts created by a school start with a temporary password: send them to
+ * /academy/change-password before anything else (the API enforces it too).
+ */
+function PasswordGate() {
+  const session = useAcademySession();
+  const { pathname } = useLocation();
+  const must = session.status === "user" && !!(session.user as { mustChangePassword?: boolean } | null)?.mustChangePassword;
+  if (!must || /^\/academy\/(change-password|login)/.test(pathname)) return null;
+  return <Navigate to={`/academy/change-password?next=${encodeURIComponent(pathname)}`} replace />;
+}
+
+// Design-board screens added in the 2026-11 redesign (real endpoints only)
+import { BecomeInstructor, InstructorApplication, CourseBuilder } from "../pages/academy/market/TeachPages";
+import EventDetails from "../pages/academy/market/EventDetails";
+import StudentCertificates from "../pages/academy/market/StudentCertificates";
+import AcademyClassroom from "../pages/academy/market/AcademyClassroom";
+import CertificateDesigner from "../pages/academy/certificates/CertificateDesigner";
+import InstructorCertificates from "../pages/academy/certificates/InstructorCertificates";
+import VerifyCertificate from "../pages/academy/certificates/VerifyCertificate";
+import AcademyLogin from "../pages/academy/AcademyLogin";
 
 // ============================================================================
 // ACADEMY ADMIN
@@ -64,6 +103,27 @@ import AcademyAdminSettings from "../pages/academy/admin/AcademyAdminSettings";
  *   /academy/calendar
  *   /academy/about
  *   /academy/contact
+ *   /academy/campus          (previous homepage, preserved)
+ *   /academy/learn           (course catalog)
+ *   /academy/learn/:code     (course details)
+ *   /academy/events/:id      (seminar / event details)
+ *   /academy/teach           (become an instructor)
+ *   /academy/teach/apply     (instructor application)
+ *   /academy/portal/certificates  (student certificates)
+ *   /academy/instructor[/:section]  (instructor dashboard, own layout)
+ *   /academy/instructor/course/new  (course builder, own layout)
+ *   /academy/classroom/:code (learning player: videos, PDFs, tests, live sessions)
+ *   /academy/studio          (Creator Studio — anyone can publish classes)
+ *   /academy/studio/new      (create a course / seminar / workshop / live class)
+ *   /academy/studio/:code    (edit lessons, price, certificate, learners)
+ *   /academy/checkout/:code  (buy a paid class through the existing Fockis checkout)
+ *   /academy/schools, /academy/schools/:slug, /academy/schools/register
+ *   /academy/school, /academy/school/:id   (school staff: students, applications, staff)
+ *   /academy/change-password  (required after a temporary password)
+ *   /academy/admin/institutions (Fockis admins review schools)
+ *   /academy/instructor/certificates            (templates, issue, issued)
+ *   /academy/instructor/certificates/designer[/:id]
+ *   /academy/verify[/:code]  (public verification: certificate no., QR id or enrollment ID)
  *
  * Admin:
  *   /academy/admin/login
@@ -85,6 +145,8 @@ import AcademyAdminSettings from "../pages/academy/admin/AcademyAdminSettings";
  */
 export default function AcademyRoutes() {
   return (
+    <>
+    <PasswordGate />
     <Routes>
 
       {/* ================================================================== */}
@@ -135,16 +197,11 @@ export default function AcademyRoutes() {
           element={<AcademyOnlineLearning />}
         />
 
-        {/* /academy/portal */}
-        <Route
-          path="portal"
-          element={<AcademyPortal />}
-        />
 
-        {/* /academy/lms */}
+        {/* /academy/lms — removed; the Student Portal replaces it */}
         <Route
           path="lms"
-          element={<AcademyLms />}
+          element={<Navigate to="/academy/portal" replace />}
         />
 
         {/* /academy/career */}
@@ -189,7 +246,150 @@ export default function AcademyRoutes() {
           element={<AcademyContact />}
         />
 
+        {/* /academy/campus — previous homepage */}
+        <Route
+          path="campus"
+          element={<AcademyCampus />}
+        />
+
+        {/* /academy/learn — course catalog */}
+        <Route
+          path="learn"
+          element={<CourseExplore />}
+        />
+
+        {/* /academy/learn/:code — course details */}
+        <Route
+          path="learn/:code"
+          element={<CourseDetails />}
+        />
+
+        {/* /academy/events/:id — seminar details & registration */}
+        <Route
+          path="events/:id"
+          element={<EventDetails />}
+        />
+
+        {/* /academy/verify[/:code] — public certificate & enrollment verification */}
+        <Route
+          path="verify"
+          element={<VerifyCertificate />}
+        />
+        <Route
+          path="verify/:code"
+          element={<VerifyCertificate />}
+        />
+        <Route
+          path="verify-certificate/:code"
+          element={<VerifyCertificate />}
+        />
+
+        {/* Schools on Fockis */}
+        <Route path="schools" element={<SchoolsDirectory />} />
+        <Route path="schools/:slug" element={<SchoolPage />} />
+
+        {/* /academy/teach — become an instructor */}
+        <Route
+          path="teach"
+          element={<BecomeInstructor />}
+        />
+
+        {/* /academy/teach/apply — instructor application */}
+        <Route
+          path="teach/apply"
+          element={<InstructorApplication />}
+        />
+
       </Route>
+
+
+      {/* ================================================================== */}
+      {/* FULL-PAGE LAYOUTS (dashboards, builder, classroom)                 */}
+      {/* ================================================================== */}
+
+      {/* /academy/login, /academy/register — student & instructor accounts */}
+      <Route
+        path="login"
+        element={<AcademyFullPage><AcademyLogin mode="signin" /></AcademyFullPage>}
+      />
+      <Route
+        path="register"
+        element={<AcademyFullPage><AcademyLogin mode="register" /></AcademyFullPage>}
+      />
+
+      <Route
+        path="portal"
+        element={<AcademyFullPage><AcademyPortal /></AcademyFullPage>}
+      />
+
+      <Route
+        path="portal/certificates"
+        element={<AcademyFullPage><StudentCertificates /></AcademyFullPage>}
+      />
+
+      <Route
+        path="instructor/certificates"
+        element={<AcademyFullPage><InstructorCertificates /></AcademyFullPage>}
+      />
+
+      <Route
+        path="instructor/certificates/designer"
+        element={<AcademyFullPage><CertificateDesigner /></AcademyFullPage>}
+      />
+
+      <Route
+        path="instructor/certificates/designer/:id"
+        element={<AcademyFullPage><CertificateDesigner /></AcademyFullPage>}
+      />
+
+      <Route
+        path="instructor/course/new"
+        element={<AcademyFullPage><CourseBuilder /></AcademyFullPage>}
+      />
+
+      <Route
+        path="classroom/:code"
+        element={<AcademyClassroom />}
+      />
+
+      {/* Schools: registration and staff dashboard, password change */}
+      <Route path="schools/register" element={<AcademyFullPage><RegisterSchool /></AcademyFullPage>} />
+      <Route path="school" element={<AcademyFullPage><MySchools /></AcademyFullPage>} />
+      <Route path="school/:id" element={<AcademyFullPage><SchoolDashboard /></AcademyFullPage>} />
+      <Route path="change-password" element={<AcademyFullPage><ChangePassword /></AcademyFullPage>} />
+
+      {/* Creator Studio — open marketplace (any signed-in Academy account) */}
+      <Route
+        path="studio"
+        element={<AcademyFullPage><CreatorStudio /></AcademyFullPage>}
+      />
+      <Route
+        path="studio/new"
+        element={<AcademyFullPage><StudioNew /></AcademyFullPage>}
+      />
+      <Route
+        path="studio/:code"
+        element={<AcademyFullPage><StudioEditor /></AcademyFullPage>}
+      />
+      <Route
+        path="checkout/:code"
+        element={<AcademyFullPage><AcademyCheckout /></AcademyFullPage>}
+      />
+
+
+      {/* ================================================================== */}
+      {/* INSTRUCTOR DASHBOARD (own full-page layout)                        */}
+      {/* ================================================================== */}
+
+      <Route
+        path="instructor"
+        element={<InstructorDashboard />}
+      />
+
+      <Route
+        path="instructor/:section"
+        element={<InstructorDashboard />}
+      />
 
 
       {/* ================================================================== */}
@@ -344,6 +544,12 @@ export default function AcademyRoutes() {
         {/* USERS                                                            */}
         {/* ================================================================ */}
 
+        {/* /academy/admin/institutions — review schools */}
+        <Route
+          path="institutions"
+          element={<AcademyAdminInstitutions />}
+        />
+
         {/* /academy/admin/users */}
         <Route
           path="users"
@@ -402,5 +608,6 @@ export default function AcademyRoutes() {
       />
 
     </Routes>
+    </>
   );
 }

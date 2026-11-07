@@ -35,8 +35,12 @@
 | out and the remaining weights are renormalized. Nothing is invented.
 |
 | Adjustments after the weighted score:
-|   - posts the viewer has already viewed (Post.viewedBy) are demoted,
-|     not removed
+|   - posts the viewer has already viewed (Post.viewedBy, reported in
+|     batches by the client through POST /feed/seen) are demoted, not
+|     removed
+|   - posts that led the viewer's last few sessions are demoted a little
+|     per session (servedPenalty), so a refresh rotates the top instead
+|     of repeating the same first posts
 |
 | A deterministic diversity pass then spaces out posts from the same
 | creator, breaks up runs of the same media type, the same hashtag
@@ -165,6 +169,19 @@ export interface FeedRankingConfig {
   /** Score multiplier for posts the viewer has already viewed. */
   seenPenalty: number;
 
+  /**
+   * Refresh rotation. A post that sat at the top of the viewer's recent
+   * feed sessions (served, whether or not it was scrolled past) is
+   * multiplied by servedPenalty per session it led (weighted by slot:
+   * #1 counts most, see servedPositionWeight), never below
+   * minServedFactor. This is what lets other eligible posts reach the top
+   * on the next refresh instead of the same first post every time.
+   * Applies to the viewer's own posts too, so a new own post leads once
+   * and then rotates.
+   */
+  servedPenalty?: number;
+  minServedFactor?: number;
+
   diversity: {
     /** A creator may appear at most once in any window of this many posts. */
     minAuthorGap: number;
@@ -182,6 +199,25 @@ export interface FeedRankingConfig {
     lookahead: number;
     /** At least one discovery post in every N positions (0 disables). */
     discoveryEvery: number;
+  };
+
+  /**
+   * Fresh lead. The first `slots` positions prefer posts the viewer has
+   * not seen yet and that did not lead one of their recent sessions (see
+   * leadStaleness). A stale post in one of those slots is swapped for the
+   * best less-stale post within the next `window` positions, provided its score is at least
+   * `minScoreRatio` of the stale post's score (so a much weaker post is
+   * never forced up). The stale post only moves down; it stays in the feed.
+   *
+   * Uses Post.viewedBy (stored in MongoDB), so it keeps working after an
+   * API restart, unlike the in-memory served history.
+   */
+  freshLead?: {
+    slots: number;
+    window: number;
+    minScoreRatio: number;
+    /** recentlyServed weight at which a post counts as having led (1.5 = was #1 once). */
+    ledThreshold: number;
   };
 
   snapshot: {
@@ -248,6 +284,9 @@ export const FEED_RANKING_CONFIG: FeedRankingConfig = {
 
   seenPenalty: 0.6,
 
+  servedPenalty: 0.7,
+  minServedFactor: 0.45,
+
   diversity: {
     minAuthorGap: 3,
     authorRepeatDecay: 0.85,
@@ -258,6 +297,13 @@ export const FEED_RANKING_CONFIG: FeedRankingConfig = {
     sameAgeRunPenalty: 0.9,
     lookahead: 30,
     discoveryEvery: 5,
+  },
+
+  freshLead: {
+    slots: 3,
+    window: 25,
+    minScoreRatio: 0.5,
+    ledThreshold: 1.5,
   },
 
   snapshot: {
@@ -333,6 +379,12 @@ export interface RankOptions {
    * Omit to disable exploration (its weight is then renormalized away).
    */
   explorationSeed?: string;
+
+  /**
+   * Posts that led the viewer's recent sessions → weighted number of
+   * sessions they led (servedCounts). See config.servedPenalty.
+   */
+  recentlyServed?: ReadonlyMap<string, number>;
 }
 
 export function emptyViewerSignals(
@@ -783,6 +835,15 @@ export function scorePosts(
       score *= config.seenPenalty ?? 1;
     }
 
+    const servedTimes = options.recentlyServed?.get(post.id) ?? 0;
+
+    if (servedTimes > 0) {
+      score *= Math.max(
+        config.minServedFactor ?? 0,
+        Math.pow(config.servedPenalty ?? 1, servedTimes),
+      );
+    }
+
     return {
       post,
       score,
@@ -988,7 +1049,111 @@ export function rankFeed(
     options,
   ).sort(compareScored);
 
-  return diversifyRanking(scored, config, now);
+  return preferFreshLead(
+    diversifyRanking(scored, config, now),
+    viewer,
+    config,
+    options,
+  );
+}
+
+/* ============================================================================
+   FRESH LEAD
+============================================================================ */
+
+/**
+ * How stale a post is as a feed opener:
+ *   2  it led (was #1, or near the top repeatedly in) another recent session
+ *   1  the viewer already saw it (their own posts excepted, as in scoring)
+ *   0  fresh
+ * A post that just opened the feed is the staler of the two, so on a
+ * feed where the viewer has seen everything the top still rotates.
+ */
+export function leadStaleness(
+  item: ScoredPost,
+  viewer: ViewerSignals,
+  config: FeedRankingConfig = FEED_RANKING_CONFIG,
+  options: RankOptions = {},
+): number {
+  const threshold = config.freshLead?.ledThreshold ?? Infinity;
+
+  if ((options.recentlyServed?.get(item.post.id) ?? 0) >= threshold) {
+    return 2;
+  }
+
+  const isOwn = Boolean(
+    viewer.viewerId && item.post.authorId === viewer.viewerId,
+  );
+
+  return item.post.seenByViewer && !isOwn ? 1 : 0;
+}
+
+/**
+ * See FeedRankingConfig.freshLead. Deterministic; only reorders within
+ * the first slots + window positions and never drops a post.
+ */
+export function preferFreshLead(
+  ranked: ScoredPost[],
+  viewer: ViewerSignals,
+  config: FeedRankingConfig = FEED_RANKING_CONFIG,
+  options: RankOptions = {},
+): ScoredPost[] {
+  const rule = config.freshLead;
+
+  if (!rule || rule.slots <= 0 || ranked.length < 2) {
+    return ranked;
+  }
+
+  const result = [...ranked];
+  const slots = Math.min(rule.slots, result.length);
+
+  for (let slot = 0; slot < slots; slot += 1) {
+    const current = result[slot];
+    const staleness = leadStaleness(current, viewer, config, options);
+
+    if (staleness === 0) {
+      continue;
+    }
+
+    const end = Math.min(result.length, slot + 1 + Math.max(0, rule.window));
+    const minScore = current.score * rule.minScoreRatio;
+
+    // Best (highest-ranked) candidate among the least stale ones in the window.
+    let bestIndex = -1;
+    let bestStaleness = staleness;
+
+    for (let index = slot + 1; index < end; index += 1) {
+      const candidate = result[index];
+
+      if (candidate.score < minScore) {
+        continue;
+      }
+
+      const candidateStaleness = leadStaleness(
+        candidate,
+        viewer,
+        config,
+        options,
+      );
+
+      if (candidateStaleness < bestStaleness) {
+        bestStaleness = candidateStaleness;
+        bestIndex = index;
+
+        if (candidateStaleness === 0) {
+          break;
+        }
+      }
+    }
+
+    if (bestIndex !== -1) {
+      // Move it up; everything between shifts down by one.
+      const [candidate] = result.splice(bestIndex, 1);
+      result.splice(slot, 0, candidate);
+    }
+  }
+
+  return result;
 }
 
 /* ============================================================================
@@ -1083,4 +1248,156 @@ export class FeedSnapshotStore {
       this.entries.delete(oldestKey);
     }
   }
+}
+
+/* ============================================================================
+   SERVED HISTORY (refresh rotation)
+
+   Per viewer, the first posts of each of their last few feed sessions.
+   A new session (app open, pull-to-refresh, refresh button) ranks with
+   these counts as RankOptions.recentlyServed, so posts that just led the
+   feed step down and other eligible posts get the top slots.
+
+   - Bounded: maxSessions per viewer, topSize IDs per session, maxViewers
+     overall (least recently used evicted), entries expire after ttlMs.
+   - Re-ranking page 1 of the SAME session replaces that session's entry
+     and never counts it against itself, so a repeated request (React
+     StrictMode, a retry) gives the same order.
+   - Pure in-memory and synchronous; FeedService can mirror it to Redis
+     when configured, but never requires it.
+============================================================================ */
+
+export interface ServedSession {
+  session: string;
+  ids: string[];
+  at: number;
+}
+
+export class ServedHistoryStore {
+  private readonly viewers = new Map<string, ServedSession[]>();
+
+  constructor(
+    readonly topSize = 12,
+    readonly maxSessions = 4,
+    private readonly ttlMs = 45 * 60_000,
+    private readonly maxViewers = 20_000,
+    private readonly clock: () => number = Date.now,
+  ) {}
+
+  /** Sessions still valid for a viewer, newest last. */
+  sessions(viewerKey: string): ServedSession[] {
+    const list = this.viewers.get(viewerKey);
+
+    if (!list) {
+      return [];
+    }
+
+    const now = this.clock();
+    const live = list.filter((entry) => now - entry.at <= this.ttlMs);
+
+    if (live.length === 0) {
+      this.viewers.delete(viewerKey);
+    } else if (live.length !== list.length) {
+      this.viewers.set(viewerKey, live);
+    }
+
+    return live;
+  }
+
+  /** How many recent OTHER sessions each post led. */
+  counts(viewerKey: string, currentSession: string): Map<string, number> {
+    return servedCounts(this.sessions(viewerKey), currentSession);
+  }
+
+  record(viewerKey: string, session: string, ids: string[]): ServedSession[] {
+    const next = mergeServedSession(
+      this.sessions(viewerKey),
+      { session, ids: ids.slice(0, this.topSize), at: this.clock() },
+      this.maxSessions,
+    );
+
+    this.viewers.delete(viewerKey);
+    this.viewers.set(viewerKey, next);
+
+    while (this.viewers.size > this.maxViewers) {
+      const oldest = this.viewers.keys().next().value;
+
+      if (oldest === undefined) {
+        break;
+      }
+
+      this.viewers.delete(oldest);
+    }
+
+    return next;
+  }
+
+  /** Replace a viewer's sessions (used when loading a Redis copy). */
+  load(viewerKey: string, sessions: ServedSession[]) {
+    const now = this.clock();
+    const live = sessions
+      .filter(
+        (entry) =>
+          entry &&
+          typeof entry.session === 'string' &&
+          Array.isArray(entry.ids) &&
+          typeof entry.at === 'number' &&
+          now - entry.at <= this.ttlMs,
+      )
+      .slice(-this.maxSessions);
+
+    if (live.length) {
+      this.viewers.set(viewerKey, live);
+    }
+  }
+}
+
+/**
+ * Weighted count of how strongly each post led the viewer's other recent
+ * sessions: the #1 slot counts 1.5, slots 2–3 count 1, the rest of the
+ * recorded top 0.6. Each post counts once per session.
+ */
+export function servedPositionWeight(index: number): number {
+  if (index === 0) {
+    return 1.5;
+  }
+
+  return index < 3 ? 1 : 0.6;
+}
+
+export function servedCounts(
+  sessions: readonly ServedSession[],
+  currentSession: string,
+): Map<string, number> {
+  const counts = new Map<string, number>();
+
+  for (const entry of sessions) {
+    if (entry.session === currentSession) {
+      continue;
+    }
+
+    const counted = new Set<string>();
+
+    entry.ids.forEach((id, index) => {
+      if (counted.has(id)) {
+        return;
+      }
+
+      counted.add(id);
+      counts.set(id, (counts.get(id) ?? 0) + servedPositionWeight(index));
+    });
+  }
+
+  return counts;
+}
+
+export function mergeServedSession(
+  sessions: readonly ServedSession[],
+  entry: ServedSession,
+  maxSessions: number,
+): ServedSession[] {
+  return [
+    ...sessions.filter((item) => item.session !== entry.session),
+    entry,
+  ].slice(-maxSessions);
 }

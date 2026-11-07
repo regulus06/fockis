@@ -274,8 +274,9 @@ ACCOUNT CONTROLS
 
 .fk-profile-page__account-controls {
   position: fixed;
-  top: 20px;
-  right: 24px;
+  /* Below the phone status bar / notch (edge-to-edge app and PWA). */
+  top: calc(20px + env(safe-area-inset-top, 0px));
+  right: calc(24px + env(safe-area-inset-right, 0px));
   z-index: 1000;
 }
 
@@ -1772,8 +1773,8 @@ MOBILE
   }
 
   .fk-profile-page__account-controls {
-    top: 14px;
-    right: 16px;
+    top: calc(14px + env(safe-area-inset-top, 0px));
+    right: calc(16px + env(safe-area-inset-right, 0px));
   }
 }
 
@@ -1793,8 +1794,8 @@ MOBILE
   }
 
   .fk-profile-page__account-controls {
-    top: 12px;
-    right: 12px;
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    right: calc(12px + env(safe-area-inset-right, 0px));
   }
 
   .fk-profile-page__settings-button {
@@ -2260,4 +2261,4 @@ REDUCED MOTION
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
+}

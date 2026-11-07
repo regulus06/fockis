@@ -58,6 +58,9 @@ export type LocationKind = "home" | "work" | "saved" | "family" | "business";
 export interface MapsConfig {
   provider: "maptiler" | "openfreemap";
   styles: { streets: string; satellite: string | null; terrain: string | null };
+  /** Esri World Imagery tiles, drawn under the street labels. Null when styles.satellite is used. */
+  satelliteRaster?: { tiles: string[]; tileSize: number; maxzoom: number; attribution: string } | null;
+  satelliteProvider?: "esri" | "maptiler" | null;
   satellite: boolean;
   terrain: boolean;
   traffic: boolean;
@@ -70,7 +73,7 @@ export interface MapsConfig {
 
 export interface PlaceResult {
   id: string;
-  kind: "saved" | "business" | "place";
+  kind: "saved" | "business" | "place" | "public";
   name: string;
   address: string;
   lat: number;
@@ -250,6 +253,55 @@ export interface SharedPlace {
   expiresAt: string | null;
 }
 
+/* ---------------------------------------------------------------- community places */
+
+export const PUBLIC_CATEGORIES = [
+  ["restaurant", "Restaurant / food"],
+  ["shop", "Shop / store"],
+  ["market", "Market"],
+  ["hospital", "Hospital / clinic"],
+  ["pharmacy", "Pharmacy"],
+  ["school", "School / university"],
+  ["church", "Church / place of worship"],
+  ["bank", "Bank / money transfer"],
+  ["hotel", "Hotel / guest house"],
+  ["gas", "Gas station"],
+  ["transport", "Bus / tap-tap / taxi stop"],
+  ["government", "Government office"],
+  ["office", "Office / business"],
+  ["landmark", "Landmark / monument"],
+  ["other", "Other"],
+] as const;
+export type PublicCategory = (typeof PUBLIC_CATEGORIES)[number][0];
+export type PublicPlaceStatus = "pending" | "approved" | "rejected" | "removed";
+
+export interface PublicPlace {
+  id: string;
+  name: string;
+  category: PublicCategory;
+  description: string;
+  phone: string;
+  website: string;
+  openingHours: string;
+  addressText: string;
+  countryCode: string;
+  department: string;
+  commune: string;
+  neighborhood: string;
+  latitude: number;
+  longitude: number;
+  status: PublicPlaceStatus;
+  /** Reviewer's message (only for the person who added the place). */
+  reviewNote: string;
+  submittedAt: string | null;
+  reviewedAt: string | null;
+  mine: boolean;
+}
+
+export type SavePublicPlaceInput = Omit<PublicPlace, "id" | "status" | "reviewNote" | "submittedAt" | "reviewedAt" | "mine">;
+
+export const categoryLabel = (c: string) => PUBLIC_CATEGORIES.find(([v]) => v === c)?.[1] ?? "Place";
+
 /* ---------------------------------------------------------------- calls */
 
 const enc = encodeURIComponent;
@@ -277,6 +329,14 @@ export const mapsApi = {
   shared: (token: string) => api<SharedPlace>(`/map/shared/${enc(token)}`),
   requestVerification: (id: string, message?: string) =>
     api<SavedLocation>(`/map/places/${enc(id)}/verification`, { method: "POST", json: message ? { message } : {} }),
+
+  publicPlaces: (b: { south: number; west: number; north: number; east: number }) =>
+    api<PublicPlace[]>(`/map/public-places?south=${b.south}&west=${b.west}&north=${b.north}&east=${b.east}`),
+  publicPlace: (id: string) => api<PublicPlace>(`/map/public-places/${enc(id)}`),
+  myPublicPlaces: () => api<PublicPlace[]>("/map/public-places/mine"),
+  addPublicPlace: (input: SavePublicPlaceInput) => api<PublicPlace>("/map/public-places", { method: "POST", json: input }),
+  updatePublicPlace: (id: string, input: Partial<SavePublicPlaceInput>) => api<PublicPlace>(`/map/public-places/${enc(id)}`, { method: "PATCH", json: input }),
+  removePublicPlace: (id: string) => api<{ removed: boolean }>(`/map/public-places/${enc(id)}`, { method: "DELETE" }),
 
   savedRoutes: () => api<SavedRoute[]>("/map/saved-routes"),
   saveRoute: (body: Omit<SavedRoute, "id" | "createdAt">) => api<SavedRoute>("/map/saved-routes", { method: "POST", json: body }),

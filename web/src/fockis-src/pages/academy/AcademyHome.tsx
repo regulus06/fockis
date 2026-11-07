@@ -1,221 +1,216 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { getPrograms, getJobs, getStudentCourses, getStudentDashboard, getNews, getEvents, StudentDashboard } from '../../lib/academyApi';
-import { Program, JobListing, Course, NewsItem, CampusEvent } from '../../types/academy';
-import { NetworkMotif } from '../../components/academy/icons';
-import QuickActionCard from '../../components/academy/QuickActionCard';
-import ProgramCard from '../../components/academy/ProgramCard';
-import WhyCard from '../../components/academy/WhyCard';
-import DashboardPreview from '../../components/academy/DashboardPreview';
-import CareerBoard from '../../components/academy/CareerBoard';
-import NewsCard from '../../components/academy/NewsCard';
-import EventRow from '../../components/academy/EventRow';
-import { useContentSection } from '../../lib/useContentSection';
+import { useMemo } from "react";
+import { Link } from "react-router-dom";
+import { Icon } from "../../components/academy/market/Icon";
+import { HeroDuo } from "../../components/academy/market/Art";
+import { Person } from "../../components/academy/market/Shared";
+import { LoadState } from "../../components/academy/learn/CourseCard";
+import FaCourseCard from "../../components/academy/market/FaCourseCard";
+import { useAcademyLoad } from "../../lib/useAcademyLoad";
+import { getCatalogCourses, shortDate } from "../../lib/academyLearnApi";
+import { getEvents, getFaculty } from "../../lib/academyApi";
+
+/**
+ * ============================================================================
+ * FOCKIS ACADEMY — HOMEPAGE (design board screen 2: Learning Marketplace)
+ * ============================================================================
+ *
+ * Every list on this page comes from the real Academy backend:
+ *   Featured courses  → GET /academy/courses/catalog
+ *   Upcoming seminars → GET /academy/events
+ *   Instructors       → GET /academy/faculty
+ *
+ * No invented statistics, ratings or prices. The institutional homepage
+ * (design board screen 1) is at /academy/campus.
+ */
+
+const OFFERINGS = [
+  { name: "Courses", icon: "book", href: "/academy/learn" },
+  { name: "Live Classes", icon: "monitor", href: "/academy/online-learning" },
+  { name: "Seminars", icon: "mic", href: "/academy/calendar" },
+  { name: "Workshops", icon: "users", href: "/academy/calendar" },
+  { name: "Certificates", icon: "award", href: "/academy/portal/certificates" },
+  { name: "Career Learning", icon: "shield", href: "/academy/career" },
+];
+
+/** Each runs a real search over course names and descriptions. */
+const CATEGORIES = [
+  { name: "Technology", q: "technology", icon: "cpu", tone: "blue" },
+  { name: "Business", q: "business", icon: "chart", tone: "purple" },
+  { name: "Culinary Arts", q: "culinary", icon: "chef", tone: "amber" },
+  { name: "Health & Wellness", q: "health", icon: "heart", tone: "red" },
+  { name: "Design & Arts", q: "design", icon: "palette", tone: "green" },
+  { name: "Education", q: "education", icon: "cap", tone: "sky" },
+];
 
 export default function AcademyHome() {
-  const [programs, setPrograms] = useState<Program[]>([]);
-  const [jobs, setJobs] = useState<JobListing[]>([]);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [stats, setStats] = useState<StudentDashboard | null>(null);
-  const [news, setNews] = useState<NewsItem[]>([]);
-  const [events, setEvents] = useState<CampusEvent[]>([]);
-  const whyUs = useContentSection('home-why-us');
-  const learningFeatures = useContentSection('learning-features');
+  const courses = useAcademyLoad(getCatalogCourses);
+  const events = useAcademyLoad(getEvents);
+  const faculty = useAcademyLoad(getFaculty);
 
-  useEffect(() => {
-    getPrograms().then(setPrograms).catch((err) => console.error('Failed to load programs', err));
-    getJobs().then(setJobs).catch((err) => console.error('Failed to load jobs', err));
-    getStudentCourses('demo-student').then(setCourses).catch((err) => console.error('Failed to load courses', err));
-    getStudentDashboard('demo-student').then(setStats).catch((err) => console.error('Failed to load dashboard', err));
-    getNews().then(setNews).catch((err) => console.error('Failed to load news', err));
-    getEvents().then(setEvents).catch((err) => console.error('Failed to load events', err));
-  }, []);
+  const featured = useMemo(() => (courses.state.status === "ready" ? courses.state.data.slice(0, 8) : []), [courses.state]);
+
+  const upcoming = useMemo(() => {
+    if (events.state.status !== "ready") return [];
+    const now = Date.now();
+    return events.state.data
+      .filter((e) => e.isActive !== false)
+      .map((e) => ({ e, when: new Date(e.startDate || e.date || "").getTime() }))
+      .filter(({ when }) => Number.isNaN(when) || when >= now - 86400000)
+      .sort((a, b) => (a.when || 0) - (b.when || 0))
+      .slice(0, 4)
+      .map(({ e }) => e);
+  }, [events.state]);
 
   return (
-    <>
-      <section className="hero">
-        <NetworkMotif />
-        <div className="wrap">
-          <div>
-            <div className="eyebrow">Fockis Academy · Est. Purpose-Built for Careers</div>
-            <h1>Build Your Future at Fockis Academy</h1>
-            <p className="lede">
-              Career-focused education, innovative programs, and a community designed to help you succeed — on
-              campus or online.
-            </p>
-            <div className="hero-actions">
-              <Link className="btn btn-gold" to="/academy/programs">Explore Programs</Link>
-              <Link className="btn btn-ghost-light" to="/academy/admissions">Apply Now</Link>
-            </div>
-            <div className="hero-stats">
-              <div><span>5,000+</span><small>Students</small></div>
-              <div><span>100+</span><small>Programs & Certificates</small></div>
-              <div><span>90%</span><small>Career/Transfer Success</small></div>
-              <div><span>200+</span><small>Employer Partners</small></div>
+    <div className="fa-root fa-page">
+      <div className="fa-container">
+        {/* HERO */}
+        <section className="fa-mhero">
+          <div className="fa-mhero__copy">
+            <h1>
+              Learn • Teach • Host • Earn
+              <br />
+              on Fockis Academy
+            </h1>
+            <p>Discover courses, attend live classes, join seminars and workshops, or become an instructor and share your expertise.</p>
+            <div className="fa-mhero__btns">
+              <Link className="fa-btn fa-btn--primary" to="/academy/learn">
+                Explore Courses
+              </Link>
+              <Link className="fa-btn fa-btn--white" to="/academy/teach">
+                Become an Instructor
+              </Link>
             </div>
           </div>
-          <div className="hero-visual">
-            <img
-              src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1000&auto=format&fit=crop"
-              alt="Students collaborating on a technology project"
-            />
-            <div className="tag">
-              <div><strong>Cybersecurity Lab</strong><small>Fockis Technology Center</small></div>
-              <span className="badge badge-gold">Live</span>
-            </div>
-          </div>
-        </div>
-      </section>
+          <HeroDuo className="fa-mhero__art" />
+        </section>
 
-      <section className="quick-actions wrap">
-        <div className="qa-grid">
-          <QuickActionCard title="Apply" sub="Start your application." href="/academy/admissions" icon="doc" />
-          <QuickActionCard title="Visit" sub="Explore Fockis Academy." href="/academy/contact" icon="pin" />
-          <QuickActionCard title="Programs" sub="Find a program that fits your goals." href="/academy/programs" icon="book" />
-          <QuickActionCard title="Financial Aid" sub="Tuition, scholarships, and aid." href="/academy/financial-aid" icon="coin" />
-          <QuickActionCard title="Student Portal" sub="Access your academic resources." href="/academy/portal" icon="grid" />
-          <QuickActionCard title="Contact" sub="Connect with admissions." href="/academy/contact" icon="mail" />
-        </div>
-      </section>
+        {/* OFFERINGS */}
+        <section className="fa-offer">
+          {OFFERINGS.map((o) => (
+            <Link key={o.name} to={o.href} className="fa-offer__item">
+              <Icon name={o.icon} size={26} stroke={1.6} />
+              <span>{o.name}</span>
+            </Link>
+          ))}
+        </section>
 
-      <section className="section">
-        <div className="wrap">
-          <div className="section-head">
-            <div className="eyebrow">Programs</div>
-            <h2>Explore Our Programs</h2>
-            <p>Seven career-connected pathways built around real employer demand.</p>
-          </div>
-          <div className="grid grid-4">
-            {programs.slice(0, 4).map((p) => (
-              <ProgramCard key={p.id} program={p} />
+        {/* CATEGORIES */}
+        <section className="fa-section">
+          <h3 className="fa-h3">Explore by Category</h3>
+          <div className="fa-cats">
+            {CATEGORIES.map((c) => (
+              <Link key={c.name} to={`/academy/learn?q=${encodeURIComponent(c.q)}`} className={`fa-cat tone-${c.tone}`}>
+                <Icon name={c.icon} size={22} />
+                <span>{c.name}</span>
+              </Link>
             ))}
-          </div>
-          <div style={{ textAlign: 'center', marginTop: 32 }}>
-            <Link className="btn btn-navy" to="/academy/programs">View All Programs</Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="section section-dark">
-        <div className="wrap">
-          <div className="section-head">
-            <div className="eyebrow">Why Fockis</div>
-            <h2>Why Choose Fockis Academy?</h2>
-            <p>A modern, career-connected approach to higher education.</p>
-          </div>
-          {whyUs.loading && <p style={{ color: '#B9C4CF' }}>Loading…</p>}
-          {!whyUs.loading && whyUs.error && <p style={{ color: '#B9C4CF' }}>Couldn&apos;t load this section right now.</p>}
-          {!whyUs.loading && !whyUs.error && (
-            <div className="grid grid-3">
-              {whyUs.items.map((w) => (
-                <WhyCard key={w._id ?? w.title} title={w.title} desc={w.description ?? ''} />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="wrap" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 56, alignItems: 'center' }}>
-          <div>
-            <div className="eyebrow">Online Learning</div>
-            <h2>Learn Anywhere. Build Your Future.</h2>
-            <p style={{ marginTop: 16, fontSize: 16 }}>
-              Take courses fully online with live classes, recorded lectures, digital textbooks, and direct
-              instructor messaging — all inside Fockis Learn.
-            </p>
-            {!learningFeatures.loading && !learningFeatures.error && (
-              <div className="grid grid-2" style={{ marginTop: 24 }}>
-                {learningFeatures.items.slice(0, 8).map((i) => (
-                  <div key={i._id ?? i.title} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                    <span className="badge badge-gold" style={{ width: 8, height: 8, padding: 0, borderRadius: '50%' }}></span>
-                    {i.title}
-                  </div>
-                ))}
-              </div>
-            )}
-            <Link className="btn btn-navy" style={{ marginTop: 28, display: 'inline-flex' }} to="/academy/online-learning">
-              Explore Online Learning
+            <Link to="/academy/learn" className="fa-cat tone-gray">
+              <span>More</span>
             </Link>
           </div>
-          <div className="hero-visual" style={{ aspectRatio: '1 / 1', boxShadow: 'var(--shadow-l)' }}>
-            <img
-              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=900&auto=format&fit=crop"
-              alt="Student learning online on a laptop"
-            />
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="section" style={{ background: 'var(--paper-dim)' }}>
-        <div className="wrap">
-          <div className="section-head">
-            <div className="eyebrow">Student Success</div>
-            <h2>The Student Portal</h2>
-            <p>A preview of what students see when they log in.</p>
+        {/* FEATURED COURSES */}
+        <section className="fa-section">
+          <div className="fa-sechead">
+            <h3 className="fa-h3">Featured Courses</h3>
+            <Link className="fa-link" to="/academy/learn">
+              View all <Icon name="right" size={14} />
+            </Link>
           </div>
-          <DashboardPreview stats={stats} courses={courses} />
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="wrap">
-          <div className="section-head">
-            <div className="eyebrow">Career Center</div>
-            <h2>Turn Education Into a Career</h2>
-            <p>Internships, employer partners, and coaching built into every program.</p>
-          </div>
-          <CareerBoard jobs={jobs.slice(0, 3)} hideFilters />
-          <div style={{ textAlign: 'center', marginTop: 32 }}>
-            <Link className="btn btn-navy" to="/academy/career">View Career Center</Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="section" style={{ background: 'var(--paper-dim)' }}>
-        <div className="wrap">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
-            <div className="section-head" style={{ marginBottom: 0 }}>
-              <div className="eyebrow">News</div>
-              <h2>Campus News</h2>
-            </div>
-            <Link className="btn btn-outline btn-sm" to="/academy/about">All News</Link>
-          </div>
-          <div className="grid grid-4">
-            {news.map((n) => (
-              <NewsCard key={n.title} item={n} />
+          {courses.state.status === "loading" && <LoadState status="loading" />}
+          {courses.state.status === "error" && <LoadState status="error" error={courses.state.error} onRetry={courses.reload} />}
+          {courses.state.status === "ready" &&
+            (featured.length === 0 ? (
+              <LoadState status="empty" empty="No courses are published yet." />
+            ) : (
+              <div className="fa-cgrid">
+                {featured.map((c) => (
+                  <FaCourseCard key={c._id || c.code} course={c} />
+                ))}
+              </div>
             ))}
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="section">
-        <div className="wrap">
-          <div className="section-head">
-            <div className="eyebrow">Events</div>
-            <h2>Upcoming Events</h2>
+        {/* SEMINARS & EVENTS */}
+        <section className="fa-section">
+          <div className="fa-sechead">
+            <h3 className="fa-h3">Upcoming Seminars & Workshops</h3>
+            <Link className="fa-link" to="/academy/calendar">
+              Calendar <Icon name="right" size={14} />
+            </Link>
           </div>
+          {events.state.status === "loading" && <LoadState status="loading" />}
+          {events.state.status === "error" && <LoadState status="error" error={events.state.error} onRetry={events.reload} />}
+          {events.state.status === "ready" &&
+            (upcoming.length === 0 ? (
+              <LoadState status="empty" empty="No upcoming seminars scheduled." />
+            ) : (
+              <div className="fa-egrid">
+                {upcoming.map((e) => {
+                  const id = String(e._id || e.id || "");
+                  return (
+                    <Link key={id || e.title} to={id ? `/academy/events/${encodeURIComponent(id)}` : "/academy/calendar"} className="fa-card fa-ecard">
+                      <span className="fa-ecard__date">
+                        <Icon name="calendar" size={14} /> {shortDate(e.startDate || e.date) || "Date to be announced"}
+                        {e.startTime ? ` · ${e.startTime}` : ""}
+                      </span>
+                      <b>{e.title}</b>
+                      {(e.location || (e.loc as string | undefined)) && (
+                        <small>
+                          <Icon name="monitor" size={12} /> {(e.location || (e.loc as string | undefined))}
+                        </small>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
+        </section>
+
+        {/* INSTRUCTORS */}
+        <section className="fa-section">
+          <div className="fa-sechead">
+            <h3 className="fa-h3">Our Instructors</h3>
+            <Link className="fa-link" to="/academy/faculty">
+              All instructors <Icon name="right" size={14} />
+            </Link>
+          </div>
+          {faculty.state.status === "loading" && <LoadState status="loading" />}
+          {faculty.state.status === "error" && <LoadState status="error" error={faculty.state.error} onRetry={faculty.reload} />}
+          {faculty.state.status === "ready" &&
+            (faculty.state.data.length === 0 ? (
+              <LoadState status="empty" empty="Instructor profiles will appear here." />
+            ) : (
+              <div className="fa-igrid">
+                {faculty.state.data
+                  .filter((p) => p.isActive !== false)
+                  .slice(0, 6)
+                  .map((p, i) => {
+                    const photo = (p.photoUrl || p.imageUrl || p.avatarUrl) as string | undefined;
+                    return (
+                      <Link key={String(p._id || p.id || p.name)} to="/academy/faculty" className="fa-card fa-icard">
+                        {photo ? <img src={photo} alt="" /> : <Person look={{ skin: i % 6, hair: i % 6, shirt: "#1d5ee8", style: i % 2 ? "long" : "short" }} size={64} />}
+                        <b>{p.name}</b>
+                        {Boolean(p.title || p.position || p.pos) && <small>{String(p.title || p.position || p.pos)}</small>}
+                      </Link>
+                    );
+                  })}
+              </div>
+            ))}
+        </section>
+
+        <section className="fa-cta">
           <div>
-            {events.map((e) => (
-              <EventRow key={e.title} event={e} />
-            ))}
+            <h2>Have something to teach?</h2>
+            <p>Create courses, host seminars and help learners build real skills on Fockis Academy.</p>
           </div>
-        </div>
-      </section>
-
-      <section className="section" style={{ background: 'linear-gradient(160deg, var(--navy-950), var(--navy-800))', color: '#fff', textAlign: 'center' }}>
-        <div className="wrap">
-          <h2 style={{ color: '#fff', fontSize: 'clamp(24px,3.4vw,36px)' }}>Your Future Starts With One Application</h2>
-          <p style={{ color: '#C9D3DE', maxWidth: 520, margin: '16px auto 28px' }}>
-            Join a community of students building real careers in technology, business, healthcare, and the skilled
-            trades.
-          </p>
-          <div className="hero-actions" style={{ justifyContent: 'center' }}>
-            <Link className="btn btn-gold" to="/academy/admissions">Start Your Application</Link>
-            <Link className="btn btn-ghost-light" to="/academy/contact">Request Information</Link>
-          </div>
-        </div>
-      </section>
-    </>
+          <Link className="fa-btn fa-btn--white" to="/academy/teach">
+            Become an Instructor
+          </Link>
+        </section>
+      </div>
+    </div>
   );
 }
