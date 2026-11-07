@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { StudentsService } from '../services/students.service';
 import { CreateStudentDto } from '../dto/create-student.dto';
 import { UpdateStudentDto } from '../dto/update-student.dto';
@@ -15,6 +15,17 @@ export class StudentsController {
   @Roles('administrator', 'staff', 'advisor')
   findAll() {
     return this.studentsService.findAll();
+  }
+
+  /**
+   * Dashboard for the signed-in Academy user (courses, progress, upcoming
+   * events, assignments). Declared before ':idOrSlug' so "dashboard" is not
+   * read as a student slug.
+   */
+  @Get('dashboard')
+  @UseGuards(AcademyJwtAuthGuard)
+  myDashboard(@Req() req: { user: { userId: string; name: string; email: string; role: string } }) {
+    return this.studentsService.getMyDashboard(req.user);
   }
 
   @Get(':idOrSlug')

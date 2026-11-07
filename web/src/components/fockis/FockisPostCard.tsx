@@ -2479,7 +2479,7 @@ export default function FockisPostCard({
   ========================================================================== */
 
   return (
-    <article className="fk-post">
+    <article className="fk-post" data-post-id={post.id}>
       {/* ====================================================================
           POST HEADER
       ===================================================================== */}
@@ -3159,4 +3159,4 @@ export default function FockisPostCard({
       />
     </article>
   );
-}
+}

@@ -67,6 +67,7 @@ import { DiscoveryMenuButton, DiscoverySidebar, InlineDiscovery } from "../compo
 import FockisBottomNav from "../components/fockis/FockisBottomNav";
 
 import { useFockisFeed } from "../hooks/useFockisFeed";
+import { PULL_TRIGGER_PX, usePullToRefresh } from "../hooks/usePullToRefresh";
 
 import {
 
@@ -231,8 +232,12 @@ function FeedInner() {
     };
   }, [feed.pendingNewPostsCount]);
 
-  const showNewPosts = () => {
-    feed.showPendingNewPosts();
+  // Pull down at the top of the feed (touch) → a real re-rank.
+  const pullToRefresh = usePullToRefresh(feed.reloadFeed);
+
+  const showNewPosts = async () => {
+    // For You: re-ranks the feed (new session), then pins the new posts.
+    await feed.showPendingNewPosts();
 
     requestAnimationFrame(() => {
       const reduceMotion =
@@ -692,7 +697,41 @@ function FeedInner() {
 
         <main className="fk-shell__center">
 
-          <div className="fk-shell__center-inner">
+          <div className="fk-shell__center-inner" ref={feed.seenRootRef}>
+
+            {(pullToRefresh.pull > 0 || pullToRefresh.refreshing) && (
+              <div
+                className={`fk-feed-pull${
+                  pullToRefresh.refreshing ||
+                  pullToRefresh.pull >= PULL_TRIGGER_PX
+                    ? " is-ready"
+                    : ""
+                }${pullToRefresh.refreshing ? " is-refreshing" : ""}`}
+                style={{
+                  transform: `translate(-50%, ${
+                    pullToRefresh.refreshing ? 56 : pullToRefresh.pull * 0.8
+                  }px)`,
+                }}
+                role="status"
+                aria-label={
+                  pullToRefresh.refreshing
+                    ? "Refreshing feed"
+                    : "Pull to refresh"
+                }
+              >
+                <RefreshCw
+                  size={18}
+                  aria-hidden="true"
+                  style={
+                    pullToRefresh.refreshing
+                      ? undefined
+                      : {
+                          transform: `rotate(${pullToRefresh.pull * 3}deg)`,
+                        }
+                  }
+                />
+              </div>
+            )}
 
             <FockisFeedTopBar
 
@@ -808,7 +847,7 @@ function FeedInner() {
 
             />
 
-            <FockisFeedTab />
+            <FockisFeedTab onActiveTabClick={() => void feed.reloadFeed()} />
 
             <FockisCreatePost
 
@@ -831,7 +870,13 @@ function FeedInner() {
                 <button
                   type="button"
                   className="fk-feed-new-posts__btn"
-                  onClick={showNewPosts}
+                  onClick={() => void showNewPosts()}
+                  disabled={feed.loading}
+                  aria-label={
+                    feed.pendingNewPostsCount === 1
+                      ? "New posts available: 1 new post. Show updated feed."
+                      : `New posts available: ${feed.pendingNewPostsCount} new posts. Show updated feed.`
+                  }
                   style={
                     newPostsPillLeft !== null
                       ? { left: newPostsPillLeft }
@@ -839,9 +884,7 @@ function FeedInner() {
                   }
                 >
                   <ArrowUp size={16} aria-hidden="true" />
-                  {feed.pendingNewPostsCount === 1
-                    ? "1 new post"
-                    : `${feed.pendingNewPostsCount} new posts`}
+                  New posts available
                 </button>
               )}
             </div>
@@ -1343,7 +1386,7 @@ function FeedInner() {
                   <button
                     type="button"
                     className="fk-feed-status__retry"
-                    onClick={() => void feed.refreshFeed()}
+                    onClick={() => void feed.reloadFeed()}
                     disabled={feed.loading}
                   >
                     <RefreshCw size={14} aria-hidden="true" />

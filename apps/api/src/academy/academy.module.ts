@@ -31,6 +31,9 @@ import { ContentModule } from "./content.module";
 // ============================================================================
 
 import { DashboardModule } from "./dashboard.module";
+import { CertificatesModule } from "./certificates/certificates.module";
+import { StudioModule } from "./studio/studio.module";
+import { InstitutionsModule } from "./institutions/institutions.module";
 
 /**
  * ============================================================================
@@ -96,6 +99,9 @@ import { DashboardModule } from "./dashboard.module";
     // ========================================================================
 
     DashboardModule,
+    CertificatesModule,
+    StudioModule,
+    InstitutionsModule,
   ],
 })
 export class AcademyModule {}

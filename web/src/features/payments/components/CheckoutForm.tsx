@@ -291,7 +291,7 @@ export default function CheckoutForm({
                 base: {
                   fontSize: "16px",
                   lineHeight: "24px",
-                  color: "#111827",
+                  color: "#0B1B3F",
 
                   fontFamily:
                     "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
@@ -300,11 +300,11 @@ export default function CheckoutForm({
                     "antialiased",
 
                   "::placeholder": {
-                    color: "#9ca3af",
+                    color: "#94A3B8",
                   },
 
                   iconColor:
-                    "#6b7280",
+                    "#1659F5",
                 },
 
                 invalid: {
@@ -315,7 +315,7 @@ export default function CheckoutForm({
                 },
 
                 complete: {
-                  color: "#111827",
+                  color: "#0B1B3F",
                 },
               },
             }}
@@ -502,4 +502,4 @@ export default function CheckoutForm({
 
     </div>
   );
-}
+}

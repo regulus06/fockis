@@ -65,3 +65,12 @@ subscription-cleanup-backup-20261016-141333/
 subscription-redesign-backup-20261016/
 *.backup
 *.backup-*
+
+!mobile/Fockis-Mobile-Shell/assets/sounds/fockis_ringtone.wav
+
+# Temporary inspection folders and local backups
+**/eas-inspect*/
+**/*.bak
+**/*.bak?
+**/*backup-20261103*/
+mobile/Fockis-Mobile-Shell/fockis-ios-build-log.txt

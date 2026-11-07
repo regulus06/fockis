@@ -17,6 +17,7 @@ import {
   Layers,
   Loader2,
   MapPin,
+  MapPinPlus,
   Map as MapIcon,
   Menu,
   MessageSquare,
@@ -44,6 +45,7 @@ import SearchBox from "./SearchBox";
 import { DirectionsPanel, NavigationHUD } from "./panels/Directions";
 import { BusinessesPanel, DeliveryPanel, LocationsPanel, openSaved, PoiPanel, SavedPanel, SettingsPanel, startNewPlace } from "./panels/ListPanels";
 import { PlacePanel, refreshPlaces, SmartAddressEditor, StreetViewCard } from "./panels/PlacePanels";
+import { ContributionsPanel, PublicPlaceEditor, startPublicPlace } from "./panels/PublicPlaces";
 import { useHideBottomNav } from "../../components/fockis/FockisBottomNav";
 import "./maps.scss";
 
@@ -59,6 +61,7 @@ const NAV: Array<{ view: MapsView; label: string; icon: React.ReactNode; soon?: 
   { view: "delivery", label: "Delivery", icon: <Package size={21} />, soon: true },
   { view: "locations", label: "My Locations", icon: <Bookmark size={21} /> },
   { view: "saved", label: "Saved Places", icon: <Star size={21} /> },
+  { view: "contributions", label: "Places I added", icon: <MapPinPlus size={21} /> },
   { view: "businesses", label: "Businesses", icon: <Building2 size={21} /> },
   { view: "couriers", label: "Couriers", icon: <Bike size={21} />, soon: true },
   { view: "orders", label: "Orders", icon: <ShoppingBag size={21} /> },
@@ -116,6 +119,14 @@ function findNearby(category: string) {
 }
 
 function pickResult(r: PlaceResult) {
+  // Close the phone keyboard so the place card isn't hidden behind it.
+  (document.activeElement as HTMLElement | null)?.blur?.();
+  if (r.kind === "public") {
+    selectPoint({ lat: r.lat, lon: r.lon, name: r.name, address: r.address, source: "public", category: r.category, publicId: r.id });
+    st().set({ view: "map", poi: null });
+    getMap()?.flyTo({ center: [r.lon, r.lat], zoom: 18 });
+    return;
+  }
   const saved = r.kind === "saved" ? st().places.find((p) => p.id === r.id) : undefined;
   selectPoint({
     lat: r.lat,
@@ -262,7 +273,7 @@ function StyleChips() {
           className={base === "satellite" ? "is-on" : ""}
           aria-pressed={base === "satellite"}
           disabled={!config?.satellite}
-          title={config?.satellite ? "" : "Satellite needs a MapTiler key on the server"}
+          title={config?.satellite ? "" : "Satellite needs a MapTiler or Esri key on the server"}
           onClick={() => st().set({ base: "satellite" })}
         >
           <Satellite size={20} /> Satellite
@@ -357,6 +368,7 @@ function CategoryBar() {
     getMap()?.flyTo({ center: [p.longitude, p.latitude], zoom: 18 });
   };
   const items: Array<{ key: string; label: string; icon: React.ReactNode; run: () => void }> = [
+    { key: "add", label: "Add place", icon: <MapPinPlus size={24} />, run: () => startPublicPlace() },
     { key: "home", label: "Home", icon: <Home size={24} />, run: () => goTo("home") },
     { key: "work", label: "Work", icon: <Briefcase size={24} />, run: () => goTo("work") },
     { key: "delivery", label: "Delivery", icon: <Package size={24} />, run: () => st().set({ view: "delivery" }) },
@@ -398,7 +410,8 @@ function SidePanel() {
   const selected = useMaps((s) => s.selected);
   const editor = useMaps((s) => s.editor);
   const poi = useMaps((s) => s.poi);
-  if (editor) return <SmartAddressEditor />;
+  if (editor) return editor.purpose === "public" ? <PublicPlaceEditor /> : <SmartAddressEditor />;
+  if (view === "contributions") return <ContributionsPanel />;
   if (view === "navigation") return <DirectionsPanel />;
   if (view === "locations") return <LocationsPanel />;
   if (view === "saved") return <SavedPanel />;
@@ -410,9 +423,12 @@ function SidePanel() {
   return (
     <section className="fkm-card fkm-welcome">
       <h2>Explore Haiti, house by house</h2>
-      <p className="fkm-muted">Tap any building or spot on the map to see it, get directions, or save it as your Fockis Smart Address — no street name needed.</p>
+      <p className="fkm-muted">Tap any building or spot on the map to see it, get directions, or save it as your Fockis Smart Address — no street name needed. Know a shop, church or school that's missing? Add it for everyone.</p>
       <button type="button" className="fkm-btn fkm-btn--primary fkm-btn--block" onClick={() => startNewPlace()}>
         <Plus size={18} /> Pin my home
+      </button>
+      <button type="button" className="fkm-btn fkm-btn--outline fkm-btn--block" onClick={() => startPublicPlace()}>
+        <MapPinPlus size={18} /> Add a place to the map
       </button>
       <button type="button" className="fkm-btn fkm-btn--outline fkm-btn--block" onClick={() => st().set({ view: "navigation" })}>
         <Navigation size={18} /> Get directions
@@ -461,6 +477,24 @@ export default function MapsApp() {
     setParams(next, { replace: true });
   }, [params, config, placesLoaded, setParams]);
 
+  // /map?public=<id> (from a review notification): open that community place.
+  useEffect(() => {
+    const id = params.get("public");
+    if (!id || !config) return;
+    mapsApi
+      .publicPlace(id)
+      .then((p) => {
+        window.setTimeout(() => {
+          selectPoint({ lat: p.latitude, lon: p.longitude, name: p.name, source: "public", category: p.category, publicId: p.id, publicPlace: p });
+          getMap()?.flyTo({ center: [p.longitude, p.latitude], zoom: 18 });
+        }, 400);
+      })
+      .catch(() => st().set({ view: "contributions" }));
+    const next = new URLSearchParams(params);
+    next.delete("public");
+    setParams(next, { replace: true });
+  }, [params, config, setParams]);
+
   // Deep links: /map?to=lat,lon&label=…&mode=…  and  /map/p/:token (shared place)
   useEffect(() => {
     if (!config || handledLink.current) return;
@@ -492,6 +526,39 @@ export default function MapsApp() {
   }, [config, params, setParams, token]);
 
   const mobilePanel = editor || view !== "map" || selected || poi;
+
+  // Phones: the bottom sheet covers the lower part of the map. Tell the map,
+  // so the selected place, the pin being placed and routes stay in the part
+  // you can see.
+  const sideRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = sideRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    let last = -1;
+    const apply = () => {
+      const map = getMap();
+      if (!map) return;
+      const phone = window.matchMedia("(max-width: 860px)").matches;
+      const bottom = phone && el.classList.contains("has-content") ? Math.round(el.getBoundingClientRect().height) : 0;
+      const height = map.getContainer().clientHeight;
+      const capped = Math.min(bottom, Math.round(height * 0.7));
+      // The search bar and map-type chips cover the top of the map.
+      const top = capped && height - capped > 180 ? 96 : 0;
+      if (capped === last) return;
+      last = capped;
+      map.easeTo({ padding: { top, right: 0, left: 0, bottom: capped }, duration: 250 });
+    };
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    const mo = new MutationObserver(apply);
+    mo.observe(el, { attributes: true, attributeFilter: ["class"] });
+    window.addEventListener("resize", apply);
+    return () => {
+      ro.disconnect();
+      mo.disconnect();
+      window.removeEventListener("resize", apply);
+    };
+  }, [config, navActive]);
 
   return (
     <div className={`fkm-app view-${view} ${navActive ? "is-navigating" : ""} ${editor ? "is-editing" : ""}`}>
@@ -542,14 +609,15 @@ export default function MapsApp() {
         {!navActive && !editor && view === "map" && <CategoryBar />}
         {editor && (
           <div className="fkm-edithint" role="status">
-            <MapPin size={18} /> Tap the map or drag the pin to your door. Tap a building to select its outline.
+            <MapPin size={18} />{" "}
+            {editor.purpose === "public" ? "Tap the map or drag the pin to the entrance of the place." : "Tap the map or drag the pin to your door. Tap a building to select its outline."}
           </div>
         )}
         <NavigationHUD />
       </main>
 
       {!navActive && (
-        <aside className={`fkm-side ${mobilePanel ? "has-content" : ""} sheet-${sheet}`}>
+        <aside ref={sideRef} className={`fkm-side ${mobilePanel ? "has-content" : ""} sheet-${sheet}`}>
           <button
             type="button"
             className="fkm-sheet-handle"

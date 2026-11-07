@@ -1,13 +1,18 @@
 import {
+  BadRequestException,
+  Body,
   Controller,
   Get,
   Header,
+  HttpCode,
+  Post,
   Query,
   Req,
+  UnauthorizedException,
 } from '@nestjs/common';
 
 import { Request } from 'express';
-import { FeedService } from './feed.service';
+import { FeedService, MAX_SEEN_BATCH } from './feed.service';
 import { FeedDiscoveryService } from './feed-discovery.service';
 
 /**
@@ -40,6 +45,36 @@ export class FeedController {
     const user = request.user;
     const id = user?.userId ?? user?.id ?? user?._id ?? user?.sub;
     return id ? String(id) : undefined;
+  }
+
+  /**
+   * POST /feed/seen   { postIds: string[] }   (max 50 per request)
+   * Posts that stayed on the viewer's screen. The viewer is always the
+   * authenticated user, never a body field. Used to demote already-seen
+   * posts on the next ranking; repeated reports are no-ops.
+   */
+  @Post('seen')
+  @HttpCode(200)
+  async seen(@Req() request: Request, @Body() body: unknown) {
+    const viewerId = this.viewerOf(request as any);
+
+    if (!viewerId) {
+      throw new UnauthorizedException();
+    }
+
+    const raw = (body as { postIds?: unknown } | undefined)?.postIds;
+
+    if (
+      !Array.isArray(raw) ||
+      raw.length > MAX_SEEN_BATCH ||
+      raw.some((id) => typeof id !== 'string' || !/^[a-f0-9]{24}$/i.test(id))
+    ) {
+      throw new BadRequestException(
+        `postIds must be an array of at most ${MAX_SEEN_BATCH} post IDs`,
+      );
+    }
+
+    return this.feedService.markSeen(viewerId, raw as string[]);
   }
 
   /**

@@ -6,6 +6,7 @@ import AcademyToast from '../AcademyToast';
 import { ADMIN_NAV } from './adminNavConfig';
 import '../../../styles/academy.scss';
 import '../../../styles/academy-admin.scss';
+import '../../../styles/academy-market.scss';
 
 function currentPageTitle(pathname: string, search: string): string {
   const full = pathname + search;

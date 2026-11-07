@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 import FockisMark from "../../../components/fockis/FockisMark";
+import { SOCIALS, useSiteInfo } from "../../lib/siteInfo";
 const ACADEMY_LINKS = {
   about: "/academy/about",
   admissions: "/academy/admissions",
@@ -10,13 +11,20 @@ const ACADEMY_LINKS = {
   library: "/academy/library",
   calendar: "/academy/calendar",
   portal: "/academy/portal",
-  lms: "/academy/lms",
   studentLife: "/academy/student-life",
   career: "/academy/career",
   contact: "/academy/contact",
 };
 
+/**
+ * Academy footer. Name, tagline and social links come from
+ * Admin → Settings → Institution (useSiteInfo); unset items are hidden.
+ */
 export default function AcademyFooter() {
+  const { info } = useSiteInfo();
+  const name = info.name || "Fockis Academy";
+  const socials = SOCIALS.filter((x) => info[x.key]);
+
   return (
     <footer>
       <div className="wrap">
@@ -31,20 +39,21 @@ export default function AcademyFooter() {
               to="/academy"
             >
               <FockisMark size={30} className="academy-footer-mark" />
-              FOCKIS ACADEMY
+              {name.toUpperCase()}
             </Link>
 
-            <p
-              style={{
-                color: "#9BAAB8",
-                fontSize: 13.5,
-                maxWidth: 280,
-              }}
-            >
-              Career-focused education for a
-              technology-driven world. Learn.
-              Build. Connect. Succeed.
-            </p>
+            {info.tagline && (
+              <p
+                style={{
+                  color: "#9BAAB8",
+                  fontSize: 13.5,
+                  maxWidth: 280,
+                  whiteSpace: "pre-line",
+                }}
+              >
+                {info.tagline}
+              </p>
+            )}
           </div>
 
           <div>
@@ -170,8 +179,8 @@ export default function AcademyFooter() {
               </li>
 
               <li>
-                <Link to={ACADEMY_LINKS.lms}>
-                  Fockis Learn
+                <Link to={ACADEMY_LINKS.portal}>
+                  My Learning
                 </Link>
               </li>
 
@@ -200,50 +209,27 @@ export default function AcademyFooter() {
 
         <div className="footer-bottom">
           <span>
-            © {new Date().getFullYear()} Fockis
-            Academy. All rights reserved.
+            © {new Date().getFullYear()} {name}. All rights reserved.
           </span>
 
-          <div
-            className="socials"
-            aria-label="Social media"
-          >
-            <a
-              href="https://www.facebook.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Facebook"
+          {socials.length > 0 && (
+            <div
+              className="socials"
+              aria-label="Social media"
             >
-              FB
-            </a>
-
-            <a
-              href="https://www.instagram.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Instagram"
-            >
-              IG
-            </a>
-
-            <a
-              href="https://www.youtube.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="YouTube"
-            >
-              YT
-            </a>
-
-            <a
-              href="https://www.linkedin.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn"
-            >
-              IN
-            </a>
-          </div>
+              {socials.map((x) => (
+                <a
+                  key={x.key}
+                  href={info[x.key]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={x.label}
+                >
+                  {x.short}
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </footer>

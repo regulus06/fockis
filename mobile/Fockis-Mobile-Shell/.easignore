@@ -1,0 +1,10 @@
+.git/
+node_modules/
+.expo/
+.env
+eas-inspect/
+eas-inspect-fixed/
+eas-inspect-final/
+!assets/
+!assets/sounds/
+!assets/sounds/fockis_ringtone.wav

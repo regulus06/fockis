@@ -8,10 +8,15 @@ import { estimateFlightSeconds, flightSearchUrl, greatCircle, nearestAirports, a
 /* ============================================================================
    FOCKIS MAPS — PROVIDERS
    Map tiles & satellite:  MapTiler (MAPTILER_KEY, browser key restricted to
-                           your domains). Without it: OpenFreeMap (streets
-                           only, no satellite).
-   Search & addresses:     MapTiler Geocoding, or OSM Nominatim (fair-use,
+                           your domains). Without it: OpenFreeMap streets.
+                           Satellite without MapTiler: Esri World Imagery
+                           (ESRI_API_KEY, ArcGIS Location Platform; also used
+                           instead of MapTiler when MAP_SATELLITE=esri).
+   Search & addresses:     MapTiler Geocoding; without it Photon (search-as-
+                           you-type, PHOTON_URL), then OSM Nominatim (fair-use,
                            1 request/s, identify with NOMINATIM_EMAIL).
+                           Approved community places (map_public_places) and
+                           the user's own Smart Addresses come first.
    Routing:                Valhalla (VALHALLA_URL). Default is the public
                            FOSSGIS server — fine for testing, not production.
    Traffic (optional):     TomTom traffic-flow tiles, proxied (key stays
@@ -28,7 +33,7 @@ export interface LatLon {
 
 export interface PlaceResult {
   id: string;
-  kind: "saved" | "business" | "place";
+  kind: "saved" | "business" | "place" | "public";
   name: string;
   address: string;
   lat: number;
@@ -160,13 +165,28 @@ export class GeoService {
     return (this.env("VALHALLA_URL") || "https://valhalla1.openstreetmap.de").replace(/\/+$/, "");
   }
 
+  /** Esri World Imagery tiles (ArcGIS Location Platform key). Browser-visible: restrict the key by referrer. */
+  private esriImagery() {
+    const key = this.env("ESRI_API_KEY");
+    if (!key) return null;
+    const token = encodeURIComponent(key);
+    return {
+      tiles: [`https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?token=${token}`],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: "Esri, Maxar, Earthstar Geographics, and the GIS User Community",
+    };
+  }
+
   /** Public map configuration for the web and mobile apps. Contains only browser-safe values. */
   config() {
     const key = this.env("MAPTILER_KEY");
+    const esri = this.esriImagery();
+    const preferEsri = Boolean(esri) && (!key || this.env("MAP_SATELLITE").toLowerCase() === "esri");
     const styles = key
       ? {
           streets: `https://api.maptiler.com/maps/streets-v2/style.json?key=${key}`,
-          satellite: `https://api.maptiler.com/maps/hybrid/style.json?key=${key}`,
+          satellite: preferEsri ? null : `https://api.maptiler.com/maps/hybrid/style.json?key=${key}`,
           terrain: `https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=${key}`,
         }
       : {
@@ -174,19 +194,26 @@ export class GeoService {
           satellite: null,
           terrain: null,
         };
+    const attribution = [
+      key ? "© MapTiler © OpenStreetMap contributors" : "© OpenFreeMap © OpenMapTiles © OpenStreetMap contributors",
+      preferEsri && esri ? `Imagery: ${esri.attribution}` : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
     return {
       provider: key ? "maptiler" : "openfreemap",
       styles,
-      satellite: Boolean(key),
+      /** Raster satellite drawn under the street labels (Esri). Null when the satellite style above is used. */
+      satelliteRaster: preferEsri ? esri : null,
+      satelliteProvider: preferEsri ? "esri" : key ? "maptiler" : null,
+      satellite: Boolean(key) || Boolean(esri),
       terrain: Boolean(key),
       traffic: Boolean(this.env("TOMTOM_TRAFFIC_KEY")),
       streetView: Boolean(this.env("MAPILLARY_TOKEN")),
       routing: { provider: "valhalla", modes: ["driving", "motorcycle", "walking", "bicycle"], testServer: !this.env("VALHALLA_URL") },
-      geocoder: key ? "maptiler" : "nominatim",
+      geocoder: key ? "maptiler" : "photon",
       defaultCenter: { lat: 18.5944, lon: -72.3074, zoom: 13 },
-      attribution: key
-        ? "© MapTiler © OpenStreetMap contributors"
-        : "© OpenFreeMap © OpenMapTiles © OpenStreetMap contributors",
+      attribution,
     };
   }
 
@@ -232,8 +259,9 @@ export class GeoService {
     const cc = /^[a-z]{2}$/i.test(countryCode) ? countryCode.toLowerCase() : "ht";
 
     let providerError: unknown = null;
-    const [saved, businesses, inCountry] = await Promise.all([
+    const [saved, community, businesses, inCountry] = await Promise.all([
       this.searchSaved(userId, query),
+      this.searchPublicPlaces(query, cc),
       this.searchBusinesses(query),
       this.searchProvider(query, near, cc).catch((e) => {
         providerError = e;
@@ -263,11 +291,14 @@ export class GeoService {
       places = streets.map((p) => ({ ...p, approximate: true }));
     }
     // An outage must not look like "no results".
-    if (providerError && !saved.length && !businesses.length && !places.length) throw providerError;
-    const all = [...saved, ...businesses, ...places];
+    if (providerError && !saved.length && !community.length && !businesses.length && !places.length) throw providerError;
+    // The same place from the provider and from Fockis: keep the Fockis one.
+    const known = [...community, ...businesses];
+    places = places.filter((p) => !known.some((k) => k.name.toLowerCase() === p.name.toLowerCase() && haversineMeters(k, p) < 150));
+    const all = [...saved, ...community, ...businesses, ...places];
     if (near) {
       all.sort((a, b) => {
-        const rank = (p: PlaceResult) => (p.kind === "saved" ? 0 : p.kind === "business" ? 1 : 2);
+        const rank = (p: PlaceResult) => (p.kind === "saved" ? 0 : p.kind === "public" || p.kind === "business" ? 1 : 2);
         return rank(a) - rank(b) || haversineMeters(near, a) - haversineMeters(near, b);
       });
     }
@@ -292,6 +323,29 @@ export class GeoService {
       lat: r.location.coordinates[1],
       lon: r.location.coordinates[0],
       category: r.kind,
+      source: "fockis",
+    }));
+  }
+
+  /** Places people added to the map that a reviewer approved. */
+  private async searchPublicPlaces(query: string, cc: string): Promise<PlaceResult[]> {
+    const model = this.connection.models["PublicPlace"];
+    if (!model) return [];
+    const re = new RegExp(escapeRegex(query), "i");
+    const rows = (await model
+      .find({ status: "approved", countryCode: { $in: [cc.toUpperCase(), ""] }, $or: [{ name: re }, { addressText: re }, { neighborhood: re }] })
+      .limit(6)
+      .lean()
+      .exec()
+      .catch(() => [])) as any[];
+    return rows.map((r) => ({
+      id: String(r._id),
+      kind: "public" as const,
+      name: r.name,
+      address: [r.addressText, r.neighborhood, r.commune].filter(Boolean).join(", "),
+      lat: r.location.coordinates[1],
+      lon: r.location.coordinates[0],
+      category: r.category,
       source: "fockis",
     }));
   }
@@ -344,6 +398,17 @@ export class GeoService {
         source: "maptiler",
       }));
     } else {
+      // Photon is made for search-as-you-type ("boulan" → "Boulangerie …").
+      // Nominatim is the fallback (one request per second, full words only).
+      const photon = await this.searchPhoton(query, near, cc).catch((error) => {
+        this.logger.warn(`Photon search failed: ${String(error)}`);
+        return null;
+      });
+      // Nothing in the selected country from Photon: Nominatim filters by country more strictly.
+      if (photon && (photon.length || !cc)) {
+        this.searchCache.set(cacheKey, photon);
+        return photon;
+      }
       await this.nominatimTurn();
       const params = new URLSearchParams({ q: query, format: "jsonv2", limit: "8", addressdetails: "1", "accept-language": "fr,en" });
       if (cc) params.set("countrycodes", cc);
@@ -365,6 +430,54 @@ export class GeoService {
     }
     results = results.filter((r) => Number.isFinite(r.lat) && Number.isFinite(r.lon));
     this.searchCache.set(cacheKey, results);
+    return results;
+  }
+
+  /** Country centres for ranking Photon results when the map position isn't known. */
+  private static readonly COUNTRY_BIAS: Record<string, LatLon> = {
+    ht: { lat: 18.9, lon: -72.6 },
+    do: { lat: 18.8, lon: -70.2 },
+    us: { lat: 39.8, lon: -98.6 },
+    ca: { lat: 56.1, lon: -106.3 },
+    fr: { lat: 46.6, lon: 2.4 },
+  };
+
+  /**
+   * Photon (komoot, OpenStreetMap data). Returns null when it can't answer so
+   * the caller falls back to Nominatim. PHOTON_URL points at your own server.
+   */
+  private async searchPhoton(query: string, near: LatLon | undefined, cc: string | null): Promise<PlaceResult[] | null> {
+    const base = (this.env("PHOTON_URL") || "https://photon.komoot.io").replace(/\/+$/, "");
+    const bias = near ?? (cc ? GeoService.COUNTRY_BIAS[cc] : undefined);
+    const params = new URLSearchParams({ q: query, limit: cc ? "20" : "10" });
+    if (bias) {
+      params.set("lat", String(bias.lat));
+      params.set("lon", String(bias.lon));
+      if (near) params.set("zoom", "12");
+    }
+    const { status, body } = await this.fetchJson<any>(`${base}/api/?${params}`, {}, 6000);
+    if (status >= 400 || !Array.isArray(body?.features)) return null;
+    const results: PlaceResult[] = [];
+    for (const f of body.features as any[]) {
+      const p = f.properties ?? {};
+      const [lon, lat] = f.geometry?.coordinates ?? [];
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+      if (cc && String(p.countrycode ?? "").toLowerCase() !== cc) continue;
+      const street = [p.housenumber, p.street].filter(Boolean).join(" ");
+      const name = p.name || street || p.city || p.state || query;
+      const address = [p.name ? street : "", p.district || p.locality, p.city, p.state, p.country].filter((v, i, a) => v && a.indexOf(v) === i && v !== name).join(", ");
+      results.push({
+        id: `osm-${p.osm_type ?? "x"}-${p.osm_id ?? `${lat},${lon}`}`,
+        kind: "place",
+        name,
+        address,
+        lat,
+        lon,
+        category: p.osm_value || p.type,
+        source: "photon",
+      });
+      if (results.length >= 8) break;
+    }
     return results;
   }
 

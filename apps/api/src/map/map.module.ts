@@ -26,6 +26,9 @@ import { PlacesService } from "./places/places.service";
 import { MapsController } from "./places/maps.controller";
 import { AddressVerificationController } from "./places/address-verification.controller";
 import { AddressVerificationService } from "./places/address-verification.service";
+import { PublicPlacesAdminController, PublicPlacesController } from "./places/public-places.controller";
+import { PublicPlacesService } from "./places/public-places.service";
+import { PublicPlace, PublicPlaceSchema } from "./places/public-place.schema";
 import { NotificationsModule } from "../notifications/notifications.module";
 import {
   MapCounter,
@@ -51,6 +54,7 @@ import {
       { name: SavedLocation.name, schema: SavedLocationSchema },
       { name: MapCounter.name, schema: MapCounterSchema },
       { name: SavedRoute.name, schema: SavedRouteSchema },
+      { name: PublicPlace.name, schema: PublicPlaceSchema },
     ]),
   ],
 
@@ -58,6 +62,8 @@ import {
     MapController,
     MapsController,
     AddressVerificationController,
+    PublicPlacesController,
+    PublicPlacesAdminController,
   ],
 
   providers: [
@@ -67,6 +73,7 @@ import {
     GeoService,
     PlacesService,
     AddressVerificationService,
+    PublicPlacesService,
   ],
 
   exports: [

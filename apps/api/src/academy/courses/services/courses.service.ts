@@ -20,6 +20,7 @@ import {
 
 import {
   Enrollment,
+  ensureEnrollmentNumber,
 } from "../schemas/enrollment.schema";
 
 import {
@@ -64,6 +65,28 @@ export class CoursesService {
   async findAll() {
     return this.courseModel
       .find()
+      .populate(
+        "instructorId",
+        "name email role",
+      )
+      .sort({ code: 1 })
+      .lean()
+      .exec();
+  }
+
+  /**
+   * Public catalog: only courses whose visibility is "public".
+   * Courses created before visibility existed have no value and count as public.
+   */
+  async findCatalog() {
+    return this.courseModel
+      .find({
+        $or: [
+          { visibility: "public" },
+          { visibility: { $exists: false } },
+        ],
+        institutionBlocked: { $ne: true },
+      })
       .populate(
         "instructorId",
         "name email role",
@@ -153,6 +176,66 @@ export class CoursesService {
       await this.findByCode(code);
 
     return course.assignments ?? [];
+  }
+
+  /** Courses the given Academy user is enrolled in, newest enrollment first. */
+  async findStudentCourses(
+    userId: string,
+  ) {
+    if (!Types.ObjectId.isValid(userId)) {
+      return [];
+    }
+
+    const enrollmentDocs =
+      await this.enrollmentModel
+        .find({
+          studentId: new Types.ObjectId(userId),
+        })
+        .sort({ createdAt: -1 })
+        .exec();
+
+    if (!enrollmentDocs.length) {
+      return [];
+    }
+
+    // Older enrollments get their verification number on first read.
+    await Promise.all(
+      enrollmentDocs.map((doc) => ensureEnrollmentNumber(doc)),
+    );
+
+    const enrollments = enrollmentDocs.map((doc) => doc.toObject());
+
+    const courses =
+      await this.courseModel
+        .find({
+          code: {
+            $in: enrollments.map((e) => e.courseCode),
+          },
+        })
+        .populate("instructorId", "name email role")
+        .lean()
+        .exec();
+
+    const byCode = new Map(
+      courses.map((c) => [c.code, c]),
+    );
+
+    return enrollments
+      .filter((e) => byCode.has(e.courseCode))
+      .map((e) => {
+        const enrollment = e as typeof e & { createdAt?: Date };
+        return {
+          ...byCode.get(e.courseCode),
+          enrollmentId: String(e._id),
+          enrollmentNumber: e.enrollmentNumber,
+          studentId: String(e.studentId),
+          enrolledAt: enrollment.createdAt,
+          progress: e.progress ?? 0,
+          grade: e.grade,
+          enrollmentStatus:
+            (e.progress ?? 0) >= 100 ? "completed" : "active",
+        };
+      });
   }
 
   async findAllEnrollments() {
@@ -405,6 +488,20 @@ export class CoursesService {
     }
 
     if (
+      dto.visibility !== undefined
+    ) {
+      update.visibility =
+        dto.visibility;
+    }
+
+    if (
+      dto.enrollmentOpen !== undefined
+    ) {
+      update.enrollmentOpen =
+        dto.enrollmentOpen;
+    }
+
+    if (
       isPrivileged &&
       dto.instructorId !== undefined
     ) {
@@ -519,6 +616,14 @@ export class CoursesService {
       );
     }
 
+    // Creator Studio courses track progress per lesson (quizzes must be
+    // passed), so the legacy module checkbox cannot be used to skip them.
+    if (course.studio || (course.lessons ?? []).length) {
+      throw new BadRequestException(
+        "Progress for this course is tracked lesson by lesson in the classroom.",
+      );
+    }
+
     const moduleExists =
       (course.modules ?? []).some(
         (module: {
@@ -548,6 +653,12 @@ export class CoursesService {
             course.code,
         })
         .exec();
+
+    if (!enrollment && course.isFree === false) {
+      throw new ForbiddenException(
+        "This is a paid course. Purchase it to start learning.",
+      );
+    }
 
     if (!enrollment) {
       enrollment =

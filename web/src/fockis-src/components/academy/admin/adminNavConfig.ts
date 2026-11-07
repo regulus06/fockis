@@ -17,6 +17,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     label: 'Academy Management',
     items: [
+      { label: 'Schools & Organizations', href: '/academy/admin/institutions' },
       { label: 'Programs', href: '/academy/admin/programs' },
       { label: 'Courses', href: '/academy/admin/courses' },
       { label: 'Faculty', href: '/academy/admin/faculty' },

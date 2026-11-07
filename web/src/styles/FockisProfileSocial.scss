@@ -491,7 +491,10 @@ $scope: ".fk-profile-page-wrapper.fk-social-scope";
 
 @media (max-width: 767px) {
   #{$scope} {
-    padding: 12px 8px calc(96px + env(safe-area-inset-bottom));
+    /* Room for the status bar and the fixed settings button above the
+       cover, so neither covers the other. */
+    padding: calc(52px + env(safe-area-inset-top, 0px)) 8px
+      calc(96px + env(safe-area-inset-bottom));
   }
 
   #{$scope} .fk-profile-page__content {

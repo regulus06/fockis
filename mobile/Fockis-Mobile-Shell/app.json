@@ -1,3 +1,4 @@
+
 {
   "expo": {
     "name": "Fockis",
@@ -28,6 +29,7 @@
     },
     "android": {
       "package": "com.fockis.mobile",
+      "versionCode": 13,
       "usesCleartextTraffic": true,
       "permissions": [
         "android.permission.CAMERA",

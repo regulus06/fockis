@@ -1,31 +1,38 @@
 import { Link } from 'react-router-dom';
 import PageHero from '../../components/academy/PageHero';
+import { FeatureCard, SectionHead, StateLine, asItems } from '../../components/academy/market/FaBlocks';
 import { useContentSection } from '../../lib/useContentSection';
 
+/** /academy/online-learning — CMS section "learning-features". */
 export default function AcademyOnlineLearning() {
   const { items, loading, error } = useContentSection('learning-features');
+  const list = asItems(items);
 
   return (
-    <>
-      <PageHero crumb="Academics" title="Learn Anywhere. Build Your Future." subtitle="A complete online learning experience powered by Fockis Learn — our custom LMS." />
-      <section className="section">
-        <div className="wrap">
-          {loading && <p>Loading…</p>}
-          {!loading && error && <p>Couldn&apos;t load this section right now.</p>}
-          {!loading && !error && (
-            <div className="grid grid-4">
-              {items.map((i) => (
-                <div className="card" style={{ padding: 20 }} key={i._id ?? i.title}>
-                  <h3 style={{ fontSize: 14.5 }}>{i.title}</h3>
-                </div>
-              ))}
-            </div>
-          )}
-          <div style={{ textAlign: 'center', marginTop: 36 }}>
-            <Link className="btn btn-gold" to="/academy/lms">Explore Fockis Learn</Link>
+    <div className="fa-root fa-page">
+      <PageHero
+        crumb="Academics"
+        title="Learn Anywhere. Build Your Future."
+        subtitle="Courses, live classes, seminars and certificates — a complete online learning experience on Fockis Academy."
+        icon="monitor"
+        actions={
+          <>
+            <Link className="fa-btn fa-btn--primary" to="/academy/learn">Explore Courses</Link>
+            <Link className="fa-btn fa-btn--white" to="/academy/portal">My Learning</Link>
+          </>
+        }
+      />
+      <div className="fa-container fa-section">
+        <SectionHead eyebrow="Features" title="Everything you need to learn online" />
+        <StateLine loading={loading} error={!loading && error} empty={!loading && !error && list.length === 0} />
+        {!loading && !error && (
+          <div className="fa-fgrid fa-fgrid--4">
+            {list.map((c, i) => (
+              <FeatureCard key={c._id ?? c.title} index={i} title={c.title} text={c.description} />
+            ))}
           </div>
-        </div>
-      </section>
-    </>
+        )}
+      </div>
+    </div>
   );
 }

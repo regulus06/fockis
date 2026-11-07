@@ -1,6 +1,7 @@
 import {
   Injectable,
   Logger,
+  Optional,
 } from '@nestjs/common';
 
 import {
@@ -23,6 +24,7 @@ import { StoriesService } from '../stories/stories.service';
 import { BlockVisibilityService } from '../friends/services/block-visibility.service';
 import { EventsService } from '../events/services/events.service';
 import { parseEventIdList } from '../events/utils/event-recommendation';
+import { RedisService } from '../redis/redis.service';
 
 import {
   FeedEventSlot,
@@ -35,6 +37,9 @@ import {
   FeedMode,
   FeedSnapshotStore,
   MediaKind,
+  ServedHistoryStore,
+  ServedSession,
+  servedCounts,
   RankablePost,
   ViewerSignals,
   emptyViewerSignals,
@@ -438,6 +443,9 @@ export class FeedService {
   /** Products already served per (viewer, For You session). */
   private readonly servedProducts = new ServedEventsStore();
 
+  /** First posts of each viewer's recent sessions (refresh rotation). */
+  private readonly servedHistory = new ServedHistoryStore();
+
   constructor(
     @InjectModel(Post.name)
     private readonly postModel: Model<PostDocument>,
@@ -450,6 +458,14 @@ export class FeedService {
     private readonly blockVisibilityService: BlockVisibilityService,
 
     private readonly eventsService: EventsService,
+
+    /*
+     * Optional. Only used when FEED_HISTORY_REDIS=true, so several API
+     * instances share the served history. Every Redis call has a short
+     * timeout and falls back to the in-memory store.
+     */
+    @Optional()
+    private readonly redis?: RedisService,
   ) {}
 
   /* ==========================================================================
@@ -924,16 +940,50 @@ export class FeedService {
         this.loadFollowerCounts(authorIds),
       ]);
 
+      const historyKey = viewerId ?? (session ? `anon:${session}` : undefined);
+
+      /*
+       * Refresh rotation: posts that led this viewer's last sessions are
+       * demoted a little per session, so a new session (refresh) brings
+       * other eligible posts to the top. Only on a session's own first
+       * ranking; the session never counts against itself.
+       */
+      const recentlyServed =
+        historyKey && session
+          ? servedCountsFor(await this.loadServedHistory(historyKey), session)
+          : undefined;
+
       const ranked = rankFeed(
         rankable,
         signals,
         followerCounts,
         new Date(),
         FEED_RANKING_CONFIG,
-        { explorationSeed: this.explorationSeed(viewerId, session) },
+        {
+          explorationSeed: this.explorationSeed(viewerId, session),
+          recentlyServed,
+        },
       );
 
       const postIds = ranked.map((item) => item.post.id);
+
+      if (historyKey && session) {
+        await this.recordServedHistory(
+          historyKey,
+          session,
+          postIds.slice(0, this.servedHistory.topSize),
+        );
+      }
+
+      if (process.env.NODE_ENV !== 'production') {
+        this.logger.log(
+          `[feed] viewer=${viewerId ?? 'anonymous'} session=${
+            session ?? '-'
+          } page=${page} rotated=${recentlyServed?.size ?? 0} top=${postIds
+            .slice(0, 8)
+            .join(',')}`,
+        );
+      }
 
       const scores: Record<string, number> = {};
 
@@ -1054,6 +1104,103 @@ export class FeedService {
    * session gives a different mix. Without a session the seed changes
    * once per hour.
    */
+  private async loadServedHistory(viewerKey: string): Promise<ServedSession[]> {
+    const client = this.redisClient();
+
+    if (client) {
+      const raw = await withTimeout(
+        client.get(servedRedisKey(viewerKey)),
+        FEED_REDIS_TIMEOUT_MS,
+      ).catch(() => undefined);
+
+      if (typeof raw === 'string') {
+        try {
+          const parsed = JSON.parse(raw);
+
+          if (Array.isArray(parsed)) {
+            this.servedHistory.load(viewerKey, parsed as ServedSession[]);
+          }
+        } catch {
+          /* corrupt copy: memory store wins */
+        }
+      }
+    }
+
+    return this.servedHistory.sessions(viewerKey);
+  }
+
+  private async recordServedHistory(
+    viewerKey: string,
+    session: string,
+    ids: string[],
+  ) {
+    const sessions = this.servedHistory.record(viewerKey, session, ids);
+    const client = this.redisClient();
+
+    if (client) {
+      await withTimeout(
+        client.set(
+          servedRedisKey(viewerKey),
+          JSON.stringify(sessions),
+          'EX',
+          45 * 60,
+        ),
+        FEED_REDIS_TIMEOUT_MS,
+      ).catch(() => undefined);
+    }
+  }
+
+  /** Redis client only when opted in AND connected right now. */
+  private redisClient() {
+    if (process.env.FEED_HISTORY_REDIS !== 'true') {
+      return undefined;
+    }
+
+    const client = this.redis?.client;
+
+    return client && client.status === 'ready' ? client : undefined;
+  }
+
+  /* ==========================================================================
+     SEEN POSTS (POST /feed/seen)
+  ========================================================================== */
+
+  /**
+   * Record that the viewer actually saw these posts (the client reports
+   * posts that stayed on screen, in batches). One updateMany per batch:
+   * only posts not already in viewedBy are touched, so re-reporting is a
+   * no-op and views count each viewer once — the same rule as
+   * POST /posts/:id/view. Hidden/blocked rules still apply when ranking;
+   * marking a post seen never makes it visible.
+   */
+  async markSeen(viewerId: string, postIds: string[]) {
+    const ids = Array.from(
+      new Set(postIds.filter((id) => Types.ObjectId.isValid(id))),
+    ).slice(0, MAX_SEEN_BATCH);
+
+    if (!viewerId || !Types.ObjectId.isValid(viewerId) || ids.length === 0) {
+      return { recorded: 0 };
+    }
+
+    /* Post.viewedBy stores user IDs as strings (see post.schema.ts). */
+    const viewer = String(viewerId);
+
+    const result = await this.postModel
+      .updateMany(
+        {
+          _id: { $in: ids.map((id) => new Types.ObjectId(id)) },
+          viewedBy: { $ne: viewer },
+        },
+        {
+          $push: { viewedBy: viewer },
+          $inc: { views: 1 },
+        },
+      )
+      .exec();
+
+    return { recorded: result.modifiedCount ?? 0 };
+  }
+
   private explorationSeed(
     viewerId: string | undefined,
     session: string | undefined,
@@ -1650,4 +1797,38 @@ export class FeedService {
 
     return session;
   }
+}
+
+/* ============================================================================
+   SERVED HISTORY HELPERS
+============================================================================ */
+
+const FEED_REDIS_TIMEOUT_MS = 150;
+
+export const MAX_SEEN_BATCH = 50;
+
+function servedRedisKey(viewerKey: string) {
+  return `fockis:feed:served:${viewerKey}`;
+}
+
+function servedCountsFor(sessions: ServedSession[], session: string) {
+  const counts = servedCounts(sessions, session);
+  return counts.size ? counts : undefined;
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), ms);
+
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
 }

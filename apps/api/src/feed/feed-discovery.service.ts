@@ -52,7 +52,8 @@ export function hashtagsIn(text: unknown): string[] {
 export function rankHashtags(posts: Array<{ content?: unknown; createdAt?: unknown; media?: unknown; [k: string]: unknown }>, limit: number): TrendingTag[] {
   const byTag = new Map<string, { label: string; posts: number; last: number; thumb: string | null; thumbType: "image" | "video" | null; labels: Map<string, number> }>();
   for (const post of posts) {
-    const at = new Date(String(post.createdAt ?? 0)).getTime() || 0;
+    // Date instances keep milliseconds (String(date) would drop them).
+    const at = (post.createdAt instanceof Date ? post.createdAt : new Date(String(post.createdAt ?? 0))).getTime() || 0;
     const media = getRawMedia(post);
     const mediaType = media ? detectMediaType(media, post) : "none";
     for (const label of hashtagsIn(post.content)) {

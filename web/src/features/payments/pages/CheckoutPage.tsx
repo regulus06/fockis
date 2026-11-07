@@ -1,7 +1,4 @@
-import React, {
-  useMemo,
-  useState,
-} from "react";
+import React, { useMemo, useState } from "react";
 
 import {
   CardElement,
@@ -46,6 +43,26 @@ type BackendPaymentPurpose =
   | "subscription"
   | "other";
 
+/**
+ * Optional display details for the order summary.
+ * Purely presentational — nothing here is sent to the backend
+ * or used to calculate the amount.
+ */
+export interface CheckoutItemDetails {
+  /** Cover image / thumbnail URL. */
+  imageUrl?: string;
+  /** Short badge, e.g. "Seminar", "Course", "Workshop", "Order". */
+  typeLabel?: string;
+  /** Category, e.g. "Cybersecurity". */
+  category?: string;
+  /** Seller / instructor / organizer name. */
+  provider?: string;
+  /** Human-readable schedule, e.g. "Nov 12, 2026 · 6:00 PM EST". */
+  schedule?: string;
+  /** Extra label/value rows shown in the summary. */
+  details?: Array<{ label: string; value: string }>;
+}
+
 interface CheckoutPageProps {
   amount: number;
   currency?: string;
@@ -56,9 +73,10 @@ interface CheckoutPageProps {
   description?: string;
   metadata?: Record<string, string>;
 
-  onSuccess?: (
-    payment: ConfirmPaymentResponse,
-  ) => void;
+  /** Optional order-summary details (display only). */
+  item?: CheckoutItemDetails;
+
+  onSuccess?: (payment: ConfirmPaymentResponse) => void;
 
   onCancel?: () => void;
 }
@@ -133,10 +151,7 @@ const COUNTRY_CURRENCY_MAP: Record<string, string> = {
  * The backend ValidationPipe expects the exact
  * lowercase enum values.
  */
-const PAYMENT_PURPOSE_MAP: Record<
-  string,
-  BackendPaymentPurpose
-> = {
+const PAYMENT_PURPOSE_MAP: Record<string, BackendPaymentPurpose> = {
   FOCKIS_ID: "fockis_id",
   fockis_id: "fockis_id",
 
@@ -176,21 +191,31 @@ const PAYMENT_PURPOSE_MAP: Record<
   other: "other",
 };
 
+/** Friendly labels for the summary (display only). */
+const PURPOSE_LABELS: Record<BackendPaymentPurpose, string> = {
+  fockis_id: "Fockis ID",
+  marketplace_order: "Marketplace order",
+  coin_purchase: "Fockis Coins",
+  travel_booking: "Travel booking",
+  music: "Music",
+  event: "Event registration",
+  meeting: "Meeting",
+  church: "Organization",
+  advertising: "Advertising",
+  subscription: "Subscription",
+  other: "Payment",
+};
+
 /**
  * Converts whatever the frontend supplies into
  * the exact value expected by the NestJS backend.
  */
-function normalizePaymentPurpose(
-  purpose?: string,
-): BackendPaymentPurpose {
-  const value =
-    purpose?.trim() || "OTHER";
+function normalizePaymentPurpose(purpose?: string): BackendPaymentPurpose {
+  const value = purpose?.trim() || "OTHER";
 
   return (
     PAYMENT_PURPOSE_MAP[value] ??
-    PAYMENT_PURPOSE_MAP[
-      value.toUpperCase()
-    ] ??
+    PAYMENT_PURPOSE_MAP[value.toUpperCase()] ??
     "other"
   );
 }
@@ -199,12 +224,8 @@ function normalizePaymentPurpose(
    HELPERS
 ============================================================================ */
 
-function normalizeCurrency(
-  currency?: string,
-): string {
-  const value =
-    currency?.trim().toUpperCase() ||
-    "USD";
+function normalizeCurrency(currency?: string): string {
+  const value = currency?.trim().toUpperCase() || "USD";
 
   if (value.length !== 3) {
     return "USD";
@@ -213,12 +234,8 @@ function normalizeCurrency(
   return value;
 }
 
-function normalizeCountry(
-  country?: string,
-): string {
-  const value =
-    country?.trim().toUpperCase() ||
-    "US";
+function normalizeCountry(country?: string): string {
+  const value = country?.trim().toUpperCase() || "US";
 
   if (value.length !== 2) {
     return "US";
@@ -227,48 +244,54 @@ function normalizeCountry(
   return value;
 }
 
-function getCurrencyForCountry(
-  country: string,
-): string {
-  return (
-    COUNTRY_CURRENCY_MAP[country] ??
-    "USD"
-  );
+function getCurrencyForCountry(country: string): string {
+  return COUNTRY_CURRENCY_MAP[country] ?? "USD";
 }
 
-function formatMoney(
-  amount: number,
-  currency: string,
-): string {
+function formatMoney(amount: number, currency: string): string {
   try {
-    return new Intl.NumberFormat(
-      undefined,
-      {
-        style: "currency",
-        currency,
-      },
-    ).format(amount);
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+    }).format(amount);
   } catch {
     return `${currency} ${amount.toFixed(2)}`;
   }
 }
 
-function getErrorMessage(
-  error: unknown,
-): string {
-  const axiosError =
-    error as {
-      response?: {
-        data?: {
-          message?: string | string[];
-          error?: string;
-        };
-      };
-      message?: string;
-    };
+function getCountryName(code: string): string {
+  try {
+    const DisplayNames = (
+      Intl as unknown as {
+        DisplayNames?: new (
+          locales?: string | string[],
+          options?: { type: "region" },
+        ) => { of: (code: string) => string | undefined };
+      }
+    ).DisplayNames;
 
-  const backendMessage =
-    axiosError?.response?.data?.message;
+    if (DisplayNames) {
+      return new DisplayNames(undefined, { type: "region" }).of(code) ?? code;
+    }
+  } catch {
+    // Fall through.
+  }
+
+  return code;
+}
+
+function getErrorMessage(error: unknown): string {
+  const axiosError = error as {
+    response?: {
+      data?: {
+        message?: string | string[];
+        error?: string;
+      };
+    };
+    message?: string;
+  };
+
+  const backendMessage = axiosError?.response?.data?.message;
 
   if (Array.isArray(backendMessage)) {
     return backendMessage.join(", ");
@@ -278,8 +301,7 @@ function getErrorMessage(
     return String(backendMessage);
   }
 
-  const backendError =
-    axiosError?.response?.data?.error;
+  const backendError = axiosError?.response?.data?.error;
 
   if (backendError) {
     return backendError;
@@ -296,8 +318,7 @@ function createCheckoutId(): string {
   try {
     if (
       typeof crypto !== "undefined" &&
-      typeof crypto.randomUUID ===
-        "function"
+      typeof crypto.randomUUID === "function"
     ) {
       return crypto.randomUUID();
     }
@@ -305,18 +326,14 @@ function createCheckoutId(): string {
     // Fall through.
   }
 
-  return `${Date.now()}-${Math.random()
-    .toString(36)
-    .slice(2)}`;
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
 /* ============================================================================
    SUCCESS ROUTES
 ============================================================================ */
 
-function getSuccessPath(
-  backendPurpose: BackendPaymentPurpose,
-): string {
+function getSuccessPath(backendPurpose: BackendPaymentPurpose): string {
   switch (backendPurpose) {
     case "fockis_id":
       return "/settings/fockis-id";
@@ -355,6 +372,85 @@ function getSuccessPath(
 }
 
 /* ============================================================================
+   ICONS (inline SVG, stroke = currentColor)
+============================================================================ */
+
+type IconProps = { size?: number };
+
+const svgProps = (size = 18) => ({
+  width: size,
+  height: size,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  "aria-hidden": true,
+});
+
+const LockIcon = ({ size }: IconProps) => (
+  <svg {...svgProps(size)}>
+    <rect x="4" y="11" width="16" height="10" rx="2" />
+    <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+  </svg>
+);
+
+const ShieldIcon = ({ size }: IconProps) => (
+  <svg {...svgProps(size)}>
+    <path d="M12 3 4 6v6c0 4.5 3.4 8.4 8 9 4.6-.6 8-4.5 8-9V6l-8-3Z" />
+    <path d="m9 12 2 2 4-4" />
+  </svg>
+);
+
+const CardIcon = ({ size }: IconProps) => (
+  <svg {...svgProps(size)}>
+    <rect x="2.5" y="5" width="19" height="14" rx="2.5" />
+    <path d="M2.5 10h19M6.5 15h4" />
+  </svg>
+);
+
+const CheckIcon = ({ size }: IconProps) => (
+  <svg {...svgProps(size)}>
+    <path d="m5 12 4.5 4.5L19 7" />
+  </svg>
+);
+
+const AlertIcon = ({ size }: IconProps) => (
+  <svg {...svgProps(size)}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7.5v5.5M12 16.5h.01" />
+  </svg>
+);
+
+const ArrowLeftIcon = ({ size }: IconProps) => (
+  <svg {...svgProps(size)}>
+    <path d="M19 12H5M11 18l-6-6 6-6" />
+  </svg>
+);
+
+const UserIcon = ({ size }: IconProps) => (
+  <svg {...svgProps(size)}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21a8 8 0 0 1 16 0" />
+  </svg>
+);
+
+const CalendarIcon = ({ size }: IconProps) => (
+  <svg {...svgProps(size)}>
+    <rect x="3.5" y="5" width="17" height="16" rx="2" />
+    <path d="M3.5 10h17M8 3v4M16 3v4" />
+  </svg>
+);
+
+const ReceiptIcon = ({ size }: IconProps) => (
+  <svg {...svgProps(size)}>
+    <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" />
+    <path d="M9 8h6M9 12h6" />
+  </svg>
+);
+
+/* ============================================================================
    COMPONENT
 ============================================================================ */
 
@@ -365,9 +461,9 @@ export default function CheckoutPage({
   purpose = "OTHER",
   referenceId,
   title = "Secure Checkout",
-  description =
-    "Complete your payment securely with Stripe.",
+  description = "Complete your payment securely with Stripe.",
   metadata,
+  item,
   onSuccess,
   onCancel,
 }: CheckoutPageProps) {
@@ -376,172 +472,99 @@ export default function CheckoutPage({
 
   const navigate = useNavigate();
 
-  const [
-    isProcessing,
-    setIsProcessing,
-  ] = useState(false);
-
-  const [
-    errorMessage,
-    setErrorMessage,
-  ] = useState<string | null>(null);
-
-  const [
-    successMessage,
-    setSuccessMessage,
-  ] = useState<string | null>(null);
-
-  const [
-    cardComplete,
-    setCardComplete,
-  ] = useState(false);
-
-  const [
-    cardError,
-    setCardError,
-  ] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [cardComplete, setCardComplete] = useState(false);
+  const [cardError, setCardError] = useState<string | null>(null);
+  const [cardFocused, setCardFocused] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
 
   /* ==========================================================================
-     CHECKOUT ID
+     DERIVED VALUES
   ========================================================================== */
 
-  const checkoutId = useMemo(
-    () => createCheckoutId(),
-    [],
+  const checkoutId = useMemo(() => createCheckoutId(), []);
+
+  const resolvedCountry = useMemo(() => normalizeCountry(country), [country]);
+
+  const resolvedCurrency = useMemo(() => {
+    if (currency?.trim()) {
+      return normalizeCurrency(currency);
+    }
+
+    return getCurrencyForCountry(resolvedCountry);
+  }, [currency, resolvedCountry]);
+
+  const backendPurpose = useMemo(
+    () => normalizePaymentPurpose(purpose),
+    [purpose],
   );
 
-  /* ==========================================================================
-     COUNTRY
-  ========================================================================== */
+  const numericAmount = useMemo(() => {
+    const parsed = Number(amount);
 
-  const resolvedCountry =
-    useMemo(
-      () =>
-        normalizeCountry(country),
-      [country],
-    );
+    if (!Number.isFinite(parsed)) {
+      return 0;
+    }
 
-  /* ==========================================================================
-     CURRENCY
-  ========================================================================== */
+    return Number(parsed.toFixed(2));
+  }, [amount]);
 
-  const resolvedCurrency =
-    useMemo(() => {
-      if (currency?.trim()) {
-        return normalizeCurrency(
-          currency,
-        );
-      }
+  const formattedAmount = useMemo(
+    () => formatMoney(numericAmount, resolvedCurrency),
+    [numericAmount, resolvedCurrency],
+  );
 
-      return getCurrencyForCountry(
-        resolvedCountry,
-      );
-    }, [
-      currency,
-      resolvedCountry,
-    ]);
+  const countryName = useMemo(
+    () => getCountryName(resolvedCountry),
+    [resolvedCountry],
+  );
 
-  /* ==========================================================================
-     PAYMENT PURPOSE
-  ========================================================================== */
+  const typeLabel = item?.typeLabel?.trim() || PURPOSE_LABELS[backendPurpose];
 
-  const backendPurpose =
-    useMemo(
-      () =>
-        normalizePaymentPurpose(
-          purpose,
-        ),
-      [purpose],
-    );
-
-  /* ==========================================================================
-     AMOUNT
-  ========================================================================== */
-
-  const numericAmount =
-    useMemo(() => {
-      const parsed = Number(amount);
-
-      if (!Number.isFinite(parsed)) {
-        return 0;
-      }
-
-      return Number(
-        parsed.toFixed(2),
-      );
-    }, [amount]);
-
-  const formattedAmount =
-    useMemo(
-      () =>
-        formatMoney(
-          numericAmount,
-          resolvedCurrency,
-        ),
-      [
-        numericAmount,
-        resolvedCurrency,
-      ],
-    );
-
-  /* ==========================================================================
-     SUBMIT
-  ========================================================================== */
+  const isPaid = Boolean(successMessage);
 
   const canSubmit =
     Boolean(stripe) &&
     Boolean(elements) &&
     cardComplete &&
     !isProcessing &&
+    !isPaid &&
     numericAmount > 0;
 
   /* ==========================================================================
      CARD CHANGE
   ========================================================================== */
 
-  const handleCardChange = (
-    event: {
-      complete?: boolean;
-      error?: {
-        message?: string;
-      };
-    },
-  ) => {
-    const complete =
-      Boolean(event.complete);
-
-    const message =
-      event.error?.message ?? null;
+  const handleCardChange = (event: {
+    complete?: boolean;
+    error?: {
+      message?: string;
+    };
+  }) => {
+    const complete = Boolean(event.complete);
+    const message = event.error?.message ?? null;
 
     setCardComplete(complete);
     setCardError(message);
-
-    if (message) {
-      setErrorMessage(message);
-    } else {
-      setErrorMessage(null);
-    }
+    setErrorMessage(null);
   };
 
   /* ==========================================================================
      SUBMIT PAYMENT
+     (Flow unchanged: create -> Stripe confirm -> Fockis backend confirm)
   ========================================================================== */
 
-  const handleSubmit = async (
-    event: React.FormEvent<HTMLFormElement>,
-  ) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (isProcessing) {
+    if (isProcessing || isPaid) {
       return;
     }
 
     setErrorMessage(null);
     setSuccessMessage(null);
-
-    /* ------------------------------------------------------------------------
-       STRIPE CHECK
-    ------------------------------------------------------------------------ */
 
     if (!stripe) {
       setErrorMessage(
@@ -558,164 +581,91 @@ export default function CheckoutPage({
     }
 
     if (numericAmount <= 0) {
-      setErrorMessage(
-        "The payment amount is invalid.",
-      );
+      setErrorMessage("The payment amount is invalid.");
       return;
     }
 
     if (!cardComplete) {
-      setErrorMessage(
-        "Please enter your complete card information.",
-      );
+      setErrorMessage("Please enter your complete card information.");
       return;
     }
 
-    const card =
-      elements.getElement(
-        CardElement,
-      );
+    const card = elements.getElement(CardElement);
 
     if (!card) {
-      setErrorMessage(
-        "Unable to load the secure card field.",
-      );
+      setErrorMessage("Unable to load the secure card field.");
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      /* ======================================================================
-         STEP 1 — CREATE PAYMENT
-      ====================================================================== */
+      /* STEP 1 — CREATE PAYMENT */
 
-      const safeReferenceId =
-        referenceId?.trim() ||
-        `checkout-${checkoutId}`;
+      const safeReferenceId = referenceId?.trim() || `checkout-${checkoutId}`;
 
-      /*
-       * IMPORTANT:
-       *
-       * Send the backend enum value, NOT the
-       * frontend value.
-       *
-       * Example:
-       *
-       * FOCKIS_ID
-       *
-       * becomes:
-       *
-       * fockis_id
-       */
-      const idempotencyKey =
-        `fockis:${backendPurpose}:${safeReferenceId}:${checkoutId}`;
+      const idempotencyKey = `fockis:${backendPurpose}:${safeReferenceId}:${checkoutId}`;
 
-      console.log(
-        "[Fockis Checkout] Creating payment:",
+      console.log("[Fockis Checkout] Creating payment:", {
+        purpose: backendPurpose,
+        referenceId: safeReferenceId,
+        amount: numericAmount,
+        currency: resolvedCurrency,
+        country: resolvedCountry,
+      });
+
+      const createResponse = await api.post<CreatePaymentResponse>(
+        "/payments/create",
         {
           purpose: backendPurpose,
-          referenceId:
-            safeReferenceId,
-          amount: numericAmount,
-          currency:
-            resolvedCurrency,
-          country:
-            resolvedCountry,
+          referenceId: safeReferenceId,
+          baseAmount: numericAmount,
+          baseCurrency: resolvedCurrency,
+          country: resolvedCountry,
+          idempotencyKey,
+          metadata: {
+            ...(metadata ?? {}),
+            source: metadata?.source ?? "fockis-web-checkout",
+            checkoutId,
+            checkoutVersion: "3",
+            frontendPurpose: String(purpose),
+            backendPurpose,
+          },
         },
       );
 
-      const createResponse =
-        await api.post<CreatePaymentResponse>(
-          "/payments/create",
-          {
-            purpose:
-              backendPurpose,
+      const payment = createResponse.data;
 
-            referenceId:
-              safeReferenceId,
-
-            baseAmount:
-              numericAmount,
-
-            baseCurrency:
-              resolvedCurrency,
-
-            country:
-              resolvedCountry,
-
-            idempotencyKey,
-
-            metadata: {
-              ...(metadata ?? {}),
-
-              source:
-                metadata?.source ??
-                "fockis-web-checkout",
-
-              checkoutId,
-
-              checkoutVersion:
-                "3",
-
-              frontendPurpose:
-                String(purpose),
-
-              backendPurpose:
-                backendPurpose,
-            },
-          },
-        );
-
-      const payment =
-        createResponse.data;
-
-      if (
-        !payment ||
-        !payment.clientSecret
-      ) {
-        throw new Error(
-          "Fockis did not return a Stripe client secret.",
-        );
+      if (!payment || !payment.clientSecret) {
+        throw new Error("Fockis did not return a Stripe client secret.");
       }
 
-      /* ======================================================================
-         STEP 2 — STRIPE CONFIRMATION
-      ====================================================================== */
+      /* STEP 2 — STRIPE CONFIRMATION */
 
-      const stripeResult =
-        await stripe.confirmCardPayment(
-          payment.clientSecret,
-          {
-            payment_method: {
-              card,
-            },
+      const stripeResult = await stripe.confirmCardPayment(
+        payment.clientSecret,
+        {
+          payment_method: {
+            card,
           },
-        );
+        },
+      );
 
       if (stripeResult.error) {
         throw new Error(
-          stripeResult.error.message ||
-          "Stripe could not process the payment.",
+          stripeResult.error.message || "Stripe could not process the payment.",
         );
       }
 
-      const paymentIntent =
-        stripeResult.paymentIntent;
+      const paymentIntent = stripeResult.paymentIntent;
 
       if (!paymentIntent) {
-        throw new Error(
-          "Stripe did not return a payment intent.",
-        );
+        throw new Error("Stripe did not return a payment intent.");
       }
 
-      /* ======================================================================
-         STEP 3 — STRIPE STATUS
-      ====================================================================== */
+      /* STEP 3 — STRIPE STATUS */
 
-      switch (
-        paymentIntent.status
-      ) {
+      switch (paymentIntent.status) {
         case "succeeded":
           break;
 
@@ -725,9 +675,7 @@ export default function CheckoutPage({
           );
 
         case "requires_action":
-          throw new Error(
-            "Additional payment authentication is required.",
-          );
+          throw new Error("Additional payment authentication is required.");
 
         case "requires_payment_method":
           throw new Error(
@@ -735,9 +683,7 @@ export default function CheckoutPage({
           );
 
         case "canceled":
-          throw new Error(
-            "This payment was canceled.",
-          );
+          throw new Error("This payment was canceled.");
 
         default:
           throw new Error(
@@ -745,103 +691,52 @@ export default function CheckoutPage({
           );
       }
 
-      /* ======================================================================
-         STEP 4 — FOCKIS CONFIRMATION
-      ========================================================================== */
+      /* STEP 4 — FOCKIS BACKEND CONFIRMATION */
 
-      const confirmResponse =
-        await api.post<ConfirmPaymentResponse>(
-          "/payments/confirm",
-          {
-            paymentIntentId:
-              paymentIntent.id,
-          },
-        );
+      const confirmResponse = await api.post<ConfirmPaymentResponse>(
+        "/payments/confirm",
+        {
+          paymentIntentId: paymentIntent.id,
+        },
+      );
 
-      const confirmedPayment =
-        confirmResponse.data;
+      const confirmedPayment = confirmResponse.data;
 
-      if (
-        confirmedPayment?.success ===
-        false
-      ) {
-        throw new Error(
-          "Fockis could not confirm the payment.",
-        );
+      if (confirmedPayment?.success === false) {
+        throw new Error("Fockis could not confirm the payment.");
       }
 
-      /* ======================================================================
-         STEP 5 — SUCCESS
-      ========================================================================== */
+      /* STEP 5 — SUCCESS */
 
-      setSuccessMessage(
-        "Payment completed successfully. Redirecting...",
-      );
-
+      setSuccessMessage("Payment completed successfully. Redirecting...");
       setErrorMessage(null);
 
-      onSuccess?.(
-        confirmedPayment,
-      );
+      onSuccess?.(confirmedPayment);
 
-      /* ======================================================================
-         STEP 6 — REDIRECT
-      ========================================================================== */
+      /* STEP 6 — REDIRECT */
 
-      const successPath =
-        getSuccessPath(
-          backendPurpose,
-        );
+      const successPath = getSuccessPath(backendPurpose);
 
-      await new Promise<void>(
-        (resolve) => {
-          window.setTimeout(
-            resolve,
-            1000,
-          );
+      await new Promise<void>((resolve) => {
+        window.setTimeout(resolve, 1000);
+      });
+
+      navigate(successPath, {
+        replace: true,
+        state: {
+          payment: confirmedPayment,
+          paymentIntentId: paymentIntent.id,
+          purpose: backendPurpose,
+          referenceId: safeReferenceId,
+          paymentSuccess: true,
+          activated: backendPurpose === "fockis_id",
         },
-      );
-
-      navigate(
-        successPath,
-        {
-          replace: true,
-
-          state: {
-            payment:
-              confirmedPayment,
-
-            paymentIntentId:
-              paymentIntent.id,
-
-            purpose:
-              backendPurpose,
-
-            referenceId:
-              safeReferenceId,
-
-            paymentSuccess:
-              true,
-
-            activated:
-              backendPurpose ===
-              "fockis_id",
-          },
-        },
-      );
-    } catch (
-      error: unknown
-    ) {
-      console.error(
-        "[Fockis Checkout] Payment error:",
-        error,
-      );
+      });
+    } catch (error: unknown) {
+      console.error("[Fockis Checkout] Payment error:", error);
 
       setSuccessMessage(null);
-
-      setErrorMessage(
-        getErrorMessage(error),
-      );
+      setErrorMessage(getErrorMessage(error));
     } finally {
       setIsProcessing(false);
     }
@@ -861,345 +756,264 @@ export default function CheckoutPage({
       return;
     }
 
-    if (
-      backendPurpose ===
-      "fockis_id"
-    ) {
-      navigate(
-        "/settings/fockis-id",
-        {
-          replace: true,
-        },
-      );
-
+    if (backendPurpose === "fockis_id") {
+      navigate("/settings/fockis-id", { replace: true });
       return;
     }
 
-    navigate(
-      "/fockis-preview",
-      {
-        replace: true,
-      },
-    );
+    navigate("/fockis-preview", { replace: true });
   };
 
   /* ==========================================================================
      RENDER
   ========================================================================== */
 
+  const steps = [
+    { label: "Review", state: "done" as const },
+    { label: "Payment", state: isPaid ? ("done" as const) : ("active" as const) },
+    { label: "Confirmation", state: isPaid ? ("active" as const) : ("todo" as const) },
+  ];
+
+  const showImage = Boolean(item?.imageUrl) && !imageFailed;
+
   return (
     <div className="fockis-checkout">
-      <div className="fockis-checkout__container">
+      {/* ==================================================================
+          TOP BAR
+      ================================================================== */}
 
-        {/* ==================================================================
-            HEADER
-        ================================================================== */}
+      <div className="fockis-checkout__topbar">
+        <div className="fockis-checkout__topbar-inner">
+          <button
+            type="button"
+            className="fockis-checkout__back"
+            onClick={handleCancel}
+            disabled={isProcessing}
+          >
+            <ArrowLeftIcon size={16} />
+            <span>Back</span>
+          </button>
 
-        <header className="fockis-checkout__header">
-
-          <div>
-
-            <span className="fockis-checkout__eyebrow">
-              FOCKIS PAYMENTS
+          <div className="fockis-checkout__brand" aria-label="Fockis Payments">
+            <span className="fockis-checkout__brand-mark" aria-hidden="true">
+              F
             </span>
-
-            <h1>
-              {title}
-            </h1>
-
-            <p>
-              {description}
-            </p>
-
+            <span className="fockis-checkout__brand-text">
+              Fockis <em>Payments</em>
+            </span>
           </div>
 
           <div className="fockis-checkout__secure">
+            <LockIcon size={15} />
+            <span>Secure checkout</span>
+          </div>
+        </div>
+      </div>
 
-            <span className="fockis-checkout__secure-icon">
-              🔒
-            </span>
+      <div className="fockis-checkout__container">
+        {/* ==================================================================
+            HEADER + STEPPER
+        ================================================================== */}
 
-            <div>
-
-              <strong>
-                Secure payment
-              </strong>
-
-              <span>
-                Powered by Stripe
-              </span>
-
-            </div>
-
+        <header className="fockis-checkout__header">
+          <div className="fockis-checkout__heading">
+            <span className="fockis-checkout__eyebrow">Checkout</span>
+            <h1>{title}</h1>
+            <p>{description}</p>
           </div>
 
+          <ol className="fockis-checkout__stepper" aria-label="Checkout progress">
+            {steps.map((step, index) => (
+              <li
+                key={step.label}
+                className={`fockis-checkout__stepper-item is-${step.state}`}
+                aria-current={step.state === "active" ? "step" : undefined}
+              >
+                <span className="fockis-checkout__stepper-dot">
+                  {step.state === "done" ? <CheckIcon size={14} /> : index + 1}
+                </span>
+                <span className="fockis-checkout__stepper-label">
+                  {step.label}
+                </span>
+              </li>
+            ))}
+          </ol>
         </header>
 
         {/* ==================================================================
-            MAIN
+            MAIN GRID
         ================================================================== */}
 
         <div className="fockis-checkout__grid">
-
           {/* ================================================================
               PAYMENT
           ================================================================ */}
 
-          <section className="fockis-checkout__payment-card">
-
-            <div className="fockis-checkout__section-heading">
-
+          <section
+            className="fockis-checkout__panel fockis-checkout__payment-card"
+            aria-labelledby="fockis-checkout-payment-title"
+          >
+            <div className="fockis-checkout__panel-head">
+              <span className="fockis-checkout__panel-icon">
+                <CardIcon size={20} />
+              </span>
               <div>
-
-                <span className="fockis-checkout__step">
-                  01
-                </span>
-
-                <div>
-
-                  <h2>
-                    Payment method
-                  </h2>
-
-                  <p>
-                    Enter your card
-                    information below.
-                  </p>
-
-                </div>
-
+                <h2 id="fockis-checkout-payment-title">Payment method</h2>
+                <p>All transactions are secure and encrypted.</p>
               </div>
-
             </div>
 
             <form
-              className="fockis-checkout__form"
-              onSubmit={
-                handleSubmit
-              }
+              className={[
+                "fockis-checkout__form",
+                isProcessing ? "is-processing" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              onSubmit={handleSubmit}
+              noValidate
             >
+              {/* METHOD TILE (card is the only method the backend supports here) */}
 
-              {/* ==========================================================
-                  CARD
-              ========================================================== */}
+              <div className="fockis-checkout__method is-selected">
+                <span className="fockis-checkout__method-radio" aria-hidden="true">
+                  <span />
+                </span>
+
+                <div className="fockis-checkout__method-body">
+                  <strong>Credit or debit card</strong>
+                  <span>Processed securely by Stripe</span>
+                </div>
+
+                <div className="fockis-checkout__brands" aria-label="Accepted cards">
+                  <span className="is-visa">VISA</span>
+                  <span className="is-mc">Mastercard</span>
+                  <span className="is-amex">AMEX</span>
+                  <span className="is-disc">Discover</span>
+                </div>
+              </div>
+
+              {/* CARD FIELD */}
 
               <div className="fockis-checkout__card-field">
+                <div className="fockis-checkout__field-head">
+                  <label htmlFor="fockis-card-element">Card information</label>
 
-                <div
-                  style={{
-                    display:
-                      "flex",
-                    justifyContent:
-                      "space-between",
-                    alignItems:
-                      "center",
-                    gap: "12px",
-                    marginBottom:
-                      "8px",
-                  }}
-                >
-
-                  <label
-                    htmlFor="fockis-card-element"
-                  >
-                    Card information
-                  </label>
-
-                  {cardComplete &&
-                    !cardError && (
-                      <span
-                        style={{
-                          color:
-                            "#16a34a",
-                          fontSize:
-                            "13px",
-                          fontWeight:
-                            700,
-                        }}
-                      >
-                        ✓ Card ready
-                      </span>
-                    )}
-
+                  {cardComplete && !cardError && (
+                    <span className="fockis-checkout__card-ready">
+                      <CheckIcon size={14} />
+                      Card ready
+                    </span>
+                  )}
                 </div>
 
                 <div
                   id="fockis-card-element"
                   className={[
                     "fockis-checkout__stripe-element",
-                    cardError
-                      ? "is-invalid"
-                      : "",
-                    cardComplete
-                      ? "is-complete"
-                      : "",
+                    cardError ? "is-invalid" : "",
+                    cardComplete ? "is-complete" : "",
+                    cardFocused ? "is-focused" : "",
                   ]
-                    .filter(
-                      Boolean,
-                    )
+                    .filter(Boolean)
                     .join(" ")}
                 >
-
                   <CardElement
-                    onChange={
-                      handleCardChange
-                    }
+                    onChange={handleCardChange}
+                    onFocus={() => setCardFocused(true)}
+                    onBlur={() => setCardFocused(false)}
                     options={{
-                      hidePostalCode:
-                        false,
-
+                      hidePostalCode: false,
+                      disabled: isProcessing || isPaid,
                       style: {
                         base: {
-                          fontSize:
-                            "16px",
-
-                          color:
-                            "#111827",
-
+                          fontSize: "16px",
+                          color: "#0B1B3F",
                           fontFamily:
                             "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-
-                          lineHeight:
-                            "24px",
-
-                          fontSmoothing:
-                            "antialiased",
-
-                          "::placeholder":
-                            {
-                              color:
-                                "#9ca3af",
-                            },
+                          lineHeight: "24px",
+                          fontSmoothing: "antialiased",
+                          iconColor: "#1659F5",
+                          "::placeholder": {
+                            color: "#94A3B8",
+                          },
                         },
-
                         invalid: {
-                          color:
-                            "#dc2626",
+                          color: "#DC2626",
+                          iconColor: "#DC2626",
                         },
-
                         complete: {
-                          color:
-                            "#111827",
+                          color: "#0B1B3F",
                         },
                       },
                     }}
                   />
-
                 </div>
 
                 {cardError && (
-                  <div
-                    className="fockis-checkout__field-error"
-                    role="alert"
-                  >
-                    {cardError}
+                  <div className="fockis-checkout__field-error" role="alert">
+                    <AlertIcon size={15} />
+                    <span>{cardError}</span>
                   </div>
                 )}
-
               </div>
 
-              {/* ==========================================================
-                  SECURITY
-              ========================================================== */}
+              {/* SECURITY NOTE */}
 
               <div className="fockis-checkout__security">
-
-                <div className="fockis-checkout__security-icon">
-                  ✓
-                </div>
+                <span className="fockis-checkout__security-icon">
+                  <ShieldIcon size={20} />
+                </span>
 
                 <div>
-
-                  <strong>
-                    Your payment information
-                    is protected
-                  </strong>
-
+                  <strong>Your payment information is protected</strong>
                   <p>
-                    Your card details are
-                    securely processed by
-                    Stripe. Fockis does not
-                    store your complete card
-                    number.
+                    Card details are encrypted and processed by Stripe. Fockis
+                    never stores your full card number.
                   </p>
-
                 </div>
-
               </div>
 
-              {/* ==========================================================
-                  ERROR
-              ========================================================== */}
+              {/* ALERTS */}
 
               {errorMessage && (
                 <div
                   className="fockis-checkout__alert fockis-checkout__alert--error"
                   role="alert"
                 >
-
-                  <span>
-                    !
+                  <span className="fockis-checkout__alert-icon">
+                    <AlertIcon size={18} />
                   </span>
-
                   <div>
-
-                    <strong>
-                      Payment failed
-                    </strong>
-
-                    <p>
-                      {errorMessage}
-                    </p>
-
+                    <strong>Payment failed</strong>
+                    <p>{errorMessage}</p>
                   </div>
-
                 </div>
               )}
-
-              {/* ==========================================================
-                  SUCCESS
-              ========================================================== */}
 
               {successMessage && (
                 <div
                   className="fockis-checkout__alert fockis-checkout__alert--success"
                   role="status"
                 >
-
-                  <span>
-                    ✓
+                  <span className="fockis-checkout__alert-icon">
+                    <CheckIcon size={18} />
                   </span>
-
                   <div>
-
-                    <strong>
-                      Payment successful
-                    </strong>
-
-                    <p>
-                      {successMessage}
-                    </p>
-
+                    <strong>Payment successful</strong>
+                    <p>{successMessage}</p>
                   </div>
-
                 </div>
               )}
 
-              {/* ==========================================================
-                  ACTIONS
-              ========================================================== */}
+              {/* ACTIONS */}
 
               <div className="fockis-checkout__actions">
-
                 <button
                   type="button"
                   className="fockis-checkout__cancel"
-                  onClick={
-                    handleCancel
-                  }
-                  disabled={
-                    isProcessing
-                  }
+                  onClick={handleCancel}
+                  disabled={isProcessing}
                 >
                   Cancel
                 </button>
@@ -1207,180 +1021,153 @@ export default function CheckoutPage({
                 <button
                   type="submit"
                   className="fockis-checkout__submit"
-                  disabled={
-                    !canSubmit
-                  }
+                  disabled={!canSubmit}
                 >
-
                   {isProcessing ? (
                     <>
-                      <span className="fockis-checkout__spinner" />
-
-                      Processing
-                      payment...
+                      <span className="fockis-checkout__spinner" aria-hidden="true" />
+                      Processing payment...
+                    </>
+                  ) : isPaid ? (
+                    <>
+                      <CheckIcon size={18} />
+                      Paid
                     </>
                   ) : (
                     <>
-                      Pay{" "}
-                      {
-                        formattedAmount
-                      }
+                      <LockIcon size={16} />
+                      Pay {formattedAmount}
                     </>
                   )}
-
                 </button>
-
               </div>
 
+              <p className="fockis-checkout__terms">
+                By completing this payment you agree to the Fockis terms of
+                service and refund policy.
+              </p>
             </form>
-
           </section>
 
           {/* ================================================================
               ORDER SUMMARY
           ================================================================ */}
 
-          <aside className="fockis-checkout__summary">
-
-            <div className="fockis-checkout__summary-header">
-
-              <span className="fockis-checkout__step">
-                02
+          <aside
+            className="fockis-checkout__panel fockis-checkout__summary"
+            aria-labelledby="fockis-checkout-summary-title"
+          >
+            <div className="fockis-checkout__panel-head">
+              <span className="fockis-checkout__panel-icon">
+                <ReceiptIcon size={20} />
               </span>
-
               <div>
-
-                <h2>
-                  Order summary
-                </h2>
-
-                <p>
-                  Review your payment
-                  before continuing.
-                </p>
-
+                <h2 id="fockis-checkout-summary-title">Order summary</h2>
+                <p>Review your purchase before paying.</p>
               </div>
-
             </div>
 
-            <div className="fockis-checkout__summary-item">
-
-              <div>
-
-                <span>
-                  Service
-                </span>
-
-                <strong>
-                  {title}
-                </strong>
-
+            <div className="fockis-checkout__product">
+              <div className="fockis-checkout__product-media">
+                {showImage ? (
+                  <img
+                    src={item?.imageUrl}
+                    alt=""
+                    loading="lazy"
+                    onError={() => setImageFailed(true)}
+                  />
+                ) : (
+                  <span className="fockis-checkout__product-fallback" aria-hidden="true">
+                    F
+                  </span>
+                )}
               </div>
 
-              <strong>
-                {formattedAmount}
-              </strong>
+              <div className="fockis-checkout__product-body">
+                <div className="fockis-checkout__product-tags">
+                  <span className="fockis-checkout__tag">{typeLabel}</span>
+                  {item?.category && (
+                    <span className="fockis-checkout__tag fockis-checkout__tag--muted">
+                      {item.category}
+                    </span>
+                  )}
+                </div>
 
+                <strong className="fockis-checkout__product-title">{title}</strong>
+
+                {item?.provider && (
+                  <span className="fockis-checkout__product-line">
+                    <UserIcon size={14} />
+                    {item.provider}
+                  </span>
+                )}
+
+                {item?.schedule && (
+                  <span className="fockis-checkout__product-line">
+                    <CalendarIcon size={14} />
+                    {item.schedule}
+                  </span>
+                )}
+              </div>
             </div>
 
-            <div className="fockis-checkout__summary-meta">
-
+            <dl className="fockis-checkout__summary-meta">
               <div>
-
-                <span>
-                  Payment type
-                </span>
-
-                <strong>
-                  {backendPurpose}
-                </strong>
-
+                <dt>Payment type</dt>
+                <dd>{PURPOSE_LABELS[backendPurpose]}</dd>
               </div>
 
               <div>
-
-                <span>
-                  Country
-                </span>
-
-                <strong>
-                  {resolvedCountry}
-                </strong>
-
+                <dt>Billing country</dt>
+                <dd>{countryName}</dd>
               </div>
 
               <div>
-
-                <span>
-                  Currency
-                </span>
-
-                <strong>
-                  {resolvedCurrency}
-                </strong>
-
+                <dt>Currency</dt>
+                <dd>{resolvedCurrency}</dd>
               </div>
 
+              {item?.details?.map((row) => (
+                <div key={row.label}>
+                  <dt>{row.label}</dt>
+                  <dd>{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+
+            <div className="fockis-checkout__subtotal">
+              <span>Subtotal</span>
+              <span>{formattedAmount}</span>
             </div>
 
             <div className="fockis-checkout__total">
+              <span>Total</span>
+              <strong>{formattedAmount}</strong>
+            </div>
 
+            <ul className="fockis-checkout__guarantees">
+              <li>
+                <CheckIcon size={15} />
+                Secure Stripe checkout
+              </li>
+              <li>
+                <CheckIcon size={15} />
+                Payment verified by Fockis before access is granted
+              </li>
+              <li>
+                <CheckIcon size={15} />
+                Receipt saved to your payment history
+              </li>
+            </ul>
+
+            <div className="fockis-checkout__powered">
+              <LockIcon size={13} />
               <span>
-                Total
+                Powered by <strong>Stripe</strong>
               </span>
-
-              <strong>
-                {formattedAmount}
-              </strong>
-
             </div>
-
-            <div className="fockis-checkout__guarantees">
-
-              <div>
-
-                <span>
-                  ✓
-                </span>
-
-                <p>
-                  Secure Stripe checkout
-                </p>
-
-              </div>
-
-              <div>
-
-                <span>
-                  ✓
-                </span>
-
-                <p>
-                  Payment confirmation
-                  from Fockis
-                </p>
-
-              </div>
-
-              <div>
-
-                <span>
-                  ✓
-                </span>
-
-                <p>
-                  Your card details are
-                  protected
-                </p>
-
-              </div>
-
-            </div>
-
           </aside>
-
         </div>
-
       </div>
     </div>
   );

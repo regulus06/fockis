@@ -95,7 +95,8 @@ describe("GeoService routing", () => {
       text: async () => JSON.stringify(String(url).includes("countrycodes=ht") ? [] : [springfield]),
     })) as any;
     const results = await new GeoService({ models: {} } as any).search("u1", "springfield, Ohio", { lat: 18.59, lon: -72.3 }, "ht");
-    const urls = (global.fetch as jest.Mock).mock.calls.map((c) => String(c[0]));
+    // Photon answers first; this mock speaks Nominatim, so Nominatim is the fallback.
+    const urls = (global.fetch as jest.Mock).mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/search?"));
     expect(urls[0]).toContain("countrycodes=ht");
     expect(urls[1]).not.toContain("countrycodes");
     expect(results[0]).toMatchObject({ name: "Springfield", lat: 39.92, lon: -83.81 });
@@ -110,6 +111,29 @@ describe("GeoService routing", () => {
     const results = await new GeoService({ models: {} } as any).search("u1", "807 Riggsby Road, Georgia", undefined, "us");
     expect(results[0]).toMatchObject({ name: "Riggsby Road", approximate: true });
   }, 10_000);
+
+  it("uses Photon for search-as-you-type and keeps results in the selected country", async () => {
+    const feature = (name: string, countrycode: string, lon: number, lat: number) => ({
+      geometry: { coordinates: [lon, lat] },
+      properties: { name, countrycode, osm_type: "N", osm_id: name.length, city: "Pétion-Ville", country: "Haïti", osm_value: "bakery" },
+    });
+    global.fetch = jest.fn(async () => ({
+      status: 200,
+      text: async () => JSON.stringify({ features: [feature("Boulangerie Paris", "FR", 2.35, 48.85), feature("Boulangerie Kenscoff", "HT", -72.28, 18.51)] }),
+    })) as any;
+    const results = await new GeoService({ models: {} } as any).search("u1", "boulan", undefined, "ht");
+    expect(String((global.fetch as jest.Mock).mock.calls[0][0])).toContain("photon");
+    expect(results.map((r) => r.name)).toEqual(["Boulangerie Kenscoff"]);
+  });
+
+  it("offers satellite with an Esri key and no MapTiler key", () => {
+    process.env.ESRI_API_KEY = "esri-public";
+    const cfg = geo.config();
+    expect(cfg.satellite).toBe(true);
+    expect(cfg.satelliteRaster?.tiles[0]).toContain("World_Imagery");
+    delete process.env.ESRI_API_KEY;
+    expect(geo.config().satelliteRaster).toBeNull();
+  });
 
   it("reports a provider outage instead of 'no results'", async () => {
     global.fetch = jest.fn(async () => ({ status: 503, text: async () => "" })) as any;

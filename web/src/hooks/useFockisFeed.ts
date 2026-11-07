@@ -15,6 +15,7 @@ import {
   uniqueById,
 } from "./feedScrollPolicy";
 import { storyApi } from "../api/storyApi";
+import { useSeenPostsTracker } from "./useSeenPostsTracker";
 import {
   excludeList,
   placeFeedEvents,
@@ -491,6 +492,33 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
   );
 
   /* ==========================================================================
+     SEEN POSTS (batched, see useSeenPostsTracker)
+  ========================================================================== */
+
+  const sendSeen = useCallback(
+    async (postIds: string[], { keepalive }: { keepalive: boolean }) => {
+      if (!getAccessToken() || postIds.length === 0) {
+        return;
+      }
+
+      await authenticatedFetch(`${API_URL}/feed/seen`, {
+        method: "POST",
+        body: JSON.stringify({ postIds }),
+        keepalive,
+      });
+    },
+    [authenticatedFetch, getAccessToken],
+  );
+
+  const seenTracker = useSeenPostsTracker({
+    enabled: Boolean(getAccessToken()),
+    send: sendSeen,
+  });
+
+  const flushSeenRef = useRef(seenTracker.flush);
+  flushSeenRef.current = seenTracker.flush;
+
+  /* ==========================================================================
      LOAD SAVED POST IDS
   ========================================================================== */
 
@@ -821,6 +849,18 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
           return;
         }
 
+        if (import.meta.env.DEV) {
+          const ids = (Array.isArray(res?.feed) ? res.feed : [])
+            .map((item: any) => String(item?._id ?? item?.id ?? ""))
+            .slice(0, 10);
+          // eslint-disable-next-line no-console
+          console.debug(
+            `[feed] mode=${mode} session=${
+              isForYou ? sessionIdRef.current : "-"
+            } page=${pageRef.current} reason=${reason} ids=${ids.join(",")}`,
+          );
+        }
+
         if (Array.isArray(res?.products)) {
           setProducts((previous) => {
             const merged = new Map<string, Record<string, any>>();
@@ -1020,9 +1060,10 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
      NEW POSTS
      Checks the newest posts (Latest for For You, the same mode otherwise)
      and keeps only posts created after the newest one this feed already
-     knew about. Near the top they are inserted directly; further down
-     they wait behind the "new posts" pill so the reading position never
-     jumps. Existing posts are never reordered.
+     knew about. They always wait behind the "New posts available" pill
+     (only the viewer's own new post, insertNow, or an empty feed shows
+     them straight away), so the post being read never moves. Existing
+     posts are never reordered by a background check.
   ========================================================================== */
 
   const checkForNewPostsRef =
@@ -1101,13 +1142,11 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
           return 0;
         }
 
-        const nearTop =
-          typeof window === "undefined" ||
-          window.scrollY <= FEED_SCROLL_CONFIG.autoInsertScrollTop;
-
+        // Background checks never move what is on screen: new posts wait
+        // behind the pill. Only the viewer's own post (insertNow) or an
+        // empty feed shows them directly.
         if (
           options.insertNow ||
-          nearTop ||
           displayedIdsRef.current.size === 0
         ) {
           prependPosts(fresh);
@@ -1157,15 +1196,6 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
         isCheckingNewRef.current = false;
       }
     }, [mode, prependPosts]);
-
-  /** Shows posts waiting behind the "new posts" pill. */
-  const showPendingNewPosts = useCallback(() => {
-    if (pendingNewPosts.length > 0) {
-      prependPosts(pendingNewPosts);
-    }
-
-    setPendingNewPosts([]);
-  }, [pendingNewPosts, prependPosts]);
 
   /* ==========================================================================
      REFRESH FEED
@@ -1231,12 +1261,13 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
      resets pagination, dedupe and cycle state, and loads page 1.
   ========================================================================== */
 
-  useEffect(() => {
-    if (lastModeRef.current === mode) {
-      return;
-    }
-
-    lastModeRef.current = mode;
+  /**
+   * Back to a clean first page: cancels anything in flight (its response
+   * is ignored through feedGenerationRef), starts a NEW feed session,
+   * drops the cursor and every dedupe/cycle/pending structure, and clears
+   * the rendered posts. Used by the mode switch and by reloadFeed().
+   */
+  const resetFeedState = useCallback(() => {
     feedGenerationRef.current += 1;
     abortRef.current?.abort();
     abortRef.current = null;
@@ -1275,11 +1306,82 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
     setFeedStatus("idle");
     setFeedError(null);
     setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  useEffect(() => {
+    if (lastModeRef.current === mode) {
+      return;
+    }
+
+    lastModeRef.current = mode;
+    resetFeedState();
     window.scrollTo({ top: 0, behavior: "auto" });
 
     void loadNextPage("initial");
-  }, [mode, loadNextPage]);
+  }, [mode, loadNextPage, resetFeedState]);
+
+  /* ==========================================================================
+     MANUAL REFRESH (pull-to-refresh, tapping the active tab, Refresh button)
+     A real re-rank, not a re-render: reports what was just seen, then
+     starts a new session so the server ranks page 1 again with the
+     viewer's served/seen history (feed-ranking.ts, refresh rotation).
+     Never runs on its own while the viewer is scrolling; new posts that
+     arrive meanwhile still only show the "New posts" pill.
+  ========================================================================== */
+
+  const reloadingRef = useRef(false);
+
+  const reloadFeed = useCallback(async () => {
+    if (reloadingRef.current) {
+      return;
+    }
+
+    reloadingRef.current = true;
+
+    try {
+      await flushSeenRef.current();
+      resetFeedState();
+      window.scrollTo({ top: 0, behavior: "auto" });
+      void loadStories();
+      await loadNextPageRef.current("manual");
+    } finally {
+      reloadingRef.current = false;
+    }
+    // loadStories is stable for the life of the hook.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetFeedState]);
+
+  /*
+   * "New posts available" pill.
+   * For You: a full re-rank (new session, same as pull-to-refresh), then
+   * the posts that triggered the pill are pinned on top if the new
+   * ranking did not already place them on page 1, so the viewer always
+   * sees what they tapped for. Chronological modes: the waiting posts are
+   * simply put on top (that IS the updated order there, no refetch).
+   */
+  const showPendingNewPosts = useCallback(async () => {
+    const waiting = pendingNewPosts;
+
+    if (mode !== "for-you") {
+      if (waiting.length > 0) {
+        prependPosts(waiting);
+      }
+
+      setPendingNewPosts([]);
+      return;
+    }
+
+    await reloadFeed();
+
+    const missing = waiting.filter(
+      (post) => !displayedIdsRef.current.has(post.id),
+    );
+
+    if (missing.length > 0) {
+      prependPosts(missing);
+    }
+  }, [mode, pendingNewPosts, prependPosts, reloadFeed]);
 
   /* ==========================================================================
      INFINITE SCROLL SENTINEL
@@ -2796,6 +2898,9 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
     handleProductClick,
 
     refreshFeed,
+    reloadFeed,
+    // Callback ref for the element that contains the post cards.
+    seenRootRef: seenTracker.setRoot,
 
     feedEvents,
     dismissFeedEvent,

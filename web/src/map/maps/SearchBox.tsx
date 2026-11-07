@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { Briefcase, Building2, Crosshair, Home, Loader2, MapPin, Search, Star, X } from "lucide-react";
+import { Briefcase, Building2, Crosshair, Home, Loader2, MapPin, MapPinned, Search, Star, X } from "lucide-react";
 
 import { mapsApi, type PlaceResult } from "./mapsApi";
 import { getMap, useMaps } from "./mapsStore";
@@ -11,6 +11,7 @@ import { getMap, useMaps } from "./mapsStore";
 function iconFor(r: PlaceResult) {
   if (r.kind === "saved") return r.category === "home" ? <Home size={18} /> : r.category === "work" ? <Briefcase size={18} /> : <Star size={18} />;
   if (r.kind === "business") return <Building2 size={18} />;
+  if (r.kind === "public") return <MapPinned size={18} />;
   return <MapPin size={18} />;
 }
 
@@ -44,23 +45,29 @@ export default function SearchBox({
   const box = useRef<HTMLDivElement>(null);
   // Enter pressed before results arrived → take the first result when they do.
   const pickWhenReady = useRef(false);
+  // Only the latest request may show results (slow phone networks answer out of order).
+  const requestId = useRef(0);
+  const input = useRef<HTMLInputElement>(null);
   const listId = useId();
 
   useEffect(() => setQ(value ?? ""), [value]);
 
   useEffect(() => {
-    const onDoc = (e: MouseEvent) => {
+    // pointerdown also fires for taps on the map canvas on phones.
+    const onDoc = (e: PointerEvent) => {
       if (box.current && !box.current.contains(e.target as Node)) setOpen(false);
     };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
+    document.addEventListener("pointerdown", onDoc);
+    return () => document.removeEventListener("pointerdown", onDoc);
   }, []);
 
   useEffect(() => {
     const query = q.trim();
     if (!open || query.length < 2 || query === value) {
+      requestId.current++;
       setItems([]);
       setError("");
+      setLoading(false);
       return;
     }
     // "18.59, -72.30" → a pin at those coordinates.
@@ -72,9 +79,11 @@ export default function SearchBox({
     setLoading(true);
     const t = window.setTimeout(() => {
       const c = getMap()?.getCenter();
+      const id = ++requestId.current;
       mapsApi
         .search(query, c ? { lat: c.lat, lon: c.lng } : undefined, country.toLowerCase())
         .then((r) => {
+          if (id !== requestId.current) return;
           if (pickWhenReady.current && r.length) {
             pickWhenReady.current = false;
             pick(r[0]);
@@ -85,11 +94,14 @@ export default function SearchBox({
           setError(r.length ? "" : "No results. Check the spelling, add the city, or tap the map to drop a pin.");
         })
         .catch((e) => {
+          if (id !== requestId.current) return;
           pickWhenReady.current = false;
           setError(e instanceof Error ? e.message : "Search isn't available.");
         })
-        .finally(() => setLoading(false));
-    }, 300);
+        .finally(() => {
+          if (id === requestId.current) setLoading(false);
+        });
+    }, 380);
     return () => window.clearTimeout(t);
   }, [q, open, country, value]);
 
@@ -101,6 +113,7 @@ export default function SearchBox({
   const pick = (r: PlaceResult) => {
     setOpen(false);
     setQ(r.name);
+    input.current?.blur();
     onPick(r);
   };
 
@@ -108,6 +121,14 @@ export default function SearchBox({
     <div className={`fkm-search ${className}`} ref={box}>
       {leading ?? <Search size={20} className="fkm-search__icon" />}
       <input
+        ref={input}
+        type="search"
+        inputMode="search"
+        enterKeyHint="search"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
         value={q}
         onChange={(e) => {
           setQ(e.target.value);
@@ -147,6 +168,8 @@ export default function SearchBox({
           onClick={() => {
             setQ("");
             setItems([]);
+            setError("");
+            input.current?.focus();
           }}
           aria-label="Clear"
         >
