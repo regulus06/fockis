@@ -18,6 +18,7 @@ import {
 
 import { CreateApplicationDto } from "../dto/create-application.dto";
 import { CareerProfileService } from "./career-profile.service";
+import { EmployerAccessService } from "./employer-access.service";
 import { UpdateApplicationStatusDto } from "../dto/update-application-status.dto";
 
 import {
@@ -36,6 +37,10 @@ export class ApplicationsService {
 
     @Optional()
     private readonly careerProfiles?: CareerProfileService,
+
+    // Hidden jobs (taken down, employer paused) can't receive applications.
+    @Optional()
+    private readonly access?: EmployerAccessService,
   ) {}
 
   async findAllForUser(userId: string) {
@@ -79,6 +84,7 @@ export class ApplicationsService {
         _id: new Types.ObjectId(dto.jobId),
         isActive: true,
         isApproved: true,
+        ...(this.access ? await this.access.publicJobFilter() : { takenDown: { $ne: true } }),
       })
       .exec();
 

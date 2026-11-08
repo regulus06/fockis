@@ -42,6 +42,8 @@ export function EmployerRoutes() {
           <Route path="analytics" element={<Pages.EmployerAnalyticsPage />} />
           <Route path="resources" element={<Pages.EmployerResourcesPage />} />
           <Route path="billing" element={<Pages.EmployerBillingPage />} />
+          {/* Pay for a plan (prices set in the Admin Center) through the existing checkout. */}
+          <Route path="billing/pay" element={<Pages.EmployerPlanCheckoutPage />} />
           <Route path="settings" element={<Pages.EmployerSettingsPage />} />
 
           <Route path="*" element={<Pages.EmployerNotFoundPage />} />

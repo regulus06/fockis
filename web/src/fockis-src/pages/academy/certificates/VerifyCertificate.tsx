@@ -96,7 +96,9 @@ export default function VerifyCertificate() {
                     {d.kind === "enrollment"
                       ? `${d.recipientName} is enrolled in ${d.activityName}.`
                       : valid
-                        ? `Issued by Fockis Academy to ${d.recipientName}.`
+                        ? d.institutionName && d.institutionName !== "Fockis Academy"
+                          ? `Issued by ${d.institutionName} on Fockis Academy to ${d.recipientName}.`
+                          : `Issued by Fockis Academy to ${d.recipientName}.`
                         : `It was revoked${d.revokedAt ? ` on ${shortDate(d.revokedAt)}` : ""}${d.revokedReason ? ` — ${d.revokedReason}` : ""}. It is no longer valid.`}
                   </p>
                 </div>

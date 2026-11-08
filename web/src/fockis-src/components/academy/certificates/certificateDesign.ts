@@ -179,10 +179,10 @@ function landscape(o: {
   const sx = o.sigX ?? (o.align === "center" ? [280, 750] : [o.x + 110]);
   sx.forEach((x, i) => {
     els.push(
-      t({ kind: "signature", x: x - 90, y: 610, w: 180, h: 52, text: i === 0 ? "{{instructor_name}}" : "Fockis Academy", font: "script", size: 30, color: o.light ? "#ffffff" : o.text }),
+      t({ kind: "signature", x: x - 90, y: 610, w: 180, h: 52, text: i === 0 ? "{{instructor_name}}" : "{{institution_name}}", font: "script", size: 30, color: o.light ? "#ffffff" : o.text }),
       t({ kind: "line", x: x - 110, y: 672, w: 220, h: 1.5, color: o.light ? "#ffffff" : o.muted }),
       t({ kind: "text", label: i === 0 ? "Instructor" : "Institution", x, y: 696, text: i === 0 ? "{{instructor_name}}" : "{{institution_name}}", font: "sans", size: 15, color: o.light ? "#ffffff" : o.text, weight: 700, align: "center" }),
-      t({ kind: "text", label: i === 0 ? "Instructor role" : "Institution role", x, y: 716, text: i === 0 ? "Instructor" : "Academic Office", font: "sans", size: 12, color: o.light ? "#c7d3ee" : o.muted, weight: 400, align: "center" }),
+      t({ kind: "text", label: i === 0 ? "Instructor role" : "Institution role", x, y: 716, text: i === 0 ? "Instructor" : "Organizer", font: "sans", size: 12, color: o.light ? "#c7d3ee" : o.muted, weight: 400, align: "center" }),
     );
   });
   if (o.seal !== null) els.push(t({ kind: "seal", x: o.seal?.x ?? 900, y: o.seal?.y ?? 470, w: o.seal?.w ?? 150, color: o.accent }));
@@ -210,8 +210,10 @@ export const TEMPLATES: TemplateDef[] = [
     tag: "Verified side panel",
     make: () => {
       const c = { primary: "#0b2a6b", accent: "#c99a2e", background: "#ffffff", text: "#0f1b33", muted: "#5f6b85" };
-      const els = landscape({ x: 90, align: "left", title: "Certificate", titleFont: "elegant", titleSize: 74, subtitle: "of Completion", nameFont: "elegant", nameSize: 50, ...c, top: 100, seal: { x: 838, y: 160, w: 170 }, qr: { x: 868, y: 560, w: 110 }, sigX: [200], lead: "Presented to" });
+      const els = landscape({ x: 90, align: "left", title: "Certificate", titleFont: "elegant", titleSize: 74, subtitle: "of Completion", nameFont: "elegant", nameSize: 50, ...c, top: 100, seal: { x: 838, y: 160, w: 170 }, qr: { x: 868, y: 560, w: 110 }, sigX: [200, 470], lead: "Presented to" });
       els.push(t({ kind: "text", label: "Verify label", x: 923, y: 540, text: "Verify authenticity", font: "sans", size: 12, color: c.muted, weight: 700, align: "center", spacing: 3, upper: true }));
+      // Who offers the class (the business or school) — "Offered by Bell Bakery".
+      els.push(t({ kind: "text", label: "Offered by", x: 90, y: 524, text: "Offered by {{institution_name}}", font: "sans", size: 16, color: c.primary, weight: 700, align: "left" }));
       return design("signature", "signature", c, els);
     },
   },

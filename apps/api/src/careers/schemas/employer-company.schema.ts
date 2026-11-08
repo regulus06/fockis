@@ -6,6 +6,7 @@ import {
 
 import {
   HydratedDocument,
+  SchemaTypes,
   Types,
 } from "mongoose";
 
@@ -209,6 +210,68 @@ export class EmployerBillingState {
 
   @Prop({ type: [UpgradeRequest], default: [] })
   upgradeRequests!: UpgradeRequest[];
+
+  // ---------------------------------------------------------------- paid plans
+  // Prices and limits are set by Fockis admins (EmployerPlanSettings).
+
+  /** The plan is paid up to this moment (paid plans only). */
+  @Prop({ type: Date })
+  paidUntil?: Date;
+
+  /** Fockis admins gave this employer its plan without payment. */
+  @Prop({ type: Boolean, default: false })
+  exempt!: boolean;
+
+  @Prop({ type: String, trim: true, maxlength: 500 })
+  exemptReason?: string;
+
+  /** Prices quoted to the employer; a payment must match one of these. */
+  @Prop({ type: [SchemaTypes.Mixed], default: [] })
+  quotes!: EmployerPlanQuote[];
+
+  /** Payments, admin-recorded payments and plan changes. */
+  @Prop({ type: [SchemaTypes.Mixed], default: [] })
+  entries!: EmployerBillingEntry[];
+}
+
+export interface EmployerPlanQuote {
+  referenceId: string;
+  plan: string;
+  amount: number;
+  currency: string;
+  periodMonths: number;
+  createdAt: Date;
+}
+
+export interface EmployerBillingEntry {
+  method: "stripe" | "manual" | "plan_change" | "exempt" | "unexempt" | "cleared";
+  plan?: string;
+  amount?: number;
+  currency?: string;
+  from?: Date;
+  to?: Date;
+  paymentIntentId?: string;
+  paymentId?: string;
+  referenceId?: string;
+  note?: string;
+  byName?: string;
+  at: Date;
+}
+
+/** Fockis admin actions on an employer (approve, reject, block…). */
+@Schema({ _id: false })
+export class EmployerAdminAction {
+  @Prop({ type: String, required: true })
+  action!: string;
+
+  @Prop({ type: String, trim: true, maxlength: 2000 })
+  reason?: string;
+
+  @Prop({ type: String, trim: true, maxlength: 200 })
+  byName?: string;
+
+  @Prop({ type: Date, required: true })
+  at!: Date;
 }
 
 @Schema({
@@ -284,6 +347,21 @@ export class EmployerCompany {
 
   @Prop({ type: EmployerBillingState, default: () => ({}) })
   billing!: EmployerBillingState;
+
+  // ---------------------------------------------------------------- Fockis admin
+
+  /** Blocked by Fockis: can't post, and none of its jobs show on Careers. */
+  @Prop({ type: Boolean, default: false, index: true })
+  blocked!: boolean;
+
+  @Prop({ type: String, trim: true, maxlength: 2000 })
+  blockedReason?: string;
+
+  @Prop({ type: Date })
+  blockedAt?: Date;
+
+  @Prop({ type: [EmployerAdminAction], default: [] })
+  adminHistory!: EmployerAdminAction[];
 }
 
 export const EmployerCompanySchema =

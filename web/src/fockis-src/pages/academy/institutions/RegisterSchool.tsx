@@ -4,7 +4,8 @@ import { Icon } from "../../../components/academy/market/Icon";
 import { Progress } from "../../../components/academy/market/Shared";
 import { useAcademySession } from "../../../lib/academySession";
 import { mediaUrl, uploadStudioFile } from "../../../lib/studioApi";
-import { INSTITUTION_TYPE_LABEL, schoolsApi, type InstitutionDetails, type InstitutionType } from "../../../lib/institutionsApi";
+import { INSTITUTION_TYPE_LABEL, domainPeriodText, schoolsApi, type DomainPricingPublic, type InstitutionDetails, type InstitutionType } from "../../../lib/institutionsApi";
+import { formatPrice } from "../../../lib/studioApi";
 import { SignInGate } from "../AcademyPortal";
 
 const toSlug = (s: string) =>
@@ -192,6 +193,12 @@ export default function RegisterSchool() {
   const [v, setV] = useState<InstitutionDetails>(EMPTY_SCHOOL);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  // Domain price, set by Fockis admins in the Admin Center.
+  const [pricing, setPricing] = useState<DomainPricingPublic | null>(null);
+  useEffect(() => {
+    schoolsApi.domainPricing().then(setPricing).catch(() => setPricing(null));
+  }, []);
+  const price = pricing?.enabled ? Number(pricing.prices[v.type] ?? 0) : 0;
 
   if (session.status === "loading") return <div className="fa-root fa-page" />;
   if (session.status === "guest") return <SignInGate what="Register your school" />;
@@ -230,13 +237,39 @@ export default function RegisterSchool() {
             <li>
               <b>2</b> Fockis reviews &amp; approves
             </li>
+            {price > 0 && (
+              <li>
+                <b>3</b> Pay for your domain
+              </li>
+            )}
             <li>
-              <b>3</b> Add students &amp; publish classes
+              <b>{price > 0 ? 4 : 3}</b> Add students &amp; publish classes
             </li>
           </ol>
         </div>
         <form className="fa-card fa-pad" onSubmit={submit}>
           <SchoolForm value={v} onChange={setV} />
+          {pricing?.enabled && (
+            <div className={`fa-domainfee ${price > 0 ? "" : "is-free"}`}>
+              <Icon name="wallet" size={18} />
+              <div>
+                {price > 0 ? (
+                  <>
+                    <b>
+                      {INSTITUTION_TYPE_LABEL[v.type]} domain: {formatPrice(false, price, pricing.currency)} {domainPeriodText(pricing.periodMonths)}
+                    </b>
+                    <p>
+                      Nothing to pay now. You pay through the secure Fockis checkout after Fockis Academy approves your registration
+                      {pricing.periodMonths > 0 ? ", and renew from your school dashboard. Nothing is charged automatically." : "."}
+                    </p>
+                  </>
+                ) : (
+                  <b>The Fockis domain is free for a {INSTITUTION_TYPE_LABEL[v.type].toLowerCase()}.</b>
+                )}
+                {pricing.note && <p>{pricing.note}</p>}
+              </div>
+            </div>
+          )}
           {err && <p className="fa-error">{err}</p>}
           <div className="fa-st-new__foot">
             <Link className="fa-btn fa-btn--outline" to="/academy/school">

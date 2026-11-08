@@ -17,11 +17,12 @@ import { AcademyUser } from "../../auth/schemas/academy-user.schema";
 import { CertificateTemplate } from "../../certificates/schemas/certificate-template.schema";
 import { CertificatesService } from "../../certificates/services/certificates.service";
 import { LessonContent, LessonQuiz } from "../schemas/lesson-content.schema";
-import { SaveStudioCourseDto, StudioLessonDto } from "../dto/studio.dto";
+import { CreatorApplyDto, SaveStudioCourseDto, StudioLessonDto } from "../dto/studio.dto";
 import { AcademyInstitution } from "../../institutions/schemas/institution.schema";
 
 // Shared Fockis infrastructure — used read-only / through its public API, never modified.
 import { Payment } from "../../../payments/schemas/payment.schema";
+import { DomainBillingService } from "../../institutions/billing/domain-billing.service";
 import { CloudStorageService } from "../../../uploads/cloud-storage.service";
 
 export interface AcademyActor {
@@ -74,7 +75,100 @@ export class StudioService {
     @InjectModel(AcademyInstitution.name) private readonly instModel: Model<AcademyInstitution>,
     private readonly certificates: CertificatesService,
     private readonly storage: CloudStorageService,
+    private readonly billing: DomainBillingService,
   ) {}
+
+  // ======================================================================
+  // CREATOR — permission to teach (approved by Fockis)
+  // ======================================================================
+
+  /** Approved schools this person owns or works for. */
+  private async approvedSchoolIds(userId: string) {
+    if (!Types.ObjectId.isValid(userId)) return [] as string[];
+    const uid = new Types.ObjectId(userId);
+    const rows = await this.instModel.find({ status: "approved", $or: [{ ownerId: uid }, { "staff.userId": uid }] }, { _id: 1 }).lean().exec();
+    return rows.map((r) => String(r._id));
+  }
+
+  /**
+   * Who may teach: creators approved by Fockis, Academy staff/instructors, and
+   * owners/staff of an approved school (for that school's classes).
+   */
+  async creatorAccess(actor: AcademyActor) {
+    const user = await this.userModel
+      .findById(actor.userId, { creatorStatus: 1, creatorProfile: 1, creatorReason: 1, creatorAppliedAt: 1, creatorReviewedAt: 1, role: 1, name: 1, managed: 1 })
+      .lean()
+      .exec();
+    if (!user) throw new ForbiddenException("Sign in to your Academy account.");
+    const trusted = ["administrator", "staff", "instructor"].includes(String(user.role));
+    const status = trusted ? "approved" : (user.creatorStatus ?? "none");
+    const schools = await this.approvedSchoolIds(actor.userId);
+    return {
+      status,
+      trusted,
+      profile: user.creatorProfile ?? null,
+      reason: user.creatorReason ?? "",
+      appliedAt: user.creatorAppliedAt ?? null,
+      reviewedAt: user.creatorReviewedAt ?? null,
+      /** Can create classes under their own name / business. */
+      canTeach: status === "approved",
+      /** Can create classes offered by these approved schools even without creator approval. */
+      schoolIds: schools,
+      /** School student logins can't apply to teach. */
+      canApply: !user.managed && !trusted && status !== "approved" && status !== "pending" && status !== "suspended",
+    };
+  }
+
+  async applyAsCreator(dto: CreatorApplyDto, actor: AcademyActor) {
+    const user = await this.userModel.findById(actor.userId).exec();
+    if (!user || user.isActive === false) throw new ForbiddenException("Your Academy account is not active.");
+    if (user.managed) throw new ForbiddenException("School student logins can't apply to teach. Use your own Academy account.");
+    if (user.creatorStatus === "approved") throw new BadRequestException("You are already approved to teach.");
+    if (user.creatorStatus === "pending") throw new BadRequestException("Your application is already waiting for review.");
+    if (user.creatorStatus === "suspended") throw new ForbiddenException("Your teaching permission is suspended. Contact Fockis support.");
+    if (dto.kind === "business" && !dto.businessName?.trim()) throw new BadRequestException("Enter the business or organization name.");
+    const clean = (v?: string) => (v ?? "").trim() || undefined;
+    let website = clean(dto.website);
+    if (website && !/^https?:\/\//i.test(website)) website = `https://${website}`;
+    const now = new Date();
+    user.creatorProfile = {
+      kind: dto.kind,
+      displayName: dto.displayName.trim(),
+      businessName: dto.kind === "business" ? clean(dto.businessName) : undefined,
+      phone: clean(dto.phone),
+      country: clean(dto.country),
+      city: clean(dto.city),
+      website,
+      topics: clean(dto.topics),
+      about: dto.about.trim(),
+      experience: clean(dto.experience),
+      sampleUrl: clean(dto.sampleUrl),
+    };
+    user.creatorStatus = "pending";
+    user.creatorReason = undefined;
+    user.creatorAppliedAt = now;
+    user.creatorHistory = [...(user.creatorHistory ?? []), { action: "applied", byName: user.name, at: now }];
+    user.markModified("creatorProfile");
+    user.markModified("creatorHistory");
+    await user.save();
+    this.logger.log(`Creator application from ${actor.userId}`);
+    return this.creatorAccess(actor);
+  }
+
+  /** Throws unless this person may create/edit a class (offered by `institutionId` when given). */
+  private async assertCanTeach(actor: AcademyActor, institutionId?: string | Types.ObjectId | null) {
+    // A school's classes need its Fockis domain to be paid (price set by Fockis admins).
+    if (institutionId && (await this.billing.inactiveIds()).has(String(institutionId))) {
+      throw new ForbiddenException("This school's Fockis domain isn't paid. The school's owner can pay or renew it from the school dashboard.");
+    }
+    const a = await this.creatorAccess(actor);
+    if (a.canTeach) return;
+    if (institutionId && a.schoolIds.includes(String(institutionId))) return;
+    if (a.status === "suspended") throw new ForbiddenException(`Your teaching permission is suspended${a.reason ? `: ${a.reason}` : "."}`);
+    if (a.status === "pending") throw new ForbiddenException("Your creator application is waiting for Fockis review. You can create classes once it is approved.");
+    if (a.schoolIds.length) throw new ForbiddenException("Choose your school in “Offered by”. To teach under your own name, apply to become a creator.");
+    throw new ForbiddenException("Only creators approved by Fockis can publish classes. Apply in Creator Studio.");
+  }
 
   // ======================================================================
   // CREATOR — my offerings
@@ -130,6 +224,7 @@ export class StudioService {
   async create(dto: SaveStudioCourseDto, actor: AcademyActor) {
     const name = dto.name?.trim();
     if (!name) throw new BadRequestException("Give your class a title.");
+    await this.assertCanTeach(actor, dto.institutionId);
     const user = await this.userModel.findById(actor.userId, { name: 1, isActive: 1 }).lean().exec();
     if (!user || user.isActive === false) throw new ForbiddenException("Your Academy account is not active.");
 
@@ -187,6 +282,7 @@ export class StudioService {
 
   async update(code: string, dto: SaveStudioCourseDto, actor: AcademyActor) {
     const course = await this.ownedCourse(code, actor);
+    await this.assertCanTeach(actor, dto.clearInstitution ? null : (dto.institutionId ?? course.institutionId));
     await this.applyChanges(course, dto, actor);
     return this.getForEditor(course.code, actor);
   }
@@ -240,6 +336,8 @@ export class StudioService {
   async upload(file: Express.Multer.File, kind: string, actor: AcademyActor) {
     if (!file) throw new BadRequestException("No file received.");
     try {
+      const access = await this.creatorAccess(actor);
+      if (!access.canTeach && !access.schoolIds.length) throw new ForbiddenException("Only approved creators can upload class material.");
       const mime = (file.mimetype || "").toLowerCase();
       const allowed: Record<string, (m: string) => boolean> = {
         video: (m) => m.startsWith("video/"),
@@ -273,9 +371,17 @@ export class StudioService {
   /** Public course page; enrolled learners and the owner also get lesson content. */
   async coursePage(code: string, actor: AcademyActor | null) {
     const course = await this.findCourse(code);
-    const isOwner = !!actor && (String(course.instructorId) === actor.userId || STAFF.includes(actor.role));
-    if (course.visibility === "draft" && !isOwner) throw new NotFoundException("This class is not published yet.");
-    if (course.institutionBlocked && !isOwner) throw new NotFoundException("This class is not available.");
+    // Only the creator manages a class. Academy administrators/staff may look
+    // inside every class (to review it) but can't edit it here; moderation is
+    // done from the Fockis admin center.
+    const isOwner = !!actor && String(course.instructorId) === actor.userId;
+    const staffView = !!actor && !isOwner && STAFF.includes(actor.role);
+    const canSee = isOwner || staffView;
+    if (course.visibility === "draft" && !canSee) throw new NotFoundException("This class is not published yet.");
+    if (course.institutionBlocked && !canSee) throw new NotFoundException("This class is not available.");
+    if ((course.takenDown || course.creatorBlocked) && !canSee && !(actor && (await this.findEnrollment(course.code, actor.userId)))) {
+      throw new NotFoundException("This class is not available.");
+    }
     const school = course.institutionId
       ? await this.instModel.findById(course.institutionId, { name: 1, slug: 1, status: 1, teachers: 1 }).lean().exec()
       : null;
@@ -299,7 +405,7 @@ export class StudioService {
       this.userModel.findById(course.instructorId, { name: 1 }).lean().exec(),
     ]);
 
-    const unlocked = isOwner || !!enrollment;
+    const unlocked = canSee || !!enrollment;
     const lessons = [...(course.lessons ?? [])].sort((a, b) => a.order - b.order);
     const visibleKeys = lessons.filter((l) => unlocked || l.preview).map((l) => l.key);
     const contents = visibleKeys.length
@@ -308,10 +414,11 @@ export class StudioService {
     const byKey = new Map(contents.map((c) => [c.lessonKey, c]));
 
     const seatsLeft = course.capacity > 0 ? Math.max(0, course.capacity - learners) : null;
-    let canEnroll = !enrollment && !isOwner && course.enrollmentOpen !== false && seatsLeft !== 0 && (!memberOnly || isMember);
+    let canEnroll = !enrollment && !canSee && course.enrollmentOpen !== false && seatsLeft !== 0 && (!memberOnly || isMember);
     let reason: string | undefined;
     if (enrollment) reason = "enrolled";
     else if (isOwner) reason = "owner";
+    else if (staffView) reason = "Academy staff can review this class but not join it.";
     else if (memberOnly && !isMember) reason = `Only ${school?.name ?? "school"} students can join. Sign in with your school login.`;
     else if (course.enrollmentOpen === false) reason = "Enrollment is closed for this class.";
     else if (seatsLeft === 0) reason = "This class is full.";
@@ -320,7 +427,7 @@ export class StudioService {
 
     // Teacher contact & meeting room: only for enrolled students (and the class owner),
     // and only if the school allows students to contact this teacher.
-    const canSeeContact = !!t?.contactEnabled && (isOwner || !!enrollment);
+    const canSeeContact = !!t?.contactEnabled && (canSee || !!enrollment);
     const teacherContact = canSeeContact
       ? { email: t!.contactEmail, phone: t!.contactPhone, officeHours: t!.officeHours, meetingUrl: t!.meetingUrl }
       : null;
@@ -366,6 +473,7 @@ export class StudioService {
           preview: !!l.preview,
           durationMin: l.durationMin,
           startsAt: l.startsAt,
+          dueAt: l.dueAt,
           section: l.section,
           locked: !open,
           ...(c
@@ -390,6 +498,7 @@ export class StudioService {
       access: {
         signedIn: !!actor,
         isOwner,
+        staffView,
         enrolled: !!enrollment,
         canEnroll,
         reason,
@@ -454,6 +563,7 @@ export class StudioService {
   async completeLesson(code: string, key: string, actor: AcademyActor) {
     const { course, enrollment, lesson } = await this.learnerLesson(code, key, actor);
     if (lesson.type === "quiz") throw new BadRequestException("Pass the quiz to complete this lesson.");
+    if (lesson.type === "assignment") throw new BadRequestException("Hand in this assignment. It is completed when your teacher grades it.");
     return this.markComplete(course, enrollment, key);
   }
 
@@ -632,6 +742,12 @@ export class StudioService {
       if (l.type === "live" && l.startsAt && Number.isNaN(new Date(l.startsAt).getTime())) {
         throw new BadRequestException(`Lesson ${i + 1}: invalid start time.`);
       }
+      if (l.type === "assignment" && l.dueAt && Number.isNaN(new Date(l.dueAt).getTime())) {
+        throw new BadRequestException(`Lesson ${i + 1}: invalid due date.`);
+      }
+      if (l.type === "assignment" && !l.body?.trim()) {
+        throw new BadRequestException(`"${l.title}": write the assignment instructions.`);
+      }
       if (l.type === "quiz") {
         const qs = l.quiz?.questions ?? [];
         qs.forEach((q, qi) => {
@@ -653,12 +769,14 @@ export class StudioService {
         durationMin: l.durationMin,
         startsAt: l.type === "live" && l.startsAt ? new Date(l.startsAt) : undefined,
         section: l.section?.trim() || undefined,
+        dueAt: l.type === "assignment" && l.dueAt ? new Date(l.dueAt) : undefined,
       });
       contents.push({
         courseCode: course.code,
         lessonKey: key,
         videoUrl: l.type === "video" ? cleanUrl(l.videoUrl) : undefined,
-        storageKey: l.type === "video" || l.type === "pdf" ? l.storageKey || undefined : undefined,
+        // Assignments may carry a worksheet (PDF) for learners to download.
+        storageKey: l.type === "video" || l.type === "pdf" || l.type === "assignment" ? l.storageKey || undefined : undefined,
         fileName: l.fileName,
         mimeType: l.mimeType,
         size: l.size,
@@ -710,6 +828,11 @@ export class StudioService {
     return out;
   }
 
+  /** Used by homework grading: a graded assignment counts as a completed lesson. */
+  completeForGrading(course: CourseDoc, enrollment: EnrollmentDoc, key: string) {
+    return this.markComplete(course, enrollment, key);
+  }
+
   private async markComplete(course: CourseDoc, enrollment: EnrollmentDoc, key: string) {
     const keys = new Set(enrollment.completedLessonKeys ?? []);
     keys.add(key);
@@ -751,6 +874,10 @@ export class StudioService {
     if (String(course.instructorId) === actor.userId) throw new BadRequestException("You own this class.");
     if (course.visibility === "draft") throw new BadRequestException("This class is not published yet.");
     if (course.institutionBlocked) throw new BadRequestException("This class is not available right now.");
+    if (course.takenDown || course.creatorBlocked) throw new BadRequestException("This class is not available right now.");
+    if (course.institutionId && (await this.billing.inactiveIds()).has(String(course.institutionId))) {
+      throw new BadRequestException("New enrollments for this school are paused right now. Please try again later.");
+    }
     if (course.visibility === "school" && (!actor.institutionId || String(course.institutionId) !== actor.institutionId)) {
       throw new ForbiddenException("Only students of this school can join. Sign in with your school login.");
     }
@@ -838,7 +965,8 @@ export class StudioService {
 
   private async ownedCourse(code: string, actor: AcademyActor) {
     const course = await this.findCourse(code);
-    if (String(course.instructorId) !== actor.userId && !STAFF.includes(actor.role)) {
+    // Only the person who created the class can edit, delete or see its learner list.
+    if (String(course.instructorId) !== actor.userId) {
       throw new ForbiddenException("You can only manage your own classes.");
     }
     return course;

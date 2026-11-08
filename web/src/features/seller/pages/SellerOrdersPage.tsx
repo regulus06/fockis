@@ -267,6 +267,14 @@ const FILTERS = [
     value: "shipped",
   },
   {
+    label: "In Transit",
+    value: "in_transit",
+  },
+  {
+    label: "Out for Delivery",
+    value: "out_for_delivery",
+  },
+  {
     label: "Delivered",
     value: "delivered",
   },
@@ -1201,13 +1209,27 @@ export default function SellerOrdersPage() {
         );
       }
 
-      return orders.filter(
-        order =>
-          normalizeStatus(
-            order.status,
-          ) ===
-          filter,
-      );
+      return orders.filter(order => {
+        // Shipping progress is stored separately from the order/payment status.
+        // Prefer the shipment status so carrier updates such as in_transit and
+        // out_for_delivery appear in the matching Seller Center filters.
+        const shipmentStatus = normalizeStatus(getShipmentStatus(order));
+        const orderStatus = normalizeStatus(order.status);
+
+        if (filter === "shipped") {
+          return shipmentStatus === "shipped" || orderStatus === "shipped";
+        }
+
+        if (filter === "in_transit" || filter === "out_for_delivery") {
+          return shipmentStatus === filter || orderStatus === filter;
+        }
+
+        if (filter === "delivered") {
+          return shipmentStatus === "delivered" || orderStatus === "delivered";
+        }
+
+        return orderStatus === filter;
+      });
     }, [
       orders,
       filter,
@@ -2539,31 +2561,22 @@ export default function SellerOrdersPage() {
                             <span
                               className={
                                 "status-pill status-" +
-                                normalizeStatus(
-                                  order.status,
-                                )
+                                (normalizeStatus(getShipmentStatus(order)) || normalizeStatus(order.status))
                               }
                             >
                               {
                                 getStatusLabel(
-                                  order.status,
+                                  getShipmentStatus(order) || order.status,
                                 )
                               }
                             </span>
 
                             {(
-                              normalizeStatus(
-                                order.status,
-                              ) ===
-                                "shipped" ||
-                              normalizeStatus(
-                                order.status,
-                              ) ===
-                                "delivered"
+                              ["shipped", "in_transit", "out_for_delivery", "delivered"].includes(
+                                normalizeStatus(getShipmentStatus(order) || order.status),
+                              )
                             ) &&
-                              renderTrackingInfo(
-                                order,
-                              )}
+                              renderTrackingInfo(order)}
 
                           </td>
 

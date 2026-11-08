@@ -127,6 +127,24 @@ export const NAV_SECTIONS: NavSection[] = [
     anyOf: [P.MAP_ADDRESSES_VIEW],
   },
 
+  {
+    label: "Academy",
+    path: "/admin/academy",
+    anyOf: [P.ACADEMY_VIEW],
+  },
+
+  {
+    label: "Domain Pricing & Fees",
+    path: "/admin/domains/pricing",
+    anyOf: [P.DOMAINS_VIEW],
+  },
+
+  {
+    label: "Careers",
+    path: "/admin/careers",
+    anyOf: [P.CAREERS_VIEW],
+  },
+
   // ============================================================
   // MARKETPLACE
   // ============================================================

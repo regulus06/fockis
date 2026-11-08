@@ -67,8 +67,6 @@ const MORE_ITEMS: NavItem[] = [
   { to: "/meetings", label: "Meetings", icon: Video },
   { to: "/my-live", label: "My Live", icon: Radio },
   { to: "/businesses", label: "Businesses", icon: Building2 },
-  { to: "/careers/search", label: "Find Jobs", icon: Briefcase },
-  { to: "/careers/employer", label: "Employer Center", icon: UserRoundCog },
   { to: "/ads", label: "Ads Manager", icon: Megaphone },
   { to: "/seller", label: "Seller Center", icon: Store },
   { to: "/travel", label: "Fockis Travel", icon: Plane },
@@ -77,6 +75,22 @@ const MORE_ITEMS: NavItem[] = [
   { to: "/fockis-ai", label: "Fockis AI", icon: Bot },
   { to: "/academy", label: "Fockis Academy", icon: BookOpen },
   { to: "/church", label: "Fockis Org", icon: Landmark },
+];
+
+/** Careers pages for job seekers, so "Careers" stays highlighted while browsing them. */
+const CAREERS_SEEKER_PATHS = [
+  "/careers/jobs",
+  "/careers/search",
+  "/careers/internships",
+  "/careers/co-ops",
+  "/careers/companies",
+  "/careers/dashboard",
+  "/careers/applications",
+  "/careers/saved-jobs",
+  "/careers/profile",
+  "/careers/resume",
+  "/careers/alerts",
+  "/careers/resources",
 ];
 
 interface SidebarUser {
@@ -182,6 +196,10 @@ export default function FockisSidebar({ collapsed = false, mobileOpen = false, o
       { to: "/groups", label: "Groups", icon: Users },
       { to: "/events", label: "Events", icon: CalendarDays },
       { to: "/organizations", label: "Organizations", icon: Building2 },
+      // Job seekers: every Careers page except the Employer Center.
+      { to: "/careers", label: "Careers", icon: Briefcase, end: true, match: CAREERS_SEEKER_PATHS },
+      // Employers: post jobs, see applicants (the form to become an employer is here too).
+      { to: "/careers/employer", label: "Employer Center", icon: UserRoundCog },
     ],
     [unreadCount, unreadMessages],
   );

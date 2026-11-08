@@ -81,8 +81,8 @@ export class CourseLesson {
   @Prop({ required: true, trim: true })
   title!: string;
 
-  @Prop({ enum: ["video", "pdf", "text", "quiz", "live"], required: true })
-  type!: "video" | "pdf" | "text" | "quiz" | "live";
+  @Prop({ enum: ["video", "pdf", "text", "quiz", "live", "assignment"], required: true })
+  type!: "video" | "pdf" | "text" | "quiz" | "live" | "assignment";
 
   /** Free preview lesson, visible before enrolling. */
   @Prop({ default: false })
@@ -97,6 +97,10 @@ export class CourseLesson {
 
   @Prop({ trim: true })
   section?: string;
+
+  /** Assignments only: hand-in deadline (late work is still accepted, and marked late). */
+  @Prop()
+  dueAt?: Date;
 }
 
 export const CourseLessonSchema =
@@ -260,6 +264,31 @@ export class Course {
   /** Created through the open Creator Studio. */
   @Prop({ default: false, index: true })
   studio!: boolean;
+
+  /**
+   * Taken down by a Fockis administrator (admin center → Academy). Hidden
+   * from the catalog and closed to new learners until restored; people
+   * already enrolled keep access. Only Fockis admins can change it.
+   */
+  @Prop({ default: false, index: true })
+  takenDown!: boolean;
+
+  @Prop({ trim: true })
+  takenDownReason?: string;
+
+  @Prop()
+  takenDownAt?: Date;
+
+  @Prop({ trim: true })
+  takenDownBy?: string;
+
+  /**
+   * Set while the creator's teaching permission is suspended by Fockis:
+   * hidden from the catalog and closed to new learners; enrolled learners
+   * keep access. (Classes offered by a school are not affected.)
+   */
+  @Prop({ default: false, index: true })
+  creatorBlocked!: boolean;
 }
 
 

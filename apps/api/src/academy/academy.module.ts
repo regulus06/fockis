@@ -34,6 +34,7 @@ import { DashboardModule } from "./dashboard.module";
 import { CertificatesModule } from "./certificates/certificates.module";
 import { StudioModule } from "./studio/studio.module";
 import { InstitutionsModule } from "./institutions/institutions.module";
+import { AcademyAdminCenterModule } from "./admin-center/admin-center.module";
 
 /**
  * ============================================================================
@@ -102,6 +103,9 @@ import { InstitutionsModule } from "./institutions/institutions.module";
     CertificatesModule,
     StudioModule,
     InstitutionsModule,
+
+    // Fockis admin center → Academy (/admin/academy/*, main Fockis admins)
+    AcademyAdminCenterModule,
   ],
 })
 export class AcademyModule {}

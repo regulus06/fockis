@@ -7,6 +7,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { DomainBillingService } from "../billing/domain-billing.service";
 import { Model, Types } from "mongoose";
 import * as bcrypt from "bcrypt";
 import { randomBytes, randomUUID } from "crypto";
@@ -76,6 +77,7 @@ export class InstitutionsService {
     @InjectModel(AcademyUser.name) private readonly userModel: Model<AcademyUser>,
     @InjectModel(Course.name) private readonly courseModel: Model<Course>,
     private readonly storage: CloudStorageService,
+    private readonly billing: DomainBillingService,
   ) {}
 
   domainOf(inst: { slug: string }) {
@@ -90,6 +92,11 @@ export class InstitutionsService {
     const slug = String(raw || "").trim().toLowerCase();
     if (!/^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])$/.test(slug)) return { slug, available: false, reason: "Use 3–30 lowercase letters, numbers or dashes." };
     if (RESERVED.has(slug)) return { slug, available: false, reason: "That name is reserved." };
+    // Organization Identity also gives out <name>.fockis.com — one name, one owner.
+    const orgDomain = await this.instModel.db.collection("organization_domains").findOne({ domain: `${slug}.${SCHOOL_DOMAIN_ROOT}` }, { projection: { _id: 1 } });
+    if (orgDomain) return { slug, available: false, reason: "Already taken by a Fockis organization." };
+    const person = await this.instModel.db.collection("personal_domains").findOne({ name: slug }, { projection: { _id: 1 } });
+    if (person) return { slug, available: false, reason: "Already taken." };
     const taken = await this.instModel.exists({ slug });
     return { slug, domain: `${slug}.${SCHOOL_DOMAIN_ROOT}`, available: !taken, reason: taken ? "Already taken." : undefined };
   }
@@ -108,7 +115,7 @@ export class InstitutionsService {
     if (!inst) throw new NotFoundException("School not found.");
     const [classes, students] = await Promise.all([
       this.courseModel
-        .find({ institutionId: inst._id, visibility: { $in: ["public", "school"] } })
+        .find({ institutionId: inst._id, visibility: { $in: ["public", "school"] }, takenDown: { $ne: true } })
         .select("code name kind brandName isFree price currency coverUrl summary lessons.type startsAt visibility")
         .sort({ updatedAt: -1 })
         .lean()
@@ -178,6 +185,17 @@ export class InstitutionsService {
       history: [{ action: "submitted", by: new Types.ObjectId(actor.userId), byName: actor.name, at: new Date() }],
     });
     return this.forStaff(inst);
+  }
+
+  /**
+   * The school of a student account created by a school (school login), with
+   * all its classes, including members-only ones. Null for everyone else.
+   */
+  async studentSchool(actor: AcademyActor & { institutionId?: string }) {
+    if (!actor.institutionId || !Types.ObjectId.isValid(actor.institutionId)) return null;
+    const inst = await this.instModel.findById(actor.institutionId, { slug: 1, status: 1 }).lean().exec();
+    if (!inst || inst.status !== "approved") return null;
+    return this.publicProfile(inst.slug);
   }
 
   async mine(actor: AcademyActor) {
@@ -324,6 +342,7 @@ export class InstitutionsService {
   async approveApplication(id: string, appId: string, actor: AcademyActor) {
     const inst = await this.staffInstitution(id, actor, false);
     this.assertApproved(inst);
+    await this.billing.assertActive(inst, "accept students");
     const app = await this.appModel.findOne({ _id: this.oid(appId), institutionId: inst._id }).exec();
     if (!app) throw new NotFoundException("Application not found.");
     if (app.status !== "pending") throw new BadRequestException(`This application was already ${app.status}.`);
@@ -378,12 +397,14 @@ export class InstitutionsService {
   async addStudent(id: string, dto: NewStudentDto, actor: AcademyActor) {
     const inst = await this.staffInstitution(id, actor, false);
     this.assertApproved(inst);
+    await this.billing.assertActive(inst, "add students");
     return this.createStudent(inst, dto);
   }
 
   async addStudents(id: string, list: NewStudentDto[], actor: AcademyActor) {
     const inst = await this.staffInstitution(id, actor, false);
     this.assertApproved(inst);
+    await this.billing.assertActive(inst, "add students");
     const created: IssuedCredentials[] = [];
     const failed: { name: string; error: string }[] = [];
     for (const s of list) {
@@ -434,6 +455,11 @@ export class InstitutionsService {
       .exec();
     const nById = new Map(counts.map((c) => [String(c._id), c.n]));
     const totals = await this.instModel.aggregate<{ _id: string; n: number }>([{ $group: { _id: "$status", n: { $sum: 1 } } }]).exec();
+    const pricing = await this.billing.pricing();
+    const billingState = (i: (typeof list)[number]) => {
+      const b = this.billing.compute(i as never, pricing);
+      return { state: b.state, active: b.active, paidUntil: b.paidUntil, graceEndsAt: b.graceEndsAt, price: b.price, currency: b.currency };
+    };
     return {
       totals: Object.fromEntries(totals.map((t) => [t._id, t.n])),
       items: list.map((i) => ({
@@ -442,6 +468,7 @@ export class InstitutionsService {
         owner: byId.get(String(i.ownerId)) ?? null,
         students: nById.get(String(i._id)) ?? 0,
         hasProof: !!i.proofStorageKey,
+        billing: billingState(i),
       })),
     };
   }
@@ -458,7 +485,8 @@ export class InstitutionsService {
       this.userModel.countDocuments({ institutionId: inst._id }).exec(),
       this.courseModel.countDocuments({ institutionId: inst._id }).exec(),
     ]);
-    return { ...inst, domain: this.domainOf(inst), owner, proofUrl, students, classes };
+    const billing = await this.billing.adminView(inst as never);
+    return { ...inst, billing: undefined, domain: this.domainOf(inst), owner, proofUrl, students, classes, domainBilling: billing };
   }
 
   async adminSetStatus(id: string, action: "approve" | "reject" | "block" | "unblock", reason: string | undefined, actor: AcademyActor) {
@@ -475,6 +503,7 @@ export class InstitutionsService {
 
     const next: Record<typeof action, InstitutionStatus> = { approve: "approved", reject: "rejected", block: "blocked", unblock: "approved" };
     inst.status = next[action];
+    if (action === "approve" && !inst.approvedAt) inst.approvedAt = new Date();
     inst.statusReason = action === "reject" || action === "block" ? reason!.trim() : undefined;
     inst.reviewedBy = new Types.ObjectId(actor.userId);
     inst.reviewedAt = new Date();
@@ -494,6 +523,26 @@ export class InstitutionsService {
     }
     this.logger.log(`Institution ${inst.slug} ${action} by ${actor.userId}`);
     return this.adminGet(id);
+  }
+
+  // ======================================================================
+  // DOMAIN FEE (owner / school admins pay through the existing Fockis checkout)
+  // ======================================================================
+
+  domainPricing() {
+    return this.billing.publicPricing();
+  }
+
+  async domainCheckout(id: string, actor: AcademyActor) {
+    const inst = await this.staffInstitution(id, actor, false, true);
+    if (inst.status === "blocked") throw new ForbiddenException("This school is blocked. Contact Fockis Academy support.");
+    await this.billing.claimPending(inst);
+    return this.billing.checkoutInfo(inst, actor.userId);
+  }
+
+  async domainClaim(id: string, paymentIntentId: string, actor: AcademyActor) {
+    const inst = await this.staffInstitution(id, actor, false, true);
+    return this.billing.claim(inst, paymentIntentId, actor.name);
   }
 
   // ======================================================================
@@ -563,6 +612,9 @@ export class InstitutionsService {
   }
 
   private async forStaff(inst: InstitutionDocument, actor?: AcademyActor) {
+    // A payment whose page closed before it was claimed is picked up here.
+    if (inst.status === "approved") await this.billing.claimPending(inst);
+    const domainBilling = await this.billing.infoFor(inst);
     const obj = inst.toObject();
     const staffUsers = await this.userModel.find({ _id: { $in: [obj.ownerId, ...obj.staff.map((s) => s.userId)] } }, { name: 1, email: 1 }).lean().exec();
     const byId = new Map(staffUsers.map((u) => [String(u._id), u]));
@@ -583,6 +635,12 @@ export class InstitutionsService {
       myRole,
       teachers: await this.teachersWithClasses(obj, false),
       counts: { students, pendingApplications, classes },
+      billing: undefined,
+      domainBilling,
+      domainPayments: (obj.billing ?? [])
+        .filter((b) => b.method === "stripe" || (b.method === "manual" && b.to))
+        .map((b) => ({ method: b.method, amount: b.amount, currency: b.currency, from: b.from, to: b.to, at: b.at }))
+        .reverse(),
     };
   }
 

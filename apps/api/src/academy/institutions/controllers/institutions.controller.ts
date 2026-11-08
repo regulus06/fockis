@@ -3,7 +3,7 @@ import { AcademyJwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../auth/guards/roles.guard";
 import { Roles } from "../../auth/decorators/roles.decorator";
 import { AcademyActor, InstitutionsService } from "../services/institutions.service";
-import { AddStaffDto, ApplyDto, BulkStudentsDto, NewStudentDto, ReasonDto, SaveInstitutionDto, TeacherDto } from "../dto/institution.dto";
+import { AddStaffDto, ApplyDto, DomainClaimDto, BulkStudentsDto, NewStudentDto, ReasonDto, SaveInstitutionDto, TeacherDto } from "../dto/institution.dto";
 
 type R = { user: AcademyActor };
 
@@ -29,11 +29,24 @@ export class InstitutionsController {
     return this.service.slugAvailable(slug);
   }
 
+  /** What a Fockis domain costs (set by Fockis admins). */
+  @Get("domain-pricing")
+  domainPricing() {
+    return this.service.domainPricing();
+  }
+
   // ---------------- signed-in school owners / staff
   @Get("mine")
   @UseGuards(AcademyJwtAuthGuard)
   mine(@Req() req: R) {
     return this.service.mine(req.user);
+  }
+
+  // ---------------- signed-in students: my school and its classes
+  @Get("my-school")
+  @UseGuards(AcademyJwtAuthGuard)
+  mySchool(@Req() req: { user: AcademyActor & { institutionId?: string } }) {
+    return this.service.studentSchool(req.user);
   }
 
   @Post()
@@ -46,6 +59,20 @@ export class InstitutionsController {
   @UseGuards(AcademyJwtAuthGuard)
   get(@Req() req: R, @Param("id") id: string) {
     return this.service.getForStaff(id, req.user);
+  }
+
+  /** Price + payment reference for the existing Fockis checkout. */
+  @Post("manage/:id/domain/checkout")
+  @UseGuards(AcademyJwtAuthGuard)
+  domainCheckout(@Req() req: R, @Param("id") id: string) {
+    return this.service.domainCheckout(id, req.user);
+  }
+
+  /** After the checkout succeeded: verify the payment and extend the domain. */
+  @Post("manage/:id/domain/claim")
+  @UseGuards(AcademyJwtAuthGuard)
+  domainClaim(@Req() req: R, @Param("id") id: string, @Body() dto: DomainClaimDto) {
+    return this.service.domainClaim(id, dto.paymentIntentId, req.user);
   }
 
   @Patch("manage/:id")

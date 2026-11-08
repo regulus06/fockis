@@ -313,6 +313,20 @@ export enum Permission {
   MAP_ADDRESSES_VERIFY = "map.addresses.verify",
 
   // ========================================================================
+  // ACADEMY — classes, seminars, schools, certificates, learner accounts
+  // ========================================================================
+
+  ACADEMY_VIEW = "academy.view",
+  ACADEMY_MANAGE = "academy.manage",
+
+  // ========================================================================
+  // CAREERS — employers (approve, reject, block), jobs, employer plans
+  // ========================================================================
+
+  CAREERS_VIEW = "careers.view",
+  CAREERS_MANAGE = "careers.manage",
+
+  // ========================================================================
   // LEGAL & EVIDENCE (restricted: not granted to ordinary admins)
   // ========================================================================
 

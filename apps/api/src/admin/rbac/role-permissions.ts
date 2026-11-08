@@ -153,6 +153,18 @@ export const RolePermissions: Record<Role, Permission[]> = {
     Permission.MAP_ADDRESSES_VIEW,
     Permission.MAP_ADDRESSES_VERIFY,
 
+    // Academy: classes, seminars, schools, certificates
+    Permission.ACADEMY_VIEW,
+    Permission.ACADEMY_MANAGE,
+
+    // Fockis domains: prices and organizations' domain fees
+    Permission.DOMAINS_VIEW,
+    Permission.DOMAINS_MANAGE,
+
+    // Careers: employers, job posts, employer plans
+    Permission.CAREERS_VIEW,
+    Permission.CAREERS_MANAGE,
+
     // Policy & Compliance (approval, publishing and sensitive records stay
     // with super admins and the seeded Policy Approver / Compliance roles)
     Permission.POLICY_VIEW,

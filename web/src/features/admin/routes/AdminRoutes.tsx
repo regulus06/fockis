@@ -28,6 +28,7 @@ import ModerationSettingsPage from "../moderation/pages/ModerationSettingsPage";
 import SupportModRoutes from "../support/SupportModRoutes";
 import AddressVerificationRoutes from "../map-addresses/AddressVerificationPages";
 import PublicPlacesReviewRoutes from "../map-addresses/PublicPlacesReviewPages";
+import AcademyAdminCenterRoutes from "../academy/AcademyAdminCenterPages";
 import LegalRoutes from "../legal/LegalRoutes";
 import PolicyComplianceRoutes from "../policy-compliance/PolicyComplianceRoutes";
 
@@ -74,6 +75,8 @@ import DomainSettingsPage from "../domains/pages/DomainSettingsPage";
 import DomainCampaignsPage from "../domains/pages/DomainCampaignsPage";
 import DomainAuthorizationsPage from "../domains/pages/DomainAuthorizationsPage";
 import DomainManagementPage from "../domains/pages/DomainManagementPage";
+import { DomainFeeDetailPage, DomainFeesPage, DomainPricingPage, PersonalDomainDetailPage, PersonalDomainsPage } from "../domains/pages/DomainBillingPages";
+import CareersAdminRoutes from "../careers/CareersAdminPages";
 
 /* ================================================================
    MESSAGES ADMIN
@@ -346,6 +349,18 @@ export function AdminRoutes(): React.ReactElement {
           <Route
             path="map/places/*"
             element={guarded([P.MAP_ADDRESSES_VIEW], <PublicPlacesReviewRoutes />)}
+          />
+
+          {/* Academy: classes, seminars, schools, certificates, learner accounts. */}
+          <Route
+            path="academy/*"
+            element={guarded([P.ACADEMY_VIEW], <AcademyAdminCenterRoutes />)}
+          />
+
+          {/* Careers: employers (approve / reject / block), jobs, employer plans. */}
+          <Route
+            path="careers/*"
+            element={guarded([P.CAREERS_VIEW], <CareersAdminRoutes />)}
           />
 
           {/* Legal & Evidence (restricted: legal.* permissions only). */}
@@ -820,6 +835,47 @@ export function AdminRoutes(): React.ReactElement {
             element={guarded(
               [P.SYSTEM_SETTINGS],
               <DomainManagementPage />,
+            )}
+          />
+
+          {/* Fockis domain prices & organization fees (one list for every *.fockis.com) */}
+          <Route
+            path="domains/pricing"
+            element={guarded(
+              [P.DOMAINS_VIEW],
+              <DomainPricingPage />,
+            )}
+          />
+
+          <Route
+            path="domains/fees"
+            element={guarded(
+              [P.DOMAINS_VIEW],
+              <DomainFeesPage />,
+            )}
+          />
+
+          <Route
+            path="domains/fees/:organizationId"
+            element={guarded(
+              [P.DOMAINS_VIEW],
+              <DomainFeeDetailPage />,
+            )}
+          />
+
+          <Route
+            path="domains/personal"
+            element={guarded(
+              [P.DOMAINS_VIEW],
+              <PersonalDomainsPage />,
+            )}
+          />
+
+          <Route
+            path="domains/personal/:id"
+            element={guarded(
+              [P.DOMAINS_VIEW],
+              <PersonalDomainDetailPage />,
             )}
           />
 

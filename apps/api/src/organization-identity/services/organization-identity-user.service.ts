@@ -59,6 +59,10 @@ import {
   OrganizationIdentityCommonService,
 } from "./organization-identity-common.service";
 
+import {
+  OrganizationDomainBillingService,
+} from "../billing/organization-domain-billing.service";
+
 import type {
   OrganizationIdentityActionResponse,
   OrganizationIdentityResponse,
@@ -81,6 +85,9 @@ export class OrganizationIdentityUserService {
     private readonly domainModel: Model<OrganizationDomainDocument>,
 
     private readonly common: OrganizationIdentityCommonService,
+
+    // Domain fees (price set in the Admin Center).
+    private readonly billing: OrganizationDomainBillingService,
   ) {}
 
   // ==========================================================================
@@ -394,6 +401,28 @@ export class OrganizationIdentityUserService {
           "This domain is already assigned.",
         );
       }
+    }
+
+    // ------------------------------------------------------------------------
+    // DOMAIN FEE
+    // A new login gets a member domain under the base domain, which needs the
+    // organization's domain to be paid (and a member-domain place when
+    // member domains are charged). Checked before anything is created.
+    // ------------------------------------------------------------------------
+
+    if (selectedDomain) {
+      await this.billing.assertActive(
+        organization._id,
+      );
+    } else if (
+      await this.common.getOrganizationBaseDomain(
+        organization._id,
+        true,
+      )
+    ) {
+      await this.billing.assertCanAddMemberDomain(
+        organization._id,
+      );
     }
 
     const temporaryPassword =

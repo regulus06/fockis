@@ -7,6 +7,7 @@ import {
 } from "@nestjs/common";
 
 import { InjectModel } from "@nestjs/mongoose";
+import { DomainBillingService } from "../../institutions/billing/domain-billing.service";
 
 import {
   HydratedDocument,
@@ -60,6 +61,8 @@ export class CoursesService {
 
     @InjectModel(AcademyUser.name)
     private readonly userModel: Model<AcademyUser>,
+
+    private readonly billing: DomainBillingService,
   ) {}
 
   async findAll() {
@@ -79,6 +82,8 @@ export class CoursesService {
    * Courses created before visibility existed have no value and count as public.
    */
   async findCatalog() {
+    // Organizations whose Fockis domain is unpaid or expired: their classes leave the catalog.
+    const paused = await this.billing.inactiveObjectIds();
     return this.courseModel
       .find({
         $or: [
@@ -86,6 +91,9 @@ export class CoursesService {
           { visibility: { $exists: false } },
         ],
         institutionBlocked: { $ne: true },
+        takenDown: { $ne: true },
+        creatorBlocked: { $ne: true },
+        ...(paused.length ? { institutionId: { $nin: paused } } : {}),
       })
       .populate(
         "instructorId",

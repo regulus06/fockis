@@ -6,6 +6,7 @@ import { StudentApplication, StudentApplicationSchema } from "./schemas/student-
 import { InstitutionsService } from "./services/institutions.service";
 import { InstitutionsAdminController, InstitutionsController } from "./controllers/institutions.controller";
 import { CoursesModule } from "../courses/courses.module";
+import { DomainBillingModule } from "./billing/domain-billing.module";
 
 // Existing Fockis storage (signed links to proof documents), reused unchanged.
 import { UploadsModule } from "../../uploads/uploads.module";
@@ -18,10 +19,11 @@ import { UploadsModule } from "../../uploads/uploads.module";
       { name: StudentApplication.name, schema: StudentApplicationSchema },
     ]),
     CoursesModule, // Course + AcademyUser models
+    DomainBillingModule, // domain fees (price set in the Admin Center)
     UploadsModule,
   ],
   controllers: [InstitutionsController, InstitutionsAdminController],
   providers: [InstitutionsService],
-  exports: [InstitutionsService, MongooseModule],
+  exports: [InstitutionsService, MongooseModule, DomainBillingModule],
 })
 export class InstitutionsModule {}

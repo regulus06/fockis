@@ -29,6 +29,7 @@ import InstructorDashboard from "../pages/academy/learn/InstructorDashboard";
 import CreatorStudio, { StudioNew } from "../pages/academy/studio/CreatorStudio";
 import StudioEditor from "../pages/academy/studio/StudioEditor";
 import AcademyCheckout from "../pages/academy/studio/AcademyCheckout";
+import SchoolDomainCheckout from "../pages/academy/institutions/SchoolDomainCheckout";
 import RegisterSchool from "../pages/academy/institutions/RegisterSchool";
 import SchoolDashboard, { MySchools } from "../pages/academy/institutions/SchoolDashboard";
 import { SchoolPage, SchoolsDirectory } from "../pages/academy/institutions/SchoolPages";
@@ -119,6 +120,7 @@ import AcademyAdminSettings from "../pages/academy/admin/AcademyAdminSettings";
  *   /academy/checkout/:code  (buy a paid class through the existing Fockis checkout)
  *   /academy/schools, /academy/schools/:slug, /academy/schools/register
  *   /academy/school, /academy/school/:id   (school staff: students, applications, staff)
+ *   /academy/school/:id/pay  (pay / renew the Fockis domain through the existing checkout)
  *   /academy/change-password  (required after a temporary password)
  *   /academy/admin/institutions (Fockis admins review schools)
  *   /academy/instructor/certificates            (templates, issue, issued)
@@ -356,6 +358,8 @@ export default function AcademyRoutes() {
       <Route path="schools/register" element={<AcademyFullPage><RegisterSchool /></AcademyFullPage>} />
       <Route path="school" element={<AcademyFullPage><MySchools /></AcademyFullPage>} />
       <Route path="school/:id" element={<AcademyFullPage><SchoolDashboard /></AcademyFullPage>} />
+      {/* pay / renew the school's Fockis domain (price set in the Admin Center) */}
+      <Route path="school/:id/pay" element={<AcademyFullPage><SchoolDomainCheckout /></AcademyFullPage>} />
       <Route path="change-password" element={<AcademyFullPage><ChangePassword /></AcademyFullPage>} />
 
       {/* Creator Studio — open marketplace (any signed-in Academy account) */}

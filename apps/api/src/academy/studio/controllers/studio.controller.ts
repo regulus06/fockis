@@ -21,7 +21,7 @@ import { randomUUID } from "crypto";
 import { AcademyJwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { OptionalAcademyAuthGuard } from "../guards/optional-academy-auth.guard";
 import { AcademyActor, StudioService } from "../services/studio.service";
-import { ClaimPaymentDto, QuizAnswersDto, SaveStudioCourseDto } from "../dto/studio.dto";
+import { ClaimPaymentDto, CreatorApplyDto, QuizAnswersDto, SaveStudioCourseDto } from "../dto/studio.dto";
 
 type AuthedReq = { user: AcademyActor };
 type MaybeReq = { user: AcademyActor | null };
@@ -37,6 +37,18 @@ const TMP_DIR = "./uploads/academy-tmp";
 @UseGuards(AcademyJwtAuthGuard)
 export class StudioController {
   constructor(private readonly studio: StudioService) {}
+
+  /** Am I allowed to teach? (approved creator, or staff of an approved school) */
+  @Get("creator")
+  creator(@Req() req: AuthedReq) {
+    return this.studio.creatorAccess(req.user);
+  }
+
+  /** Apply to become a creator; a Fockis administrator reviews it. */
+  @Post("creator/apply")
+  apply(@Req() req: AuthedReq, @Body() dto: CreatorApplyDto) {
+    return this.studio.applyAsCreator(dto, req.user);
+  }
 
   @Get("schools")
   schools(@Req() req: AuthedReq) {

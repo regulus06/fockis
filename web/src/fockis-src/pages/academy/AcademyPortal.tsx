@@ -8,6 +8,8 @@ import { themeFor } from "../../components/academy/market/FaCourseCard";
 import { useAcademyLoad } from "../../lib/useAcademyLoad";
 import { getStudentCourses, getStudentDashboard, type StudentCourse } from "../../lib/academyApi";
 import { shortDate } from "../../lib/academyLearnApi";
+import { schoolsApi, type PublicSchool } from "../../lib/institutionsApi";
+import { KIND_LABEL, formatPrice, type Kind } from "../../lib/studioApi";
 
 /**
  * /academy/portal — Student Dashboard (design board screen 10).
@@ -57,6 +59,7 @@ export default function AcademyPortal() {
   const hasToken = !!academyToken();
   const dash = useAcademyLoad(() => (hasToken ? getStudentDashboard() : Promise.reject(new Error("not-signed-in"))), [hasToken]);
   const courses = useAcademyLoad(() => (hasToken ? getStudentCourses() : Promise.resolve([] as StudentCourse[])), [hasToken]);
+  const school = useAcademyLoad(() => (hasToken ? schoolsApi.mySchool().catch(() => null) : Promise.resolve(null)), [hasToken]);
 
   const list = courses.state.status === "ready" ? courses.state.data : [];
   const upcoming = useMemo(() => {
@@ -101,6 +104,10 @@ export default function AcademyPortal() {
           <Stat icon="award" value={courses.state.status === "ready" ? String(completed) : "—"} label="Certificates" tone="purple" />
         </div>
 
+        {school.state.status === "ready" && school.state.data && (
+          <MySchool s={school.state.data} enrolled={new Set(list.map((c) => String(c.code).toUpperCase()))} />
+        )}
+
         <div className="fa-dgrid">
           <div className="fa-card fa-pad">
             <div className="fa-cardhead">
@@ -110,7 +117,17 @@ export default function AcademyPortal() {
             {courses.state.status === "error" && <LoadState status="error" error={courses.state.error} onRetry={courses.reload} />}
             {courses.state.status === "ready" &&
               (list.length === 0 ? (
-                <LoadState status="empty" empty="You aren't enrolled in any courses yet." />
+                <div className="fa-portal-empty">
+                  <p className="fa-muted">You aren&apos;t enrolled in any class yet.</p>
+                  <p>
+                    {school.state.status === "ready" && school.state.data
+                      ? "Pick a class from your school above and click Enroll — or browse all public classes."
+                      : "Find a class, open it and click Enroll. It then shows up here."}
+                  </p>
+                  <Link className="fa-btn fa-btn--primary fa-btn--sm" to="/academy/learn">
+                    <Icon name="search" size={14} /> Browse classes
+                  </Link>
+                </div>
               ) : (
                 <ul className="fa-prog">
                   {list.map((c, i) => {
@@ -173,6 +190,51 @@ export default function AcademyPortal() {
           </div>
         </div>
       </DashShell>
+    </div>
+  );
+}
+
+/** School students: their school's classes (members-only ones too), one click to open and enroll. */
+function MySchool({ s, enrolled }: { s: PublicSchool; enrolled: Set<string> }) {
+  return (
+    <div className="fa-card fa-pad fa-myschool">
+      <div className="fa-cardhead">
+        <h4>
+          <Icon name="building" size={16} /> My school · {s.name}
+        </h4>
+        <Link className="fa-link" to={`/academy/schools/${encodeURIComponent(s.slug)}`}>
+          School page
+        </Link>
+      </div>
+      {s.classes.length === 0 ? (
+        <p className="fa-muted">Your school hasn&apos;t published any classes yet.</p>
+      ) : (
+        <ul className="fa-myschool__list">
+          {s.classes.map((c) => {
+            const joined = enrolled.has(c.code.toUpperCase());
+            return (
+              <li key={c.code}>
+                <div>
+                  <b>{c.name}</b>
+                  <small className="fa-muted">
+                    {KIND_LABEL[c.kind as Kind] ?? "Class"} · {formatPrice(c.isFree, c.price, c.currency)}
+                    {c.visibility === "school" ? " · members only" : ""}
+                  </small>
+                </div>
+                {joined ? (
+                  <Link className="fa-btn fa-btn--xs fa-btn--outline" to={`/academy/classroom/${encodeURIComponent(c.code)}`}>
+                    Continue
+                  </Link>
+                ) : (
+                  <Link className="fa-btn fa-btn--xs fa-btn--primary" to={`/academy/learn/${encodeURIComponent(c.code)}`}>
+                    Open &amp; enroll
+                  </Link>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 
 import type { FockisUser } from "../types/fockisprofiletypes";
+import FockisDomainBadge from "../../../account/fockis-domain/FockisDomainBadge";
 
 import "../../../../styles/FockisProfileHeader.scss";
 
@@ -199,6 +200,8 @@ export default function FockisProfileHeader({
 
             <p className="fk-profile-hero__handle">
               {user.username && <span>@{user.username}</span>}
+              {/* Personal Fockis domain (john.fockis.com), while paid. */}
+              <FockisDomainBadge userId={user.id || user._id} />
               {user.isPrivate && (
                 <span className="fk-profile-hero__private">
                   <Lock size={12} aria-hidden="true" />

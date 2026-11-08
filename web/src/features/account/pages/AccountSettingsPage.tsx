@@ -34,6 +34,8 @@ import {
 
   X,
 
+  Globe,
+
 } from "lucide-react";
 
 import api from "../../../api/api";
@@ -1578,6 +1580,68 @@ export default function AccountSettingsPage() {
                   </p>
 
                 </aside>
+
+              </section>
+
+              {/* ==========================================================
+
+                  YOUR FOCKIS DOMAIN (john.fockis.com — price set by Fockis)
+
+              ========================================================== */}
+
+              <section
+
+                className="fk-account-settings__card"
+
+                aria-labelledby={`${idPrefix}-domain-title`}
+
+              >
+
+                <div className="fk-account-settings__card-heading">
+
+                  <span
+
+                    className="fk-account-settings__icon fk-account-settings__icon--blue"
+
+                    aria-hidden="true"
+
+                  >
+
+                    <Globe size={22} />
+
+                  </span>
+
+                  <div>
+
+                    <h2 id={`${idPrefix}-domain-title`}>Your Fockis domain</h2>
+
+                    <p>
+
+                      Get your own name.fockis.com, shown on your profile.
+
+                    </p>
+
+                  </div>
+
+                </div>
+
+                <div className="fk-account-settings__actions">
+
+                  <button
+
+                    type="button"
+
+                    className="fk-account-settings__primary"
+
+                    onClick={() => navigate("/settings/fockis-domain")}
+
+                  >
+
+                    Manage my domain
+
+                  </button>
+
+                </div>
 
               </section>
 

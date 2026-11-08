@@ -28,6 +28,8 @@ import {
   UpdateEmployerSettingsDto,
   UpdateTeamMemberDto,
   UpgradeRequestDto,
+  ChoosePlanDto,
+  ClaimPlanPaymentDto,
 } from "../dto/employer.dto";
 
 type AuthenticatedRequest = Request & {
@@ -276,6 +278,18 @@ export class EmployerController {
   @Delete("billing/upgrade-requests/pending")
   cancelUpgrade(@Req() req: AuthenticatedRequest) {
     return this.employerService.cancelUpgradeRequest(this.actor(req));
+  }
+
+  /** Free plans switch at once; paid plans return a checkout for the existing Fockis checkout. */
+  @Post("billing/plan")
+  choosePlan(@Req() req: AuthenticatedRequest, @Body() dto: ChoosePlanDto) {
+    return this.employerService.choosePlan(this.actor(req), dto.plan);
+  }
+
+  /** After the checkout succeeded: verify the payment and apply the plan. */
+  @Post("billing/claim")
+  claimPlan(@Req() req: AuthenticatedRequest, @Body() dto: ClaimPlanPaymentDto) {
+    return this.employerService.claimPlanPayment(this.actor(req), dto.paymentIntentId);
   }
 
   /* ---------------- settings ---------------- */

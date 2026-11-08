@@ -17,6 +17,7 @@ import {
 } from "../auth/schemas/academy-user.schema";
 
 import { CoursesService } from "./services/courses.service";
+import { DomainBillingModule } from "../institutions/billing/domain-billing.module";
 
 import { CoursesController } from "./controllers/courses.controller";
 
@@ -36,6 +37,8 @@ import { CoursesController } from "./controllers/courses.controller";
         schema: AcademyUserSchema,
       },
     ]),
+    // Hides classes of organizations whose Fockis domain isn't paid.
+    DomainBillingModule,
   ],
 
   controllers: [

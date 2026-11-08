@@ -109,6 +109,18 @@ import {
 // MODULE
 // ============================================================================
 
+// ----------------------------------------------------------------------------
+// DOMAIN FEES (price list set in the Admin Center; payments via existing checkout)
+// ----------------------------------------------------------------------------
+import { Payment, PaymentSchema } from "../payments/schemas/payment.schema";
+import { DomainPricingModule } from "./billing/domain-pricing.module";
+import { OrganizationDomainBilling, OrganizationDomainBillingSchema } from "./billing/organization-domain-billing.schema";
+import { OrganizationDomainBillingService } from "./billing/organization-domain-billing.service";
+import { DomainBillingAdminController, OrganizationDomainBillingController } from "./billing/organization-domain-billing.controller";
+import { PersonalDomain, PersonalDomainSchema } from "./personal/personal-domain.schema";
+import { PersonalDomainService } from "./personal/personal-domain.service";
+import { PersonalDomainAdminController, PersonalDomainController, PersonalDomainPublicController } from "./personal/personal-domain.controller";
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -183,11 +195,36 @@ import {
         name: OrganizationSecurityPolicy.name,
         schema: OrganizationSecurityPolicySchema,
       },
+
+      // ----------------------------------------------------------------------
+      // DOMAIN FEES
+      // ----------------------------------------------------------------------
+      {
+        name: OrganizationDomainBilling.name,
+        schema: OrganizationDomainBillingSchema,
+      },
+      // Personal domains (john.fockis.com) people pay for themselves.
+      {
+        name: PersonalDomain.name,
+        schema: PersonalDomainSchema,
+      },
+      // Existing Fockis payment records — read-only (verify domain payments).
+      {
+        name: Payment.name,
+        schema: PaymentSchema,
+      },
     ]),
+
+    DomainPricingModule,
   ],
 
   controllers: [
     OrganizationIdentityController,
+    OrganizationDomainBillingController,
+    DomainBillingAdminController,
+    PersonalDomainController,
+    PersonalDomainPublicController,
+    PersonalDomainAdminController,
   ],
 
   providers: [
@@ -220,6 +257,12 @@ import {
     // ------------------------------------------------------------------------
 
     OrganizationIdentityService,
+
+    // ------------------------------------------------------------------------
+    // DOMAIN FEES
+    // ------------------------------------------------------------------------
+    OrganizationDomainBillingService,
+    PersonalDomainService,
   ],
 
   exports: [

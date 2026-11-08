@@ -65,6 +65,53 @@ export default function DomainAdminDashboard() {
       <section className="domain-admin-grid">
         <Link
           className="domain-admin-card"
+          to="/admin/domains/pricing"
+        >
+          <span className="domain-admin-card__icon">
+            $
+          </span>
+
+          <h2>
+            Domain Pricing
+          </h2>
+
+          <p>
+            What churches, organizations,
+            member domains and Academy
+            schools pay for a .fockis.com
+            domain.
+          </p>
+
+          <strong>
+            Set prices →
+          </strong>
+        </Link>
+
+        <Link
+          className="domain-admin-card"
+          to="/admin/domains/fees"
+        >
+          <span className="domain-admin-card__icon">
+            ✓
+          </span>
+
+          <h2>
+            Organization Fees
+          </h2>
+
+          <p>
+            Who paid, who is due, record
+            cash payments and exempt
+            organizations.
+          </p>
+
+          <strong>
+            View organizations →
+          </strong>
+        </Link>
+
+        <Link
+          className="domain-admin-card"
           to="/admin/domains/settings"
         >
           <span className="domain-admin-card__icon">

@@ -9,6 +9,7 @@ import {
 
 import OrganizationIdentitySidebar from "../components/OrganizationIdentitySidebar";
 import DomainVerificationCard from "../components/DomainVerificationCard";
+import DomainFeeCard from "../components/DomainFeeCard";
 
 import {
   useOrganizationDomains,
@@ -141,6 +142,16 @@ export default function OrganizationDomainDetailsPage() {
           <div className="notice">
             {message}
           </div>
+        )}
+
+        {/* Paying activates the organization's base domain. */}
+        {domain.domain.split(".").length ===
+          3 && (
+          <DomainFeeCard
+            organizationId={
+              organizationId
+            }
+          />
         )}
 
         <DomainVerificationCard

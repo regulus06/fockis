@@ -62,3 +62,9 @@ export class TeacherDto {
   @IsOptional() @IsString() @MaxLength(200) officeHours?: string;
   @IsOptional() @IsString() @MaxLength(1000) meetingUrl?: string;
 }
+
+export class DomainClaimDto {
+  @IsString()
+  @MaxLength(200)
+  paymentIntentId!: string;
+}

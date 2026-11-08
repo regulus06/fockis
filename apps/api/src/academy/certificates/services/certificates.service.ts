@@ -15,7 +15,7 @@ import { Enrollment, ensureEnrollmentNumber } from "../../courses/schemas/enroll
 import { CampusEvent } from "../../events/schemas/event.schema";
 import { AcademyUser } from "../../auth/schemas/academy-user.schema";
 import { IssueCertificatesDto, SaveTemplateDto, UpdateTemplateDto } from "../dto/certificate.dto";
-import { DEFAULT_CERT_DESIGN } from "../default-design";
+import { DEFAULT_CERT_DESIGN, withInstitutionLine } from "../default-design";
 
 export interface AcademyActor {
   userId: string;
@@ -261,6 +261,15 @@ export class CertificatesService {
       ? await this.templateModel.findOne({ _id: course.certificateTemplateId, ownerId }).exec()
       : null;
     if (!template) template = await this.templateModel.findOne({ ownerId }).sort({ updatedAt: -1 }).exec();
+    // Older auto-created default templates: add the institution line.
+    if (template && template.name === "Fockis Signature (default)") {
+      const upgraded = withInstitutionLine(template.design);
+      if (upgraded !== template.design) {
+        template.design = upgraded;
+        template.markModified("design");
+        await template.save();
+      }
+    }
     if (!template) {
       template = await this.templateModel.create({
         ownerId,
@@ -320,9 +329,10 @@ export class CertificatesService {
 
   // ------------------------------------------------------------------ listing
 
-  issuedByMe(actor: AcademyActor) {
+  async issuedByMe(actor: AcademyActor) {
     const q = STAFF.includes(actor.role) ? {} : { instructorId: new Types.ObjectId(actor.userId) };
-    return this.certModel.find(q).sort({ issuedAt: -1 }).limit(1000).lean().exec();
+    const rows = await this.certModel.find(q).sort({ issuedAt: -1 }).limit(1000).lean().exec();
+    return rows.map((c) => ({ ...c, design: withInstitutionLine(c.design) }));
   }
 
   async mine(actor: AcademyActor) {
@@ -330,7 +340,8 @@ export class CertificatesService {
       .find({ $or: [{ studentId: new Types.ObjectId(actor.userId) }, { recipientEmail: String(actor.email || "").toLowerCase() || "__none__" }] })
       .sort({ issuedAt: -1 })
       .lean()
-      .exec();
+      .exec()
+      .then((rows) => rows.map((c) => ({ ...c, design: withInstitutionLine(c.design) })));
   }
 
   async getOne(id: string, actor: AcademyActor) {
@@ -340,7 +351,7 @@ export class CertificatesService {
     const isOwner = String(c.studentId) === actor.userId || (!!c.recipientEmail && c.recipientEmail === String(actor.email).toLowerCase());
     const isIssuer = String(c.instructorId) === actor.userId || STAFF.includes(actor.role);
     if (!isOwner && !isIssuer) throw new ForbiddenException("You can only view your own certificates.");
-    return c;
+    return { ...c, design: withInstitutionLine(c.design) };
   }
 
   async setStatus(id: string, revoke: boolean, reason: string | undefined, actor: AcademyActor) {
@@ -380,7 +391,7 @@ export class CertificatesService {
         issuedAt: cert.issuedAt,
         revokedAt: cert.status === "revoked" ? last?.at ?? null : null,
         revokedReason: cert.status === "revoked" ? last?.reason ?? null : null,
-        design: cert.design,
+        design: withInstitutionLine(cert.design),
       };
     }
 

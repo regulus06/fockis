@@ -10,6 +10,7 @@ import {
 
 import OrganizationIdentitySidebar from "../components/OrganizationIdentitySidebar";
 import DomainCard from "../components/DomainCard";
+import DomainFeeCard from "../components/DomainFeeCard";
 
 import {
   useOrganizationDomains,
@@ -390,6 +391,14 @@ export default function OrganizationDomainsPage({
             </p>
           </div>
         </header>
+
+        {/* ================================================================
+            DOMAIN FEE (prices set by Fockis in the Admin Center)
+            ================================================================ */}
+
+        <DomainFeeCard
+          organizationId={organizationId}
+        />
 
         {/* ================================================================
             REQUIRED ORGANIZATION DOMAIN

@@ -1,10 +1,12 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Bot,
+  Briefcase,
   ChartColumn,
   Crown,
   FileText,
   Globe,
+  GraduationCap,
   Headset,
   Landmark,
   LayoutDashboard,
@@ -163,6 +165,42 @@ export const ADMIN_NAV: AdminNavItem[] = [
     ],
   },
   {
+    label: "Academy",
+    icon: GraduationCap,
+    path: "/admin/academy",
+    children: [
+      { label: "Overview", path: "/admin/academy", anyOf: [P.ACADEMY_VIEW] },
+      { label: "Classes & Seminars", path: "/admin/academy/classes", anyOf: [P.ACADEMY_VIEW] },
+      { label: "Creators", path: "/admin/academy/creators", anyOf: [P.ACADEMY_VIEW] },
+      { label: "Schools & Organizations", path: "/admin/academy/schools", anyOf: [P.ACADEMY_VIEW] },
+      { label: "Certificates", path: "/admin/academy/certificates", anyOf: [P.ACADEMY_VIEW] },
+      { label: "Learner Accounts", path: "/admin/academy/learners", anyOf: [P.ACADEMY_VIEW] },
+    ],
+  },
+  {
+    label: "Careers",
+    icon: Briefcase,
+    path: "/admin/careers",
+    children: [
+      { label: "Overview", path: "/admin/careers", anyOf: [P.CAREERS_VIEW] },
+      { label: "Employers", path: "/admin/careers/employers", anyOf: [P.CAREERS_VIEW] },
+      { label: "Jobs", path: "/admin/careers/jobs", anyOf: [P.CAREERS_VIEW] },
+      { label: "Employer Plans", path: "/admin/careers/plans", anyOf: [P.CAREERS_VIEW] },
+    ],
+  },
+  {
+    label: "Domains",
+    icon: Globe,
+    path: "/admin/domains/pricing",
+    children: [
+      { label: "Domain Pricing", path: "/admin/domains/pricing", anyOf: [P.DOMAINS_VIEW] },
+      { label: "Organization Fees", path: "/admin/domains/fees", anyOf: [P.DOMAINS_VIEW] },
+      { label: "Personal Domains", path: "/admin/domains/personal", anyOf: [P.DOMAINS_VIEW] },
+      { label: "Academy School Fees", path: "/admin/academy/schools", anyOf: [P.ACADEMY_VIEW] },
+      { label: "Domain Administration", path: "/admin/domains", anyOf: [P.SYSTEM_SETTINGS] },
+    ],
+  },
+  {
     label: "Legal & Evidence",
     icon: Scale,
     path: "/admin/legal",
@@ -222,7 +260,6 @@ export const ADMIN_NAV: AdminNavItem[] = [
       { label: "Travel Applications", path: "/admin/travel/applications", anyOf: [P.ANALYTICS_VIEW] },
       { label: "Travel Listings", path: "/admin/travel/listings", anyOf: [P.ANALYTICS_VIEW] },
       { label: "Travel Bookings", path: "/admin/travel/bookings", anyOf: [P.ANALYTICS_VIEW] },
-      { label: "Domain Administration", path: "/admin/domains", anyOf: [P.SYSTEM_SETTINGS] },
     ],
   },
   {

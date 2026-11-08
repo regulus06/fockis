@@ -30,6 +30,7 @@ import {
 } from "../schemas/employer-interview.schema";
 
 import { CareerProfileService } from "./career-profile.service";
+import { EmployerAccessService } from "./employer-access.service";
 
 import {
   InterviewFeedbackDto,
@@ -152,6 +153,10 @@ export class EmployerService {
 
     @Optional()
     private readonly careerProfiles?: CareerProfileService,
+
+    // Approval by Fockis, blocks, plan prices and limits.
+    @Optional()
+    private readonly access?: EmployerAccessService,
   ) {}
 
   /* ============================================================
@@ -390,6 +395,10 @@ export class EmployerService {
   async setJobActive(actor: EmployerActor, jobId: string, isActive: boolean) {
     const context = await this.resolveContext(actor);
     this.assertCan(context, "manageJobs");
+
+    if (isActive && this.access) {
+      await this.access.assertCanActivate(context.ownerId, jobId);
+    }
 
     const job = await this.jobModel
       .findOneAndUpdate(
@@ -1351,21 +1360,49 @@ export class EmployerService {
     const context = await this.resolveContext(actor);
     const company = await this.findCompany(context.ownerId);
 
-    const plan = company?.billing?.plan ?? "free";
     const requests = (company?.billing?.upgradeRequests ?? [])
       .slice()
       .sort((a, b) => this.time(b.requestedAt) - this.time(a.requestedAt));
 
+    // Plans, prices and limits come from the Admin Center (EmployerAccessService).
+    const access = this.access ? await this.access.billingFor(context.ownerId) : null;
+    const plans = access?.pricing.plans ?? EMPLOYER_PLANS.map((p) => ({ ...p, price: 0, periodMonths: 0, periodLabel: "one-time", maxActiveJobs: 0 }));
+    const planId = access?.plan.planId ?? company?.billing?.plan ?? "free";
+
     return {
-      paymentsConnected: false,
-      currentPlan: EMPLOYER_PLANS.find((item) => item.id === plan) ?? EMPLOYER_PLANS[0],
-      plans: EMPLOYER_PLANS,
+      paymentsConnected: !!access?.pricing.enabled,
+      currency: access?.pricing.currency ?? "USD",
+      note: access?.pricing.note ?? "",
+      currentPlan: plans.find((item) => item.id === planId) ?? plans[0],
+      plans,
+      planState: access?.plan ?? null,
+      liveJobs: access?.liveJobs ?? 0,
+      employerStatus: access?.status ?? "not_submitted",
+      payments: access?.payments ?? [],
       pendingUpgrade: requests.find((item) => item.status === "requested") ?? null,
       upgradeRequests: requests,
       invoices: [],
       paymentMethods: [],
       canManage: this.capabilitiesFor(context.role).includes("manageBilling"),
     };
+  }
+
+  /** Choose a plan: free plans switch at once, paid plans return a checkout (existing Fockis checkout). */
+  async choosePlan(actor: EmployerActor, plan: string) {
+    const context = await this.resolveContext(actor);
+    this.assertCan(context, "manageBilling");
+    if (!this.access) throw new BadRequestException("Plans are not available right now.");
+    const result = await this.access.choosePlan(context.ownerId, plan, actor.username ?? actor.email ?? "Employer");
+    return { ...result, billing: result.switched ? await this.getBilling(actor) : null };
+  }
+
+  /** After the checkout succeeded: verify the payment and apply the plan. */
+  async claimPlanPayment(actor: EmployerActor, paymentIntentId: string) {
+    const context = await this.resolveContext(actor);
+    this.assertCan(context, "manageBilling");
+    if (!this.access) throw new BadRequestException("Plans are not available right now.");
+    await this.access.claim(context.ownerId, paymentIntentId, actor.username ?? actor.email ?? "Employer");
+    return this.getBilling(actor);
   }
 
   async requestUpgrade(actor: EmployerActor, dto: UpgradeRequestDto) {
@@ -1487,7 +1524,7 @@ export class EmployerService {
   async listPublicCompanies(search?: string) {
     const groups = await this.jobModel
       .aggregate<{ _id: Types.ObjectId; openJobs: number; company: string; latest: Date }>([
-        { $match: { isActive: true, isApproved: true } },
+        { $match: { isActive: true, isApproved: true, ...(this.access ? await this.access.publicJobFilter() : { takenDown: { $ne: true } }) } },
         { $sort: { createdAt: -1 } },
         {
           $group: {
@@ -1534,14 +1571,14 @@ export class EmployerService {
     const [company, jobs] = await Promise.all([
       this.companyModel.findOne({ ownerId }).lean().exec(),
       this.jobModel
-        .find({ employerId: ownerId, isActive: true, isApproved: true })
+        .find({ employerId: ownerId, isActive: true, isApproved: true, takenDown: { $ne: true } })
         .select("-viewCount")
         .sort({ createdAt: -1 })
         .lean()
         .exec(),
     ]);
 
-    if (!company && !jobs.length) {
+    if ((!company && !jobs.length) || company?.blocked) {
       throw new NotFoundException("Company not found");
     }
 
@@ -1823,6 +1860,10 @@ export class EmployerService {
         caption: item.caption ?? "",
       })),
       verificationStatus: company.verification?.status ?? "not_submitted",
+      // Fockis admin decisions shown in Employer Center.
+      blocked: !!company.blocked,
+      blockedReason: company.blocked ? company.blockedReason ?? "" : "",
+      reviewerNote: company.verification?.reviewerNote ?? "",
       teamSize: (company.team ?? []).filter((member) => member.status === "active").length + 1,
       plan: company.billing?.plan ?? "free",
       updatedAt: company.updatedAt ?? null,

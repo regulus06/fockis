@@ -8,6 +8,7 @@ import OrganizationUserDetailsPage from "./pages/OrganizationUserDetailsPage";
 import OrganizationDomainsPage from "./pages/OrganizationDomainsPage";
 import OrganizationAddDomainPage from "./pages/OrganizationAddDomainPage";
 import OrganizationDomainDetailsPage from "./pages/OrganizationDomainDetailsPage";
+import OrganizationDomainCheckoutPage from "./pages/OrganizationDomainCheckoutPage";
 
 import OrganizationIdentitySettingsPage from "./pages/OrganizationIdentitySettingsPage";
 
@@ -101,6 +102,15 @@ export function createOrganizationIdentityRoutes(
       element: <OrganizationAddDomainPage />,
     },
 
+    /**
+     * Pay / renew the Fockis domain (prices set in the Admin Center).
+     *
+     * /organizations/:organizationId/identity/domains/pay
+     */
+    {
+      path: "identity/domains/pay",
+      element: <OrganizationDomainCheckoutPage />,
+    },
     /**
      * Domain details / verification
      *

@@ -274,6 +274,16 @@ function EnrollActions({ c, onChanged }: { c: CoursePage; onChanged: () => void 
       </div>
     );
 
+  if (a.staffView)
+    return (
+      <div className="fa-detail__btns">
+        <Link className="fa-btn fa-btn--outline" to={room}>
+          <Icon name="monitor" size={15} /> Review classroom
+        </Link>
+        <small className="fa-muted">Academy staff view — only the creator can edit this class.</small>
+      </div>
+    );
+
   if (a.enrolled && a.enrollment)
     return (
       <div className="fa-st-enrolled">

@@ -18,6 +18,7 @@ export { EmployerTeamPage } from './EmployerTeamPage';
 export { EmployerAnalyticsPage } from './EmployerAnalyticsPage';
 export { EmployerResourcesPage } from './EmployerResourcesPage';
 export { EmployerBillingPage } from './EmployerBillingPage';
+export { EmployerPlanCheckoutPage } from './EmployerPlanCheckoutPage';
 export { EmployerSettingsPage } from './EmployerSettingsPage';
 
 export { EmployerNotFoundPage } from './EmployerNotFoundPage';

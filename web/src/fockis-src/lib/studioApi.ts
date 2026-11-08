@@ -13,7 +13,7 @@ import { getAcademyApiBaseUrl } from "./academyApi";
 import { academyToken } from "./academySession";
 
 export type Kind = "course" | "seminar" | "live_class" | "workshop";
-export type LessonType = "video" | "pdf" | "text" | "quiz" | "live";
+export type LessonType = "video" | "pdf" | "text" | "quiz" | "live" | "assignment";
 export type Level = "beginner" | "intermediate" | "advanced" | "all";
 export type Visibility = "public" | "hidden" | "private" | "draft" | "school";
 
@@ -29,6 +29,7 @@ export const LESSON_LABEL: Record<LessonType, string> = {
   text: "Reading",
   quiz: "Test",
   live: "Live session",
+  assignment: "Homework",
 };
 export const LESSON_ICON: Record<LessonType, string> = {
   video: "play",
@@ -36,6 +37,7 @@ export const LESSON_ICON: Record<LessonType, string> = {
   text: "book",
   quiz: "quiz",
   live: "video",
+  assignment: "clipboard",
 };
 
 export interface QuizQuestion {
@@ -52,6 +54,8 @@ export interface EditorLesson {
   preview?: boolean;
   durationMin?: number;
   startsAt?: string;
+  /** Homework: hand-in deadline (ISO). */
+  dueAt?: string;
   section?: string;
   videoUrl?: string;
   storageKey?: string;
@@ -96,6 +100,9 @@ export interface StudioCourse {
   revenue?: Record<string, number>;
   updatedAt?: string;
   createdAt?: string;
+  /** Taken down by Fockis (admin center). Hidden and closed to new learners. */
+  takenDown?: boolean;
+  takenDownReason?: string;
 }
 
 export type StudioSave = Partial<Omit<StudioCourse, "code" | "lessons" | "_id" | "learners" | "completed" | "revenue">> & {
@@ -134,6 +141,7 @@ export interface PageLesson {
   preview: boolean;
   durationMin?: number;
   startsAt?: string;
+  dueAt?: string;
   section?: string;
   locked: boolean;
   videoUrl?: string;
@@ -190,6 +198,8 @@ export interface CoursePage {
   access: {
     signedIn: boolean;
     isOwner: boolean;
+    /** Academy administrator/staff looking at someone else's class: can review, not edit. */
+    staffView?: boolean;
     enrolled: boolean;
     canEnroll: boolean;
     reason?: string;
@@ -313,6 +323,87 @@ export function uploadStudioFile(file: File, kind: "video" | "pdf" | "image", on
     xhr.send(fd);
   });
 }
+
+// ---------------------------------------------------------------- creator approval
+export type CreatorStatus = "none" | "pending" | "approved" | "rejected" | "suspended";
+
+export interface CreatorProfile {
+  kind: "person" | "business";
+  displayName: string;
+  businessName?: string;
+  phone?: string;
+  country?: string;
+  city?: string;
+  website?: string;
+  topics?: string;
+  about: string;
+  experience?: string;
+  sampleUrl?: string;
+}
+
+export interface CreatorAccess {
+  status: CreatorStatus;
+  trusted: boolean;
+  profile: CreatorProfile | null;
+  reason: string;
+  appliedAt: string | null;
+  reviewedAt: string | null;
+  /** May create classes under their own name or business. */
+  canTeach: boolean;
+  /** Approved schools they belong to (may always create classes offered by these). */
+  schoolIds: string[];
+  canApply: boolean;
+}
+
+export const creatorApi = {
+  access: () => call<CreatorAccess>("/studio/creator"),
+  apply: (body: CreatorProfile) => call<CreatorAccess>("/studio/creator/apply", { method: "POST", body: json(body) }),
+};
+
+// ---------------------------------------------------------------- homework
+export type SubmissionStatus = "submitted" | "returned" | "graded";
+
+export interface Submission {
+  id: string;
+  lessonKey: string;
+  text: string;
+  files: { index: number; fileName: string; mimeType?: string; size?: number }[];
+  status: SubmissionStatus;
+  grade: string;
+  feedback: string;
+  attempts: number;
+  submittedAt: string;
+  gradedAt: string | null;
+  gradedByName: string;
+  late: boolean;
+}
+
+export interface OwnerSubmissions {
+  assignments: { key: string; title: string; dueAt: string | null; learners: number; handedIn: number; toReview: number }[];
+  items: (Submission & { lessonTitle: string; student: { id: string; name: string; email: string } })[];
+}
+
+export const MAX_HOMEWORK_FILES = 3;
+export const MAX_HOMEWORK_MB = 25;
+
+export const homeworkApi = {
+  /** My hand-in for a homework lesson (null if not handed in yet). */
+  mine: (code: string, key: string) => call<Submission | null>(`/learn/${enc(code)}/lessons/${enc(key)}/submission`),
+  /** Hand in (or hand in again): text, previous files to keep (by index) and new files. */
+  submit: (code: string, key: string, text: string, keep: number[], files: File[]) => {
+    const fd = new FormData();
+    fd.append("text", text);
+    fd.append("keep", keep.join(","));
+    files.forEach((f) => fd.append("files", f));
+    return call<Submission>(`/learn/${enc(code)}/lessons/${enc(key)}/submission`, { method: "POST", body: fd });
+  },
+  myFile: (submissionId: string, index: number) => call<{ url: string; fileName: string }>(`/learn/submissions/${enc(submissionId)}/files/${index}`),
+  // class owner
+  list: (code: string) => call<OwnerSubmissions>(`/studio/courses/${enc(code)}/submissions`),
+  review: (code: string, id: string, action: "grade" | "return", grade: string, feedback: string) =>
+    call<Submission>(`/studio/courses/${enc(code)}/submissions/${enc(id)}/review`, { method: "POST", body: json({ action, grade, feedback }) }),
+  ownerFile: (code: string, id: string, index: number) => call<{ url: string; fileName: string }>(`/studio/courses/${enc(code)}/submissions/${enc(id)}/files/${index}`),
+};
 
 // ---------------------------------------------------------------- learner
 export const learnApi = {

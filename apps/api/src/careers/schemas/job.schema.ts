@@ -307,12 +307,26 @@ export class Job {
   /**
    * ADMINISTRATOR APPROVAL
    */
+  /**
+   * Shown publicly on Careers. Set automatically from the employer's approval
+   * by Fockis (approved and not blocked) and cleared when a job is taken down.
+   */
   @Prop({
     type: Boolean,
     default: false,
     index: true,
   })
   isApproved!: boolean;
+
+  /** Taken down by a Fockis admin (stays hidden even if the employer is approved). */
+  @Prop({ type: Boolean, default: false, index: true })
+  takenDown!: boolean;
+
+  @Prop({ type: String, trim: true, maxlength: 2000 })
+  takenDownReason?: string;
+
+  @Prop({ type: Date })
+  takenDownAt?: Date;
 }
 
 /**

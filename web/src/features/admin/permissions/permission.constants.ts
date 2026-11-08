@@ -90,6 +90,27 @@ export const PERMISSIONS = {
   MAP_ADDRESSES_VERIFY: "map.addresses.verify",
 
   // ============================================================
+  // ACADEMY
+  // ============================================================
+
+  ACADEMY_VIEW: "academy.view",
+  ACADEMY_MANAGE: "academy.manage",
+
+  // ============================================================
+  // DOMAINS (Fockis domain prices & fees)
+  // ============================================================
+
+  DOMAINS_VIEW: "domains.view",
+  DOMAINS_MANAGE: "domains.manage",
+
+  // ============================================================
+  // CAREERS (employers, job posts, employer plans)
+  // ============================================================
+
+  CAREERS_VIEW: "careers.view",
+  CAREERS_MANAGE: "careers.manage",
+
+  // ============================================================
   // LEGAL & EVIDENCE (restricted)
   // ============================================================
 
@@ -327,4 +348,4 @@ export const REASON_REQUIRED_ACTIONS = new Set<string>([
   "CHANGE_ADMIN_ROLE",
   "CHANGE_PERMISSIONS",
   "EMERGENCY_ACTION",
-]);
+]);

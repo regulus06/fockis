@@ -19,7 +19,7 @@ import {
 } from "class-validator";
 
 export const KINDS = ["course", "seminar", "live_class", "workshop"] as const;
-export const LESSON_TYPES = ["video", "pdf", "text", "quiz", "live"] as const;
+export const LESSON_TYPES = ["video", "pdf", "text", "quiz", "live", "assignment"] as const;
 export const LEVELS = ["beginner", "intermediate", "advanced", "all"] as const;
 export const VISIBILITY = ["public", "hidden", "private", "draft", "school"] as const;
 
@@ -50,6 +50,10 @@ export class StudioLessonDto {
   @IsOptional() @IsString() @MaxLength(40)
   key?: string;
 
+  /** Sent back by the editor as it was loaded; the server re-numbers lessons from their position. */
+  @IsOptional() @IsInt() @Min(0) @Max(10000)
+  order?: number;
+
   @IsString() @MinLength(1) @MaxLength(160)
   title!: string;
 
@@ -64,6 +68,10 @@ export class StudioLessonDto {
 
   @IsOptional() @IsISO8601()
   startsAt?: string;
+
+  /** Assignments: hand-in deadline. */
+  @IsOptional() @IsISO8601()
+  dueAt?: string;
 
   @IsOptional() @IsString() @MaxLength(120)
   section?: string;
@@ -178,4 +186,50 @@ export class ClaimPaymentDto {
 export class QuizAnswersDto {
   @IsArray() @ArrayMaxSize(100) @IsInt({ each: true })
   answers!: number[];
+}
+
+export class ReviewSubmissionDto {
+  @IsIn(["grade", "return"])
+  action!: "grade" | "return";
+
+  @IsOptional() @IsString() @MaxLength(40)
+  grade?: string;
+
+  @IsOptional() @IsString() @MaxLength(4000)
+  feedback?: string;
+}
+
+export class CreatorApplyDto {
+  @IsIn(["person", "business"])
+  kind!: "person" | "business";
+
+  @IsString() @MinLength(2) @MaxLength(80)
+  displayName!: string;
+
+  @IsOptional() @IsString() @MaxLength(120)
+  businessName?: string;
+
+  @IsOptional() @IsString() @MaxLength(40)
+  phone?: string;
+
+  @IsOptional() @IsString() @MaxLength(60)
+  country?: string;
+
+  @IsOptional() @IsString() @MaxLength(80)
+  city?: string;
+
+  @IsOptional() @IsString() @MaxLength(300)
+  website?: string;
+
+  @IsOptional() @IsString() @MaxLength(300)
+  topics?: string;
+
+  @IsString() @MinLength(30) @MaxLength(2000)
+  about!: string;
+
+  @IsOptional() @IsString() @MaxLength(2000)
+  experience?: string;
+
+  @IsOptional() @IsString() @MaxLength(300)
+  sampleUrl?: string;
 }

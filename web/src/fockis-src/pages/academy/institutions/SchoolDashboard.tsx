@@ -6,6 +6,7 @@ import CredentialsSheet from "../../../components/academy/institutions/Credentia
 import { useAcademyLoad } from "../../../lib/useAcademyLoad";
 import { useAcademySession } from "../../../lib/academySession";
 import { mediaUrl, uploadStudioFile } from "../../../lib/studioApi";
+import { publicSiteUrl } from "../../../lib/siteUrl";
 import {
   INSTITUTION_TYPE_LABEL,
   STATUS_LABEL,
@@ -19,7 +20,9 @@ import {
   type TeacherInput,
   type StaffInstitution,
   type StudentApplication,
+  domainPeriodText,
 } from "../../../lib/institutionsApi";
+import { formatPrice } from "../../../lib/studioApi";
 import { SignInGate } from "../AcademyPortal";
 import { SchoolForm } from "./RegisterSchool";
 
@@ -133,6 +136,12 @@ export default function SchoolDashboard() {
                   <span>{INSTITUTION_TYPE_LABEL[s.type]}</span>
                   <span>·</span>
                   <code>{s.domain}</code>
+                  {s.domainBilling?.state === "active" && s.domainBilling.paidUntil && (
+                    <>
+                      <span>·</span>
+                      <span>Domain paid until {fmt(s.domainBilling.paidUntil)}</span>
+                    </>
+                  )}
                 </div>
               </div>
               {s.status === "approved" && (
@@ -142,6 +151,7 @@ export default function SchoolDashboard() {
               )}
             </div>
             <StatusBanner s={s} onChanged={school.reload} />
+            <DomainBanner s={s} />
             {tab === "overview" && <Overview s={s} />}
             {tab === "teachers" && <Teachers s={s} onChanged={(n) => school.setData(() => n)} />}
             {tab === "students" && <Students s={s} onCreds={setCreds} />}
@@ -193,8 +203,42 @@ function StatusBanner({ s, onChanged }: { s: StaffInstitution; onChanged: () => 
   );
 }
 
+/** Fockis domain fee: pay after approval, renew before the end of each period. */
+function DomainBanner({ s }: { s: StaffInstitution }) {
+  const b = s.domainBilling;
+  if (s.status !== "approved" || !b) return null;
+  const show = b.state === "unpaid" || b.state === "expired" || b.state === "grace" || (b.state === "active" && b.renewSoon);
+  if (!show) return null;
+  const canPay = s.myRole === "owner" || s.myRole === "admin" || s.myRole === "fockis-admin";
+  const price = `${formatPrice(false, b.price, b.currency)} ${domainPeriodText(b.periodMonths)}`;
+  const copy = {
+    unpaid: { tone: "is-pending", icon: "wallet", title: "Approved — pay to switch on your domain", text: `${s.domain} costs ${price}. Once paid, you can add students and publish school classes.`, btn: "Pay now" },
+    grace: { tone: "is-pending", icon: "clock", title: "Your domain payment is due", text: `Pay ${price} before ${fmt(b.graceEndsAt ?? undefined)} to keep ${s.domain} running.`, btn: "Pay now" },
+    expired: { tone: "is-bad", icon: "lock", title: "Your domain is paused", text: `Your classes are hidden and you can't add students or classes. Renew ${s.domain} (${price}) to switch everything back on. Students who already joined keep their classes.`, btn: "Renew now" },
+    active: { tone: "is-pending", icon: "calendar", title: "Renew your domain soon", text: `${s.domain} is paid until ${fmt(b.paidUntil ?? undefined)}. Renewing adds another period after that date (${price}).`, btn: "Renew" },
+  } as const;
+  const c = copy[b.state as keyof typeof copy];
+  return (
+    <div className={`fa-sch-banner ${c.tone}`}>
+      <Icon name={c.icon} size={20} />
+      <div>
+        <b>{c.title}</b>
+        <p>{c.text}</p>
+        {b.note && <p className="fa-sch-banner__note">{b.note}</p>}
+        {!canPay && <p>Only the school&apos;s owner or admins can pay.</p>}
+      </div>
+      {canPay && b.canPay && (
+        <Link className="fa-btn fa-btn--primary fa-btn--sm" to={`/academy/school/${s._id}/pay`}>
+          {c.btn}
+        </Link>
+      )}
+    </div>
+  );
+}
+
 function Overview({ s }: { s: StaffInstitution }) {
-  const approved = s.status === "approved";
+  // Paused domain (unpaid / expired) works like "not approved" for these shortcuts.
+  const approved = s.status === "approved" && s.domainBilling?.active !== false;
   return (
     <>
       <div className="fa-stats fa-stats--4">
@@ -219,6 +263,20 @@ function Overview({ s }: { s: StaffInstitution }) {
           </Link>
         ))}
       </div>
+      {(s.domainPayments?.length ?? 0) > 0 && (
+        <div className="fa-card fa-pad">
+          <h4 className="fa-st-h4">Domain payments</h4>
+          <ul className="fa-sch-history">
+            {s.domainPayments!.map((p, i) => (
+              <li key={i}>
+                <b>{p.amount !== undefined ? formatPrice(false, p.amount, p.currency) : "Payment"}</b> {fmt(p.at)}
+                {p.to ? ` · covers until ${fmt(p.to)}` : p.method === "stripe" ? " · lifetime" : ""}
+                {p.method === "manual" ? " · recorded by Fockis" : ""}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {s.history?.length > 0 && (
         <div className="fa-card fa-pad">
           <h4 className="fa-st-h4">History</h4>
@@ -570,6 +628,7 @@ function Students({ s, onCreds }: { s: StaffInstitution; onCreds: (c: { items: C
             <input value={q} placeholder="Search students" onChange={(e) => setQ(e.target.value)} />
           </label>
         </div>
+        <SignInHelp />
         {list.state.status === "error" && <p className="fa-error">{list.state.error}</p>}
         {list.state.status === "ready" && rows.length === 0 && <p className="fa-muted">{q ? "No student matches." : "No student logins yet."}</p>}
         {rows.length > 0 && (
@@ -597,7 +656,10 @@ function Students({ s, onCreds }: { s: StaffInstitution; onCreds: (c: { items: C
                       )}
                     </td>
                     <td>
-                      <code>{x.loginId}</code>
+                      <span className="fa-sch-login">
+                        <code>{x.loginId}</code>
+                        <CopyButton text={x.loginId} label={`Copy ${x.loginId}`} />
+                      </span>
                     </td>
                     <td>
                       {!x.active ? (
@@ -631,6 +693,49 @@ function Students({ s, onCreds }: { s: StaffInstitution; onCreds: (c: { items: C
         )}
       </div>
     </div>
+  );
+}
+
+/** Where students sign in, so staff can tell them (email isn't connected yet). */
+function SignInHelp() {
+  const url = `${publicSiteUrl()}/academy/login`;
+  return (
+    <div className="fa-sch-signin">
+      <Icon name="lock" size={16} />
+      <div>
+        <b>How students sign in the first time</b>
+        <p>
+          Send each student this page, their <b>login</b> (below) and the <b>temporary password</b> you got when you created it. They sign in, then choose
+          their own password. Lost the temporary password? Click <b>New password</b> to make another one.
+        </p>
+        <span className="fa-sch-login">
+          <a href={url} target="_blank" rel="noreferrer">
+            {url}
+          </a>
+          <CopyButton text={url} label="Copy the sign-in link" />
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function CopyButton({ text, label }: { text: string; label: string }) {
+  const [done, setDone] = useState(false);
+  return (
+    <button
+      type="button"
+      className="fa-icon-btn fa-sch-copy"
+      aria-label={label}
+      title={done ? "Copied" : label}
+      onClick={() =>
+        void navigator.clipboard?.writeText(text).then(() => {
+          setDone(true);
+          window.setTimeout(() => setDone(false), 1500);
+        })
+      }
+    >
+      <Icon name={done ? "check" : "clipboard"} size={13} />
+    </button>
   );
 }
 

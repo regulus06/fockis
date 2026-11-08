@@ -13,6 +13,7 @@ import { useNotify } from '../store/employerNotificationStore';
 import { employerApi } from '../services/employerApi';
 import { getErrorMessage } from '../hooks/useEmployerQuery';
 import { ROLE_LABELS } from '../utils/employerPermissions';
+import { EmployerStatusBanner } from './EmployerStatusBanner';
 
 /** One shared shell for every Employer Center page. */
 export function EmployerLayout() {
@@ -85,6 +86,7 @@ export function EmployerLayout() {
               </p>
             </div>
           )}
+          {me && <EmployerStatusBanner me={me} />}
           {me && <Outlet />}
         </div>
       </div>

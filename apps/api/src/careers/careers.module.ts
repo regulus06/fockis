@@ -17,6 +17,14 @@ import { ApplicationsService } from "./services/applications.service";
 import { SavedJobsService } from "./services/saved-jobs.service";
 import { EmployerService } from "./services/employer.service";
 import { CareerProfileService } from "./services/career-profile.service";
+import { EmployerAccessService } from "./services/employer-access.service";
+import { CareersAdminController } from "./controllers/careers-admin.controller";
+import {
+  EmployerPlanSettings,
+  EmployerPlanSettingsSchema,
+} from "./schemas/employer-plan-settings.schema";
+// Existing Fockis payment records — read-only (verify employer plan payments).
+import { Payment, PaymentSchema } from "../payments/schemas/payment.schema";
 
 import {
   JobSchema,
@@ -77,6 +85,15 @@ import {
         name: CareerProfile.name,
         schema: CareerProfileSchema,
       },
+      // Employer plans (prices set in the Admin Center).
+      {
+        name: EmployerPlanSettings.name,
+        schema: EmployerPlanSettingsSchema,
+      },
+      {
+        name: Payment.name,
+        schema: PaymentSchema,
+      },
     ]),
   ],
 
@@ -87,6 +104,7 @@ import {
     CompaniesController,
     EmployerController,
     CareerController,
+    CareersAdminController,
   ],
 
   providers: [
@@ -95,6 +113,8 @@ import {
     SavedJobsService,
     EmployerService,
     CareerProfileService,
+    // Employer approval, blocks and plans (Admin Center → Careers).
+    EmployerAccessService,
   ],
 
   exports: [
@@ -103,6 +123,7 @@ import {
     SavedJobsService,
     EmployerService,
     CareerProfileService,
+    EmployerAccessService,
   ],
 })
 export class CareersModule {}

@@ -6,6 +6,7 @@ import type {
   EmployerApplicantDetail,
   EmployerApplicantList,
   EmployerBilling,
+  EmployerChoosePlanResult,
   EmployerCandidate,
   EmployerDashboard,
   EmployerInterview,
@@ -142,6 +143,10 @@ export const employerApi = {
   requestUpgrade: (plan: 'growth' | 'enterprise') =>
     apiClient.post<EmployerBilling>('/employer/billing/upgrade-requests', { plan }),
   cancelUpgradeRequest: () => apiClient.delete<EmployerBilling>('/employer/billing/upgrade-requests/pending'),
+  /** Free plans switch at once; paid plans return a checkout (existing Fockis checkout). */
+  choosePlan: (plan: string) => apiClient.post<EmployerChoosePlanResult>('/employer/billing/plan', { plan }),
+  /** After the checkout succeeded: verify the payment and apply the plan. */
+  claimPlanPayment: (paymentIntentId: string) => apiClient.post<EmployerBilling>('/employer/billing/claim', { paymentIntentId }),
 
   /* settings */
   getSettings: () => apiClient.get<EmployerSettings>('/employer/settings'),

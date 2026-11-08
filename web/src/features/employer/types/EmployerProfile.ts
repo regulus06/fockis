@@ -23,6 +23,11 @@ export interface EmployerCompany {
   };
   media: { id: string; url: string; caption: string }[];
   verificationStatus: EmployerVerificationStatus;
+  /** Blocked by Fockis: jobs hidden, no new posts. */
+  blocked?: boolean;
+  blockedReason?: string;
+  /** Fockis's note when approving / rejecting. */
+  reviewerNote?: string;
   teamSize: number;
   plan: string;
   updatedAt: string | null;

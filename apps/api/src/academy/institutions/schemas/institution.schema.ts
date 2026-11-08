@@ -33,6 +33,22 @@ export interface InstitutionTeacher {
   meetingUrl?: string;
 }
 
+/** One paid (or admin-recorded) period of the school's Fockis domain. */
+export interface InstitutionBillingEntry {
+  method: "stripe" | "manual" | "exempt" | "unexempt";
+  amount?: number;
+  currency?: string;
+  /** Covered period; `to` is empty for a one-time (lifetime) fee. */
+  from?: Date;
+  to?: Date;
+  paymentIntentId?: string;
+  paymentId?: string;
+  referenceId?: string;
+  note?: string;
+  byName?: string;
+  at: Date;
+}
+
 export interface InstitutionHistory {
   action: "submitted" | "resubmitted" | "approved" | "rejected" | "blocked" | "unblocked";
   reason?: string;
@@ -103,6 +119,25 @@ export class AcademyInstitution {
 
   @Prop({ type: [SchemaTypes.Mixed], default: [] })
   teachers!: InstitutionTeacher[];
+
+  // ---------------------------------------------------------------- domain billing
+  // Price, period and grace days are set by Fockis admins (AcademyDomainPricing).
+
+  /** First approval (start of the "pay to activate" step). */
+  @Prop() approvedAt?: Date;
+
+  /** The domain is paid up to this moment. */
+  @Prop({ index: true }) paidUntil?: Date;
+
+  /** A one-time (lifetime) domain fee was paid. */
+  @Prop({ default: false }) paidForever!: boolean;
+
+  /** Fockis admins let this organization use its domain without paying. */
+  @Prop({ default: false, index: true }) billingExempt!: boolean;
+  @Prop({ trim: true }) billingExemptReason?: string;
+
+  @Prop({ type: [SchemaTypes.Mixed], default: [] })
+  billing!: InstitutionBillingEntry[];
 
   /** Students can apply from the public school page. */
   @Prop({ default: true })

@@ -80,6 +80,58 @@ export interface HistoryEntry {
   at: string;
 }
 
+/* ---------------------------------------------------------------- Fockis domain fee */
+
+export type DomainBillingState = "free" | "exempt" | "paid" | "active" | "grace" | "unpaid" | "expired" | "not_approved";
+
+export interface DomainBilling {
+  state: DomainBillingState;
+  active: boolean;
+  canPay: boolean;
+  price: number;
+  currency: string;
+  periodMonths: number;
+  graceDays: number;
+  paidUntil: string | null;
+  graceEndsAt: string | null;
+  renewSoon: boolean;
+  note: string;
+}
+
+export interface DomainPricingPublic {
+  enabled: boolean;
+  currency: string;
+  periodMonths: number;
+  periodLabel: string;
+  graceDays: number;
+  note: string;
+  prices: Partial<Record<InstitutionType, number>>;
+}
+
+export interface DomainCheckoutInfo {
+  purpose: string;
+  referenceId: string;
+  amount: number;
+  currency: string;
+  periodMonths: number;
+  periodLabel: string;
+  title: string;
+  organization: string;
+  type: InstitutionType;
+  renewal: boolean;
+  note: string;
+  metadata: Record<string, string>;
+}
+
+/** "per year", "per month", "one-time"… */
+export function domainPeriodText(months: number) {
+  if (months === 0) return "one-time";
+  if (months === 1) return "per month";
+  if (months === 12) return "per year";
+  if (months % 12 === 0) return `every ${months / 12} years`;
+  return `every ${months} months`;
+}
+
 export interface StaffInstitution extends InstitutionDetails {
   _id: string;
   domain: string;
@@ -94,6 +146,8 @@ export interface StaffInstitution extends InstitutionDetails {
   myRole: "owner" | "admin" | "staff" | "fockis-admin";
   teachers: SchoolTeacher[];
   counts: { students: number; pendingApplications: number; classes: number };
+  domainBilling?: DomainBilling;
+  domainPayments?: { method: "stripe" | "manual"; amount?: number; currency?: string; from?: string; to?: string; at: string }[];
 }
 
 export interface Credentials {
@@ -199,11 +253,16 @@ export const schoolsApi = {
   directory: () => call<(PublicSchool & { domain: string })[]>(base, {}, false),
   checkDomain: (slug: string) => call<{ slug: string; domain?: string; available: boolean; reason?: string }>(`${base}/check-domain?slug=${enc(slug)}`, {}, false),
   profile: (slug: string) => call<PublicSchool>(`${base}/${enc(slug)}`, {}, false),
+  /** Signed-in student with a school login: their school and all its classes (null otherwise). */
+  mySchool: () => call<PublicSchool | null>(`${base}/my-school`),
   apply: (slug: string, body: { name: string; personalEmail: string; phone?: string; program?: string; message?: string }) =>
     call<{ message: string }>(`${base}/${enc(slug)}/apply`, { method: "POST", body: json(body) }, false),
 
   // school owners / staff
   mine: () => call<StaffInstitution[]>(`${base}/mine`),
+  domainPricing: () => call<DomainPricingPublic>(`${base}/domain-pricing`, {}, false),
+  domainCheckout: (id: string) => call<DomainCheckoutInfo>(`${m(id)}/domain/checkout`, { method: "POST" }),
+  domainClaim: (id: string, paymentIntentId: string) => call<DomainBilling>(`${m(id)}/domain/claim`, { method: "POST", body: json({ paymentIntentId }) }),
   register: (body: Partial<InstitutionDetails>) => call<StaffInstitution>(base, { method: "POST", body: json(body) }),
   get: (id: string) => call<StaffInstitution>(m(id)),
   update: (id: string, body: Partial<InstitutionDetails>) => call<StaffInstitution>(m(id), { method: "PATCH", body: json(body) }),

@@ -654,6 +654,25 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
   },
 
   // ============================================================
+  // CAREERS
+  // ============================================================
+
+  {
+    key: "careers.view",
+    label: "View Careers",
+    description:
+      "View employers, job posts and employer plans.",
+    module: "careers",
+  },
+  {
+    key: "careers.manage",
+    label: "Manage Careers",
+    description:
+      "Approve, reject or block employers, take down jobs and set employer plan prices.",
+    module: "careers",
+  },
+
+  // ============================================================
   // HELP & SUPPORT
   // ============================================================
 
@@ -709,6 +728,23 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
     label: "Verify Addresses",
     description: "Approve, reject or ask for more information on Smart Addresses.",
     module: "maps",
+  },
+
+  // ============================================================
+  // ACADEMY
+  // ============================================================
+
+  {
+    key: "academy.view",
+    label: "View Academy",
+    description: "See Fockis Academy classes, seminars, schools, certificates and learner accounts.",
+    module: "academy",
+  },
+  {
+    key: "academy.manage",
+    label: "Manage Academy",
+    description: "Take classes down, approve or block schools, revoke certificates and suspend learner accounts.",
+    module: "academy",
   },
   {
     key: "legal.view",

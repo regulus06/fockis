@@ -102,6 +102,8 @@ import ResetPassword from "./pages/ResetPassword";
 
 import FockisFeedPage from "./pages/FockisFeedPage";
 import AccountSettingsPage from "./features/account/pages/AccountSettingsPage";
+import MyFockisDomainPage from "./features/account/fockis-domain/MyFockisDomainPage";
+import MyFockisDomainPayPage from "./features/account/fockis-domain/MyFockisDomainPayPage";
 import FockisProfilePage from "./features/gifts/fockisprofile/pages/FockisProfilePage";
 import LegalPolicyPage from "./pages/legal/LegalPolicyPage";
 
@@ -216,6 +218,7 @@ import OrganizationUserDetailsPage from "./features/organization-identity/pages/
 import OrganizationDomainsPage from "./features/organization-identity/pages/OrganizationDomainsPage";
 import OrganizationAddDomainPage from "./features/organization-identity/pages/OrganizationAddDomainPage";
 import OrganizationDomainDetailsPage from "./features/organization-identity/pages/OrganizationDomainDetailsPage";
+import OrganizationDomainCheckoutPage from "./features/organization-identity/pages/OrganizationDomainCheckoutPage";
 import OrganizationIdentitySettingsPage from "./features/organization-identity/pages/OrganizationIdentitySettingsPage";
 
 // ============================================================================
@@ -1968,6 +1971,17 @@ function App(): React.JSX.Element {
           element={<AccountSettingsPage />}
         />
 
+        {/* Personal Fockis domain (john.fockis.com) — price set in the Admin Center. */}
+        <Route
+          path="/settings/fockis-domain"
+          element={<MyFockisDomainPage />}
+        />
+
+        <Route
+          path="/settings/fockis-domain/pay"
+          element={<MyFockisDomainPayPage />}
+        />
+
         <Route
           path="/settings/appearance"
           element={<AccountSettingsPage />}
@@ -2360,6 +2374,12 @@ function App(): React.JSX.Element {
         <Route
           path="/organizations/:organizationId/identity/domains/new"
           element={<OrganizationAddDomainPage />}
+        />
+
+        {/* Pay / renew the Fockis domain (prices set in the Admin Center). */}
+        <Route
+          path="/organizations/:organizationId/identity/domains/pay"
+          element={<OrganizationDomainCheckoutPage />}
         />
 
         <Route

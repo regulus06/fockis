@@ -1131,3 +1131,82 @@ $tones: ("blue": ($blue, #e7efff), "green": (#16a34a, #e3f7ea), "purple": (#7c3a
 // but stronger than the app-wide `h1, h2 { color: var(--text-h) }`.
 .fa-root :where(h1, h2, h3, h4, h5, h6), .academy :where(h1, h2, h3, h4, h5, h6) { color: inherit; }
 .fa-qrwarn { display: flex; gap: 10px; align-items: flex-start; background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; border-radius: 12px; padding: 12px 14px; font-size: 13px; line-height: 1.5; margin-bottom: 16px; code { background: #fff; padding: 1px 6px; border-radius: 6px; font-size: 12px; } }
+
+// ---- Homework (assignment lessons): classroom hand-in + Creator Studio review ----
+.fa-hw__box { margin-top: 18px; padding: 18px; display: grid; gap: 12px;
+  &.is-loading { min-height: 120px; background: $bg-soft; }
+  .fa-fields { display: grid; gap: 12px; }
+  textarea { width: 100%; } }
+.fa-hw__head { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  > b { font-size: 15px; color: $ink; } }
+.fa-hw__flag { font-size: 12.5px; font-weight: 600; color: $blue; background: $blue-soft; border-radius: 999px; padding: 3px 10px;
+  &.is-amber { color: #92400e; background: #fef3c7; }
+  &.is-gray { color: $muted; background: $bg-soft; } }
+.fa-hw__feedback { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 10px 12px;
+  small { color: #15803d; font-weight: 600; font-size: 12px; }
+  p { margin: 4px 0 0; white-space: pre-wrap; color: $ink; font-size: 14px; } }
+.fa-hw__text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; background: $bg-soft; border-radius: 10px; padding: 12px; font-size: 14px; line-height: 1.55; color: $ink; }
+.fa-hw__files { display: flex; flex-wrap: wrap; gap: 8px;
+  .fa-btn { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+.fa-hw__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.fa-hw__keep { display: grid; gap: 6px; }
+.fa-hw__new { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 13px;
+  li { display: flex; gap: 6px; align-items: center; overflow-wrap: anywhere; } }
+.fa-hw__due { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; font-weight: 600; color: $blue; margin: 0 0 10px;
+  &.is-past { color: #b91c1c; } }
+.fa-hw__sheet { margin: 14px 0 0; border: 1px solid $line; border-radius: 12px; flex-wrap: wrap; }
+.fa-hw { display: grid; gap: 14px; }
+.fa-hw__sum { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.fa-hw__stat { padding: 14px; display: grid; gap: 4px; font-size: 13px; > b { font-size: 14px; color: $ink; } }
+.fa-hw__item { padding: 16px; display: grid; gap: 12px; }
+.fa-hw__badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.fa-hw__review { display: grid; gap: 10px; border-top: 1px solid $line; padding-top: 12px;
+  @media (min-width: 720px) { grid-template-columns: 180px 1fr; align-items: start;
+    .fa-hw__actions, .fa-error { grid-column: 1 / -1; } } }
+.fa-hw__review .fa-field { min-width: 0; input, textarea { width: 100%; min-width: 0; box-sizing: border-box; } }
+
+// School → Students: readable login IDs (the app's global `code` style made them dark-on-dark).
+.fa-table td b { color: $ink; }
+.fa-sch-login { display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
+  code { background: #eef2f7; color: $ink; border: 1px solid $line; border-radius: 6px; padding: 3px 8px; font-size: 12.5px; white-space: nowrap; }
+  a { color: $blue; font-weight: 600; font-size: 13px; overflow-wrap: anywhere; } }
+.fa-sch-copy { width: 28px; height: 28px; flex: none; }
+.fa-sch-signin { min-width: 0; max-width: 100%; box-sizing: border-box; display: flex; gap: 10px; align-items: flex-start; background: $blue-soft; border-radius: 12px; padding: 12px 14px; margin: 4px 0 14px; color: $ink;
+  > svg { color: $blue; flex: none; margin-top: 2px; }
+  > div { min-width: 0; } a { word-break: break-all; }
+  b { color: $ink; } p { margin: 4px 0 8px; font-size: 13px; line-height: 1.5; color: $ink; } }
+// Dashboards: let wide tables scroll inside their card instead of widening the page on phones.
+.fa-dash__main { min-width: 0; max-width: 100%; }
+.fa-dash__main .fa-card { min-width: 0; max-width: 100%; }
+
+// Student dashboard: "My school" classes and the empty state.
+.fa-myschool { margin-bottom: 18px;
+  h4 { display: inline-flex; align-items: center; gap: 8px; } }
+.fa-myschool__list { list-style: none; margin: 0; padding: 0; display: grid;
+  li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid $line;
+    &:last-child { border-bottom: 0; }
+    > div { display: grid; gap: 2px; min-width: 0; b { color: $ink; font-size: 14px; } small { font-size: 12.5px; } }
+    .fa-btn { flex: none; } } }
+.fa-portal-empty { display: grid; gap: 8px; justify-items: start; padding: 6px 0;
+  p { margin: 0; font-size: 14px; color: $ink; } }
+
+// Plain <code> (certificate numbers, enrollment IDs, logins): the app-wide code
+// style paints it dark-on-dark. Give it a light box everywhere in Academy.
+:is(.fa-root, .academy, .fa-dash, .fa-room) code:not([class]) { background: #eef2f7; color: $ink; border: 1px solid $line; border-radius: 6px; padding: 2px 7px; font-size: .92em; }
+
+// Creator Studio: apply-to-teach card and its states.
+.fa-cgate { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 18px; border: 1px solid $line;
+  > svg { color: $blue; flex: none; margin-top: 3px; }
+  h3 { margin: 0 0 6px; font-size: 17px; color: $ink; }
+  p { margin: 0 0 12px; font-size: 14px; line-height: 1.55; color: $ink; }
+  &.is-pending { background: #fffbeb; border-color: #fde68a; > svg { color: #b45309; } }
+  &.is-bad { background: #fef2f2; border-color: #fecaca; > svg { color: #b91c1c; } }
+  &__reason { background: #fef2f2; border-radius: 10px; padding: 8px 10px; color: #991b1b !important; }
+  &__form { margin-top: 4px; max-width: 760px; } }
+
+// Fockis domain fee: note on the registration form, extra line in the dashboard banner.
+.fa-domainfee { display: flex; gap: 12px; align-items: flex-start; margin: 16px 0 4px; padding: 12px 14px; border-radius: 12px; background: #eef4ff; border: 1px solid #c9dafc; color: $ink;
+  > svg { color: $blue; flex: none; margin-top: 2px; }
+  b { display: block; font-size: 14px; } p { margin: 4px 0 0; font-size: 13px; color: $muted; line-height: 1.5; }
+  &.is-free { background: #f0fdf4; border-color: #bbf7d0; > svg { color: #15803d; } } }
+.fa-sch-banner__note { font-style: italic; }

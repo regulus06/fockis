@@ -9,11 +9,15 @@ import {
   LESSON_LABEL,
   embedFor,
   formatWhen,
+  homeworkApi,
   learnApi,
+  MAX_HOMEWORK_FILES,
+  MAX_HOMEWORK_MB,
   minutesLabel,
   type CoursePage,
   type EnrollmentSummary,
   type PageLesson,
+  type Submission,
 } from "../../../lib/studioApi";
 import TeacherContact from "../../../components/academy/institutions/TeacherContact";
 import "../../../styles/academy-market.scss";
@@ -82,7 +86,7 @@ export default function AcademyClassroom() {
       </div>
     );
 
-  const unlocked = c.access.enrolled || c.access.isOwner;
+  const unlocked = c.access.enrolled || c.access.isOwner || !!c.access.staffView;
   const progress = enr?.progress ?? 0;
   const go = (key: string) => {
     const next = new URLSearchParams(params);
@@ -109,7 +113,7 @@ export default function AcademyClassroom() {
           </small>
           <b>{c.name}</b>
         </div>
-        {unlocked && !c.access.isOwner && (
+        {c.access.enrolled && (
           <div className="fa-room__prog">
             <Progress value={progress} />
             <span>{progress}%</span>
@@ -197,6 +201,7 @@ export default function AcademyClassroom() {
                               <Icon name={LESSON_ICON[l.type]} size={11} /> {LESSON_LABEL[l.type]}
                               {l.durationMin ? ` · ${minutesLabel(l.durationMin)}` : ""}
                               {l.type === "live" && l.startsAt ? ` · ${formatWhen(l.startsAt)}` : ""}
+                              {l.type === "assignment" && l.dueAt ? ` · due ${formatWhen(l.dueAt)}` : ""}
                             </small>
                           </span>
                           {l.locked && <Icon name="lock" size={12} />}
@@ -262,10 +267,17 @@ function LessonView({ c, l, index, done, enr, onProgress }: { c: CoursePage; l: 
       {l.type === "live" && <LiveBlock c={c} l={l} onJoin={() => canTrack && !done && complete()} />}
       {l.type === "quiz" && <QuizBlock c={c} l={l} enr={enr} canTrack={canTrack} onProgress={onProgress} />}
 
-      {l.body && <div className={`fa-room__text ${l.type === "text" ? "is-main" : ""}`}>{l.body}</div>}
+      {l.type === "assignment" && l.dueAt && (
+        <p className={`fa-hw__due ${new Date(l.dueAt).getTime() < Date.now() ? "is-past" : ""}`}>
+          <Icon name="calendar" size={14} /> Due {formatWhen(l.dueAt)}
+        </p>
+      )}
+      {l.body && <div className={`fa-room__text ${l.type === "text" || l.type === "assignment" ? "is-main" : ""}`}>{l.body}</div>}
       {l.type === "text" && !l.body && <p className="fa-muted">This reading is empty.</p>}
+      {l.type === "assignment" && l.hasFile && <WorksheetLink c={c} l={l} />}
+      {l.type === "assignment" && <HomeworkBlock c={c} l={l} canTrack={canTrack} done={done} />}
 
-      {l.type !== "quiz" && canTrack && (
+      {l.type !== "quiz" && l.type !== "assignment" && canTrack && (
         <div className="fa-room__done">
           {done ? (
             <span className="fa-st-ok">
@@ -535,6 +547,211 @@ function LegacyModules({ c, done, setDone, unlocked }: { c: CoursePage; done: nu
           </li>
         ))}
       </ol>
+      {err && <p className="fa-error">{err}</p>}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- homework */
+
+function WorksheetLink({ c, l }: { c: CoursePage; l: PageLesson }) {
+  const [err, setErr] = useState<string | null>(null);
+  async function download() {
+    try {
+      const r = await learnApi.file(c.code, l.key, true);
+      window.location.href = r.url;
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not download the worksheet.");
+    }
+  }
+  return (
+    <div className="fa-room__pdfbar fa-hw__sheet">
+      <Icon name="file" size={16} /> <b>{l.fileName || "Worksheet.pdf"}</b>
+      <span className="fa-room__spacer" />
+      <button className="fa-btn fa-btn--outline fa-btn--sm" onClick={() => void download()}>
+        <Icon name="download" size={13} /> Download worksheet
+      </button>
+      {err && <span className="fa-error">{err}</span>}
+    </div>
+  );
+}
+
+function HomeworkBlock({ c, l, canTrack, done }: { c: CoursePage; l: PageLesson; canTrack: boolean; done: boolean }) {
+  const [sub, setSub] = useState<Submission | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState("");
+  const [keep, setKeep] = useState<number[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!canTrack) return;
+    let off = false;
+    homeworkApi
+      .mine(c.code, l.key)
+      .then((s) => {
+        if (off) return;
+        setSub(s);
+        setText(s?.text ?? "");
+        setKeep(s?.files.map((f) => f.index) ?? []);
+        setEditing(!s);
+        setLoaded(true);
+      })
+      .catch((e) => !off && (setErr(e instanceof Error ? e.message : "Could not load your homework."), setLoaded(true)));
+    return () => {
+      off = true;
+    };
+  }, [c.code, l.key, canTrack]);
+
+  if (!canTrack)
+    return (
+      <div className="fa-card fa-hw__box">
+        <p className="fa-muted">Enrolled learners hand in their work here. {c.access.isOwner ? "You review it in Creator Studio → Homework." : ""}</p>
+      </div>
+    );
+  if (!loaded) return <div className="fa-card fa-hw__box is-loading" />;
+
+  const pick = (list: FileList | null) => {
+    setErr(null);
+    const chosen = Array.from(list ?? []);
+    const big = chosen.find((f) => f.size > MAX_HOMEWORK_MB * 1024 * 1024);
+    if (big) return setErr(`"${big.name}" is larger than ${MAX_HOMEWORK_MB} MB.`);
+    const next = [...files, ...chosen];
+    if (next.length + keep.length > MAX_HOMEWORK_FILES) return setErr(`You can attach at most ${MAX_HOMEWORK_FILES} files.`);
+    setFiles(next);
+  };
+
+  const send = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      const s = await homeworkApi.submit(c.code, l.key, text, keep, files);
+      setSub(s);
+      setKeep(s.files.map((f) => f.index));
+      setFiles([]);
+      setEditing(false);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not hand in your homework.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const openFile = async (i: number) => {
+    if (!sub) return;
+    try {
+      const f = await homeworkApi.myFile(sub.id, i);
+      window.open(f.url, "_blank", "noopener");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not open the file.");
+    }
+  };
+
+  const status = sub?.status;
+  return (
+    <div className="fa-card fa-hw__box">
+      <div className="fa-hw__head">
+        <b>Your homework</b>
+        {status === "graded" ? (
+          <span className="fa-st-ok">
+            <Icon name="check" size={15} /> Graded{sub?.grade ? `: ${sub.grade}` : ""}
+          </span>
+        ) : status === "returned" ? (
+          <span className="fa-hw__flag is-amber">Returned — please update and hand in again</span>
+        ) : status === "submitted" ? (
+          <span className="fa-hw__flag">Handed in {sub ? formatWhen(sub.submittedAt) : ""} · waiting for your teacher</span>
+        ) : (
+          <span className="fa-hw__flag is-gray">Not handed in yet</span>
+        )}
+      </div>
+
+      {sub?.feedback && (status === "graded" || status === "returned") && (
+        <div className="fa-hw__feedback">
+          <small>
+            Feedback from {sub.gradedByName || "your teacher"}
+            {sub.gradedAt ? ` · ${formatWhen(sub.gradedAt)}` : ""}
+          </small>
+          <p>{sub.feedback}</p>
+        </div>
+      )}
+
+      {!editing && sub && (
+        <>
+          {sub.text && <p className="fa-hw__text">{sub.text}</p>}
+          {sub.files.length > 0 && (
+            <div className="fa-hw__files">
+              {sub.files.map((f) => (
+                <button key={f.index} className="fa-btn fa-btn--outline fa-btn--sm" onClick={() => void openFile(f.index)}>
+                  <Icon name="file" size={13} /> {f.fileName}
+                </button>
+              ))}
+            </div>
+          )}
+          {sub.late && <small className="fa-muted">Handed in after the due date.</small>}
+          {status !== "graded" && (
+            <div className="fa-hw__actions">
+              <button className="fa-btn fa-btn--outline fa-btn--sm" onClick={() => setEditing(true)}>
+                <Icon name="pen" size={13} /> {status === "returned" ? "Update my homework" : "Change my answer"}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {editing && (
+        <div className="fa-fields">
+          <label className="fa-field">
+            <span>Your answer</span>
+            <textarea rows={6} value={text} maxLength={20000} placeholder="Write your answer here…" onChange={(e) => setText(e.target.value)} />
+          </label>
+          {sub && sub.files.length > 0 && (
+            <div className="fa-hw__keep">
+              <small className="fa-muted">Files you already attached (untick to remove):</small>
+              {sub.files.map((f) => (
+                <label key={f.index} className="fa-check">
+                  <input
+                    type="checkbox"
+                    checked={keep.includes(f.index)}
+                    onChange={(e) => setKeep((k) => (e.target.checked ? [...k, f.index] : k.filter((x) => x !== f.index)))}
+                  />{" "}
+                  {f.fileName}
+                </label>
+              ))}
+            </div>
+          )}
+          <label className="fa-field">
+            <span>
+              Attach files (up to {MAX_HOMEWORK_FILES}, {MAX_HOMEWORK_MB} MB each — PDF, Word, images…)
+            </span>
+            <input type="file" multiple onChange={(e) => (pick(e.target.files), (e.target.value = ""))} />
+          </label>
+          {files.length > 0 && (
+            <ul className="fa-hw__new">
+              {files.map((f, i) => (
+                <li key={i}>
+                  <Icon name="file" size={13} /> {f.name}{" "}
+                  <button className="fa-link fa-link--danger" onClick={() => setFiles((x) => x.filter((_y, j) => j !== i))}>
+                    remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="fa-hw__actions">
+            <button className="fa-btn fa-btn--primary" disabled={busy || (!text.trim() && !files.length && !keep.length)} onClick={() => void send()}>
+              <Icon name="send" size={14} /> {busy ? "Sending…" : sub ? "Hand in again" : "Hand in"}
+            </button>
+            {sub && (
+              <button className="fa-btn fa-btn--outline" disabled={busy} onClick={() => (setEditing(false), setText(sub.text), setKeep(sub.files.map((f) => f.index)), setFiles([]))}>
+                Cancel
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+      {done && status === "graded" && <small className="fa-muted">This lesson counts as completed.</small>}
       {err && <p className="fa-error">{err}</p>}
     </div>
   );

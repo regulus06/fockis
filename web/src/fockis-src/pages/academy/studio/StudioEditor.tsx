@@ -11,6 +11,7 @@ import {
   LESSON_ICON,
   LESSON_LABEL,
   formatPrice,
+  homeworkApi,
   mediaUrl,
   studioApi,
   uploadStudioFile,
@@ -18,19 +19,21 @@ import {
   type Kind,
   type Learner,
   type LessonType,
+  type OwnerSubmissions,
   type StudioCourse,
   type StudioSave,
 } from "../../../lib/studioApi";
 import { SignInGate } from "../AcademyPortal";
 import { STUDIO_NAV } from "./CreatorStudio";
 
-type Tab = "details" | "content" | "pricing" | "certificate" | "learners";
+type Tab = "details" | "content" | "pricing" | "certificate" | "learners" | "homework";
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "details", label: "Details", icon: "pen" },
   { key: "content", label: "Lessons & sessions", icon: "layers" },
   { key: "pricing", label: "Price & access", icon: "dollar" },
   { key: "certificate", label: "Certificate", icon: "award" },
   { key: "learners", label: "Learners", icon: "users" },
+  { key: "homework", label: "Homework", icon: "clipboard" },
 ];
 const CATEGORIES = ["Food & Baking", "Business", "Technology", "Design & Arts", "Health & Wellness", "Languages", "Music", "Personal Growth", "Education", "Other"];
 const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "HTG", "DOP", "MXN", "BRL", "JPY", "AUD"];
@@ -46,7 +49,7 @@ const toLocal = (iso?: string) => {
 const fromLocal = (v: string) => (v ? new Date(v).toISOString() : undefined);
 
 function blankLesson(type: LessonType): EditorLesson {
-  const titles: Record<LessonType, string> = { video: "New video lesson", pdf: "Handout (PDF)", text: "Reading", quiz: "Knowledge check", live: "Live session" };
+  const titles: Record<LessonType, string> = { video: "New video lesson", pdf: "Handout (PDF)", text: "Reading", quiz: "Knowledge check", live: "Live session", assignment: "Homework" };
   return {
     title: titles[type],
     type,
@@ -225,6 +228,12 @@ export default function StudioEditor() {
             </div>
           </div>
           {msg && <p className={msg.tone === "ok" ? "fa-st-ok" : "fa-error"}>{msg.text}</p>}
+          {c.takenDown && (
+            <p className="fa-error fa-st-takedown" role="alert">
+              <b>Taken down by Fockis.</b> This class is hidden from the catalog and closed to new learners; people already enrolled keep access.
+              {c.takenDownReason ? ` Reason: “${c.takenDownReason}”.` : ""} Fix the problem and contact Fockis support to have it restored.
+            </p>
+          )}
         </div>
 
         <nav className="fa-tabs fa-st-tabs" role="tablist">
@@ -240,6 +249,7 @@ export default function StudioEditor() {
         {tab === "pricing" && <PricingTab c={c} set={set} />}
         {tab === "certificate" && <CertificateTab c={c} set={set} />}
         {tab === "learners" && <LearnersTab c={c} />}
+        {tab === "homework" && <HomeworkTab c={c} />}
 
         <div className="fa-st-danger">
           <button className="fa-link fa-link--danger" onClick={remove}>
@@ -461,7 +471,7 @@ function ContentTab({ c, setLessons, open, setOpen }: { c: StudioCourse; setLess
             <Icon name="layers" size={28} />
           </span>
           <h3>No lessons yet</h3>
-          <p className="fa-muted">Add videos, PDF handouts, readings, tests and live sessions above. Learners go through them in this order.</p>
+          <p className="fa-muted">Add videos, PDF handouts, readings, tests, homework and live sessions above. Learners go through them in this order.</p>
         </div>
       )}
       <ol className="fa-st-lessons">
@@ -476,6 +486,7 @@ function ContentTab({ c, setLessons, open, setOpen }: { c: StudioCourse; setLess
                   {i + 1}. {LESSON_LABEL[l.type]}
                   {l.preview ? " · free preview" : ""}
                   {l.type === "live" && l.startsAt ? ` · ${new Date(l.startsAt).toLocaleString()}` : ""}
+                  {l.type === "assignment" && l.dueAt ? ` · due ${new Date(l.dueAt).toLocaleString()}` : ""}
                 </small>
                 <b>{l.title || "Untitled"}</b>
               </button>
@@ -508,6 +519,7 @@ function lessonProblems(l: EditorLesson): string[] {
   if (l.type === "quiz" && !l.quiz?.questions?.some((q) => q.prompt.trim())) out.push("No questions");
   if (l.type === "live" && !l.startsAt) out.push("No date");
   if (l.type === "live" && !l.joinUrl) out.push("No join link");
+  if (l.type === "assignment" && !l.body?.trim()) out.push("No instructions");
   return out;
 }
 
@@ -610,9 +622,22 @@ function LessonEditor({ l, onChange, onDelete }: { l: EditorLesson; onChange: (p
         </>
       )}
       {l.type === "quiz" && <QuizEditor l={l} onChange={onChange} />}
+      {l.type === "assignment" && (
+        <>
+          <label className="fa-field">
+            <span>Due date (optional — late work is still accepted and marked late)</span>
+            <input type="datetime-local" value={toLocal(l.dueAt)} onChange={(e) => onChange({ dueAt: fromLocal(e.target.value) })} />
+          </label>
+          <FileField l={l} kind="pdf" onChange={onChange} />
+          <p className="fa-note">
+            <Icon name="clipboard" size={14} /> Learners hand in a written answer and/or up to 3 files (PDF, Word, images…). You grade it in the{" "}
+            <b>Homework</b> tab; a graded homework counts as a completed lesson.
+          </p>
+        </>
+      )}
       <label className="fa-field">
-        <span>{l.type === "text" ? "Lesson text" : "Notes for learners (optional)"}</span>
-        <textarea rows={l.type === "text" ? 10 : 3} value={l.body ?? ""} onChange={(e) => onChange({ body: e.target.value })} />
+        <span>{l.type === "text" ? "Lesson text" : l.type === "assignment" ? "Instructions for learners" : "Notes for learners (optional)"}</span>
+        <textarea rows={l.type === "text" ? 10 : l.type === "assignment" ? 6 : 3} value={l.body ?? ""} onChange={(e) => onChange({ body: e.target.value })} />
       </label>
       <div className="fa-st-lesson__foot">
         <label className="fa-check">
@@ -855,6 +880,134 @@ function LearnersTab({ c }: { c: StudioCourse }) {
             ))}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- homework */
+
+function HomeworkTab({ c }: { c: StudioCourse }) {
+  const hasHomework = c.lessons.some((l) => l.type === "assignment" && l.key);
+  const r = useAcademyLoad(() => (hasHomework ? homeworkApi.list(c.code) : Promise.resolve<OwnerSubmissions>({ assignments: [], items: [] })), [c.code, hasHomework]);
+  const [filter, setFilter] = useState<"todo" | "all">("todo");
+  if (!hasHomework)
+    return (
+      <div className="fa-card fa-st-empty">
+        <span className="fa-st-empty__ic">
+          <Icon name="clipboard" size={28} />
+        </span>
+        <h3>No homework in this class</h3>
+        <p className="fa-muted">Add a Homework lesson in “Lessons & sessions”, save, and learners can hand in their work here.</p>
+      </div>
+    );
+  if (r.state.status === "loading") return <p className="fa-muted">Loading homework…</p>;
+  if (r.state.status === "error") return <p className="fa-error">{r.state.error}</p>;
+  const data = r.state.data;
+  const items = filter === "todo" ? data.items.filter((x) => x.status === "submitted") : data.items;
+  return (
+    <div className="fa-hw">
+      <div className="fa-hw__sum">
+        {data.assignments.map((a) => (
+          <div key={a.key} className="fa-card fa-hw__stat">
+            <b>{a.title}</b>
+            <small className="fa-muted">{a.dueAt ? `Due ${new Date(a.dueAt).toLocaleString()}` : "No due date"}</small>
+            <span>
+              {a.handedIn} of {a.learners} handed in · <b>{a.toReview}</b> to review
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="fa-seg fa-seg--sm" role="tablist">
+        <button role="tab" aria-selected={filter === "todo"} className={filter === "todo" ? "is-on" : ""} onClick={() => setFilter("todo")}>
+          To review ({data.items.filter((x) => x.status === "submitted").length})
+        </button>
+        <button role="tab" aria-selected={filter === "all"} className={filter === "all" ? "is-on" : ""} onClick={() => setFilter("all")}>
+          All ({data.items.length})
+        </button>
+      </div>
+      {!items.length ? (
+        <p className="fa-muted">{filter === "todo" ? "Nothing waiting for review." : "Nobody has handed in homework yet."}</p>
+      ) : (
+        items.map((x) => <SubmissionCard key={x.id} code={c.code} x={x} onDone={r.reload} />)
+      )}
+    </div>
+  );
+}
+
+function SubmissionCard({ code, x, onDone }: { code: string; x: OwnerSubmissions["items"][number]; onDone: () => void }) {
+  const [grade, setGrade] = useState(x.grade);
+  const [feedback, setFeedback] = useState(x.feedback);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const tone = x.status === "graded" ? "green" : x.status === "returned" ? "amber" : "blue";
+  const label = x.status === "graded" ? "Graded" : x.status === "returned" ? "Returned for changes" : "To review";
+
+  const open = async (i: number) => {
+    try {
+      const f = await homeworkApi.ownerFile(code, x.id, i);
+      window.open(f.url, "_blank", "noopener");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not open the file.");
+    }
+  };
+  const review = async (action: "grade" | "return") => {
+    setBusy(true);
+    setErr(null);
+    try {
+      await homeworkApi.review(code, x.id, action, grade, feedback);
+      onDone();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not save.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="fa-card fa-hw__item">
+      <div className="fa-hw__head">
+        <div>
+          <b>{x.student.name}</b> <small className="fa-muted">{x.student.email}</small>
+          <br />
+          <small className="fa-muted">
+            {x.lessonTitle} · handed in {new Date(x.submittedAt).toLocaleString()}
+            {x.attempts > 1 ? ` · attempt ${x.attempts}` : ""}
+          </small>
+        </div>
+        <div className="fa-hw__badges">
+          {x.late && <Badge tone="red">Late</Badge>}
+          <Badge tone={tone}>{label}</Badge>
+        </div>
+      </div>
+      {x.text && <p className="fa-hw__text">{x.text}</p>}
+      {x.files.length > 0 && (
+        <div className="fa-hw__files">
+          {x.files.map((f) => (
+            <button key={f.index} className="fa-btn fa-btn--outline fa-btn--sm" onClick={() => void open(f.index)}>
+              <Icon name="download" size={13} /> {f.fileName}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="fa-hw__review">
+        <label className="fa-field">
+          <span>Grade</span>
+          <input value={grade} maxLength={40} placeholder="e.g. 18/20, A, Pass" onChange={(e) => setGrade(e.target.value)} />
+        </label>
+        <label className="fa-field">
+          <span>Feedback to the learner</span>
+          <textarea rows={2} value={feedback} maxLength={4000} onChange={(e) => setFeedback(e.target.value)} />
+        </label>
+        <div className="fa-hw__actions">
+          <button className="fa-btn fa-btn--primary fa-btn--sm" disabled={busy} onClick={() => void review("grade")}>
+            {x.status === "graded" ? "Update grade" : "Grade"}
+          </button>
+          <button className="fa-btn fa-btn--outline fa-btn--sm" disabled={busy} onClick={() => void review("return")}>
+            Return for changes
+          </button>
+        </div>
+        {err && <p className="fa-error">{err}</p>}
       </div>
     </div>
   );

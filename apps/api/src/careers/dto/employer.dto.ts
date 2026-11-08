@@ -313,3 +313,16 @@ export class UpgradeRequestDto {
   @IsIn(["growth", "enterprise"])
   plan!: "growth" | "enterprise";
 }
+
+/** Choose an employer plan (prices are set in the Admin Center). */
+export class ChoosePlanDto {
+  @IsString()
+  @MaxLength(50)
+  plan!: string;
+}
+
+export class ClaimPlanPaymentDto {
+  @IsString()
+  @MaxLength(200)
+  paymentIntentId!: string;
+}

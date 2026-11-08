@@ -21,6 +21,7 @@ import {
 } from "../schemas/job.schema";
 
 import { CreateJobDto } from "../dto/create-job.dto";
+import { EmployerAccessService } from "./employer-access.service";
 import { UpdateJobDto } from "../dto/update-job.dto";
 
 interface JobFilters {
@@ -37,6 +38,9 @@ export class CareerService {
   constructor(
     @InjectModel("FockisCareerJob")
     private readonly jobModel: Model<JobDocument>,
+
+    // Employer approval, blocks and plan limits (set by Fockis admins).
+    private readonly access: EmployerAccessService,
   ) {}
 
   /**
@@ -84,6 +88,10 @@ export class CareerService {
       );
     }
 
+    // Blocked employers can't post; approved employers' jobs go live at once
+    // (within their plan's open-job limit). Others wait for Fockis approval.
+    const { live } = await this.access.prepareNewJob(employerId);
+
     const job = await this.jobModel.create({
       title: data.title.trim(),
       employerId: new Types.ObjectId(employerId),
@@ -111,7 +119,7 @@ export class CareerService {
       skills: this.cleanStringArray(data.skills),
       benefits: this.cleanStringArray(data.benefits),
       isActive: true,
-      isApproved: false,
+      isApproved: live,
     });
 
     return job;
@@ -124,6 +132,7 @@ export class CareerService {
     const query: Record<string, any> = {
       isActive: true,
       isApproved: true,
+      ...(await this.access.publicJobFilter()),
     };
 
     if (filters?.search?.trim()) {
@@ -177,6 +186,7 @@ export class CareerService {
         type: jobType,
         isActive: true,
         isApproved: true,
+        ...(await this.access.publicJobFilter()),
       })
       .sort({ createdAt: -1 })
       .exec();
@@ -195,6 +205,7 @@ export class CareerService {
           _id: new Types.ObjectId(id),
           isActive: true,
           isApproved: true,
+          ...(await this.access.publicJobFilter()),
         },
         { $inc: { viewCount: 1 } },
         { new: true },
@@ -457,6 +468,10 @@ export class CareerService {
   ) {
     this.validateObjectId(id, "job");
     this.validateObjectId(employerId, "employer");
+
+    if (isActive) {
+      await this.access.assertCanActivate(employerId, id);
+    }
 
     const job = await this.jobModel
       .findOneAndUpdate(
