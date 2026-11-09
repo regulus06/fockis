@@ -1549,6 +1549,62 @@ export class LiveGateway
   }
 
   /* ==========================================================================
+     PUBLIC LIVE DISCOVERY BROADCASTS
+
+     Sent to every authenticated socket on /live (not to a stream room) so
+     surfaces such as the feed's "Live Now" rail can show a stream the
+     moment it starts and drop it the moment it ends, without polling.
+     Never throws: a broadcast failure must not fail the REST request that
+     started or ended the stream.
+  ========================================================================== */
+
+  broadcastPublicStreamStarted(
+    stream: Record<string, unknown> | null | undefined,
+  ): void {
+    if (!stream) {
+      return;
+    }
+
+    const status = String(stream.status ?? "").toLowerCase();
+    const visibility = String(stream.visibility ?? "public").toLowerCase();
+
+    // Only public, active streams are announced.
+    if (
+      status !== "live" ||
+      visibility !== "public" ||
+      stream.isPublic === false
+    ) {
+      return;
+    }
+
+    try {
+      this.server?.emit("live:public-started", { stream });
+    } catch (error) {
+      console.error(
+        "[LiveGateway] Could not broadcast live:public-started:",
+        error,
+      );
+    }
+  }
+
+  broadcastPublicStreamEnded(
+    streamId: string | null | undefined,
+  ): void {
+    if (!streamId) {
+      return;
+    }
+
+    try {
+      this.server?.emit("live:public-ended", { streamId: String(streamId) });
+    } catch (error) {
+      console.error(
+        "[LiveGateway] Could not broadcast live:public-ended:",
+        error,
+      );
+    }
+  }
+
+  /* ==========================================================================
      ROOM
   ========================================================================== */
 

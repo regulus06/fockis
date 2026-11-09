@@ -242,6 +242,18 @@ export class ProductsService {
 
           data.location || "",
 
+        // BRAND OWNERSHIP AND PRODUCT SOURCING
+
+        brandOwnership: data.brandOwnership || undefined,
+
+        productSource: data.productSource || undefined,
+
+        supplierName: data.supplierName || undefined,
+
+        sourcingDetails: data.sourcingDetails || undefined,
+
+        fulfillmentDetails: data.fulfillmentDetails || undefined,
+
         images:
 
           Array.isArray(
@@ -255,31 +267,57 @@ export class ProductsService {
             : [],
 
         // SHIPPING PACKAGE: preserve seller-entered packed parcel details.
+
         shippingWeight:
+
           data.shippingWeight !== undefined &&
+
           data.shippingWeight !== null &&
+
           data.shippingWeight !== ""
+
             ? Number(data.shippingWeight)
+
             : undefined,
+
         shippingWeightUnit: data.shippingWeightUnit || "lb",
+
         shippingLength:
+
           data.shippingLength !== undefined &&
+
           data.shippingLength !== null &&
+
           data.shippingLength !== ""
+
             ? Number(data.shippingLength)
+
             : undefined,
+
         shippingWidth:
+
           data.shippingWidth !== undefined &&
+
           data.shippingWidth !== null &&
+
           data.shippingWidth !== ""
+
             ? Number(data.shippingWidth)
+
             : undefined,
+
         shippingHeight:
+
           data.shippingHeight !== undefined &&
+
           data.shippingHeight !== null &&
+
           data.shippingHeight !== ""
+
             ? Number(data.shippingHeight)
+
             : undefined,
+
         shippingDimensionUnit: data.shippingDimensionUnit || "in",
 
         seller:
@@ -828,7 +866,7 @@ export class ProductsService {
 
           $regex:
 
-            `^${escapedSearch}`,
+          `^${escapedSearch}`,
 
           $options: "i",
 

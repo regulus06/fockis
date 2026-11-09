@@ -12,20 +12,20 @@ import { Model, Types } from "mongoose";
 import {
   Organization,
   OrganizationDocument,
-} from "../../church/organizations/schemas/organization.schema";
+} from "../../org/organizations/schemas/organization.schema";
 
 import {
   Membership,
   MembershipDocument,
-} from "../../church/members/schemas/membership.schema";
+} from "../../org/members/schemas/membership.schema";
 
 import {
   MembershipStatus,
-} from "../../church/enums/membership-status.enum";
+} from "../../org/enums/membership-status.enum";
 
 import {
   ADMIN_MEMBER_ROLES,
-} from "../../church/enums/member-role.enum";
+} from "../../org/enums/member-role.enum";
 
 import {
   OrganizationIdentity,

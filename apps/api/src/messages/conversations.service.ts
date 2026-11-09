@@ -35,6 +35,7 @@ import {
 import {
   mapConversation,
 } from "./mappers/conversation.mapper";
+import { assertInteractionAllowed } from "../policy-center/privacy-enforcement";
 
 @Injectable()
 export class ConversationsService {
@@ -93,6 +94,10 @@ export class ConversationsService {
   private readonly userSelect =
     "_id fockisId username firstName lastName profilePicture online lastSeen";
 
+  /** Fields needed for the conversation-list preview of the last message. */
+  private readonly lastMessageSelect =
+    "senderId type text attachments.kind deletedForEveryone deletedForMeBy systemLabel status readBy deliveredTo createdAt";
+
   /* ==========================================================================
      LIST USER CONVERSATIONS
   ========================================================================== */
@@ -112,19 +117,90 @@ export class ConversationsService {
           path: "participantIds",
           select: this.userSelect,
         })
+        .populate({
+          path: "lastMessageId",
+          select: this.lastMessageSelect,
+        })
         .sort({
           updatedAt: -1,
         })
         .limit(100)
         .lean();
 
-    return conversations.map(
-      (conversation) =>
-        mapConversation(
-          conversation,
-          userId,
-        ),
+    return this.markRequests(
+      conversations,
+      conversations.map(
+        (conversation) =>
+          mapConversation(
+            conversation,
+            userId,
+          ),
+      ),
+      userId,
     );
+  }
+
+  /* ==========================================================================
+     MESSAGE REQUESTS
+
+     A direct conversation is a "request" for the user when the other person
+     is not their friend, the user has never sent a message in it, and the
+     user hasn't accepted it yet.
+  ========================================================================== */
+
+  private async markRequests<T extends { id: string; isGroup: boolean; otherUser?: any; lastMessage?: any }>(
+    raw: any[],
+    mapped: T[],
+    userId: string,
+  ): Promise<Array<T & { request: boolean }>> {
+    const uid = String(userId);
+    const accepted = new Set(
+      raw
+        .filter((c) => {
+          const map = c.requestAcceptedBy instanceof Map ? Object.fromEntries(c.requestAcceptedBy) : c.requestAcceptedBy || {};
+          return Boolean(map[uid]);
+        })
+        .map((c) => String(c._id)),
+    );
+    const candidates = mapped.filter((c) => !c.isGroup && c.otherUser?.id && !accepted.has(c.id) && c.lastMessage);
+    const requestIds = new Set<string>();
+
+    if (candidates.length) {
+      const friendship = this.userModel.db?.models?.["Friendship"];
+      const friends = new Set<string>();
+      if (friendship && Types.ObjectId.isValid(uid)) {
+        const me = new Types.ObjectId(uid);
+        const rows = (await friendship
+          .find({
+            status: "accepted",
+            $or: [
+              { requester: me, receiver: { $in: candidates.map((c) => new Types.ObjectId(c.otherUser.id)) } },
+              { receiver: me, requester: { $in: candidates.map((c) => new Types.ObjectId(c.otherUser.id)) } },
+            ],
+          })
+          .select("requester receiver")
+          .lean()
+          .exec()
+          .catch(() => [])) as any[];
+        for (const row of rows) friends.add(String(row.requester) === uid ? String(row.receiver) : String(row.requester));
+      }
+
+      const strangers = candidates.filter((c) => !friends.has(String(c.otherUser.id)));
+      if (strangers.length) {
+        const replied = (await this.messageModel
+          .find({
+            conversationId: { $in: strangers.map((c) => new Types.ObjectId(c.id)) },
+            senderId: new Types.ObjectId(uid),
+          })
+          .select("conversationId")
+          .lean()
+          .exec()) as any[];
+        const repliedIds = new Set(replied.map((m) => String(m.conversationId)));
+        for (const c of strangers) if (!repliedIds.has(c.id)) requestIds.add(c.id);
+      }
+    }
+
+    return mapped.map((c) => ({ ...c, request: requestIds.has(c.id) }));
   }
 
   /* ==========================================================================
@@ -154,6 +230,10 @@ export class ConversationsService {
           path: "participantIds",
           select: this.userSelect,
         })
+        .populate({
+          path: "lastMessageId",
+          select: this.lastMessageSelect,
+        })
         .lean();
 
     if (!conversation) {
@@ -162,10 +242,13 @@ export class ConversationsService {
       );
     }
 
-    return mapConversation(
-      conversation,
+    const [mapped] = await this.markRequests(
+      [conversation],
+      [mapConversation(conversation, userId)],
       userId,
     );
+
+    return mapped;
   }
 
   /* ==========================================================================
@@ -269,6 +352,27 @@ export class ConversationsService {
       dto.isGroup === true;
 
     /* ------------------------------------------------------------------------
+       PRIVACY: "who can message me" (Policy Center)
+    ------------------------------------------------------------------------ */
+
+    if (
+      !isGroup &&
+      uniqueIds.length === 2
+    ) {
+      const otherId =
+        uniqueIds.find(
+          (id) => id !== userId,
+        ) as string;
+
+      await assertInteractionAllowed(
+        this.userModel.db,
+        "messaging",
+        userId,
+        otherId,
+      );
+    }
+
+    /* ------------------------------------------------------------------------
        DIRECT CONVERSATION
 
        Do not create duplicate 1-to-1 conversations.
@@ -291,6 +395,10 @@ export class ConversationsService {
           .populate({
             path: "participantIds",
             select: this.userSelect,
+          })
+          .populate({
+            path: "lastMessageId",
+            select: this.lastMessageSelect,
           })
           .lean();
 
@@ -361,6 +469,10 @@ export class ConversationsService {
         .populate({
           path: "participantIds",
           select: this.userSelect,
+        })
+        .populate({
+          path: "lastMessageId",
+          select: this.lastMessageSelect,
         })
         .lean();
 
@@ -512,6 +624,10 @@ export class ConversationsService {
           path: "participantIds",
           select: this.userSelect,
         })
+        .populate({
+          path: "lastMessageId",
+          select: this.lastMessageSelect,
+        })
         .lean();
 
     if (!populated) {
@@ -522,6 +638,61 @@ export class ConversationsService {
 
     return mapConversation(
       populated,
+      userId,
+    );
+  }
+
+  /* ==========================================================================
+     PER-USER FLAGS: pin, archive, mark unread
+     Each flag only affects the requesting participant.
+  ========================================================================== */
+
+  async setFlag(
+    conversationId: string,
+    userId: string,
+    flag:
+      | "pinnedBy"
+      | "archivedBy"
+      | "markedUnreadBy"
+      | "mutedBy"
+      | "requestAcceptedBy",
+    value: boolean,
+  ) {
+    const conversation =
+      await this.conversationModel.findOne({
+        _id: this.objectId(conversationId),
+        participantIds: this.objectId(userId),
+      });
+
+    if (!conversation) {
+      throw new NotFoundException(
+        "Conversation not found",
+      );
+    }
+
+    if (flag === "pinnedBy" && value) {
+      const pinnedCount =
+        await this.conversationModel.countDocuments({
+          participantIds: this.objectId(userId),
+          [`pinnedBy.${userId}`]: true,
+          _id: { $ne: conversation._id },
+        });
+
+      if (pinnedCount >= 5) {
+        throw new BadRequestException(
+          "You can pin up to 5 conversations.",
+        );
+      }
+    }
+
+    await this.conversationModel.updateOne(
+      { _id: conversation._id },
+      { $set: { [`${flag}.${userId}`]: Boolean(value) } },
+      { timestamps: false },
+    );
+
+    return this.getById(
+      conversationId,
       userId,
     );
   }
@@ -596,6 +767,15 @@ export class ConversationsService {
         key,
         current + 1,
       );
+
+      // A new message brings an archived chat back to the main list,
+      // unless the person also muted it.
+      if (
+        conversation.archivedBy?.get?.(key) &&
+        !conversation.mutedBy?.get?.(key)
+      ) {
+        conversation.archivedBy.set(key, false);
+      }
     }
 
     await conversation.save();

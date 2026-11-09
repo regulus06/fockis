@@ -148,6 +148,42 @@ export class ReportsService {
     };
   }
 
+  /**
+   * A chat message being reported: the reporter must be in the conversation
+   * and the message must have been sent by the reported account.
+   */
+  private async resolveChatMessage(reporterId: string, senderId: string, messageId: string) {
+    const messageModel = this.connection.models["Message"];
+    const conversationModel = this.connection.models["Conversation"];
+
+    if (!messageModel || !conversationModel) {
+      throw new InternalServerErrorException("Messages are unavailable right now.");
+    }
+
+    const message: any = await messageModel.findById(messageId).lean().exec();
+
+    if (!message || message.deletedForEveryone || String(message.senderId) !== String(senderId)) {
+      throw new NotFoundException("This message is no longer available.");
+    }
+
+    const member = await conversationModel
+      .exists({ _id: message.conversationId, participantIds: new Types.ObjectId(reporterId) })
+      .exec();
+
+    if (!member) {
+      throw new NotFoundException("This message is no longer available.");
+    }
+
+    return {
+      messageId: String(message._id),
+      conversationId: String(message.conversationId),
+      type: String(message.type ?? "text"),
+      text: String(message.text ?? "").slice(0, 5000),
+      attachments: (message.attachments ?? []).slice(0, 10).map((a: any) => ({ kind: a.kind, url: a.url, name: a.name })),
+      sentAt: message.createdAt ?? null,
+    };
+  }
+
   private async resolveAccount(reporterId: string, userId: string): Promise<ResolvedTarget> {
     if (userId === reporterId) {
       throw new BadRequestException("You can't report your own account.");
@@ -211,6 +247,13 @@ export class ReportsService {
       dto.targetType === ReportTargetType.POST
         ? await this.resolvePost(reporterId, dto.targetId)
         : await this.resolveAccount(reporterId, dto.targetId);
+
+    if (dto.messageId) {
+      if (dto.targetType !== ReportTargetType.ACCOUNT) {
+        throw new BadRequestException("A message can only be reported together with its sender's account.");
+      }
+      target.evidence = { ...target.evidence, reportedMessage: await this.resolveChatMessage(reporterId, dto.targetId, dto.messageId) };
+    }
 
     const thresholds = await this.settings.get();
     const reporter = new Types.ObjectId(reporterId);
@@ -540,6 +583,11 @@ export class ReportsService {
       caseId,
       [updated.decision?.decidedBy ?? "", updated.assignedTo ? String(updated.assignedTo) : ""],
     );
+
+    // Shown under "Recent Activity" in the user's Policy Center.
+    await this.connection.models["UserPolicyActivity"]
+      ?.create({ userId, type: "appeal_submitted", title: "Appeal submitted", description: String(updated.decision?.ruleLabel ?? "Moderation decision").slice(0, 300), at: now })
+      .catch(() => undefined);
 
     return { success: true, decision: this.serializeDecision(updated) };
   }

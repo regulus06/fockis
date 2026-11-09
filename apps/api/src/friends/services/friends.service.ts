@@ -20,6 +20,7 @@ import {
   User,
   UserDocument,
 } from "../../users/user.schema";
+import { PUBLIC_USER_SELECT } from "../../users/public-user.fields";
 
 /* ============================================================================
    FRIENDS SERVICE
@@ -1042,7 +1043,7 @@ export class FriendsService {
         })
         .populate(
           "requester receiver",
-          "-password",
+          PUBLIC_USER_SELECT,
         )
         .exec();
 
@@ -1106,7 +1107,7 @@ export class FriendsService {
         .find(query)
         .populate(
           "requester",
-          "-password",
+          PUBLIC_USER_SELECT,
         )
         .sort({
           createdAt: -1,
@@ -1165,7 +1166,7 @@ export class FriendsService {
         .find(query)
         .populate(
           "receiver",
-          "-password",
+          PUBLIC_USER_SELECT,
         )
         .sort({
           createdAt: -1,
@@ -1227,7 +1228,7 @@ export class FriendsService {
         .find(query)
         .populate(
           "requester receiver",
-          "-password",
+          PUBLIC_USER_SELECT,
         )
         .sort({
           createdAt: -1,
@@ -1345,7 +1346,7 @@ export class FriendsService {
           $in: blockedUserIds,
         },
       })
-      .select("-password")
+      .select(PUBLIC_USER_SELECT)
       .exec();
 
     /*
@@ -1710,12 +1711,6 @@ export class FriendsService {
             },
           },
           {
-            email: {
-              $regex: trimmed,
-              $options: "i",
-            },
-          },
-          {
             firstName: {
               $regex: trimmed,
               $options: "i",
@@ -1729,7 +1724,7 @@ export class FriendsService {
           },
         ],
       })
-      .select("-password")
+      .select(PUBLIC_USER_SELECT)
       .limit(20);
   }
 
@@ -1878,7 +1873,7 @@ export class FriendsService {
             $ne: false,
           },
         })
-        .select("-password")
+        .select(PUBLIC_USER_SELECT)
         .limit(20)
         .exec();
 

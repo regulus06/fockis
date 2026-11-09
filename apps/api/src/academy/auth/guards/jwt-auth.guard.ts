@@ -1,5 +1,6 @@
 import {
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
@@ -59,6 +60,22 @@ export class AcademyJwtAuthGuard extends AuthGuard(
           "Invalid or missing Academy authentication token.",
         )
       );
+    }
+
+    // Accounts created by a school start with a temporary password: until it
+    // is changed, only "who am I" and "change password" are allowed.
+    if (user.mustChangePassword) {
+      const request = context.switchToHttp().getRequest();
+      const path = String(request.originalUrl || request.url || "").split("?")[0];
+      const allowed =
+        /\/academy\/auth\/me$/.test(path) ||
+        /\/academy\/auth\/change-password$/.test(path);
+
+      if (!allowed) {
+        throw new ForbiddenException(
+          "PASSWORD_CHANGE_REQUIRED: Change your temporary password to continue.",
+        );
+      }
     }
 
     console.log(

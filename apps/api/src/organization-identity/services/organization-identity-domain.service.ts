@@ -18,7 +18,7 @@ import {
 import {
   Membership,
   MembershipDocument,
-} from "../../church/members/schemas/membership.schema";
+} from "../../org/members/schemas/membership.schema";
 
 import {
   OrganizationIdentity,
@@ -39,6 +39,10 @@ import {
   OrganizationIdentityCommonService,
 } from "./organization-identity-common.service";
 
+import {
+  OrganizationDomainBillingService,
+} from "../billing/organization-domain-billing.service";
+
 import type {
   DomainAvailabilityResponse,
   OrganizationDomainResponse,
@@ -58,11 +62,48 @@ export class OrganizationIdentityDomainService {
     private readonly domainModel: Model<OrganizationDomainDocument>,
 
     private readonly common: OrganizationIdentityCommonService,
+
+    // Domain fees (price set in the Admin Center).
+    private readonly billing: OrganizationDomainBillingService,
   ) {}
 
   // ==========================================================================
   // CHECK AVAILABILITY
   // ==========================================================================
+
+  /**
+   * Fockis Academy schools also own <slug>.fockis.com. The same name can't be
+   * given out twice across the two systems.
+   */
+  private async usedByAcademySchool(
+    domain: string,
+  ): Promise<boolean> {
+    if (!this.common.isDirectFockisSubdomain(domain)) {
+      return false;
+    }
+
+    const slug =
+      domain.split(".")[0];
+
+    const found =
+      await this.domainModel.db
+        .collection("academy_institutions")
+        .findOne(
+          { slug },
+          { projection: { _id: 1 } },
+        );
+
+    // A person's own domain (john.fockis.com) — see personal/personal-domain.service.ts.
+    const person =
+      await this.domainModel.db
+        .collection("personal_domains")
+        .findOne(
+          { name: slug },
+          { projection: { _id: 1 } },
+        );
+
+    return !!found || !!person;
+  }
 
   async checkDomainAvailability(
     organizationId: string,
@@ -91,6 +132,15 @@ export class OrganizationIdentityDomainService {
           domain,
         } as any)
         .exec();
+
+    if (!existing && (await this.usedByAcademySchool(domain))) {
+      return {
+        available: false,
+        domain,
+        message:
+          "This Fockis domain is already used by a Fockis Academy school or a person.",
+      };
+    }
 
     if (!existing) {
       if (
@@ -404,6 +454,12 @@ export class OrganizationIdentityDomainService {
       );
     }
 
+    if (await this.usedByAcademySchool(domain)) {
+      throw new BadRequestException(
+        "This Fockis domain is already used by a Fockis Academy school or a person.",
+      );
+    }
+
     let assignedUserId:
       Types.ObjectId | null = null;
 
@@ -605,6 +661,30 @@ export class OrganizationIdentityDomainService {
       ) {
         throw new BadRequestException(
           "The member domain does not belong to its parent organization domain.",
+        );
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // DOMAIN FEE
+    // The base domain is activated by paying (price set in the Admin Center);
+    // each member domain needs a paid member-domain place when that is charged.
+    // ------------------------------------------------------------------------
+
+    if (
+      String(domain.status) !==
+      String(this.common.domainStatusVerified())
+    ) {
+      if (
+        domain.domainType ===
+        OrganizationDomainType.Member
+      ) {
+        await this.billing.assertCanAddMemberDomain(
+          organization._id,
+        );
+      } else {
+        await this.billing.assertBaseCanBeVerified(
+          organization._id,
         );
       }
     }

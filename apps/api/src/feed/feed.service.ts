@@ -1,6 +1,7 @@
 import {
   Injectable,
   Logger,
+  Optional,
 } from '@nestjs/common';
 
 import {
@@ -23,6 +24,7 @@ import { StoriesService } from '../stories/stories.service';
 import { BlockVisibilityService } from '../friends/services/block-visibility.service';
 import { EventsService } from '../events/services/events.service';
 import { parseEventIdList } from '../events/utils/event-recommendation';
+import { RedisService } from '../redis/redis.service';
 
 import {
   FeedEventSlot,
@@ -35,6 +37,9 @@ import {
   FeedMode,
   FeedSnapshotStore,
   MediaKind,
+  ServedHistoryStore,
+  ServedSession,
+  servedCounts,
   RankablePost,
   ViewerSignals,
   emptyViewerSignals,
@@ -42,6 +47,7 @@ import {
   parseFeedMode,
   rankFeed,
 } from './feed-ranking';
+import { mutedUserIds } from '../policy-center/privacy-enforcement';
 
 /*
 |--------------------------------------------------------------------------
@@ -85,7 +91,7 @@ import {
 
 type LeanPost = Record<string, any>;
 
-type Filter = Record<string, any>;
+export type Filter = Record<string, any>;
 
 interface GetFeedOptions {
   viewerId?: string;
@@ -106,7 +112,7 @@ interface GetFeedOptions {
   longitude?: number;
 }
 
-interface ViewerRelationships {
+export interface ViewerRelationships {
   followedIds: string[];
   friendIds: string[];
   blockedIds: string[];
@@ -119,6 +125,27 @@ interface FeedPage {
   scores?: Record<string, number>;
   nextCursor?: string;
 }
+
+/*
+ * Fockis Shop products mixed into the feed.
+ *
+ * Every eligible product (active, configured for the feed, not expired)
+ * from every shop is a candidate. Each feed page carries a small batch,
+ * picked round-robin across shops so one seller cannot fill the feed:
+ * every shop's newest product first, then every shop's second product,
+ * and so on. The shop order is shuffled per viewer + session, so different
+ * people (and each fresh session) see shops in a different order.
+ *
+ * For You remembers which products it already served in the session, so
+ * scrolling keeps bringing new products. Latest has no session, so its
+ * pages walk the same rotation by page number.
+ */
+const FEED_PRODUCTS_PER_PAGE = 2;
+const FEED_PRODUCT_POOL_SIZE = 300;
+/** For You: at most this many products from one shop per session. */
+const FEED_PRODUCTS_PER_SHOP_PER_SESSION = 3;
+const FEED_PRODUCT_MODES = new Set<FeedMode>(['for-you', 'latest']);
+const STORE_MODEL_NAME = 'Store';
 
 const MAX_PAGE_SIZE = 50;
 const HISTORY_SAMPLE_SIZE = 500;
@@ -169,7 +196,7 @@ function extractMediaValue(value: any): string {
   return '';
 }
 
-function getRawMedia(post: any): string {
+export function getRawMedia(post: any): string {
   if (!post) {
     return '';
   }
@@ -234,7 +261,7 @@ function getRawMedia(post: any): string {
   return '';
 }
 
-function detectMediaType(
+export function detectMediaType(
   media: string,
   post: any,
 ): 'image' | 'video' | 'none' {
@@ -343,6 +370,18 @@ function and(...filters: Filter[]): Filter {
   return { $and: parts };
 }
 
+/** FNV-1a: a stable pseudo-random number for seeded ordering. */
+function hashString(value: string): number {
+  let hash = 0x811c9dc5;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+
+  return hash >>> 0;
+}
+
 function toObjectIds(ids: string[]): Types.ObjectId[] {
   return ids
     .filter((id) => Types.ObjectId.isValid(id))
@@ -401,6 +440,12 @@ export class FeedService {
 
   private readonly servedEvents = new ServedEventsStore();
 
+  /** Products already served per (viewer, For You session). */
+  private readonly servedProducts = new ServedEventsStore();
+
+  /** First posts of each viewer's recent sessions (refresh rotation). */
+  private readonly servedHistory = new ServedHistoryStore();
+
   constructor(
     @InjectModel(Post.name)
     private readonly postModel: Model<PostDocument>,
@@ -413,6 +458,14 @@ export class FeedService {
     private readonly blockVisibilityService: BlockVisibilityService,
 
     private readonly eventsService: EventsService,
+
+    /*
+     * Optional. Only used when FEED_HISTORY_REDIS=true, so several API
+     * instances share the served history. Every Redis call has a short
+     * timeout and falls back to the in-memory store.
+     */
+    @Optional()
+    private readonly redis?: RedisService,
   ) {}
 
   /* ==========================================================================
@@ -462,7 +515,7 @@ export class FeedService {
       result.posts,
     );
 
-    const [stories, events] = await Promise.all([
+    const [stories, events, products] = await Promise.all([
       this.storiesService.findAll(),
       this.loadFeedEvents({
         viewerId,
@@ -474,6 +527,7 @@ export class FeedService {
         latitude: options.latitude,
         longitude: options.longitude,
       }),
+      this.loadFeedProducts({ viewerId, mode, session, page }),
     ]);
 
     return {
@@ -497,7 +551,7 @@ export class FeedService {
         };
       }),
 
-      products: [],
+      products,
 
       page,
 
@@ -514,6 +568,251 @@ export class FeedService {
 
       session: mode === 'for-you' ? session : undefined,
     };
+  }
+
+  /**
+   * Fockis Shop products for this feed page.
+   *
+   * Never fails the feed: if anything goes wrong the page is served with no
+   * products. The product and store models are read from the shared
+   * Mongoose connection so FeedModule does not register second copies.
+   */
+  private async loadFeedProducts(input: {
+    viewerId?: string;
+    mode: FeedMode;
+    session?: string;
+    page: number;
+  }): Promise<Record<string, any>[]> {
+    // Following and Friends only show people the viewer chose.
+    if (!FEED_PRODUCT_MODES.has(input.mode)) {
+      return [];
+    }
+
+    const productModel = this.connection.models['Product'];
+
+    if (!productModel) {
+      this.logger.warn(
+        'Product model is not registered on the shared Mongoose connection; feed products are unavailable.',
+      );
+      return [];
+    }
+
+    const now = new Date();
+
+    let pool: Record<string, any>[];
+
+    try {
+      pool = (await productModel
+        .find({
+          isActive: true,
+          displayLocations: 'feed',
+          $or: [
+            { feedExpiresAt: null },
+            { feedExpiresAt: { $exists: false } },
+            { feedExpiresAt: { $gt: now } },
+          ],
+        })
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(FEED_PRODUCT_POOL_SIZE)
+        .lean()
+        .exec()) as Record<string, any>[];
+    } catch (error) {
+      // Product discovery must never take down the main social feed.
+      this.logger.warn(`Could not load feed products: ${String(error)}`);
+      return [];
+    }
+
+    if (pool.length === 0) {
+      return [];
+    }
+
+    const memoryKey =
+      input.mode === 'for-you' && input.session
+        ? `${input.viewerId ?? 'anonymous'}:${input.session}`
+        : undefined;
+
+    const seed =
+      memoryKey ??
+      `${input.viewerId ?? 'anonymous'}:h${Math.floor(now.getTime() / 3_600_000)}`;
+
+    const rotation = this.buildProductRotation(pool, seed);
+
+    let picked: Record<string, any>[];
+
+    if (memoryKey) {
+      const served = new Set(this.servedProducts.get(memoryKey));
+      const servedPerShop = new Map<string, number>();
+
+      for (const product of pool) {
+        if (served.has(idOf(product._id))) {
+          const shopId = this.shopIdOf(product);
+          servedPerShop.set(shopId, (servedPerShop.get(shopId) ?? 0) + 1);
+        }
+      }
+
+      picked = this.pickOnePerShop(
+        rotation.filter(
+          (product) =>
+            !served.has(idOf(product._id)) &&
+            (servedPerShop.get(this.shopIdOf(product)) ?? 0) <
+              FEED_PRODUCTS_PER_SHOP_PER_SESSION,
+        ),
+        FEED_PRODUCTS_PER_PAGE,
+      );
+      this.servedProducts.add(
+        memoryKey,
+        picked.map((product) => idOf(product._id)),
+      );
+    } else {
+      // No session (Latest, background checks): walk the rotation by page.
+      const start =
+        ((input.page - 1) * FEED_PRODUCTS_PER_PAGE) % rotation.length;
+      picked = this.pickOnePerShop(
+        [...rotation.slice(start), ...rotation.slice(0, start)],
+        FEED_PRODUCTS_PER_PAGE,
+      );
+    }
+
+    const withStores = await this.attachStores(picked);
+
+    return withStores.map((product) => ({
+      ...product,
+      _id: idOf(product._id),
+      id: idOf(product._id),
+    }));
+  }
+
+  private shopIdOf(product: Record<string, any>): string {
+    return (
+      idOf(product.storeId) ||
+      idOf(product.seller) ||
+      `product:${idOf(product._id)}`
+    );
+  }
+
+  /**
+   * Round-robin across shops: every shop's newest product, then every
+   * shop's second product, and so on. Shop order is shuffled by `seed`.
+   */
+  private buildProductRotation(
+    products: Record<string, any>[],
+    seed: string,
+  ): Record<string, any>[] {
+    const byShop = new Map<string, Record<string, any>[]>();
+
+    // `products` is newest first, so each shop's list is newest first too.
+    for (const product of products) {
+      const shopId = this.shopIdOf(product);
+      const list = byShop.get(shopId);
+
+      if (list) {
+        list.push(product);
+      } else {
+        byShop.set(shopId, [product]);
+      }
+    }
+
+    const shops = Array.from(byShop.keys()).sort(
+      (a, b) =>
+        hashString(`${seed}:${a}`) - hashString(`${seed}:${b}`) ||
+        a.localeCompare(b),
+    );
+
+    const rotation: Record<string, any>[] = [];
+
+    for (let round = 0; rotation.length < products.length; round += 1) {
+      for (const shopId of shops) {
+        const product = byShop.get(shopId)?.[round];
+
+        if (product) {
+          rotation.push(product);
+        }
+      }
+    }
+
+    return rotation;
+  }
+
+  /** Up to `count` products, never two from the same shop on one page. */
+  private pickOnePerShop(
+    candidates: Record<string, any>[],
+    count: number,
+  ): Record<string, any>[] {
+    const picked: Record<string, any>[] = [];
+    const shops = new Set<string>();
+
+    for (const product of candidates) {
+      const shopId = this.shopIdOf(product);
+
+      if (shops.has(shopId)) {
+        continue;
+      }
+
+      shops.add(shopId);
+      picked.push(product);
+
+      if (picked.length >= count) {
+        break;
+      }
+    }
+
+    return picked;
+  }
+
+  /**
+   * Adds `store: { id, name, logo, slug }` so the feed card can show the
+   * shop instead of a generic label. Optional: products are returned
+   * unchanged if the Store model is missing or the lookup fails.
+   */
+  private async attachStores(
+    products: Record<string, any>[],
+  ): Promise<Record<string, any>[]> {
+    const storeModel = this.connection.models[STORE_MODEL_NAME];
+
+    const storeIds = toObjectIds(
+      Array.from(
+        new Set(products.map((product) => idOf(product.storeId)).filter(Boolean)),
+      ),
+    );
+
+    if (!storeModel || storeIds.length === 0) {
+      return products;
+    }
+
+    try {
+      const stores = (await storeModel
+        .find({ _id: { $in: storeIds } })
+        .lean()
+        .exec()) as Record<string, any>[];
+
+      const byId = new Map(stores.map((store) => [idOf(store._id), store]));
+
+      return products.map((product) => {
+        const store = byId.get(idOf(product.storeId));
+
+        if (!store) {
+          return product;
+        }
+
+        return {
+          ...product,
+          store: {
+            id: idOf(store._id),
+            name: store.name ?? store.storeName ?? store.title ?? undefined,
+            logo:
+              store.logo ??
+              store.logoUrl ??
+              store.avatar ??
+              store.image ??
+              undefined,
+            slug: store.slug ?? undefined,
+          },
+        };
+      });
+    } catch (error) {
+      this.logger.warn(`Could not load feed product stores: ${String(error)}`);
+      return products;
+    }
   }
 
   /* ==========================================================================
@@ -641,16 +940,50 @@ export class FeedService {
         this.loadFollowerCounts(authorIds),
       ]);
 
+      const historyKey = viewerId ?? (session ? `anon:${session}` : undefined);
+
+      /*
+       * Refresh rotation: posts that led this viewer's last sessions are
+       * demoted a little per session, so a new session (refresh) brings
+       * other eligible posts to the top. Only on a session's own first
+       * ranking; the session never counts against itself.
+       */
+      const recentlyServed =
+        historyKey && session
+          ? servedCountsFor(await this.loadServedHistory(historyKey), session)
+          : undefined;
+
       const ranked = rankFeed(
         rankable,
         signals,
         followerCounts,
         new Date(),
         FEED_RANKING_CONFIG,
-        { explorationSeed: this.explorationSeed(viewerId, session) },
+        {
+          explorationSeed: this.explorationSeed(viewerId, session),
+          recentlyServed,
+        },
       );
 
       const postIds = ranked.map((item) => item.post.id);
+
+      if (historyKey && session) {
+        await this.recordServedHistory(
+          historyKey,
+          session,
+          postIds.slice(0, this.servedHistory.topSize),
+        );
+      }
+
+      if (process.env.NODE_ENV !== 'production') {
+        this.logger.log(
+          `[feed] viewer=${viewerId ?? 'anonymous'} session=${
+            session ?? '-'
+          } page=${page} rotated=${recentlyServed?.size ?? 0} top=${postIds
+            .slice(0, 8)
+            .join(',')}`,
+        );
+      }
 
       const scores: Record<string, number> = {};
 
@@ -771,6 +1104,103 @@ export class FeedService {
    * session gives a different mix. Without a session the seed changes
    * once per hour.
    */
+  private async loadServedHistory(viewerKey: string): Promise<ServedSession[]> {
+    const client = this.redisClient();
+
+    if (client) {
+      const raw = await withTimeout(
+        client.get(servedRedisKey(viewerKey)),
+        FEED_REDIS_TIMEOUT_MS,
+      ).catch(() => undefined);
+
+      if (typeof raw === 'string') {
+        try {
+          const parsed = JSON.parse(raw);
+
+          if (Array.isArray(parsed)) {
+            this.servedHistory.load(viewerKey, parsed as ServedSession[]);
+          }
+        } catch {
+          /* corrupt copy: memory store wins */
+        }
+      }
+    }
+
+    return this.servedHistory.sessions(viewerKey);
+  }
+
+  private async recordServedHistory(
+    viewerKey: string,
+    session: string,
+    ids: string[],
+  ) {
+    const sessions = this.servedHistory.record(viewerKey, session, ids);
+    const client = this.redisClient();
+
+    if (client) {
+      await withTimeout(
+        client.set(
+          servedRedisKey(viewerKey),
+          JSON.stringify(sessions),
+          'EX',
+          45 * 60,
+        ),
+        FEED_REDIS_TIMEOUT_MS,
+      ).catch(() => undefined);
+    }
+  }
+
+  /** Redis client only when opted in AND connected right now. */
+  private redisClient() {
+    if (process.env.FEED_HISTORY_REDIS !== 'true') {
+      return undefined;
+    }
+
+    const client = this.redis?.client;
+
+    return client && client.status === 'ready' ? client : undefined;
+  }
+
+  /* ==========================================================================
+     SEEN POSTS (POST /feed/seen)
+  ========================================================================== */
+
+  /**
+   * Record that the viewer actually saw these posts (the client reports
+   * posts that stayed on screen, in batches). One updateMany per batch:
+   * only posts not already in viewedBy are touched, so re-reporting is a
+   * no-op and views count each viewer once — the same rule as
+   * POST /posts/:id/view. Hidden/blocked rules still apply when ranking;
+   * marking a post seen never makes it visible.
+   */
+  async markSeen(viewerId: string, postIds: string[]) {
+    const ids = Array.from(
+      new Set(postIds.filter((id) => Types.ObjectId.isValid(id))),
+    ).slice(0, MAX_SEEN_BATCH);
+
+    if (!viewerId || !Types.ObjectId.isValid(viewerId) || ids.length === 0) {
+      return { recorded: 0 };
+    }
+
+    /* Post.viewedBy stores user IDs as strings (see post.schema.ts). */
+    const viewer = String(viewerId);
+
+    const result = await this.postModel
+      .updateMany(
+        {
+          _id: { $in: ids.map((id) => new Types.ObjectId(id)) },
+          viewedBy: { $ne: viewer },
+        },
+        {
+          $push: { viewedBy: viewer },
+          $inc: { views: 1 },
+        },
+      )
+      .exec();
+
+    return { recorded: result.modifiedCount ?? 0 };
+  }
+
   private explorationSeed(
     viewerId: string | undefined,
     session: string | undefined,
@@ -948,6 +1378,16 @@ export class FeedService {
      VIEWER DATA
   ========================================================================== */
 
+  /** Follows, friends and blocks of a viewer (used by feed discovery). */
+  relationshipsFor(viewerId: string | undefined): Promise<ViewerRelationships> {
+    return this.loadViewerRelationships(viewerId);
+  }
+
+  /** The same audience / moderation / block rules the feed applies. */
+  visibilityFilterFor(viewerId: string | undefined, relationships: ViewerRelationships): Filter {
+    return this.buildVisibilityFilter(viewerId, relationships);
+  }
+
   private async loadViewerRelationships(
     viewerId: string | undefined,
   ): Promise<ViewerRelationships> {
@@ -1041,6 +1481,19 @@ export class FeedService {
 
       relationships.friendIds = Array.from(friends);
       relationships.blockedIds = Array.from(blocked);
+    }
+
+    // Muted accounts (Policy Center) are left out of the feed like blocks.
+    const muted = await mutedUserIds(this.connection, viewerId).catch(
+      () => [] as string[],
+    );
+    if (muted.length) {
+      relationships.blockedIds = Array.from(
+        new Set([...relationships.blockedIds, ...muted]),
+      );
+      relationships.friendIds = relationships.friendIds.filter(
+        (id) => !muted.includes(id),
+      );
     }
 
     relationships.followedIds = relationships.followedIds.filter(
@@ -1344,4 +1797,38 @@ export class FeedService {
 
     return session;
   }
+}
+
+/* ============================================================================
+   SERVED HISTORY HELPERS
+============================================================================ */
+
+const FEED_REDIS_TIMEOUT_MS = 150;
+
+export const MAX_SEEN_BATCH = 50;
+
+function servedRedisKey(viewerKey: string) {
+  return `fockis:feed:served:${viewerKey}`;
+}
+
+function servedCountsFor(sessions: ServedSession[], session: string) {
+  const counts = servedCounts(sessions, session);
+  return counts.size ? counts : undefined;
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), ms);
+
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
 }

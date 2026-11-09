@@ -50,9 +50,11 @@ export class Product {
     const discountPercent = Number(this.discount ?? 0);
 
     if (originalPrice <= 0) return 0;
+
     if (discountPercent <= 0) {
       return Number(originalPrice.toFixed(2));
     }
+
     if (discountPercent >= 100) return 0;
 
     return Number(
@@ -116,6 +118,59 @@ export class Product {
     index: true,
   })
   storeId!: Types.ObjectId;
+
+  // BRAND OWNERSHIP
+
+  @Prop({
+    type: String,
+    enum: [
+      "OWN_BRAND",
+      "THIRD_PARTY_BRAND",
+      "UNBRANDED",
+    ],
+    default: undefined,
+  })
+  brandOwnership?:
+    | "OWN_BRAND"
+    | "THIRD_PARTY_BRAND"
+    | "UNBRANDED";
+
+  // PRODUCT SOURCE
+
+  @Prop({
+    type: String,
+    enum: [
+      "SELF_MANUFACTURED",
+      "SUPPLIER",
+      "DROPSHIPPING",
+    ],
+    default: undefined,
+  })
+  productSource?:
+    | "SELF_MANUFACTURED"
+    | "SUPPLIER"
+    | "DROPSHIPPING";
+
+  @Prop({
+    type: String,
+    default: "",
+    trim: true,
+  })
+  supplierName?: string;
+
+  @Prop({
+    type: String,
+    default: "",
+    trim: true,
+  })
+  sourcingDetails?: string;
+
+  @Prop({
+    type: String,
+    default: "",
+    trim: true,
+  })
+  fulfillmentDetails?: string;
 
   // SHIPPING PACKAGE
 

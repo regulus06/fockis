@@ -1,3 +1,4 @@
+
 import {
   Prop,
   Schema,
@@ -9,57 +10,69 @@ import {
   Types,
 } from "mongoose";
 
-/* ============================================================
-   JOB DOCUMENT
-============================================================ */
+/**
+ * JOB DOCUMENT
+ */
+export type JobDocument = HydratedDocument<Job>;
 
-export type JobDocument =
-  HydratedDocument<Job>;
-
-/* ============================================================
-   JOB TYPE
-============================================================ */
-
+/**
+ * JOB TYPE
+ */
 export enum JobType {
   JOB = "job",
   INTERNSHIP = "internship",
   COOP = "coop",
 }
 
-/* ============================================================
-   WORKPLACE TYPE
-============================================================ */
-
+/**
+ * WORKPLACE TYPE
+ */
 export enum WorkplaceType {
   REMOTE = "remote",
   HYBRID = "hybrid",
   ONSITE = "onsite",
 }
 
-/* ============================================================
-   JOB SCHEMA
-============================================================ */
+/** Optional employment arrangement (shown as Full-time, Part-time…). */
+export const EMPLOYMENT_TYPES = ["full_time", "part_time", "contract", "temporary"] as const;
 
+/** Optional seniority used by the job-seeker experience filter. */
+export const EXPERIENCE_LEVELS = ["entry", "mid", "senior"] as const;
+
+/**
+ * APPLICATION METHOD
+ *
+ * fockis   -> candidates apply inside Fockis (existing internal flow)
+ * external -> candidates are redirected to applicationUrl
+ */
+export enum ApplicationMethod {
+  FOCKIS = "fockis",
+  EXTERNAL = "external",
+}
+
+/**
+ * JOB SCHEMA
+ */
 @Schema({
   timestamps: true,
+  collection: "jobs",
 })
 export class Job {
-  /* ==========================================================
-     JOB INFORMATION
-  ========================================================== */
-
+  /**
+   * JOB INFORMATION
+   */
   @Prop({
+    type: String,
     required: true,
     trim: true,
+    minlength: 3,
+    maxlength: 150,
   })
   title!: string;
 
-  /* ==========================================================
-     EMPLOYER
-     
-     User who created the job.
-  ========================================================== */
-
+  /**
+   * EMPLOYER
+   */
   @Prop({
     type: Types.ObjectId,
     ref: "User",
@@ -68,88 +81,83 @@ export class Job {
   })
   employerId!: Types.ObjectId;
 
-  /* ==========================================================
-     COMPANY INFORMATION
-     
-     Stored directly on the job so historical listings
-     remain accurate if the employer later changes
-     their company profile.
-  ========================================================== */
-
+  /**
+   * COMPANY INFORMATION
+   */
   @Prop({
+    type: String,
     required: true,
     trim: true,
+    minlength: 2,
+    maxlength: 150,
   })
   company!: string;
 
   @Prop({
+    type: String,
     trim: true,
+    maxlength: 3000,
   })
   companyDescription?: string;
 
   @Prop({
+    type: String,
     trim: true,
+    maxlength: 2048,
   })
   companyWebsite?: string;
 
-  /* ==========================================================
-     INTERNATIONAL LOCATION
-  ========================================================== */
-
+  /**
+   * INTERNATIONAL LOCATION
+   */
   @Prop({
+    type: String,
     required: true,
     trim: true,
+    maxlength: 100,
     index: true,
   })
   country!: string;
 
   @Prop({
+    type: String,
     required: true,
     trim: true,
+    maxlength: 100,
     index: true,
   })
   city!: string;
 
   @Prop({
+    type: String,
     trim: true,
+    maxlength: 100,
   })
   stateProvince?: string;
 
-  /*
-   * Optional human-readable location.
-   *
-   * Example:
-   * Columbus, Ohio
-   */
   @Prop({
+    type: String,
     trim: true,
+    maxlength: 200,
   })
   location?: string;
 
-  /* ==========================================================
-     JOB TYPE
-     
-     job
-     internship
-     coop
-  ========================================================== */
-
+  /**
+   * JOB TYPE
+   */
   @Prop({
+    type: String,
     required: true,
     enum: Object.values(JobType),
     index: true,
   })
   type!: JobType;
 
-  /* ==========================================================
-     WORKPLACE TYPE
-     
-     remote
-     hybrid
-     onsite
-  ========================================================== */
-
+  /**
+   * WORKPLACE TYPE
+   */
   @Prop({
+    type: String,
     required: true,
     enum: Object.values(WorkplaceType),
     default: WorkplaceType.ONSITE,
@@ -157,128 +165,179 @@ export class Job {
   })
   workplaceType!: WorkplaceType;
 
-  /* ==========================================================
-     DESCRIPTION
-  ========================================================== */
-
+  /**
+   * JOB DESCRIPTION
+   */
   @Prop({
+    type: String,
     required: true,
     trim: true,
+    minlength: 20,
+    maxlength: 20000,
   })
   description!: string;
 
-  /* ==========================================================
-     SALARY
-  ========================================================== */
-
+  /**
+   * SALARY
+   */
   @Prop({
+    type: String,
     trim: true,
+    maxlength: 100,
   })
   salary?: string;
 
-  /*
-   * Examples:
-   * USD
-   * HTG
-   * CAD
-   * DOP
-   * EUR
-   */
-
   @Prop({
+    type: String,
     trim: true,
     uppercase: true,
+    maxlength: 10,
   })
   currency?: string;
 
-  /*
-   * Examples:
-   * hourly
-   * monthly
-   * yearly
-  */
-
   @Prop({
+    type: String,
     trim: true,
+    lowercase: true,
+    enum: [
+      "hourly",
+      "daily",
+      "weekly",
+      "monthly",
+      "yearly",
+      "negotiable",
+    ],
   })
   salaryPeriod?: string;
 
-  /* ==========================================================
-     REMOTE FLAG
-     
-     Kept for compatibility with existing frontend/API data.
-     workplaceType should normally be the primary source.
-  ========================================================== */
+  @Prop({
+    type: Number,
+    min: 0,
+  })
+  salaryMin?: number;
 
   @Prop({
+    type: Number,
+    min: 0,
+  })
+  salaryMax?: number;
+
+  @Prop({ type: String, enum: EMPLOYMENT_TYPES, index: true })
+  employmentType?: (typeof EMPLOYMENT_TYPES)[number];
+
+  @Prop({ type: String, enum: EXPERIENCE_LEVELS, index: true })
+  experienceLevel?: (typeof EXPERIENCE_LEVELS)[number];
+
+  /**
+   * HOW CANDIDATES APPLY
+   */
+  @Prop({
+    type: String,
+    enum: Object.values(ApplicationMethod),
+    default: ApplicationMethod.FOCKIS,
+    index: true,
+  })
+  applicationMethod!: ApplicationMethod;
+
+  /**
+   * EXTERNAL APPLICATION URL
+   */
+  @Prop({
+    type: String,
+    trim: true,
+    maxlength: 2048,
+  })
+  applicationUrl?: string;
+
+  /**
+   * PUBLIC DETAIL-PAGE VIEWS
+   */
+  @Prop({
+    type: Number,
+    default: 0,
+    min: 0,
+  })
+  viewCount!: number;
+
+  /**
+   * REMOTE FLAG
+   */
+  @Prop({
+    type: Boolean,
     default: false,
   })
   remote!: boolean;
 
-  /* ==========================================================
-     APPLICATION DEADLINE
-  ========================================================== */
-
-  @Prop()
+  /**
+   * APPLICATION DEADLINE
+   */
+  @Prop({
+    type: Date,
+  })
   applicationDeadline?: Date;
 
-  /* ==========================================================
-     REQUIRED SKILLS
-  ========================================================== */
-
+  /**
+   * REQUIRED SKILLS
+   */
   @Prop({
     type: [String],
     default: [],
   })
   skills!: string[];
 
-  /* ==========================================================
-     BENEFITS
-  ========================================================== */
-
+  /**
+   * BENEFITS
+   */
   @Prop({
     type: [String],
     default: [],
   })
   benefits!: string[];
 
-  /* ==========================================================
-     JOB VISIBILITY
-     
-     Active jobs can be shown to candidates.
-  ========================================================== */
-
+  /**
+   * JOB VISIBILITY
+   */
   @Prop({
+    type: Boolean,
     default: true,
     index: true,
   })
   isActive!: boolean;
 
-  /* ==========================================================
-     MODERATION
-     
-     Allows an admin/moderator to approve jobs before
-     they become publicly visible.
-  ========================================================== */
-
+  /**
+   * ADMINISTRATOR APPROVAL
+   */
+  /**
+   * Shown publicly on Careers. Set automatically from the employer's approval
+   * by Fockis (approved and not blocked) and cleared when a job is taken down.
+   */
   @Prop({
+    type: Boolean,
     default: false,
     index: true,
   })
   isApproved!: boolean;
+
+  /** Taken down by a Fockis admin (stays hidden even if the employer is approved). */
+  @Prop({ type: Boolean, default: false, index: true })
+  takenDown!: boolean;
+
+  @Prop({ type: String, trim: true, maxlength: 2000 })
+  takenDownReason?: string;
+
+  @Prop({ type: Date })
+  takenDownAt?: Date;
 }
 
-/* ============================================================
-   SCHEMA FACTORY
-============================================================ */
-
+/**
+ * CREATE MONGOOSE SCHEMA
+ */
 export const JobSchema =
   SchemaFactory.createForClass(Job);
 
-/* ============================================================
-   TEXT SEARCH INDEX
-============================================================ */
-
+/**
+ * TEXT SEARCH INDEX
+ */
 JobSchema.index({
   title: "text",
   company: "text",
@@ -286,10 +345,9 @@ JobSchema.index({
   skills: "text",
 });
 
-/* ============================================================
-   INTERNATIONAL JOB SEARCH INDEX
-============================================================ */
-
+/**
+ * INTERNATIONAL JOB SEARCH INDEX
+ */
 JobSchema.index({
   country: 1,
   city: 1,
@@ -297,10 +355,18 @@ JobSchema.index({
   workplaceType: 1,
 });
 
-/* ============================================================
-   EMPLOYER JOB MANAGEMENT INDEX
-============================================================ */
+/**
+ * PUBLIC JOB DISCOVERY INDEX
+ */
+JobSchema.index({
+  isActive: 1,
+  isApproved: 1,
+  createdAt: -1,
+});
 
+/**
+ * EMPLOYER JOB MANAGEMENT INDEX
+ */
 JobSchema.index({
   employerId: 1,
   createdAt: -1,

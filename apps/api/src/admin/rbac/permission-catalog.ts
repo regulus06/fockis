@@ -654,6 +654,208 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
   },
 
   // ============================================================
+  // CAREERS
+  // ============================================================
+
+  {
+    key: "careers.view",
+    label: "View Careers",
+    description:
+      "View employers, job posts and employer plans.",
+    module: "careers",
+  },
+  {
+    key: "careers.manage",
+    label: "Manage Careers",
+    description:
+      "Approve, reject or block employers, take down jobs and set employer plan prices.",
+    module: "careers",
+  },
+
+  // ============================================================
+  // HELP & SUPPORT
+  // ============================================================
+
+  {
+    key: "support.view",
+    label: "View Support",
+    description: "View feedback, support tickets and live chats.",
+    module: "support",
+  },
+  {
+    key: "support.respond",
+    label: "Respond to Users",
+    description: "Reply to feedback, tickets and live chats, and add internal notes.",
+    module: "support",
+  },
+  {
+    key: "support.assign",
+    label: "Assign Support Work",
+    description: "Assign, transfer and escalate tickets, chats and feedback.",
+    module: "support",
+  },
+  {
+    key: "support.resolve",
+    label: "Resolve Support Work",
+    description: "Change status and priority, close, reopen and archive.",
+    module: "support",
+  },
+  {
+    key: "support.settings",
+    label: "Support Settings",
+    description: "Switch live chat availability on or off.",
+    module: "support",
+  },
+  {
+    key: "help.content.manage",
+    label: "Manage Help Articles",
+    description: "Create, edit, publish and archive Help Center articles and FAQs.",
+    module: "support",
+  },
+
+  // ============================================================
+  // MAPS
+  // ============================================================
+
+  {
+    key: "map.addresses.view",
+    label: "View Address Requests",
+    description: "See Smart Addresses people add, with their pin, details and owner, to review them.",
+    module: "maps",
+  },
+  {
+    key: "map.addresses.verify",
+    label: "Verify Addresses",
+    description: "Approve, reject or ask for more information on Smart Addresses.",
+    module: "maps",
+  },
+
+  // ============================================================
+  // ACADEMY
+  // ============================================================
+
+  {
+    key: "academy.view",
+    label: "View Academy",
+    description: "See Fockis Academy classes, seminars, schools, certificates and learner accounts.",
+    module: "academy",
+  },
+  {
+    key: "academy.manage",
+    label: "Manage Academy",
+    description: "Take classes down, approve or block schools, revoke certificates and suspend learner accounts.",
+    module: "academy",
+  },
+  {
+    key: "legal.view",
+    label: "View Legal & Evidence",
+    description: "Open the Legal & Evidence dashboard and list holds, requests and records (no record contents).",
+    module: "legal",
+  },
+  {
+    key: "legal.evidence.view",
+    label: "View Preserved Evidence",
+    description: "Open preserved record contents. Every access requires a reason and is logged.",
+    module: "legal",
+  },
+  {
+    key: "legal.evidence.preserve",
+    label: "Preserve Evidence",
+    description: "Preserve records under a legal hold or verified request.",
+    module: "legal",
+  },
+  {
+    key: "legal.evidence.export",
+    label: "Export Evidence",
+    description: "Create evidence packages with hashes and chain of custody.",
+    module: "legal",
+  },
+  {
+    key: "legal.holds.manage",
+    label: "Manage Legal Holds",
+    description: "Create, update and release legal holds.",
+    module: "legal",
+  },
+  {
+    key: "legal.requests.manage",
+    label: "Manage Legal Requests",
+    description: "Record, verify and work on legal requests.",
+    module: "legal",
+  },
+  {
+    key: "legal.requests.approve",
+    label: "Approve Disclosure",
+    description: "Approve or deny disclosure for a verified legal request.",
+    module: "legal",
+  },
+  {
+    key: "legal.retention.manage",
+    label: "Manage Retention Policies",
+    description: "Change retention periods and run the retention job.",
+    module: "legal",
+  },
+  {
+    key: "legal.audit.view",
+    label: "View Evidence Access Logs",
+    description: "Read the tamper-evident evidence access log.",
+    module: "legal",
+  },
+  {
+    key: "legal.deletions.view",
+    label: "View Deleted Account Records",
+    description: "Read minimal records of account deletions.",
+    module: "legal",
+  },
+  {
+    key: "policy.view",
+    label: "View Policies",
+    description: "Open Policy & Compliance: library, versions, approvals and rules.",
+    module: "policy",
+  },
+  {
+    key: "policy.edit",
+    label: "Edit Policies",
+    description: "Create policies, edit drafts, create versions and submit them for approval.",
+    module: "policy",
+  },
+  {
+    key: "policy.review",
+    label: "Approve Policies",
+    description: "Approve, reject or request changes on submitted policy versions and rules.",
+    module: "policy",
+  },
+  {
+    key: "policy.publish",
+    label: "Publish Policies",
+    description: "Schedule and publish approved versions, archive and restore policies.",
+    module: "policy",
+  },
+  {
+    key: "policy.rules.manage",
+    label: "Manage Operational Rules",
+    description: "Create and edit operational rules and submit them for approval.",
+    module: "policy",
+  },
+  {
+    key: "policy.acceptance.view",
+    label: "View Acceptance Records",
+    description: "View and export policy acceptance records and handle data correction requests.",
+    module: "policy",
+  },
+  {
+    key: "policy.audit.view",
+    label: "View Policy Audit Log",
+    description: "Read the policy audit log.",
+    module: "policy",
+  },
+  {
+    key: "policy.settings",
+    label: "Policy Settings",
+    description: "Change approval, notification and versioning settings.",
+    module: "policy",
+  },
+
+  // ============================================================
   // SYSTEM
   // ============================================================
 
@@ -664,4 +866,4 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
       "Manage platform settings.",
     module: "system",
   },
-];
+];

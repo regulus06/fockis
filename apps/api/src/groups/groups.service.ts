@@ -18,6 +18,7 @@ import {
 
 import { CreateGroupDto } from "./dto/create-group.dto";
 import { SendGroupMessageDto } from "./dto/send-group-message.dto";
+import { USER_IDENTITY_SELECT } from "../users/public-user.fields";
 
 
 
@@ -92,7 +93,7 @@ export class GroupsService {
 
       .populate(
         "members",
-        "username email profilePicture",
+        USER_IDENTITY_SELECT,
       )
 
       .sort({

@@ -226,6 +226,25 @@ export class OrganizationBadge {
   })
   qrCodeValue!: string;
 
+  /**
+   * Random, unguessable code in the badge's QR link
+   * (/badges/verify/<verifyToken>). Anyone who scans it sees whether the
+   * badge is valid, without signing in.
+   */
+  // No default: a sparse unique index skips badges that don't have one yet.
+  @Prop({
+    type: String,
+    index: { unique: true, sparse: true },
+  })
+  verifyToken?: string;
+
+  /** The member's Fockis address, e.g. jean.gracechurch.fockis.church */
+  @Prop({
+    type: String,
+    default: null,
+  })
+  memberDomain?: string | null;
+
   /* ==========================================================================
      BADGE STATE
      ========================================================================== */

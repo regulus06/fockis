@@ -38,6 +38,11 @@ export const RolePermissions: Record<Role, Permission[]> = {
     Permission.MODERATION_RESTRICT,
     Permission.MODERATION_RESTORE,
     Permission.MODERATION_APPEALS,
+
+    // Help & Support: moderators could already answer tickets; keep that.
+    Permission.SUPPORT_VIEW,
+    Permission.SUPPORT_RESPOND,
+    Permission.SUPPORT_RESOLVE,
   ],
 
   // ========================================================================
@@ -135,6 +140,37 @@ export const RolePermissions: Record<Role, Permission[]> = {
     Permission.MODERATION_RESTORE,
     Permission.MODERATION_APPEALS,
     Permission.MODERATION_SETTINGS,
+
+    // Help & Support
+    Permission.SUPPORT_VIEW,
+    Permission.SUPPORT_RESPOND,
+    Permission.SUPPORT_ASSIGN,
+    Permission.SUPPORT_RESOLVE,
+    Permission.SUPPORT_SETTINGS,
+    Permission.HELP_CONTENT_MANAGE,
+
+    // Maps: review Smart Addresses people add
+    Permission.MAP_ADDRESSES_VIEW,
+    Permission.MAP_ADDRESSES_VERIFY,
+
+    // Academy: classes, seminars, schools, certificates
+    Permission.ACADEMY_VIEW,
+    Permission.ACADEMY_MANAGE,
+
+    // Fockis domains: prices and organizations' domain fees
+    Permission.DOMAINS_VIEW,
+    Permission.DOMAINS_MANAGE,
+
+    // Careers: employers, job posts, employer plans
+    Permission.CAREERS_VIEW,
+    Permission.CAREERS_MANAGE,
+
+    // Policy & Compliance (approval, publishing and sensitive records stay
+    // with super admins and the seeded Policy Approver / Compliance roles)
+    Permission.POLICY_VIEW,
+    Permission.POLICY_EDIT,
+    Permission.POLICY_RULES_MANAGE,
+    Permission.POLICY_AUDIT_VIEW,
   ],
 
   // ========================================================================
@@ -142,4 +178,4 @@ export const RolePermissions: Record<Role, Permission[]> = {
   // ========================================================================
 
   [Role.SUPER_ADMIN]: Object.values(Permission),
-};
+};

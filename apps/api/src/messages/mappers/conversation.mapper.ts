@@ -41,6 +41,30 @@ export function mapConversation(
           ),
         );
 
+  const archivedBy =
+    conversation.archivedBy instanceof Map
+      ? conversation.archivedBy
+      : new Map(
+          Object.entries(
+            conversation.archivedBy || {},
+          ),
+        );
+
+  const markedUnreadBy =
+    conversation.markedUnreadBy instanceof Map
+      ? conversation.markedUnreadBy
+      : new Map(
+          Object.entries(
+            conversation.markedUnreadBy || {},
+          ),
+        );
+
+  const lastMessage =
+    summarizeLastMessage(
+      conversation.lastMessageId,
+      userId,
+    );
+
   const mutedBy =
     conversation.mutedBy instanceof Map
       ? conversation.mutedBy
@@ -360,6 +384,26 @@ export function mapConversation(
       : {}),
 
     /*
+     * Group conversations list their members (public profile fields only)
+     * so the client can show "Sender: preview" and member avatars.
+     */
+    ...(conversation.isGroup
+      ? {
+          members: participants
+            .filter((p: any) => p && typeof p === "object" && p._id)
+            .map((p: any) => ({
+              id: String(p._id),
+              name:
+                [p.firstName, p.lastName].filter(Boolean).join(" ").trim() ||
+                String(p.username || "User"),
+              username: String(p.username || ""),
+              avatar: String(p.profilePicture || ""),
+              presence: p.online ? "online" : "offline",
+            })),
+        }
+      : {}),
+
+    /*
      * Direct conversations receive the OTHER user's profile.
      */
     ...(otherUser
@@ -399,5 +443,66 @@ export function mapConversation(
           String(userId),
         ),
       ),
+    archived:
+      Boolean(
+        archivedBy.get(
+          String(userId),
+        ),
+      ),
+    markedUnread:
+      Boolean(
+        markedUnreadBy.get(
+          String(userId),
+        ),
+      ),
+    ...(lastMessage
+      ? {
+          lastMessage,
+        }
+      : {}),
+  };
+}
+
+/* ============================================================================
+   LAST MESSAGE SUMMARY (conversation list preview)
+   Only present when lastMessageId was populated. Hidden when the current
+   user deleted it for themselves.
+============================================================================ */
+
+function summarizeLastMessage(
+  raw: any,
+  userId: string,
+) {
+  if (!raw || typeof raw !== "object" || !raw._id) {
+    return undefined;
+  }
+
+  const ids = (list: any[] | undefined) =>
+    (list || []).map((id: any) => String(id?._id || id));
+
+  if (ids(raw.deletedForMeBy).includes(String(userId))) {
+    return undefined;
+  }
+
+  const senderId = String(raw.senderId?._id || raw.senderId || "");
+  const attachments = Array.isArray(raw.attachments) ? raw.attachments : [];
+  let status = raw.status || "sent";
+
+  if (senderId === String(userId)) {
+    if (ids(raw.readBy).some((id) => id !== senderId)) status = "read";
+    else if (ids(raw.deliveredTo).some((id) => id !== senderId)) status = "delivered";
+  }
+
+  return {
+    id: String(raw._id),
+    senderId,
+    type: String(raw.type || "text"),
+    text: raw.deletedForEveryone ? "" : String(raw.text || "").slice(0, 160),
+    attachmentKind: attachments[0]?.kind ? String(attachments[0].kind) : undefined,
+    attachmentCount: attachments.length,
+    deletedForEveryone: Boolean(raw.deletedForEveryone),
+    systemLabel: raw.systemLabel ? String(raw.systemLabel) : undefined,
+    status,
+    createdAt: new Date(raw.createdAt || Date.now()).toISOString(),
   };
 }

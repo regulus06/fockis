@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Comment, CommentDocument } from './comment.schema';
+import { assertInteractionAllowed } from '../policy-center/privacy-enforcement';
 
 @Injectable()
 export class CommentsService {
@@ -19,6 +20,15 @@ export class CommentsService {
     content: string;
     parentCommentId?: string;
   }) {
+    if (data.targetType === 'post') {
+      const posts = this.commentModel.db?.models?.['Post'];
+      const post: any = posts
+        ? await posts.findById(data.targetId).select('user').lean().exec().catch(() => null)
+        : null;
+      if (post?.user) {
+        await assertInteractionAllowed(this.commentModel.db, 'comments', String(data.userId), String(post.user));
+      }
+    }
     return this.commentModel.create({
       ...data,
       parentCommentId: data.parentCommentId ?? null,

@@ -5,8 +5,10 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  Optional,
 } from "@nestjs/common";
 import { InjectConnection, InjectModel } from "@nestjs/mongoose";
+import { ModerationEventsService } from "./moderation-events.service";
 import { Connection, Model, Types } from "mongoose";
 import { randomUUID } from "crypto";
 
@@ -108,6 +110,9 @@ export class ModerationService {
     private readonly notifier: ModerationNotifierService,
     private readonly settings: ModerationSettingsService,
     private readonly audit: AuditService,
+
+    @Optional()
+    private readonly events?: ModerationEventsService,
   ) {}
 
   /* ==========================================================================
@@ -141,6 +146,18 @@ export class ModerationService {
       await this.audit.log({ userId: actorId(actor), action, module: "moderation", targetId, metadata });
     } catch (error) {
       this.logger.warn(`Audit log failed for ${action}: ${String(error)}`);
+    }
+    // Also kept in the tamper-evident Moderation History.
+    if (this.events && action !== "MODERATION_SETTINGS_UPDATED") {
+      const reason = typeof metadata.reason === "string" ? metadata.reason : typeof metadata.note === "string" ? metadata.note : "";
+      await this.events.record({
+        actorId: actorId(actor) || "system",
+        action: action.toLowerCase().replace(/^moderation_/, "case_"),
+        targetType: "case",
+        targetId,
+        reason,
+        metadata,
+      });
     }
   }
 

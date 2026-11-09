@@ -8,10 +8,13 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UseGuards,
 } from "@nestjs/common";
+import type { Response } from "express";
 
 import { LiveJwtGuard } from "../guards/live-jwt.guard";
+import { Public } from "../../auth/public.decorator";
 
 import { LiveService } from "../services/live.service";
 import { LiveTokenService } from "../services/live-token.service";
@@ -31,6 +34,7 @@ import {
 } from "../dto/live-guest.dto";
 
 import { getUserId } from "../utils/live-room.util";
+import { LiveGateway } from "../gateways/live.gateway";
 
 @Controller("live")
 export class LiveController {
@@ -41,6 +45,7 @@ export class LiveController {
     private readonly discoveryService: LiveDiscoveryService,
     private readonly liveGuestService: LiveGuestService,
     private readonly recordingService: LiveRecordingService,
+    private readonly liveGateway: LiveGateway,
   ) {}
 
   @UseGuards(LiveJwtGuard)
@@ -57,10 +62,97 @@ export class LiveController {
       );
     }
 
-    return this.liveService.create(
-      userId,
-      dto,
+    const stream =
+      await this.liveService.create(
+        userId,
+        dto,
+      );
+
+    // Feed "Live Now" rails show the new stream immediately.
+    this.liveGateway.broadcastPublicStreamStarted(
+      stream,
     );
+
+    return stream;
+  }
+
+  /**
+   * Host's Studio sends a camera snapshot (JPEG data URL) while LIVE.
+   */
+  @UseGuards(LiveJwtGuard)
+  @Post(":id/thumbnail")
+  async uploadThumbnail(
+    @Req() req: any,
+    @Param("id") id: string,
+    @Body() body: { image?: string },
+  ) {
+    const userId =
+      getUserId(req.user);
+
+    if (!userId) {
+      throw new BadRequestException(
+        "Unable to determine authenticated user.",
+      );
+    }
+
+    const proto = String(
+      req.headers?.["x-forwarded-proto"] || req.protocol || "https",
+    )
+      .split(",")[0]
+      .trim();
+
+    const host = String(
+      req.headers?.["x-forwarded-host"] || req.headers?.host || "",
+    )
+      .split(",")[0]
+      .trim();
+
+    const result =
+      await this.liveService.saveThumbnail(
+        userId,
+        id,
+        String(body?.image || ""),
+        `${proto}://${host}`,
+      );
+
+    // Cards already on screen swap in the new picture (same event the
+    // feed uses for a starting stream; it updates the card in place).
+    try {
+      const stream =
+        await this.liveService.findById(id);
+
+      this.liveGateway.broadcastPublicStreamStarted(
+        stream,
+      );
+    } catch {
+      // The thumbnail is saved; the next list load will show it.
+    }
+
+    return result;
+  }
+
+  /**
+   * Public JPEG preview of a LIVE (used as <img src> by every card).
+   * @Public(): an <img> request carries no login token.
+   */
+  @Public()
+  @Get(":id/thumbnail")
+  async thumbnail(
+    @Param("id") id: string,
+    @Res() res: Response,
+  ) {
+    const data =
+      await this.liveService.getThumbnail(id);
+
+    if (!data) {
+      res.status(404).end();
+      return;
+    }
+
+    res.setHeader("Content-Type", "image/jpeg");
+    res.setHeader("Cache-Control", "public, max-age=30");
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    res.send(data);
   }
 
   @Get("public")
@@ -554,6 +646,11 @@ export class LiveController {
       id,
     );
 
+    // Feed "Live Now" rails drop the stream immediately.
+    this.liveGateway.broadcastPublicStreamEnded(
+      id,
+    );
+
     return result;
   }
 
@@ -572,10 +669,17 @@ export class LiveController {
       );
     }
 
-    return this.liveService.delete(
-      userId,
+    const result =
+      await this.liveService.delete(
+        userId,
+        id,
+      );
+
+    this.liveGateway.broadcastPublicStreamEnded(
       id,
     );
+
+    return result;
   }
 
   @Post(":id/share")

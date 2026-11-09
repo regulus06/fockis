@@ -1,5 +1,7 @@
 import {
   IsArray,
+  IsBoolean,
+  IsIn,
   IsMongoId,
   IsNumber,
   IsOptional,
@@ -73,4 +75,11 @@ export class UpdateCourseDto {
   @ValidateNested({ each: true })
   @Type(() => CourseAssignmentUpdateDto)
   assignments?: CourseAssignmentUpdateDto[];
+  @IsOptional()
+  @IsIn(["public", "hidden", "private", "draft"])
+  visibility?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  enrollmentOpen?: boolean;
 }

@@ -196,6 +196,17 @@ export class LiveStream {
   })
   thumbnailUrl!: string;
 
+  /**
+   * Latest camera snapshot (JPEG) sent by the host's Studio while LIVE.
+   * Served by GET /live/:id/thumbnail and used as the card preview.
+   * Not selected by default so lists never load the image bytes.
+   */
+  @Prop({ type: Buffer, select: false })
+  thumbnailData?: Buffer;
+
+  @Prop({ type: Date, default: null })
+  thumbnailUpdatedAt?: Date | null;
+
   @Prop({
     default: "General",
     trim: true,

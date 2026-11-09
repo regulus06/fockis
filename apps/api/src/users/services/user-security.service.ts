@@ -468,10 +468,10 @@ export class UserSecurityService {
 
     if (
       !newPassword ||
-      newPassword.trim().length < 8
+      newPassword.trim().length < 12
     ) {
       throw new BadRequestException(
-        "Password must be at least 8 characters.",
+        "Password must be at least 12 characters.",
       );
     }
 
@@ -559,4 +559,4 @@ export class UserSecurityService {
       mustChangePassword: false,
     };
   }
-}
+}

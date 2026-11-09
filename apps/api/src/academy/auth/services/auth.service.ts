@@ -19,6 +19,8 @@ import {
   AcademyRole,
 } from "../schemas/academy-user.schema";
 
+import { AcademyInstitution } from "../../institutions/schemas/institution.schema";
+
 import { RegisterDto } from "../dto/register.dto";
 import { LoginDto } from "../dto/login.dto";
 import { UpdateRoleDto } from "../dto/update-role.dto";
@@ -28,6 +30,8 @@ export class AuthService {
   constructor(
     @InjectModel(AcademyUser.name)
     private readonly userModel: Model<AcademyUser>,
+    @InjectModel(AcademyInstitution.name)
+    private readonly institutionModel: Model<AcademyInstitution>,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -45,6 +49,13 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     const email = dto.email.trim().toLowerCase();
+
+    // name@<school>.fockis.com logins are created by schools only.
+    if (/@[^@]+\.fockis\.com$/.test(email)) {
+      throw new ConflictException(
+        "Addresses ending in .fockis.com are school logins. Ask your school for your account, or sign up with your own email.",
+      );
+    }
 
     const existing = await this.userModel
       .findOne({ email })
@@ -217,8 +228,28 @@ export class AuthService {
       );
 
       throw new ForbiddenException(
-        "This Academy account is disabled.",
+        user.suspendedReason
+          ? `This account is suspended: ${user.suspendedReason}`
+          : "This Academy account is disabled.",
       );
+    }
+
+    // Students of a blocked (or no longer approved) school can't sign in.
+    if (user.institutionId) {
+      const school = await this.institutionModel
+        .findById(user.institutionId, { name: 1, status: 1 })
+        .lean()
+        .exec();
+
+      if (!school || school.status !== "approved") {
+        await this.recordLoginHistory(user, false);
+
+        throw new ForbiddenException(
+          school?.status === "blocked"
+            ? `${school.name} is currently blocked on Fockis Academy, so its accounts can't sign in.`
+            : "Your school's account is not active on Fockis Academy right now.",
+        );
+      }
     }
 
     return this.signToken(user);
@@ -278,6 +309,12 @@ export class AuthService {
             name,
           );
       }
+    }
+
+    if (body.email !== undefined && user.managed && body.email.trim().toLowerCase() !== user.email) {
+      throw new ForbiddenException(
+        "Your login is managed by your school and can't be changed.",
+      );
     }
 
     if (body.email !== undefined) {
@@ -379,11 +416,20 @@ export class AuthService {
       );
     }
 
+    if (newPassword === currentPassword) {
+      throw new ConflictException(
+        "Choose a new password that is different from the current one.",
+      );
+    }
+
     user.passwordHash =
       await bcrypt.hash(
         newPassword,
         12,
       );
+
+    // First sign-in with a temporary password is now complete.
+    user.mustChangePassword = false;
 
     user.sessions = [];
 
@@ -645,6 +691,11 @@ export class AuthService {
       isActive: user.isActive,
       twoFactorEnabled:
         user.twoFactorEnabled,
+      managed: !!user.managed,
+      mustChangePassword: !!user.mustChangePassword,
+      institutionId: user.institutionId
+        ? user.institutionId.toString()
+        : undefined,
     };
   }
 

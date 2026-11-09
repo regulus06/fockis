@@ -19,6 +19,15 @@ export class CreateReportDto {
   @IsMongoId({ message: "Invalid target ID." })
   targetId!: string;
 
+  /**
+   * Optional: the chat message being reported. Only valid with
+   * targetType "account" (the message's sender); the message is attached
+   * to the report as evidence.
+   */
+  @IsOptional()
+  @IsMongoId({ message: "Invalid message ID." })
+  messageId?: string;
+
   @IsEnum(ReportReason, { message: "Choose a reason for your report." })
   reason!: ReportReason;
 

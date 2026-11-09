@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Headers,
+  NotFoundException,
   Post,
   Query,
   Req,
@@ -47,6 +48,10 @@ import {
 import {
   Public,
 } from "../auth/public.decorator";
+
+import {
+  PRIVATE_STORAGE_PREFIXES,
+} from "../legal/legal.constants";
 
 @Controller("uploads")
 export class UploadsController {
@@ -240,6 +245,23 @@ export class UploadsController {
     if (!objectKey) {
       throw new BadRequestException(
         "Media storage key is required.",
+      );
+    }
+
+    /*
+     * Restricted files (support attachments, legal documents, preserved
+     * evidence) are never served by this public gateway. They are only
+     * reachable through short-lived signed links issued after a
+     * permission check.
+     */
+    if (
+      PRIVATE_STORAGE_PREFIXES.some((prefix) =>
+        objectKey.toLowerCase().startsWith(prefix),
+      ) ||
+      objectKey.includes("..")
+    ) {
+      throw new NotFoundException(
+        "Media not found.",
       );
     }
 
@@ -645,4 +667,4 @@ export class UploadsController {
 
     return "application/octet-stream";
   }
-}
+}

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { StudentsService } from '../services/students.service';
 import { CreateStudentDto } from '../dto/create-student.dto';
 import { UpdateStudentDto } from '../dto/update-student.dto';
@@ -17,12 +17,29 @@ export class StudentsController {
     return this.studentsService.findAll();
   }
 
+  /**
+   * Dashboard for the signed-in Academy user (courses, progress, upcoming
+   * events, assignments). Declared before ':idOrSlug' so "dashboard" is not
+   * read as a student slug.
+   */
+  @Get('dashboard')
+  @UseGuards(AcademyJwtAuthGuard)
+  myDashboard(@Req() req: { user: { userId: string; name: string; email: string; role: string } }) {
+    return this.studentsService.getMyDashboard(req.user);
+  }
+
+  // A student's record is private: only Academy staff and advisors can look
+  // it up. Students see their own data through GET /academy/students/dashboard.
   @Get(':idOrSlug')
+  @UseGuards(AcademyJwtAuthGuard, RolesGuard)
+  @Roles('administrator', 'staff', 'advisor')
   dashboard(@Param('idOrSlug') idOrSlug: string) {
     return this.studentsService.getDashboard(idOrSlug);
   }
 
   @Get(':idOrSlug/courses')
+  @UseGuards(AcademyJwtAuthGuard, RolesGuard)
+  @Roles('administrator', 'staff', 'advisor')
   courses(@Param('idOrSlug') idOrSlug: string) {
     return this.studentsService.getCourseCards(idOrSlug);
   }

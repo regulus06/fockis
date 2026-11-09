@@ -1,4 +1,3 @@
-
 import {
   BadRequestException,
   Controller,
@@ -106,7 +105,12 @@ export class SubscriptionsController {
    * }
    *
    * Stripe Checkout creates a recurring subscription.
-   * The plan price is controlled by the server-side plan configuration.
+   * The plan price is controlled by the server-side plan record.
+   *
+   * A Stripe Price ID is used only when it has the expected
+   * Stripe Price ID format. If an old database record contains
+   * a numeric amount (for example "10.99") in the Price ID field,
+   * checkout safely uses price_data instead.
    */
   @Post("checkout")
   async createCheckout(
@@ -193,14 +197,21 @@ export class SubscriptionsController {
       );
     }
 
-    const stripePriceId =
+    const configuredStripePriceId =
       body.billingInterval === BillingInterval.YEARLY
         ? planConfig.stripeYearlyPriceId
         : planConfig.stripeMonthlyPriceId;
 
+    // Only actual Stripe Price IDs should be sent using `price`.
+    // Numeric strings or Product IDs must use the price_data fallback.
+    const stripePriceId =
+      typeof configuredStripePriceId === "string" &&
+      /^price_[a-zA-Z0-9]+$/.test(configuredStripePriceId.trim())
+        ? configuredStripePriceId.trim()
+        : undefined;
+
     const frontendUrl = (
-      process.env.FRONTEND_URL ??
-      "http://localhost:5173"
+      process.env.FRONTEND_URL ?? "http://localhost:5173"
     ).replace(/\/+$/, "");
 
     const successUrl =
@@ -221,7 +232,7 @@ export class SubscriptionsController {
     let session: Stripe.Checkout.Session;
 
     if (stripePriceId) {
-      // Prefer the Stripe Price configured by the administrator.
+      // Preserve existing Stripe Price ID checkout for configured plans.
       session =
         await this.stripeService.client.checkout.sessions.create({
           mode: "subscription",
@@ -239,12 +250,13 @@ export class SubscriptionsController {
           cancel_url: cancelUrl,
         });
     } else {
-      // Use the server-configured amount if no Stripe Price ID exists.
+      // Fallback for plans whose Stripe Price ID is missing or malformed.
+      // Stripe creates the recurring price from the server-side plan amount.
       const unitAmount = Math.round(numericPrice * 100);
 
-      if (unitAmount <= 0) {
+      if (!Number.isSafeInteger(unitAmount) || unitAmount <= 0) {
         throw new BadRequestException(
-          "Subscription price must be greater than zero.",
+          "Subscription price must be a valid amount greater than zero.",
         );
       }
 
@@ -301,9 +313,8 @@ export class SubscriptionsController {
   /**
    * POST /subscriptions/upgrade
    *
-   * Note: the service's upgrade method must not be used to grant a
-   * paid plan without verifying payment or synchronizing the Stripe
-   * subscription. Use /checkout for a new paid subscription.
+   * The service's upgrade method updates the local record only.
+   * Paid plan changes must use checkout and Stripe webhook syncing.
    */
   @Post("upgrade")
   async upgrade(

@@ -842,6 +842,7 @@ export class MessagesService {
 
           deletedForEveryone:
             false,
+          forwarded: true,
         });
 
       await this.conversationsService.touch(
@@ -863,5 +864,289 @@ export class MessagesService {
     }
 
     return created;
+  }
+
+  // ============================================================
+  // PIN / UNPIN (visible to everyone in the conversation)
+  // ============================================================
+
+  async togglePin(
+    messageId: string,
+    userId: string,
+  ) {
+    const message = await this.findMessage(messageId);
+
+    await this.requireParticipant(
+      message.conversationId,
+      userId,
+    );
+
+    if (message.deletedForEveryone) {
+      throw new BadRequestException(
+        "Deleted messages cannot be pinned",
+      );
+    }
+
+    if (message.type === MessageType.SYSTEM) {
+      throw new BadRequestException(
+        "This message cannot be pinned",
+      );
+    }
+
+    const pin = !message.pinned;
+
+    if (pin) {
+      const pinnedCount = await this.messageModel.countDocuments({
+        conversationId: message.conversationId,
+        pinned: true,
+        deletedForEveryone: { $ne: true },
+      });
+
+      if (pinnedCount >= 10) {
+        throw new BadRequestException(
+          "A conversation can have up to 10 pinned messages. Unpin one first.",
+        );
+      }
+    }
+
+    await this.messageModel.updateOne(
+      { _id: message._id },
+      {
+        $set: {
+          pinned: pin,
+          pinnedAt: pin ? new Date() : null,
+          pinnedBy: pin ? this.objectId(userId) : null,
+        },
+      },
+      { timestamps: false },
+    );
+
+    const fresh = await this.messageModel.findById(message._id).lean();
+
+    return mapMessage(
+      fresh,
+      userId,
+    );
+  }
+
+  async listPinned(
+    conversationId: string,
+    userId: string,
+  ) {
+    await this.requireParticipant(
+      conversationId,
+      userId,
+    );
+
+    const rows = await this.messageModel
+      .find({
+        conversationId: this.objectId(conversationId),
+        pinned: true,
+        deletedForEveryone: { $ne: true },
+        deletedForMeBy: { $ne: this.objectId(userId) },
+      })
+      .sort({ pinnedAt: -1 })
+      .limit(10)
+      .lean();
+
+    return rows.map((row) => mapMessage(row, userId));
+  }
+
+  // ============================================================
+  // STARRED MESSAGES (only the requesting user's stars)
+  // ============================================================
+
+  async listStarred(
+    userId: string,
+    limit = 100,
+  ) {
+    const uid = this.objectId(userId);
+
+    const conversationIds = (
+      await this.conversationModel
+        .find({ participantIds: uid })
+        .select("_id")
+        .lean()
+    ).map((c: any) => c._id);
+
+    const rows = await this.messageModel
+      .find({
+        conversationId: { $in: conversationIds },
+        starredBy: uid,
+        deletedForEveryone: { $ne: true },
+        deletedForMeBy: { $ne: uid },
+      })
+      .sort({ createdAt: -1 })
+      .limit(Math.min(Math.max(limit, 1), 200))
+      .lean();
+
+    return rows.map((row) => mapMessage(row, userId));
+  }
+
+  // ============================================================
+  // DELETE SEVERAL MESSAGES
+  //
+  // "me": hides any message in conversations the user belongs to.
+  // "everyone": only the user's own messages; others are skipped.
+  // ============================================================
+
+  async bulkDelete(
+    userId: string,
+    messageIds: string[],
+    scope: "me" | "everyone",
+  ) {
+    const unique = Array.from(new Set((messageIds || []).filter((id) => Types.ObjectId.isValid(id)))).slice(0, 100);
+
+    if (unique.length === 0) {
+      throw new BadRequestException(
+        "Select at least one message",
+      );
+    }
+
+    const uid = this.objectId(userId);
+
+    const rows = await this.messageModel
+      .find({ _id: { $in: unique.map((id) => new Types.ObjectId(id)) } })
+      .select("_id conversationId senderId deletedForEveryone")
+      .lean();
+
+    const conversationIds = Array.from(new Set(rows.map((r: any) => String(r.conversationId))));
+
+    const allowed = new Set(
+      (
+        await this.conversationModel
+          .find({
+            _id: { $in: conversationIds.map((id) => new Types.ObjectId(id)) },
+            participantIds: uid,
+          })
+          .select("_id")
+          .lean()
+      ).map((c: any) => String(c._id)),
+    );
+
+    const permitted = rows.filter((r: any) => allowed.has(String(r.conversationId)));
+
+    if (scope === "me") {
+      await this.messageModel.updateMany(
+        { _id: { $in: permitted.map((r: any) => r._id) } },
+        { $addToSet: { deletedForMeBy: uid } },
+      );
+
+      return {
+        scope,
+        deletedIds: permitted.map((r: any) => String(r._id)),
+        skippedIds: unique.filter((id) => !permitted.some((r: any) => String(r._id) === id)),
+        messages: [] as any[],
+      };
+    }
+
+    const own = permitted.filter((r: any) => String(r.senderId) === String(userId));
+    const messages: any[] = [];
+
+    for (const row of own) {
+      messages.push(await this.deleteForEveryone(String(row._id), userId));
+    }
+
+    return {
+      scope,
+      deletedIds: own.map((r: any) => String(r._id)),
+      skippedIds: unique.filter((id) => !own.some((r: any) => String(r._id) === id)),
+      messages,
+    };
+  }
+
+  // ============================================================
+  // CLEAR CONVERSATION (for the requesting user only)
+  // ============================================================
+
+  async clearConversation(
+    conversationId: string,
+    userId: string,
+  ) {
+    const conversation = await this.requireParticipant(
+      conversationId,
+      userId,
+    );
+
+    const uid = this.objectId(userId);
+
+    const result = await this.messageModel.updateMany(
+      {
+        conversationId: conversation._id,
+        deletedForMeBy: { $ne: uid },
+      },
+      { $addToSet: { deletedForMeBy: uid } },
+    );
+
+    await this.conversationModel.updateOne(
+      { _id: conversation._id },
+      { $set: { [`unreadCounts.${userId}`]: 0, [`markedUnreadBy.${userId}`]: false } },
+      { timestamps: false },
+    );
+
+    return {
+      success: true,
+      cleared: Number((result as any).modifiedCount ?? 0),
+    };
+  }
+
+  // ============================================================
+  // CALL LOG ENTRY
+  //
+  // Adds a "Missed voice call" / "Video call · 2:31" line to the
+  // direct conversation between the two users (created if needed).
+  // ============================================================
+
+  async createCallLog(params: {
+    callerId: string;
+    receiverId: string;
+    callId: string;
+    label: string;
+  }) {
+    const conversation = await this.conversationsService.createWithParticipant(
+      params.callerId,
+      params.receiverId,
+    );
+
+    const conversationId = String((conversation as any)?.id ?? "");
+
+    if (!Types.ObjectId.isValid(conversationId)) {
+      return null;
+    }
+
+    const existing = await this.messageModel
+      .findOne({ conversationId: new Types.ObjectId(conversationId), callId: params.callId })
+      .lean();
+
+    if (existing) {
+      return mapMessage(existing, params.callerId);
+    }
+
+    const callerObjectId = this.objectId(params.callerId);
+
+    const message = await this.messageModel.create({
+      conversationId: new Types.ObjectId(conversationId),
+      senderId: callerObjectId,
+      type: MessageType.SYSTEM,
+      text: params.label,
+      systemLabel: params.label,
+      callId: params.callId,
+      attachments: [],
+      replyTo: null,
+      status: MessageStatus.SENT,
+      deliveredTo: [callerObjectId],
+      readBy: [callerObjectId],
+      reactions: [],
+      starredBy: [],
+      deletedForMeBy: [],
+      deletedForEveryone: false,
+    });
+
+    await this.conversationsService.touch(
+      conversationId,
+      message._id.toString(),
+    );
+
+    return mapMessage(message.toObject(), params.callerId);
   }
 }

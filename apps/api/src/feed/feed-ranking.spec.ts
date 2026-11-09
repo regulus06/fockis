@@ -2,6 +2,8 @@ import {
   FEED_RANKING_CONFIG,
   FeedSnapshotStore,
   RankablePost,
+  ServedHistoryStore,
+  servedCounts,
   ViewerSignals,
   ageBucket,
   emptyViewerSignals,
@@ -310,5 +312,280 @@ describe('FeedSnapshotStore pagination', () => {
     clock = 2000;
 
     expect(store.get('k')).toBeUndefined();
+  });
+});
+
+describe('refresh rotation (served history)', () => {
+  /** A strong own post + a strong friend post on top of a flat pool. */
+  function poolWithLeaders(): RankablePost[] {
+    return [
+      post('own', 'viewer', 0.05, { likes: 40, meaningfulComments: 10 }),
+      post('friend', 'f1', 0.2, { likes: 60, meaningfulComments: 12 }),
+      ...mixedAgePool(),
+    ];
+  }
+
+  const viewer: ViewerSignals = {
+    ...emptyViewerSignals('viewer'),
+    followingIds: new Set(['f1']),
+    friendIds: new Set(['f1']),
+  };
+
+  function refreshFiveTimes() {
+    let clock = 0;
+    const history = new ServedHistoryStore(12, 4, 45 * 60_000, 100, () => clock);
+    const pages: string[][] = [];
+
+    for (let refresh = 1; refresh <= 5; refresh += 1) {
+      clock += 60_000;
+      const session = `s${refresh}`;
+      const ranked = rankFeed(
+        poolWithLeaders(),
+        viewer,
+        noFollowers,
+        NOW,
+        FEED_RANKING_CONFIG,
+        {
+          explorationSeed: `viewer:${session}`,
+          recentlyServed: history.counts('viewer', session),
+        },
+      );
+      const ids = ranked.map((item) => item.post.id);
+      history.record('viewer', session, ids.slice(0, history.topSize));
+      pages.push(ids);
+    }
+
+    return pages;
+  }
+
+  it('does not keep the same first post across 5 refreshes', () => {
+    const pages = refreshFiveTimes();
+    const firsts = pages.map((ids) => ids[0]);
+
+    expect(new Set(firsts).size).toBeGreaterThanOrEqual(3);
+    // nothing is stuck at #1 for consecutive refreshes
+    for (let i = 1; i < firsts.length; i += 1) {
+      expect(firsts[i]).not.toBe(firsts[i - 1]);
+    }
+  });
+
+  it('changes the first page and lets other posts reach the top', () => {
+    const pages = refreshFiveTimes();
+    const topFives = pages.map((ids) => ids.slice(0, 5).join(','));
+
+    expect(new Set(topFives).size).toBe(5);
+
+    const reachedTop = new Set(pages.flatMap((ids) => ids.slice(0, 5)));
+    expect(reachedTop.size).toBeGreaterThan(8);
+  });
+
+  it('demotes but never removes posts, and never duplicates', () => {
+    for (const ids of refreshFiveTimes()) {
+      expect(new Set(ids).size).toBe(ids.length);
+      expect(ids.length).toBe(poolWithLeaders().length);
+      expect(ids).toContain('own');
+      expect(ids).toContain('friend');
+    }
+  });
+
+  it('still lets a new own post lead the first session', () => {
+    expect(['own', 'friend']).toContain(refreshFiveTimes()[0][0]);
+  });
+
+  it('gives the same order when the same session re-ranks page 1', () => {
+    let clock = 0;
+    const history = new ServedHistoryStore(12, 4, 45 * 60_000, 100, () => clock);
+    history.record('viewer', 's0', ['own', 'friend']);
+
+    const once = () => {
+      const ranked = rankFeed(poolWithLeaders(), viewer, noFollowers, NOW, FEED_RANKING_CONFIG, {
+        explorationSeed: 'viewer:s1',
+        recentlyServed: history.counts('viewer', 's1'),
+      });
+      const ids = ranked.map((item) => item.post.id);
+      history.record('viewer', 's1', ids.slice(0, 12));
+      return ids;
+    };
+
+    const first = once();
+    clock += 1_000;
+    expect(once()).toEqual(first);
+  });
+
+  it('bounds the penalty with minServedFactor', () => {
+    const counts = new Map([['friend', 50]]);
+    const ranked = rankFeed(poolWithLeaders(), viewer, noFollowers, NOW, FEED_RANKING_CONFIG, {
+      explorationSeed: 'viewer:x',
+      recentlyServed: counts,
+    });
+    const plain = rankFeed(poolWithLeaders(), viewer, noFollowers, NOW, FEED_RANKING_CONFIG, {
+      explorationSeed: 'viewer:x',
+    });
+    const score = (list: typeof ranked) => list.find((i) => i.post.id === 'friend')!.score;
+
+    expect(score(ranked) / score(plain)).toBeCloseTo(FEED_RANKING_CONFIG.minServedFactor!, 5);
+  });
+});
+
+describe('ServedHistoryStore', () => {
+  it('ignores the current session and expires old ones', () => {
+    let clock = 0;
+    const store = new ServedHistoryStore(3, 2, 1_000, 10, () => clock);
+
+    store.record('v', 'a', ['p1', 'p2']);
+    store.record('v', 'b', ['p2', 'p3']);
+    expect(store.counts('v', 'b')).toEqual(new Map([['p1', 1.5], ['p2', 1]]));
+    expect(store.counts('v', 'c').get('p2')).toBe(2.5);
+
+    store.record('v', 'c', ['p9']);
+    expect(store.sessions('v').map((s) => s.session)).toEqual(['b', 'c']);
+
+    clock = 5_000;
+    expect(store.sessions('v')).toEqual([]);
+  });
+
+  it('evicts least recently used viewers', () => {
+    const store = new ServedHistoryStore(3, 2, 60_000, 2);
+    store.record('v1', 'a', ['p1']);
+    store.record('v2', 'a', ['p1']);
+    store.record('v3', 'a', ['p1']);
+    expect(store.sessions('v1')).toEqual([]);
+    expect(store.sessions('v3')).toHaveLength(1);
+  });
+
+  it('servedCounts counts each post once per session', () => {
+    expect(
+      servedCounts([{ session: 'a', ids: ['x', 'x'], at: 0 }], 'z').get('x'),
+    ).toBe(1.5);
+  });
+});
+
+describe('fresh lead (an already-seen post does not keep opening the feed)', () => {
+  // One dominant photo post with lots of engagement among weak text posts.
+  function dominantPool(seen: boolean): RankablePost[] {
+    const pool: RankablePost[] = [
+      post('dominant', 'star', 2, {
+        mediaKind: 'image',
+        likes: 80,
+        meaningfulComments: 25,
+        shares: 10,
+        views: 120,
+        seenByViewer: seen,
+      }),
+    ];
+
+    for (let index = 0; index < 12; index += 1) {
+      pool.push(
+        post(`p${index}`, `a${index}`, 30 + index * 8, {
+          likes: index % 3,
+          views: 10,
+        }),
+      );
+    }
+
+    return pool;
+  }
+
+  it('leads with the dominant post while it is unseen', () => {
+    const ranked = rankFeed(
+      dominantPool(false),
+      emptyViewerSignals('viewer'),
+      new Map(),
+      NOW,
+      FEED_RANKING_CONFIG,
+      { explorationSeed: 'viewer:s1' },
+    );
+
+    expect(ranked[0].post.id).toBe('dominant');
+  });
+
+  it('moves an already-seen post out of the top slots when a fresh post is close enough', () => {
+    const ranked = rankFeed(
+      dominantPool(true),
+      emptyViewerSignals('viewer'),
+      new Map(),
+      NOW,
+      FEED_RANKING_CONFIG,
+      { explorationSeed: 'viewer:s1' },
+    );
+
+    const position = ranked.findIndex((item) => item.post.id === 'dominant');
+
+    expect(ranked).toHaveLength(13);
+    expect(position).toBeGreaterThanOrEqual(1);
+    expect(ranked[0].post.seenByViewer).toBeFalsy();
+  });
+
+  it('rotates a dominant post that keeps leading even when seen data never arrives', () => {
+    // Seen tracking failed for this post (e.g. a card taller than the
+    // screen). The served penalty alone bottoms out at minServedFactor,
+    // which is not enough to move a post this far ahead.
+    const pool: RankablePost[] = [
+      post('dominant', 'star', 2, {
+        mediaKind: 'image',
+        likes: 80,
+        meaningfulComments: 25,
+        shares: 10,
+        views: 120,
+      }),
+    ];
+
+    for (let index = 0; index < 6; index += 1) {
+      pool.push(
+        post(`old${index}`, `o${index}`, 24 * 20 + index * 24, {
+          views: 200,
+          seenByViewer: true,
+        }),
+      );
+    }
+
+    const ranked = rankFeed(
+      pool,
+      emptyViewerSignals('viewer'),
+      new Map(),
+      NOW,
+      FEED_RANKING_CONFIG,
+      {
+        explorationSeed: 'viewer:s1',
+        recentlyServed: new Map([['dominant', 3]]),
+      },
+    );
+
+    expect(ranked[0].post.id).not.toBe('dominant');
+    expect(ranked.map((item) => item.post.id)).toContain('dominant');
+    expect(ranked).toHaveLength(7);
+  });
+
+  it('keeps the viewer\'s own seen post eligible to lead', () => {
+    const pool = dominantPool(true).map((item) =>
+      item.id === 'dominant' ? { ...item, authorId: 'viewer' } : item,
+    );
+
+    const ranked = rankFeed(
+      pool,
+      emptyViewerSignals('viewer'),
+      new Map(),
+      NOW,
+      FEED_RANKING_CONFIG,
+      { explorationSeed: 'viewer:s1' },
+    );
+
+    expect(ranked.some((item) => item.post.id === 'dominant')).toBe(true);
+  });
+
+  it('never forces up a much weaker post', () => {
+    const ranked = rankFeed(
+      [
+        post('strong', 'a', 1, { likes: 50, views: 60, seenByViewer: true }),
+        post('weak', 'b', 24 * 30, { views: 500 }),
+      ],
+      emptyViewerSignals('viewer'),
+      new Map(),
+      NOW,
+      { ...FEED_RANKING_CONFIG, freshLead: { slots: 3, window: 25, minScoreRatio: 0.99, ledThreshold: 1.5 } },
+      {},
+    );
+
+    expect(ranked[0].post.id).toBe('strong');
   });
 });

@@ -1,18 +1,25 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
+  Optional,
+  ServiceUnavailableException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { isValidObjectId, Model } from "mongoose";
 import { User, UserDocument } from "../user.schema";
+import { ACCOUNT_DELETION_HANDLER, type AccountDeletionHandler } from "../../legal/account-deletion.token";
 
 @Injectable()
 export class UserProfileService {
   constructor(
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
+    @Optional()
+    @Inject(ACCOUNT_DELETION_HANDLER)
+    private readonly deletion?: AccountDeletionHandler,
   ) {}
 
   /**
@@ -180,9 +187,35 @@ export class UserProfileService {
     }
   }
 
+  /**
+   * Settings → Delete account (password confirmed). Needs the legal
+   * module's deletion workflow so holds and retention rules are applied.
+   */
+  async deleteOwnAccount(id: string, currentPassword: string) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException("Invalid user ID.");
+    }
+
+    if (!this.deletion) {
+      throw new ServiceUnavailableException(
+        "Account deletion isn't available right now. Please contact support.",
+      );
+    }
+
+    const result = await this.deletion.requestOwnDeletion(id, currentPassword);
+    return { success: true, reference: result.number };
+  }
+
   async deleteUser(id: string) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException("Invalid user ID.");
+    }
+
+    // Run the full deletion workflow (legal holds, retention, audit) when
+    // the legal module is loaded; otherwise keep the original behaviour.
+    if (this.deletion) {
+      const result = await this.deletion.process(id, "user", id);
+      return { success: true, reference: result.number };
     }
 
     const result = await this.userModel.deleteOne({ _id: id });

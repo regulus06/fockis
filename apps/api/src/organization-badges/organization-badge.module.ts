@@ -9,24 +9,32 @@ import {
 import {
   Membership,
   MembershipSchema,
-} from '../church/members/schemas/membership.schema';
+} from '../org/members/schemas/membership.schema';
 
 import {
   Organization,
   OrganizationSchema,
-} from '../church/organizations/schemas/organization.schema';
+} from '../org/organizations/schemas/organization.schema';
 
 import {
   Department,
   DepartmentSchema,
-} from '../church/departments/schemas/department.schema';
+} from '../org/departments/schemas/department.schema';
 
 import {
   ChurchGroup,
   ChurchGroupSchema,
-} from '../church/groups/schemas/church-group.schema';
+} from '../org/groups/schemas/church-group.schema';
 
-import { OrganizationBadgeController } from './controllers/organization-badge.controller';
+import {
+  BadgeVerifyController,
+  OrganizationBadgeController,
+} from './controllers/organization-badge.controller';
+
+import {
+  OrganizationBadgeDesign,
+  OrganizationBadgeDesignSchema,
+} from './schemas/organization-badge-design.schema';
 
 import { OrganizationBadgeService } from './services/organization-badge.service';
 
@@ -36,6 +44,12 @@ import { OrganizationBadgeService } from './services/organization-badge.service'
       {
         name: OrganizationBadge.name,
         schema: OrganizationBadgeSchema,
+      },
+
+      // Which badge template each organization uses.
+      {
+        name: OrganizationBadgeDesign.name,
+        schema: OrganizationBadgeDesignSchema,
       },
 
       {
@@ -62,6 +76,7 @@ import { OrganizationBadgeService } from './services/organization-badge.service'
 
   controllers: [
     OrganizationBadgeController,
+    BadgeVerifyController,
   ],
 
   providers: [

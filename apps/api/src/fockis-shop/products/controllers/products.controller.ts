@@ -13,6 +13,7 @@ import {
 
 import { ProductsService } from "../services/products.service";
 import { CreateProductDto } from "../dto/create-product.dto";
+import { UpdateProductDto } from "../dto/update-product.dto";
 
 import { Public } from "../../../auth/public.decorator";
 import { JwtAuthGuard } from "../../../auth/jwt-auth.guard";
@@ -135,7 +136,7 @@ export class ProductsController {
   update(
     @Req() req: any,
     @Param("id") id: string,
-    @Body() body: any,
+    @Body() body: UpdateProductDto,
   ) {
     return this.productsService.update(
       id,

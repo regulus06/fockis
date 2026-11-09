@@ -8,7 +8,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import {
   Organization,
   OrganizationSchema,
-} from "../church/organizations/schemas/organization.schema";
+} from "../org/organizations/schemas/organization.schema";
 
 // ============================================================================
 // CHURCH MEMBERSHIP
@@ -17,7 +17,7 @@ import {
 import {
   Membership,
   MembershipSchema,
-} from "../church/members/schemas/membership.schema";
+} from "../org/members/schemas/membership.schema";
 
 // ============================================================================
 // CHURCH DEPARTMENT
@@ -26,7 +26,7 @@ import {
 import {
   Department,
   DepartmentSchema,
-} from "../church/departments/schemas/department.schema";
+} from "../org/departments/schemas/department.schema";
 
 // ============================================================================
 // CHURCH GROUP
@@ -35,7 +35,7 @@ import {
 import {
   ChurchGroup,
   ChurchGroupSchema,
-} from "../church/groups/schemas/church-group.schema";
+} from "../org/groups/schemas/church-group.schema";
 
 // ============================================================================
 // USER
@@ -108,6 +108,18 @@ import {
 // ============================================================================
 // MODULE
 // ============================================================================
+
+// ----------------------------------------------------------------------------
+// DOMAIN FEES (price list set in the Admin Center; payments via existing checkout)
+// ----------------------------------------------------------------------------
+import { Payment, PaymentSchema } from "../payments/schemas/payment.schema";
+import { DomainPricingModule } from "./billing/domain-pricing.module";
+import { OrganizationDomainBilling, OrganizationDomainBillingSchema } from "./billing/organization-domain-billing.schema";
+import { OrganizationDomainBillingService } from "./billing/organization-domain-billing.service";
+import { DomainBillingAdminController, OrganizationDomainBillingController } from "./billing/organization-domain-billing.controller";
+import { PersonalDomain, PersonalDomainSchema } from "./personal/personal-domain.schema";
+import { PersonalDomainService } from "./personal/personal-domain.service";
+import { PersonalDomainAdminController, PersonalDomainController, PersonalDomainPublicController } from "./personal/personal-domain.controller";
 
 @Module({
   imports: [
@@ -183,11 +195,36 @@ import {
         name: OrganizationSecurityPolicy.name,
         schema: OrganizationSecurityPolicySchema,
       },
+
+      // ----------------------------------------------------------------------
+      // DOMAIN FEES
+      // ----------------------------------------------------------------------
+      {
+        name: OrganizationDomainBilling.name,
+        schema: OrganizationDomainBillingSchema,
+      },
+      // Personal domains (john.fockis.com) people pay for themselves.
+      {
+        name: PersonalDomain.name,
+        schema: PersonalDomainSchema,
+      },
+      // Existing Fockis payment records — read-only (verify domain payments).
+      {
+        name: Payment.name,
+        schema: PaymentSchema,
+      },
     ]),
+
+    DomainPricingModule,
   ],
 
   controllers: [
     OrganizationIdentityController,
+    OrganizationDomainBillingController,
+    DomainBillingAdminController,
+    PersonalDomainController,
+    PersonalDomainPublicController,
+    PersonalDomainAdminController,
   ],
 
   providers: [
@@ -220,6 +257,12 @@ import {
     // ------------------------------------------------------------------------
 
     OrganizationIdentityService,
+
+    // ------------------------------------------------------------------------
+    // DOMAIN FEES
+    // ------------------------------------------------------------------------
+    OrganizationDomainBillingService,
+    PersonalDomainService,
   ],
 
   exports: [

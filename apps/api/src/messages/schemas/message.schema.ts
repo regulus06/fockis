@@ -301,6 +301,47 @@ export class Message {
   })
   editedAt?: Date | null;
 
+  /*
+   * Pinned for everyone in the conversation (any participant can pin).
+   */
+  @Prop({
+    type: Boolean,
+    default: false,
+    index: true,
+  })
+  pinned!: boolean;
+
+  @Prop({
+    type: Date,
+    default: null,
+  })
+  pinnedAt?: Date | null;
+
+  @Prop({
+    type: Types.ObjectId,
+    ref: "User",
+    default: null,
+  })
+  pinnedBy?: Types.ObjectId | null;
+
+  /*
+   * True when the message was created with "Forward".
+   */
+  @Prop({
+    type: Boolean,
+    default: false,
+  })
+  forwarded!: boolean;
+
+  /*
+   * Call log entries (type "system") reference the call they describe.
+   */
+  @Prop({
+    type: String,
+    default: null,
+  })
+  callId?: string | null;
+
   @Prop({
     type: String,
     maxlength: 500,

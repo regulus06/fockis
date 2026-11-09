@@ -295,6 +295,66 @@ export enum Permission {
   MODERATION_SETTINGS = "moderation.settings",
 
   // ========================================================================
+  // HELP & SUPPORT (feedback, tickets, live chat, help articles)
+  // ========================================================================
+
+  SUPPORT_VIEW = "support.view",
+  SUPPORT_RESPOND = "support.respond",
+  SUPPORT_ASSIGN = "support.assign",
+  SUPPORT_RESOLVE = "support.resolve",
+  SUPPORT_SETTINGS = "support.settings",
+  HELP_CONTENT_MANAGE = "help.content.manage",
+
+  // ========================================================================
+  // MAPS — Smart Address verification
+  // ========================================================================
+
+  MAP_ADDRESSES_VIEW = "map.addresses.view",
+  MAP_ADDRESSES_VERIFY = "map.addresses.verify",
+
+  // ========================================================================
+  // ACADEMY — classes, seminars, schools, certificates, learner accounts
+  // ========================================================================
+
+  ACADEMY_VIEW = "academy.view",
+  ACADEMY_MANAGE = "academy.manage",
+
+  // ========================================================================
+  // CAREERS — employers (approve, reject, block), jobs, employer plans
+  // ========================================================================
+
+  CAREERS_VIEW = "careers.view",
+  CAREERS_MANAGE = "careers.manage",
+
+  // ========================================================================
+  // LEGAL & EVIDENCE (restricted: not granted to ordinary admins)
+  // ========================================================================
+
+  LEGAL_VIEW = "legal.view",
+  LEGAL_EVIDENCE_VIEW = "legal.evidence.view",
+  LEGAL_EVIDENCE_PRESERVE = "legal.evidence.preserve",
+  LEGAL_EVIDENCE_EXPORT = "legal.evidence.export",
+  LEGAL_HOLDS_MANAGE = "legal.holds.manage",
+  LEGAL_REQUESTS_MANAGE = "legal.requests.manage",
+  LEGAL_REQUESTS_APPROVE = "legal.requests.approve",
+  LEGAL_RETENTION_MANAGE = "legal.retention.manage",
+  LEGAL_AUDIT_VIEW = "legal.audit.view",
+  LEGAL_DELETIONS_VIEW = "legal.deletions.view",
+
+  // ========================================================================
+  // POLICY & COMPLIANCE
+  // ========================================================================
+
+  POLICY_VIEW = "policy.view",
+  POLICY_EDIT = "policy.edit",
+  POLICY_REVIEW = "policy.review",
+  POLICY_PUBLISH = "policy.publish",
+  POLICY_RULES_MANAGE = "policy.rules.manage",
+  POLICY_ACCEPTANCE_VIEW = "policy.acceptance.view",
+  POLICY_AUDIT_VIEW = "policy.audit.view",
+  POLICY_SETTINGS = "policy.settings",
+
+  // ========================================================================
   // SECURITY
   // ========================================================================
 
@@ -449,4 +509,4 @@ export enum Permission {
 
   MARKETING_AUDIT_VIEW =
     "marketing.audit.view",
-}
+}

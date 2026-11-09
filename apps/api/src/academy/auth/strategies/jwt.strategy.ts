@@ -167,6 +167,13 @@ export class JwtStrategy extends PassportStrategy(
       );
     }
 
+    // Disabled or suspended accounts lose access immediately.
+    if (user.isActive === false) {
+      throw new UnauthorizedException(
+        "This Academy account is disabled.",
+      );
+    }
+
     // ------------------------------------------------------------------------
     // SUCCESS
     // ------------------------------------------------------------------------
@@ -189,6 +196,10 @@ export class JwtStrategy extends PassportStrategy(
       name: user.name,
       role: user.role,
       studentSlug: user.studentSlug,
+      mustChangePassword: !!user.mustChangePassword,
+      institutionId: user.institutionId
+        ? user.institutionId.toString()
+        : undefined,
     };
   }
 }

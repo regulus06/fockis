@@ -28,6 +28,11 @@ import { StudentsController } from "./controllers/students.controller";
 
 import { CoursesModule } from "../courses/courses.module";
 
+import {
+  CampusEvent,
+  CampusEventSchema,
+} from "../events/schemas/event.schema";
+
 @Module({
   imports: [
     // ========================================================================
@@ -38,6 +43,10 @@ import { CoursesModule } from "../courses/courses.module";
       {
         name: Student.name,
         schema: StudentSchema,
+      },
+      {
+        name: CampusEvent.name,
+        schema: CampusEventSchema,
       },
     ]),
 

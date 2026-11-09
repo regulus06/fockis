@@ -44,6 +44,12 @@ export class CoursesController {
     return this.coursesService.findAll();
   }
 
+  /** Public catalog (visibility = public). Declared before ":code". */
+  @Get("catalog")
+  findCatalog() {
+    return this.coursesService.findCatalog();
+  }
+
   @Get("mine")
   @UseGuards(
     AcademyJwtAuthGuard,
@@ -71,6 +77,20 @@ export class CoursesController {
   )
   findAllEnrollments() {
     return this.coursesService.findAllEnrollments();
+  }
+
+  /**
+   * Signed-in student's enrolled courses (course + progress + grade).
+   * Declared before ":code" so "student" is not read as a course code.
+   */
+  @Get("student")
+  @UseGuards(AcademyJwtAuthGuard)
+  findMyEnrolledCourses(
+    @Req() req: AcademyRequest,
+  ) {
+    return this.coursesService.findStudentCourses(
+      req.user.userId,
+    );
   }
 
   @Get(":code/modules")
