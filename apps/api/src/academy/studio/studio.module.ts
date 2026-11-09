@@ -11,6 +11,7 @@ import { LearnController, StudioController } from "./controllers/studio.controll
 import { AssignmentSubmission, AssignmentSubmissionSchema } from "./schemas/assignment-submission.schema";
 import { AssignmentsService } from "./services/assignments.service";
 import { LearnAssignmentsController, StudioAssignmentsController } from "./controllers/assignments.controller";
+import { AcademyMediaController } from "./controllers/media.controller";
 
 // Existing Fockis infrastructure, reused unchanged:
 //  - Payment model: read-only, to verify purchases made through /payments/create + /payments/confirm
@@ -34,7 +35,8 @@ import { DomainBillingModule } from "../institutions/billing/domain-billing.modu
     UploadsModule,
     DomainBillingModule, // schools must have a paid Fockis domain to publish / take new learners
   ],
-  controllers: [StudioController, LearnController, StudioAssignmentsController, LearnAssignmentsController],
+  // AcademyMediaController first: GET academy/learn/media/:token streams lesson files.
+  controllers: [AcademyMediaController, StudioController, LearnController, StudioAssignmentsController, LearnAssignmentsController],
   providers: [StudioService, AssignmentsService],
 })
 export class StudioModule {}
