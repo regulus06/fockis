@@ -8,8 +8,7 @@
  */
 import { useEffect, useState } from "react";
 import { getAcademyApiBaseUrl, getMe, type AcademyUser } from "./academyApi";
-
-const KEYS = ["academyToken", "academy_token"];
+import { forgetAcademyToken, readAcademyToken, rememberAcademyOwner } from "./academyTokenGuard";
 
 export type Session = { status: "loading" | "guest" | "user"; user: AcademyUser | null };
 
@@ -22,24 +21,16 @@ function emit(s: Session) {
   listeners.forEach((l) => l(s));
 }
 
+/**
+ * The Academy token, only while the Fockis account that signed in to Academy
+ * is still the one signed in to Fockis (see academyTokenGuard.ts).
+ */
 export function academyToken(): string | null {
-  try {
-    for (const k of KEYS) {
-      const v = localStorage.getItem(k);
-      if (v) return v;
-    }
-  } catch {
-    /* storage unavailable */
-  }
-  return null;
+  return readAcademyToken();
 }
 
 function clearToken() {
-  try {
-    KEYS.forEach((k) => localStorage.removeItem(k));
-  } catch {
-    /* ignore */
-  }
+  forgetAcademyToken();
 }
 
 /** (Re)load the signed-in Academy user. */
@@ -66,6 +57,9 @@ export function useAcademySession(): Session {
   const [s, setS] = useState<Session>(current);
   useEffect(() => {
     listeners.add(setS);
+    // Someone else signed in to Fockis since this page loaded: drop the
+    // previous person's Academy session instead of showing it.
+    if (current.status === "user" && !academyToken()) emit({ status: "guest", user: null });
     if (current.status === "loading") void refreshSession();
     else setS(current);
     return () => {
@@ -95,6 +89,7 @@ async function authPost(path: string, body: unknown): Promise<AcademyUser | null
   if (!token) throw new Error(data?.message || "Sign-in did not return a session. If two-factor is on, use the admin sign-in.");
   try {
     localStorage.setItem("academyToken", token);
+    rememberAcademyOwner();
   } catch {
     throw new Error("Your browser blocked storage, so you can't stay signed in.");
   }

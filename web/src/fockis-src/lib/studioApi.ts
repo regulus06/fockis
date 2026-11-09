@@ -254,6 +254,17 @@ export class StudioError extends Error {
   }
 }
 
+/**
+ * Lesson and homework files come back as a link to the Academy API itself
+ * ("/learn/media/<signed token>"), which streams the file. Make it a full
+ * address so <video>, <iframe> and downloads load it from the API server.
+ */
+function withFullUrl<T extends { url: string }>(r: T): T {
+  if (!r?.url || /^https?:\/\//i.test(r.url)) return r;
+  const base = getAcademyApiBaseUrl().replace(/\/+$/, "");
+  return { ...r, url: `${base}${r.url.startsWith("/") ? "" : "/"}${r.url}` };
+}
+
 async function call<T>(path: string, init: RequestInit = {}, auth: "required" | "optional" = "required"): Promise<T> {
   const headers = new Headers(init.headers);
   const token = academyToken();
@@ -397,12 +408,12 @@ export const homeworkApi = {
     files.forEach((f) => fd.append("files", f));
     return call<Submission>(`/learn/${enc(code)}/lessons/${enc(key)}/submission`, { method: "POST", body: fd });
   },
-  myFile: (submissionId: string, index: number) => call<{ url: string; fileName: string }>(`/learn/submissions/${enc(submissionId)}/files/${index}`),
+  myFile: (submissionId: string, index: number) => call<{ url: string; fileName: string }>(`/learn/submissions/${enc(submissionId)}/files/${index}`).then(withFullUrl),
   // class owner
   list: (code: string) => call<OwnerSubmissions>(`/studio/courses/${enc(code)}/submissions`),
   review: (code: string, id: string, action: "grade" | "return", grade: string, feedback: string) =>
     call<Submission>(`/studio/courses/${enc(code)}/submissions/${enc(id)}/review`, { method: "POST", body: json({ action, grade, feedback }) }),
-  ownerFile: (code: string, id: string, index: number) => call<{ url: string; fileName: string }>(`/studio/courses/${enc(code)}/submissions/${enc(id)}/files/${index}`),
+  ownerFile: (code: string, id: string, index: number) => call<{ url: string; fileName: string }>(`/studio/courses/${enc(code)}/submissions/${enc(id)}/files/${index}`).then(withFullUrl),
 };
 
 // ---------------------------------------------------------------- learner
@@ -422,7 +433,7 @@ export const learnApi = {
   completeModule: (code: string, order: number) =>
     call<{ progress: number; completedModuleOrders: number[] }>(`/courses/${enc(code)}/modules/${order}/complete`, { method: "POST" }),
   file: (code: string, key: string, download = false) =>
-    call<{ url: string; fileName?: string; mimeType?: string }>(`/learn/${enc(code)}/lessons/${enc(key)}/file${download ? "?download=1" : ""}`, {}, "optional"),
+    call<{ url: string; fileName?: string; mimeType?: string }>(`/learn/${enc(code)}/lessons/${enc(key)}/file${download ? "?download=1" : ""}`, {}, "optional").then(withFullUrl),
 };
 
 // ---------------------------------------------------------------- helpers

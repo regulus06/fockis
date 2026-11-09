@@ -297,6 +297,18 @@ export class CloudStorageService {
   // SIGNED URL
   // ==========================================================================
 
+  /** Size and type of a stored object (used to stream Academy lesson files). */
+  async getObjectInfo(objectKey: string): Promise<{ size: number; contentType?: string }> {
+    const [meta] = await this.storage.bucket(this.bucketName).file(objectKey).getMetadata();
+    return { size: Number(meta.size ?? 0), contentType: meta.contentType ? String(meta.contentType) : undefined };
+  }
+
+  /** Read a stored object, optionally one byte range (inclusive), for streaming. */
+  openReadStream(objectKey: string, range?: { start: number; end: number }) {
+    const file = this.storage.bucket(this.bucketName).file(objectKey);
+    return range ? file.createReadStream({ start: range.start, end: range.end, validation: false }) : file.createReadStream();
+  }
+
   async getSignedUrl(
     objectKey: string,
     options: {

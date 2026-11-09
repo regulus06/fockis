@@ -1,4 +1,5 @@
 import { FOCKIS_API_URL } from "../../config/fockisConfig";
+import { forgetAcademyToken, readAcademyToken, rememberAcademyOwner } from "./academyTokenGuard";
 
 
 
@@ -96,15 +97,8 @@ async function request<T>(
 
   if (authenticated) {
 
-    const token =
-
-      localStorage.getItem("academyToken") ||
-
-      localStorage.getItem("academy_token") ||
-
-      localStorage.getItem("accessToken") ||
-
-      localStorage.getItem("token");
+    // Academy token only, and only for the Fockis account that created it.
+    const token = readAcademyToken();
 
 
 
@@ -422,17 +416,7 @@ export interface AcademyLoginResponse {
 
 export function getStoredToken(): string | null {
 
-  return (
-
-    localStorage.getItem("academyToken") ||
-
-    localStorage.getItem("academy_token") ||
-
-    localStorage.getItem("accessToken") ||
-
-    localStorage.getItem("token")
-
-  );
+  return readAcademyToken();
 
 }
 
@@ -482,6 +466,8 @@ export async function login(
 
     );
 
+    rememberAcademyOwner();
+
   }
 
 
@@ -493,6 +479,8 @@ export async function login(
 
 
 export function logout(): void {
+
+  forgetAcademyToken();
 
   localStorage.removeItem("academyToken");
 

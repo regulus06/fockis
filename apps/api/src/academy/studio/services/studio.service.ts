@@ -24,6 +24,7 @@ import { AcademyInstitution } from "../../institutions/schemas/institution.schem
 import { Payment } from "../../../payments/schemas/payment.schema";
 import { DomainBillingService } from "../../institutions/billing/domain-billing.service";
 import { CloudStorageService } from "../../../uploads/cloud-storage.service";
+import { mediaPath } from "../media-link";
 
 export interface AcademyActor {
   userId: string;
@@ -605,12 +606,9 @@ export class StudioService {
     if (!lesson.preview && !isOwner && !enrolled) throw new ForbiddenException("Enroll to open this lesson.");
     const content = await this.contentModel.findOne({ courseCode: course.code, lessonKey: key }).lean().exec();
     if (!content?.storageKey) throw new NotFoundException("This lesson has no uploaded file.");
-    const safeName = (content.fileName || "lesson").replace(/["\\\r\n]/g, "");
-    const url = await this.storage.getSignedUrl(content.storageKey, {
-      expiresInSeconds: 60 * 60 * 3,
-      responseDisposition: download ? `attachment; filename="${safeName}"` : undefined,
-      responseType: content.mimeType,
-    });
+    // A Fockis-signed link streamed by GET /academy/learn/media/:token
+    // (see media-link.ts), relative to the Academy API base.
+    const url = mediaPath(content.storageKey, content.mimeType, content.fileName || "lesson", download, 60 * 60 * 3);
     return { url, fileName: content.fileName, mimeType: content.mimeType, expiresInSeconds: 10800 };
   }
 

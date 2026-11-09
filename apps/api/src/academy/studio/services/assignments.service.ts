@@ -1,4 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { mediaPath } from "../media-link";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { unlink } from "fs/promises";
@@ -166,12 +167,8 @@ export class AssignmentsService {
     }
     const f = (s.files ?? [])[index];
     if (!f) throw new NotFoundException("File not found.");
-    const safeName = f.fileName.replace(/["\\\r\n]/g, "");
-    const url = await this.storage.getSignedUrl(f.storageKey, {
-      expiresInSeconds: 60 * 30,
-      responseDisposition: `attachment; filename="${safeName}"`,
-      responseType: f.mimeType,
-    });
+    // A Fockis-signed link streamed by GET /academy/learn/media/:token.
+    const url = mediaPath(f.storageKey, f.mimeType, f.fileName, true, 60 * 30);
     return { url, fileName: f.fileName };
   }
 
