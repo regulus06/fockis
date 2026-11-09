@@ -167,8 +167,10 @@ church: {
 navigation: {
 home: "Akèy",
 organizations: "Òganizasyon yo",
-myChurch: "Legliz mwen",
+myChurch: "Òganizasyon mwen",
 planVisit: "Planifye yon vizit",
+myHistory: "Istwa mwen",
+visitRequests: "Demann vizit",
 
   overview: "Apèsi",
   leadership: "Lidèchip",
@@ -182,11 +184,11 @@ planVisit: "Planifye yon vizit",
   communication: "Kominikasyon",
   media: "Medya",
 
-  churchMenu: "Meni Legliz la",
+  churchMenu: "Meni òganizasyon an",
   myOrganization: "Òganizasyon mwen",
 
   admin: "Admin",
-  administration: "Administrasyon Legliz la",
+  administration: "Administrasyon òganizasyon an",
   dashboard: "Tablo kontwòl",
   createOrganization: "Kreye òganizasyon",
   manageMembers: "Jere manm yo",
@@ -194,7 +196,7 @@ planVisit: "Planifye yon vizit",
   manageGroups: "Jere gwoup yo",
   manageEvents: "Jere evènman yo",
   livestreamManager: "Manadjè difizyon an dirèk",
-  settings: "Paramèt Legliz la",
+  settings: "Paramèt òganizasyon an",
 
   closeMenu: "Fèmen meni an",
   openMenu: "Louvri meni an",
@@ -214,7 +216,7 @@ search: {
   organizationsEventsMembers:
     "Chèche òganizasyon, evènman ak manm…",
   mobile: "Chèche…",
-  ariaLabel: "Chèche nan Fockis Church",
+  ariaLabel: "Chèche nan Fockis Òganizasyon",
 },
 
 notifications: {
@@ -322,7 +324,7 @@ organizationCard: {
 },
 
 createGroup: {
-  eyebrow: "Fockis Church",
+  eyebrow: "Fockis Òganizasyon",
   title: "Kreye yon gwoup",
   description:
     "Kreye yon etid biblik, ti gwoup, gwoup lapriyè oswa gwoup pèsonalize pou òganizasyon ou.",

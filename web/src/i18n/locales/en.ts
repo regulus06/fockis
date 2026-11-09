@@ -182,8 +182,10 @@ const en = {
     navigation: {
       home: "Home",
       organizations: "Organizations",
-      myChurch: "My Church",
+      myChurch: "My Organization",
       planVisit: "Plan a Visit",
+      myHistory: "My History",
+      visitRequests: "Visit Requests",
 
       overview: "Overview",
       leadership: "Leadership",
@@ -197,11 +199,11 @@ const en = {
       communication: "Communication",
       media: "Media",
 
-      churchMenu: "Church Menu",
+      churchMenu: "Organization Menu",
       myOrganization: "My Organization",
 
       admin: "Admin",
-      administration: "Church Administration",
+      administration: "Organization Administration",
       dashboard: "Dashboard",
       createOrganization: "Create Organization",
       manageMembers: "Manage Members",
@@ -209,7 +211,7 @@ const en = {
       manageGroups: "Manage Groups",
       manageEvents: "Manage Events",
       livestreamManager: "Livestream Manager",
-      settings: "Church Settings",
+      settings: "Organization Settings",
 
       closeMenu: "Close menu",
       openMenu: "Open menu",
@@ -229,7 +231,7 @@ const en = {
       organizationsEventsMembers:
         "Search organizations, events, members…",
       mobile: "Search…",
-      ariaLabel: "Search Fockis Church",
+      ariaLabel: "Search Fockis Organizations",
     },
 
     notifications: {
@@ -338,7 +340,7 @@ const en = {
     },
 
     createGroup: {
-      eyebrow: "Fockis Church",
+      eyebrow: "Fockis Organizations",
       title: "Create a group",
       description:
         "Create a Bible study, small group, prayer group, or custom group for your organization.",

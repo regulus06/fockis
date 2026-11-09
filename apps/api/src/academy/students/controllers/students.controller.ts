@@ -28,12 +28,18 @@ export class StudentsController {
     return this.studentsService.getMyDashboard(req.user);
   }
 
+  // A student's record is private: only Academy staff and advisors can look
+  // it up. Students see their own data through GET /academy/students/dashboard.
   @Get(':idOrSlug')
+  @UseGuards(AcademyJwtAuthGuard, RolesGuard)
+  @Roles('administrator', 'staff', 'advisor')
   dashboard(@Param('idOrSlug') idOrSlug: string) {
     return this.studentsService.getDashboard(idOrSlug);
   }
 
   @Get(':idOrSlug/courses')
+  @UseGuards(AcademyJwtAuthGuard, RolesGuard)
+  @Roles('administrator', 'staff', 'advisor')
   courses(@Param('idOrSlug') idOrSlug: string) {
     return this.studentsService.getCourseCards(idOrSlug);
   }

@@ -1,8 +1,17 @@
+
 // ============================================================================
 // FOCKIS JWT STRATEGY
 //
-// Database-authoritative authentication + route-aware session security
-// + effective RBAC permissions
+// Database-authoritative authentication
+// Persistent sessions for regular users
+// Route-aware administrator security
+// Effective RBAC permissions
+//
+// SESSION POLICY:
+// - Regular users: no inactivity expiration or maximum session age.
+// - Premium users, sellers, employers and Academy students: same as regular.
+// - Admins: existing security restrictions on admin routes.
+// - Super Admins: existing stricter security restrictions.
 // ============================================================================
 
 import {
@@ -75,13 +84,16 @@ interface JwtPayload {
 
 type SessionPolicyName =
   | "standard"
-  | "protected"
   | "admin"
   | "super_admin";
 
 interface SessionPolicy {
   name: SessionPolicyName;
+
+  // Zero means no inactivity expiration.
   inactivityMinutes: number;
+
+  // Zero means no maximum session age enforced here.
   maximumSessionHours: number;
 }
 
@@ -94,24 +106,32 @@ export class JwtStrategy extends PassportStrategy(
   Strategy,
   "jwt",
 ) {
+
   // ==========================================================================
-  // STANDARD FOCKIS
+  // REGULAR FOCKIS USERS
+  // ==========================================================================
+  //
+  // Persistent login.
+  //
+  // No inactivity timeout.
+  // No maximum session age enforced by this strategy.
+  //
+  // Applies to:
+  // - Regular users
+  // - Premium users
+  // - Sellers
+  // - Employers
+  // - Academy students
+  // - Other non-administrator accounts
+  //
+  // NOTE: Passport still validates the JWT exp claim.
+  // A persistent login requires a working refresh-token mechanism.
   // ==========================================================================
 
   private readonly STANDARD_SESSION: SessionPolicy = {
     name: "standard",
-    inactivityMinutes: 120,
-    maximumSessionHours: 24,
-  };
-
-  // ==========================================================================
-  // PROTECTED FOCKIS AREAS
-  // ==========================================================================
-
-  private readonly PROTECTED_SESSION: SessionPolicy = {
-    name: "protected",
-    inactivityMinutes: 15,
-    maximumSessionHours: 12,
+    inactivityMinutes: 0,
+    maximumSessionHours: 0,
   };
 
   // ==========================================================================
@@ -151,10 +171,6 @@ export class JwtStrategy extends PassportStrategy(
     const jwtSecret =
       process.env.JWT_SECRET?.trim();
 
-    // ------------------------------------------------------------------------
-    // JWT SECRET
-    // ------------------------------------------------------------------------
-
     if (!jwtSecret) {
       throw new Error(
         "JWT_SECRET environment variable is required.",
@@ -173,6 +189,7 @@ export class JwtStrategy extends PassportStrategy(
 
       secretOrKey: jwtSecret,
 
+      // JWT expiration is still checked by Passport.
       ignoreExpiration: false,
 
       passReqToCallback: true,
@@ -187,6 +204,7 @@ export class JwtStrategy extends PassportStrategy(
     request: any,
     payload: JwtPayload,
   ) {
+
     // ========================================================================
     // RESOLVE USER ID
     // ========================================================================
@@ -210,16 +228,6 @@ export class JwtStrategy extends PassportStrategy(
 
     // ========================================================================
     // LOAD CURRENT USER
-    // ========================================================================
-    //
-    // Authorization is always based on the current database record.
-    //
-    // JWT claims do NOT decide:
-    // - role
-    // - permissions
-    // - super-admin status
-    // - account status
-    // - custom admin role
     // ========================================================================
 
     const user = await this.userModel
@@ -300,20 +308,6 @@ export class JwtStrategy extends PassportStrategy(
     // ========================================================================
     // SYSTEM ROLE PERMISSIONS
     // ========================================================================
-    //
-    // IMPORTANT:
-    //
-    // These are the baseline permissions defined by:
-    //
-    // admin/rbac/role-permissions.ts
-    //
-    // USER       -> no admin permissions
-    // MODERATOR  -> moderation/audit permissions
-    // ADMIN      -> normal administrative permissions
-    // SUPER_ADMIN -> complete permission catalog
-    //
-    // These are now merged into request.user.permissions.
-    // ========================================================================
 
     let systemRolePermissions: string[] = [];
 
@@ -357,11 +351,6 @@ export class JwtStrategy extends PassportStrategy(
           | AdminRoleDocument
           | null;
 
-      // ----------------------------------------------------------------------
-      // If the referenced custom role no longer exists
-      // or is inactive, do not grant its permissions.
-      // ----------------------------------------------------------------------
-
       if (customRole) {
         customRolePermissions =
           this.normalizePermissions(
@@ -389,19 +378,6 @@ export class JwtStrategy extends PassportStrategy(
 
     // ========================================================================
     // MERGE EFFECTIVE PERMISSIONS
-    // ==========================================================================
-    //
-    // Effective permissions are:
-    //
-    //   SYSTEM ROLE
-    //       +
-    //   CUSTOM ADMIN ROLE
-    //       +
-    //   DIRECT USER PERMISSIONS
-    //
-    // Super Admin also receives all permissions from RolePermissions.
-    //
-    // A Set prevents duplicates.
     // ========================================================================
 
     const permissions =
@@ -427,8 +403,15 @@ export class JwtStrategy extends PassportStrategy(
     // ========================================================================
     // JWT MAXIMUM SESSION AGE
     // ========================================================================
+    //
+    // A zero maximumSessionHours means this strategy does not
+    // enforce a maximum session age.
+    //
+    // Administrators retain their existing maximum-age limits.
+    // ========================================================================
 
     if (
+      sessionPolicy.maximumSessionHours > 0 &&
       typeof payload?.iat === "number"
     ) {
       const issuedAtMs =
@@ -445,8 +428,7 @@ export class JwtStrategy extends PassportStrategy(
         issuedAtMs;
 
       if (
-        sessionAgeMs >
-        maximumSessionMs
+        sessionAgeMs > maximumSessionMs
       ) {
         throw new UnauthorizedException(
           "Your session has expired. Please sign in again.",
@@ -457,13 +439,24 @@ export class JwtStrategy extends PassportStrategy(
     // ========================================================================
     // ROUTE-AWARE INACTIVITY SECURITY
     // ========================================================================
+    //
+    // Regular users:
+    // inactivityMinutes = 0
+    // Therefore no inactivity logout.
+    //
+    // Administrators:
+    // Existing inactivity restrictions remain.
+    // ========================================================================
 
     const lastActiveAt =
       this.toDate(
         user.lastActiveAt,
       );
 
-    if (lastActiveAt) {
+    if (
+      sessionPolicy.inactivityMinutes > 0 &&
+      lastActiveAt
+    ) {
       const inactivityLimitMs =
         sessionPolicy.inactivityMinutes *
         60 *
@@ -474,8 +467,7 @@ export class JwtStrategy extends PassportStrategy(
         lastActiveAt.getTime();
 
       if (
-        inactiveForMs >
-        inactivityLimitMs
+        inactiveForMs > inactivityLimitMs
       ) {
         await this.userModel.updateOne(
           {
@@ -525,12 +517,8 @@ export class JwtStrategy extends PassportStrategy(
         },
         {
           $set: {
-            lastActiveAt:
-              activityDate,
-
-            lastSeen:
-              activityDate,
-
+            lastActiveAt: activityDate,
+            lastSeen: activityDate,
             online: true,
           },
         },
@@ -580,80 +568,46 @@ export class JwtStrategy extends PassportStrategy(
     // ========================================================================
 
     return {
-      // ======================================================================
+
       // IDENTIFIERS
-      // ======================================================================
 
-      id:
-        user._id.toString(),
+      id: user._id.toString(),
 
-      userId:
-        user._id.toString(),
+      userId: user._id.toString(),
 
-      sub:
-        user._id.toString(),
+      sub: user._id.toString(),
 
       fockisId,
 
-      // ======================================================================
       // ACCOUNT
-      // ======================================================================
 
-      email:
-        user.email,
+      email: user.email,
 
-      username:
-        user.username,
+      username: user.username,
 
-      // ======================================================================
       // SYSTEM ROLE
-      // ======================================================================
 
-      role:
-        userRole,
+      role: userRole,
 
-      // ======================================================================
       // CUSTOM ADMIN ROLE
-      // ======================================================================
 
-      adminRoleId:
-        customRoleId,
+      adminRoleId: customRoleId,
 
-      adminRoleSlug:
-        customRoleSlug,
+      adminRoleSlug: customRoleSlug,
 
-      adminRoleName:
-        customRoleName,
+      adminRoleName: customRoleName,
 
-      // ======================================================================
       // EFFECTIVE PERMISSIONS
-      // ======================================================================
-      //
-      // This is the important RBAC fix.
-      //
-      // RbacGuard will now receive:
-      //
-      // system role permissions
-      // + custom role permissions
-      // + direct permissions
-      //
-      // through request.user.permissions.
-      // ======================================================================
 
       permissions,
 
-      // ======================================================================
       // SUPER ADMIN
-      // ======================================================================
 
       isSuperAdmin,
 
-      // ======================================================================
       // SESSION POLICY
-      // ======================================================================
 
-      sessionPolicy:
-        sessionPolicy.name,
+      sessionPolicy: sessionPolicy.name,
 
       inactivityTimeoutMinutes:
         sessionPolicy.inactivityMinutes,
@@ -661,99 +615,63 @@ export class JwtStrategy extends PassportStrategy(
       maximumSessionHours:
         sessionPolicy.maximumSessionHours,
 
-      // ======================================================================
       // ACCOUNT SECURITY
-      // ======================================================================
 
-      isActive:
-        Boolean(
-          user.isActive,
-        ),
+      isActive: Boolean(user.isActive),
 
-      verified:
-        Boolean(
-          user.verified,
-        ),
+      verified: Boolean(user.verified),
 
       mustChangePassword:
-        Boolean(
-          user.mustChangePassword,
-        ),
+        Boolean(user.mustChangePassword),
 
       passwordChangedAt:
-        user.passwordChangedAt ||
-        null,
+        user.passwordChangedAt || null,
 
       passwordResetByAdmin:
-        Boolean(
-          user.passwordResetByAdmin,
-        ),
+        Boolean(user.passwordResetByAdmin),
 
       failedLoginAttempts:
-        Number(
-          user.failedLoginAttempts || 0,
-        ),
+        Number(user.failedLoginAttempts || 0),
 
       lockedUntil:
-        user.lockedUntil ||
-        null,
+        user.lockedUntil || null,
 
       lockoutCount:
-        Number(
-          user.lockoutCount || 0,
-        ),
+        Number(user.lockoutCount || 0),
 
-      // ======================================================================
       // ACTIVITY
-      // ======================================================================
 
       lastLoginAt:
-        user.lastLoginAt ||
-        null,
+        user.lastLoginAt || null,
 
       lastActiveAt:
-        user.lastActiveAt ||
-        null,
+        user.lastActiveAt || null,
 
       lastSeen:
-        user.lastSeen ||
-        null,
+        user.lastSeen || null,
 
       online:
-        Boolean(
-          user.online,
-        ),
+        Boolean(user.online),
 
-      // ======================================================================
       // PROFILE / OPTIONAL FIELDS
-      // ======================================================================
 
-      age:
-        (user as any).age,
+      age: (user as any).age,
 
-      gender:
-        (user as any).gender,
+      gender: (user as any).gender,
 
-      country:
-        (user as any).country,
+      country: (user as any).country,
 
-      state:
-        (user as any).state,
+      state: (user as any).state,
 
-      city:
-        (user as any).city,
+      city: (user as any).city,
 
-      interests:
-        (user as any).interests,
+      interests: (user as any).interests,
 
-      categories:
-        (user as any).categories,
+      categories: (user as any).categories,
 
-      behaviors:
-        (user as any).behaviors,
+      behaviors: (user as any).behaviors,
 
-      device:
-        (user as any).device,
+      device: (user as any).device,
 
       operatingSystem:
         (user as any).operatingSystem,
@@ -767,6 +685,7 @@ export class JwtStrategy extends PassportStrategy(
   private getRoleEnumValue(
     normalizedRole: string,
   ): Role | null {
+
     switch (normalizedRole) {
       case "user":
         return Role.USER;
@@ -794,6 +713,7 @@ export class JwtStrategy extends PassportStrategy(
     userRole: string,
     isSuperAdmin: boolean,
   ): SessionPolicy {
+
     // ========================================================================
     // SUPER ADMIN
     // ========================================================================
@@ -806,7 +726,7 @@ export class JwtStrategy extends PassportStrategy(
     }
 
     // ========================================================================
-    // ADMIN
+    // ADMIN AND MODERATOR
     // ========================================================================
 
     if (
@@ -816,30 +736,25 @@ export class JwtStrategy extends PassportStrategy(
       const path =
         this.getRequestPath(request);
 
-      if (
-        this.isAdminPath(path)
-      ) {
+      if (this.isAdminPath(path)) {
         return this.ADMIN_SESSION;
       }
     }
 
     // ========================================================================
-    // PROTECTED APPLICATION AREAS
+    // ALL OTHER ACCOUNTS
     // ========================================================================
-
-    const path =
-      this.getRequestPath(request);
-
-    if (
-      this.isProtectedApplicationPath(
-        path,
-      )
-    ) {
-      return this.PROTECTED_SESSION;
-    }
-
-    // ========================================================================
-    // NORMAL FOCKIS
+    //
+    // Do not expire sessions because of:
+    // - Inactivity
+    // - Time spent logged in
+    // - Accessing Academy
+    // - Accessing Careers
+    // - Accessing Organizations
+    // - Accessing Marketplace
+    // - Accessing Seller Center
+    //
+    // All non-super-admin accounts use the standard persistent policy.
     // ========================================================================
 
     return this.STANDARD_SESSION;
@@ -852,6 +767,7 @@ export class JwtStrategy extends PassportStrategy(
   private getRequestPath(
     request: any,
   ): string {
+
     const rawPath =
       String(
         request?.originalUrl ??
@@ -876,38 +792,10 @@ export class JwtStrategy extends PassportStrategy(
   private isAdminPath(
     path: string,
   ): boolean {
+
     return (
       path === "/admin" ||
       path.startsWith("/admin/")
-    );
-  }
-
-  // ==========================================================================
-  // PROTECTED APPLICATION ROUTES
-  // ==========================================================================
-
-  private isProtectedApplicationPath(
-    path: string,
-  ): boolean {
-    return (
-      // Organizations
-      path === "/organizations" ||
-      path.startsWith("/organizations/") ||
-
-      // Academy
-      path === "/academy" ||
-      path.startsWith("/academy/") ||
-
-      // Careers
-      path === "/careers" ||
-      path.startsWith("/careers/") ||
-
-      // Singular route variants
-      path === "/organization" ||
-      path.startsWith("/organization/") ||
-
-      path === "/career" ||
-      path.startsWith("/career/")
     );
   }
 
@@ -918,6 +806,7 @@ export class JwtStrategy extends PassportStrategy(
   private normalizeRole(
     role: unknown,
   ): string {
+
     return String(
       role ?? "",
     )
@@ -936,6 +825,7 @@ export class JwtStrategy extends PassportStrategy(
   private normalizePermissions(
     permissions: unknown,
   ): string[] {
+
     if (!Array.isArray(permissions)) {
       return [];
     }
@@ -961,6 +851,7 @@ export class JwtStrategy extends PassportStrategy(
   private toDate(
     value: unknown,
   ): Date | null {
+
     if (!value) {
       return null;
     }

@@ -1,0 +1,1053 @@
+/* ==========================================================================
+   FOCKIS CHURCH — DEPARTMENTS PAGE
+   ========================================================================== */
+
+.church-departments-page {
+  --departments-primary: #005a8d;
+  --departments-primary-light: #0879b5;
+  --departments-primary-dark: #003f63;
+
+  --departments-gold: #f6b62c;
+  --departments-gold-dark: #a86f00;
+  --departments-gold-light: #ffd76a;
+
+  --departments-ink: #172b4d;
+  --departments-muted: #66788a;
+  --departments-muted-light: #8a9aaa;
+
+  --departments-border: #dce4ea;
+  --departments-border-strong: #ccd8e0;
+
+  --departments-background: #f3f6f9;
+  --departments-white: #ffffff;
+
+  background: var(--departments-background);
+}
+
+/* ==========================================================================
+   CONTENT
+   ========================================================================== */
+
+.church-departments-content {
+  min-width: 0;
+  padding-bottom: 4rem;
+}
+
+/* ==========================================================================
+   HERO
+   ========================================================================== */
+
+.church-departments-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+
+  min-height: 230px;
+  padding: 2rem 2.25rem;
+
+  margin-bottom: 1.5rem;
+
+  overflow: hidden;
+
+  border: 1px solid
+    rgba(0, 63, 99, 0.12);
+
+  border-radius: 18px;
+
+  background:
+    radial-gradient(
+      circle at 90% 15%,
+      rgba(246, 182, 44, 0.18),
+      transparent 32%
+    ),
+    linear-gradient(
+      135deg,
+      #003f63 0%,
+      #005a8d 58%,
+      #0879b5 100%
+    );
+
+  box-shadow:
+    0 18px 45px
+      rgba(0, 63, 99, 0.16);
+
+  color: #ffffff;
+}
+
+.church-departments-hero::before {
+  content: "";
+
+  position: absolute;
+
+  width: 280px;
+  height: 280px;
+
+  right: -100px;
+  bottom: -150px;
+
+  border-radius: 50%;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.12);
+
+  box-shadow:
+    0 0 0 35px
+      rgba(255, 255, 255, 0.025),
+    0 0 0 70px
+      rgba(255, 255, 255, 0.02);
+
+  pointer-events: none;
+}
+
+.church-departments-hero__icon {
+  position: relative;
+  z-index: 1;
+
+  flex: 0 0 76px;
+
+  width: 76px;
+  height: 76px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 20px;
+
+  background: rgba(
+    255,
+    255,
+    255,
+    0.12
+  );
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.2);
+
+  box-shadow:
+    inset 0 1px 0
+      rgba(255, 255, 255, 0.18);
+
+  backdrop-filter: blur(8px);
+
+  color: var(--departments-gold-light);
+
+  font-size: 2.25rem;
+}
+
+.church-departments-hero__content {
+  position: relative;
+  z-index: 1;
+
+  min-width: 0;
+
+  flex: 1;
+}
+
+.church-departments-hero__eyebrow {
+  margin-bottom: 0.35rem;
+
+  color: var(
+    --departments-gold-light
+  );
+
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.church-departments-hero h1 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: clamp(
+    1.75rem,
+    3vw,
+    2.5rem
+  );
+
+  line-height: 1.1;
+
+  letter-spacing: -0.025em;
+}
+
+.church-departments-hero p {
+  max-width: 700px;
+
+  margin: 0.7rem 0 0;
+
+  color: rgba(
+    255,
+    255,
+    255,
+    0.8
+  );
+
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+.church-departments-hero__stats {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+
+  margin-top: 1.25rem;
+}
+
+.church-departments-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.church-departments-stat strong {
+  color: #ffffff;
+
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.church-departments-stat span {
+  color: rgba(
+    255,
+    255,
+    255,
+    0.62
+  );
+
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.church-departments-stat__divider {
+  width: 1px;
+  height: 32px;
+
+  background: rgba(
+    255,
+    255,
+    255,
+    0.18
+  );
+}
+
+.church-departments-hero__action {
+  position: relative;
+  z-index: 2;
+
+  align-self: flex-start;
+
+  flex: 0 0 auto;
+}
+
+.church-departments-create-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+
+  min-height: 46px;
+
+  padding: 0.75rem 1.1rem;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.18);
+
+  box-shadow:
+    0 8px 22px
+      rgba(0, 0, 0, 0.16);
+
+  white-space: nowrap;
+}
+
+.church-departments-create-button span {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+/* ==========================================================================
+   TOOLBAR
+   ========================================================================== */
+
+.church-departments-toolbar {
+  padding: 1.35rem 1.5rem;
+
+  margin-bottom: 1.5rem;
+
+  border: 1px solid
+    var(--departments-border);
+
+  border-radius: 14px;
+
+  background: var(
+    --departments-white
+  );
+
+  box-shadow:
+    0 6px 22px
+      rgba(23, 43, 77, 0.055);
+}
+
+.church-departments-toolbar__heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+
+  margin-bottom: 1.1rem;
+}
+
+.church-departments-toolbar__label {
+  display: block;
+
+  margin-bottom: 0.25rem;
+
+  color: var(
+    --departments-primary
+  );
+
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+}
+
+.church-departments-toolbar h2 {
+  margin: 0;
+
+  color: var(--departments-ink);
+
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.church-departments-clear-button {
+  border: 0;
+
+  padding: 0.3rem 0;
+
+  background: transparent;
+
+  color: var(
+    --departments-primary
+  );
+
+  font-size: 0.82rem;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.church-departments-clear-button:hover {
+  text-decoration: underline;
+}
+
+.church-departments-filters {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 2fr)
+    minmax(220px, 1fr);
+
+  gap: 1rem;
+}
+
+.church-departments-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.church-departments-filter > span {
+  color: var(--departments-muted);
+
+  font-size: 0.72rem;
+  font-weight: 800;
+
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.church-departments-search {
+  position: relative;
+}
+
+.church-departments-search .church-input {
+  width: 100%;
+
+  padding-left: 2.6rem;
+}
+
+.church-departments-search__icon {
+  position: absolute;
+
+  left: 0.9rem;
+  top: 50%;
+
+  z-index: 1;
+
+  transform: translateY(-50%);
+
+  color: var(
+    --departments-muted
+  );
+
+  font-size: 1.25rem;
+
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   ALERT
+   ========================================================================== */
+
+.church-departments-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+
+  margin-bottom: 1.5rem;
+
+  padding: 1rem 1.1rem;
+
+  border-radius: 12px;
+}
+
+.church-departments-alert__icon {
+  flex: 0 0 32px;
+
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: rgba(
+    180,
+    38,
+    38,
+    0.1
+  );
+
+  color: #b3261e;
+
+  font-weight: 900;
+}
+
+.church-departments-alert__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.church-departments-alert__content strong {
+  display: block;
+
+  margin-bottom: 0.2rem;
+
+  color: #8d211b;
+}
+
+.church-departments-alert__content p {
+  margin: 0;
+
+  color: #70413e;
+
+  line-height: 1.5;
+}
+
+.church-departments-alert__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+
+  margin-top: 0.8rem;
+}
+
+/* ==========================================================================
+   LIST HEADING
+   ========================================================================== */
+
+.church-departments-list-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 1rem;
+
+  margin-bottom: 1rem;
+}
+
+.church-departments-list-heading > div:first-child > span {
+  display: block;
+
+  margin-bottom: 0.25rem;
+
+  color: var(
+    --departments-primary
+  );
+
+  font-size: 0.68rem;
+  font-weight: 800;
+
+  letter-spacing: 0.12em;
+}
+
+.church-departments-list-heading h2 {
+  margin: 0;
+
+  color: var(--departments-ink);
+
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.church-departments-count {
+  padding: 0.35rem 0.7rem;
+
+  border: 1px solid
+    rgba(0, 90, 141, 0.14);
+
+  border-radius: 999px;
+
+  background: rgba(
+    0,
+    90,
+    141,
+    0.055
+  );
+
+  color: var(
+    --departments-primary
+  );
+
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   GRID
+   ========================================================================== */
+
+.church-departments-grid {
+  grid-template-columns: repeat(
+    3,
+    minmax(0, 1fr)
+  );
+
+  align-items: stretch;
+
+  gap: 1.1rem;
+}
+
+/*
+ * DepartmentCard itself owns its internal styling.
+ * These rules make the surrounding grid feel more consistent.
+ */
+
+.church-departments-grid > * {
+  min-width: 0;
+}
+
+/* ==========================================================================
+   LOADING SKELETON
+   ========================================================================== */
+
+.church-departments-loading {
+  padding-top: 0.25rem;
+}
+
+.church-departments-loading__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+
+  margin-bottom: 1.2rem;
+}
+
+.church-skeleton {
+  position: relative;
+
+  overflow: hidden;
+
+  border-radius: 7px;
+
+  background: #e6edf2;
+}
+
+.church-skeleton::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  transform: translateX(-100%);
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.62),
+    transparent
+  );
+
+  animation:
+    church-skeleton-shimmer
+    1.4s infinite;
+}
+
+.church-skeleton--title {
+  width: 240px;
+  height: 25px;
+}
+
+.church-skeleton--text {
+  width: 340px;
+  max-width: 80%;
+  height: 14px;
+}
+
+.church-departments-skeleton-grid {
+  display: grid;
+
+  grid-template-columns: repeat(
+    3,
+    minmax(0, 1fr)
+  );
+
+  gap: 1.1rem;
+}
+
+.church-department-skeleton-card {
+  min-height: 230px;
+
+  display: flex;
+  gap: 1rem;
+
+  padding: 1.25rem;
+
+  border: 1px solid
+    var(--departments-border);
+
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 5px 18px
+      rgba(23, 43, 77, 0.045);
+}
+
+.church-skeleton--avatar {
+  flex: 0 0 54px;
+
+  width: 54px;
+  height: 54px;
+
+  border-radius: 14px;
+}
+
+.church-department-skeleton-card__body {
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.church-skeleton--line {
+  width: 85%;
+  height: 14px;
+}
+
+.church-skeleton--short {
+  width: 55%;
+}
+
+.church-skeleton--button {
+  width: 120px;
+  height: 38px;
+
+  margin-top: auto;
+
+  border-radius: 8px;
+}
+
+@keyframes church-skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ==========================================================================
+   EMPTY STATE
+   ========================================================================== */
+
+.church-departments-empty {
+  min-height: 330px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 3rem 1.5rem;
+
+  border: 1px dashed
+    var(--departments-border-strong);
+
+  border-radius: 16px;
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(0, 90, 141, 0.055),
+      transparent 38%
+    ),
+    #ffffff;
+
+  text-align: center;
+}
+
+.church-departments-empty__icon {
+  width: 68px;
+  height: 68px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 1rem;
+
+  border-radius: 18px;
+
+  background: rgba(
+    0,
+    90,
+    141,
+    0.07
+  );
+
+  color: var(
+    --departments-primary
+  );
+
+  font-size: 1.8rem;
+}
+
+.church-departments-empty h2 {
+  margin: 0;
+
+  color: var(--departments-ink);
+
+  font-size: 1.3rem;
+}
+
+.church-departments-empty p {
+  max-width: 480px;
+
+  margin: 0.6rem 0 0;
+
+  color: var(--departments-muted);
+
+  line-height: 1.6;
+}
+
+.church-departments-empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+
+  gap: 0.7rem;
+
+  margin-top: 1.3rem;
+}
+
+/* ==========================================================================
+   EXISTING BUTTON ENHANCEMENTS
+   ========================================================================== */
+
+.church-departments-page
+  .church-button {
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.church-departments-page
+  .church-button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.church-departments-page
+  .church-button:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.church-departments-page
+  .church-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* ==========================================================================
+   INPUTS
+   ========================================================================== */
+
+.church-departments-page
+  .church-input,
+.church-departments-page
+  .church-select {
+  min-height: 44px;
+
+  border-color:
+    var(--departments-border-strong);
+
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: var(--departments-ink);
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.church-departments-page
+  .church-input:hover,
+.church-departments-page
+  .church-select:hover {
+  border-color: #aebdca;
+}
+
+.church-departments-page
+  .church-input:focus,
+.church-departments-page
+  .church-select:focus {
+  border-color:
+    var(--departments-primary);
+
+  box-shadow:
+    0 0 0 3px
+      rgba(0, 90, 141, 0.1);
+
+  outline: none;
+}
+
+/* ==========================================================================
+   RESPONSIVE — LARGE TABLET
+   ========================================================================== */
+
+@media (max-width: 1100px) {
+  .church-departments-grid,
+  .church-departments-skeleton-grid {
+    grid-template-columns: repeat(
+      2,
+      minmax(0, 1fr)
+    );
+  }
+
+  .church-departments-hero {
+    align-items: flex-start;
+  }
+
+  .church-departments-hero__action {
+    margin-left: auto;
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE — TABLET
+   ========================================================================== */
+
+@media (max-width: 900px) {
+  .church-departments-hero {
+    padding: 1.6rem;
+
+    gap: 1.1rem;
+  }
+
+  .church-departments-hero__icon {
+    flex-basis: 62px;
+
+    width: 62px;
+    height: 62px;
+
+    border-radius: 16px;
+
+    font-size: 1.8rem;
+  }
+
+  .church-departments-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE — MOBILE
+   ========================================================================== */
+
+@media (max-width: 700px) {
+  .church-departments-content {
+    padding-bottom: 2.5rem;
+  }
+
+  .church-departments-hero {
+    flex-direction: column;
+
+    min-height: 0;
+
+    padding: 1.4rem;
+
+    border-radius: 14px;
+  }
+
+  .church-departments-hero__icon {
+    width: 56px;
+    height: 56px;
+
+    flex-basis: 56px;
+  }
+
+  .church-departments-hero__action {
+    width: 100%;
+
+    margin-left: 0;
+  }
+
+  .church-departments-create-button {
+    width: 100%;
+  }
+
+  .church-departments-hero__stats {
+    margin-top: 1rem;
+  }
+
+  .church-departments-toolbar {
+    padding: 1rem;
+
+    border-radius: 12px;
+  }
+
+  .church-departments-toolbar__heading {
+    align-items: flex-start;
+  }
+
+  .church-departments-list-heading {
+    align-items: flex-start;
+  }
+
+  .church-departments-grid,
+  .church-departments-skeleton-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .church-departments-alert {
+    padding: 0.9rem;
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE — SMALL MOBILE
+   ========================================================================== */
+
+@media (max-width: 430px) {
+  .church-departments-hero h1 {
+    font-size: 1.65rem;
+  }
+
+  .church-departments-hero p {
+    font-size: 0.9rem;
+  }
+
+  .church-departments-hero__stats {
+    gap: 0.9rem;
+  }
+
+  .church-departments-stat strong {
+    font-size: 1.05rem;
+  }
+
+  .church-departments-stat span {
+    font-size: 0.65rem;
+  }
+
+  .church-departments-toolbar__heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .church-departments-list-heading {
+    flex-direction: column;
+  }
+
+  .church-departments-empty {
+    min-height: 280px;
+
+    padding: 2rem 1rem;
+  }
+
+  .church-departments-empty__actions {
+    width: 100%;
+
+    flex-direction: column;
+  }
+
+  .church-departments-empty__actions
+    .church-button {
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+   REDUCED MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .church-departments-page
+    .church-button {
+    transition: none;
+  }
+
+  .church-skeleton::after {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   PRINT
+   ========================================================================== */
+
+@media print {
+  .church-departments-page
+    .church-departments-hero {
+    color: #000;
+
+    background: #fff;
+
+    border: 1px solid #ccc;
+
+    box-shadow: none;
+  }
+
+  .church-departments-hero h1,
+  .church-departments-hero p,
+  .church-departments-stat strong,
+  .church-departments-stat span {
+    color: #000;
+  }
+
+  .church-departments-toolbar,
+  .church-departments-hero__action,
+  .church-departments-clear-button {
+    display: none;
+  }
+}

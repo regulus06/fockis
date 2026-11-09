@@ -14,6 +14,7 @@ import { Course } from "../../courses/schemas/course.schema";
 import { Enrollment, ensureEnrollmentNumber } from "../../courses/schemas/enrollment.schema";
 import { CampusEvent } from "../../events/schemas/event.schema";
 import { AcademyUser } from "../../auth/schemas/academy-user.schema";
+import { AcademyInstitution } from "../../institutions/schemas/institution.schema";
 import { IssueCertificatesDto, SaveTemplateDto, UpdateTemplateDto } from "../dto/certificate.dto";
 import { DEFAULT_CERT_DESIGN, withInstitutionLine } from "../default-design";
 
@@ -45,7 +46,26 @@ export class CertificatesService {
     @InjectModel(Enrollment.name) private readonly enrollmentModel: Model<Enrollment>,
     @InjectModel(CampusEvent.name) private readonly eventModel: Model<CampusEvent>,
     @InjectModel(AcademyUser.name) private readonly userModel: Model<AcademyUser>,
+    @InjectModel(AcademyInstitution.name) private readonly instModel: Model<AcademyInstitution>,
   ) {}
+
+  /**
+   * Certificates are designed by people who teach: Academy instructors/staff,
+   * creators approved by Fockis, and owners/staff of an approved school.
+   * Students and other participants can only see certificates issued to them.
+   */
+  private async assertMayDesign(actor: AcademyActor) {
+    if (TEACHING.includes(actor.role)) return;
+    if (!Types.ObjectId.isValid(actor.userId)) throw new ForbiddenException("Only teachers can design certificates.");
+    const uid = new Types.ObjectId(actor.userId);
+    const user = await this.userModel.findById(uid, { creatorStatus: 1 }).lean().exec();
+    if (user?.creatorStatus === "approved") return;
+    const school = await this.instModel
+      .exists({ status: "approved", $or: [{ ownerId: uid }, { "staff.userId": uid }] })
+      .exec();
+    if (school) return;
+    throw new ForbiddenException("Only teachers can design certificates. Apply to teach in Creator Studio.");
+  }
 
   // ------------------------------------------------------------------ templates
 
@@ -57,7 +77,8 @@ export class CertificatesService {
     return this.ownedTemplate(id, actor);
   }
 
-  createTemplate(dto: SaveTemplateDto, actor: AcademyActor) {
+  async createTemplate(dto: SaveTemplateDto, actor: AcademyActor) {
+    await this.assertMayDesign(actor);
     return this.templateModel.create({ ...dto, ownerId: new Types.ObjectId(actor.userId) });
   }
 
@@ -70,6 +91,7 @@ export class CertificatesService {
   }
 
   async duplicateTemplate(id: string, actor: AcademyActor) {
+    await this.assertMayDesign(actor);
     const t = await this.ownedTemplate(id, actor);
     return this.templateModel.create({
       ownerId: new Types.ObjectId(actor.userId),

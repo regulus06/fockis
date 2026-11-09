@@ -171,7 +171,7 @@ import {
 // CHURCH / MUSIC / TRANSLATION
 // ============================================================================
 
-import { ChurchModule } from "./church/church.module";
+import { ChurchModule } from "./org/church.module";
 import { MusicModule } from "./music/music.module";
 
 import {
@@ -532,4 +532,4 @@ import {
     },
   ],
 })
-export class AppModule {}
+export class AppModule {}

@@ -1,0 +1,163 @@
+/* OrganizationCommunication.scss — announcements, messages, notifications. */
+
+.foc {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+
+  &--admin {
+    grid-template-columns: minmax(0, 1fr) 340px;
+  }
+}
+
+.foc-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--fo-border);
+}
+
+.foc-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #334155;
+  font: 600 13.5px var(--fo-font);
+  cursor: pointer;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background: var(--fo-blue-050);
+    color: var(--fo-blue-700);
+  }
+
+  &.is-active {
+    background: var(--fo-blue);
+    color: #fff;
+  }
+}
+
+.foc-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+
+  li {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 16px 4px;
+    border-bottom: 1px solid #edf1f7;
+
+    &:last-child {
+      border-bottom: 0;
+    }
+
+    &.is-pinned,
+    &.is-unread {
+      background: #f6f9fd;
+      border-radius: 12px;
+      padding: 16px 12px;
+      border-bottom-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    > div {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  &__icon {
+    width: 36px;
+    height: 36px;
+    flex: none;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: var(--fo-blue-050);
+    color: var(--fo-blue);
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  strong {
+    display: block;
+    color: var(--fo-ink);
+    font-size: 15px;
+  }
+
+  small {
+    color: var(--fo-muted);
+    font-size: 12.5px;
+    text-transform: none;
+  }
+
+  p {
+    margin-top: 6px;
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+
+  .fo-iconbtn {
+    width: 34px;
+    height: 34px;
+    flex: none;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+.foc-link {
+  display: inline-block;
+  margin-top: 6px;
+  color: var(--fo-blue);
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.foc-compose {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 90px;
+
+  h2 {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .foc--admin {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .foc-compose {
+    position: static;
+    order: -1;
+  }
+}

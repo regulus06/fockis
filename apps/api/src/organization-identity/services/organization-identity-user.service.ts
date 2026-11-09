@@ -21,15 +21,15 @@ import * as bcrypt from "bcryptjs";
 import {
   Membership,
   MembershipDocument,
-} from "../../church/members/schemas/membership.schema";
+} from "../../org/members/schemas/membership.schema";
 
 import {
   MembershipStatus,
-} from "../../church/enums/membership-status.enum";
+} from "../../org/enums/membership-status.enum";
 
 import {
   MemberRole,
-} from "../../church/enums/member-role.enum";
+} from "../../org/enums/member-role.enum";
 
 import {
   User,

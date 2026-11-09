@@ -19,6 +19,7 @@ import {
 } from "../../../components/academy/certificates/certificateDesign";
 import { useAcademyToast } from "../../../lib/academyToastStore";
 import { getMe } from "../../../lib/academyApi";
+import { creatorApi } from "../../../lib/studioApi";
 import { useAcademyLoad } from "../../../lib/useAcademyLoad";
 import { createTemplate, deleteTemplate, getTemplate, listTemplates, updateTemplate } from "../../../lib/certificatesApi";
 import "../../../styles/academy-market.scss";
@@ -49,8 +50,14 @@ export default function CertificateDesigner() {
   const toast = useAcademyToast((s) => s.showToast);
   const hasToken = !!academyToken();
   const me = useAcademyLoad(() => (hasToken ? getMe() : Promise.reject(new Error("not-signed-in"))), [hasToken]);
-  // Any signed-in Academy account can design certificates for its own classes.
-  const isTeacher = me.state.status === "ready";
+  // Only people allowed to teach (Academy instructors/staff, creators approved
+  // by Fockis, or staff of an approved school) can design certificates.
+  const access = useAcademyLoad(() => (me.state.status === "ready" ? creatorApi.access() : Promise.resolve(null)), [me.state.status]);
+  const isTeacher =
+    me.state.status === "ready" &&
+    access.state.status === "ready" &&
+    !!access.state.data &&
+    (access.state.data.canTeach || access.state.data.schoolIds.length > 0);
   const saved = useAcademyLoad(() => (isTeacher ? listTemplates() : Promise.resolve([])), [isTeacher]);
 
   const [design, setDesign] = useState<CertDesign>(() => templateByKey(params.get("base") ?? "signature").make());
@@ -320,13 +327,15 @@ export default function CertificateDesigner() {
         </div>
       </div>
     );
+  if (me.state.status === "loading" || (me.state.status === "ready" && access.state.status === "loading"))
+    return <div className="fa-root fa-page fa-page--soft" />;
   if (me.state.status === "ready" && !isTeacher)
     return (
       <div className="fa-root fa-page fa-page--soft">
         <div className="fa-container fa-narrow">
           <div className="fa-card fa-gate">
             <h2>Certificate Designer</h2>
-            <p className="fa-muted">Only approved instructors can design certificates.</p>
+            <p className="fa-muted">Only approved teachers can design certificates. Students can see their own certificates in their portal.</p>
             <Link className="fa-btn fa-btn--primary" to="/academy/teach/apply">Apply to teach</Link>
           </div>
         </div>

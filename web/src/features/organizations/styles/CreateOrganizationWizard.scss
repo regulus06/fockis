@@ -1,0 +1,493 @@
+/* CreateOrganizationWizard.scss — "Create an Organization" (four steps). */
+
+.fow {
+  max-width: 860px;
+  margin: 0 auto;
+  padding-top: 6px;
+
+  &__head {
+    text-align: center;
+    margin-bottom: 22px;
+
+    h1 {
+      font-size: clamp(24px, 3vw, 30px);
+      font-weight: 700;
+    }
+
+    p {
+      margin: 8px auto 0;
+      color: var(--fo-muted);
+      max-width: 520px;
+      font-size: 15px;
+    }
+  }
+
+  &__card {
+    padding: 28px;
+  }
+
+  &__section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+
+    h2 {
+      font-size: 19px;
+      font-weight: 700;
+    }
+  }
+
+  &__badge {
+    width: 64px;
+    height: 64px;
+    border-radius: 999px;
+    background: #eef3fa;
+    color: var(--fo-navy);
+    display: grid;
+    place-items: center;
+    flex: none;
+
+    svg {
+      width: 30px;
+      height: 30px;
+    }
+  }
+
+  &__gap {
+    margin-top: 16px;
+  }
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  /* domain */
+  &__domain {
+    margin: 22px 0 0;
+    padding: 18px;
+    border: 1px solid var(--fo-border);
+    border-radius: 12px;
+    background: #fafcff;
+
+    legend {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--fo-ink);
+      padding: 0 6px;
+    }
+  }
+
+  &__domain-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  &__avail {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 110px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 9px;
+    font-size: 13.5px;
+    font-weight: 600;
+
+    svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    &--idle,
+    &--error {
+      visibility: hidden;
+    }
+
+    &--checking {
+      color: var(--fo-muted);
+      background: #f1f5fb;
+    }
+
+    &--available {
+      color: var(--fo-ok);
+      background: var(--fo-ok-bg);
+    }
+
+    &--taken,
+    &--invalid {
+      color: var(--fo-danger);
+      background: var(--fo-danger-bg);
+    }
+  }
+
+  /* branding */
+  &__brand {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+    gap: 18px;
+  }
+
+  &__logo {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  &__logo-box {
+    width: 96px;
+    height: 96px;
+    border-radius: 20px;
+    border: 1px dashed var(--fo-border-strong);
+    background: #f6f9fd;
+    display: grid;
+    place-items: center;
+    color: var(--fo-navy);
+    overflow: hidden;
+    flex: none;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    svg {
+      width: 38px;
+      height: 38px;
+    }
+
+    &--sm {
+      width: 58px;
+      height: 58px;
+      border-radius: 14px;
+      border-style: solid;
+
+      svg {
+        width: 26px;
+        height: 26px;
+      }
+    }
+  }
+
+  &__logo-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+
+    strong {
+      color: var(--fo-ink);
+    }
+  }
+
+  &__cover {
+    position: relative;
+    min-height: 170px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: linear-gradient(120deg, #e8f0fb, #d8e6fa) center / cover no-repeat;
+    border: 1px solid var(--fo-border);
+    display: grid;
+    place-items: center;
+
+    video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__cover-empty {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--fo-muted);
+    font-weight: 600;
+
+    svg {
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  &__cover-actions {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    display: flex;
+    gap: 8px;
+  }
+
+  /* locations */
+  &__choice {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  &__option {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 14px;
+    border: 1px solid var(--fo-border-strong);
+    border-radius: 12px;
+    cursor: pointer;
+    background: #fff;
+
+    input {
+      margin-top: 3px;
+      accent-color: var(--fo-blue);
+    }
+
+    > svg {
+      width: 22px;
+      height: 22px;
+      color: var(--fo-blue);
+      flex: none;
+    }
+
+    span {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    strong {
+      color: var(--fo-ink);
+      font-size: 14.5px;
+    }
+
+    small {
+      color: var(--fo-muted);
+    }
+
+    &.is-on {
+      border-color: var(--fo-blue);
+      background: var(--fo-blue-050);
+    }
+  }
+
+  &__locations {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  &__location {
+    width: 100%;
+    margin: 0;
+    padding: 16px;
+    border: 1px solid var(--fo-border);
+    border-radius: 12px;
+
+    legend {
+      padding: 0 6px;
+    }
+  }
+
+  /* settings */
+  &__settings {
+    display: grid;
+    gap: 10px;
+  }
+
+  &__switch {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 14px;
+    border: 1px solid var(--fo-border);
+    border-radius: 12px;
+    cursor: pointer;
+
+    input {
+      width: 40px;
+      height: 22px;
+      flex: none;
+      appearance: none;
+      border-radius: 999px;
+      background: #cfd9e8;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.15s;
+
+      &::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 16px;
+        height: 16px;
+        border-radius: 999px;
+        background: #fff;
+        transition: transform 0.15s;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      }
+
+      &:checked {
+        background: var(--fo-blue);
+
+        &::after {
+          transform: translateX(18px);
+        }
+      }
+    }
+
+    span {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    strong {
+      color: var(--fo-ink);
+    }
+
+    small {
+      color: var(--fo-muted);
+    }
+  }
+
+  &__review {
+    margin-top: 18px;
+    padding: 18px;
+    border-radius: 12px;
+    background: #f6f9fd;
+    border: 1px solid var(--fo-border);
+
+    dl {
+      margin: 16px 0 0;
+      display: grid;
+      gap: 10px;
+
+      div {
+        display: grid;
+        grid-template-columns: 170px minmax(0, 1fr);
+        gap: 12px;
+      }
+
+      dt {
+        color: var(--fo-muted);
+        font-size: 13.5px;
+      }
+
+      dd {
+        margin: 0;
+        color: var(--fo-ink);
+        font-weight: 500;
+        overflow-wrap: anywhere;
+      }
+    }
+  }
+
+  &__review-org {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+
+    div {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    strong {
+      font-family: var(--fo-display);
+      font-size: 18px;
+      color: var(--fo-ink);
+    }
+
+    span {
+      color: var(--fo-muted);
+      font-size: 13.5px;
+    }
+  }
+
+  &__domain-final {
+    color: var(--fo-blue) !important;
+    font-weight: 600;
+  }
+
+  &__modules {
+    margin-top: 16px;
+
+    strong {
+      color: var(--fo-ink);
+      font-size: 14px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 10px 0 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    li {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 13.5px;
+      color: #334155;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 26px;
+    padding-top: 18px;
+    border-top: 1px solid var(--fo-border);
+  }
+}
+
+@media (max-width: 720px) {
+  .fow {
+    &__card {
+      padding: 18px;
+    }
+
+    &__domain-row {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+
+      .fow__avail {
+        grid-column: 1 / -1;
+      }
+    }
+
+    &__brand,
+    &__choice {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    &__review dl div {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2px;
+    }
+
+    &__badge {
+      width: 48px;
+      height: 48px;
+    }
+  }
+
+  .fo-stepper li {
+    font-size: 12px;
+  }
+}

@@ -18,7 +18,7 @@ import {
 import {
   Membership,
   MembershipDocument,
-} from "../../church/members/schemas/membership.schema";
+} from "../../org/members/schemas/membership.schema";
 
 import {
   OrganizationIdentity,

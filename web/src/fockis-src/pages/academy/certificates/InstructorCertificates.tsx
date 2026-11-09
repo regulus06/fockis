@@ -10,7 +10,7 @@ import { useAcademyLoad } from "../../../lib/useAcademyLoad";
 import { useAcademyToast } from "../../../lib/academyToastStore";
 import { getEvents, getMe } from "../../../lib/academyApi";
 import { getMyCourses, shortDate } from "../../../lib/academyLearnApi";
-import { studioApi } from "../../../lib/studioApi";
+import { creatorApi, studioApi } from "../../../lib/studioApi";
 import { linksAreLocalOnly, publicSiteUrl } from "../../../lib/siteUrl";
 import { STUDIO_NAV } from "../studio/CreatorStudio";
 import {
@@ -74,9 +74,15 @@ export default function InstructorCertificates() {
   const toast = useAcademyToast((s) => s.showToast);
   const hasToken = !!academyToken();
   const me = useAcademyLoad(() => (hasToken ? getMe() : Promise.reject(new Error("not-signed-in"))), [hasToken]);
-  // Any signed-in Academy account can certify its own classes (Creator Studio);
-  // campus seminars/workshops stay with Academy teaching staff.
-  const ok = me.state.status === "ready";
+  // People allowed to teach (Academy instructors/staff, creators approved by
+  // Fockis, staff of an approved school) certify their own classes; campus
+  // seminars/workshops stay with Academy teaching staff.
+  const access = useAcademyLoad(() => (me.state.status === "ready" ? creatorApi.access() : Promise.resolve(null)), [me.state.status]);
+  const ok =
+    me.state.status === "ready" &&
+    access.state.status === "ready" &&
+    !!access.state.data &&
+    (access.state.data.canTeach || access.state.data.schoolIds.length > 0);
   const teacher = ok && me.state.status === "ready" && TEACHING.includes(String(me.state.data.role));
   const templates = useAcademyLoad(() => (ok ? listTemplates() : Promise.resolve([])), [ok]);
   const issued = useAcademyLoad(() => (ok ? listIssued() : Promise.resolve([] as IssuedCert[])), [ok]);
@@ -186,6 +192,8 @@ export default function InstructorCertificates() {
         </div>
       </div>
     );
+  if (me.state.status === "loading" || (me.state.status === "ready" && access.state.status === "loading"))
+    return <div className="fa-root fa-page fa-page--soft" />;
   if (me.state.status === "ready" && !ok)
     return (
       <div className="fa-root fa-page fa-page--soft">

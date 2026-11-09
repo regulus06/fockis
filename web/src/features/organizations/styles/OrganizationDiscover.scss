@@ -1,0 +1,147 @@
+/* OrganizationDiscover.scss — Discover Organizations. */
+
+.fod-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.fod-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--fo-border-strong);
+  background: #fff;
+  color: var(--fo-ink);
+  font: 500 13.5px var(--fo-font);
+  cursor: pointer;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    color: var(--fo-blue);
+  }
+
+  &:hover {
+    border-color: var(--fo-blue);
+  }
+
+  &.is-active {
+    background: var(--fo-blue);
+    border-color: var(--fo-blue);
+    color: #fff;
+
+    svg {
+      color: #fff;
+    }
+  }
+}
+
+.fod-count {
+  margin-bottom: 12px;
+  font-size: 13.5px;
+}
+
+.fod-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.fod-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid var(--fo-border);
+  border-radius: 16px;
+  box-shadow: var(--fo-shadow);
+  transition: border-color 0.15s, transform 0.15s;
+
+  &:hover {
+    border-color: var(--fo-blue);
+    transform: translateY(-1px);
+  }
+
+  &__top {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+
+    span {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    strong {
+      font-family: var(--fo-display);
+      color: var(--fo-ink);
+      font-size: 16px;
+    }
+
+    small {
+      color: var(--fo-muted);
+      font-size: 13px;
+    }
+  }
+
+  &__logo {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    background: var(--fo-blue-050);
+    color: var(--fo-blue);
+    object-fit: cover;
+  }
+
+  &__desc {
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 3.1em;
+  }
+
+  &__meta {
+    display: flex;
+    gap: 14px;
+    font-size: 13px;
+    color: var(--fo-muted);
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    svg {
+      width: 15px;
+      height: 15px;
+    }
+  }
+
+  &__foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+  }
+}
+
+.fod-pager {
+  border-top: 0;
+  padding: 18px 0 0;
+}

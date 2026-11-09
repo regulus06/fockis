@@ -1,0 +1,1009 @@
+/* ============================================================================
+   FOCKIS ORGANIZATION
+   DEPARTMENT MANAGEMENT
+   ============================================================================ */
+
+.organization-department-management {
+  --odm-primary: #005a8d;
+  --odm-primary-light: #0879b5;
+  --odm-primary-dark: #003f63;
+
+  --odm-gold: #f6b62c;
+  --odm-gold-light: #ffd76a;
+
+  --odm-success: #168a52;
+  --odm-success-bg: #eaf8f0;
+
+  --odm-warning: #a86f00;
+  --odm-warning-bg: #fff7df;
+
+  --odm-danger: #c0392b;
+  --odm-danger-bg: #fff0ee;
+
+  --odm-ink: #172b4d;
+  --odm-muted: #66788a;
+  --odm-muted-light: #8a9aaa;
+
+  --odm-bg: #f3f6f9;
+  --odm-surface: #ffffff;
+  --odm-border: #dce4ea;
+  --odm-border-dark: #ccd8e0;
+
+  --odm-shadow-sm:
+    0 2px 8px rgba(23, 43, 77, 0.06);
+
+  --odm-shadow-md:
+    0 8px 28px rgba(23, 43, 77, 0.09);
+
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 28px;
+  background: var(--odm-bg);
+  color: var(--odm-ink);
+}
+
+/* ============================================================================
+   HEADER
+   ============================================================================ */
+
+.organization-department-management__header {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 28px;
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto 24px;
+  padding: 28px 30px;
+  box-sizing: border-box;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #f7fbfd 55%,
+      #eef7fb 100%
+    );
+
+  border: 1px solid var(--odm-border);
+  border-radius: 18px;
+  box-shadow: var(--odm-shadow-md);
+}
+
+.organization-department-management__header > div:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.organization-department-management__header h1 {
+  margin: 5px 0 8px;
+  color: var(--odm-ink);
+  font-size: clamp(28px, 3vw, 40px);
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.organization-department-management__header .church-admin-muted {
+  max-width: 720px;
+  margin: 0;
+  color: var(--odm-muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.organization-department-management .church-admin-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #e8f3f8;
+  color: var(--odm-primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ============================================================================
+   HEADER STATS
+   ============================================================================ */
+
+.organization-department-management__header-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(85px, 1fr));
+  gap: 10px;
+  flex: 0 0 auto;
+  min-width: 300px;
+}
+
+.organization-department-management__header-stat {
+  min-width: 0;
+  padding: 16px 14px;
+  text-align: center;
+  background: #ffffff;
+  border: 1px solid var(--odm-border);
+  border-radius: 14px;
+  box-shadow: var(--odm-shadow-sm);
+}
+
+.organization-department-management__header-stat strong {
+  display: block;
+  color: var(--odm-primary);
+  font-size: 25px;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.organization-department-management__header-stat span {
+  display: block;
+  margin-top: 5px;
+  color: var(--odm-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ============================================================================
+   ALERT
+   ============================================================================ */
+
+.organization-department-management .church-admin-alert {
+  position: relative;
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 13px;
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto 20px;
+  padding: 15px 18px;
+  box-sizing: border-box;
+  border-radius: 14px;
+}
+
+.organization-department-management .church-admin-alert--error {
+  background: var(--odm-danger-bg);
+  border: 1px solid #f0c4bf;
+  color: #84291f;
+}
+
+.organization-department-management__alert-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--odm-danger);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.organization-department-management .church-admin-alert strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 14px;
+}
+
+.organization-department-management .church-admin-alert p {
+  margin: 0;
+  line-height: 1.5;
+  font-size: 13px;
+}
+
+.organization-department-management__alert-close {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.organization-department-management__alert-close:hover {
+  opacity: 1;
+}
+
+/* ============================================================================
+   PANELS
+   ============================================================================ */
+
+.organization-department-management__panel {
+  display: block !important;
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto 24px;
+  padding: 28px 30px;
+  box-sizing: border-box;
+
+  background: var(--odm-surface);
+  border: 1px solid var(--odm-border);
+  border-radius: 18px;
+  box-shadow: var(--odm-shadow-md);
+}
+
+.organization-department-management__panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.organization-department-management__panel-heading > div {
+  min-width: 0;
+}
+
+.organization-department-management__section-kicker {
+  display: inline-block;
+  margin-bottom: 6px;
+  color: var(--odm-primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.organization-department-management__panel-heading h2 {
+  margin: 0 0 7px;
+  color: var(--odm-ink);
+  font-size: 23px;
+  line-height: 1.25;
+  font-weight: 800;
+}
+
+.organization-department-management__panel-heading p {
+  margin: 0;
+  max-width: 800px;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.organization-department-management__editing-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #fff5d8;
+  border: 1px solid #f0d48a;
+  color: #8a6100;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ============================================================================
+   FORM
+   ============================================================================ */
+
+.organization-department-management__form {
+  display: block !important;
+  width: 100%;
+}
+
+.organization-department-management__form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.6fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.organization-department-management .church-admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  margin-bottom: 18px;
+}
+
+.organization-department-management .church-admin-field > span {
+  color: var(--odm-ink);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.organization-department-management .church-admin-field small {
+  color: var(--odm-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.organization-department-management .church-admin-input,
+.organization-department-management .church-admin-select,
+.organization-department-management .church-admin-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--odm-border-dark);
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--odm-ink);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.organization-department-management .church-admin-input,
+.organization-department-management .church-admin-select {
+  min-height: 46px;
+  padding: 10px 13px;
+}
+
+.organization-department-management .church-admin-textarea {
+  min-height: 115px;
+  padding: 12px 13px;
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.organization-department-management .church-admin-input:hover,
+.organization-department-management .church-admin-select:hover,
+.organization-department-management .church-admin-textarea:hover {
+  border-color: #aebfc9;
+}
+
+.organization-department-management .church-admin-input:focus,
+.organization-department-management .church-admin-select:focus,
+.organization-department-management .church-admin-textarea:focus {
+  border-color: var(--odm-primary-light);
+  box-shadow: 0 0 0 3px rgba(8, 121, 181, 0.12);
+}
+
+.organization-department-management .church-admin-input:disabled,
+.organization-department-management .church-admin-select:disabled,
+.organization-department-management .church-admin-textarea:disabled {
+  background: #f4f6f8;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* ============================================================================
+   FORM ACTIONS
+   ============================================================================ */
+
+.organization-department-management__form-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 1px solid var(--odm-border);
+}
+
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
+
+.organization-department-management .church-admin-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px;
+  min-height: 40px;
+  padding: 9px 15px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.organization-department-management .church-admin-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.organization-department-management .church-admin-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.organization-department-management .church-admin-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.organization-department-management .church-admin-btn--primary {
+  background: var(--odm-primary);
+  border-color: var(--odm-primary);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 90, 141, 0.18);
+}
+
+.organization-department-management .church-admin-btn--primary:hover:not(:disabled) {
+  background: var(--odm-primary-dark);
+  border-color: var(--odm-primary-dark);
+}
+
+.organization-department-management .church-admin-btn--secondary {
+  background: #eaf3f7;
+  border-color: #c9dce5;
+  color: var(--odm-primary-dark);
+}
+
+.organization-department-management .church-admin-btn--secondary:hover:not(:disabled) {
+  background: #dcecf3;
+}
+
+.organization-department-management .church-admin-btn--ghost {
+  background: #ffffff;
+  border-color: var(--odm-border-dark);
+  color: var(--odm-ink);
+}
+
+.organization-department-management .church-admin-btn--ghost:hover:not(:disabled) {
+  background: #f5f8fa;
+  border-color: #b8c9d2;
+}
+
+.organization-department-management .church-admin-btn--sm {
+  min-height: 34px;
+  padding: 7px 11px;
+  font-size: 12px;
+}
+
+/* ============================================================================
+   TABS
+   ============================================================================ */
+
+.organization-department-management__tabs {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 5px;
+  margin-bottom: 22px;
+  width: fit-content;
+  max-width: 100%;
+  background: #f0f4f7;
+  border: 1px solid var(--odm-border);
+  border-radius: 12px;
+}
+
+.organization-department-management__tabs .church-admin-btn {
+  border-radius: 8px;
+}
+
+.organization-department-management__tabs .church-admin-btn span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 11px;
+}
+
+/* ============================================================================
+   FILTERS
+   ============================================================================ */
+
+.organization-department-management__filters {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(200px, 280px) auto;
+  align-items: end !important;
+  gap: 14px;
+  padding: 18px;
+  margin-bottom: 16px;
+  background: #f8fafb;
+  border: 1px solid var(--odm-border);
+  border-radius: 14px;
+}
+
+.organization-department-management__filters .church-admin-field {
+  margin: 0;
+}
+
+.organization-department-management__clear {
+  min-height: 46px !important;
+}
+
+/* ============================================================================
+   RESULT SUMMARY
+   ============================================================================ */
+
+.organization-department-management__result-summary {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-height: 38px;
+  padding: 8px 2px;
+  color: var(--odm-muted);
+  font-size: 13px;
+}
+
+.organization-department-management__result-summary strong {
+  color: var(--odm-ink);
+  font-weight: 800;
+}
+
+/* ============================================================================
+   LOADING
+   ============================================================================ */
+
+.organization-department-management__loading {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px;
+  min-height: 260px;
+  padding: 35px;
+  text-align: center;
+  color: var(--odm-muted);
+}
+
+.organization-department-management__loading strong {
+  color: var(--odm-ink);
+  font-size: 15px;
+}
+
+.organization-department-management__loading span {
+  font-size: 13px;
+}
+
+.organization-department-management__spinner {
+  width: 34px;
+  height: 34px;
+  margin-bottom: 6px;
+  border: 3px solid #dbe7ed;
+  border-top-color: var(--odm-primary);
+  border-radius: 50%;
+  animation: odm-spin 0.8s linear infinite;
+}
+
+@keyframes odm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================================
+   EMPTY STATE
+   ============================================================================ */
+
+.organization-department-management__empty {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 300px;
+  padding: 40px 25px;
+  text-align: center;
+  border: 1px dashed #cbd8df;
+  border-radius: 15px;
+  background:
+    linear-gradient(
+      180deg,
+      #fbfdfe 0%,
+      #f7fafc 100%
+    );
+}
+
+.organization-department-management__empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 16px;
+  border-radius: 16px;
+  background: #eaf4f8;
+  color: var(--odm-primary);
+  font-size: 27px;
+  font-weight: 700;
+}
+
+.organization-department-management__empty h3 {
+  margin: 0 0 8px;
+  color: var(--odm-ink);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.organization-department-management__empty p {
+  max-width: 560px;
+  margin: 0 0 18px;
+  color: var(--odm-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+/* ============================================================================
+   TABLE
+   ============================================================================ */
+
+.organization-department-management__table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--odm-border);
+  border-radius: 14px;
+  background: #ffffff;
+  -webkit-overflow-scrolling: touch;
+}
+
+.organization-department-management__table {
+  width: 100%;
+  min-width: 850px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.organization-department-management__table thead th {
+  padding: 14px 16px;
+  background: #f5f8fa;
+  border-bottom: 1px solid var(--odm-border);
+  color: #506679;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.organization-department-management__table tbody td {
+  padding: 17px 16px;
+  border-bottom: 1px solid #edf1f4;
+  vertical-align: middle;
+}
+
+.organization-department-management__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.organization-department-management__table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.organization-department-management__table tbody tr:hover {
+  background: #f9fbfc;
+}
+
+/* ============================================================================
+   DEPARTMENT CELL
+   ============================================================================ */
+
+.organization-department-management__department-cell {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 4px;
+  min-width: 240px;
+}
+
+.organization-department-management__department-cell > strong {
+  color: var(--odm-ink);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.organization-department-management__department-cell small {
+  color: var(--odm-muted-light);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.organization-department-management__description {
+  display: -webkit-box;
+  display: box;
+  -webkit-box-orient: vertical;
+  box-orient: vertical;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  max-width: 520px;
+  margin: 2px 0;
+  color: var(--odm-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* ============================================================================
+   TYPE BADGE
+   ============================================================================ */
+
+.organization-department-management__type-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #edf5f8;
+  border: 1px solid #d2e3ea;
+  color: var(--odm-primary-dark);
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   MEMBER COUNT
+   ============================================================================ */
+
+.organization-department-management__member-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 32px;
+  padding: 0 9px;
+  border-radius: 9px;
+  background: #f3f6f8;
+  color: var(--odm-ink);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* ============================================================================
+   STATUS
+   ============================================================================ */
+
+.organization-department-management__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.organization-department-management__status > span {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.organization-department-management__status--active {
+  background: var(--odm-success-bg);
+  border: 1px solid #c8e9d6;
+  color: #147244;
+}
+
+.organization-department-management__status--active > span {
+  background: var(--odm-success);
+}
+
+.organization-department-management__status--archived {
+  background: #f2f4f6;
+  border: 1px solid #d9e0e5;
+  color: #687783;
+}
+
+.organization-department-management__status--archived > span {
+  background: #8998a3;
+}
+
+/* ============================================================================
+   ACTIONS
+   ============================================================================ */
+
+.organization-department-management__actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.organization-department-management__actions .church-admin-btn {
+  margin: 0 !important;
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 1100px) {
+  .organization-department-management {
+    padding: 20px;
+  }
+
+  .organization-department-management__header {
+    flex-direction: column !important;
+  }
+
+  .organization-department-management__header-stats {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .organization-department-management__filters {
+    grid-template-columns: minmax(0, 1fr) minmax(190px, 260px);
+  }
+
+  .organization-department-management__clear {
+    grid-column: 1 / -1;
+    justify-self: flex-start;
+  }
+}
+
+@media (max-width: 760px) {
+  .organization-department-management {
+    padding: 12px;
+  }
+
+  .organization-department-management__header,
+  .organization-department-management__panel {
+    padding: 20px 17px;
+    border-radius: 14px;
+  }
+
+  .organization-department-management__header {
+    margin-bottom: 15px;
+  }
+
+  .organization-department-management__header h1 {
+    font-size: 27px;
+  }
+
+  .organization-department-management__header-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+  }
+
+  .organization-department-management__header-stat {
+    padding: 12px 7px;
+  }
+
+  .organization-department-management__header-stat strong {
+    font-size: 21px;
+  }
+
+  .organization-department-management__header-stat span {
+    font-size: 9px;
+  }
+
+  .organization-department-management__panel-heading {
+    flex-direction: column;
+    margin-bottom: 19px;
+  }
+
+  .organization-department-management__form-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .organization-department-management__filters {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .organization-department-management__clear {
+    grid-column: auto;
+    width: 100%;
+  }
+
+  .organization-department-management__tabs {
+    width: 100%;
+  }
+
+  .organization-department-management__tabs .church-admin-btn {
+    flex: 1 1 0;
+  }
+
+  .organization-department-management__form-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .organization-department-management__form-actions .church-admin-btn {
+    width: 100%;
+  }
+
+  .organization-department-management__result-summary {
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .organization-department-management {
+    padding: 8px;
+  }
+
+  .organization-department-management__header,
+  .organization-department-management__panel {
+    padding: 16px 13px;
+  }
+
+  .organization-department-management__header-stats {
+    gap: 5px;
+  }
+
+  .organization-department-management__header-stat {
+    padding: 10px 4px;
+    border-radius: 10px;
+  }
+
+  .organization-department-management__header-stat strong {
+    font-size: 19px;
+  }
+
+  .organization-department-management__header-stat span {
+    font-size: 8px;
+  }
+
+  .organization-department-management__panel-heading h2 {
+    font-size: 20px;
+  }
+
+  .organization-department-management__empty {
+    min-height: 250px;
+    padding: 30px 16px;
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY
+   ============================================================================ */
+
+.organization-department-management button:focus-visible,
+.organization-department-management input:focus-visible,
+.organization-department-management select:focus-visible,
+.organization-department-management textarea:focus-visible {
+  outline: 3px solid rgba(8, 121, 181, 0.2);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .organization-department-management *,
+  .organization-department-management *::before,
+  .organization-department-management *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ============================================================================
+   PRINT
+   ============================================================================ */
+
+@media print {
+  .organization-department-management {
+    padding: 0;
+    background: #ffffff;
+  }
+
+  .organization-department-management__header,
+  .organization-department-management__panel {
+    box-shadow: none;
+    border: 1px solid #cccccc;
+  }
+
+  .organization-department-management__form,
+  .organization-department-management__filters,
+  .organization-department-management__tabs,
+  .organization-department-management__actions {
+    display: none !important;
+  }
+}

@@ -210,8 +210,10 @@ const es = {
     navigation: {
       home: "Inicio",
       organizations: "Organizaciones",
-      myChurch: "Mi Iglesia",
+      myChurch: "Mi organización",
       planVisit: "Planificar una visita",
+      myHistory: "Mi historial",
+      visitRequests: "Solicitudes de visita",
 
       overview: "Resumen",
       leadership: "Liderazgo",
@@ -225,11 +227,11 @@ const es = {
       communication: "Comunicación",
       media: "Multimedia",
 
-      churchMenu: "Menú de la Iglesia",
+      churchMenu: "Menú de la organización",
       myOrganization: "Mi Organización",
 
       admin: "Admin",
-      administration: "Administración de la Iglesia",
+      administration: "Administración de la organización",
       dashboard: "Panel de control",
       createOrganization: "Crear organización",
       manageMembers: "Administrar miembros",
@@ -238,7 +240,7 @@ const es = {
       manageEvents: "Administrar eventos",
       livestreamManager:
         "Administrador de transmisiones en vivo",
-      settings: "Configuración de la Iglesia",
+      settings: "Configuración de la organización",
 
       closeMenu: "Cerrar menú",
       openMenu: "Abrir menú",
@@ -259,7 +261,7 @@ const es = {
       organizationsEventsMembers:
         "Buscar organizaciones, eventos y miembros…",
       mobile: "Buscar…",
-      ariaLabel: "Buscar en Fockis Church",
+      ariaLabel: "Buscar en Fockis Organizaciones",
     },
 
     notifications: {
@@ -370,7 +372,7 @@ const es = {
     },
 
     createGroup: {
-      eyebrow: "Fockis Church",
+      eyebrow: "Fockis Organizaciones",
       title: "Crear un grupo",
       description:
         "Crea un estudio bíblico, grupo pequeño, grupo de oración o grupo personalizado para tu organización.",

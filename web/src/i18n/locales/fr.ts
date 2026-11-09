@@ -202,8 +202,10 @@ church: {
 navigation: {
 home: "Accueil",
 organizations: "Organisations",
-myChurch: "Mon Église",
+myChurch: "Mon organisation",
 planVisit: "Planifier une visite",
+myHistory: "Mon historique",
+visitRequests: "Demandes de visite",
 
   overview: "Vue d'ensemble",
   leadership: "Direction",
@@ -217,11 +219,11 @@ planVisit: "Planifier une visite",
   communication: "Communication",
   media: "Médias",
 
-  churchMenu: "Menu de l'Église",
+  churchMenu: "Menu de l'organisation",
   myOrganization: "Mon Organisation",
 
   admin: "Admin",
-  administration: "Administration de l'Église",
+  administration: "Administration de l'organisation",
   dashboard: "Tableau de bord",
   createOrganization: "Créer une organisation",
   manageMembers: "Gérer les membres",
@@ -230,7 +232,7 @@ planVisit: "Planifier une visite",
   manageEvents: "Gérer les événements",
   livestreamManager:
     "Gestionnaire des diffusions en direct",
-  settings: "Paramètres de l'Église",
+  settings: "Paramètres de l'organisation",
 
   closeMenu: "Fermer le menu",
   openMenu: "Ouvrir le menu",
@@ -251,7 +253,7 @@ search: {
   organizationsEventsMembers:
     "Rechercher des organisations, événements et membres…",
   mobile: "Rechercher…",
-  ariaLabel: "Rechercher dans Fockis Church",
+  ariaLabel: "Rechercher dans Fockis Organisations",
 },
 
 notifications: {
@@ -627,7 +629,7 @@ organizationCard: {
 },
 
 createGroup: {
-  eyebrow: "Fockis Church",
+  eyebrow: "Fockis Organisations",
   title: "Créer un groupe",
   description:
     "Créez une étude biblique, un petit groupe, un groupe de prière ou un groupe personnalisé pour votre organisation.",

@@ -8,7 +8,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import {
   Organization,
   OrganizationSchema,
-} from "../church/organizations/schemas/organization.schema";
+} from "../org/organizations/schemas/organization.schema";
 
 // ============================================================================
 // CHURCH MEMBERSHIP
@@ -17,7 +17,7 @@ import {
 import {
   Membership,
   MembershipSchema,
-} from "../church/members/schemas/membership.schema";
+} from "../org/members/schemas/membership.schema";
 
 // ============================================================================
 // CHURCH DEPARTMENT
@@ -26,7 +26,7 @@ import {
 import {
   Department,
   DepartmentSchema,
-} from "../church/departments/schemas/department.schema";
+} from "../org/departments/schemas/department.schema";
 
 // ============================================================================
 // CHURCH GROUP
@@ -35,7 +35,7 @@ import {
 import {
   ChurchGroup,
   ChurchGroupSchema,
-} from "../church/groups/schemas/church-group.schema";
+} from "../org/groups/schemas/church-group.schema";
 
 // ============================================================================
 // USER

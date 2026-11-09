@@ -2,7 +2,7 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 
-import { Organization, type OrganizationDocument } from "../../church/organizations/schemas/organization.schema";
+import { Organization, type OrganizationDocument } from "../../org/organizations/schemas/organization.schema";
 // Existing Fockis payment records — read-only here (the payment system is not changed).
 import { Payment } from "../../payments/schemas/payment.schema";
 import { OrganizationDomain, OrganizationDomainType, type OrganizationDomainDocument } from "../schemas/organization-domain.schema";

@@ -347,6 +347,30 @@ export function CourseBuilder() {
       </div>
     );
 
+  if (me.state.status === "loading") return <div className="fa-root fa-page fa-page--soft" />;
+
+  // The server only lets Academy instructors, staff and administrators create
+  // courses here. Everyone else teaches through Creator Studio once approved.
+  if (me.state.status === "ready" && !["instructor", "staff", "administrator"].includes(String(me.state.data.role)))
+    return (
+      <div className="fa-root fa-page fa-page--soft">
+        <div className="fa-container fa-narrow">
+          <div className="fa-card fa-gate">
+            <h2>Create a course</h2>
+            <p className="fa-muted">Only Academy instructors can create courses here. To teach your own class, use Creator Studio. Fockis reviews new creators first.</p>
+            <div className="fa-gate__btns">
+              <Link className="fa-btn fa-btn--primary" to="/academy/studio">
+                Open Creator Studio
+              </Link>
+              <Link className="fa-btn fa-btn--outline" to="/academy/portal">
+                My learning
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
   const validBasics = c.code.trim() && c.title.trim();
 
   async function save(publishAs?: Visibility) {

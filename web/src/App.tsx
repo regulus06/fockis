@@ -51,41 +51,49 @@ import AcademyRoutes from "./fockis-src/routes/AcademyRoutes";
 // FOCKIS ORGANIZATIONS
 // ============================================================================
 
-import ChurchHomePage from "./features/church/pages/ChurchHomePage";
-import ChurchOrganizationsPage from "./features/church/pages/ChurchOrganizationsPage";
-import ChurchOrganizationPage from "./features/church/pages/ChurchOrganizationPage";
-import ChurchMembersPage from "./features/church/pages/ChurchMembersPage";
-import ChurchMemberProfilePage from "./features/church/pages/ChurchMemberProfilePage";
-import ChurchDepartmentsPage from "./features/church/pages/ChurchDepartmentsPage";
-import ChurchGroupsPage from "./features/church/pages/ChurchGroupsPage";
-import ChurchEventsPage from "./features/church/pages/ChurchEventsPage";
-import ChurchLivePage from "./features/church/pages/ChurchLivePage";
-import ChurchLivestreamPage from "./features/church/pages/ChurchLivestreamPage";
-import ChurchAttendancePage from "./features/church/pages/ChurchAttendancePage";
-import ChurchCommunicationPage from "./features/church/pages/ChurchCommunicationPage";
-import ChurchMediaPage from "./features/church/pages/ChurchMediaPage";
-import ChurchPlanVisitPage from "./features/church/pages/ChurchPlanVisitPage";
+import OrganizationsHomePage from "./features/organizations/pages/OrganizationsHomePage";
+import OrganizationsPage from "./features/organizations/pages/OrganizationsPage";
+import OrganizationPage from "./features/organizations/pages/OrganizationPage";
+import OrganizationMembersPage from "./features/organizations/pages/OrganizationMembersPage";
+import OrganizationMemberProfilePage from "./features/organizations/pages/OrganizationMemberProfilePage";
+import OrganizationDepartmentsPage from "./features/organizations/pages/OrganizationDepartmentsPage";
+import OrganizationGroupsPage from "./features/organizations/pages/OrganizationGroupsPage";
+import OrganizationEventsPage from "./features/organizations/pages/OrganizationEventsPage";
+import OrganizationLivePage from "./features/organizations/pages/OrganizationLivePage";
+import OrganizationLivestreamPage from "./features/organizations/pages/OrganizationLivestreamPage";
+import OrganizationAttendancePage from "./features/organizations/pages/OrganizationAttendancePage";
+import OrganizationCommunicationPage from "./features/organizations/pages/OrganizationCommunicationPage";
+import OrganizationMediaLibrary from "./features/organizations/pages/OrganizationMediaLibrary";
+import OrganizationPlanVisitPage from "./features/organizations/pages/OrganizationPlanVisitPage";
+import OrganizationJoinPage from "./features/organizations/pages/OrganizationJoinPage";
+import OrganizationMyHistoryPage from "./features/organizations/pages/OrganizationMyHistoryPage";
+import OrganizationVisitRequestsPage from "./features/organizations/admin/OrganizationVisitRequestsPage";
+import OrganizationBadgesPage from "./features/organizations/admin/OrganizationBadgesPage";
+import OrganizationMyBadgePage from "./features/organizations/pages/OrganizationMyBadgePage";
+import BadgeVerifyPage from "./features/organizations/badges/BadgeVerifyPage";
 
 // ============================================================================
 // ORGANIZATION MEMBER PORTAL
 // ============================================================================
 
-import ChurchMemberPortalPage from "./features/church/pages/ChurchMemberPortalPage";
-import ChurchMemberSettingsPage from "./features/church/pages/ChurchMemberSettingsPage";
+import OrganizationMemberPortalPage from "./features/organizations/pages/OrganizationMemberPortalPage";
+import OrganizationMemberSettingsPage from "./features/organizations/pages/OrganizationMemberSettingsPage";
 
 // ============================================================================
 // ORGANIZATION ADMIN
 // ============================================================================
 
-import ChurchAdminDashboard from "./features/church/admin/ChurchAdminDashboard";
-import ChurchDepartmentManagement from "./features/church/admin/ChurchDepartmentManagement";
-import ChurchEventManagement from "./features/church/admin/ChurchEventManagement";
-import ChurchGroupManagement from "./features/church/admin/ChurchGroupManagement";
-import ChurchMemberManagement from "./features/church/admin/ChurchMemberManagement";
-import ChurchOrganizationForm from "./features/church/admin/ChurchOrganizationForm";
-import ChurchSettings from "./features/church/admin/ChurchSettings";
-import ChurchAdminMediaPage from "./features/church/admin/ChurchAdminMediaPage";
-import ChurchAdminLivestreamPage from "./features/church/admin/live/ChurchAdminLivestreamPage";
+import OrganizationAdminDashboard from "./features/organizations/admin/OrganizationAdminDashboard";
+import OrganizationDepartmentManagement from "./features/organizations/admin/OrganizationDepartmentManagement";
+import OrganizationEventManagement from "./features/organizations/admin/OrganizationEventManagement";
+import OrganizationGroupManagement from "./features/organizations/admin/OrganizationGroupManagement";
+import OrganizationMemberManagement from "./features/organizations/admin/OrganizationMemberManagement";
+import OrganizationMembersAdminPage from "./features/organizations/admin/OrganizationMembersAdminPage";
+import CreateOrganizationWizard from "./features/organizations/admin/CreateOrganizationWizard";
+import RequireOrgAdmin, { LegacyAdminRedirect } from "./features/organizations/ui/RequireOrgAdmin";
+import OrganizationForm from "./features/organizations/admin/OrganizationForm";
+import OrganizationSettingsPage from "./features/organizations/admin/OrganizationSettingsPage";
+import OrganizationAdminLivestreamPage from "./features/organizations/admin/live/OrganizationAdminLivestreamPage";
 
 // ============================================================================
 // AUTH
@@ -326,7 +334,7 @@ function OrganizationHomeRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchOrganizationPage />;
+  return <OrganizationPage />;
 }
 
 function OrganizationMembersRoute(): React.JSX.Element {
@@ -337,7 +345,7 @@ function OrganizationMembersRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchMembersPage />;
+  return <OrganizationMembersPage />;
 }
 
 function OrganizationMemberProfileRoute(): React.JSX.Element {
@@ -351,7 +359,7 @@ function OrganizationMemberProfileRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchMemberProfilePage />;
+  return <OrganizationMemberProfilePage />;
 }
 
 function OrganizationDepartmentsRoute(): React.JSX.Element {
@@ -362,7 +370,7 @@ function OrganizationDepartmentsRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchDepartmentsPage />;
+  return <OrganizationDepartmentsPage />;
 }
 
 function OrganizationGroupsRoute(): React.JSX.Element {
@@ -373,7 +381,7 @@ function OrganizationGroupsRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchGroupsPage />;
+  return <OrganizationGroupsPage />;
 }
 
 // ============================================================================
@@ -381,11 +389,11 @@ function OrganizationGroupsRoute(): React.JSX.Element {
 // ============================================================================
 
 function OrganizationMemberPortalRoute(): React.JSX.Element {
-  return <ChurchMemberPortalPage />;
+  return <OrganizationMemberPortalPage />;
 }
 
 function OrganizationMemberSettingsRoute(): React.JSX.Element {
-  return <ChurchMemberSettingsPage />;
+  return <OrganizationMemberSettingsPage />;
 }
 
 // ============================================================================
@@ -454,7 +462,7 @@ function OrganizationLiveRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchLivePage />;
+  return <OrganizationLivePage />;
 }
 
 function OrganizationMediaRoute(): React.JSX.Element {
@@ -465,7 +473,7 @@ function OrganizationMediaRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchMediaPage />;
+  return <OrganizationMediaLibrary />;
 }
 
 function OrganizationCommunicationRoute(): React.JSX.Element {
@@ -476,7 +484,7 @@ function OrganizationCommunicationRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchCommunicationPage />;
+  return <OrganizationCommunicationPage />;
 }
 
 function OrganizationAttendanceRoute(): React.JSX.Element {
@@ -487,7 +495,7 @@ function OrganizationAttendanceRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchAttendancePage />;
+  return <OrganizationAttendancePage />;
 }
 
 function OrganizationVisitRoute(): React.JSX.Element {
@@ -498,7 +506,7 @@ function OrganizationVisitRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchPlanVisitPage />;
+  return <OrganizationPlanVisitPage />;
 }
 
 // ============================================================================
@@ -513,7 +521,21 @@ function OrganizationAdminDashboardRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchAdminDashboard />;
+  return <OrganizationAdminDashboard />;
+}
+
+/**
+ * /organizations — the Fockis Organizations homepage. Older links that carry
+ * search filters (?search=, ?category=, ?type=, ?page=) still open the
+ * directory, now at /organizations/discover.
+ */
+function OrganizationsLandingRoute(): React.JSX.Element {
+  const { search } = useLocation();
+  const params = new URLSearchParams(search);
+  if (["search", "category", "type", "page"].some((k) => params.has(k))) {
+    return <Navigate to={`/organizations/discover${search}`} replace />;
+  }
+  return <OrganizationsHomePage />;
 }
 
 function OrganizationAdminMembersRoute(): React.JSX.Element {
@@ -524,7 +546,7 @@ function OrganizationAdminMembersRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchMemberManagement />;
+  return <OrganizationMembersAdminPage />;
 }
 
 function OrganizationAdminDepartmentsRoute(): React.JSX.Element {
@@ -535,7 +557,7 @@ function OrganizationAdminDepartmentsRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchDepartmentManagement />;
+  return <OrganizationDepartmentManagement />;
 }
 
 function OrganizationAdminGroupsRoute(): React.JSX.Element {
@@ -546,7 +568,7 @@ function OrganizationAdminGroupsRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchGroupManagement />;
+  return <OrganizationGroupManagement />;
 }
 
 function OrganizationAdminEventsRoute(): React.JSX.Element {
@@ -557,7 +579,7 @@ function OrganizationAdminEventsRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchEventManagement />;
+  return <OrganizationEventManagement />;
 }
 
 function OrganizationAdminLiveRoute(): React.JSX.Element {
@@ -568,7 +590,7 @@ function OrganizationAdminLiveRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchAdminLivestreamPage />;
+  return <OrganizationAdminLivestreamPage />;
 }
 
 function OrganizationAdminMediaRoute(): React.JSX.Element {
@@ -579,7 +601,7 @@ function OrganizationAdminMediaRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchAdminMediaPage />;
+  return <OrganizationMediaLibrary />;
 }
 
 function OrganizationAdminSettingsRoute(): React.JSX.Element {
@@ -590,7 +612,7 @@ function OrganizationAdminSettingsRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <ChurchSettings />;
+  return <OrganizationSettingsPage />;
 }
 
 // ============================================================================
@@ -1117,16 +1139,17 @@ function App(): React.JSX.Element {
 
       <Route
         path="/organizations"
-        element={<ChurchOrganizationsPage />}
+        element={<OrganizationsLandingRoute />}
+      />
+
+      <Route
+        path="/organizations/discover"
+        element={<OrganizationsPage />}
       />
 
       <Route
         path="/organizations/new"
-        element={
-          <ChurchOrganizationForm
-            mode="create"
-          />
-        }
+        element={<CreateOrganizationWizard />}
       />
 
       <Route
@@ -1152,6 +1175,30 @@ function App(): React.JSX.Element {
       <Route
         path="/organizations/:organizationId"
         element={<OrganizationHomeRoute />}
+      />
+
+      {/* Shareable join link: a short form to ask to join. */}
+      <Route
+        path="/organizations/:organizationId/join"
+        element={<OrganizationJoinPage />}
+      />
+
+      {/* A member's own badge (ID card with QR code). */}
+      <Route
+        path="/organizations/:organizationId/my-badge"
+        element={<OrganizationMyBadgePage />}
+      />
+
+      {/* What a badge QR code opens. Public. */}
+      <Route
+        path="/badges/verify/:token"
+        element={<BadgeVerifyPage />}
+      />
+
+      {/* A member's own history in this organization. */}
+      <Route
+        path="/organizations/:organizationId/my-history"
+        element={<OrganizationMyHistoryPage />}
       />
 
       <Route
@@ -1229,107 +1276,125 @@ function App(): React.JSX.Element {
 
       <Route
         path="/organizations/:organizationId/admin"
-        element={<OrganizationAdminDashboardRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminDashboardRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/dashboard"
-        element={<OrganizationAdminDashboardRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminDashboardRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/members"
-        element={<OrganizationAdminMembersRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminMembersRoute /></RequireOrgAdmin>}
+      />
+
+      {/* Join link, add a member by hand, member IDs (the previous members screen). */}
+      <Route
+        path="/organizations/:organizationId/admin/members/tools"
+        element={<RequireOrgAdmin><OrganizationMemberManagement /></RequireOrgAdmin>}
+      />
+
+      {/* Member badges: templates, every member's badge, printing. */}
+      <Route
+        path="/organizations/:organizationId/admin/badges"
+        element={<RequireOrgAdmin><OrganizationBadgesPage /></RequireOrgAdmin>}
+      />
+
+      {/* "Plan a visit" requests sent to this organization. */}
+      <Route
+        path="/organizations/:organizationId/admin/visits"
+        element={<RequireOrgAdmin><OrganizationVisitRequestsPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/departments"
-        element={<OrganizationAdminDepartmentsRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminDepartmentsRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/groups"
-        element={<OrganizationAdminGroupsRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminGroupsRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/events"
-        element={<OrganizationAdminEventsRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminEventsRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/live"
-        element={<OrganizationAdminLiveRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminLiveRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/media"
-        element={<OrganizationAdminMediaRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminMediaRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/settings"
-        element={<OrganizationAdminSettingsRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminSettingsRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/domains"
-        element={<OrganizationAdminDomainsRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminDomainsRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/domains/new"
-        element={<OrganizationAdminAddDomainRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminAddDomainRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/domains/:domainId"
-        element={<OrganizationAdminDomainDetailsRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminDomainDetailsRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/identity"
-        element={<OrganizationAdminIdentityRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminIdentityRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/identity/users"
-        element={<OrganizationAdminManagedUsersRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminManagedUsersRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/identity/users/new"
-        element={<OrganizationAdminCreateUserRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminCreateUserRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/identity/users/create"
-        element={<OrganizationAdminCreateUserRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminCreateUserRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/identity/users/:userId"
-        element={<OrganizationAdminUserDetailsRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminUserDetailsRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/identity/domains"
-        element={<OrganizationAdminDomainsRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminDomainsRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/identity/domains/new"
-        element={<OrganizationAdminAddDomainRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminAddDomainRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/identity/domains/:domainId"
-        element={<OrganizationAdminDomainDetailsRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminDomainDetailsRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/organizations/:organizationId/admin/identity/settings"
-        element={<OrganizationAdminIdentitySettingsRoute />}
+        element={<RequireOrgAdmin><OrganizationAdminIdentitySettingsRoute /></RequireOrgAdmin>}
       />
 
       {/* ====================================================================
@@ -1338,339 +1403,331 @@ function App(): React.JSX.Element {
 
       <Route
         path="/church"
-        element={<ChurchHomePage />}
+        element={<OrganizationsHomePage />}
       />
 
       <Route
         path="/church/me"
-        element={<ChurchMemberPortalPage />}
+        element={<OrganizationMemberPortalPage />}
       />
 
       <Route
         path="/church/member"
-        element={<ChurchMemberPortalPage />}
+        element={<OrganizationMemberPortalPage />}
       />
 
       <Route
         path="/church/member-portal"
-        element={<ChurchMemberPortalPage />}
+        element={<OrganizationMemberPortalPage />}
       />
 
       <Route
         path="/church/me/settings"
-        element={<ChurchMemberSettingsPage />}
+        element={<OrganizationMemberSettingsPage />}
       />
 
       <Route
         path="/church/member/settings"
-        element={<ChurchMemberSettingsPage />}
+        element={<OrganizationMemberSettingsPage />}
       />
 
       <Route
         path="/church/member-portal/settings"
-        element={<ChurchMemberSettingsPage />}
+        element={<OrganizationMemberSettingsPage />}
       />
 
       <Route
         path="/church/live"
-        element={<ChurchLivestreamPage />}
+        element={<OrganizationLivestreamPage />}
       />
 
       <Route
         path="/church/organizations"
-        element={<ChurchOrganizationsPage />}
+        element={<OrganizationsPage />}
       />
 
       <Route
         path="/church/organizations/new"
-        element={
-          <ChurchOrganizationForm
-            mode="create"
-          />
-        }
+        element={<CreateOrganizationWizard />}
       />
 
       <Route
         path="/church/organizations/:organizationId"
-        element={<ChurchOrganizationPage />}
+        element={<OrganizationPage />}
       />
 
       <Route
         path="/church/organizations/:organizationId/visit"
-        element={<ChurchPlanVisitPage />}
+        element={<OrganizationPlanVisitPage />}
       />
 
       <Route
         path="/church/organizations/:organizationId/members"
-        element={<ChurchMembersPage />}
+        element={<OrganizationMembersPage />}
       />
 
       <Route
         path="/church/organizations/:organizationId/members/:memberId"
-        element={<ChurchMemberProfilePage />}
+        element={<OrganizationMemberProfilePage />}
       />
 
       <Route
         path="/church/organizations/:organizationId/departments"
-        element={<ChurchDepartmentsPage />}
+        element={<OrganizationDepartmentsPage />}
       />
 
       <Route
         path="/church/organizations/:organizationId/groups"
-        element={<ChurchGroupsPage />}
+        element={<OrganizationGroupsPage />}
       />
 
       <Route
         path="/church/organizations/:organizationId/events"
-        element={<ChurchEventsPage />}
+        element={<OrganizationEventsPage />}
       />
 
       <Route
         path="/church/organizations/:organizationId/live"
-        element={<ChurchLivePage />}
+        element={<OrganizationLivePage />}
       />
 
       <Route
         path="/church/organizations/:organizationId/media"
-        element={<ChurchMediaPage />}
+        element={<OrganizationMediaLibrary />}
       />
 
       <Route
         path="/church/organizations/:organizationId/communication"
-        element={<ChurchCommunicationPage />}
+        element={<OrganizationCommunicationPage />}
       />
 
       <Route
         path="/church/organizations/:organizationId/attendance"
-        element={<ChurchAttendancePage />}
+        element={<OrganizationAttendancePage />}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin"
-        element={<ChurchAdminDashboard />}
+        element={<RequireOrgAdmin><OrganizationAdminDashboard /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/dashboard"
-        element={<ChurchAdminDashboard />}
+        element={<RequireOrgAdmin><OrganizationAdminDashboard /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/members"
-        element={<ChurchMemberManagement />}
+        element={<RequireOrgAdmin><OrganizationMemberManagement /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/departments"
-        element={<ChurchDepartmentManagement />}
+        element={<RequireOrgAdmin><OrganizationDepartmentManagement /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/groups"
-        element={<ChurchGroupManagement />}
+        element={<RequireOrgAdmin><OrganizationGroupManagement /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/events"
-        element={<ChurchEventManagement />}
+        element={<RequireOrgAdmin><OrganizationEventManagement /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/live"
-        element={<ChurchAdminLivestreamPage />}
+        element={<RequireOrgAdmin><OrganizationAdminLivestreamPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/media"
-        element={<ChurchAdminMediaPage />}
+        element={<RequireOrgAdmin><OrganizationMediaLibrary /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/settings"
-        element={<ChurchSettings />}
+        element={<RequireOrgAdmin><OrganizationSettingsPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/domains"
-        element={<ChurchOrganizationDomainsRoute />}
+        element={<RequireOrgAdmin><ChurchOrganizationDomainsRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/domains/new"
-        element={<OrganizationAddDomainPage />}
+        element={<RequireOrgAdmin><OrganizationAddDomainPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/domains/:domainId"
-        element={<OrganizationDomainDetailsPage />}
+        element={<RequireOrgAdmin><OrganizationDomainDetailsPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/identity"
-        element={<ChurchOrganizationIdentityHomeRoute />}
+        element={<RequireOrgAdmin><ChurchOrganizationIdentityHomeRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/identity/users"
-        element={<ChurchOrganizationManagedUsersRoute />}
+        element={<RequireOrgAdmin><ChurchOrganizationManagedUsersRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/identity/users/new"
-        element={<OrganizationCreateUserPage />}
+        element={<RequireOrgAdmin><OrganizationCreateUserPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/identity/users/create"
-        element={<OrganizationCreateUserPage />}
+        element={<RequireOrgAdmin><OrganizationCreateUserPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/identity/users/:userId"
-        element={<OrganizationUserDetailsPage />}
+        element={<RequireOrgAdmin><OrganizationUserDetailsPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/identity/domains"
-        element={<ChurchOrganizationDomainsRoute />}
+        element={<RequireOrgAdmin><ChurchOrganizationDomainsRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/identity/domains/new"
-        element={<OrganizationAddDomainPage />}
+        element={<RequireOrgAdmin><OrganizationAddDomainPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/identity/domains/:domainId"
-        element={<OrganizationDomainDetailsPage />}
+        element={<RequireOrgAdmin><OrganizationDomainDetailsPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/identity/settings"
-        element={<OrganizationIdentitySettingsPage />}
+        element={<RequireOrgAdmin><OrganizationIdentitySettingsPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/admin"
-        element={<ChurchAdminDashboard />}
+        element={<LegacyAdminRedirect />}
       />
 
       <Route
         path="/church/admin/dashboard"
-        element={<ChurchAdminDashboard />}
+        element={<LegacyAdminRedirect />}
       />
 
       <Route
         path="/church/admin/organizations/new"
-        element={
-          <ChurchOrganizationForm
-            mode="create"
-          />
-        }
+        element={<CreateOrganizationWizard />}
       />
 
       <Route
         path="/church/admin/organizations/:organizationId/edit"
-        element={
-          <ChurchOrganizationForm
+        element={<RequireOrgAdmin>
+          <OrganizationForm
             mode="edit"
           />
-        }
+        </RequireOrgAdmin>}
       />
 
       <Route
         path="/church/admin/members"
-        element={<ChurchMemberManagement />}
+        element={<LegacyAdminRedirect section="members" />}
       />
 
       <Route
         path="/church/admin/departments"
-        element={<ChurchDepartmentManagement />}
+        element={<LegacyAdminRedirect section="departments" />}
       />
 
       <Route
         path="/church/admin/groups"
-        element={<ChurchGroupManagement />}
+        element={<LegacyAdminRedirect section="groups" />}
       />
 
       <Route
         path="/church/admin/events"
-        element={<ChurchEventManagement />}
+        element={<LegacyAdminRedirect section="events" />}
       />
 
       <Route
         path="/church/admin/live"
-        element={<ChurchAdminLivestreamPage />}
+        element={<LegacyAdminRedirect section="live" />}
       />
 
       <Route
         path="/church/admin/media"
-        element={<ChurchAdminMediaPage />}
+        element={<LegacyAdminRedirect section="media" />}
       />
 
       <Route
         path="/church/admin/settings"
-        element={<ChurchSettings />}
+        element={<LegacyAdminRedirect section="settings" />}
       />
 
       <Route
         path="/church/admin/organizations/:organizationId/domains"
-        element={<ChurchOrganizationDomainsRoute />}
+        element={<RequireOrgAdmin><ChurchOrganizationDomainsRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/admin/organizations/:organizationId/domains/new"
-        element={<OrganizationAddDomainPage />}
+        element={<RequireOrgAdmin><OrganizationAddDomainPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/admin/organizations/:organizationId/domains/:domainId"
-        element={<OrganizationDomainDetailsPage />}
+        element={<RequireOrgAdmin><OrganizationDomainDetailsPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/admin/organizations/:organizationId/identity"
-        element={<ChurchOrganizationIdentityHomeRoute />}
+        element={<RequireOrgAdmin><ChurchOrganizationIdentityHomeRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/admin/organizations/:organizationId/identity/users"
-        element={<ChurchOrganizationManagedUsersRoute />}
+        element={<RequireOrgAdmin><ChurchOrganizationManagedUsersRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/admin/organizations/:organizationId/identity/users/new"
-        element={<OrganizationCreateUserPage />}
+        element={<RequireOrgAdmin><OrganizationCreateUserPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/admin/organizations/:organizationId/identity/users/create"
-        element={<OrganizationCreateUserPage />}
+        element={<RequireOrgAdmin><OrganizationCreateUserPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/admin/organizations/:organizationId/identity/users/:userId"
-        element={<OrganizationUserDetailsPage />}
+        element={<RequireOrgAdmin><OrganizationUserDetailsPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/admin/organizations/:organizationId/identity/domains"
-        element={<ChurchOrganizationDomainsRoute />}
+        element={<RequireOrgAdmin><ChurchOrganizationDomainsRoute /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/admin/organizations/:organizationId/identity/domains/new"
-        element={<OrganizationAddDomainPage />}
+        element={<RequireOrgAdmin><OrganizationAddDomainPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/admin/organizations/:organizationId/identity/domains/:domainId"
-        element={<OrganizationDomainDetailsPage />}
+        element={<RequireOrgAdmin><OrganizationDomainDetailsPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/admin/organizations/:organizationId/identity/settings"
-        element={<OrganizationIdentitySettingsPage />}
+        element={<RequireOrgAdmin><OrganizationIdentitySettingsPage /></RequireOrgAdmin>}
       />
 
       {/* ====================================================================
