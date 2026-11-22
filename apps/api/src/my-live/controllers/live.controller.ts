@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Body,
+  ForbiddenException,
   Controller,
   Delete,
   Get,
@@ -141,6 +142,12 @@ export class LiveController {
     @Param("id") id: string,
     @Res() res: Response,
   ) {
+    // Camera snapshots of members-only / private organization livestreams stay private.
+    if (await this.liveService.isRestrictedOrganizationStream(id)) {
+      res.status(404).end();
+      return;
+    }
+
     const data =
       await this.liveService.getThumbnail(id);
 
@@ -403,6 +410,11 @@ export class LiveController {
   async comments(
     @Param("id") id: string,
   ) {
+    // Chat history of restricted organization livestreams is not public.
+    if (await this.liveService.isRestrictedOrganizationStream(id)) {
+      return [];
+    }
+
     return this.commentService.findLatest(
       id,
     );
@@ -430,6 +442,18 @@ export class LiveController {
     ) {
       throw new BadRequestException(
         "Message is required.",
+      );
+    }
+
+    // Organization livestreams: only allowed viewers, and only when chat is on.
+    const chatStream =
+      await this.liveService.getLiveStreamDocument(id);
+    if (
+      !(await this.liveService.canViewerAccess(chatStream, userId)) ||
+      !(await this.liveService.organizationChatAllowed(chatStream))
+    ) {
+      throw new ForbiddenException(
+        "Chat is not available for this livestream.",
       );
     }
 
@@ -489,6 +513,26 @@ export class LiveController {
       String(userId);
 
     /*
+     * Organization livestreams: only people the organization's access
+     * rules allow (members, groups, invitations) get a viewer token.
+     */
+    // findById() returns the public shape; the access fields live on the document.
+    const accessDoc =
+      await this.liveService.getLiveStreamDocument(id);
+
+    if (
+      !isHost &&
+      !(await this.liveService.canViewerAccess(
+        accessDoc,
+        userId,
+      ))
+    ) {
+      throw new ForbiddenException(
+        "You do not have access to this livestream.",
+      );
+    }
+
+    /*
      * A guest is allowed to publish only
      * after accepting an invitation.
      */
@@ -534,7 +578,10 @@ export class LiveController {
      * moment to connect to the LiveKit room. Idempotent: reconnects
      * never start a second recording.
      */
-    if (isHost) {
+    if (
+      isHost &&
+      !accessDoc.orgRecordingDisabled
+    ) {
       this.recordingService.scheduleStart(id);
     }
 
@@ -798,6 +845,29 @@ export class LiveController {
       id,
       productId,
     );
+  }
+
+  /**
+   * Recording of an organization livestream for an authorized viewer
+   * (the organization allows replays and the viewer passes its access rules).
+   * Returns a short-lived signed playback URL.
+   */
+  @UseGuards(LiveJwtGuard)
+  @Get(":id/org-replay")
+  async organizationReplay(
+    @Req() req: any,
+    @Param("id") id: string,
+  ) {
+    const userId = getUserId(req.user) || null;
+    const stream = await this.liveService.getLiveStreamDocument(id);
+    if (!stream.orgLiveEventId) {
+      throw new ForbiddenException("This recording is not available.");
+    }
+    const event = await this.liveService.organizationReplayAllowed(stream);
+    if (!event || !(await this.liveService.canViewerAccess(stream, userId))) {
+      throw new ForbiddenException("This recording is not available.");
+    }
+    return this.recordingService.summarize(stream.toObject());
   }
 
   @Get(":id")

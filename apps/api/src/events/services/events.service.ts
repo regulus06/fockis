@@ -6,7 +6,10 @@ import {
   InternalServerErrorException,
   Logger,
   NotFoundException,
+  Optional,
 } from "@nestjs/common";
+
+import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { InjectConnection, InjectModel } from "@nestjs/mongoose";
 
@@ -25,6 +28,9 @@ import {
 } from "../schemas/event.schema";
 
 import { CreateEventDto } from "../dto/create-event.dto";
+import { NotificationsService } from "../../notifications/notifications.service";
+import { isOrgEventManager } from "../utils/org-manager";
+import { sanitizeEventHtml, textLength } from "../utils/rich-text";
 import { UpdateEventDto } from "../dto/update-event.dto";
 import type {
   DiscoverEventsQueryDto,
@@ -47,6 +53,14 @@ import {
   EventViewerRelationships,
   loadEventViewerRelationships,
 } from "../utils/viewer-relationships";
+
+import {
+  normalizeSettings,
+  RegistrationAccess,
+  RegistrationMode,
+  settingsOf,
+  type EventRegistrationSettings,
+} from "../registrations/registration-settings";
 
 import {
   EVENT_RECOMMENDATION_CONFIG,
@@ -74,6 +88,24 @@ export interface EventOrganizer {
   name: string;
   avatar: string;
   verified: boolean;
+}
+
+/** Registration facts every viewer may see (prices, mode, dates). */
+export interface EventRegistrationSummary {
+  mode: RegistrationMode;
+  isFree: boolean;
+  minPrice: number;
+  maxPrice: number;
+  currency: string;
+  requireApproval: boolean;
+  waitlistEnabled: boolean;
+  opensAt: string | null;
+  closesAt: string | null;
+  attendanceOptions: string[];
+  access: RegistrationAccess;
+  registeredSeats: number;
+  /** Signed-in viewer can see the meeting link through GET /events/:id/join. */
+  hasOnlineMeeting: boolean;
 }
 
 export interface SerializedEvent {
@@ -115,6 +147,19 @@ export interface SerializedEvent {
   distanceKm?: number;
   createdAt: string | null;
   updatedAt: string | null;
+  registration: EventRegistrationSummary;
+  /** Full settings, organizer only (for the edit form). */
+  registrationSettings?: EventRegistrationSettings;
+  /** Organization events. */
+  organizationId: string | null;
+  eventType: string;
+  orgCategory: string;
+  isDraft: boolean;
+  isArchived: boolean;
+  /** The viewer may manage this event (organizer or organization event manager). */
+  canManage: boolean;
+  /** Host of the meeting link ("meet.fockis.com", "zoom.us"…), managers only. */
+  meetingProvider?: string;
 }
 
 export interface RsvpResult {
@@ -153,6 +198,15 @@ const ORGANIZER_FIELDS = "username firstName lastName profilePicture verified";
 /* ============================================================================
    HELPERS
 ============================================================================ */
+
+/** "meet.fockis.com", "zoom.us"… from a meeting link (empty when it isn't a URL). */
+function meetingProviderOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
 
 function and(...filters: Filter[]): Filter {
   const parts = filters.filter((filter) => filter && Object.keys(filter).length);
@@ -227,6 +281,14 @@ export class EventsService {
 
     @InjectConnection()
     private readonly connection: Connection,
+
+    /** Tells registrations about time / place changes and cancellations. */
+    @Optional()
+    private readonly emitter?: EventEmitter2,
+
+    /** Tells organization members about newly published events. */
+    @Optional()
+    private readonly notifications?: NotificationsService,
   ) {}
 
   /* ==========================================================================
@@ -285,6 +347,21 @@ export class EventsService {
     return { event, relationships };
   }
 
+  /** One event the viewer (or a signed-out guest) may see; "not found" otherwise. */
+  async getViewable(eventId: string, viewerId?: string): Promise<EventLean> {
+    const _id = this.objectId(eventId);
+    const [event, relationships] = await Promise.all([
+      this.eventModel.findById(_id).lean<EventLean>().exec(),
+      viewerId ? this.loadRelationships(viewerId) : Promise.resolve({ ...EMPTY_RELATIONSHIPS }),
+    ]);
+
+    if (!event || !canViewEvent(event, viewerId, relationships)) {
+      throw new NotFoundException("Event not found.");
+    }
+
+    return event;
+  }
+
   /* ==========================================================================
      ORGANIZERS
   ========================================================================== */
@@ -339,9 +416,10 @@ export class EventsService {
     viewerId?: string,
     organizers?: Map<string, EventOrganizer>,
     now: Date = new Date(),
-    extras: { distanceKm?: number } = {},
+    extras: { distanceKm?: number; manager?: boolean } = {},
   ): SerializedEvent {
     const creatorId = String(event.creatorId);
+    const manager = Boolean(extras.manager || (viewerId && viewerId === creatorId));
     const attendees = idList(event.attendeeIds);
     const interested = idList(event.interestedIds);
     const invited = idList(event.invitedIds);
@@ -352,11 +430,23 @@ export class EventsService {
     const isInvited = Boolean(viewerId && invited.includes(viewerId));
 
     const status = getEventStatus(event, now);
+    const settings = settingsOf(event);
+    const registrationRequired = settings.mode === RegistrationMode.REQUIRED;
+    const registeredSeats = Number(event.registeredSeats ?? 0);
     const capacity =
       typeof event.capacity === "number" && event.capacity > 0 ? event.capacity : null;
-    const spotsLeft = capacity === null ? null : Math.max(0, capacity - attendees.length);
+    // With registration, places are counted from registrations (several people
+    // per registration); otherwise from the Going list as before.
+    const taken = registrationRequired ? registeredSeats : attendees.length;
+    const spotsLeft = capacity === null ? null : Math.max(0, capacity - taken);
     const isFull = spotsLeft === 0;
     const active = status === EventStatus.UPCOMING || status === EventStatus.LIVE;
+    // The meeting link travels with the event only for the original RSVP flow
+    // (public access); otherwise it is handed out by GET /events/:id/join after
+    // checking registration and access.
+    const legacyLink =
+      settings.mode === RegistrationMode.RSVP && settings.access === RegistrationAccess.PUBLIC;
+    const prices = settings.ticketTypes.map((ticket) => ticket.price);
 
     const coverMediaType = event.coverMediaType ?? EventCoverMediaType.IMAGE;
 
@@ -376,7 +466,7 @@ export class EventsService {
       latitude: typeof event.latitude === "number" ? event.latitude : null,
       longitude: typeof event.longitude === "number" ? event.longitude : null,
       isOnline: Boolean(event.isOnline),
-      onlineUrl: isOwner || isGoing || isInterested ? event.onlineUrl ?? "" : "",
+      onlineUrl: manager || (legacyLink && (isGoing || isInterested)) ? event.onlineUrl ?? "" : "",
       coverImageUrl: event.coverImageUrl ?? "",
       coverVideoUrl: event.coverVideoUrl ?? "",
       coverMediaType,
@@ -398,12 +488,37 @@ export class EventsService {
       isCancelled: Boolean(event.isCancelled),
       cancelledAt: isoOrNull(event.cancelledAt),
       cancellationReason: event.cancellationReason ?? "",
-      canRsvp: active && !isOwner && (!isFull || isGoing),
+      canRsvp: active && !isOwner && settings.mode !== RegistrationMode.REQUIRED && (!isFull || isGoing),
       ...(typeof extras.distanceKm === "number"
         ? { distanceKm: Math.round(extras.distanceKm * 10) / 10 }
         : {}),
       createdAt: isoOrNull(event.createdAt),
       updatedAt: isoOrNull(event.updatedAt),
+      registration: {
+        mode: settings.mode,
+        isFree: settings.isFree,
+        minPrice: prices.length ? Math.min(...prices) : 0,
+        maxPrice: prices.length ? Math.max(...prices) : 0,
+        currency: settings.currency,
+        requireApproval: settings.requireApproval,
+        waitlistEnabled: settings.waitlistEnabled,
+        opensAt: isoOrNull(settings.opensAt),
+        closesAt: isoOrNull(settings.closesAt),
+        attendanceOptions: settings.attendanceOptions,
+        access: settings.access,
+        registeredSeats,
+        hasOnlineMeeting:
+          Boolean(event.onlineUrl) &&
+          (Boolean(event.isOnline) || settings.attendanceOptions.includes("online")),
+      },
+      ...(manager ? { registrationSettings: settings } : {}),
+      organizationId: event.organizationId ? String(event.organizationId) : null,
+      eventType: event.eventType ?? "",
+      orgCategory: event.orgCategory ?? "",
+      isDraft: Boolean(event.isDraft),
+      isArchived: Boolean(event.isArchived),
+      canManage: manager,
+      ...(manager && event.onlineUrl ? { meetingProvider: meetingProviderOf(event.onlineUrl) } : {}),
     };
   }
 
@@ -412,6 +527,7 @@ export class EventsService {
     viewerId?: string,
     now: Date = new Date(),
     distanceFrom?: { latitude: number; longitude: number },
+    managedOrgs?: string[],
   ): Promise<SerializedEvent[]> {
     const organizers = await this.loadOrganizers(events);
 
@@ -428,7 +544,10 @@ export class EventsService {
             )
           : undefined;
 
-      return this.serialize(event, viewerId, organizers, now, { distanceKm });
+      const manager = Boolean(
+        managedOrgs && event.organizationId && managedOrgs.includes(String(event.organizationId)),
+      );
+      return this.serialize(event, viewerId, organizers, now, { distanceKm, manager });
     });
   }
 
@@ -569,7 +688,26 @@ export class EventsService {
       }
 
       const isOnline = dto.isOnline ?? false;
-      const onlineUrl = isOnline ? dto.onlineUrl?.trim() ?? "" : "";
+
+      // Organization events: only the organization's event managers.
+      const organizationId = dto.organizationId ? this.objectId(dto.organizationId, "organization") : null;
+      if (organizationId && !(await isOrgEventManager(this.connection, organizationId, userId))) {
+        throw new ForbiddenException("You need the Manage events permission of this organization.");
+      }
+      const description = this.cleanDescription(dto.description, organizationId ? 2000 : 5000);
+
+      let registration =
+        dto.registration !== undefined
+          ? normalizeSettings(dto.registration, { isOnline, endDate })
+          : null;
+      if (organizationId) {
+        registration = registration ?? normalizeSettings({}, { isOnline, endDate });
+        // Members-only access always means members of this organization.
+        registration.organizationId = String(organizationId);
+      }
+      // Hybrid (in person + online) events keep the meeting link too.
+      const hybrid = Boolean(registration?.attendanceOptions.includes("online"));
+      const onlineUrl = isOnline || hybrid ? dto.onlineUrl?.trim() ?? "" : "";
       const locationName = dto.locationName?.trim() ?? "";
       const address = dto.address?.trim() ?? "";
 
@@ -609,9 +747,18 @@ export class EventsService {
         (coverVideoUrl ? EventCoverMediaType.VIDEO : EventCoverMediaType.IMAGE);
 
       const event = await this.eventModel.create({
+        registration,
+        registeredSeats: 0,
+        ticketSeats: {},
         creatorId,
         title: dto.title.trim(),
-        description: dto.description?.trim() ?? "",
+        description,
+        organizationId,
+        eventType: dto.eventType ?? "",
+        orgCategory: dto.orgCategory?.trim() ?? "",
+        isDraft: Boolean(organizationId && dto.isDraft),
+        isArchived: false,
+        updatedBy: creatorId,
         category: dto.category ?? EventCategory.GENERAL,
         visibility: dto.visibility ?? EventVisibility.PUBLIC,
         startDate,
@@ -632,6 +779,8 @@ export class EventsService {
         invitedIds: [],
         isCancelled: false,
       });
+
+      if (organizationId && !event.isDraft && dto.notifyMembers) await this.notifyMembers(event);
 
       const [serialized] = await this.serializeMany(
         [event.toObject() as unknown as EventLean],
@@ -1071,8 +1220,8 @@ export class EventsService {
    * viewer may see it.
    */
   async findOne(id: string, viewerId: string): Promise<SerializedEvent> {
-    const { event } = await this.loadVisible(id, viewerId);
-    const [serialized] = await this.serializeMany([event], viewerId);
+    const { event, relationships } = await this.loadVisible(id, viewerId);
+    const [serialized] = await this.serializeMany([event], viewerId, undefined, undefined, relationships.managedOrganizationIds);
 
     return serialized;
   }
@@ -1117,8 +1266,8 @@ export class EventsService {
         throw new NotFoundException("Event not found.");
       }
 
-      if (!event.creatorId.equals(this.objectId(userId, "user"))) {
-        throw new ForbiddenException("Only the event creator can update this event.");
+      if (!(await this.canManageEvent(event, userId))) {
+        throw new ForbiddenException("Only the event creator or the organization's event managers can update this event.");
       }
 
       if (event.isCancelled) {
@@ -1139,7 +1288,13 @@ export class EventsService {
       }
 
       const isOnline = dto.isOnline ?? event.isOnline;
-      const onlineUrl = isOnline ? (dto.onlineUrl ?? event.onlineUrl ?? "").trim() : "";
+      const nextSettings =
+        dto.registration !== undefined
+          ? normalizeSettings(dto.registration, { isOnline, endDate })
+          : settingsOf({ registration: event.registration, isOnline });
+      // Hybrid (in person + online) events keep the meeting link too.
+      const hybrid = nextSettings.attendanceOptions.includes("online");
+      const onlineUrl = isOnline || hybrid ? (dto.onlineUrl ?? event.onlineUrl ?? "").trim() : "";
       const locationName = isOnline ? "" : (dto.locationName ?? event.locationName ?? "").trim();
       const address = isOnline ? "" : (dto.address ?? event.address ?? "").trim();
 
@@ -1175,11 +1330,56 @@ export class EventsService {
       }
 
       if (dto.title !== undefined) event.title = dto.title.trim();
-      if (dto.description !== undefined) event.description = dto.description.trim();
+      if (dto.description !== undefined) event.description = this.cleanDescription(dto.description, event.organizationId ? 2000 : 5000);
+      if (dto.eventType !== undefined) event.eventType = dto.eventType;
+      if (dto.orgCategory !== undefined) event.orgCategory = dto.orgCategory.trim();
+      if (dto.isDraft !== undefined && event.organizationId) event.isDraft = dto.isDraft;
+      event.updatedBy = this.objectId(userId, "user");
       if (dto.category !== undefined) event.category = dto.category;
       if (dto.visibility !== undefined) event.visibility = dto.visibility;
       if (dto.timeZone !== undefined) event.timeZone = dto.timeZone;
       if (dto.capacity !== undefined) event.capacity = dto.capacity;
+
+      // Never shrink below what registrations already hold.
+      const heldSeats = Number(event.registeredSeats ?? 0);
+      if (typeof event.capacity === "number" && event.capacity > 0 && event.capacity < heldSeats) {
+        throw new BadRequestException(
+          `${heldSeats} places are already taken by registrations, so capacity can't be lower than that.`,
+        );
+      }
+
+      if (dto.registration !== undefined) {
+        const settings = nextSettings;
+        if (event.organizationId) settings.organizationId = String(event.organizationId);
+        const sold = (event.ticketSeats ?? {}) as Record<string, number>;
+        const previous = settingsOf(event.toObject() as unknown as EventLean);
+
+        for (const ticket of previous.ticketTypes) {
+          const taken = Number(sold[ticket.id] ?? 0);
+          const next = settings.ticketTypes.find((item) => item.id === ticket.id);
+
+          if (taken > 0 && !next) {
+            throw new BadRequestException(`"${ticket.name}" already has registrations and can't be removed.`);
+          }
+
+          if (taken > 0 && next && next.quantity !== null && next.quantity < taken) {
+            throw new BadRequestException(`"${next.name}" already has ${taken} registrations; its quantity can't be lower.`);
+          }
+
+          if (taken > 0 && next && next.price !== ticket.price) {
+            throw new BadRequestException(`"${ticket.name}" already has registrations; create a new ticket type for a different price.`);
+          }
+        }
+
+        event.set("registration", settings);
+        event.markModified("registration");
+      }
+
+      const locationChanged =
+        isOnline !== event.isOnline ||
+        locationName !== (event.locationName ?? "") ||
+        address !== (event.address ?? "") ||
+        onlineUrl !== (event.onlineUrl ?? "");
 
       event.startDate = startDate;
       event.endDate = endDate;
@@ -1192,9 +1392,24 @@ export class EventsService {
 
       await event.save();
 
+      // "Send notifications": once, when the event is (or becomes) published.
+      if (event.organizationId && !event.isDraft && dto.notifyMembers) {
+        await this.notifyMembers(event);
+      }
+
+      // Registrants hear about new times and places (and their reminders move).
+      this.emitter?.emit("events.updated", {
+        eventId: String(event._id),
+        timeChanged: datesChanged,
+        locationChanged,
+      });
+
       const [serialized] = await this.serializeMany(
         [event.toObject() as unknown as EventLean],
         userId,
+        undefined,
+        undefined,
+        event.organizationId ? [String(event.organizationId)] : undefined,
       );
 
       return serialized;
@@ -1202,6 +1417,203 @@ export class EventsService {
       await this.discardUploads(coverImageFile, coverVideoFile);
       throw error;
     }
+  }
+
+  /* ==========================================================================
+     ORGANIZATION EVENTS
+  ========================================================================== */
+
+  /** Creator, or an event manager of the event's organization. */
+  async canManageEvent(event: { creatorId: unknown; organizationId?: unknown }, userId: string): Promise<boolean> {
+    if (userId && String(event.creatorId) === userId) return true;
+    return Boolean(event.organizationId) && isOrgEventManager(this.connection, event.organizationId, userId);
+  }
+
+  private async requireOrgManager(organizationId: string, userId: string): Promise<Types.ObjectId> {
+    const org = this.objectId(organizationId, "organization");
+    if (!(await isOrgEventManager(this.connection, org, userId))) {
+      throw new ForbiddenException("You need the Manage events permission of this organization.");
+    }
+    return org;
+  }
+
+  /**
+   * Plain text stays as it is; editor HTML is reduced to the allow-list.
+   * Organization events allow 2,000 visible characters, other events 5,000.
+   */
+  private cleanDescription(value: string | undefined, limit: number): string {
+    const clean = sanitizeEventHtml(String(value ?? "").trim());
+    if (textLength(clean) > limit) throw new BadRequestException(`The description can be at most ${limit.toLocaleString("en-US")} characters.`);
+    return clean;
+  }
+
+  /** In-app notification to the organization's active members (once per event). */
+  private async notifyMembers(event: EventDocument): Promise<void> {
+    if (!this.notifications || event.membersNotified || !event.organizationId) return;
+    try {
+      const members = await this.connection
+        .collection("church_members")
+        .find({ organizationId: event.organizationId, status: "active", userId: { $ne: null } }, { projection: { userId: 1 } })
+        .limit(5000)
+        .toArray();
+      const org = await this.connection
+        .collection("church_organizations")
+        .findOne({ _id: event.organizationId }, { projection: { name: 1 } });
+      const when = new Date(event.startDate).toLocaleString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: event.timeZone || "UTC",
+      });
+      const creator = String(event.creatorId);
+      for (const m of members) {
+        const recipientId = String(m.userId);
+        if (!recipientId || recipientId === creator) continue;
+        await this.notifications.create({
+          recipientId,
+          type: "SYSTEM",
+          title: `New event: ${event.title}`,
+          message: `${org?.name ?? "Your organization"} · ${when}`,
+          entityId: String(event._id),
+          entityType: "event",
+          link: `/events/${String(event._id)}`,
+        });
+      }
+      event.membersNotified = true;
+      await event.save();
+    } catch (error) {
+      this.logger.warn(`Could not notify members about event ${String(event._id)}: ${String(error)}`);
+    }
+  }
+
+  /**
+   * GET /events/organization/:organizationId (public)
+   * Upcoming and ongoing events of the organization that this viewer may
+   * see: public events for everyone, members-only events for its members.
+   * Never drafts or archived events. Meeting links are not included.
+   */
+  async organizationEvents(organizationId: string, viewerId?: string, includePast = false): Promise<SerializedEvent[]> {
+    const org = this.objectId(organizationId, "organization");
+    const now = new Date();
+    const relationships = viewerId ? await this.loadRelationships(viewerId) : { ...EMPTY_RELATIONSHIPS };
+    const events = await this.eventModel
+      .find(
+        and(
+          buildEventVisibilityFilter(viewerId, relationships),
+          { organizationId: org },
+          includePast ? { isCancelled: { $ne: true } } : activeEventFilter(now),
+        ),
+      )
+      .sort(includePast ? { startDate: -1 } : { startDate: 1 })
+      .limit(50)
+      .lean<EventLean[]>()
+      .exec();
+    return this.serializeMany(events, viewerId, now);
+  }
+
+  /**
+   * GET /events/organization/:organizationId/manage (event managers)
+   * Every event of the organization with tab counts and registration counts.
+   */
+  async manageOrganizationEvents(
+    organizationId: string,
+    userId: string,
+    q: { tab?: string; search?: string; type?: string; page?: number; limit?: number },
+  ) {
+    const org = await this.requireOrgManager(organizationId, userId);
+    const now = new Date();
+    const base = { organizationId: org };
+    const live = { isCancelled: { $ne: true }, startDate: { $lte: now }, endDate: { $gt: now } };
+    const tabs: Record<string, Record<string, unknown>> = {
+      all: { isArchived: { $ne: true } },
+      upcoming: { isArchived: { $ne: true }, isDraft: { $ne: true }, isCancelled: { $ne: true }, startDate: { $gt: now } },
+      ongoing: { isArchived: { $ne: true }, isDraft: { $ne: true }, ...live },
+      past: { isArchived: { $ne: true }, isDraft: { $ne: true }, $or: [{ endDate: { $lte: now } }, { isCancelled: true }] },
+      drafts: { isArchived: { $ne: true }, isDraft: true },
+      archived: { isArchived: true },
+    };
+    const tab = tabs[String(q.tab)] ? String(q.tab) : "all";
+    const filter: Record<string, unknown> = { ...base, ...tabs[tab] };
+    if (q.type) filter.eventType = String(q.type).slice(0, 60);
+    const search = String(q.search ?? "").trim().slice(0, 100);
+    if (search) {
+      const rx = { $regex: search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" };
+      filter.$and = [{ $or: [{ title: rx }, { locationName: rx }, { address: rx }] }];
+    }
+    const limit = Math.min(100, Math.max(1, Number(q.limit) || 25));
+    const page = Math.max(1, Number(q.page) || 1);
+
+    const [events, total, counts] = await Promise.all([
+      this.eventModel
+        .find(filter)
+        .sort(tab === "upcoming" || tab === "ongoing" ? { startDate: 1 } : { startDate: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean<EventLean[]>()
+        .exec(),
+      this.eventModel.countDocuments(filter).exec(),
+      Promise.all(Object.entries(tabs).map(async ([k, f]) => [k, await this.eventModel.countDocuments({ ...base, ...f }).exec()] as const)),
+    ]);
+
+    // Registration counts per event (and pending approvals for the whole organization).
+    const ids = events.map((e) => e._id);
+    const regs = this.connection.collection("event_registrations");
+    const [byEvent, pending] = await Promise.all([
+      ids.length
+        ? regs
+            .aggregate<{ _id: { e: Types.ObjectId; s: string }; n: number; seats: number; checked: number }>([
+              { $match: { eventId: { $in: ids } } },
+              {
+                $group: {
+                  _id: { e: "$eventId", s: "$status" },
+                  n: { $sum: 1 },
+                  seats: { $sum: { $ifNull: ["$quantity", 1] } },
+                  checked: { $sum: { $cond: [{ $in: ["$attendanceStatus", ["checked_in", "partially_checked_in"]] }, 1, 0] } },
+                },
+              },
+            ])
+            .toArray()
+        : Promise.resolve([]),
+      (async () => {
+        const orgEventIds = await this.eventModel.find(base).distinct("_id").exec();
+        return orgEventIds.length ? regs.countDocuments({ eventId: { $in: orgEventIds }, status: "pending_approval" }) : 0;
+      })(),
+    ]);
+    const stats = new Map<string, Record<string, number>>();
+    for (const row of byEvent) {
+      const key = String(row._id.e);
+      const m = stats.get(key) ?? {};
+      m[row._id.s] = row.n;
+      // Registrations with at least one checked-in attendee (QR or manual check-in).
+      m.checked_in = (m.checked_in ?? 0) + (row.checked ?? 0);
+      stats.set(key, m);
+    }
+
+    const serialized = await this.serializeMany(events, userId, now, undefined, [String(org)]);
+    return {
+      items: serialized.map((e) => ({ ...e, registrationCounts: stats.get(e.id) ?? {} })),
+      total,
+      page,
+      limit,
+      tab,
+      counts: Object.fromEntries(counts),
+      pendingRegistrations: pending,
+    };
+  }
+
+  async archive(userId: string, eventId: string, archived: boolean): Promise<SerializedEvent> {
+    const event = await this.eventModel.findById(this.objectId(eventId)).exec();
+    if (!event) throw new NotFoundException("Event not found.");
+    if (!event.organizationId) throw new BadRequestException("Only organization events can be archived.");
+    if (!(await this.canManageEvent(event, userId))) throw new ForbiddenException("You can't manage this event.");
+    event.isArchived = archived;
+    event.archivedAt = archived ? new Date() : null;
+    event.updatedBy = this.objectId(userId, "user");
+    await event.save();
+    const [serialized] = await this.serializeMany([event.toObject() as unknown as EventLean], userId, undefined, undefined, [String(event.organizationId)]);
+    return serialized;
   }
 
   /* ==========================================================================
@@ -1215,8 +1627,8 @@ export class EventsService {
       throw new NotFoundException("Event not found.");
     }
 
-    if (!event.creatorId.equals(this.objectId(userId, "user"))) {
-      throw new ForbiddenException("Only the event creator can cancel this event.");
+    if (!(await this.canManageEvent(event, userId))) {
+      throw new ForbiddenException("Only the event creator or the organization's event managers can cancel this event.");
     }
 
     if (event.isCancelled) {
@@ -1235,6 +1647,11 @@ export class EventsService {
 
     await event.save();
 
+    this.emitter?.emit("events.cancelled", {
+      eventId: String(event._id),
+      reason: event.cancellationReason,
+    });
+
     const [serialized] = await this.serializeMany([event.toObject() as unknown as EventLean], userId);
 
     return { success: true, cancelled: true, message: "Event cancelled successfully.", event: serialized };
@@ -1251,8 +1668,8 @@ export class EventsService {
       throw new NotFoundException("Event not found.");
     }
 
-    if (!event.creatorId.equals(this.objectId(userId, "user"))) {
-      throw new ForbiddenException("Only the event creator can delete this event.");
+    if (!(await this.canManageEvent(event, userId))) {
+      throw new ForbiddenException("Only the event creator or the organization's event managers can delete this event.");
     }
 
     const result = await event.deleteOne();
@@ -1336,6 +1753,24 @@ export class EventsService {
       return this.rsvpResult(event, userId);
     }
 
+    const mode = settingsOf(event).mode;
+
+    if (status === EventRsvpStatus.GOING && mode === RegistrationMode.REQUIRED) {
+      throw new BadRequestException("Register for this event to attend.");
+    }
+
+    if (
+      status === EventRsvpStatus.INTERESTED &&
+      mode === RegistrationMode.REQUIRED &&
+      idList(event.attendeeIds).includes(userId)
+    ) {
+      throw new BadRequestException("You're registered for this event. Cancel your registration to leave it.");
+    }
+
+    if (status === EventRsvpStatus.GOING && mode === RegistrationMode.NONE) {
+      throw new BadRequestException("This event doesn't take RSVPs. You can save it as Interested.");
+    }
+
     const now = new Date();
     const base = { _id: event._id, ...activeEventFilter(now) };
 
@@ -1383,6 +1818,13 @@ export class EventsService {
 
     if (String(event.creatorId) === userId) {
       return this.rsvpResult(event, userId);
+    }
+
+    if (
+      settingsOf(event).mode === RegistrationMode.REQUIRED &&
+      idList(event.attendeeIds).includes(userId)
+    ) {
+      throw new BadRequestException("You're registered for this event. Cancel your registration instead.");
     }
 
     if (!isEventActive(event)) {

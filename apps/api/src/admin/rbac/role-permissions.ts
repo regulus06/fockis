@@ -171,6 +171,12 @@ export const RolePermissions: Record<Role, Permission[]> = {
     Permission.POLICY_EDIT,
     Permission.POLICY_RULES_MANAGE,
     Permission.POLICY_AUDIT_VIEW,
+
+    // Security & Identity: read-only for administrators. Changing policies,
+    // two-factor rules, sessions and account recovery needs a custom role
+    // with the specific security.* permission (or super admin).
+    Permission.SECURITY_VIEW,
+    Permission.SECURITY_AUDIT_VIEW,
   ],
 
   // ========================================================================

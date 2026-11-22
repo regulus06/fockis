@@ -57,6 +57,7 @@ import {
 } from "../../members/schemas/membership.schema";
 
 import { MembersService } from "../../members/services/members.service";
+import { CommunitiesService } from "../../communities/communities.service";
 
 /* ============================================================================
    TYPES
@@ -95,6 +96,9 @@ export class ChurchGroupsService {
     private readonly membershipModel: Model<MembershipDocument>,
 
     private readonly membersService: MembersService,
+
+    // Groups & Communities join rules (privacy, approval, status).
+    private readonly communities: CommunitiesService,
   ) {}
 
   /* ==========================================================================
@@ -416,6 +420,8 @@ export class ChurchGroupsService {
 
       organizationId:
         organizationObjectId,
+
+      deletedAt: null,
     };
 
     if (!includeArchived) {
@@ -544,6 +550,9 @@ export class ChurchGroupsService {
     > = {
       organizationId:
         organizationObjectId,
+
+      // Groups & Communities soft delete (restorable by church leadership).
+      deletedAt: null,
     };
 
     if (
@@ -1105,6 +1114,13 @@ export class ChurchGroupsService {
         organizationId,
         requesterUserId,
       );
+
+    // Private / invitation-only / approval groups cannot be joined directly.
+    await this.communities.assertLegacyJoinAllowed(
+      organizationId,
+      requesterUserId,
+      groupId,
+    );
 
     const alreadyMember =
       (

@@ -9,6 +9,7 @@ import {
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
+import { randomBytes } from "crypto";
 import Stripe from "stripe";
 
 import {
@@ -22,6 +23,57 @@ import {
   PaymentStatus,
 } from "../fockis-shop/orders/schemas/order.schema";
 import { FockisStripeService } from "../payments/services/stripe.service";
+import {
+  CommissionQuote,
+  MarketplaceCommissionService,
+} from "./fockis-marketplace-commission/services/marketplace-commission.service";
+import { PayoutHoldsService } from "./marketplace-finance/services/payout-holds.service";
+
+/** One seller's share of one shipment, as the payout ledger sees it. */
+export interface ShipmentAllocation {
+  orderId: string;
+  orderNumber: string;
+  shipmentId: string;
+  storeId: string;
+  currency: string;
+  paidAt: Date | null;
+  orderDate: Date | null;
+  labelPurchasedAt: Date | null;
+  paymentStatus: string;
+  orderStatus: string;
+  /** Item subtotal for this shipment. */
+  subtotalCents: number;
+  commissionCents: number;
+  commissionRate: number;
+  /** Seller share before any early payout fee. */
+  sellerCents: number;
+  /** True once the commission is frozen on the order (seller already paid). */
+  snapshot: boolean;
+  transferred: boolean;
+  stripeTransferId: string;
+  payoutStatus: string;
+  payoutType: string;
+  earlyFeeCents: number;
+  /** What actually went to the seller's Stripe account. */
+  transferredCents: number;
+  payoutAt: Date | null;
+  /** Paid by the customer and not refunded or cancelled. */
+  payable: boolean;
+}
+
+/** Order states in which the customer has paid. */
+const PAID_ORDER_STATUSES: string[] = [
+  OrderStatus.PAID,
+  OrderStatus.PROCESSING,
+  OrderStatus.READY_TO_SHIP,
+  OrderStatus.SHIPPED,
+  OrderStatus.IN_TRANSIT,
+  OrderStatus.OUT_FOR_DELIVERY,
+  OrderStatus.DELIVERED,
+];
+
+/** A claim older than this is treated as abandoned (for example the API restarted mid-transfer). */
+const CLAIM_TIMEOUT_MS = 10 * 60 * 1000;
 
 /**
  * Seller payouts through Stripe Connect (Express accounts).
@@ -56,6 +108,10 @@ export class PayoutsService implements OnModuleInit {
     private readonly orderModel: Model<OrderDocument>,
 
     private readonly fockisStripe: FockisStripeService,
+
+    private readonly commissionService: MarketplaceCommissionService,
+
+    private readonly holdsService: PayoutHoldsService,
   ) {}
 
   /**
@@ -85,7 +141,7 @@ export class PayoutsService implements OnModuleInit {
     }
   }
 
-  private get stripe(): Stripe {
+  get stripe(): Stripe {
     return this.fockisStripe.client;
   }
 
@@ -99,21 +155,12 @@ export class PayoutsService implements OnModuleInit {
       .replace(/\/+$/, "");
   }
 
-  private commissionPercent(): number {
-    const value = Number(process.env.PLATFORM_COMMISSION_PERCENT ?? "10");
-    if (!Number.isFinite(value) || value < 0 || value > 100) {
-      throw new ServiceUnavailableException(
-        "PLATFORM_COMMISSION_PERCENT must be a number between 0 and 100.",
-      );
-    }
-    return value;
-  }
 
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
 
-  private async getOwnedStore(userId: string, storeId: string) {
+  async getOwnedStore(userId: string, storeId: string) {
     if (!storeId || !Types.ObjectId.isValid(storeId)) {
       throw new BadRequestException("A valid store ID is required.");
     }
@@ -168,7 +215,7 @@ export class PayoutsService implements OnModuleInit {
    * before switching to live keys, the old ID is cleared so the seller can
    * set up payouts again under the correct account.
    */
-  private async usableAccountId(store: StoreDocument): Promise<string | null> {
+  async usableAccountId(store: StoreDocument): Promise<string | null> {
     const accountId = store.stripeAccountId;
     if (!accountId) return null;
 
@@ -209,7 +256,7 @@ export class PayoutsService implements OnModuleInit {
    * Sellers are Accounts v2 "recipients": they can receive /v1/transfers
    * once the stripe_balance.stripe_transfers capability is active.
    */
-  private async fetchAccountStatus(accountId: string): Promise<AccountStatus> {
+  async fetchAccountStatus(accountId: string): Promise<AccountStatus> {
     const account = await this.stripe.v2.core.accounts.retrieve(accountId, {
       include: ["configuration.recipient", "requirements"],
     });
@@ -407,9 +454,19 @@ export class PayoutsService implements OnModuleInit {
    * Transfers the seller's share for one shipment of a paid order.
    * Safe to call more than once: an existing transfer is never repeated.
    *
-   * Called by ShippingService after the seller purchases the label.
+   * Standard payouts are started by ShippingService after the seller buys
+   * the label. Early payouts are started by the seller (see SellerFinanceService)
+   * and pass `early`, whose fee Fockis keeps out of the transfer.
+   *
+   * Before paying, it checks admin holds and the seller's Stripe account,
+   * then freezes the commission on the order (the frozen numbers are reused
+   * on every later call, so a rate change never alters this sale).
    */
-  async releaseShipmentPayout(orderId: string, shipmentId: string) {
+  async releaseShipmentPayout(
+    orderId: string,
+    shipmentId: string,
+    early?: { requestId: string; feeCents: number; expectedSellerCents: number },
+  ) {
     if (
       !Types.ObjectId.isValid(orderId) ||
       !Types.ObjectId.isValid(shipmentId)
@@ -436,23 +493,9 @@ export class PayoutsService implements OnModuleInit {
       };
     }
 
-    const paidStatuses: string[] = [
-      OrderStatus.PAID,
-      OrderStatus.PROCESSING,
-      OrderStatus.READY_TO_SHIP,
-      OrderStatus.SHIPPED,
-      OrderStatus.IN_TRANSIT,
-      OrderStatus.OUT_FOR_DELIVERY,
-      OrderStatus.DELIVERED,
-    ];
-
-    const paid =
-      order.paymentStatus === PaymentStatus.PAID ||
-      paidStatuses.includes(order.status);
-
-    if (!paid) {
+    if (!this.isOrderPayable(order)) {
       throw new BadRequestException(
-        "The order must be paid before the seller can be paid out.",
+        "The order must be paid (and not refunded or cancelled) before the seller can be paid out.",
       );
     }
 
@@ -460,7 +503,28 @@ export class PayoutsService implements OnModuleInit {
     if (!store) {
       throw new NotFoundException("The seller's store was not found.");
     }
+    const storeId = String(store._id);
 
+    // 1. Admin holds.
+    const holds = await this.holdsService.check(storeId, orderId);
+    let heldByAmount = false;
+    if (!holds.blocked && holds.reservedCents > 0) {
+      // Amount holds: the store must keep at least that much unpaid.
+      const others = await this.untransferredCentsForStore(storeId, shipmentId);
+      heldByAmount = others < holds.reservedCents;
+    }
+    if (holds.blocked || heldByAmount) {
+      if (!early) {
+        shipment.payoutStatus = "on_hold";
+        await order.save({ validateModifiedOnly: true });
+        this.logger.warn(
+          `Payout for order ${order.orderNumber} shipment ${shipmentId} is on hold for store ${storeId}.`,
+        );
+      }
+      return { status: "on_hold" };
+    }
+
+    // 2. The seller's Stripe account must be able to receive transfers.
     let ready = false;
     const sellerAccountId = await this.usableAccountId(store);
     if (sellerAccountId) {
@@ -469,69 +533,358 @@ export class PayoutsService implements OnModuleInit {
     }
 
     if (!sellerAccountId || !ready) {
-      shipment.payoutStatus = "pending_seller_onboarding";
-      await order.save();
-
-      this.logger.warn(
-        `Payout for order ${orderId} shipment ${shipmentId} is waiting: store ${store._id} has not finished Stripe onboarding.`,
-      );
-
+      if (!early) {
+        shipment.payoutStatus = "pending_seller_onboarding";
+        await order.save({ validateModifiedOnly: true });
+        this.logger.warn(
+          `Payout for order ${orderId} shipment ${shipmentId} is waiting: store ${storeId} has not finished Stripe onboarding.`,
+        );
+      }
       return { status: "pending_seller_onboarding" };
     }
 
-    const subtotalCents = this.shipmentSubtotalCents(order, shipment);
-    const commissionCents = Math.round(
-      (subtotalCents * this.commissionPercent()) / 100,
-    );
-    const sellerCents = subtotalCents - commissionCents;
+    // 3. Commission: reuse the frozen numbers, or work them out now and freeze them.
+    const quote = await this.quoteForShipment(order, shipment);
+    if (!this.hasSnapshot(shipment)) {
+      shipment.payoutCommissionRate = quote.rate;
+      shipment.payoutCommissionSource = quote.source;
+      shipment.payoutSubtotal = quote.subtotalCents / 100;
+      shipment.payoutCommission = quote.commissionCents / 100;
+      shipment.payoutSellerAmount = quote.sellerCents / 100;
+      shipment.payoutQuoteAt = new Date();
+    }
+    const sellerCents = quote.sellerCents;
+    const commissionCents = quote.commissionCents;
 
     if (sellerCents <= 0) {
       shipment.payoutStatus = "nothing_to_pay";
-      await order.save();
+      await order.save({ validateModifiedOnly: true });
       return { status: "nothing_to_pay" };
+    }
+
+    // 4. Early payout: the seller agreed to a fee that Fockis keeps.
+    const feeCents = early ? early.feeCents : 0;
+    if (early) {
+      if (sellerCents !== early.expectedSellerCents) {
+        // The amount changed since the seller saw the preview.
+        return { status: "amount_changed" };
+      }
+      if (!Number.isSafeInteger(feeCents) || feeCents < 0 || feeCents >= sellerCents) {
+        throw new BadRequestException("The early payout fee is not valid for this sale.");
+      }
+    }
+    const transferCents = sellerCents - feeCents;
+
+    // 5. Claim the shipment so two transfers can never start at once.
+    const claimId = randomBytes(12).toString("hex");
+    const claimed = await this.orderModel
+      .updateOne(
+        {
+          _id: order._id,
+          shipments: {
+            $elemMatch: {
+              _id: shipment._id,
+              stripeTransferId: { $in: ["", null] },
+              $or: [
+                { payoutClaimId: { $in: ["", null] } },
+                { payoutClaimId: { $exists: false } },
+                { payoutClaimedAt: { $lt: new Date(Date.now() - CLAIM_TIMEOUT_MS) } },
+              ],
+            },
+          },
+        },
+        { $set: { "shipments.$.payoutClaimId": claimId, "shipments.$.payoutClaimedAt": new Date() } },
+      )
+      .exec();
+    if (claimed.modifiedCount !== 1) {
+      return { status: "in_progress" };
     }
 
     const chargeId = await this.resolveChargeId(order);
     const currency = String(order.currency || "usd").toLowerCase();
 
-    const transfer = await this.stripe.transfers.create(
-      {
-        amount: sellerCents,
-        currency,
-        destination: sellerAccountId,
-        transfer_group: `order_${orderId}`,
-        ...(chargeId ? { source_transaction: chargeId } : {}),
-        metadata: {
-          orderId,
-          orderNumber: order.orderNumber,
-          shipmentId,
-          storeId: String(store._id),
-          subtotalCents: String(subtotalCents),
-          commissionCents: String(commissionCents),
+    let transfer: Stripe.Transfer;
+    try {
+      transfer = await this.stripe.transfers.create(
+        {
+          amount: transferCents,
+          currency,
+          destination: sellerAccountId,
+          transfer_group: `order_${orderId}`,
+          ...(chargeId ? { source_transaction: chargeId } : {}),
+          metadata: {
+            orderId,
+            orderNumber: order.orderNumber,
+            shipmentId,
+            storeId,
+            subtotalCents: String(quote.subtotalCents),
+            commissionCents: String(commissionCents),
+            sellerCents: String(sellerCents),
+            payoutType: early ? "early" : "standard",
+            earlyPayoutFeeCents: String(feeCents),
+            ...(early ? { earlyPayoutRequestId: early.requestId } : {}),
+          },
         },
-      },
-      { idempotencyKey: `fockis_payout_${orderId}_${shipmentId}` },
-    );
+        {
+          idempotencyKey: early
+            ? `fockis_early_${early.requestId}_${shipmentId}`
+            : `fockis_payout_${orderId}_${shipmentId}`,
+        },
+      );
+    } catch (error) {
+      await this.orderModel
+        .updateOne(
+          { _id: order._id, "shipments._id": shipment._id, "shipments.payoutClaimId": claimId },
+          { $set: { "shipments.$.payoutClaimId": "", "shipments.$.payoutClaimedAt": null } },
+        )
+        .exec();
+      throw error;
+    }
 
     shipment.stripeTransferId = transfer.id;
     shipment.payoutStatus = "paid_out";
-    shipment.payoutAmount = sellerCents / 100;
+    shipment.payoutType = early ? "early" : "standard";
+    shipment.payoutEarlyFeeCents = early ? feeCents : null;
+    shipment.payoutEarlyRequestId = early ? early.requestId : "";
+    shipment.payoutAmount = transferCents / 100;
     shipment.payoutCommission = commissionCents / 100;
     shipment.payoutCurrency = currency;
     shipment.payoutAt = new Date();
-    await order.save();
+    shipment.payoutClaimId = "";
+    shipment.payoutClaimedAt = null;
+    await order.save({ validateModifiedOnly: true });
 
     this.logger.log(
-      `Transferred ${(sellerCents / 100).toFixed(2)} ${currency.toUpperCase()} to ${sellerAccountId} for order ${order.orderNumber} shipment ${shipmentId}.`,
+      `Transferred ${(transferCents / 100).toFixed(2)} ${currency.toUpperCase()} to ${sellerAccountId} for order ${order.orderNumber} shipment ${shipmentId}${
+        early ? ` (early payout, fee ${(feeCents / 100).toFixed(2)})` : ""
+      }.`,
     );
 
     return {
       status: "paid_out",
       transferId: transfer.id,
-      amount: sellerCents / 100,
+      amount: transferCents / 100,
       commission: commissionCents / 100,
+      earlyPayoutFee: feeCents / 100,
       currency,
     };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Payout ledger (read side)
+  // ---------------------------------------------------------------------------
+
+  /** Paid by the customer and not refunded, partly refunded or cancelled. */
+  isOrderPayable(order: Pick<OrderDocument, "paymentStatus" | "status">): boolean {
+    const blocked: string[] = [
+      OrderStatus.CANCELLED,
+      OrderStatus.REFUNDED,
+      OrderStatus.RETURN_REQUESTED,
+      OrderStatus.RETURNED,
+    ];
+    if (blocked.includes(order.status)) return false;
+    if (
+      order.paymentStatus === PaymentStatus.REFUNDED ||
+      order.paymentStatus === PaymentStatus.PARTIALLY_REFUNDED ||
+      order.paymentStatus === PaymentStatus.FAILED
+    ) {
+      return false;
+    }
+    return order.paymentStatus === PaymentStatus.PAID || PAID_ORDER_STATUSES.includes(order.status);
+  }
+
+  private hasSnapshot(shipment: OrderDocument["shipments"][number]): boolean {
+    return (
+      shipment.payoutCommissionRate !== null &&
+      shipment.payoutCommissionRate !== undefined &&
+      shipment.payoutSellerAmount !== null &&
+      shipment.payoutSellerAmount !== undefined &&
+      shipment.payoutCommission !== null &&
+      shipment.payoutCommission !== undefined
+    );
+  }
+
+  /**
+   * Commission for one shipment: the frozen numbers if the seller was already
+   * paid, otherwise today's admin settings (not saved).
+   */
+  async quoteForShipment(
+    order: OrderDocument,
+    shipment: OrderDocument["shipments"][number],
+  ): Promise<CommissionQuote> {
+    const subtotalCents = this.shipmentSubtotalCents(order, shipment);
+    if (this.hasSnapshot(shipment)) {
+      return {
+        rate: shipment.payoutCommissionRate as number,
+        fixedCents: 0,
+        minCents: 0,
+        maxCents: null,
+        subtotalCents: Math.round((shipment.payoutSubtotal ?? subtotalCents / 100) * 100),
+        commissionCents: Math.round((shipment.payoutCommission as number) * 100),
+        sellerCents: Math.round((shipment.payoutSellerAmount as number) * 100),
+        source: (shipment.payoutCommissionSource || "default") as CommissionQuote["source"],
+      };
+    }
+    if (
+      shipment.stripeTransferId &&
+      shipment.payoutCommission !== null &&
+      shipment.payoutCommission !== undefined &&
+      shipment.payoutAmount !== null &&
+      shipment.payoutAmount !== undefined
+    ) {
+      // Paid out before snapshots existed: use what was actually recorded.
+      const commissionCents = Math.round(shipment.payoutCommission * 100);
+      const sellerCents = Math.round(shipment.payoutAmount * 100) + (shipment.payoutEarlyFeeCents ?? 0);
+      return {
+        rate: subtotalCents > 0 ? Math.round((commissionCents / subtotalCents) * 10000) / 100 : 0,
+        fixedCents: 0,
+        minCents: 0,
+        maxCents: null,
+        subtotalCents,
+        commissionCents,
+        sellerCents,
+        source: "default",
+      };
+    }
+    return this.commissionService.quote({ subtotalCents, storeId: String(shipment.storeId) });
+  }
+
+  /** Every shipment of a store with its money, newest first. */
+  async storeAllocations(storeId: string, limit = 1000): Promise<ShipmentAllocation[]> {
+    if (!Types.ObjectId.isValid(storeId)) return [];
+    const store = new Types.ObjectId(storeId);
+    const orders = await this.orderModel
+      .find({ "shipments.storeId": store })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .exec();
+
+    const rows: ShipmentAllocation[] = [];
+    for (const order of orders) {
+      const payable = this.isOrderPayable(order);
+      for (const shipment of order.shipments ?? []) {
+        if (String(shipment.storeId) !== storeId) continue;
+        // Skip unpaid orders that were never paid out (abandoned checkouts, etc.).
+        if (!payable && !shipment.stripeTransferId && order.paymentStatus === PaymentStatus.PENDING) continue;
+
+        // One broken order (for example items with a $0 total) must not stop
+        // the whole payouts page. Skip it here and log it for a look.
+        let quote: CommissionQuote;
+        try {
+          quote = await this.quoteForShipment(order, shipment);
+        } catch (error) {
+          this.logger.warn(
+            `Skipped order ${order.orderNumber} shipment ${shipment._id} in the payout ledger: ${
+              error instanceof Error ? error.message : "unknown error"
+            }`,
+          );
+          continue;
+        }
+        const transferred = Boolean(shipment.stripeTransferId);
+        const earlyFeeCents = shipment.payoutEarlyFeeCents ?? 0;
+        rows.push({
+          orderId: String(order._id),
+          orderNumber: order.orderNumber,
+          shipmentId: String(shipment._id),
+          storeId,
+          currency: String(order.currency || "usd").toLowerCase(),
+          paidAt: order.paidAt ?? null,
+          orderDate: order.orderDate ?? (order as OrderDocument & { createdAt?: Date }).createdAt ?? null,
+          labelPurchasedAt: shipment.labelPurchasedAt ?? null,
+          paymentStatus: order.paymentStatus,
+          orderStatus: order.status,
+          subtotalCents: quote.subtotalCents,
+          commissionCents: quote.commissionCents,
+          commissionRate: quote.rate,
+          sellerCents: quote.sellerCents,
+          snapshot: this.hasSnapshot(shipment),
+          transferred,
+          stripeTransferId: shipment.stripeTransferId || "",
+          payoutStatus: shipment.payoutStatus || "",
+          payoutType: shipment.payoutType || (transferred ? "standard" : ""),
+          earlyFeeCents,
+          transferredCents: transferred
+            ? Math.round((shipment.payoutAmount ?? quote.sellerCents / 100) * 100)
+            : 0,
+          payoutAt: shipment.payoutAt ?? null,
+          payable,
+        });
+      }
+    }
+    return rows;
+  }
+
+  /** Marketplace-wide totals of what has been paid to sellers, by currency. */
+  async marketplaceTotals() {
+    return this.orderModel
+      .aggregate<{
+        _id: string;
+        transferredCents: number;
+        commissionCents: number;
+        earlyFeeCents: number;
+        shipments: number;
+      }>([
+        { $unwind: "$shipments" },
+        { $match: { "shipments.stripeTransferId": { $nin: ["", null] } } },
+        {
+          $group: {
+            _id: { $toLower: { $ifNull: ["$currency", "usd"] } },
+            transferredCents: { $sum: { $round: [{ $multiply: [{ $ifNull: ["$shipments.payoutAmount", 0] }, 100] }, 0] } },
+            commissionCents: { $sum: { $round: [{ $multiply: [{ $ifNull: ["$shipments.payoutCommission", 0] }, 100] }, 0] } },
+            earlyFeeCents: { $sum: { $ifNull: ["$shipments.payoutEarlyFeeCents", 0] } },
+            shipments: { $sum: 1 },
+          },
+        },
+      ])
+      .exec();
+  }
+
+  /** Seller money still with Fockis for this store (paid orders, not yet transferred). */
+  async untransferredCentsForStore(storeId: string, excludeShipmentId?: string): Promise<number> {
+    const rows = await this.storeAllocations(storeId);
+    return rows
+      .filter((row) => row.payable && !row.transferred && row.shipmentId !== excludeShipmentId)
+      .reduce((sum, row) => sum + row.sellerCents, 0);
+  }
+
+  /**
+   * Pays shipments that were stopped by a hold, once the hold is gone.
+   * Only shipments whose label was bought (normal payout time) are paid;
+   * the others become available for early payout again.
+   */
+  async releaseHeldForStore(storeId: string, orderId?: string) {
+    const query: Record<string, unknown> = {
+      shipments: {
+        $elemMatch: { storeId: new Types.ObjectId(storeId), payoutStatus: "on_hold" },
+      },
+    };
+    if (orderId) query._id = new Types.ObjectId(orderId);
+    const orders = await this.orderModel.find(query).exec();
+    const results: Array<{ orderId: string; shipmentId: string; status: string }> = [];
+
+    for (const order of orders) {
+      for (const shipment of order.shipments ?? []) {
+        if (String(shipment.storeId) !== storeId || shipment.payoutStatus !== "on_hold") continue;
+        if (!shipment.labelPurchasedAt) {
+          shipment.payoutStatus = "";
+          await order.save({ validateModifiedOnly: true });
+          results.push({ orderId: String(order._id), shipmentId: String(shipment._id), status: "available" });
+          continue;
+        }
+        try {
+          const result = await this.releaseShipmentPayout(String(order._id), String(shipment._id));
+          results.push({ orderId: String(order._id), shipmentId: String(shipment._id), status: result.status });
+        } catch (error) {
+          this.logger.error(
+            `Releasing held payout failed for order ${order._id} shipment ${shipment._id}: ${
+              error instanceof Error ? error.message : "Unknown error"
+            }`,
+          );
+          results.push({ orderId: String(order._id), shipmentId: String(shipment._id), status: "failed" });
+        }
+      }
+    }
+    return results;
   }
 
   /**

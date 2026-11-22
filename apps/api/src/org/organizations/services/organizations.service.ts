@@ -1457,7 +1457,8 @@ export class OrganizationsService {
       organization.bannerMediaSource =
         'upload';
 
-      await organization.save();
+      // Check only changed fields: older organizations may miss newer required fields (like domain).
+      await organization.save({ validateModifiedOnly: true });
     } catch (error) {
       try {
         const directory =
@@ -1623,7 +1624,8 @@ export class OrganizationsService {
     organization.bannerMediaSource =
       'url';
 
-    await organization.save();
+    // Check only changed fields: older organizations may miss newer required fields (like domain).
+    await organization.save({ validateModifiedOnly: true });
 
     if (
       previousSource ===
@@ -1711,7 +1713,8 @@ export class OrganizationsService {
     organization.bannerMediaSource =
       null;
 
-    await organization.save();
+    // Check only changed fields: older organizations may miss newer required fields (like domain).
+    await organization.save({ validateModifiedOnly: true });
 
     if (
       previousMediaSource ===
@@ -3409,7 +3412,8 @@ export class OrganizationsService {
      * validation, conflict handling, audit logging, and namespace migration.
      */
 
-    await organization.save();
+    // Check only changed fields: older organizations may miss newer required fields (like domain).
+    await organization.save({ validateModifiedOnly: true });
 
     return this.toOrganizationResponse(
       organization,
@@ -3471,7 +3475,8 @@ export class OrganizationsService {
     organization.status =
       status;
 
-    await organization.save();
+    // Check only changed fields: older organizations may miss newer required fields (like domain).
+    await organization.save({ validateModifiedOnly: true });
 
     return this.toOrganizationResponse(
       organization,
@@ -3530,7 +3535,8 @@ export class OrganizationsService {
     organization.settings =
       nextSettings;
 
-    await organization.save();
+    // Check only changed fields: older organizations may miss newer required fields (like domain).
+    await organization.save({ validateModifiedOnly: true });
 
     return {
       organizationId,

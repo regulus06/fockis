@@ -15,6 +15,16 @@ import {
   UserDocument,
 } from "../user.schema";
 
+import { LoginHistoryService } from "./login-history.service";
+
+import { PlatformSecurityPolicyService } from "../../admin/security/platform-security/platform-security-policy.service";
+import { AccountSecurityService } from "../../admin/security/platform-security/account-security.service";
+import {
+  isPasswordReused,
+  nextPasswordHistory,
+  passwordPolicyProblems,
+} from "../../admin/security/platform-security/password-policy";
+
 @Injectable()
 export class UserSecurityService {
   private readonly DEFAULT_MAX_FAILED_ATTEMPTS = 5;
@@ -30,7 +40,28 @@ export class UserSecurityService {
   constructor(
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
+
+    private readonly loginHistory: LoginHistoryService,
+
+    private readonly securityPolicy: PlatformSecurityPolicyService,
+
+    private readonly accountSecurity: AccountSecurityService,
   ) {}
+
+  /** Adds a failed sign-in to the account's login history. */
+  async recordFailedLoginAttempt(
+    userId: string,
+    ip?: string,
+    userAgent?: string,
+    locked = false,
+  ): Promise<void> {
+    await this.loginHistory.record(userId, {
+      success: false,
+      reason: locked ? "locked" : "wrong_password",
+      ip: ip ?? null,
+      userAgent: userAgent ?? null,
+    });
+  }
 
   private getNumber(
     value: unknown,
@@ -283,6 +314,12 @@ export class UserSecurityService {
 
     await user.save();
 
+    await this.loginHistory.record(userId, {
+      success: true,
+      ip: ip ?? null,
+      userAgent: userAgent ?? null,
+    });
+
     return user;
   }
 
@@ -364,23 +401,21 @@ export class UserSecurityService {
     };
   }
 
+  /**
+   * Administrator password reset.
+   *
+   * `forceChange` defaults to the effective policy
+   * (forcePasswordChangeAfterAdminReset).
+   */
   async setPasswordForSecurityReset(
     userId: string,
     newPassword: string,
-    forceChange = true,
+    forceChange?: boolean,
+    options: { actorId?: string | null; actorName?: string | null } = {},
   ) {
     if (!isValidObjectId(userId)) {
       throw new BadRequestException(
         "Invalid user ID.",
-      );
-    }
-
-    if (
-      !newPassword ||
-      newPassword.trim().length < 8
-    ) {
-      throw new BadRequestException(
-        "Password must be at least 8 characters.",
       );
     }
 
@@ -393,46 +428,41 @@ export class UserSecurityService {
       );
     }
 
-    const sameCurrent =
-      await bcrypt.compare(
+    const effective =
+      await this.securityPolicy.getEffectiveForUser(user as any);
+
+    const problems =
+      passwordPolicyProblems(newPassword, effective.values);
+
+    if (problems.length) {
+      throw new BadRequestException(problems[0]);
+    }
+
+    if (
+      await isPasswordReused(
         newPassword,
         user.password,
-      );
-
-    if (sameCurrent) {
-      throw new BadRequestException(
-        "New password must be different from the current password.",
-      );
-    }
-
-    for (
-      const oldHash of user.passwordHistory || []
+        user.passwordHistory,
+        effective.values,
+      )
     ) {
-      if (
-        await bcrypt.compare(
-          newPassword,
-          oldHash,
-        )
-      ) {
-        throw new BadRequestException(
-          "You cannot reuse a previous password.",
-        );
-      }
+      throw new BadRequestException(
+        "The new password must not match the current or a recent password.",
+      );
     }
 
-    const rounds =
-      this.DEFAULT_BCRYPT_ROUNDS;
+    const mustChange =
+      forceChange ??
+      Boolean(effective.values.forcePasswordChangeAfterAdminReset);
 
     const hashedPassword =
       await bcrypt.hash(
         newPassword,
-        rounds,
+        this.DEFAULT_BCRYPT_ROUNDS,
       );
 
-    user.passwordHistory = [
-      user.password,
-      ...(user.passwordHistory || []),
-    ].slice(0, 50);
+    user.passwordHistory =
+      nextPasswordHistory(user.password, user.passwordHistory);
 
     user.password =
       hashedPassword;
@@ -444,34 +474,48 @@ export class UserSecurityService {
       true;
 
     user.mustChangePassword =
-      forceChange;
+      mustChange;
 
     await user.save();
+
+    await this.accountSecurity.onSecurityChange(
+      userId,
+      "admin_password_reset",
+      {
+        actorId: options.actorId ?? null,
+        actorName: options.actorName ?? null,
+        user: user.toObject() as any,
+      },
+    );
 
     return {
       success: true,
       mustChangePassword:
-        forceChange,
+        mustChange,
     };
   }
 
+  /**
+   * Password change by the account owner (also used for the mandatory
+   * first-login / expired-password change).
+   *
+   * Follows the effective security policy: length, strength and history.
+   * Other sessions are revoked when the policy says so; the session that
+   * made the change (tokenIat) stays signed in.
+   */
   async changePassword(
     id: string,
     currentPassword: string,
     newPassword: string,
+    options: {
+      tokenIat?: number | null;
+      ip?: string | null;
+      userAgent?: string | null;
+    } = {},
   ) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException(
         "Invalid user ID.",
-      );
-    }
-
-    if (
-      !newPassword ||
-      newPassword.trim().length < 12
-    ) {
-      throw new BadRequestException(
-        "Password must be at least 12 characters.",
       );
     }
 
@@ -485,10 +529,11 @@ export class UserSecurityService {
     }
 
     const validCurrent =
-      await bcrypt.compare(
+      Boolean(user.password) &&
+      (await bcrypt.compare(
         currentPassword,
         user.password,
-      );
+      ));
 
     if (!validCurrent) {
       throw new BadRequestException(
@@ -496,31 +541,27 @@ export class UserSecurityService {
       );
     }
 
-    const sameCurrent =
-      await bcrypt.compare(
-        newPassword,
-        user.password,
-      );
+    const effective =
+      await this.securityPolicy.getEffectiveForUser(user as any);
 
-    if (sameCurrent) {
-      throw new BadRequestException(
-        "New password must be different from the current password.",
-      );
+    const problems =
+      passwordPolicyProblems(newPassword, effective.values);
+
+    if (problems.length) {
+      throw new BadRequestException(problems[0]);
     }
 
-    for (
-      const oldHash of user.passwordHistory || []
+    if (
+      await isPasswordReused(
+        newPassword,
+        user.password,
+        user.passwordHistory,
+        effective.values,
+      )
     ) {
-      if (
-        await bcrypt.compare(
-          newPassword,
-          oldHash,
-        )
-      ) {
-        throw new BadRequestException(
-          "You cannot reuse a previous password.",
-        );
-      }
+      throw new BadRequestException(
+        "You cannot reuse your current password or a recent password.",
+      );
     }
 
     const hashedPassword =
@@ -529,10 +570,8 @@ export class UserSecurityService {
         this.DEFAULT_BCRYPT_ROUNDS,
       );
 
-    user.passwordHistory = [
-      user.password,
-      ...(user.passwordHistory || []),
-    ].slice(0, 50);
+    user.passwordHistory =
+      nextPasswordHistory(user.password, user.passwordHistory);
 
     user.password =
       hashedPassword;
@@ -552,11 +591,26 @@ export class UserSecurityService {
 
     await user.save();
 
+    const followUp =
+      await this.accountSecurity.onSecurityChange(
+        id,
+        "password_changed",
+        {
+          exceptIat: options.tokenIat ?? null,
+          context: {
+            ip: options.ip ?? null,
+            userAgent: options.userAgent ?? null,
+          },
+          user: user.toObject() as any,
+        },
+      );
+
     return {
       success: true,
       message:
         "Password changed successfully.",
       mustChangePassword: false,
+      otherSessionsSignedOut: followUp.sessionsRevoked,
     };
   }
-}
+}

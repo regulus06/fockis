@@ -11,12 +11,18 @@ export class AuthTokenService {
     private readonly usersService: UsersService,
   ) {}
 
+  /**
+   * @param expiresIn token lifetime in seconds. When
+   *   omitted the module default (7 days) is used. The security policy sets
+   *   it for remember-me sign-ins.
+   */
   createAccessToken(
     user: any,
     userId: string,
     mfaVerified = false,
+    expiresIn?: number,
   ): string {
-    return this.jwtService.sign({
+    const payload = {
       sub: userId,
       email: user.email,
       username: user.username,
@@ -26,7 +32,11 @@ export class AuthTokenService {
       tokenType: "access",
       access: "user",
       mfaVerified,
-    });
+    };
+
+    return expiresIn !== undefined
+      ? this.jwtService.sign(payload, { expiresIn })
+      : this.jwtService.sign(payload);
   }
 
   async buildUserForTokenResponse(

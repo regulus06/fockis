@@ -41,6 +41,7 @@ import { mediaUrl } from "../api/dashboardApi";
 import { MEMBER_ROLE_LABELS, MembershipStatus, type MemberRole, type OrganizationSummary } from "../types/organization.types";
 import { typeLabel } from "../ui/orgCategories";
 import OrgAppShell from "../ui/OrgAppShell";
+import MemberLiveCard from "../live-center/MemberLiveCard";
 import { categoryInfo, termsFor } from "../ui/orgTerminology";
 import { Alert, Avatar, EmptyState, Skeleton, StatCard, errorMessage, formatDate, formatDateTime } from "../ui/orgUi";
 import "../styles/OrganizationMemberScreens.scss";
@@ -231,6 +232,8 @@ export default function OrganizationMemberPortalPage(): React.JSX.Element {
             </div>
           </section>
 
+          <MemberLiveCard organizationId={org.id} />
+
           <div className="fo-stats">
             <StatCard icon={IdCard} value={<span className="fo-badge fo-badge--ok">{isOwner ? "Owner" : "Active"}</span>} label="My Membership" to={p("/my-badge")} />
             <StatCard
@@ -323,7 +326,7 @@ export default function OrganizationMemberPortalPage(): React.JSX.Element {
                     </Link>
                   ))}
                   {history?.groups.map((g) => (
-                    <Link key={g.id} to={p("/groups")} className="fom-chip fom-chip--violet">
+                    <Link key={g.id} to={p(`/groups/${encodeURIComponent(g.id)}`)} className="fom-chip fom-chip--violet">
                       {g.name}
                     </Link>
                   ))}

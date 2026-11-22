@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import {
   Prop,
   Schema,
@@ -275,6 +276,22 @@ export class LiveStream {
     default: () => ({}),
   })
   recording?: LiveRecording;
+
+  /*
+   * Organization livestreams (apps/api/src/org/live). Set only on the
+   * broadcast record created when an organization starts a "Fockis Live"
+   * livestream. Such streams are hidden from public Fockis Live lists and
+   * viewers are checked against the livestream's access rules.
+   */
+  @Prop({ type: Types.ObjectId, default: null, index: true })
+  organizationId?: Types.ObjectId | null;
+
+  @Prop({ type: Types.ObjectId, default: null, index: true })
+  orgLiveEventId?: Types.ObjectId | null;
+
+  /** The organization turned recording off for this livestream. */
+  @Prop({ default: false })
+  orgRecordingDisabled?: boolean;
 }
 
 export const LiveStreamSchema =
@@ -316,4 +333,4 @@ LiveStreamSchema.index({
 
 LiveStreamSchema.index({
   "recording.egressId": 1,
-});
+});

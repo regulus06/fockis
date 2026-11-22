@@ -37,7 +37,25 @@
  * -----------------------------------------------------------------------------
  */
 
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
+
+// Groups & Communities (extends church groups).
+import { COMMUNITY_MODELS } from './communities/community.schemas';
+import { CommunityAccessService } from './communities/community-access.service';
+import { CommunitiesService } from './communities/communities.service';
+import { CommunityContentService } from './communities/community-content.service';
+import { CommunityFinanceService } from './communities/community-finance.service';
+// Give Online (tithes, offerings, special gifts) on the church website.
+import { ChurchGivingController } from './giving/church-giving.controller';
+import { ChurchGivingService } from './giving/church-giving.service';
+import { ChurchGift, ChurchGiftSchema, ChurchGivingSettings, ChurchGivingSettingsSchema } from './giving/church-giving.schemas';
+// Settings & Roles (Organization Administration Center): preferences, audit log.
+import { AdminCenterController } from './admin-center/admin-center.controller';
+import { AdminCenterService } from './admin-center/admin-center.service';
+import { OrganizationAuditLog, OrganizationAuditLogSchema, OrganizationPreferences, OrganizationPreferencesSchema } from './admin-center/admin-center.schemas';
+import { CommunitiesController, GroupContentController } from './communities/communities.controller';
+// Universal Fockis payments (Stripe) for group contributions.
+import { PaymentsModule } from '../payments/payments.module';
 import { RouterModule } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 
@@ -107,6 +125,15 @@ import {
 import { DepartmentsService } from './departments/services/departments.service';
 
 import { DepartmentsController } from './departments/controllers/departments.controller';
+import { PublicMinistriesController } from './departments/controllers/public-ministries.controller';
+import { MinistryAttendanceController } from './ministry-attendance/ministry-attendance.controller';
+import { MinistryAttendanceService } from './ministry-attendance/ministry-attendance.service';
+import {
+  MinistryAttendanceRecord,
+  MinistryAttendanceRecordSchema,
+  MinistryAttendanceSession,
+  MinistryAttendanceSessionSchema,
+} from './ministry-attendance/ministry-attendance.schemas';
 
 // ============================================================================
 // GROUPS
@@ -158,6 +185,8 @@ import {
 } from './live/services/church-live.service';
 
 import { ChurchLiveController } from './live/controllers/church-live.controller';
+import { OrgLiveInvitation, OrgLiveInvitationSchema } from './live/schemas/live-invitation.schema';
+import { OrgLiveView, OrgLiveViewSchema } from './live/schemas/live-view.schema';
 
 // ============================================================================
 // ATTENDANCE
@@ -227,6 +256,42 @@ import { OrganizationFollow, OrganizationFollowSchema } from './followers/organi
 import { OrganizationFollowService } from './followers/organization-follow.service';
 import { OrganizationFollowController } from './followers/organization-follow.controller';
 
+// Church member profile dashboard (extra profile details, notes, documents).
+import { MemberProfile, MemberProfileSchema } from './member-profile/member-profile.schema';
+import { MemberProfileService } from './member-profile/member-profile.service';
+import { MemberProfileController } from './member-profile/member-profile.controller';
+import { ChurchRequest, ChurchRequestSchema } from './requests/church-request.schema';
+import { ChurchRequestsService } from './requests/church-requests.service';
+import { ChurchRequestsController } from './requests/church-requests.controller';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { MessagesModule } from '../messages/messages.module';
+import { RegistrationMailer } from '../events/registrations/registration-mailer';
+
+// Ministries management (extends departments): policy, proposals, applications,
+// teams, finance requests, audit log, reports.
+import {
+  MinistryApplication,
+  MinistryApplicationSchema,
+  MinistryAuditLog,
+  MinistryAuditLogSchema,
+  MinistryFinanceRequest,
+  MinistryFinanceRequestSchema,
+  MinistryPolicy,
+  MinistryPolicySchema,
+  MinistryProposal,
+  MinistryProposalSchema,
+  MinistryTeam,
+  MinistryTeamSchema,
+} from './ministries/ministry.schemas';
+import { MinistryAccessService } from './ministries/ministry-access.service';
+import { MinistriesService } from './ministries/ministries.service';
+import { MinistriesController } from './ministries/ministries.controller';
+
+// Per-page sidebar thumbnails, banners and logos.
+import { PageBranding, PageBrandingSchema } from './page-branding/page-branding.schema';
+import { PageBrandingService } from './page-branding/page-branding.service';
+import { PageBrandingController } from './page-branding/page-branding.controller';
+
 // ============================================================================
 // MODULE
 // ============================================================================
@@ -251,6 +316,13 @@ import { OrganizationFollowController } from './followers/organization-follow.co
     //
     OrganizationBadgeModule,
 
+    // Fockis bell notifications and direct messages (Requests & Inquiries replies).
+    NotificationsModule,
+
+    // Group contributions use the existing universal payment service.
+    forwardRef(() => PaymentsModule),
+    MessagesModule,
+
     // ------------------------------------------------------------------------
     // MONGOOSE MODELS
     // ------------------------------------------------------------------------
@@ -258,6 +330,37 @@ import { OrganizationFollowController } from './followers/organization-follow.co
     MongooseModule.forFeature([
       // Followers of an organization's public updates (not membership).
       { name: OrganizationFollow.name, schema: OrganizationFollowSchema },
+
+      // Per-page thumbnail / banner / logo (draft, published, previous).
+      { name: PageBranding.name, schema: PageBrandingSchema },
+
+      // Church member profile details (one per membership).
+      { name: MemberProfile.name, schema: MemberProfileSchema },
+      // Requests & Inquiries.
+      { name: ChurchRequest.name, schema: ChurchRequestSchema },
+
+      // Give Online: per-church settings and gifts.
+      { name: ChurchGivingSettings.name, schema: ChurchGivingSettingsSchema },
+      { name: ChurchGift.name, schema: ChurchGiftSchema },
+
+      // Settings & Roles: preferences + append-only audit log.
+      { name: OrganizationPreferences.name, schema: OrganizationPreferencesSchema },
+      { name: OrganizationAuditLog.name, schema: OrganizationAuditLogSchema },
+
+      // Ministries management.
+      { name: MinistryPolicy.name, schema: MinistryPolicySchema },
+      { name: MinistryProposal.name, schema: MinistryProposalSchema },
+      { name: MinistryApplication.name, schema: MinistryApplicationSchema },
+      { name: MinistryTeam.name, schema: MinistryTeamSchema },
+      { name: MinistryFinanceRequest.name, schema: MinistryFinanceRequestSchema },
+      { name: MinistryAuditLog.name, schema: MinistryAuditLogSchema },
+
+      // Groups & Communities.
+      ...COMMUNITY_MODELS,
+
+      // Ministry attendance: one session per meeting date, one record per member.
+      { name: MinistryAttendanceSession.name, schema: MinistryAttendanceSessionSchema },
+      { name: MinistryAttendanceRecord.name, schema: MinistryAttendanceRecordSchema },
 
       // ----------------------------------------------------------------------
       // Organizations
@@ -347,6 +450,14 @@ import { OrganizationFollowController } from './followers/organization-follow.co
         name: LiveEvent.name,
         schema: LiveEventSchema,
       },
+      {
+        name: OrgLiveInvitation.name,
+        schema: OrgLiveInvitationSchema,
+      },
+      {
+        name: OrgLiveView.name,
+        schema: OrgLiveViewSchema,
+      },
 
       // ----------------------------------------------------------------------
       // Attendance
@@ -413,10 +524,21 @@ import { OrganizationFollowController } from './followers/organization-follow.co
     // Before OrganizationsController so "domain-availability" is not read as an ID.
     OrganizationDashboardController,
     OrganizationFollowController,
+    PageBrandingController,
+    MemberProfileController,
+    ChurchRequestsController,
+    ChurchGivingController,
+    AdminCenterController,
     OrganizationsController,
     LeadershipController,
     BranchesController,
     DepartmentsController,
+    // Guest-safe ministries list for the public church website.
+    PublicMinistriesController,
+    MinistryAttendanceController,
+    MinistriesController,
+    CommunitiesController,
+    GroupContentController,
     ChurchGroupsController,
     // Before MembersController so ".../members/me/history" is matched first.
     MemberHistoryController,
@@ -450,6 +572,20 @@ import { OrganizationFollowController } from './followers/organization-follow.co
     MemberHistoryService,
     OrganizationDashboardService,
     OrganizationFollowService,
+    MinistryAttendanceService,
+    PageBrandingService,
+    MemberProfileService,
+    ChurchRequestsService,
+    MinistryAccessService,
+    MinistriesService,
+    CommunityAccessService,
+    CommunitiesService,
+    CommunityContentService,
+    CommunityFinanceService,
+    ChurchGivingService,
+    AdminCenterService,
+    // Same email delivery (Resend / SMTP) as event registrations.
+    RegistrationMailer,
   ],
 
   // ==========================================================================
@@ -461,6 +597,7 @@ import { OrganizationFollowController } from './followers/organization-follow.co
     LeadershipService,
     BranchesService,
     DepartmentsService,
+    MinistryAccessService,
     ChurchGroupsService,
     MembersService,
     ChurchEventsService,

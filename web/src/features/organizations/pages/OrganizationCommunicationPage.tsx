@@ -261,6 +261,11 @@ export default function OrganizationCommunicationPage(): React.JSX.Element {
           <h1>Communication</h1>
           <p>Announcements, messages and notifications for {org?.name ?? "your organization"}.</p>
         </div>
+        {isAdmin && (
+          <Link to={`/organizations/${encodeURIComponent(organizationId)}/admin/requests`} className="fo-btn fo-btn--primary">
+            <Inbox aria-hidden="true" /> Requests &amp; Inquiries
+          </Link>
+        )}
       </div>
 
       {notice && <Alert tone="ok">{notice}</Alert>}

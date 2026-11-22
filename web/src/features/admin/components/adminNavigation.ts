@@ -10,6 +10,7 @@ import {
   Headset,
   Landmark,
   LayoutDashboard,
+  LockKeyhole,
   MapPinned,
   Megaphone,
   Scale,
@@ -74,6 +75,27 @@ export const ADMIN_NAV: AdminNavItem[] = [
     icon: ScrollText,
     path: "/admin/audit",
     anyOf: [P.AUDIT_VIEW],
+  },
+  {
+    label: "Security & Identity",
+    icon: LockKeyhole,
+    path: "/admin/security",
+    children: [
+      { label: "Security Overview", path: "/admin/security", anyOf: [P.SECURITY_VIEW] },
+      { label: "Authentication Policies", path: "/admin/security/authentication", anyOf: [P.SECURITY_VIEW] },
+      { label: "Password Security", path: "/admin/security/password", anyOf: [P.SECURITY_VIEW] },
+      { label: "Login Protection", path: "/admin/security/login-protection", anyOf: [P.SECURITY_VIEW] },
+      { label: "Session Management", path: "/admin/security/sessions", anyOf: [P.SECURITY_VIEW] },
+      { label: "Two-Factor Authentication", path: "/admin/security/two-factor", anyOf: [P.SECURITY_VIEW] },
+      { label: "Login Alerts", path: "/admin/security/alerts", anyOf: [P.SECURITY_VIEW] },
+      { label: "Account Protection", path: "/admin/security/account-protection", anyOf: [P.SECURITY_VIEW] },
+      { label: "Organization Identity Policies", path: "/admin/security/organizations", anyOf: [P.SECURITY_VIEW] },
+      {
+        label: "Security Audit Logs",
+        path: "/admin/security/audit",
+        anyOf: [P.SECURITY_AUDIT_VIEW, P.AUDIT_VIEW],
+      },
+    ],
   },
   {
     label: "Marketplace",
@@ -290,7 +312,6 @@ export const ADMIN_NAV: AdminNavItem[] = [
     children: [
       { label: "System Settings", path: "/admin/system/settings", anyOf: [P.SYSTEM_SETTINGS] },
       { label: "Feature Flags", path: "/admin/system/features", anyOf: [P.SYSTEM_FEATURES] },
-      { label: "Security Center", path: "/admin/security", anyOf: [P.SECURITY_VIEW] },
       {
         label: "Emergency Center",
         path: "/admin/system/emergency",

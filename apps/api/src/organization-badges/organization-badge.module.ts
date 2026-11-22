@@ -38,6 +38,13 @@ import {
 
 import { OrganizationBadgeService } from './services/organization-badge.service';
 
+import {
+  OrganizationBadgeVerification,
+  OrganizationBadgeVerificationSchema,
+} from './schemas/organization-badge-verification.schema';
+
+import { Branch, BranchSchema } from '../org/branches/schemas/branch.schema';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -70,6 +77,18 @@ import { OrganizationBadgeService } from './services/organization-badge.service'
       {
         name: ChurchGroup.name,
         schema: ChurchGroupSchema,
+      },
+
+      // One row per QR scan (verification history).
+      {
+        name: OrganizationBadgeVerification.name,
+        schema: OrganizationBadgeVerificationSchema,
+      },
+
+      // Main location printed on the badge.
+      {
+        name: Branch.name,
+        schema: BranchSchema,
       },
     ]),
   ],

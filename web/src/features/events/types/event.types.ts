@@ -24,6 +24,79 @@ export interface EventPerson {
   isFriend?: boolean;
 }
 
+export type RegistrationMode = "none" | "rsvp" | "required";
+export type RegistrationAccess = "public" | "members" | "selected";
+export type AttendanceOption = "in_person" | "online";
+export type QuestionType = "short_text" | "long_text" | "dropdown" | "single_choice" | "multiple_choice" | "yes_no";
+
+export interface RegistrationQuestion {
+  id: string;
+  type: QuestionType;
+  label: string;
+  required: boolean;
+  options: string[];
+}
+
+export interface TicketTypeInput {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  /** null = limited only by the event capacity. */
+  quantity: number | null;
+}
+
+/** Organizer settings (mirrors registrations/registration-settings.ts). */
+export interface RegistrationSettingsInput {
+  mode: RegistrationMode;
+  opensAt: string | null;
+  closesAt: string | null;
+  waitlistEnabled: boolean;
+  requireApproval: boolean;
+  allowGuests: boolean;
+  maxTicketsPerUser: number;
+  isFree?: boolean;
+  currency: string;
+  ticketTypes: TicketTypeInput[];
+  taxRatePercent: number;
+  serviceFee: number;
+  questions: RegistrationQuestion[];
+  askAccessibility: boolean;
+  askSpecialRequests: boolean;
+  attendanceOptions: AttendanceOption[];
+  termsText: string;
+  termsUrl: string;
+  cancellationPolicy: string;
+  allowCancellation: boolean;
+  cancellationDeadlineHours: number;
+  qrCheckIn: boolean;
+  individualCheckIn: boolean;
+  confirmationEmail: boolean;
+  reminders: boolean;
+  access: RegistrationAccess;
+  organizationId: string | null;
+  selectedGroupIds: string[];
+  earlyJoinMinutes: number;
+  checkInStaffIds: string[];
+}
+
+/** Registration facts every viewer gets with an event. */
+export interface EventRegistrationSummary {
+  mode: RegistrationMode;
+  isFree: boolean;
+  minPrice: number;
+  maxPrice: number;
+  currency: string;
+  requireApproval: boolean;
+  waitlistEnabled: boolean;
+  opensAt: string | null;
+  closesAt: string | null;
+  attendanceOptions: AttendanceOption[];
+  access: RegistrationAccess;
+  registeredSeats: number;
+  hasOnlineMeeting: boolean;
+}
+
 export interface FockisEvent {
   id: string;
   creatorId: string;
@@ -66,6 +139,20 @@ export interface FockisEvent {
   distanceKm?: number;
   createdAt: string;
   updatedAt: string;
+  /** Always present from the API (defaults to optional RSVP). */
+  registration?: EventRegistrationSummary;
+  /** Organizer only. */
+  registrationSettings?: RegistrationSettingsInput;
+  /* Organization events (empty / false for personal events). */
+  organizationId?: string | null;
+  eventType?: string;
+  orgCategory?: string;
+  isDraft?: boolean;
+  isArchived?: boolean;
+  /** The viewer may edit this event (organizer or organization event manager). */
+  canManage?: boolean;
+  /** Recognized meeting service of the pasted link (managers only). */
+  meetingProvider?: string;
 }
 
 export interface CreateEventInput {
@@ -88,6 +175,16 @@ export interface CreateEventInput {
   coverMediaType?: EventCoverMediaType;
   coverImageFile?: File;
   eventVideoFile?: File;
+  /** Registration settings; null resets to optional RSVP. */
+  registration?: RegistrationSettingsInput | null;
+  /** Create / keep the event under this organization (needs its Manage events permission). */
+  organizationId?: string;
+  eventType?: string;
+  orgCategory?: string;
+  /** Save without publishing. */
+  isDraft?: boolean;
+  /** Notify the organization's active members when the event is published. */
+  notifyMembers?: boolean;
 }
 
 export type UpdateEventInput = Partial<CreateEventInput>;

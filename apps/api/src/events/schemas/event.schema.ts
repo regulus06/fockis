@@ -1,6 +1,8 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument, Schema as MongooseSchema, Types } from "mongoose";
 
+import type { EventRegistrationSettings } from "../registrations/registration-settings";
+
 export enum EventCategory {
   GENERAL = "general", MUSIC = "music", SPORTS = "sports", BUSINESS = "business",
   EDUCATION = "education", FOOD = "food", COMMUNITY = "community", PARTY = "party",
@@ -106,6 +108,54 @@ export class Event {
 
   @Prop({ default: "", maxlength: 1000 })
   cancellationReason!: string;
+
+  /**
+   * Registration settings (mode, tickets, questions, check-in…), validated by
+   * registrations/registration-settings.ts. Null on events created before
+   * registration existed: they keep the original optional-RSVP behaviour.
+   */
+  @Prop({ type: Object, default: null })
+  registration?: EventRegistrationSettings | null;
+
+  /** Places taken by active registrations (confirmed, awaiting approval or payment). */
+  @Prop({ type: Number, default: 0, min: 0 })
+  registeredSeats?: number;
+
+  /** Places taken per ticket type id (only limited ticket types are checked). */
+  @Prop({ type: Object, default: {} })
+  ticketSeats?: Record<string, number>;
+
+  /* ---------------------------------------------- organization events */
+
+  /** Organization this event belongs to (managed from its admin console). */
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: "Organization", default: null, index: true })
+  organizationId?: Types.ObjectId | null;
+
+  /** Organization event type key ("church_service", "workshop", a custom type id…). */
+  @Prop({ type: String, default: "", maxlength: 60 })
+  eventType?: string;
+
+  /** Organization event category (custom label managed by the organization). */
+  @Prop({ type: String, default: "", maxlength: 60 })
+  orgCategory?: string;
+
+  /** Drafts are only visible to the organizer and the organization's event managers. */
+  @Prop({ type: Boolean, default: false, index: true })
+  isDraft?: boolean;
+
+  /** Archived events are hidden everywhere except the organization's manage list. */
+  @Prop({ type: Boolean, default: false, index: true })
+  isArchived?: boolean;
+
+  @Prop({ type: Date, default: null })
+  archivedAt?: Date | null;
+
+  /** Members were notified when this event was published (sent once). */
+  @Prop({ type: Boolean, default: false })
+  membersNotified?: boolean;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: "User", default: null })
+  updatedBy?: Types.ObjectId | null;
 }
 
 export const EventSchema = SchemaFactory.createForClass(Event);
@@ -122,6 +172,7 @@ EventSchema.index({ category: 1, isCancelled: 1, endDate: 1, startDate: 1 });
 EventSchema.index({ isOnline: 1, isCancelled: 1, endDate: 1, startDate: 1 });
 EventSchema.index({ latitude: 1, longitude: 1, endDate: 1 });
 EventSchema.index({ creatorId: 1, startDate: -1 });
+EventSchema.index({ organizationId: 1, isArchived: 1, startDate: -1 });
 EventSchema.index({ attendeeIds: 1, startDate: 1 });
 EventSchema.index({ interestedIds: 1, startDate: 1 });
 EventSchema.index({ invitedIds: 1, startDate: 1 });

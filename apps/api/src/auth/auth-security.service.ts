@@ -7,50 +7,50 @@ import {
 
 import type { Request } from "express";
 
+import { PlatformSecurityPolicyService } from "../admin/security/platform-security/platform-security-policy.service";
+import { passwordPolicyProblems } from "../admin/security/platform-security/password-policy";
+import type { PolicyValues } from "../admin/security/platform-security/security-policy.definitions";
+
 @Injectable()
 export class AuthSecurityService {
-  private readonly PASSWORD_MINIMUM_LENGTH = 12;
+  constructor(
+    private readonly securityPolicy: PlatformSecurityPolicyService,
+  ) {}
 
+  /**
+   * Validate a new password against the effective security policy.
+   *
+   * `values` is the effective policy for the account; when omitted (for
+   * example at registration) the platform account policy is used.
+   */
+  async validateNewPassword(
+    password: string,
+    values?: PolicyValues,
+  ): Promise<void> {
+    const policy =
+      values ?? (await this.securityPolicy.getPlatform()).accounts;
+
+    const problems = passwordPolicyProblems(password, policy);
+
+    if (problems.length) {
+      throw new BadRequestException(problems[0]);
+    }
+  }
+
+  /**
+   * @deprecated Use validateNewPassword(), which follows the platform
+   * security policy. Kept for existing callers; applies the strict defaults.
+   */
   validatePassword(
     password: string,
   ): void {
-    const value = String(
-      password || "",
-    );
+    const problems = passwordPolicyProblems(password, {
+      minimumPasswordLength: 12,
+      strongPasswords: true,
+    });
 
-    if (
-      value.length <
-      this.PASSWORD_MINIMUM_LENGTH
-    ) {
-      throw new BadRequestException(
-        `Password must be at least ${this.PASSWORD_MINIMUM_LENGTH} characters long.`,
-      );
-    }
-
-    if (!/[A-Z]/.test(value)) {
-      throw new BadRequestException(
-        "Password must contain at least one uppercase letter.",
-      );
-    }
-
-    if (!/[a-z]/.test(value)) {
-      throw new BadRequestException(
-        "Password must contain at least one lowercase letter.",
-      );
-    }
-
-    if (!/[0-9]/.test(value)) {
-      throw new BadRequestException(
-        "Password must contain at least one number.",
-      );
-    }
-
-    if (
-      !/[^A-Za-z0-9]/.test(value)
-    ) {
-      throw new BadRequestException(
-        "Password must contain at least one special character.",
-      );
+    if (problems.length) {
+      throw new BadRequestException(problems[0]);
     }
   }
 

@@ -440,6 +440,16 @@ export interface SecurityPolicy {
   // --------------------------------------------------------------------------
 
   requireVerifiedEmail: boolean;
+
+  // --------------------------------------------------------------------------
+  // Platform governance (set by the Fockis Admin Center)
+  // --------------------------------------------------------------------------
+
+  /**
+   * Which settings Fockis lets this organization tighten, which are locked,
+   * and the Fockis baseline. Values above are the enforced values.
+   */
+  governance?: SecurityGovernance;
 }
 
 // ============================================================================
@@ -547,4 +557,34 @@ export interface OrganizationIdentityActionResponse {
   message?: string;
 
   identity?: OrganizationIdentity;
+}
+
+
+// ============================================================================
+// SECURITY GOVERNANCE
+// ============================================================================
+
+export interface SecurityGovernanceField {
+  key: string;
+  section: string;
+  label: string;
+  description: string;
+  type: "boolean" | "number";
+  unit?: string;
+  min?: number;
+  max?: number;
+  strictness: string;
+  enforcement: "enforced" | "locked" | "unavailable";
+  enforcementNote: string;
+  dependsOn?: string;
+}
+
+export interface SecurityGovernance {
+  delegatedFields: string[];
+  lockedFields: string[];
+  overriddenFields: string[];
+  customized: boolean;
+  platformVersion: number;
+  platformBaseline: Record<string, boolean | number>;
+  fields: SecurityGovernanceField[];
 }

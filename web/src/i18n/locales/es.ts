@@ -212,6 +212,7 @@ const es = {
       organizations: "Organizaciones",
       myChurch: "Mi organización",
       planVisit: "Planificar una visita",
+      myBadge: "Mi credencial",
       myHistory: "Mi historial",
       visitRequests: "Solicitudes de visita",
 
@@ -981,4 +982,4 @@ const es = {
   },
 } as const;
 
-export default es;
+export default es;

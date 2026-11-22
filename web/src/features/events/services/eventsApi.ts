@@ -24,9 +24,9 @@ import { localDayStartIso, viewerTimeZone } from "../utils/eventTime";
 ============================================================================ */
 
 const API_BASE = String(import.meta.env.VITE_API_URL || FOCKIS_API_URL).replace(/\/+$/, "");
-const EVENTS_URL = `${API_BASE}/events`;
+export const EVENTS_URL = `${API_BASE}/events`;
 
-const getToken = () => {
+export const getToken = () => {
   if (typeof localStorage === "undefined") return null;
 
   try {
@@ -50,7 +50,8 @@ export class EventsApiError extends Error {
   }
 }
 
-async function request<T>(url: string, init: RequestInit = {}): Promise<T> {
+/** Shared by the registrations client (same auth, errors and no-store). */
+export async function request<T>(url: string, init: RequestInit = {}): Promise<T> {
   const isForm = typeof FormData !== "undefined" && init.body instanceof FormData;
   const token = getToken();
 
@@ -157,6 +158,15 @@ export function normalizeEvent(raw: any): FockisEvent {
     ...(typeof raw?.distanceKm === "number" ? { distanceKm: raw.distanceKm } : {}),
     createdAt: String(raw?.createdAt ?? ""),
     updatedAt: String(raw?.updatedAt ?? ""),
+    ...(raw?.registration ? { registration: raw.registration } : {}),
+    ...(raw?.registrationSettings ? { registrationSettings: raw.registrationSettings } : {}),
+    organizationId: raw?.organizationId ? String(raw.organizationId) : null,
+    eventType: String(raw?.eventType ?? ""),
+    orgCategory: String(raw?.orgCategory ?? ""),
+    isDraft: Boolean(raw?.isDraft),
+    isArchived: Boolean(raw?.isArchived),
+    canManage: Boolean(raw?.canManage ?? raw?.isOwner),
+    ...(raw?.meetingProvider ? { meetingProvider: String(raw.meetingProvider) } : {}),
   };
 }
 
@@ -203,8 +213,12 @@ function serialize(input: CreateEventInput | UpdateEventInput): BodyInit {
       if (value === undefined || key === "coverImageFile" || key === "eventVideoFile") return;
       if (typeof File !== "undefined" && value instanceof File) return;
 
-      // The API reads the string "null" as an explicit clear.
-      data.append(key, value === null ? "null" : String(value));
+      // The API reads the string "null" as an explicit clear; objects
+      // (registration settings) travel as JSON.
+      data.append(
+        key,
+        value === null ? "null" : typeof value === "object" ? JSON.stringify(value) : String(value),
+      );
     });
 
     if (hasImage) data.append("coverImageFile", image as File);

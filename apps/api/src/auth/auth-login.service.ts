@@ -17,13 +17,25 @@ import {
 import { AuthTokenService } from "./auth-token.service";
 import { AuthSecurityService } from "./auth-security.service";
 
+import { PlatformSecurityPolicyService } from "../admin/security/platform-security/platform-security-policy.service";
+import { AccountSecurityService } from "../admin/security/platform-security/account-security.service";
+import { SecurityEventsService } from "../admin/security/platform-security/security-events.service";
+import { isPasswordExpired } from "../admin/security/platform-security/password-policy";
+
+/**
+ * Compared against when the email address has no account, so a sign-in for an
+ * unknown address takes as long as one for a real account.
+ * (bcrypt hash of a random string; it matches nothing users can type.)
+ */
+const TIMING_EQUALIZER_HASH =
+  "$2a$12$U9gw1zuENp5BNG6ndooukeN48OzVpFVEZdlUS0Wavevgxfqn9bw8m";
+
+export interface LoginOptions {
+  rememberMe?: boolean;
+}
+
 @Injectable()
 export class AuthLoginService {
-  private readonly MAX_FAILED_LOGIN_ATTEMPTS = 5;
-  private readonly LOGIN_RETRY_DELAY_SECONDS = 30;
-  private readonly ACCOUNT_LOCKOUT_MINUTES = 15;
-  private readonly FAILED_LOGIN_RESET_MINUTES = 30;
-
   constructor(
     private readonly usersService: UsersService,
 
@@ -35,12 +47,19 @@ export class AuthLoginService {
     private readonly tokenService: AuthTokenService,
 
     private readonly securityService: AuthSecurityService,
+
+    private readonly securityPolicy: PlatformSecurityPolicyService,
+
+    private readonly accountSecurity: AccountSecurityService,
+
+    private readonly securityEvents: SecurityEventsService,
   ) {}
 
   async login(
     email: string,
     password: string,
     request?: any,
+    options: LoginOptions = {},
   ) {
     const normalizedEmail = String(
       email || "",
@@ -61,168 +80,10 @@ export class AuthLoginService {
       );
     }
 
-    // ------------------------------------------------------------
-    // FIND USER
-    // ------------------------------------------------------------
-
-    const user =
-      await this.usersService.findByEmail(
-        normalizedEmail,
-      );
-
-    if (!user) {
-      throw new UnauthorizedException(
-        "Invalid credentials",
-      );
-    }
-
-    // ------------------------------------------------------------
-    // ACCOUNT STATUS
-    // ------------------------------------------------------------
-
-    if (user.isActive === false) {
-      throw new UnauthorizedException(
-        "This account has been disabled.",
-      );
-    }
-
-    const now = Date.now();
-
-    // ------------------------------------------------------------
-    // ACCOUNT LOCKOUT
-    // ------------------------------------------------------------
-
-    if (user.lockedUntil) {
-      const lockedUntil =
-        new Date(
-          user.lockedUntil,
-        ).getTime();
-
-      if (lockedUntil > now) {
-        const remainingSeconds =
-          Math.max(
-            1,
-            Math.ceil(
-              (lockedUntil - now) /
-                1000,
-            ),
-          );
-
-        throw this.securityService.tooManyRequests(
-          `Account locked. Try again in ${remainingSeconds} seconds.`,
-        );
-      }
-
-      await this.usersService.clearLoginLockout(
-        String(user._id),
-      );
-    }
-
-    // ------------------------------------------------------------
-    // LOGIN RETRY DELAY
-    // ------------------------------------------------------------
-
-    if (user.lastFailedLoginAt) {
-      const lastFailedAt =
-        new Date(
-          user.lastFailedLoginAt,
-        ).getTime();
-
-      const retryDelayMilliseconds =
-        this
-          .LOGIN_RETRY_DELAY_SECONDS *
-        1000;
-
-      const elapsed =
-        now - lastFailedAt;
-
-      if (
-        elapsed <
-        retryDelayMilliseconds
-      ) {
-        const remainingSeconds =
-          Math.max(
-            1,
-            Math.ceil(
-              (retryDelayMilliseconds -
-                elapsed) /
-                1000,
-            ),
-          );
-
-        throw this.securityService.tooManyRequests(
-          `Please wait ${remainingSeconds} seconds before trying again.`,
-        );
-      }
-    }
-
-    // ------------------------------------------------------------
-    // PASSWORD
-    // ------------------------------------------------------------
-
-    if (!user.password) {
-      throw new UnauthorizedException(
-        "Invalid credentials",
-      );
-    }
-
-    const passwordMatches =
-      await bcrypt.compare(
-        password,
-        user.password,
-      );
-
-    // ------------------------------------------------------------
-    // FAILED LOGIN
-    // ------------------------------------------------------------
-
-    if (!passwordMatches) {
-      const securityResult =
-        await this.usersService.recordFailedLogin(
-          String(user._id),
-          {
-            maxFailedAttempts:
-              this
-                .MAX_FAILED_LOGIN_ATTEMPTS,
-
-            retryDelaySeconds:
-              this
-                .LOGIN_RETRY_DELAY_SECONDS,
-
-            lockoutMinutes:
-              this
-                .ACCOUNT_LOCKOUT_MINUTES,
-
-            failedResetMinutes:
-              this
-                .FAILED_LOGIN_RESET_MINUTES,
-          },
-        );
-
-      if (
-        securityResult?.locked
-      ) {
-        throw this.securityService.tooManyRequests(
-          "Too many failed login attempts. Your account has been locked for 15 minutes.",
-        );
-      }
-
-      throw new UnauthorizedException(
-        "Invalid credentials",
-      );
-    }
-
-    // ------------------------------------------------------------
-    // SUCCESSFUL LOGIN
-    // ------------------------------------------------------------
-
-    const userId =
-      user._id.toString();
-
     const ip =
       this.securityService.getRequestIp(
         request,
-      );
+      ) || undefined;
 
     const userAgent =
       typeof request?.headers?.[
@@ -233,15 +94,207 @@ export class AuthLoginService {
           ]
         : undefined;
 
+    const context = {
+      ip: ip ?? null,
+      userAgent: userAgent ?? null,
+    };
+
+    // ------------------------------------------------------------
+    // FIND USER
+    // ------------------------------------------------------------
+
+    const user =
+      await this.usersService.findByEmail(
+        normalizedEmail,
+      );
+
+    if (!user) {
+      // Same work and the same limits as a real account, so responses do
+      // not reveal whether an account exists.
+      try {
+        await bcrypt.compare(
+          password,
+          TIMING_EQUALIZER_HASH,
+        );
+      } catch {
+        // Timing equalization only; never block the response.
+      }
+
+      const platform =
+        await this.securityPolicy.getPlatform();
+
+      await this.accountSecurity.failUnknownAccount(
+        normalizedEmail,
+        platform.accounts,
+        context,
+      );
+
+      throw new UnauthorizedException(
+        "Invalid credentials",
+      );
+    }
+
+    const userId =
+      user._id.toString();
+
+    // ------------------------------------------------------------
+    // EFFECTIVE SECURITY POLICY
+    // ------------------------------------------------------------
+
+    const effective =
+      await this.securityPolicy.getEffectiveForUser(
+        user as any,
+      );
+
+    const policy =
+      effective.values;
+
+    const organizationIds =
+      effective.organizations.map(
+        (org) => org.organizationId,
+      );
+
+    // ------------------------------------------------------------
+    // RESERVE THE ATTEMPT (lockout + retry delay, atomic)
+    // ------------------------------------------------------------
+
+    const reservation =
+      await this.accountSecurity.reserveAttempt(
+        userId,
+        policy,
+      );
+
+    // ------------------------------------------------------------
+    // PASSWORD
+    // ------------------------------------------------------------
+
+    const passwordMatches =
+      Boolean(user.password) &&
+      (await bcrypt.compare(
+        password,
+        user.password,
+      ));
+
+    if (!passwordMatches) {
+      const willLock =
+        Boolean(policy.loginLockoutEnabled) &&
+        reservation.attempt >=
+          Number(policy.maxFailedLoginAttempts);
+
+      await this.usersService.recordFailedLoginAttempt(
+        userId,
+        ip,
+        userAgent,
+        willLock,
+      );
+
+      await this.accountSecurity.handleFailedAttempt(
+        user,
+        reservation,
+        policy,
+        {
+          ...context,
+          organizations:
+            organizationIds,
+        },
+      );
+
+      throw new UnauthorizedException(
+        "Invalid credentials",
+      );
+    }
+
+    // ------------------------------------------------------------
+    // ACCOUNT STATUS
+    //
+    // Checked after the password so the message is only shown to someone
+    // who knows the password.
+    // ------------------------------------------------------------
+
+    if (user.isActive === false) {
+      await this.usersService.clearLoginLockout(
+        userId,
+      );
+
+      await this.securityEvents.record({
+        action: "auth.login.denied_disabled",
+        outcome: "denied",
+        severity: "low",
+        targetId: userId,
+        targetType: "user",
+        ...context,
+        retentionDays: Number(
+          policy.authEventRetentionDays || 180,
+        ),
+      });
+
+      throw new UnauthorizedException(
+        "This account has been disabled.",
+      );
+    }
+
+    // ------------------------------------------------------------
+    // SUCCESSFUL PASSWORD CHECK
+    // ------------------------------------------------------------
+
+    const challengeTwoFactor =
+      effective.requiresTwoFactor ||
+      Boolean(user.mfaEnabled);
+
+    // Alerts compare with earlier sign-ins, so run before the history
+    // entry for this sign-in is written.
+    await this.accountSecurity.onPasswordVerified(
+      user,
+      reservation,
+      policy,
+      {
+        ...context,
+        mfaPending:
+          challengeTwoFactor,
+      },
+    );
+
     const updatedUser =
       await this.usersService.recordSuccessfulLogin(
         userId,
-        ip || undefined,
-        userAgent || undefined,
+        ip,
+        userAgent,
       );
 
     const currentUser =
       updatedUser || user;
+
+    // ------------------------------------------------------------
+    // PASSWORD EXPIRATION
+    // ------------------------------------------------------------
+
+    if (
+      !(currentUser as any).mustChangePassword &&
+      isPasswordExpired(
+        (currentUser as any).passwordChangedAt ??
+          (currentUser as any).createdAt,
+        policy,
+      )
+    ) {
+      await this.userModel.updateOne(
+        { _id: userId },
+        { $set: { mustChangePassword: true } },
+      );
+
+      (currentUser as any).mustChangePassword = true;
+
+      await this.securityEvents.record({
+        action: "auth.password.expired",
+        outcome: "success",
+        severity: "info",
+        targetId: userId,
+        targetType: "user",
+        ...context,
+        retentionDays: Number(
+          policy.authEventRetentionDays || 180,
+        ),
+      });
+    }
 
     // ------------------------------------------------------------
     // FOCKIS ID
@@ -279,18 +332,21 @@ export class AuthLoginService {
       freshUser ||
       (currentUser as UserDocument);
 
+    const rememberMe =
+      options.rememberMe === true;
+
     // ------------------------------------------------------------
-    // MFA REQUIREMENT
+    // TWO-FACTOR
+    //
+    // Required by policy, or turned on by the user.
     // ------------------------------------------------------------
 
-    const mfaRequired =
-      this.isMfaRequired(
-        loginUser,
-      );
-
-    if (mfaRequired) {
+    if (challengeTwoFactor) {
       // ----------------------------------------------------------
       // MFA SETUP REQUIRED
+      //
+      // Users who must use two-factor enroll here, during sign-in, before
+      // they get access — enforcement never locks them out.
       // ----------------------------------------------------------
 
       if (!loginUser.mfaEnabled) {
@@ -303,6 +359,7 @@ export class AuthLoginService {
                 "mfa_setup",
               tokenType:
                 "mfa_setup",
+              rememberMe,
             },
             {
               expiresIn: "5m",
@@ -365,6 +422,8 @@ export class AuthLoginService {
 
             tokenType:
               "mfa_challenge",
+
+            rememberMe,
           },
           {
             expiresIn: "5m",
@@ -405,7 +464,7 @@ export class AuthLoginService {
             true,
 
           mfaRequired:
-            true,
+            effective.requiresTwoFactor,
         },
       };
     }
@@ -419,6 +478,10 @@ export class AuthLoginService {
         loginUser,
         userId,
         false,
+        this.accountSecurity.accessTokenExpiresIn(
+          policy,
+          rememberMe,
+        ),
       );
 
     // ------------------------------------------------------------
@@ -447,32 +510,5 @@ export class AuthLoginService {
           userId,
         ),
     };
-  }
-
-  // ============================================================
-  // MFA REQUIREMENT
-  // ============================================================
-
-  private isMfaRequired(
-    user: any,
-  ): boolean {
-    const role = String(
-      user?.role || "",
-    )
-      .trim()
-      .toLowerCase()
-      .replace(
-        /[\s-]+/g,
-        "_",
-      );
-
-    return (
-      role === "admin" ||
-      role === "super_admin" ||
-      role === "superadmin" ||
-      Boolean(
-        user?.mfaRequired,
-      )
-    );
   }
 }

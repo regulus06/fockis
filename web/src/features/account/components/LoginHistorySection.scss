@@ -1,0 +1,213 @@
+/* Login history card — uses the account settings tokens (--acc-*), so it
+   follows the light and dark themes of that page. */
+
+.fk-login-history {
+  scroll-margin-top: 96px;
+
+  &__state {
+    margin-top: 18px;
+  }
+
+  &__spin {
+    animation: fk-login-history-spin 0.9s linear infinite;
+  }
+
+  &__error {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+    padding: 12px 14px;
+    border: 1px solid var(--acc-danger-border);
+    border-radius: 10px;
+    background: var(--acc-danger-soft);
+    color: var(--acc-danger);
+    font-size: 14px;
+
+    button {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border: 1px solid var(--acc-border-strong);
+      border-radius: 8px;
+      background: var(--acc-surface);
+      color: var(--acc-text);
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  }
+
+  &__summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 20px 0 16px;
+
+    > div {
+      padding: 12px 14px;
+      border: 1px solid var(--acc-border);
+      border-radius: 12px;
+      background: var(--acc-muted);
+    }
+
+    small {
+      display: block;
+      color: var(--acc-text-3);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--acc-text);
+      font-size: 15px;
+    }
+
+    .is-warn strong {
+      color: var(--acc-orange);
+    }
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--acc-border);
+    border-radius: 12px;
+    overflow: hidden;
+
+    li {
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--acc-border);
+
+      &:last-child {
+        border-bottom: 0;
+      }
+
+      &.is-failed {
+        background: var(--acc-danger-soft);
+      }
+    }
+  }
+
+  &__device {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: var(--acc-blue-soft);
+    color: var(--acc-primary);
+
+    .is-failed & {
+      background: var(--acc-surface);
+      color: var(--acc-danger);
+    }
+  }
+
+  &__main {
+    min-width: 0;
+
+    strong {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--acc-text);
+      font-size: 14.5px;
+    }
+
+    small {
+      display: block;
+      margin-top: 2px;
+      color: var(--acc-text-2);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__this {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--acc-green-soft);
+    color: var(--acc-green);
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 650;
+    white-space: nowrap;
+
+    &--ok {
+      color: var(--acc-green);
+    }
+
+    &--bad {
+      color: var(--acc-danger);
+    }
+  }
+
+  &__empty {
+    padding: 18px;
+    border: 1px dashed var(--acc-border-strong);
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  &__more {
+    display: block;
+    margin: 12px auto 0;
+    padding: 8px 14px;
+    border: 1px solid var(--acc-border-strong);
+    border-radius: 10px;
+    background: var(--acc-surface);
+    color: var(--acc-primary);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  &__note {
+    margin-top: 14px !important;
+    font-size: 13px !important;
+    color: var(--acc-text-3) !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .fk-login-history {
+    &__summary {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    &__list li {
+      grid-template-columns: 40px minmax(0, 1fr);
+    }
+
+    &__status {
+      grid-column: 2;
+    }
+  }
+}
+
+@keyframes fk-login-history-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

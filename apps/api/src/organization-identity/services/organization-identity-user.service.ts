@@ -18,6 +18,8 @@ import {
 
 import * as bcrypt from "bcryptjs";
 
+import { AccountSecurityService } from "../../admin/security/platform-security/account-security.service";
+
 import {
   Membership,
   MembershipDocument,
@@ -88,6 +90,9 @@ export class OrganizationIdentityUserService {
 
     // Domain fees (price set in the Admin Center).
     private readonly billing: OrganizationDomainBillingService,
+
+    // Session revocation, notification and audit after password resets.
+    private readonly accountSecurity: AccountSecurityService,
   ) {}
 
   // ==========================================================================
@@ -310,7 +315,7 @@ export class OrganizationIdentityUserService {
       );
 
     const policy =
-      await this.common.getOrCreateSecurityPolicy(
+      await this.common.getEffectiveSecurityPolicy(
         organization._id,
       );
 
@@ -1057,7 +1062,7 @@ export class OrganizationIdentityUserService {
         becomingNonAdmin
       ) {
         const policy =
-          await this.common.getOrCreateSecurityPolicy(
+          await this.common.getEffectiveSecurityPolicy(
             organization._id,
           );
 
@@ -1213,7 +1218,7 @@ export class OrganizationIdentityUserService {
     }
 
     const policy =
-      await this.common.getOrCreateSecurityPolicy(
+      await this.common.getEffectiveSecurityPolicy(
         organization._id,
       );
 
@@ -1359,7 +1364,7 @@ export class OrganizationIdentityUserService {
       );
 
     const policy =
-      await this.common.getOrCreateSecurityPolicy(
+      await this.common.getEffectiveSecurityPolicy(
         organization._id,
       );
 
@@ -1449,6 +1454,13 @@ export class OrganizationIdentityUserService {
       );
 
     await identity.save();
+
+    // Sign the user out of existing sessions (per policy), notify and audit.
+    await this.accountSecurity.onSecurityChange(
+      String(identity.userId),
+      "admin_password_reset",
+      { actorId: String(actorUserId) },
+    );
 
     return {
       success: true,
@@ -1591,7 +1603,7 @@ export class OrganizationIdentityUserService {
     }
 
     const policy =
-      await this.common.getOrCreateSecurityPolicy(
+      await this.common.getEffectiveSecurityPolicy(
         organization._id,
       );
 

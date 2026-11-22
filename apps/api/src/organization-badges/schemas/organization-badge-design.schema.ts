@@ -11,11 +11,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 
-export const BADGE_TEMPLATES = ['classic', 'modern', 'minimal', 'bold'] as const;
+export const BADGE_TEMPLATES = ['official', 'classic', 'modern', 'minimal', 'bold'] as const;
 export type BadgeTemplate = (typeof BADGE_TEMPLATES)[number];
 
 export const BADGE_DESIGN_DEFAULTS = {
-  template: 'classic' as BadgeTemplate,
+  template: 'official' as BadgeTemplate,
   accentColor: '#005a8d',
   badgeTitle: 'Member',
   showRole: true,
@@ -24,6 +24,9 @@ export const BADGE_DESIGN_DEFAULTS = {
   showGroups: false,
   showMemberDomain: false,
   footerText: '',
+  allowMemberPhotoEdit: true,
+  showPhotoOnVerify: true,
+  showMinistryOnVerify: true,
 };
 
 @Schema({ timestamps: true, collection: 'organization_badge_designs' })
@@ -55,6 +58,12 @@ export class OrganizationBadgeDesign {
   /** Small line at the bottom: a verse, a motto, "If found, call …". */
   @Prop({ type: String, default: '', trim: true })
   footerText!: string;
+
+  /** Members may change their own badge photo. */
+  @Prop({ type: Boolean, default: true }) allowMemberPhotoEdit!: boolean;
+  /** What a QR scan shows publicly. */
+  @Prop({ type: Boolean, default: true }) showPhotoOnVerify!: boolean;
+  @Prop({ type: Boolean, default: true }) showMinistryOnVerify!: boolean;
 
   @Prop({ type: Types.ObjectId, default: null })
   updatedByUserId?: Types.ObjectId | null;

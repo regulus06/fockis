@@ -245,6 +245,133 @@ export class OrganizationBadge {
   })
   memberDomain?: string | null;
 
+  /**
+   * Hash (SHA-256, hex) of the current QR verification token. The token
+   * itself is not stored: it is derived again from tokenNonce with the server
+   * secret (HMAC) whenever the member's badge is shown.
+   */
+  @Prop({
+    type: String,
+    index: { unique: true, sparse: true },
+  })
+  verifyTokenHash?: string;
+
+  /** Random value the current token is derived from. Changes on regenerate. */
+  @Prop({ type: String, default: null })
+  tokenNonce?: string | null;
+
+  @Prop({ type: Date, default: null })
+  tokenIssuedAt?: Date | null;
+
+  /* ==========================================================================
+     ADMIN CONTROL (independent of the membership status)
+     ========================================================================== */
+
+  /** active | suspended | revoked — set only by badge managers. */
+  @Prop({ type: String, enum: ['active', 'suspended', 'revoked'], default: 'active', index: true })
+  badgeStatus!: 'active' | 'suspended' | 'revoked';
+
+  @Prop({ type: String, default: null })
+  statusReason?: string | null;
+
+  @Prop({ type: Date, default: null })
+  statusChangedAt?: Date | null;
+
+  @Prop({ type: Date, default: null })
+  revokedAt?: Date | null;
+
+  /** Optional end date: after it the badge verifies as expired. */
+  @Prop({ type: Date, default: null })
+  expiresAt?: Date | null;
+
+  /* ==========================================================================
+     DETAILS SET BY A BADGE MANAGER (empty = taken from the membership)
+     ========================================================================== */
+
+  @Prop({ type: String, default: null, trim: true })
+  customName?: string | null;
+
+  /** Title under the name, e.g. "Deacon". Empty = the organization role. */
+  @Prop({ type: String, default: null, trim: true })
+  customTitle?: string | null;
+
+  /** Ministry shown on the badge. null = the member's first ministry. "" = none. */
+  @Prop({ type: String, default: null, trim: true })
+  ministryName?: string | null;
+
+  /** Church location printed on the badge, e.g. "Ouanaminthe, Haiti". */
+  @Prop({ type: String, default: null })
+  organizationLocation?: string | null;
+
+  @Prop({ type: String, default: null })
+  organizationBannerUrl?: string | null;
+
+  /* ==========================================================================
+     PHOTO EDITOR
+     avatarUrl is the edited (cropped) picture; the original upload is kept
+     so the photo can be re-cropped later.
+     ========================================================================== */
+
+  @Prop({
+    type: {
+      originalUrl: { type: String, default: null },
+      shape: { type: String, default: 'circle' },
+      cornerRadius: { type: Number, default: 24 },
+      x: { type: Number, default: 0 },
+      y: { type: Number, default: 0 },
+      zoom: { type: Number, default: 1 },
+      rotation: { type: Number, default: 0 },
+      aspect: { type: Number, default: 1 },
+      fit: { type: String, default: 'fill' },
+      cropX: { type: Number, default: 0 },
+      cropY: { type: Number, default: 0 },
+      cropWidth: { type: Number, default: 0 },
+      cropHeight: { type: Number, default: 0 },
+      outputWidth: { type: Number, default: 0 },
+      outputHeight: { type: Number, default: 0 },
+      updatedAt: { type: Date, default: null },
+    },
+    _id: false,
+    default: null,
+  })
+  photo?: {
+    originalUrl: string | null;
+    shape: string;
+    cornerRadius: number;
+    x: number;
+    y: number;
+    zoom: number;
+    rotation: number;
+    aspect: number;
+    fit: string;
+    cropX: number;
+    cropY: number;
+    cropWidth: number;
+    cropHeight: number;
+    outputWidth: number;
+    outputHeight: number;
+    updatedAt: Date | null;
+  } | null;
+
+  /* ==========================================================================
+     HISTORY (issued, updated, suspended, revoked, regenerated…)
+     ========================================================================== */
+
+  @Prop({
+    type: [
+      {
+        at: { type: Date, required: true },
+        action: { type: String, required: true },
+        note: { type: String, default: '' },
+        actorUserId: { type: Types.ObjectId, default: null },
+        actorName: { type: String, default: '' },
+      },
+    ],
+    _id: false,
+    default: [],
+  })
+  history!: { at: Date; action: string; note: string; actorUserId: Types.ObjectId | null; actorName: string }[];
+
   /* ==========================================================================
      BADGE STATE
      ========================================================================== */

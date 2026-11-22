@@ -79,7 +79,7 @@ import {
 
 import { MembershipStatus } from '../../org/enums/membership-status.enum';
 
-import { randomBytes } from 'crypto';
+import { createHash, createHmac, randomBytes } from 'crypto';
 import { existsSync, promises as fs } from 'fs';
 import { join, resolve } from 'path';
 
@@ -90,8 +90,42 @@ import {
   OrganizationBadgeDesignDocument,
 } from '../schemas/organization-badge-design.schema';
 
+import {
+  OrganizationBadgeVerification,
+  OrganizationBadgeVerificationDocument,
+} from '../schemas/organization-badge-verification.schema';
+
+import { Branch } from '../../org/branches/schemas/branch.schema';
+
 /** Roles and permissions that may manage badges (besides the owner). */
-const BADGE_ADMIN_ROLES = new Set(['owner', 'administrator', 'admin', 'pastor', 'director']);
+const BADGE_ADMIN_ROLES = new Set(['owner', 'administrator', 'pastor_director', 'admin', 'pastor', 'director']);
+/** Suspend, revoke, reactivate and new QR codes: the owner and administrator roles only. */
+const BADGE_STATUS_ROLES = new Set(['administrator', 'pastor_director']);
+
+export type BadgeVerifyState = 'verified' | 'pending' | 'suspended' | 'membership_inactive' | 'revoked' | 'expired' | 'not_member';
+
+export const BADGE_PHOTO_SHAPES = ['circle', 'rounded', 'square', 'rectangle', 'oval', 'custom'] as const;
+
+const VERIFY_TONE: Record<BadgeVerifyState, 'green' | 'yellow' | 'red'> = {
+  verified: 'green',
+  pending: 'yellow',
+  suspended: 'yellow',
+  membership_inactive: 'yellow',
+  revoked: 'red',
+  expired: 'red',
+  not_member: 'red',
+};
+
+/** "Chrome on Windows" — enough to recognise a device in the scan log. */
+function deviceLabel(ua?: string | null): string {
+  const s = String(ua || '');
+  if (!s) return '';
+  const browser = /Edg\//.test(s) ? 'Edge' : /SamsungBrowser/.test(s) ? 'Samsung Internet' : /Firefox\/|FxiOS/.test(s) ? 'Firefox' : /Chrome\/|CriOS/.test(s) ? 'Chrome' : /Safari\//.test(s) ? 'Safari' : 'Browser';
+  const os = /Windows/.test(s) ? 'Windows' : /iPhone|iPad|iPod/.test(s) ? 'iOS' : /Android/.test(s) ? 'Android' : /Mac OS X/.test(s) ? 'macOS' : /Linux/.test(s) ? 'Linux' : 'device';
+  return `${browser} on ${os}`;
+}
+
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 const BADGE_ADMIN_PERMISSIONS = ['manage_settings', 'update_organization', 'manage_members', 'add_member', 'update_member'];
 
 /* ============================================================================
@@ -170,7 +204,74 @@ export class OrganizationBadgeService {
     )
     private readonly designModel:
       Model<OrganizationBadgeDesignDocument>,
+
+    @InjectModel(OrganizationBadgeVerification.name)
+    private readonly verificationModel: Model<OrganizationBadgeVerificationDocument>,
+
+    @InjectModel(Branch.name)
+    private readonly branchModel: Model<any>,
   ) {}
+
+  /* ==========================================================================
+     QR TOKENS
+     The token in the QR link is HMAC(secret, badgeId + nonce). Only its
+     SHA-256 hash is stored, so the database alone cannot produce QR links.
+     ========================================================================== */
+
+  private tokenSecret(): string {
+    const secret = (process.env.BADGE_TOKEN_SECRET || process.env.JWT_SECRET || '').trim();
+    if (secret.length < 16) throw new Error('BADGE_TOKEN_SECRET (or JWT_SECRET) must be set.');
+    return secret;
+  }
+
+  private deriveToken(badgeId: string, nonce: string): string {
+    return createHmac('sha256', this.tokenSecret()).update(`fockis-badge:${badgeId}:${nonce}`).digest('base64url').slice(0, 32);
+  }
+
+  private hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
+  private currentToken(badge: OrganizationBadgeDocument): string | null {
+    return badge.tokenNonce ? this.deriveToken(String(badge._id), badge.tokenNonce) : null;
+  }
+
+  /** New QR token: the old QR code stops working (it then reads "not found"). */
+  private assignNewToken(badge: OrganizationBadgeDocument): void {
+    const nonce = randomBytes(16).toString('hex');
+    badge.tokenNonce = nonce;
+    badge.verifyTokenHash = this.hashToken(this.deriveToken(String(badge._id), nonce));
+    badge.tokenIssuedAt = new Date();
+  }
+
+  private async mainLocation(organizationId: Types.ObjectId): Promise<string | null> {
+    const branches = await this.branchModel
+      .find({ organizationId })
+      .select('isMainLocation address')
+      .sort({ isMainLocation: -1, createdAt: 1 })
+      .limit(1)
+      .lean<any[]>()
+      .exec();
+    const a = branches[0]?.address;
+    if (!a) return null;
+    const parts = [a.city, a.country].map((x: unknown) => String(x ?? '').trim()).filter(Boolean);
+    return parts.length ? parts.join(', ') : null;
+  }
+
+  private verifyState(badge: OrganizationBadgeDocument, membershipStatus: string | null): BadgeVerifyState {
+    if (badge.badgeStatus === 'revoked') return 'revoked';
+    if (badge.expiresAt && new Date(badge.expiresAt).getTime() < Date.now()) return 'expired';
+    if (!membershipStatus || membershipStatus === MembershipStatus.Archived) return 'not_member';
+    if (badge.badgeStatus === 'suspended') return 'suspended';
+    if (membershipStatus === MembershipStatus.Pending) return 'pending';
+    if (membershipStatus !== MembershipStatus.Active || !badge.active) return 'membership_inactive';
+    return 'verified';
+  }
+
+  private effectiveMinistry(badge: OrganizationBadgeDocument): string | null {
+    if (badge.ministryName === '') return null;
+    return badge.ministryName || badge.departmentNames?.[0] || null;
+  }
 
   /* ==========================================================================
      OBJECT ID
@@ -361,7 +462,7 @@ export class OrganizationBadgeService {
         badge.memberNumber,
 
       displayName:
-        badge.displayName,
+        badge.customName || badge.displayName,
 
       avatarUrl:
         badge.avatarUrl ??
@@ -400,8 +501,67 @@ export class OrganizationBadgeService {
         badge.qrCodeValue,
 
       verifyToken:
-        badge.verifyToken ??
-        null,
+        this.currentToken(badge),
+
+      memberName:
+        badge.displayName,
+
+      customName:
+        badge.customName ?? null,
+
+      customTitle:
+        badge.customTitle ?? null,
+
+      ministryName:
+        badge.ministryName ?? null,
+
+      ministry:
+        this.effectiveMinistry(badge),
+
+      organizationLocation:
+        badge.organizationLocation ?? null,
+
+      organizationBannerUrl:
+        badge.organizationBannerUrl ?? null,
+
+      badgeStatus:
+        badge.badgeStatus ?? 'active',
+
+      statusReason:
+        badge.statusReason ?? null,
+
+      statusChangedAt:
+        badge.statusChangedAt ?? null,
+
+      expiresAt:
+        badge.expiresAt ?? null,
+
+      verifyState:
+        this.verifyState(badge, badge.status ?? null),
+
+      tokenIssuedAt:
+        badge.tokenIssuedAt ?? null,
+
+      photo:
+        badge.photo
+          ? {
+              originalUrl: badge.photo.originalUrl ?? null,
+              shape: badge.photo.shape ?? 'circle',
+              cornerRadius: badge.photo.cornerRadius ?? 24,
+              x: badge.photo.x ?? 0,
+              y: badge.photo.y ?? 0,
+              zoom: badge.photo.zoom ?? 1,
+              rotation: badge.photo.rotation ?? 0,
+              aspect: badge.photo.aspect ?? 1,
+              fit: badge.photo.fit ?? 'fill',
+              cropX: badge.photo.cropX ?? 0,
+              cropY: badge.photo.cropY ?? 0,
+              cropWidth: badge.photo.cropWidth ?? 0,
+              cropHeight: badge.photo.cropHeight ?? 0,
+              outputWidth: badge.photo.outputWidth ?? 0,
+              outputHeight: badge.photo.outputHeight ?? 0,
+            }
+          : null,
 
       memberDomain:
         badge.memberDomain ??
@@ -527,6 +687,16 @@ export class OrganizationBadgeService {
         membershipIdValue,
       );
 
+    const organizationLocation =
+      await this.mainLocation(
+        organization._id as Types.ObjectId,
+      );
+
+    const organizationBannerUrl =
+      (organization as any).bannerMediaType === 'video'
+        ? null
+        : organization.bannerUrl ?? null;
+
     /**
      * IMPORTANT:
      *
@@ -596,6 +766,10 @@ export class OrganizationBadgeService {
                 (membership as any).domain ??
                 null,
 
+              organizationLocation,
+
+              organizationBannerUrl,
+
               active: true,
             },
 
@@ -619,13 +793,18 @@ export class OrganizationBadgeService {
       );
     }
 
-    // Badges made before QR links existed get their code now.
-    if (!badge.verifyToken) {
-      badge.verifyToken =
-        this.newVerifyToken();
-
-      await badge.save();
+    // Hashed QR token. Older badges keep their first (plain) token working
+    // until a manager makes a new QR code.
+    let changed = false;
+    if (!badge.tokenNonce || !badge.verifyTokenHash) {
+      this.assignNewToken(badge);
+      changed = true;
     }
+    if (!badge.history || badge.history.length === 0) {
+      badge.history = [{ at: badge.issuedAt ?? new Date(), action: 'issued', note: '', actorUserId: null, actorName: 'Fockis' }];
+      changed = true;
+    }
+    if (changed) await badge.save();
 
     return this.toResponse(
       badge,
@@ -804,10 +983,6 @@ export class OrganizationBadgeService {
      TEMPLATES, PERMISSIONS, LISTS AND PUBLIC CHECK
      ========================================================================== */
 
-  private newVerifyToken(): string {
-    return randomBytes(18).toString('base64url');
-  }
-
   /** Initials of the organization name ("Grace Community Church" → "GCC"). */
   private prefixFor(prefix: string | undefined, organizationName: string): string {
     const clean = String(prefix ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
@@ -872,11 +1047,13 @@ export class OrganizationBadgeService {
       await this.requireBadgeAdmin(organizationId, actorUserId);
     }
     if (membership.status !== MembershipStatus.Active) return null;
-    return this.createOrUpdateForMembership(membershipId);
+    const badge = await this.createOrUpdateForMembership(membershipId);
+    return { ...badge, access: await this.accessFor(organizationId, actorUserId, badge.userId) };
   }
 
   async rebuildBadgeFor(organizationId: string, membershipId: string, actorUserId: string) {
     await this.requireBadgeAdmin(organizationId, actorUserId);
+    const existing = await this.badgeModel.findOne({ membershipId: this.toObjectId(membershipId, 'membershipId') }).select('_id').lean().exec();
     const membership = await this.membershipModel
       .findOne({
         _id: this.toObjectId(membershipId, 'membershipId'),
@@ -886,7 +1063,13 @@ export class OrganizationBadgeService {
       .lean()
       .exec();
     if (!membership) throw new NotFoundException('Member not found.');
-    return this.createOrUpdateForMembership(membershipId);
+    const badge = await this.createOrUpdateForMembership(membershipId);
+    const doc = await this.badgeModel.findById(badge.id).exec();
+    if (doc) {
+      this.pushHistory(doc, existing ? 'refreshed' : 'issued_manually', '', actorUserId, await this.actorName(organizationId, actorUserId));
+      await doc.save();
+    }
+    return badge;
   }
 
   async getDesign(organizationId: string, actorUserId: string) {
@@ -908,6 +1091,9 @@ export class OrganizationBadgeService {
       showGroups: design.showGroups,
       showMemberDomain: design.showMemberDomain,
       footerText: design.footerText ?? '',
+      allowMemberPhotoEdit: design.allowMemberPhotoEdit !== false,
+      showPhotoOnVerify: design.showPhotoOnVerify !== false,
+      showMinistryOnVerify: design.showMinistryOnVerify !== false,
       templates: BADGE_TEMPLATES,
       canEdit: await this.isBadgeAdmin(organizationId, actorUserId),
     };
@@ -939,7 +1125,7 @@ export class OrganizationBadgeService {
     if (prefix !== undefined) update.numberPrefix = prefix.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
     const footer = text(body.footerText, 80);
     if (footer !== undefined) update.footerText = footer;
-    for (const key of ['showRole', 'showMemberSince', 'showDepartments', 'showGroups', 'showMemberDomain']) {
+    for (const key of ['showRole', 'showMemberSince', 'showDepartments', 'showGroups', 'showMemberDomain', 'allowMemberPhotoEdit', 'showPhotoOnVerify', 'showMinistryOnVerify']) {
       const b = bool(body[key]);
       if (b !== undefined) update[key] = b;
     }
@@ -1018,34 +1204,247 @@ export class OrganizationBadgeService {
   }
 
   /**
-   * Public: what someone sees after scanning a badge — only what is printed
-   * on the badge, plus whether it is still valid.
+   * Public: what someone sees after scanning a badge. Only what is printed on
+   * the badge (and allowed by the church's settings), plus whether it is valid
+   * right now. Never contact details, addresses or notes.
    */
-  async verify(token: string) {
+  async verify(token: string, userAgent?: string) {
     const clean = String(token ?? '').trim();
     if (!/^[A-Za-z0-9_-]{16,64}$/.test(clean)) throw new NotFoundException('This badge was not found.');
-    const badge = await this.badgeModel.findOne({ verifyToken: clean }).exec();
+    const badge =
+      (await this.badgeModel.findOne({ verifyTokenHash: this.hashToken(clean) }).exec()) ??
+      // Badges printed before hashed tokens: still valid until a new QR code is made.
+      (await this.badgeModel.findOne({ verifyToken: clean }).exec());
     if (!badge) throw new NotFoundException('This badge was not found.');
-    const membership = await this.membershipModel.findById(badge.membershipId).select('status').lean<any>().exec();
-    const valid = Boolean(badge.active && membership && membership.status === MembershipStatus.Active);
+
+    const [membership, design] = await Promise.all([
+      this.membershipModel.findById(badge.membershipId).select('status').lean<any>().exec(),
+      this.designFor(String(badge.organizationId)),
+    ]);
+    const state = this.verifyState(badge, membership?.status ?? null);
+
+    await this.verificationModel
+      .create({ badgeId: badge._id, organizationId: badge.organizationId, result: state, device: deviceLabel(userAgent) })
+      .catch(() => undefined);
+
+    const number = String(badge.memberNumber ?? '');
+    const dash = number.indexOf('-');
+    const maskedNumber = number.length > 4 ? `${dash > 0 ? number.slice(0, dash + 1) : ''}••${number.slice(-4)}` : number;
+
     return {
-      valid,
-      displayName: badge.displayName,
-      avatarUrl: badge.avatarUrl ?? null,
-      memberNumber: badge.memberNumber,
+      valid: state === 'verified',
+      state,
+      tone: VERIFY_TONE[state],
+      displayName: badge.customName || badge.displayName,
+      avatarUrl: design.showPhotoOnVerify !== false ? (badge.avatarUrl ?? null) : null,
+      photoShape: badge.photo?.shape ?? 'circle',
+      memberNumber: maskedNumber,
       role: badge.role,
+      title: badge.customTitle ?? null,
+      membershipType: design.badgeTitle || 'Member',
+      ministry: design.showMinistryOnVerify !== false ? this.effectiveMinistry(badge) : null,
       organizationId: String(badge.organizationId),
       organizationName: badge.organizationName,
       organizationLogoUrl: badge.organizationLogoUrl ?? null,
       organizationType: badge.organizationType ?? null,
+      organizationLocation: badge.organizationLocation ?? null,
       memberSince: badge.joinedAt ?? null,
       issuedAt: badge.issuedAt,
+      expiresAt: badge.expiresAt ?? null,
       checkedAt: new Date(),
     };
   }
 
   /* ==========================================================================
-     BADGE PHOTO — the member themself or a badge admin
+     ACCESS FLAGS sent with a badge
+  ========================================================================== */
+
+  async canManageStatus(organizationId: string, userId: string): Promise<boolean> {
+    const orgId = this.toObjectId(organizationId, 'organizationId');
+    const organization = await this.organizationModel.findById(orgId).select('createdByUserId').lean<any>().exec();
+    if (!organization) throw new NotFoundException('Organization not found.');
+    if (organization.createdByUserId && String(organization.createdByUserId) === String(userId)) return true;
+    if (!Types.ObjectId.isValid(userId)) return false;
+    const m = await this.membershipModel
+      .findOne({ organizationId: orgId, userId: new Types.ObjectId(userId) })
+      .select('status role')
+      .lean<any>()
+      .exec();
+    return Boolean(m && m.status === MembershipStatus.Active && BADGE_STATUS_ROLES.has(String(m.role).toLowerCase()));
+  }
+
+  private async isOwner(organizationId: string, userId: string): Promise<boolean> {
+    const organization = await this.organizationModel
+      .findById(this.toObjectId(organizationId, 'organizationId'))
+      .select('createdByUserId')
+      .lean<any>()
+      .exec();
+    return Boolean(organization?.createdByUserId && String(organization.createdByUserId) === String(userId));
+  }
+
+  async accessFor(organizationId: string, actorUserId: string, badgeUserId: string) {
+    const [admin, manager, design] = await Promise.all([
+      this.isBadgeAdmin(organizationId, actorUserId),
+      this.canManageStatus(organizationId, actorUserId),
+      this.designFor(organizationId),
+    ]);
+    const isSelf = String(badgeUserId) === String(actorUserId);
+    return {
+      isSelf,
+      canEdit: admin,
+      canEditPhoto: admin || (isSelf && design.allowMemberPhotoEdit !== false),
+      canManageStatus: manager,
+    };
+  }
+
+  /** My badge plus what I may change on it. */
+  async getMyBadgeWithAccess(organizationId: string, userId: string) {
+    const badge = await this.getMyBadge(organizationId, userId);
+    return { ...badge, access: await this.accessFor(organizationId, userId, badge.userId) };
+  }
+
+  /* ==========================================================================
+     BADGE MANAGEMENT (admins)
+  ========================================================================== */
+
+  private async actorName(organizationId: string, userId: string): Promise<string> {
+    if (!Types.ObjectId.isValid(userId)) return '';
+    const m = await this.membershipModel
+      .findOne({ organizationId: this.toObjectId(organizationId, 'organizationId'), userId: new Types.ObjectId(userId) })
+      .select('profile.displayName')
+      .lean<any>()
+      .exec();
+    if (m?.profile?.displayName) return String(m.profile.displayName);
+    return (await this.isOwner(organizationId, userId)) ? 'Organization owner' : 'Administrator';
+  }
+
+  /** The badge document of a member of this organization (created if the member is active). */
+  private async badgeDoc(organizationId: string, membershipId: string): Promise<OrganizationBadgeDocument> {
+    const membership = await this.membershipModel
+      .findOne({
+        _id: this.toObjectId(membershipId, 'membershipId'),
+        organizationId: this.toObjectId(organizationId, 'organizationId'),
+      })
+      .select('status')
+      .lean<any>()
+      .exec();
+    if (!membership) throw new NotFoundException('Member not found.');
+    if (membership.status === MembershipStatus.Active) await this.createOrUpdateForMembership(membershipId);
+    const badge = await this.badgeModel.findOne({ membershipId: this.toObjectId(membershipId, 'membershipId') }).exec();
+    if (!badge) throw new NotFoundException('This member has no badge yet. Badges are issued to active members.');
+    return badge;
+  }
+
+  private pushHistory(badge: OrganizationBadgeDocument, action: string, note: string, actorUserId: string, actorName: string) {
+    badge.history = [
+      ...(badge.history ?? []),
+      { at: new Date(), action, note: note.slice(0, 300), actorUserId: Types.ObjectId.isValid(actorUserId) ? new Types.ObjectId(actorUserId) : null, actorName },
+    ].slice(-200);
+  }
+
+  async getManage(organizationId: string, membershipId: string, actorUserId: string) {
+    await this.requireBadgeAdmin(organizationId, actorUserId);
+    const badge = await this.badgeDoc(organizationId, membershipId);
+    const verifications = await this.verificationModel
+      .find({ badgeId: badge._id })
+      .sort({ at: -1 })
+      .limit(50)
+      .lean<any[]>()
+      .exec();
+    return {
+      badge: { ...this.toResponse(badge), access: await this.accessFor(organizationId, actorUserId, String(badge.userId)) },
+      history: [...(badge.history ?? [])]
+        .reverse()
+        .map((h) => ({ at: h.at, action: h.action, note: h.note ?? '', actorName: h.actorName ?? '' })),
+      verifications: verifications.map((v) => ({ id: String(v._id), at: v.at, result: v.result, device: v.device ?? '' })),
+      ministryOptions: badge.departmentNames ?? [],
+    };
+  }
+
+  async updateDetails(organizationId: string, membershipId: string, actorUserId: string, body: Record<string, unknown>) {
+    await this.requireBadgeAdmin(organizationId, actorUserId);
+    const badge = await this.badgeDoc(organizationId, membershipId);
+    const text = (v: unknown, max: number) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, max) : undefined);
+    const changed: string[] = [];
+
+    if (body.customName !== undefined) {
+      const v = body.customName === null ? null : text(body.customName, 80) || null;
+      if (v !== (badge.customName ?? null)) changed.push('name');
+      badge.customName = v;
+    }
+    if (body.customTitle !== undefined) {
+      const v = body.customTitle === null ? null : text(body.customTitle, 60) || null;
+      if (v !== (badge.customTitle ?? null)) changed.push('title');
+      badge.customTitle = v;
+    }
+    if (body.ministryName !== undefined) {
+      // null = the member's first ministry, "" = no ministry, text = that ministry.
+      const v = body.ministryName === null ? null : (text(body.ministryName, 80) ?? null);
+      if (v !== (badge.ministryName ?? null)) changed.push('ministry');
+      badge.ministryName = v;
+    }
+    if (body.expiresAt !== undefined) {
+      if (body.expiresAt !== null && !(typeof body.expiresAt === 'string' && DATE_ONLY.test(body.expiresAt))) {
+        throw new BadRequestException('Expiry date must look like 2027-12-31.');
+      }
+      const v = body.expiresAt ? new Date(`${body.expiresAt}T23:59:59.999Z`) : null;
+      if (String(v?.getTime() ?? '') !== String(badge.expiresAt ? new Date(badge.expiresAt).getTime() : '')) changed.push('expiry date');
+      badge.expiresAt = v;
+    }
+    if (!changed.length) return { ...this.toResponse(badge), access: await this.accessFor(organizationId, actorUserId, String(badge.userId)) };
+
+    this.pushHistory(badge, 'details_updated', `Changed ${changed.join(', ')}`, actorUserId, await this.actorName(organizationId, actorUserId));
+    await badge.save();
+    return { ...this.toResponse(badge), access: await this.accessFor(organizationId, actorUserId, String(badge.userId)) };
+  }
+
+  async setStatus(organizationId: string, membershipId: string, actorUserId: string, action: unknown, reason: unknown) {
+    if (!(await this.canManageStatus(organizationId, actorUserId))) {
+      throw new ForbiddenException('Only the owner or an administrator can suspend, revoke or reactivate badges.');
+    }
+    const badge = await this.badgeDoc(organizationId, membershipId);
+    const note = typeof reason === 'string' ? reason.trim().slice(0, 300) : '';
+    const name = await this.actorName(organizationId, actorUserId);
+
+    if (action === 'suspend' || action === 'revoke') {
+      if (note.length < 3) throw new BadRequestException('Give a short reason.');
+      if (action === 'suspend' && badge.badgeStatus === 'revoked') throw new BadRequestException('This badge is revoked. Reactivate it first.');
+      badge.badgeStatus = action === 'suspend' ? 'suspended' : 'revoked';
+      badge.statusReason = note;
+      badge.statusChangedAt = new Date();
+      if (action === 'revoke') badge.revokedAt = new Date();
+      this.pushHistory(badge, action === 'suspend' ? 'suspended' : 'revoked', note, actorUserId, name);
+    } else if (action === 'reactivate') {
+      if (badge.badgeStatus === 'active') throw new BadRequestException('This badge is already active.');
+      if (badge.badgeStatus === 'revoked' && !(await this.isOwner(organizationId, actorUserId))) {
+        throw new ForbiddenException('Only the organization owner can reactivate a revoked badge.');
+      }
+      badge.badgeStatus = 'active';
+      badge.statusReason = null;
+      badge.statusChangedAt = new Date();
+      badge.revokedAt = null;
+      this.pushHistory(badge, 'reactivated', note, actorUserId, name);
+    } else {
+      throw new BadRequestException('Unknown action.');
+    }
+    await badge.save();
+    return { ...this.toResponse(badge), access: await this.accessFor(organizationId, actorUserId, String(badge.userId)) };
+  }
+
+  async regenerateToken(organizationId: string, membershipId: string, actorUserId: string) {
+    if (!(await this.canManageStatus(organizationId, actorUserId))) {
+      throw new ForbiddenException('Only the owner or an administrator can make a new QR code.');
+    }
+    const badge = await this.badgeDoc(organizationId, membershipId);
+    this.assignNewToken(badge);
+    badge.verifyToken = undefined; // the old printed QR code stops working
+    this.pushHistory(badge, 'qr_regenerated', 'Old QR code no longer works', actorUserId, await this.actorName(organizationId, actorUserId));
+    await badge.save();
+    return { ...this.toResponse(badge), access: await this.accessFor(organizationId, actorUserId, String(badge.userId)) };
+  }
+
+  /* ==========================================================================
+     BADGE PHOTO — the member themself (if the church allows it) or a badge admin
   ========================================================================== */
 
   private async photoMembership(organizationId: string, membershipId: string, actorUserId: string) {
@@ -1060,6 +1459,11 @@ export class OrganizationBadgeService {
     if (!membership) throw new NotFoundException('Member not found.');
     if (String(membership.userId) !== String(actorUserId)) {
       await this.requireBadgeAdmin(organizationId, actorUserId);
+    } else if (!(await this.isBadgeAdmin(organizationId, actorUserId))) {
+      const design = await this.designFor(organizationId);
+      if (design.allowMemberPhotoEdit === false) {
+        throw new ForbiddenException('Your church manages badge photos. Ask an administrator to change yours.');
+      }
     }
     return membership;
   }
@@ -1075,32 +1479,113 @@ export class OrganizationBadgeService {
     return this.createOrUpdateForMembership(membershipId);
   }
 
-  async uploadPhoto(organizationId: string, membershipId: string, actorUserId: string, file: UploadedBadgePhoto | undefined) {
+  private async savePhotoFile(membershipId: string, file: UploadedBadgePhoto, allowGif: boolean): Promise<string> {
     if (!file?.buffer?.length) throw new BadRequestException('Choose a photo to upload.');
     if (file.size > MAX_BADGE_PHOTO_BYTES) throw new BadRequestException('The photo is too large. The limit is 8 MB.');
     const extension = badgePhotoExtension(file.buffer);
-    if (!extension) throw new BadRequestException('Use a JPG, PNG, WebP or GIF picture.');
-
-    const membership = await this.photoMembership(organizationId, membershipId, actorUserId);
-
+    if (!extension || (!allowGif && extension === 'gif')) throw new BadRequestException('Use a JPG, PNG or WebP picture.');
     await fs.mkdir(BADGE_PHOTO_DIRECTORY, { recursive: true });
-    const filename = `${String(membership._id)}-${randomBytes(16).toString('hex')}.${extension}`;
+    const filename = `${membershipId}-${randomBytes(16).toString('hex')}.${extension}`;
     await fs.writeFile(join(BADGE_PHOTO_DIRECTORY, filename), file.buffer);
-    const url = `${BADGE_PHOTO_ROUTE}/${filename}`;
+    return `${BADGE_PHOTO_ROUTE}/${filename}`;
+  }
+
+  private parsePhotoSettings(raw: unknown) {
+    if (raw === undefined || raw === null || raw === '') return null;
+    let v: any;
+    try {
+      v = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    } catch {
+      throw new BadRequestException('Photo settings are not valid.');
+    }
+    const num = (x: unknown, min: number, max: number, d: number) => {
+      const n = Number(x);
+      return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : d;
+    };
+    const shape = (BADGE_PHOTO_SHAPES as readonly string[]).includes(String(v?.shape)) ? String(v.shape) : 'circle';
+    return {
+      shape,
+      cornerRadius: num(v?.cornerRadius, 0, 50, 24),
+      x: num(v?.x, -10000, 10000, 0),
+      y: num(v?.y, -10000, 10000, 0),
+      zoom: num(v?.zoom, 1, 5, 1),
+      rotation: num(v?.rotation, -360, 360, 0),
+      aspect: num(v?.aspect, 0.5, 2, 1),
+      fit: v?.fit === 'fit' ? 'fit' : 'fill',
+      cropX: num(v?.cropX, 0, 100000, 0),
+      cropY: num(v?.cropY, 0, 100000, 0),
+      cropWidth: num(v?.cropWidth, 0, 100000, 0),
+      cropHeight: num(v?.cropHeight, 0, 100000, 0),
+      outputWidth: num(v?.outputWidth, 0, 4000, 0),
+      outputHeight: num(v?.outputHeight, 0, 4000, 0),
+    };
+  }
+
+  /**
+   * file      the edited picture shown on the badge (required)
+   * original  the untouched upload, kept so it can be cropped again (optional:
+   *           left out when re-cropping the photo already on file)
+   * settings  JSON crop settings from the photo editor (optional)
+   */
+  async uploadPhoto(
+    organizationId: string,
+    membershipId: string,
+    actorUserId: string,
+    file: UploadedBadgePhoto | undefined,
+    original?: UploadedBadgePhoto,
+    settingsRaw?: unknown,
+  ) {
+    if (!file?.buffer?.length) throw new BadRequestException('Choose a photo to upload.');
+    const settings = this.parsePhotoSettings(settingsRaw);
+    const membership = await this.photoMembership(organizationId, membershipId, actorUserId);
+    const id = String(membership._id);
+    const badgeBefore = await this.badgeModel.findOne({ membershipId: membership._id }).exec();
+    const previousOriginal = badgeBefore?.photo?.originalUrl ?? null;
+    const previousEdited = membership.profile?.avatarUrl ?? null;
+
+    const url = await this.savePhotoFile(id, file, !settings);
+    let originalUrl: string | null = previousOriginal;
+    if (original?.buffer?.length) originalUrl = await this.savePhotoFile(id, original, false);
+    else if (!settings) originalUrl = url; // simple upload: the picture is its own original
 
     await this.membershipModel.updateOne({ _id: membership._id }, { $set: { 'profile.avatarUrl': url } }).exec();
-    await this.removeOwnPhotoFile(membership.profile?.avatarUrl);
 
-    const badge = await this.badgeAfterPhotoChange(membershipId, membership.status);
-    return { avatarUrl: url, badge };
+    // Old files nobody points to any more.
+    const keep = new Set([url, originalUrl].filter(Boolean));
+    for (const old of [previousEdited, previousOriginal]) if (old && !keep.has(old)) await this.removeOwnPhotoFile(old);
+
+    const response = await this.badgeAfterPhotoChange(membershipId, membership.status);
+    const badge = await this.badgeModel.findOne({ membershipId: membership._id }).exec();
+    if (badge) {
+      badge.photo = {
+        originalUrl,
+        ...(settings ?? { shape: badge.photo?.shape ?? 'circle', cornerRadius: badge.photo?.cornerRadius ?? 24, x: 0, y: 0, zoom: 1, rotation: 0, aspect: 1, fit: 'fill', cropX: 0, cropY: 0, cropWidth: 0, cropHeight: 0, outputWidth: 0, outputHeight: 0 }),
+        updatedAt: new Date(),
+      };
+      this.pushHistory(badge, 'photo_updated', settings ? `Shape: ${settings.shape}` : '', actorUserId, await this.actorName(organizationId, actorUserId));
+      await badge.save();
+      return { avatarUrl: url, badge: { ...this.toResponse(badge), access: await this.accessFor(organizationId, actorUserId, String(badge.userId)) } };
+    }
+    return { avatarUrl: url, badge: response };
   }
 
   async removePhoto(organizationId: string, membershipId: string, actorUserId: string) {
     const membership = await this.photoMembership(organizationId, membershipId, actorUserId);
+    const badgeBefore = await this.badgeModel.findOne({ membershipId: membership._id }).exec();
     await this.membershipModel.updateOne({ _id: membership._id }, { $set: { 'profile.avatarUrl': null } }).exec();
     await this.removeOwnPhotoFile(membership.profile?.avatarUrl);
-    const badge = await this.badgeAfterPhotoChange(membershipId, membership.status);
-    return { avatarUrl: null, badge };
+    if (badgeBefore?.photo?.originalUrl && badgeBefore.photo.originalUrl !== membership.profile?.avatarUrl) {
+      await this.removeOwnPhotoFile(badgeBefore.photo.originalUrl);
+    }
+    await this.badgeAfterPhotoChange(membershipId, membership.status);
+    const badge = await this.badgeModel.findOne({ membershipId: membership._id }).exec();
+    if (badge) {
+      badge.photo = null;
+      this.pushHistory(badge, 'photo_removed', '', actorUserId, await this.actorName(organizationId, actorUserId));
+      await badge.save();
+      return { avatarUrl: null, badge: { ...this.toResponse(badge), access: await this.accessFor(organizationId, actorUserId, String(badge.userId)) } };
+    }
+    return { avatarUrl: null, badge: null };
   }
 
   /** Path of a saved badge photo, or null when the name is not one of ours. */

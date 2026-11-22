@@ -114,7 +114,7 @@ const BASE_TERMS: OrgTerms = {
 };
 
 const TERMS_BY_CATEGORY: Partial<Record<PlatformCategory, Partial<OrgTerms>>> = {
-  faith: { departments: "Ministries", department: "Ministry", groups: "Small Groups", gatherings: "Services", myOrg: "My Church" },
+  faith: { departments: "Ministries", department: "Ministry", groups: "Groups & Communities", gatherings: "Services", myOrg: "My Church" },
   business: { people: "Employees", person: "Employee", groups: "Teams", myOrg: "My Company" },
   nonprofit: { people: "Volunteers", person: "Volunteer", groups: "Teams", gatherings: "Activities" },
   sports: { people: "Athletes", person: "Athlete", departments: "Divisions", department: "Division", groups: "Teams", gatherings: "Games & Practices", myOrg: "My Club" },
@@ -168,7 +168,7 @@ const MODULES: Partial<Record<PlatformCategory, OrgModule[]>> = {
     { id: "ministries", label: "Ministries", description: "Ministries with leaders and members.", path: "/admin/departments", available: true },
     { id: "services", label: "Services & Live", description: "Weekly services and livestreams.", path: "/admin/live", available: true },
     { id: "visits", label: "First-time visitors", description: "Plan-a-visit requests and follow-up.", path: "/admin/visits", available: true },
-    { id: "donations", label: "Giving", description: "Online giving and contribution statements.", available: false },
+    { id: "donations", label: "Giving", description: "Online tithes, offerings and special gifts.", path: "/admin/giving", available: true },
   ],
   nonprofit: [
     { id: "volunteers", label: "Volunteers", description: "Volunteer records and teams.", path: "/admin/members", available: true },

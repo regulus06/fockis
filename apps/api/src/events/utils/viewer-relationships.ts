@@ -14,16 +14,24 @@
 import { Logger } from "@nestjs/common";
 import { Connection, Types } from "mongoose";
 
+import { loadOrganizationRoles } from "./org-manager";
+
 export interface EventViewerRelationships {
   friendIds: string[];
   followedIds: string[];
   blockedIds: string[];
+  /** Organizations the viewer is an active member of (members-only events). */
+  memberOrganizationIds?: string[];
+  /** Organizations whose events the viewer manages (drafts, archived). */
+  managedOrganizationIds?: string[];
 }
 
 export const EMPTY_RELATIONSHIPS: EventViewerRelationships = {
   friendIds: [],
   followedIds: [],
   blockedIds: [],
+  memberOrganizationIds: [],
+  managedOrganizationIds: [],
 };
 
 function idOf(value: unknown): string {
@@ -61,7 +69,7 @@ export async function loadEventViewerRelationships(
   const friendshipModel = connection.models["Friendship"];
   const followModel = connection.models["Follow"];
 
-  const [friendships, follows] = await Promise.all([
+  const [friendships, follows, orgRoles] = await Promise.all([
     friendshipModel
       ? friendshipModel
           .find({
@@ -88,6 +96,10 @@ export async function loadEventViewerRelationships(
             return [];
           })
       : Promise.resolve([]),
+    loadOrganizationRoles(connection, viewerId).catch((error: unknown) => {
+      logger?.warn(`Could not load organization memberships: ${String(error)}`);
+      return { memberOrganizationIds: [], managedOrganizationIds: [] };
+    }),
   ]);
 
   const friends = new Set<string>();
@@ -127,5 +139,7 @@ export async function loadEventViewerRelationships(
     friendIds: Array.from(friends),
     followedIds: Array.from(followed),
     blockedIds: Array.from(blocked),
+    memberOrganizationIds: orgRoles.memberOrganizationIds,
+    managedOrganizationIds: orgRoles.managedOrganizationIds,
   };
 }

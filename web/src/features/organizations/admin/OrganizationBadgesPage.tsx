@@ -18,7 +18,7 @@ import { Link, useParams } from "react-router-dom";
 import { getOrganization } from "../api/organizationsApi";
 import type { Organization } from "../types/organization.types";
 import BadgeCard, { sampleBadge } from "../badges/BadgeCard";
-import BadgePhotoButton from "../badges/BadgePhotoButton";
+import { BadgeManageDialog, StatusChip } from "../badges/BadgeDialogs";
 import { BADGE_TEMPLATES, DEFAULT_DESIGN, badgeApi, type Badge, type BadgeDesign } from "../badges/badgeApi";
 import { Empty, ErrorNote, Loading, OrgShell, PageHead, Section, errorText, orgPath } from "../ui/OrgShell";
 
@@ -28,6 +28,12 @@ const TOGGLES: [keyof BadgeDesign, string][] = [
   ["showDepartments", "Departments"],
   ["showGroups", "Groups"],
   ["showMemberDomain", "Fockis member address"],
+];
+
+const POLICY_TOGGLES: [keyof BadgeDesign, string][] = [
+  ["allowMemberPhotoEdit", "Members can change their own badge photo"],
+  ["showPhotoOnVerify", "Show the photo when a QR code is scanned"],
+  ["showMinistryOnVerify", "Show the ministry when a QR code is scanned"],
 ];
 
 const TITLES = ["Member", "Staff", "Volunteer", "Student", "Leader", "Visitor"];
@@ -49,6 +55,7 @@ export default function OrganizationBadgesPage(): React.JSX.Element {
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [printing, setPrinting] = useState<Badge[] | null>(null);
+  const [managing, setManaging] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -249,6 +256,15 @@ export default function OrganizationBadgesPage(): React.JSX.Element {
             </label>
           ))}
         </div>
+        <div className="fko-actions" style={{ gap: 18 }}>
+          <span className="fko-hint">Photos and QR checks:</span>
+          {POLICY_TOGGLES.map(([key, label]) => (
+            <label key={key} className="badge-toggle">
+              <input type="checkbox" checked={draft[key] !== false} onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.checked }))} />
+              {label}
+            </label>
+          ))}
+        </div>
         <div className="fko-split" style={{ alignItems: "center" }}>
           <div className="fko-actions">
             <button type="button" className="fko-btn fko-btn--primary" disabled={!dirty || busy} onClick={() => void save()}>
@@ -293,15 +309,15 @@ export default function OrganizationBadgesPage(): React.JSX.Element {
             {badges.map((b) => (
               <div key={b.id} className="badge-item">
                 <BadgeCard badge={b} design={saved} />
-                <BadgePhotoButton
-                  badge={b}
-                  compact
-                  showRemove={false}
-                  onChange={(next) => setBadges((list) => list.map((x) => (x.id === b.id ? next : x)))}
-                />
-                <button type="button" className="fko-btn fko-btn--ghost fko-btn--sm" onClick={() => setPrinting([b])}>
-                  🖨 Print
-                </button>
+                {b.verifyState && b.verifyState !== "verified" && <StatusChip badge={b} />}
+                <div className="fko-actions" style={{ justifyContent: "center", gap: 6 }}>
+                  <button type="button" className="fko-btn fko-btn--secondary fko-btn--sm" onClick={() => setManaging(b.membershipId)}>
+                    Manage
+                  </button>
+                  <button type="button" className="fko-btn fko-btn--ghost fko-btn--sm" onClick={() => setPrinting([b])}>
+                    🖨 Print
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -321,6 +337,15 @@ export default function OrganizationBadgesPage(): React.JSX.Element {
           Prints at real ID-card size (85.6 × 54 mm). In the print window, set scale to 100% and turn on “Background graphics” for colours.
         </p>
       </Section>
+
+      {managing && (
+        <BadgeManageDialog
+          organizationId={organizationId}
+          membershipId={managing}
+          onClose={() => setManaging(null)}
+          onChanged={(next) => setBadges((list) => list.map((x) => (x.membershipId === next.membershipId ? { ...x, ...next } : x)))}
+        />
+      )}
 
       {printing && (
         <div className="badge-print-only badge-print-area" aria-hidden="true">
@@ -345,5 +370,8 @@ function pick(d: BadgeDesign): Partial<BadgeDesign> {
     showGroups: d.showGroups,
     showMemberDomain: d.showMemberDomain,
     footerText: d.footerText,
+    allowMemberPhotoEdit: d.allowMemberPhotoEdit !== false,
+    showPhotoOnVerify: d.showPhotoOnVerify !== false,
+    showMinistryOnVerify: d.showMinistryOnVerify !== false,
   };
 }

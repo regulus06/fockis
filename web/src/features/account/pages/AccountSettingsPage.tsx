@@ -52,6 +52,8 @@ import FockisTopBar from "../../../components/fockis/FockisTopBar";
 
 import AppearanceSettings from "../components/AppearanceSettings";
 
+import LoginHistorySection from "../components/LoginHistorySection";
+
 import "./AccountSettingsPage.scss";
 
 /* ============================================================================
@@ -2228,6 +2230,14 @@ export default function AccountSettingsPage() {
                 ) : null}
 
               </section>
+
+              {/* ==========================================================
+
+                  LOGIN HISTORY
+
+              ========================================================== */}
+
+              <LoginHistorySection />
 
             </>
 

@@ -73,8 +73,10 @@ export class OrganizationDashboardController {
     @Param('organizationId') organizationId: string,
     @Query('days') days: string | undefined,
     @Req() req: Request,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
   ) {
-    return this.dashboard.getDashboard(organizationId, userIdOf(req), days);
+    return this.dashboard.getDashboard(organizationId, userIdOf(req), days, from, to);
   }
 
   @Get(':organizationId/members-export')

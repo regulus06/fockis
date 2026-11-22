@@ -1,0 +1,19 @@
+Add these properties inside the existing OrderShipment class, near the existing payout fields.
+These fields freeze the commission used for this shipment once calculated.
+
+  @Prop({ type: Number, min: 0, max: 100, default: null })
+  payoutCommissionRate!: number | null;
+
+  @Prop({ type: Number, min: 0, default: null })
+  payoutSubtotal!: number | null;
+
+  @Prop({ type: Number, min: 0, default: null })
+  payoutSellerAmount!: number | null;
+
+  @Prop({ type: String, default: "" })
+  payoutCommissionSource!: string;
+
+  @Prop({ type: Date, default: null })
+  payoutQuoteAt!: Date | null;
+
+Do not remove or rename any existing fields.

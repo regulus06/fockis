@@ -9,5 +9,7 @@ export enum PaymentPurpose {
   CHURCH = 'church',
   ADVERTISING = 'advertising',
   SUBSCRIPTION = 'subscription',
+  WEBSITE_ORDER = 'website_order',
+  NEWS_DONATION = 'news_donation',
   OTHER = 'other',
 }

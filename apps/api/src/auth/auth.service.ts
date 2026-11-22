@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
   ServiceUnavailableException,
@@ -19,6 +20,18 @@ import { AuthLoginService } from "./auth-login.service";
 import { AuthTokenService } from "./auth-token.service";
 import { AuthSecurityService } from "./auth-security.service";
 import { MfaService } from "./mfa.service";
+import { PlatformSecurityPolicyService } from "../admin/security/platform-security/platform-security-policy.service";
+import { AccountSecurityService } from "../admin/security/platform-security/account-security.service";
+import { SecurityEventsService } from "../admin/security/platform-security/security-events.service";
+import {
+  decryptMfaSecret,
+  encryptMfaSecret,
+  isEncryptedMfaSecret,
+} from "../admin/security/platform-security/mfa-secret-crypto";
+import {
+  isPasswordReused,
+  nextPasswordHistory,
+} from "../admin/security/platform-security/password-policy";
 
 @Injectable()
 export class AuthService {
@@ -33,6 +46,9 @@ export class AuthService {
     private readonly tokenService: AuthTokenService,
     private readonly securityService: AuthSecurityService,
     private readonly configService: ConfigService,
+    private readonly securityPolicy: PlatformSecurityPolicyService,
+    private readonly accountSecurity: AccountSecurityService,
+    private readonly securityEvents: SecurityEventsService,
   ) {}
 
   // ============================================================
@@ -68,8 +84,13 @@ export class AuthService {
   // LOGIN
   // ============================================================
 
-  async login(email: string, password: string, request?: any) {
-    return this.loginService.login(email, password, request);
+  async login(
+    email: string,
+    password: string,
+    request?: any,
+    options: { rememberMe?: boolean } = {},
+  ) {
+    return this.loginService.login(email, password, request, options);
   }
 
   // ============================================================
@@ -186,6 +207,28 @@ export class AuthService {
       return response;
     }
 
+    // Password reset protection: one reset email per account per cooldown.
+    // The response is identical, so the cooldown reveals nothing.
+    const effective = await this.securityPolicy.getEffectiveForUser(user as any);
+
+    const allowed = await this.accountSecurity.claimPasswordResetEmail(
+      String(user._id),
+      effective.values,
+    );
+
+    if (!allowed) {
+      await this.securityEvents.record({
+        action: "auth.password_reset.throttled",
+        outcome: "denied",
+        severity: "low",
+        targetId: String(user._id),
+        targetType: "user",
+        retentionDays: Number(effective.values.authEventRetentionDays || 180),
+      });
+
+      return response;
+    }
+
     const rawToken = crypto.randomBytes(32).toString("hex");
 
     const tokenHash = crypto
@@ -262,6 +305,7 @@ export class AuthService {
             $set: {
               resetPasswordToken: null,
               resetPasswordExpires: null,
+              passwordResetRequestedAt: null,
             },
           },
         );
@@ -278,6 +322,15 @@ export class AuthService {
         "Password reset email could not be sent. Please try again later.",
       );
     }
+
+    await this.securityEvents.record({
+      action: "auth.password_reset.requested",
+      outcome: "success",
+      severity: "low",
+      targetId: String(user._id),
+      targetType: "user",
+      retentionDays: Number(effective.values.authEventRetentionDays || 180),
+    });
 
     return response;
   }
@@ -296,21 +349,14 @@ export class AuthService {
       );
     }
 
-    if (password.length < 8 || password.length > 128) {
-      throw new BadRequestException(
-        "Your new password must be between 8 and 128 characters.",
-      );
-    }
-
     const tokenHash = crypto
       .createHash("sha256")
       .update(token)
       .digest("hex");
 
-    const passwordHash = await bcrypt.hash(password, 12);
-
-    // Load the account while the reset token is still valid so the confirmation
-    // email can address the user by their saved name.
+    // Load the account while the reset token is still valid so the policy
+    // for this account can be applied and the confirmation email can address
+    // the user by their saved name.
     const user = await this.userModel
       .findOne({
         resetPasswordToken: tokenHash,
@@ -324,6 +370,26 @@ export class AuthService {
       );
     }
 
+    const effective = await this.securityPolicy.getEffectiveForUser(user as any);
+
+    // Same rules as every other password change.
+    await this.securityService.validateNewPassword(password, effective.values);
+
+    if (
+      await isPasswordReused(
+        password,
+        user.password,
+        (user as any).passwordHistory,
+        effective.values,
+      )
+    ) {
+      throw new BadRequestException(
+        "Choose a password you have not used before.",
+      );
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
     // Keep the update atomic so an expired or already-used token cannot reset
     // the password a second time.
     const result = await this.userModel.updateOne(
@@ -335,8 +401,18 @@ export class AuthService {
       {
         $set: {
           password: passwordHash,
+          passwordHistory: nextPasswordHistory(
+            user.password,
+            (user as any).passwordHistory,
+          ),
+          passwordChangedAt: new Date(),
+          mustChangePassword: false,
+          passwordResetByAdmin: false,
           resetPasswordToken: null,
           resetPasswordExpires: null,
+          failedLoginAttempts: 0,
+          lastFailedLoginAt: null,
+          lockedUntil: null,
         },
       },
     );
@@ -346,6 +422,13 @@ export class AuthService {
         "This password reset link is invalid or has expired. Request a new one.",
       );
     }
+
+    // Revoke sessions / notify / audit as the policy requires.
+    await this.accountSecurity.onSecurityChange(
+      String(user._id),
+      "password_reset",
+      { user: user.toObject() as any },
+    );
 
     // Email delivery is best-effort: a mail server problem must not undo or
     // misreport the password change after the database update has succeeded.
@@ -416,7 +499,7 @@ export class AuthService {
   }
 
   // ============================================================
-  // BEGIN MFA SETUP
+  // BEGIN MFA SETUP (during sign-in)
   // ============================================================
 
   async beginMfaSetup(setupToken: string) {
@@ -437,29 +520,11 @@ export class AuthService {
       throw new BadRequestException("MFA is already enabled.");
     }
 
-    const secret = this.mfaService.generateSecret();
-
-    const otpAuthUrl = this.mfaService.generateOtpAuthUrl(user.email, secret);
-
-    const qrCodeDataUrl =
-      await this.mfaService.generateQrCodeDataUrl(otpAuthUrl);
-
-    await this.userModel.updateOne(
-      { _id: userId },
-      { $set: { mfaSecret: secret } },
-    );
-
-    return {
-      setup_token: setupToken,
-      secret,
-      otpAuthUrl,
-      qrCodeDataUrl,
-      expiresIn: 300,
-    };
+    return this.startEnrollment(user, { setup_token: setupToken });
   }
 
   // ============================================================
-  // CONFIRM MFA SETUP
+  // CONFIRM MFA SETUP (during sign-in)
   // ============================================================
 
   async confirmMfaSetup(setupToken: string, code: string) {
@@ -476,43 +541,7 @@ export class AuthService {
       throw new BadRequestException("MFA setup has expired or is invalid.");
     }
 
-    const valid = await this.mfaService.verifyTotp(code, user.mfaSecret);
-
-    if (!valid) {
-      throw new UnauthorizedException("Invalid MFA code.");
-    }
-
-    const recoveryCodeResult = await this.mfaService.generateRecoveryCodes();
-
-    const recoveryCodes = recoveryCodeResult.codes;
-    const hashedRecoveryCodes = recoveryCodeResult.hashes;
-
-    if (
-      !Array.isArray(recoveryCodes) ||
-      !Array.isArray(hashedRecoveryCodes) ||
-      recoveryCodes.length === 0 ||
-      recoveryCodes.length !== hashedRecoveryCodes.length
-    ) {
-      throw new BadRequestException("Unable to generate MFA recovery codes.");
-    }
-
-    await this.userModel.updateOne(
-      { _id: userId },
-      {
-        $set: {
-          mfaEnabled: true,
-          mfaVerifiedAt: new Date(),
-          mfaRecoveryCodes: hashedRecoveryCodes,
-          mfaRecoveryCodesGeneratedAt: new Date(),
-        },
-      },
-    );
-
-    return {
-      message: "MFA enabled successfully.",
-      mfaEnabled: true,
-      recoveryCodes,
-    };
+    return this.finishEnrollment(user, code, null);
   }
 
   // ============================================================
@@ -533,28 +562,57 @@ export class AuthService {
       throw new UnauthorizedException("MFA is not configured.");
     }
 
-    const valid = await this.mfaService.verifyTotp(code, user.mfaSecret);
+    const effective = await this.securityPolicy.getEffectiveForUser(user as any);
+    const context = this.requestContext(request);
+
+    await this.accountSecurity.assertNotLocked(userId);
+
+    const secret = decryptMfaSecret(user.mfaSecret);
+
+    const valid =
+      Boolean(secret) && (await this.mfaService.verifyTotp(code, secret as string));
 
     if (!valid) {
+      await this.accountSecurity.recordCodeFailure(user, effective.values, {
+        ...context,
+        organizations: effective.organizations.map((org) => org.organizationId),
+        reason: "wrong_mfa_code",
+      });
+
       throw new UnauthorizedException("Invalid MFA code.");
     }
 
-    const ip = this.securityService.getRequestIp(request);
-
-    const userAgent =
-      typeof request?.headers?.["user-agent"] === "string"
-        ? request.headers["user-agent"]
-        : undefined;
+    await this.upgradeLegacySecret(userId, user.mfaSecret, secret);
 
     const updatedUser = await this.usersService.recordSuccessfulLogin(
       userId,
-      ip || undefined,
-      userAgent || undefined,
+      context.ip || undefined,
+      context.userAgent || undefined,
     );
 
     const loginUser = updatedUser || user;
 
-    const token = this.tokenService.createAccessToken(loginUser, userId, true);
+    await this.securityEvents.record({
+      action: "auth.login.success",
+      outcome: "success",
+      severity: "info",
+      actorId: userId,
+      targetId: userId,
+      targetType: "user",
+      ...context,
+      metadata: { method: "totp" },
+      retentionDays: Number(effective.values.authEventRetentionDays || 180),
+    });
+
+    const token = this.tokenService.createAccessToken(
+      loginUser,
+      userId,
+      true,
+      this.accountSecurity.accessTokenExpiresIn(
+        effective.values,
+        payload?.rememberMe === true,
+      ),
+    );
 
     return {
       access_token: token,
@@ -590,7 +648,23 @@ export class AuthService {
       throw new UnauthorizedException("MFA is not configured.");
     }
 
-    const normalizedCode = String(recoveryCode || "").trim().toUpperCase();
+    const platform = await this.securityPolicy.getPlatform();
+
+    if (!platform.accounts.allowRecoveryCodes) {
+      throw new UnauthorizedException(
+        "Recovery codes are not accepted. Contact Fockis support to recover your account.",
+      );
+    }
+
+    const effective = await this.securityPolicy.getEffectiveForUser(user as any);
+    const context = this.requestContext(request);
+
+    await this.accountSecurity.assertNotLocked(userId);
+
+    const normalizedCode = String(recoveryCode || "")
+      .replace(/[\s-]/g, "")
+      .trim()
+      .toUpperCase();
 
     if (!normalizedCode) {
       throw new UnauthorizedException("Recovery code is required.");
@@ -600,57 +674,68 @@ export class AuthService {
       ? user.mfaRecoveryCodes
       : [];
 
-    let matchingIndex = -1;
+    const matchingIndex = await this.mfaService.verifyRecoveryCode(
+      normalizedCode,
+      recoveryCodes,
+    );
 
-    for (let index = 0; index < recoveryCodes.length; index += 1) {
-      const hash = recoveryCodes[index];
+    // Consume the code atomically: if two requests use the same code at
+    // the same time, only one of them removes it and succeeds.
+    const consumed =
+      matchingIndex >= 0
+        ? await this.userModel.updateOne(
+            { _id: userId, mfaRecoveryCodes: recoveryCodes[matchingIndex] },
+            { $pull: { mfaRecoveryCodes: recoveryCodes[matchingIndex] } },
+          )
+        : null;
 
-      if (!hash || typeof hash !== "string") {
-        continue;
-      }
+    if (!consumed || consumed.modifiedCount !== 1) {
+      await this.accountSecurity.recordCodeFailure(user, effective.values, {
+        ...context,
+        organizations: effective.organizations.map((org) => org.organizationId),
+        reason: "wrong_recovery_code",
+      });
 
-      const matches = await bcrypt.compare(normalizedCode, hash);
-
-      if (matches) {
-        matchingIndex = index;
-        break;
-      }
-    }
-
-    if (matchingIndex === -1) {
       throw new UnauthorizedException("Invalid or already used recovery code.");
     }
 
-    recoveryCodes.splice(matchingIndex, 1);
-
-    await this.userModel.updateOne(
-      { _id: userId },
-      { $set: { mfaRecoveryCodes: recoveryCodes } },
-    );
-
-    const ip = this.securityService.getRequestIp(request);
-
-    const userAgent =
-      typeof request?.headers?.["user-agent"] === "string"
-        ? request.headers["user-agent"]
-        : undefined;
+    const remaining = recoveryCodes.length - 1;
 
     const updatedUser = await this.usersService.recordSuccessfulLogin(
       userId,
-      ip || undefined,
-      userAgent || undefined,
+      context.ip || undefined,
+      context.userAgent || undefined,
     );
 
     const loginUser = updatedUser || user;
 
-    const token = this.tokenService.createAccessToken(loginUser, userId, true);
+    await this.securityEvents.record({
+      action: "auth.mfa.recovery_code_used",
+      outcome: "success",
+      severity: "medium",
+      actorId: userId,
+      targetId: userId,
+      targetType: "user",
+      ...context,
+      metadata: { remainingRecoveryCodes: remaining },
+    });
+
+    const token = this.tokenService.createAccessToken(
+      loginUser,
+      userId,
+      true,
+      this.accountSecurity.accessTokenExpiresIn(
+        effective.values,
+        payload?.rememberMe === true,
+      ),
+    );
 
     return {
       access_token: token,
       requiresMfa: false,
       mfaVerified: true,
       recoveryCodeUsed: true,
-      remainingRecoveryCodes: recoveryCodes.length,
+      remainingRecoveryCodes: remaining,
       mustChangePassword: Boolean((loginUser as any).mustChangePassword),
       user: await this.tokenService.buildUserForTokenResponse(
         loginUser,
@@ -663,7 +748,12 @@ export class AuthService {
   // DISABLE MFA
   // ============================================================
 
-  async disableMfa(userId: string, currentPassword: string, mfaCode: string) {
+  async disableMfa(
+    userId: string,
+    currentPassword: string,
+    mfaCode: string,
+    options: { tokenIat?: number | null; request?: any } = {},
+  ) {
     const user = await this.userModel
       .findById(userId)
       .select("+password +mfaSecret +mfaRecoveryCodes")
@@ -673,9 +763,11 @@ export class AuthService {
       throw new UnauthorizedException("User not found.");
     }
 
-    if (this.isMandatoryMfaRole(user.role)) {
+    const effective = await this.securityPolicy.getEffectiveForUser(user as any);
+
+    if (effective.requiresTwoFactor) {
       throw new BadRequestException(
-        "MFA is mandatory for this account and cannot be disabled.",
+        "Two-factor authentication is required for this account and cannot be turned off.",
       );
     }
 
@@ -693,13 +785,20 @@ export class AuthService {
     }
 
     if (user.mfaEnabled) {
-      if (!user.mfaSecret) {
+      const secret = decryptMfaSecret(user.mfaSecret);
+
+      if (!secret) {
         throw new BadRequestException("MFA configuration is invalid.");
       }
 
-      const valid = await this.mfaService.verifyTotp(mfaCode, user.mfaSecret);
+      const valid = await this.mfaService.verifyTotp(mfaCode, secret);
 
       if (!valid) {
+        await this.accountSecurity.recordCodeFailure(user, effective.values, {
+          ...this.requestContext(options.request),
+          reason: "wrong_mfa_code",
+        });
+
         throw new UnauthorizedException("Invalid MFA code.");
       }
     }
@@ -716,6 +815,12 @@ export class AuthService {
         },
       },
     );
+
+    await this.accountSecurity.onSecurityChange(userId, "mfa_disabled", {
+      exceptIat: options.tokenIat ?? null,
+      context: this.requestContext(options.request),
+      user: user.toObject() as any,
+    });
 
     return {
       message: "MFA disabled successfully.",
@@ -734,10 +839,345 @@ export class AuthService {
       throw new UnauthorizedException("User not found.");
     }
 
+    const effective = await this.securityPolicy.getEffectiveForUser(user as any);
+    const platform = await this.securityPolicy.getPlatform();
+
     return {
       mfaEnabled: Boolean(user.mfaEnabled),
-      mfaRequired: this.isMfaRequired(user),
+      mfaRequired: effective.requiresTwoFactor,
       role: user.role || "user",
+      selfServiceAllowed:
+        Boolean(platform.accounts.allowUserTwoFactor) || effective.requiresTwoFactor,
+      recoveryCodesAllowed: Boolean(platform.accounts.allowRecoveryCodes),
+      remainingRecoveryCodes: Array.isArray((user as any).mfaRecoveryCodes)
+        ? (user as any).mfaRecoveryCodes.length
+        : undefined,
+    };
+  }
+
+  // ============================================================
+  // SELF-SERVICE TWO-FACTOR (signed-in users)
+  // ============================================================
+
+  async startSelfServiceEnrollment(userId: string, request: any) {
+    const user = await this.userModel
+      .findById(userId)
+      .select("+mfaSecret +mfaRecoveryCodes")
+      .exec();
+
+    if (!user) throw new UnauthorizedException("User not found.");
+
+    if (user.mfaEnabled) {
+      throw new BadRequestException("Two-factor authentication is already on.");
+    }
+
+    const platform = await this.securityPolicy.getPlatform();
+    const effective = await this.securityPolicy.getEffectiveForUser(user as any);
+
+    if (!platform.accounts.allowUserTwoFactor && !effective.requiresTwoFactor) {
+      throw new ForbiddenException(
+        "Two-factor enrollment from account settings is turned off by Fockis.",
+      );
+    }
+
+    this.accountSecurity.assertReauthenticated(
+      request,
+      userId,
+      Boolean(platform.accounts.requireReauthenticationForSecurityChanges),
+    );
+
+    return this.startEnrollment(user, {});
+  }
+
+  async confirmSelfServiceEnrollment(
+    userId: string,
+    code: string,
+    request: any,
+  ) {
+    const user = await this.userModel
+      .findById(userId)
+      .select("+mfaSecret +mfaRecoveryCodes")
+      .exec();
+
+    if (!user || !user.mfaSecret || user.mfaEnabled) {
+      throw new BadRequestException("Start two-factor setup again.");
+    }
+
+    return this.finishEnrollment(user, code, {
+      tokenIat: Number(request?.user?.tokenIssuedAt) || null,
+      request,
+    });
+  }
+
+  async regenerateRecoveryCodes(userId: string, code: string, request: any) {
+    const user = await this.userModel
+      .findById(userId)
+      .select("+mfaSecret +mfaRecoveryCodes")
+      .exec();
+
+    if (!user || !user.mfaEnabled) {
+      throw new BadRequestException("Two-factor authentication is not on.");
+    }
+
+    const platform = await this.securityPolicy.getPlatform();
+
+    if (!platform.accounts.allowRecoveryCodes) {
+      throw new ForbiddenException("Recovery codes are turned off by Fockis.");
+    }
+
+    this.accountSecurity.assertReauthenticated(
+      request,
+      userId,
+      Boolean(platform.accounts.requireReauthenticationForSecurityChanges),
+    );
+
+    const secret = decryptMfaSecret(user.mfaSecret);
+    const effective = await this.securityPolicy.getEffectiveForUser(user as any);
+
+    if (!secret || !(await this.mfaService.verifyTotp(code, secret))) {
+      await this.accountSecurity.recordCodeFailure(user, effective.values, {
+        ...this.requestContext(request),
+        reason: "wrong_mfa_code",
+      });
+
+      throw new UnauthorizedException("Invalid MFA code.");
+    }
+
+    const result = await this.mfaService.generateRecoveryCodes();
+
+    await this.userModel.updateOne(
+      { _id: userId },
+      {
+        $set: {
+          mfaRecoveryCodes: result.hashes,
+          mfaRecoveryCodesGeneratedAt: new Date(),
+        },
+      },
+    );
+
+    await this.accountSecurity.onSecurityChange(userId, "recovery_codes_regenerated", {
+      exceptIat: Number(request?.user?.tokenIssuedAt) || null,
+      context: this.requestContext(request),
+      user: user.toObject() as any,
+    });
+
+    return { recoveryCodes: result.codes };
+  }
+
+  // ============================================================
+  // REAUTHENTICATION
+  // ============================================================
+
+  /**
+   * Confirm the current password (and two-factor code when two-factor is on)
+   * and return a short-lived reauthentication token for sensitive actions.
+   */
+  async reauthenticate(
+    userId: string,
+    password: string,
+    code: string | undefined,
+    request: any,
+  ) {
+    const user = await this.userModel
+      .findById(userId)
+      .select("+password +mfaSecret")
+      .exec();
+
+    if (!user) throw new UnauthorizedException("User not found.");
+
+    const effective = await this.securityPolicy.getEffectiveForUser(user as any);
+    const context = this.requestContext(request);
+
+    await this.accountSecurity.assertNotLocked(userId);
+
+    const passwordOk =
+      Boolean(password) &&
+      Boolean(user.password) &&
+      (await bcrypt.compare(String(password), user.password));
+
+    let codeOk = true;
+
+    if (passwordOk && user.mfaEnabled) {
+      const secret = decryptMfaSecret(user.mfaSecret);
+      codeOk = Boolean(secret) && (await this.mfaService.verifyTotp(String(code ?? ""), secret as string));
+    }
+
+    if (!passwordOk || !codeOk) {
+      await this.accountSecurity.recordCodeFailure(user, effective.values, {
+        ...context,
+        organizations: effective.organizations.map((org) => org.organizationId),
+        reason: passwordOk ? "reauth_wrong_mfa_code" : "reauth_wrong_password",
+      });
+
+      throw new UnauthorizedException(
+        user.mfaEnabled
+          ? "The password or two-factor code is incorrect."
+          : "The password is incorrect.",
+      );
+    }
+
+    const issued = await this.accountSecurity.issueReauthToken(userId);
+
+    await this.securityEvents.record({
+      action: "auth.reauthenticated",
+      outcome: "success",
+      severity: "info",
+      actorId: userId,
+      targetId: userId,
+      targetType: "user",
+      ...context,
+      retentionDays: Number(effective.values.authEventRetentionDays || 180),
+    });
+
+    return {
+      reauthToken: issued.token,
+      expiresInSeconds: issued.expiresInSeconds,
+      mfaRequired: Boolean(user.mfaEnabled),
+    };
+  }
+
+  /** Sign out every other session of the current user. */
+  async revokeOtherSessions(userId: string, request: any) {
+    const platform = await this.securityPolicy.getPlatform();
+
+    this.accountSecurity.assertReauthenticated(
+      request,
+      userId,
+      Boolean(platform.accounts.requireReauthenticationForSecurityChanges),
+    );
+
+    await this.accountSecurity.revokeSessions(userId, {
+      reason: "user_signed_out_other_sessions",
+      exceptIat: Number(request?.user?.tokenIssuedAt) || null,
+      context: this.requestContext(request),
+    });
+
+    await this.accountSecurity.onSecurityChange(userId, "sessions_revoked", {
+      exceptIat: Number(request?.user?.tokenIssuedAt) || null,
+      context: this.requestContext(request),
+    });
+
+    return { success: true };
+  }
+
+  // ============================================================
+  // ENROLLMENT HELPERS
+  // ============================================================
+
+  private async startEnrollment(
+    user: UserDocument,
+    extra: Record<string, unknown>,
+  ) {
+    const secret = this.mfaService.generateSecret();
+
+    const otpAuthUrl = this.mfaService.generateOtpAuthUrl(user.email, secret);
+
+    const qrCodeDataUrl =
+      await this.mfaService.generateQrCodeDataUrl(otpAuthUrl);
+
+    // Stored encrypted; the plaintext secret is only shown to the user once
+    // so they can add it to an authenticator app.
+    await this.userModel.updateOne(
+      { _id: user._id },
+      { $set: { mfaSecret: encryptMfaSecret(secret) } },
+    );
+
+    return {
+      ...extra,
+      secret,
+      otpAuthUrl,
+      qrCodeDataUrl,
+      expiresIn: 300,
+    };
+  }
+
+  private async finishEnrollment(
+    user: UserDocument,
+    code: string,
+    options: { tokenIat: number | null; request?: any } | null,
+  ) {
+    const secret = decryptMfaSecret(user.mfaSecret);
+
+    const valid = Boolean(secret) && (await this.mfaService.verifyTotp(code, secret as string));
+
+    if (!valid) {
+      throw new UnauthorizedException("Invalid MFA code.");
+    }
+
+    const platform = await this.securityPolicy.getPlatform();
+
+    let recoveryCodes: string[] = [];
+    let hashedRecoveryCodes: string[] = [];
+
+    if (platform.accounts.allowRecoveryCodes) {
+      const recoveryCodeResult = await this.mfaService.generateRecoveryCodes();
+
+      recoveryCodes = recoveryCodeResult.codes;
+      hashedRecoveryCodes = recoveryCodeResult.hashes;
+
+      if (
+        !Array.isArray(recoveryCodes) ||
+        !Array.isArray(hashedRecoveryCodes) ||
+        recoveryCodes.length === 0 ||
+        recoveryCodes.length !== hashedRecoveryCodes.length
+      ) {
+        throw new BadRequestException("Unable to generate MFA recovery codes.");
+      }
+    }
+
+    await this.userModel.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          mfaEnabled: true,
+          mfaSecret: isEncryptedMfaSecret(user.mfaSecret)
+            ? user.mfaSecret
+            : encryptMfaSecret(secret as string),
+          mfaVerifiedAt: new Date(),
+          mfaRecoveryCodes: hashedRecoveryCodes,
+          mfaRecoveryCodesGeneratedAt: hashedRecoveryCodes.length ? new Date() : null,
+        },
+      },
+    );
+
+    await this.accountSecurity.onSecurityChange(String(user._id), "mfa_enabled", {
+      exceptIat: options?.tokenIat ?? null,
+      context: this.requestContext(options?.request),
+      user: user.toObject() as any,
+    });
+
+    return {
+      message: "MFA enabled successfully.",
+      mfaEnabled: true,
+      recoveryCodes,
+    };
+  }
+
+  /** Re-encrypt a legacy plaintext secret after it was used successfully. */
+  private async upgradeLegacySecret(
+    userId: string,
+    stored: unknown,
+    plain: string | null,
+  ): Promise<void> {
+    if (!plain || isEncryptedMfaSecret(stored)) return;
+
+    try {
+      await this.userModel.updateOne(
+        { _id: userId, mfaSecret: String(stored) },
+        { $set: { mfaSecret: encryptMfaSecret(plain) } },
+      );
+    } catch {
+      // Retried on the next sign-in.
+    }
+  }
+
+  private requestContext(request?: any) {
+    return {
+      ip: this.securityService.getRequestIp(request) ?? null,
+      userAgent:
+        typeof request?.headers?.["user-agent"] === "string"
+          ? request.headers["user-agent"]
+          : null,
     };
   }
 
@@ -765,30 +1205,5 @@ export class AuthService {
     } catch {
       throw new UnauthorizedException("Invalid or expired MFA token.");
     }
-  }
-
-  // ============================================================
-  // MANDATORY MFA ROLE
-  // ============================================================
-
-  private isMandatoryMfaRole(role?: string): boolean {
-    const normalized = String(role || "")
-      .trim()
-      .toLowerCase()
-      .replace(/[\s-]+/g, "_");
-
-    return (
-      normalized === "admin" ||
-      normalized === "super_admin" ||
-      normalized === "superadmin"
-    );
-  }
-
-  // ============================================================
-  // MFA REQUIRED
-  // ============================================================
-
-  private isMfaRequired(user: any): boolean {
-    return this.isMandatoryMfaRole(user?.role) || Boolean(user?.mfaRequired);
   }
 }

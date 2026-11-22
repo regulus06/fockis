@@ -50,6 +50,8 @@ import {
   SecurityPolicyResponse,
 } from "./organization-identity.service";
 
+import { PlatformSecurityPolicyService } from "../../admin/security/platform-security/platform-security-policy.service";
+
 @Injectable()
 export class OrganizationIdentityCommonService {
   readonly FOCKIS_ROOT_DOMAIN = "fockis.com";
@@ -69,7 +71,29 @@ export class OrganizationIdentityCommonService {
 
     @InjectModel(OrganizationSecurityPolicy.name)
     readonly securityPolicyModel: Model<OrganizationSecurityPolicyDocument>,
+
+    readonly platformSecurity: PlatformSecurityPolicyService,
   ) {}
+
+  // ==========================================================================
+  // EFFECTIVE SECURITY POLICY
+  //
+  // The policy actually enforced for this organization's managed users:
+  // the Fockis baseline plus any stricter delegated organization settings.
+  // ==========================================================================
+
+  async getEffectiveSecurityPolicy(
+    organizationId: Types.ObjectId,
+  ): Promise<Record<string, any>> {
+    await this.getOrCreateSecurityPolicy(organizationId);
+
+    const resolved =
+      await this.platformSecurity.getOrganizationPolicy(
+        String(organizationId),
+      );
+
+    return resolved.values;
+  }
 
   // ==========================================================================
   // OBJECT IDS

@@ -5,7 +5,7 @@
  * apps/api/src/org/dashboard/organization-dashboard.controller.ts.
  *
  *   GET  /organizations/domain-availability?domain=   (public)
- *   GET  /organizations/:id/dashboard?days=           (admins)
+ *   GET  /organizations/:id/dashboard?days= | ?from=&to=  (admins)
  *   GET  /organizations/:id/members-export            (CSV; ViewMembers)
  *   POST /organizations/:id/logo                      (multipart "file")
  * -----------------------------------------------------------------------------
@@ -45,22 +45,56 @@ export function checkDomainAvailability(domain: string, signal?: AbortSignal): P
 
 export type DashboardRange = 7 | 30 | 90 | 365;
 
+export type DashboardActivityType = "member" | "event" | "ministry" | "announcement" | "donation" | "attendance";
+
+export interface DashboardActivity {
+  id: string;
+  type: DashboardActivityType;
+  actorName: string;
+  avatarUrl: string | null;
+  /** Machine action key ("joined", "event.created", a ministry audit action…). */
+  action: string;
+  detail: string | null;
+  status: string | null;
+  at: string;
+  memberId: string | null;
+  targetId: string | null;
+}
+
+export interface DashboardEvent {
+  id: string;
+  title: string;
+  startsAt: string | null;
+  endsAt: string | null;
+  location: string | null;
+  eventType: string | null;
+  coverImageUrl?: string | null;
+  isOnline?: boolean;
+  capacity?: number | null;
+  requiresRsvp?: boolean;
+  going?: number;
+}
+
 export interface OrganizationDashboard {
   organizationId: string;
   rangeDays: number;
+  range?: { from: string; to: string; custom: boolean };
   generatedAt: string;
   viewer: { isOwner: boolean; role: string; permissions: string[] };
   counts: {
     totalMembers: number | null;
     newMembers: number | null;
+    previousNewMembers?: number | null;
     pendingApplications: number | null;
     inactiveMembers: number | null;
     departments: number | null;
+    newDepartments?: number | null;
     groups: number | null;
+    newGroups?: number | null;
     branches: number;
     upcomingEvents: number | null;
   };
-  growth: { points: { date: string; total: number }[]; changePercent: number | null } | null;
+  growth: { points: { date: string; total: number }[]; changePercent: number | null; added?: number } | null;
   attendance: {
     checkIns: number;
     previousCheckIns: number;
@@ -69,28 +103,20 @@ export interface OrganizationDashboard {
     participationRate: number | null;
     byWeek: { weekStart: string; checkIns: number }[];
   } | null;
-  recentActivity:
-    | {
-        memberId: string;
-        name: string;
-        avatarUrl: string | null;
-        at: string;
-        status: string | null;
-        role: string | null;
-        note: string | null;
-      }[]
-    | null;
-  upcomingEvents:
-    | { id: string; title: string; startsAt: string | null; endsAt: string | null; location: string | null; eventType: string | null }[]
-    | null;
+  recentActivity: DashboardActivity[] | null;
+  upcomingEvents: DashboardEvent[] | null;
 }
+
+/** `days` (7, 30, 90, 365) or an exact window (ISO dates). */
+export type DashboardQuery = { days: DashboardRange } | { from: string; to: string };
 
 export function getOrganizationDashboard(
   organizationId: string,
-  days: DashboardRange,
+  query: DashboardQuery | DashboardRange,
   signal?: AbortSignal,
 ): Promise<OrganizationDashboard> {
-  return churchGet<OrganizationDashboard>(`${org(organizationId)}/dashboard`, { days }, signal);
+  const q = typeof query === "number" ? { days: query } : query;
+  return churchGet<OrganizationDashboard>(`${org(organizationId)}/dashboard`, q, signal);
 }
 
 /* ------------------------------------------------------------------ export */
@@ -159,8 +185,18 @@ export function uploadOrganizationLogo(organizationId: string, file: File): Prom
  * In development the Vite proxy maps "/api" to it; in production the API base
  * is absolute. Anything else (https:, data:, blob:) is returned unchanged.
  */
+/**
+ * Uploaded organization covers are stored in uploads/church-organization-covers
+ * (served at /uploads/…), but the saved bannerUrl uses the address
+ * /church/organizations/:id/cover/media/:file, which no API route serves.
+ * Point it at the real file.
+ */
+const COVER_MEDIA = /^\/church\/organizations\/([a-f0-9]{24})\/cover\/media\/([^/?#]+)$/i;
+
 export function mediaUrl(value?: string | null): string | null {
   if (!value) return null;
+  const cover = value.match(COVER_MEDIA);
+  if (cover) value = `/uploads/church-organization-covers/${cover[1]}/${cover[2]}`;
   if (!value.startsWith("/uploads/")) return value;
   const apiRoot = CHURCH_API_BASE.replace(/\/church\/?$/, "");
   return `${apiRoot}${value}`;

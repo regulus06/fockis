@@ -30,6 +30,14 @@ export default function EventRsvpActions({
 
   if (!isEventActive(event, now)) return null;
 
+  // Registration events use Register (and attendees can't leave via RSVP);
+  // "No registration" events only offer Interested (saved).
+  const mode = event.registration?.mode ?? "rsvp";
+  if (mode !== "rsvp") {
+    if (event.isOwner || event.viewerRsvp === "going" || only === "going") return null;
+    only = "interested";
+  }
+
   if (event.isOwner) {
     return (
       <div className={`fke-rsvp fke-rsvp--${size} ${className}`}>

@@ -2035,3 +2035,31 @@
     transform: none !important;
   }
 }
+
+/* Formatted descriptions (organization event editor; sanitized HTML). */
+.fke-description--rich {
+  white-space: normal;
+
+  p {
+    margin: 0 0 0.7em;
+  }
+
+  ul,
+  ol {
+    margin: 0 0 0.7em;
+    padding-left: 1.4em;
+  }
+
+  a {
+    color: var(--fks-accent, #1d5fe0);
+    text-decoration: underline;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0.5em 0;
+    border-radius: 12px;
+  }
+}

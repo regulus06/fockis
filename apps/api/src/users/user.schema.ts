@@ -627,6 +627,30 @@ export class User {
 
   lockoutCount!: number;
 
+  /**
+   * Access tokens issued before this time are rejected (session revocation
+   * after password/security changes or an administrator action).
+   */
+  @Prop({
+    type: Date,
+    default: null,
+  })
+  sessionsRevokedAt!: Date | null;
+
+  /** Issue time (JWT iat) of the session kept signed in at revocation. */
+  @Prop({
+    type: Number,
+    default: null,
+  })
+  sessionRevocationExemptIat!: number | null;
+
+  /** Last password-reset email (password reset protection cooldown). */
+  @Prop({
+    type: Date,
+    default: null,
+  })
+  passwordResetRequestedAt!: Date | null;
+
   @Prop({
 
     type: Date,

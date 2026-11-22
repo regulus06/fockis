@@ -7,11 +7,12 @@
 // Route-aware administrator security
 // Effective RBAC permissions
 //
-// SESSION POLICY:
-// - Regular users: no inactivity expiration or maximum session age.
-// - Premium users, sellers, employers and Academy students: same as regular.
-// - Admins: existing security restrictions on admin routes.
-// - Super Admins: existing stricter security restrictions.
+// SESSION POLICY (from the platform security policy in MongoDB):
+// - Regular users: effective inactivity / maximum-session limits
+//   (0 = none, which keeps the previous persistent sessions).
+// - Organization-managed users: may be stricter via their organization.
+// - Admins on /admin routes and Super Admins: their own limits.
+// - Revoked sessions (password/security changes) are rejected.
 // ============================================================================
 
 import {
@@ -55,6 +56,14 @@ import {
   RolePermissions,
 } from "../admin/rbac/role-permissions";
 
+import {
+  PlatformSecurityPolicyService,
+} from "../admin/security/platform-security/platform-security-policy.service";
+
+import {
+  isPasswordExpired,
+} from "../admin/security/platform-security/password-policy";
+
 // ============================================================================
 // JWT PAYLOAD
 // ============================================================================
@@ -74,9 +83,23 @@ interface JwtPayload {
 
   mustChangePassword?: boolean;
 
+  tokenType?: string;
+  purpose?: string;
+
   iat?: number;
   exp?: number;
 }
+
+/**
+ * Tokens that are only valid for one step of a flow and must never be
+ * accepted as an access token (for example the MFA challenge token issued
+ * after the password check, before the two-factor code).
+ */
+const NON_ACCESS_TOKEN_TYPES = new Set([
+  "mfa_setup",
+  "mfa_challenge",
+  "reauth",
+]);
 
 // ============================================================================
 // SESSION POLICY
@@ -108,51 +131,17 @@ export class JwtStrategy extends PassportStrategy(
 ) {
 
   // ==========================================================================
-  // REGULAR FOCKIS USERS
-  // ==========================================================================
+  // SESSION LIMITS
   //
-  // Persistent login.
+  // Inactivity and maximum-session limits come from the platform security
+  // policy (Admin Center → Security & Identity → Session Management):
   //
-  // No inactivity timeout.
-  // No maximum session age enforced by this strategy.
-  //
-  // Applies to:
-  // - Regular users
-  // - Premium users
-  // - Sellers
-  // - Employers
-  // - Academy students
-  // - Other non-administrator accounts
-  //
-  // NOTE: Passport still validates the JWT exp claim.
-  // A persistent login requires a working refresh-token mechanism.
+  // - Super administrators: superAdmin* limits on every route.
+  // - Administrators/moderators on /admin routes: admin* limits.
+  // - Everyone else: the effective account policy (organization-managed
+  //   users may have stricter limits from their organization). With the
+  //   initial configuration (0 = off) regular users keep persistent sessions.
   // ==========================================================================
-
-  private readonly STANDARD_SESSION: SessionPolicy = {
-    name: "standard",
-    inactivityMinutes: 0,
-    maximumSessionHours: 0,
-  };
-
-  // ==========================================================================
-  // ADMIN
-  // ==========================================================================
-
-  private readonly ADMIN_SESSION: SessionPolicy = {
-    name: "admin",
-    inactivityMinutes: 10,
-    maximumSessionHours: 8,
-  };
-
-  // ==========================================================================
-  // SUPER ADMIN
-  // ==========================================================================
-
-  private readonly SUPER_ADMIN_SESSION: SessionPolicy = {
-    name: "super_admin",
-    inactivityMinutes: 5,
-    maximumSessionHours: 4,
-  };
 
   // ==========================================================================
   // ACTIVITY WRITE THROTTLE
@@ -167,6 +156,8 @@ export class JwtStrategy extends PassportStrategy(
 
     @InjectModel(AdminRole.name)
     private readonly adminRoleModel: Model<AdminRoleDocument>,
+
+    private readonly securityPolicy: PlatformSecurityPolicyService,
   ) {
     const jwtSecret =
       process.env.JWT_SECRET?.trim();
@@ -226,6 +217,17 @@ export class JwtStrategy extends PassportStrategy(
       );
     }
 
+    if (
+      (payload?.tokenType &&
+        NON_ACCESS_TOKEN_TYPES.has(String(payload.tokenType))) ||
+      (payload?.purpose &&
+        NON_ACCESS_TOKEN_TYPES.has(String(payload.purpose)))
+    ) {
+      throw new UnauthorizedException(
+        "Invalid authentication token.",
+      );
+    }
+
     // ========================================================================
     // LOAD CURRENT USER
     // ========================================================================
@@ -276,6 +278,45 @@ export class JwtStrategy extends PassportStrategy(
       throw new UnauthorizedException(
         `This account is temporarily locked. Try again in ${remainingSeconds} seconds.`,
       );
+    }
+
+    // ========================================================================
+    // SESSION REVOCATION
+    //
+    // Tokens issued before the account's sessions were revoked (password
+    // change, security change, administrator action) are rejected. The
+    // session that made the change may be exempt.
+    // ========================================================================
+
+    const sessionsRevokedAt =
+      this.toDate((user as any).sessionsRevokedAt);
+
+    if (
+      sessionsRevokedAt &&
+      typeof payload?.iat === "number"
+    ) {
+      const revokedAtSeconds =
+        Math.floor(
+          sessionsRevokedAt.getTime() / 1000,
+        );
+
+      const exemptIat =
+        Number(
+          (user as any).sessionRevocationExemptIat,
+        );
+
+      if (
+        payload.iat < revokedAtSeconds &&
+        !(
+          Number.isFinite(exemptIat) &&
+          exemptIat > 0 &&
+          payload.iat === exemptIat
+        )
+      ) {
+        throw new UnauthorizedException(
+          "You were signed out. Please sign in again.",
+        );
+      }
     }
 
     // ========================================================================
@@ -393,11 +434,35 @@ export class JwtStrategy extends PassportStrategy(
     // DETERMINE SESSION POLICY
     // ========================================================================
 
+    const effectivePolicy =
+      await this.securityPolicy.getEffectiveForUser({
+        _id: user._id,
+        role: userRole,
+        isSuperAdmin,
+        mfaRequired: (user as any).mfaRequired,
+      });
+
+    const platformPolicy =
+      await this.securityPolicy.getPlatform();
+
     const sessionPolicy =
       this.getSessionPolicy(
         request,
         userRole,
         isSuperAdmin,
+        effectivePolicy.values,
+        platformPolicy.accounts,
+      );
+
+    // ========================================================================
+    // PASSWORD EXPIRATION
+    // ========================================================================
+
+    const passwordExpired =
+      isPasswordExpired(
+        (user as any).passwordChangedAt ??
+          (user as any).createdAt,
+        effectivePolicy.values,
       );
 
     // ========================================================================
@@ -622,7 +687,20 @@ export class JwtStrategy extends PassportStrategy(
       verified: Boolean(user.verified),
 
       mustChangePassword:
-        Boolean(user.mustChangePassword),
+        Boolean(user.mustChangePassword) ||
+        passwordExpired,
+
+      passwordExpired,
+
+      // Issue time of the presented token (used to keep the current
+      // session signed in when other sessions are revoked).
+      tokenIssuedAt:
+        typeof payload?.iat === "number"
+          ? payload.iat
+          : null,
+
+      requiresTwoFactor:
+        effectivePolicy.requiresTwoFactor,
 
       passwordChangedAt:
         user.passwordChangedAt || null,
@@ -712,6 +790,8 @@ export class JwtStrategy extends PassportStrategy(
     request: any,
     userRole: string,
     isSuperAdmin: boolean,
+    effective: Record<string, boolean | number>,
+    platform: Record<string, boolean | number>,
   ): SessionPolicy {
 
     // ========================================================================
@@ -722,11 +802,17 @@ export class JwtStrategy extends PassportStrategy(
       isSuperAdmin ||
       userRole === "super_admin"
     ) {
-      return this.SUPER_ADMIN_SESSION;
+      return {
+        name: "super_admin",
+        inactivityMinutes:
+          Number(platform.superAdminInactivityMinutes) || 5,
+        maximumSessionHours:
+          Number(platform.superAdminMaximumSessionHours) || 4,
+      };
     }
 
     // ========================================================================
-    // ADMIN AND MODERATOR
+    // ADMIN AND MODERATOR ON ADMIN ROUTES
     // ========================================================================
 
     if (
@@ -737,27 +823,29 @@ export class JwtStrategy extends PassportStrategy(
         this.getRequestPath(request);
 
       if (this.isAdminPath(path)) {
-        return this.ADMIN_SESSION;
+        return {
+          name: "admin",
+          inactivityMinutes:
+            Number(platform.adminInactivityMinutes) || 10,
+          maximumSessionHours:
+            Number(platform.adminMaximumSessionHours) || 8,
+        };
       }
     }
 
     // ========================================================================
     // ALL OTHER ACCOUNTS
-    // ========================================================================
     //
-    // Do not expire sessions because of:
-    // - Inactivity
-    // - Time spent logged in
-    // - Accessing Academy
-    // - Accessing Careers
-    // - Accessing Organizations
-    // - Accessing Marketplace
-    // - Accessing Seller Center
-    //
-    // All non-super-admin accounts use the standard persistent policy.
+    // 0 means "no limit" for both values.
     // ========================================================================
 
-    return this.STANDARD_SESSION;
+    return {
+      name: "standard",
+      inactivityMinutes:
+        Math.max(0, Number(effective.inactivityTimeoutMinutes) || 0),
+      maximumSessionHours:
+        Math.max(0, Number(effective.maximumSessionHours) || 0),
+    };
   }
 
   // ==========================================================================

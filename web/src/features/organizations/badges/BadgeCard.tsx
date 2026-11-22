@@ -13,6 +13,7 @@ import { MEMBER_ROLE_LABELS } from "../types/organization.types";
 import { typeLabel } from "../ui/orgCategories";
 import { qrMatrix, qrSvgPath } from "./qr";
 import { badgePhotoSrc, badgeVerifyUrl, type Badge, type BadgeDesign } from "./badgeApi";
+import OfficialBadge from "./OfficialBadge";
 import "./Badges.scss";
 
 export function QrCode({ value, className }: { value: string; className?: string }): React.JSX.Element {
@@ -81,6 +82,17 @@ function Logo({ badge }: { badge: Badge }) {
 }
 
 export default function BadgeCard({ badge, design }: { badge: Badge; design: BadgeDesign }): React.JSX.Element {
+  if (design.template === "official") {
+    return (
+      <div className="badge badge--official">
+        <OfficialBadge badge={badge} />
+      </div>
+    );
+  }
+  return <ClassicBadges badge={badge} design={design} />;
+}
+
+function ClassicBadges({ badge, design }: { badge: Badge; design: BadgeDesign }): React.JSX.Element {
   const accent = /^#[0-9a-f]{6}$/i.test(design.accentColor) ? design.accentColor : "#005a8d";
   const style = { "--badge-accent": accent, "--badge-on-accent": textOn(accent) } as React.CSSProperties;
   const qr = badgeVerifyUrl(badge.verifyToken);

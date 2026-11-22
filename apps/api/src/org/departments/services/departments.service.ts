@@ -62,6 +62,20 @@ import {
 } from "../../members/schemas/membership.schema";
 
 import { MembersService } from "../../members/services/members.service";
+import { ChurchEvent, ChurchEventDocument } from "../../events/schemas/church-event.schema";
+import { Announcement, AnnouncementAudience, AnnouncementDocument } from "../../communication/schemas/announcement.schema";
+import { AttendanceEntry, AttendanceEntryDocument, AttendanceEntryKind } from "../../attendance/schemas/attendance.schema";
+import { ChurchMedia, ChurchMediaDocument, ChurchMediaType, ChurchMediaVisibility } from "../../media/schemas/church-media.schema";
+import { EventType } from "../../enums/event-type.enum";
+import { MembershipStatus } from "../../enums/membership-status.enum";
+import { MinistryAccessService } from "../../ministries/ministry-access.service";
+import { DEFAULT_MINISTRY_SETTINGS, type MinistrySettings } from "../../ministries/ministry.schemas";
+
+/** Tag that links a media item (photo, Bible study…) to a ministry. */
+export const ministryMediaTag = (departmentId: string) => `ministry:${departmentId}`;
+
+/** Media categories counted as Bible studies on the ministry page. */
+const STUDY_CATEGORIES = ["training", "message", "sermon", "resource"];
 
 export interface ListDepartmentsQuery {
   page?: number;
@@ -88,6 +102,20 @@ export class DepartmentsService {
     private readonly membershipModel: Model<MembershipDocument>,
 
     private readonly membersService: MembersService,
+
+    @InjectModel(ChurchEvent.name)
+    private readonly eventModel: Model<ChurchEventDocument>,
+
+    @InjectModel(Announcement.name)
+    private readonly announcementModel: Model<AnnouncementDocument>,
+
+    @InjectModel(AttendanceEntry.name)
+    private readonly attendanceModel: Model<AttendanceEntryDocument>,
+
+    @InjectModel(ChurchMedia.name)
+    private readonly mediaModel: Model<ChurchMediaDocument>,
+
+    private readonly ministryAccess: MinistryAccessService,
   ) {}
 
   /* =========================================================================
@@ -168,6 +196,10 @@ export class DepartmentsService {
               membership.userId,
             ),
 
+            membershipId: String(
+              membership._id,
+            ),
+
             displayName:
               membership.profile
                 ?.displayName ??
@@ -183,6 +215,16 @@ export class DepartmentsService {
         ),
 
       memberCount,
+
+      leaderTitles: this.titlesOf(doc),
+
+      meetingSchedule: this.scheduleOf(doc),
+
+      /* Ministries management */
+      category: MinistryAccessService.categoryOf(doc),
+      ministryStatus: doc.ministryStatus || "active",
+      status: MinistryAccessService.statusOf(doc),
+      ministrySettings: this.ministryAccess.settingsOf(doc as { ministrySettings?: Partial<MinistrySettings> }),
 
       isCurrentUserMember:
         viewerMembership
@@ -541,6 +583,328 @@ export class DepartmentsService {
     );
   }
 
+  private titlesOf(doc: { leaderTitles?: unknown }): Record<string, string> {
+    const raw = doc.leaderTitles as Map<string, string> | Record<string, string> | undefined;
+    if (!raw) return {};
+    return raw instanceof Map ? Object.fromEntries(raw.entries()) : { ...raw };
+  }
+
+  private scheduleOf(doc: { meetingSchedule?: unknown }) {
+    const list = (doc.meetingSchedule ?? []) as Array<Record<string, unknown>>;
+    return list.map((m) => ({
+      name: String(m.name ?? ""),
+      day: String(m.day ?? ""),
+      startTime: String(m.startTime ?? ""),
+      endTime: String(m.endTime ?? ""),
+      location: String(m.location ?? ""),
+      key: String(m.key ?? ""),
+      frequency: String(m.frequency ?? ""),
+      weekdays: Array.isArray(m.weekdays) ? (m.weekdays as number[]) : [],
+      anchorDate: String(m.anchorDate ?? ""),
+      endDate: String(m.endDate ?? ""),
+      startClock: String(m.startClock ?? ""),
+      endClock: String(m.endClock ?? ""),
+      timeZone: String(m.timeZone ?? ""),
+      attendance: m.attendance !== false,
+    }));
+  }
+
+  /* =========================================================================
+     PUBLIC MINISTRY OVERVIEW
+     ========================================================================= */
+
+  /**
+   * Everything the public ministry page needs, in one call. Only public,
+   * published information:
+   *   - counts (members, leaders, upcoming events, studies, avg attendance)
+   *   - leaders' name, photo and position (no contact details)
+   *   - upcoming ministry events (internal "meeting" events excluded)
+   *   - announcements addressed to everyone
+   *   - public, published photos and Bible studies tagged for the ministry
+   *   - meeting schedule
+   * Never member lists, private media, attendance records or settings.
+   */
+  async getPublicOverview(organizationId: string, departmentId: string, viewerUserId?: string | null) {
+    const ministry = await this.getPublic(organizationId, departmentId, viewerUserId);
+    const orgId = new Types.ObjectId(organizationId);
+    const deptId = new Types.ObjectId(departmentId);
+    const tag = ministryMediaTag(departmentId);
+    const now = new Date();
+
+    const doc = (await this.departmentModel
+      .findById(deptId)
+      .select("leaderIds leaderTitles meetingSchedule")
+      .lean()
+      .exec()) as unknown as {
+      leaderIds?: Types.ObjectId[];
+      leaderTitles?: Record<string, string>;
+      meetingSchedule?: unknown;
+    } | null;
+
+    const leaderIds = doc?.leaderIds ?? [];
+    const titles = this.titlesOf(doc ?? {});
+
+    const publicEventFilter = {
+      organizationId: orgId,
+      departmentId: deptId,
+      eventType: { $ne: EventType.Meeting },
+    };
+    const mediaBase = {
+      organizationId: orgId,
+      tags: tag,
+      visibility: ChurchMediaVisibility.Public,
+      publishedAt: { $ne: null },
+    };
+
+    const [memberCount, leaderDocs, upcoming, upcomingCount, announcements, photos, studies, studyCount, pastEvents] = await Promise.all([
+      this.membershipModel.countDocuments({ organizationId: orgId, departmentIds: deptId, status: MembershipStatus.Active }),
+      leaderIds.length
+        ? this.membershipModel.find({ _id: { $in: leaderIds } }, { profile: 1 }).lean().exec()
+        : Promise.resolve([]),
+      this.eventModel
+        .find({ ...publicEventFilter, startsAt: { $gte: now } })
+        .select("title startsAt endsAt location isOnline coverImageUrl eventType capacity requiresRsvp")
+        .sort({ startsAt: 1 })
+        .limit(3)
+        .lean()
+        .exec(),
+      this.eventModel.countDocuments({ ...publicEventFilter, startsAt: { $gte: now } }),
+      this.announcementModel
+        .find({ organizationId: orgId, departmentId: deptId, audience: AnnouncementAudience.Everyone })
+        .select("title body pinned publishedAt")
+        .sort({ pinned: -1, publishedAt: -1 })
+        .limit(3)
+        .lean()
+        .exec(),
+      this.mediaModel
+        .find({ ...mediaBase, mediaType: ChurchMediaType.Photo })
+        .select("title fileUrl thumbnailUrl description")
+        .sort({ order: 1, publishedAt: -1 })
+        .limit(8)
+        .lean()
+        .exec(),
+      this.mediaModel
+        .find({ ...mediaBase, category: { $in: STUDY_CATEGORIES } })
+        .select("title fileUrl thumbnailUrl durationSeconds speaker mediaType publishedAt")
+        .sort({ publishedAt: -1 })
+        .limit(3)
+        .lean()
+        .exec(),
+      this.mediaModel.countDocuments({ ...mediaBase, category: { $in: STUDY_CATEGORIES } }),
+      this.eventModel
+        .find({ organizationId: orgId, departmentId: deptId, startsAt: { $lt: now } })
+        .select("_id")
+        .sort({ startsAt: -1 })
+        .limit(12)
+        .lean()
+        .exec(),
+    ]);
+
+    // Average attendance: mean check-ins per past ministry event, as a share of members.
+    let averageAttendance: number | null = null;
+    if (pastEvents.length > 0 && memberCount > 0) {
+      const counts = await this.attendanceModel.aggregate<{ _id: Types.ObjectId; n: number }>([
+        {
+          $match: {
+            organizationId: orgId,
+            eventId: { $in: pastEvents.map((e) => (e as { _id: Types.ObjectId })._id) },
+            kind: AttendanceEntryKind.CheckIn,
+          },
+        },
+        { $group: { _id: "$eventId", n: { $sum: 1 } } },
+      ]);
+      if (counts.length > 0) {
+        const total = counts.reduce((sum, c) => sum + c.n, 0);
+        averageAttendance = Math.min(100, Math.round((total / pastEvents.length / memberCount) * 100));
+      }
+    }
+
+    const leaders = leaderIds
+      .map((id) => (leaderDocs as Array<{ _id: Types.ObjectId; profile?: { displayName?: string; avatarUrl?: string | null } }>).find((l) => String(l._id) === String(id)))
+      .filter((l): l is { _id: Types.ObjectId; profile?: { displayName?: string; avatarUrl?: string | null } } => Boolean(l))
+      .map((l) => ({
+        membershipId: String(l._id),
+        displayName: l.profile?.displayName ?? "Leader",
+        avatarUrl: l.profile?.avatarUrl ?? null,
+        title: titles[String(l._id)] ?? "",
+      }));
+
+    const iso = (d: unknown) => (d instanceof Date ? d.toISOString() : d ? new Date(String(d)).toISOString() : null);
+
+    return {
+      ministry,
+      stats: {
+        members: memberCount,
+        leaders: leaders.length,
+        upcomingEvents: upcomingCount,
+        bibleStudies: studyCount,
+        averageAttendance,
+      },
+      leaders,
+      meetingSchedule: this.scheduleOf(doc ?? {}),
+      events: (upcoming as unknown as Array<Record<string, unknown>>).map((e) => ({
+        id: String(e._id),
+        title: String(e.title ?? ""),
+        startsAt: iso(e.startsAt),
+        endsAt: iso(e.endsAt),
+        location: (e.location as string) ?? "",
+        isOnline: Boolean(e.isOnline),
+        coverImageUrl: (e.coverImageUrl as string) ?? null,
+        requiresRsvp: Boolean(e.requiresRsvp),
+      })),
+      announcements: (announcements as unknown as Array<Record<string, unknown>>).map((a) => ({
+        id: String(a._id),
+        title: String(a.title ?? ""),
+        body: String(a.body ?? ""),
+        pinned: Boolean(a.pinned),
+        publishedAt: iso(a.publishedAt),
+      })),
+      photos: (photos as unknown as Array<Record<string, unknown>>).map((m) => ({
+        id: String(m._id),
+        title: String(m.title ?? ""),
+        url: String(m.fileUrl ?? ""),
+        thumbnailUrl: (m.thumbnailUrl as string) ?? null,
+      })),
+      studies: (studies as unknown as Array<Record<string, unknown>>).map((m) => ({
+        id: String(m._id),
+        title: String(m.title ?? ""),
+        url: String(m.fileUrl ?? ""),
+        thumbnailUrl: (m.thumbnailUrl as string) ?? null,
+        durationSeconds: (m.durationSeconds as number) ?? null,
+        speaker: (m.speaker as string) ?? "",
+        mediaType: String(m.mediaType ?? ""),
+        publishedAt: iso(m.publishedAt),
+      })),
+    };
+  }
+
+  /* =========================================================================
+     PUBLIC WEBSITE LIST
+     ========================================================================= */
+
+  /**
+   * Ministries / departments shown on the organization's public website.
+   * Works for guests. Returns presentation fields only (name, type,
+   * description, photo) — never leaders, members or membership data.
+   * Archived departments and suspended/archived organizations return nothing.
+   */
+  async listPublic(organizationId: string, limit = 12) {
+    const organizationObjectId = this.validateObjectId(
+      organizationId,
+      "Organization ID",
+    );
+
+    const organization = (await this.membersService.getOrganization(
+      organizationId,
+    )) as unknown as { status?: string } | null;
+
+    const status = String(organization?.status ?? "").toLowerCase();
+
+    if (status === "suspended" || status === "archived") {
+      return { items: [] };
+    }
+
+    const safeLimit = Math.min(Math.max(1, Math.floor(Number(limit) || 12)), 50);
+
+    const docs = await this.departmentModel
+      .find({
+        organizationId: organizationObjectId,
+        isArchived: { $ne: true },
+        // Drafts, ministries awaiting approval and members-only/private
+        // ministries are not listed on the public website.
+        ministryStatus: { $nin: ["draft", "pending_approval"] },
+        "ministrySettings.visibility": { $nin: ["members", "private"] },
+      } as Record<string, unknown>)
+      .select("name departmentType description photoUrl")
+      .sort({ createdAt: 1 })
+      .limit(safeLimit)
+      .lean()
+      .exec();
+
+    return {
+      items: docs.map((d) => {
+        const doc = d as unknown as {
+          _id: Types.ObjectId;
+          name: string;
+          departmentType: string;
+          description?: string;
+          photoUrl?: string | null;
+        };
+        return {
+          id: String(doc._id),
+          name: doc.name,
+          departmentType: doc.departmentType,
+          description: doc.description ?? "",
+          photoUrl: doc.photoUrl ?? null,
+        };
+      }),
+    };
+  }
+
+  /**
+   * One ministry for its public page. Same presentation-only fields as
+   * listPublic. Archived ministries, other organizations' ministries and
+   * suspended/archived organizations return 404.
+   */
+  async getPublic(organizationId: string, departmentId: string, viewerUserId?: string | null) {
+    const organizationObjectId = this.validateObjectId(organizationId, "Organization ID");
+    const departmentObjectId = this.validateObjectId(departmentId, "Ministry ID");
+
+    const organization = (await this.membersService.getOrganization(
+      organizationId,
+    )) as unknown as { status?: string } | null;
+    const status = String(organization?.status ?? "").toLowerCase();
+
+    const doc = (await this.departmentModel
+      .findOne({
+        _id: departmentObjectId,
+        organizationId: organizationObjectId,
+        isArchived: { $ne: true },
+      })
+      .select("organizationId name departmentType description photoUrl leaderIds createdByUserId ministryStatus ministrySettings category")
+      .lean()
+      .exec()) as unknown as {
+      _id: Types.ObjectId;
+      organizationId: Types.ObjectId;
+      name: string;
+      departmentType: string;
+      description?: string;
+      photoUrl?: string | null;
+      leaderIds?: Types.ObjectId[];
+      createdByUserId?: Types.ObjectId | null;
+      ministryStatus?: string;
+      ministrySettings?: Partial<MinistrySettings>;
+      category?: string;
+    } | null;
+
+    if (!doc || status === "suspended" || status === "archived") {
+      throw new NotFoundException("This ministry could not be found.");
+    }
+
+    // Drafts and members-only/private ministries: only people allowed to see them.
+    const settings = this.ministryAccess.settingsOf(doc);
+    const published = !["draft", "pending_approval"].includes(String(doc.ministryStatus ?? ""));
+    if (!published || settings.visibility !== "public") {
+      const actor = viewerUserId ? await this.ministryAccess.actor(organizationId, viewerUserId).catch(() => null) : null;
+      if (!actor || !this.ministryAccess.canSee(actor, doc)) {
+        throw new NotFoundException("This ministry could not be found.");
+      }
+    }
+
+    return {
+      id: String(doc._id),
+      organizationId: String(organizationObjectId),
+      name: doc.name,
+      departmentType: doc.departmentType,
+      description: doc.description ?? "",
+      photoUrl: doc.photoUrl ?? null,
+      category: MinistryAccessService.categoryOf(doc),
+      status: MinistryAccessService.statusOf(doc),
+      visibility: settings.visibility,
+      joinMode: settings.joinMode,
+    };
+  }
+
   /* =========================================================================
      LIST
      ========================================================================= */
@@ -874,11 +1238,13 @@ export class DepartmentsService {
     dto: CreateDepartmentDto,
     actorUserId: string,
   ) {
-    const actor =
-      await this.requireDepartmentAdmin(
+    // Who may create ministries is set by the owner's ministry policy.
+    const ministryActor =
+      await this.ministryAccess.requireCreate(
         organizationId,
         actorUserId,
       );
+    const actor = ministryActor.membership;
 
     const name =
       this.normalizeName(
@@ -951,9 +1317,44 @@ export class DepartmentsService {
             null,
 
           leaderIds:
-            this.normalizeLeaderIds(
+            await this.validLeaderIds(
+              organizationId,
               dto.leaderIds,
             ),
+
+          leaderTitles:
+            this.cleanTitles(
+              dto.leaderTitles,
+            ),
+
+          meetingSchedule:
+            this.cleanSchedule(
+              dto.meetingSchedule,
+            ),
+
+          category:
+            dto.category ||
+            MinistryAccessService.categoryOf({
+              departmentType:
+                dto.departmentType,
+            }),
+
+          ministryStatus:
+            dto.ministryStatus ===
+            "draft"
+              ? "draft"
+              : "active",
+
+          // Owner defaults first, then what the creator chose.
+          ministrySettings:
+            MinistryAccessService.cleanSettings(
+              dto.ministrySettings as Partial<MinistrySettings>,
+              (
+                await this.ministryAccess.policy(
+                  organizationId,
+                )
+              ).defaults,
+            ) as unknown as Record<string, unknown>,
 
           isArchived: false,
 
@@ -962,6 +1363,16 @@ export class DepartmentsService {
           archivedByUserId: null,
         },
       );
+
+    await this.ministryAccess.audit(
+      organizationId,
+      created._id as Types.ObjectId,
+      ministryActor,
+      dto.ministryStatus === "draft"
+        ? "draft_saved"
+        : "created",
+      name,
+    );
 
     return this.toResponse(
       created,
@@ -979,11 +1390,14 @@ export class DepartmentsService {
     dto: UpdateDepartmentDto,
     actorUserId: string,
   ) {
-    const actor =
-      await this.requireDepartmentAdmin(
+    // Church leadership, or a leader of this ministry (policy permitting).
+    const rights =
+      await this.ministryAccess.requireManage(
         organizationId,
         actorUserId,
+        departmentId,
       );
+    const actor = rights.actor.membership;
 
     const doc =
       await this.findOrThrow(
@@ -991,6 +1405,17 @@ export class DepartmentsService {
         departmentId,
         false,
       );
+
+    // Leaders and publishing status are decided by church leadership.
+    if (
+      !rights.canGovern &&
+      (dto.leaderIds !== undefined ||
+        dto.ministryStatus !== undefined)
+    ) {
+      throw new ForbiddenException(
+        "Only church leadership can change ministry leaders or status.",
+      );
+    }
 
     if (dto.name !== undefined) {
       const name =
@@ -1056,17 +1481,140 @@ export class DepartmentsService {
       undefined
     ) {
       doc.leaderIds =
-        this.normalizeLeaderIds(
+        await this.validLeaderIds(
+          organizationId,
           dto.leaderIds,
         );
     }
 
+    if (dto.category !== undefined) {
+      doc.category = dto.category;
+    }
+
+    if (dto.ministryStatus !== undefined) {
+      doc.ministryStatus = dto.ministryStatus;
+    }
+
+    if (dto.ministrySettings !== undefined) {
+      doc.set(
+        "ministrySettings",
+        MinistryAccessService.cleanSettings(
+          dto.ministrySettings as Partial<MinistrySettings>,
+          this.ministryAccess.settingsOf(
+            doc as { ministrySettings?: Partial<MinistrySettings> },
+          ),
+        ),
+      );
+    }
+
+    if (dto.leaderTitles !== undefined) {
+      const titles = new Map<string, string>();
+      for (const [membershipId, title] of Object.entries(dto.leaderTitles ?? {})) {
+        const clean = String(title ?? "").trim().slice(0, 80);
+        if (clean && Types.ObjectId.isValid(membershipId)) titles.set(membershipId, clean);
+      }
+      doc.set("leaderTitles", titles);
+    }
+
+    if (dto.meetingSchedule !== undefined) {
+      doc.set(
+        "meetingSchedule",
+        (dto.meetingSchedule ?? [])
+          .filter((m) => m && String(m.name ?? "").trim())
+          .slice(0, 20)
+          .map((m) => ({
+            name: String(m.name).trim(),
+            day: String(m.day ?? "").trim(),
+            startTime: String(m.startTime ?? "").trim(),
+            endTime: String(m.endTime ?? "").trim(),
+            location: String(m.location ?? "").trim(),
+            // Structured fields drive one attendance session per meeting date.
+            key: String(m.key ?? "").trim() || new Types.ObjectId().toHexString(),
+            frequency: m.frequency ?? "",
+            weekdays: Array.isArray(m.weekdays) ? [...new Set(m.weekdays.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))] : [],
+            anchorDate: m.anchorDate ?? "",
+            endDate: m.endDate ?? "",
+            startClock: m.startClock ?? "",
+            endClock: m.endClock ?? "",
+            timeZone: m.timeZone ?? "",
+            attendance: m.attendance !== false,
+          })),
+      );
+    }
+
     await doc.save();
+
+    await this.ministryAccess.audit(
+      organizationId,
+      doc._id as Types.ObjectId,
+      rights.actor,
+      "updated",
+      Object.keys(dto).join(", "),
+    );
 
     return this.toResponse(
       doc,
       actor,
     );
+  }
+
+  /* =========================================================================
+     MINISTRY FIELD HELPERS
+     ========================================================================= */
+
+  /** Leader IDs must be active memberships of this organization. */
+  private async validLeaderIds(
+    organizationId: string,
+    leaderIds?: string[],
+  ): Promise<Types.ObjectId[]> {
+    const ids = this.normalizeLeaderIds(leaderIds);
+    if (!ids.length) return [];
+    const found = await this.membershipModel
+      .find({
+        _id: { $in: ids },
+        organizationId: this.validateObjectId(organizationId, "Organization ID"),
+        status: MembershipStatus.Active,
+      })
+      .select("_id")
+      .lean()
+      .exec();
+    if (found.length !== ids.length) {
+      throw new ForbiddenException(
+        "Ministry leaders must be active members of this organization.",
+      );
+    }
+    return ids;
+  }
+
+  private cleanTitles(input?: Record<string, string>): Map<string, string> {
+    const titles = new Map<string, string>();
+    for (const [membershipId, title] of Object.entries(input ?? {})) {
+      const clean = String(title ?? "").trim().slice(0, 80);
+      if (clean && Types.ObjectId.isValid(membershipId)) titles.set(membershipId, clean);
+    }
+    return titles;
+  }
+
+  private cleanSchedule(list?: UpdateDepartmentDto["meetingSchedule"]) {
+    return (list ?? [])
+      .filter((m) => m && String(m.name ?? "").trim())
+      .slice(0, 20)
+      .map((m) => ({
+        name: String(m.name).trim(),
+        day: String(m.day ?? "").trim(),
+        startTime: String(m.startTime ?? "").trim(),
+        endTime: String(m.endTime ?? "").trim(),
+        location: String(m.location ?? "").trim(),
+        key: String(m.key ?? "").trim() || new Types.ObjectId().toHexString(),
+        frequency: m.frequency ?? "",
+        weekdays: Array.isArray(m.weekdays) ? [...new Set(m.weekdays.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))] : [],
+        anchorDate: m.anchorDate ?? "",
+        endDate: m.endDate ?? "",
+        startClock: m.startClock ?? "",
+        endClock: m.endClock ?? "",
+        timeZone: m.timeZone ?? "",
+        attendance: m.attendance !== false,
+      }));
   }
 
   /* =========================================================================
@@ -1078,10 +1626,11 @@ export class DepartmentsService {
     departmentId: string,
     actorUserId: string,
   ): Promise<void> {
-    await this.requireDepartmentAdmin(
-      organizationId,
-      actorUserId,
-    );
+    const ministryActor =
+      await this.ministryAccess.requireCreate(
+        organizationId,
+        actorUserId,
+      );
 
     const organizationObjectId =
       this.validateObjectId(
@@ -1137,6 +1686,8 @@ export class DepartmentsService {
      * This preserves the historical relationship.
      */
     await doc.save();
+
+    await this.ministryAccess.audit(organizationId, doc._id as Types.ObjectId, ministryActor, "archived", doc.name);
   }
 
   /* =========================================================================
@@ -1148,11 +1699,12 @@ export class DepartmentsService {
     departmentId: string,
     actorUserId: string,
   ) {
-    const actor =
-      await this.requireDepartmentAdmin(
+    const ministryActor =
+      await this.ministryAccess.requireCreate(
         organizationId,
         actorUserId,
       );
+    const actor = ministryActor.membership;
 
     const doc =
       await this.findOrThrow(
@@ -1181,6 +1733,8 @@ export class DepartmentsService {
       null;
 
     await doc.save();
+
+    await this.ministryAccess.audit(organizationId, doc._id as Types.ObjectId, ministryActor, "restored", doc.name);
 
     return this.toResponse(
       doc,
@@ -1216,6 +1770,12 @@ export class DepartmentsService {
         requesterUserId,
       );
 
+    // Ministry join rules (open / application / invite, capacity, status).
+    await this.assertCanJoinDirectly(
+      department,
+      membership,
+    );
+
     await this.membersService.adjustDepartmentMembership(
       String(
         membership._id,
@@ -1223,6 +1783,47 @@ export class DepartmentsService {
       departmentId,
       true,
     );
+  }
+
+  /**
+   * Joining without review is only possible for open, published ministries
+   * with room left. Applications go through MinistriesService.apply().
+   */
+  private async assertCanJoinDirectly(
+    department: DepartmentDocument,
+    membership: MembershipDocument,
+  ): Promise<void> {
+    const status = MinistryAccessService.statusOf(department);
+    if (status !== "active") {
+      throw new ForbiddenException("This ministry is not accepting members right now.");
+    }
+    const settings = this.ministryAccess.settingsOf(
+      department as { ministrySettings?: Partial<MinistrySettings> },
+    );
+    const alreadyIn = (membership.departmentIds ?? []).some((id) => String(id) === String(department._id));
+    if (alreadyIn) return;
+    if (settings.joinMode === "application") {
+      throw new ForbiddenException("This ministry reviews new members. Please send an application to join.");
+    }
+    if (settings.joinMode === "invite" || settings.visibility === "private") {
+      throw new ForbiddenException("Members are added to this ministry by its leaders.");
+    }
+    await this.assertCapacity(department, settings);
+  }
+
+  async assertCapacity(
+    department: { _id: unknown; organizationId: unknown },
+    settings: Pick<MinistrySettings, "maxMembers"> = DEFAULT_MINISTRY_SETTINGS,
+  ): Promise<void> {
+    if (!settings.maxMembers) return;
+    const count = await this.membershipModel.countDocuments({
+      organizationId: department.organizationId as Types.ObjectId,
+      departmentIds: department._id as Types.ObjectId,
+      status: MembershipStatus.Active,
+    });
+    if (count >= settings.maxMembers) {
+      throw new ForbiddenException("This ministry is full.");
+    }
   }
 
   /* =========================================================================
@@ -1291,10 +1892,12 @@ export class DepartmentsService {
       );
     }
 
-    await this.requireDepartmentAdmin(
-      organizationId,
-      actorUserId,
-    );
+    const rights =
+      await this.ministryAccess.requireManage(
+        organizationId,
+        actorUserId,
+        departmentId,
+      );
 
     const target =
       await this.membersService.getMembershipByIdOrNull(
@@ -1308,10 +1911,31 @@ export class DepartmentsService {
       );
     }
 
+    if (target.status !== MembershipStatus.Active) {
+      throw new ForbiddenException(
+        "Only active members can be added to a ministry.",
+      );
+    }
+
+    if (!(target.departmentIds ?? []).some((id) => String(id) === String(department._id))) {
+      await this.assertCapacity(
+        department,
+        this.ministryAccess.settingsOf(department as { ministrySettings?: Partial<MinistrySettings> }),
+      );
+    }
+
     await this.membersService.adjustDepartmentMembership(
       memberId,
       departmentId,
       true,
+    );
+
+    await this.ministryAccess.audit(
+      organizationId,
+      departmentId,
+      rights.actor,
+      "member_added",
+      (target as unknown as { profile?: { displayName?: string } }).profile?.displayName ?? memberId,
     );
   }
 
@@ -1338,10 +1962,12 @@ export class DepartmentsService {
       );
     }
 
-    await this.requireDepartmentAdmin(
-      organizationId,
-      actorUserId,
-    );
+    const rights =
+      await this.ministryAccess.requireManage(
+        organizationId,
+        actorUserId,
+        departmentId,
+      );
 
     const target =
       await this.membersService.getMembershipByIdOrNull(
@@ -1359,6 +1985,14 @@ export class DepartmentsService {
       memberId,
       departmentId,
       false,
+    );
+
+    await this.ministryAccess.audit(
+      organizationId,
+      departmentId,
+      rights.actor,
+      "member_removed",
+      (target as unknown as { profile?: { displayName?: string } }).profile?.displayName ?? memberId,
     );
   }
 

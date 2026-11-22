@@ -139,6 +139,7 @@ export default function SidebarMainSection({
 
     { to: "/ads", label: "Ads Manager", icon: "📢" },
     { to: "/shop", label: "Fockis Shop", icon: "🛍️" },
+    { to: "/website-studio", label: "Website Studio", icon: "🌐" },
     { to: "/seller", label: "Seller Center", icon: "🏪" },
     { to: "/travel", label: "Fockis Travel", icon: "✈️" },
     { to: "/subscriptions", label: "Subscriptions", icon: "💳" },

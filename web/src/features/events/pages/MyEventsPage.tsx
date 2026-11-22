@@ -6,41 +6,51 @@ import EventCard from "../components/EventCard";
 import EventEmptyState from "../components/EventEmptyState";
 import EventSkeleton from "../components/EventSkeleton";
 import EventsShell from "../components/EventsShell";
+import MyRegistrationCard from "../registrations/MyRegistrationCard";
+import { registrationApi, type Registration } from "../registrations/registrationApi";
 import { useEventClock } from "../hooks/useEventClock";
 import { eventsApi, isAbortError } from "../services/eventsApi";
 import type { FockisEvent } from "../types/event.types";
 import { getEventStatus } from "../utils/eventTime";
 
-export type MyEventsTab = "upcoming" | "hosting" | "going" | "interested" | "past" | "cancelled";
+export type MyEventsTab = "all" | "registered" | "upcoming" | "going" | "interested" | "hosting" | "past" | "cancelled";
 
+/* "going" = Attending and "interested" = Saved (ids kept so old links work). */
 const TABS: Array<{ id: MyEventsTab; label: string }> = [
+  { id: "all", label: "All" },
+  { id: "registered", label: "Registered" },
   { id: "upcoming", label: "Upcoming" },
+  { id: "going", label: "Attending" },
+  { id: "interested", label: "Saved" },
   { id: "hosting", label: "Hosting" },
-  { id: "going", label: "Going" },
-  { id: "interested", label: "Interested" },
   { id: "past", label: "Past" },
   { id: "cancelled", label: "Cancelled" },
 ];
 
 const EMPTY: Record<MyEventsTab, string> = {
+  all: "No events yet.",
+  registered: "Events you register for appear here with your ticket.",
   upcoming: "Nothing on your calendar yet.",
   hosting: "You haven't created any events yet.",
-  going: "You haven't said you're going to anything yet.",
-  interested: "Events you mark as Interested show up here.",
+  going: "You haven't said you're attending anything yet.",
+  interested: "Events you save (Interested) show up here.",
   past: "Events you went to or hosted will be kept here.",
-  cancelled: "No cancelled events.",
+  cancelled: "No cancelled events or registrations.",
 };
+
+const ACTIVE_REG = ["confirmed", "pending_payment", "pending_approval", "waitlisted"];
 
 function isTab(value: string | null): value is MyEventsTab {
   return TABS.some((tab) => tab.id === value);
 }
 
-export default function MyEventsPage({ initialTab = "upcoming" }: { initialTab?: MyEventsTab }) {
+export default function MyEventsPage({ initialTab = "all" }: { initialTab?: MyEventsTab }) {
   const [params, setParams] = useSearchParams();
   const tabParam = params.get("tab");
   const tab: MyEventsTab = isTab(tabParam) ? tabParam : initialTab;
   const [created, setCreated] = useState<FockisEvent[]>([]);
   const [rsvps, setRsvps] = useState<FockisEvent[]>([]);
+  const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reload, setReload] = useState(0);
@@ -51,10 +61,19 @@ export default function MyEventsPage({ initialTab = "upcoming" }: { initialTab?:
     setLoading(true);
     setError("");
 
-    Promise.all([eventsApi.getMyEvents(controller.signal), eventsApi.getMyRsvps(controller.signal)])
-      .then(([mine, joined]) => {
+    Promise.all([
+      eventsApi.getMyEvents(controller.signal),
+      eventsApi.getMyRsvps(controller.signal),
+      // Registrations are optional here: an older API without them still shows events.
+      registrationApi.mine(controller.signal).catch((caught) => {
+        if (isAbortError(caught)) throw caught;
+        return { items: [] as Registration[] };
+      }),
+    ])
+      .then(([mine, joined, regs]) => {
         setCreated(mine);
         setRsvps(joined);
+        setRegistrations(regs.items);
       })
       .catch((caught) => {
         if (!isAbortError(caught)) setError(caught instanceof Error ? caught.message : "Unable to load your events.");
@@ -83,6 +102,8 @@ export default function MyEventsPage({ initialTab = "upcoming" }: { initialTab?:
     const desc = (a: FockisEvent, b: FockisEvent) => -asc(a, b);
 
     return {
+      all: [...all].sort(asc),
+      registered: [],
       upcoming: all.filter(isActive).sort(asc),
       hosting: created.filter(isActive).sort(asc),
       going: rsvps.filter((event) => event.viewerRsvp === "going" && isActive(event)).sort(asc),
@@ -92,7 +113,20 @@ export default function MyEventsPage({ initialTab = "upcoming" }: { initialTab?:
     } satisfies Record<MyEventsTab, FockisEvent[]>;
   }, [all, created, rsvps, now]);
 
+  const regLists = useMemo(() => {
+    const ended = (r: Registration) => !r.event || new Date(r.event.endDate).getTime() <= now;
+    const byStart = (a: Registration, b: Registration) => new Date(a.event?.startDate ?? 0).getTime() - new Date(b.event?.startDate ?? 0).getTime();
+    return {
+      active: registrations.filter((r) => ACTIVE_REG.includes(r.status) && !ended(r)).sort(byStart),
+      history: registrations.filter((r) => !ACTIVE_REG.includes(r.status) || ended(r)).sort((a, b) => -byStart(a, b)),
+      cancelled: registrations.filter((r) => r.status === "cancelled" || r.status === "rejected"),
+    };
+  }, [registrations, now]);
+
   const items = lists[tab];
+  const count = (id: MyEventsTab) =>
+    id === "registered" ? regLists.active.length : id === "cancelled" ? lists.cancelled.length + regLists.cancelled.length : lists[id].length;
+  const updateReg = (next: Registration) => setRegistrations((list) => list.map((r) => (r.id === next.id ? next : r)));
 
   return (
     <EventsShell>
@@ -100,7 +134,7 @@ export default function MyEventsPage({ initialTab = "upcoming" }: { initialTab?:
         <div>
           <span className="fke-eyebrow">Your events</span>
           <h1>My events</h1>
-          <p>Everything you're hosting, going to or interested in — including past events.</p>
+          <p>Your registrations and tickets, events you're hosting, attending or saved — including past events.</p>
         </div>
         <Link to="/events/create" className="fke-btn fke-btn--primary">
           Create event
@@ -115,10 +149,10 @@ export default function MyEventsPage({ initialTab = "upcoming" }: { initialTab?:
             role="tab"
             aria-selected={tab === item.id}
             className={`fke-tab ${tab === item.id ? "is-active" : ""}`}
-            onClick={() => setParams(item.id === "upcoming" ? {} : { tab: item.id }, { replace: true })}
+            onClick={() => setParams(item.id === initialTab ? {} : { tab: item.id }, { replace: true })}
           >
             {item.label}
-            {!loading && <span className="fke-tab__count">{lists[item.id].length}</span>}
+            {!loading && <span className="fke-tab__count">{count(item.id)}</span>}
           </button>
         ))}
       </div>
@@ -136,7 +170,42 @@ export default function MyEventsPage({ initialTab = "upcoming" }: { initialTab?:
         />
       )}
 
-      {!error && !loading && items.length === 0 && (
+      {!error && !loading && tab === "registered" && (
+        <div className="fkr-mylist" role="tabpanel">
+          {regLists.active.length === 0 && (
+            <EventEmptyState
+              title={EMPTY.registered}
+              action={
+                <Link to="/events" className="fke-btn fke-btn--ghost">
+                  Discover events
+                </Link>
+              }
+            />
+          )}
+          {regLists.active.map((reg) => (
+            <MyRegistrationCard key={reg.id} reg={reg} onChanged={updateReg} />
+          ))}
+          {regLists.history.length > 0 && (
+            <details className="fkr-history">
+              <summary>Registration history ({regLists.history.length})</summary>
+              {regLists.history.map((reg) => (
+                <MyRegistrationCard key={reg.id} reg={reg} onChanged={updateReg} />
+              ))}
+            </details>
+          )}
+        </div>
+      )}
+
+      {!error && !loading && tab === "cancelled" && regLists.cancelled.length > 0 && (
+        <div className="fkr-mylist">
+          <h2 className="fkr-mylist__title">Cancelled registrations</h2>
+          {regLists.cancelled.map((reg) => (
+            <MyRegistrationCard key={reg.id} reg={reg} onChanged={updateReg} />
+          ))}
+        </div>
+      )}
+
+      {!error && !loading && tab !== "registered" && items.length === 0 && !(tab === "cancelled" && regLists.cancelled.length > 0) && (
         <EventEmptyState
           title={EMPTY[tab]}
           action={
@@ -147,7 +216,7 @@ export default function MyEventsPage({ initialTab = "upcoming" }: { initialTab?:
         />
       )}
 
-      <div className="fke-grid" role="tabpanel">
+      <div className="fke-grid" role="tabpanel" hidden={tab === "registered"}>
         {loading && <EventSkeleton variant="card" count={6} />}
         {!loading &&
           items.map((event) => (

@@ -25,7 +25,7 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import {
   addGroupMember,
@@ -1076,6 +1076,13 @@ export default function OrganizationGroupManagement(): React.JSX.Element {
 
                       <td>
                         <div className="church-admin-table__actions">
+                          <Link
+                            to={`/organizations/${encodeURIComponent(organizationId)}/groups/${encodeURIComponent(group.id)}`}
+                            className="church-admin-btn church-admin-btn--secondary church-admin-btn--sm"
+                          >
+                            View
+                          </Link>
+
                           <button
                             type="button"
                             className="church-admin-btn church-admin-btn--primary church-admin-btn--sm"

@@ -1,0 +1,936 @@
+/* =============================================================================
+ * Give Online — dialog on the church website (gv-*) and the admin page (gva-*).
+ * Colours follow the church theme (--cw-*) when shown on the website, with
+ * Fockis blue as the fallback. Every element sets its own spacing because
+ * some global stylesheets style bare section / h1 / h2 elements.
+ * ========================================================================== */
+
+$gv-primary: var(--cw-primary, #1463d9);
+$gv-primary-hover: var(--cw-primary-hover, #0f52b8);
+$gv-ink: var(--cw-ink, #0f1b3d);
+$gv-text: var(--cw-text, #1e293b);
+$gv-muted: var(--cw-muted, #5b6b82);
+$gv-border: var(--cw-border, #e3e9f2);
+$gv-soft: var(--cw-soft, #e8f0fd);
+$gv-font: var(--cw-font, "Inter", "Segoe UI", system-ui, -apple-system, sans-serif);
+$gv-display: var(--cw-display, "Poppins", "Inter", "Segoe UI", system-ui, sans-serif);
+$gv-green: #15803d;
+$gv-red: #c81e1e;
+
+/* ---------------------------------------------------------------- shared */
+
+.gv-overlay,
+.gva {
+  font-family: $gv-font;
+  color: $gv-text;
+  text-align: left;
+  line-height: 1.45;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  h1,
+  h2,
+  h3 {
+    margin: 0;
+    font-family: $gv-display;
+    color: $gv-ink;
+    letter-spacing: normal;
+    line-height: 1.25;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.gv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  font: 600 14.5px/1 $gv-font;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  &--primary {
+    background: $gv-primary;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: $gv-primary-hover;
+    }
+  }
+
+  &--ghost {
+    background: #fff;
+    color: $gv-ink;
+    border-color: $gv-border;
+
+    &:hover:not(:disabled) {
+      border-color: $gv-primary;
+      color: $gv-primary;
+    }
+  }
+
+  &--block {
+    width: 100%;
+    height: 48px;
+    font-size: 15.5px;
+  }
+
+  &--sm {
+    height: 36px;
+    padding: 0 12px;
+    font-size: 13.5px;
+  }
+}
+
+.gv-input {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid #cfd8e6;
+  border-radius: 10px;
+  background: #fff;
+  color: $gv-text;
+  font: 400 15px/1.4 $gv-font;
+
+  &:focus {
+    outline: none;
+    border-color: $gv-primary;
+    box-shadow: 0 0 0 3px color-mix(in srgb, #1463d9 18%, transparent);
+  }
+}
+
+textarea.gv-input {
+  resize: vertical;
+}
+
+.gv-check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14.5px;
+  cursor: pointer;
+
+  input {
+    width: 18px;
+    height: 18px;
+    margin: 2px 0 0;
+    accent-color: #1463d9;
+    flex: none;
+  }
+
+  small {
+    display: block;
+    color: $gv-muted;
+    font-size: 13px;
+  }
+
+  &--inline {
+    align-items: center;
+    white-space: nowrap;
+
+    input {
+      margin: 0;
+    }
+  }
+}
+
+.gv-error {
+  color: $gv-red;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gv-muted {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: $gv-muted;
+  font-size: 14.5px;
+}
+
+.gv-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.gv-spin {
+  animation: gv-spin 0.9s linear infinite;
+}
+
+@keyframes gv-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------------------------------------------------------------- dialog */
+
+.gv-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 160;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(8, 18, 42, 0.62);
+  overflow-y: auto;
+}
+
+.gv-dialog {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(8, 18, 42, 0.35);
+
+  &__head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    background: $gv-primary;
+    color: #fff;
+
+    h2,
+    .cw & h2 {
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    p {
+      font-size: 13.5px;
+      opacity: 0.9;
+    }
+
+    > div {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.16);
+    flex: none;
+
+    svg {
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+.gv-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.26);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.gv-body {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.gv-message {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: $gv-soft;
+  color: $gv-ink;
+  font-size: 14.5px;
+  white-space: pre-wrap;
+}
+
+.gv-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  > label,
+  > legend {
+    padding: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: $gv-ink;
+  }
+}
+
+.gv-funds {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.gv-fund {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1.5px solid $gv-border;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  b {
+    font-size: 14.5px;
+    color: $gv-ink;
+  }
+
+  small {
+    font-size: 12.5px;
+    color: $gv-muted;
+  }
+
+  &:hover {
+    border-color: #b9c8e2;
+  }
+
+  &.is-on {
+    border-color: $gv-primary;
+    background: $gv-soft;
+  }
+
+  &:has(input:focus-visible) {
+    outline: 3px solid color-mix(in srgb, #1463d9 35%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.gv-amounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gv-chip {
+  min-width: 76px;
+  height: 40px;
+  padding: 0 14px;
+  border: 1.5px solid $gv-border;
+  border-radius: 999px;
+  background: #fff;
+  color: $gv-ink;
+  font: 700 14.5px/1 $gv-font;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #b9c8e2;
+  }
+
+  &.is-on {
+    border-color: $gv-primary;
+    background: $gv-primary;
+    color: #fff;
+  }
+}
+
+.gv-input--amount {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.gv-secure {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 12.5px;
+  color: $gv-muted;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    margin-top: 1px;
+    color: $gv-green;
+  }
+}
+
+.gv-link {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: $gv-primary;
+  font: 600 14px/1.3 $gv-font;
+  cursor: pointer;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover:not(:disabled) {
+    text-decoration: underline;
+  }
+}
+
+.gv-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: $gv-soft;
+
+  span {
+    font-weight: 600;
+    color: $gv-ink;
+  }
+
+  b {
+    font-size: 20px;
+    color: $gv-ink;
+  }
+}
+
+.gv-done {
+  justify-items: center;
+  text-align: center;
+
+  &__icon {
+    width: 56px;
+    height: 56px;
+    color: $gv-green;
+  }
+
+  h3 {
+    font-size: 20px;
+  }
+
+  .gv-message {
+    width: 100%;
+  }
+
+  .gv-row {
+    width: 100%;
+  }
+}
+
+.gv-receipt {
+  width: 100%;
+  margin: 0;
+  display: grid;
+  border: 1px solid $gv-border;
+  border-radius: 12px;
+  text-align: left;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 14px;
+
+    & + div {
+      border-top: 1px solid $gv-border;
+    }
+  }
+
+  dt {
+    color: $gv-muted;
+    font-size: 14px;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 700;
+    color: $gv-ink;
+    font-size: 14.5px;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+}
+
+.gv-fineprint {
+  font-size: 12.5px;
+  color: $gv-muted;
+}
+
+.gv-total {
+  font-size: 14.5px;
+
+  b {
+    color: $gv-ink;
+  }
+}
+
+.gv-history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid $gv-border;
+  border-radius: 12px;
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+
+    & + li {
+      border-top: 1px solid $gv-border;
+    }
+
+    > span {
+      display: grid;
+      min-width: 0;
+    }
+
+    small {
+      color: $gv-muted;
+      font-size: 12.5px;
+    }
+
+    b {
+      color: $gv-ink;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------- admin page */
+
+.gva {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 4px 0 40px;
+
+  h2 {
+    font-size: 18px;
+    font-weight: 700;
+  }
+}
+
+.gva-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+
+  > div {
+    flex: 1 1 280px;
+    min-width: 0;
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+  }
+
+  p {
+    margin-top: 2px;
+    color: $gv-muted;
+    font-size: 14.5px;
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: $gv-soft;
+    color: $gv-primary;
+
+    svg {
+      width: 26px;
+      height: 26px;
+    }
+  }
+}
+
+.gva-panel {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid $gv-border;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 27, 61, 0.04);
+}
+
+.gva-switch {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  border-left: 4px solid #94a3b8;
+
+  &.is-on {
+    border-left-color: $gv-green;
+  }
+
+  p {
+    margin-top: 4px;
+    color: $gv-muted;
+    font-size: 14.5px;
+  }
+}
+
+.gva-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: 700 14.5px/1 $gv-font;
+  color: $gv-ink;
+
+  span {
+    position: relative;
+    width: 52px;
+    height: 30px;
+    border-radius: 999px;
+    background: #cbd5e1;
+    transition: background 0.15s;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+      transition: transform 0.15s;
+    }
+  }
+
+  &.is-on span {
+    background: $gv-green;
+
+    &::after {
+      transform: translateX(22px);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+.gva-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+}
+
+.gva-stat {
+  gap: 4px;
+
+  span {
+    color: $gv-muted;
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+
+  b {
+    font-size: 22px;
+    color: $gv-ink;
+    overflow-wrap: anywhere;
+  }
+
+  small {
+    color: $gv-muted;
+    font-size: 13px;
+  }
+}
+
+.gva-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.gva-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+
+  > span {
+    font-size: 14px;
+    font-weight: 700;
+    color: $gv-ink;
+  }
+
+  > small {
+    color: $gv-muted;
+    font-size: 12.5px;
+  }
+
+  > .gv-btn {
+    justify-self: start;
+  }
+}
+
+.gva-funds {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(140px, 1fr) minmax(180px, 2fr) auto auto;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.gva-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid $gv-border;
+  border-radius: 10px;
+  background: #fff;
+  color: $gv-muted;
+  cursor: pointer;
+
+  &:hover {
+    color: $gv-red;
+    border-color: #f3b4b4;
+  }
+
+  svg {
+    width: 17px;
+    height: 17px;
+  }
+}
+
+.gva-listhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.gva-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  .gv-input {
+    width: auto;
+    min-height: 36px;
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+}
+
+.gva-byfund {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  li {
+    display: grid;
+    gap: 1px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: $gv-soft;
+    min-width: 130px;
+  }
+
+  span {
+    font-size: 13px;
+    color: $gv-muted;
+    font-weight: 600;
+  }
+
+  b {
+    color: $gv-ink;
+  }
+
+  small {
+    color: $gv-muted;
+    font-size: 12px;
+  }
+}
+
+.gva-tablewrap {
+  overflow-x: auto;
+  border: 1px solid $gv-border;
+  border-radius: 12px;
+}
+
+.gva-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th,
+  td {
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid $gv-border;
+  }
+
+  th {
+    background: #f6f8fc;
+    color: $gv-muted;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  i {
+    color: $gv-muted;
+  }
+}
+
+.gva-num {
+  text-align: right !important;
+  white-space: nowrap;
+  font-weight: 700;
+  color: $gv-ink;
+}
+
+.gva-mono {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.gva-note {
+  color: $gv-muted;
+  font-size: 13px;
+}
+
+.gva-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 170;
+  padding: 12px 16px;
+  border-radius: 12px;
+  color: #fff;
+  font: 600 14.5px/1.3 $gv-font;
+  box-shadow: 0 10px 30px rgba(8, 18, 42, 0.25);
+
+  &--ok {
+    background: $gv-green;
+  }
+
+  &--error {
+    background: $gv-red;
+  }
+}
+
+@media (max-width: 760px) {
+  .gva-stats,
+  .gva-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gva-funds li {
+    grid-template-columns: minmax(0, 1fr) auto;
+
+    > .gv-input:nth-child(2) {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+  }
+
+  .gva-switch {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .gv-overlay {
+    padding: 0;
+    align-items: end;
+  }
+
+  .gv-dialog {
+    width: 100%;
+    max-height: 94vh;
+    border-radius: 18px 18px 0 0;
+  }
+}

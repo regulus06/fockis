@@ -168,6 +168,46 @@ export class ChurchGroup {
   capacity?: number | null;
 
   /* =========================================================================
+     GROUPS & COMMUNITIES (org/communities). All optional: groups saved
+     before these existed keep working and get sensible defaults.
+     ========================================================================= */
+
+  /** fellowship | bible_study | prayer | age | family | outreach | custom. Empty = from groupType. */
+  @Prop({ type: String, default: "", index: true })
+  category?: string;
+
+  /** active | inactive | pending_approval | draft (archived stays isArchived). */
+  @Prop({ type: String, default: "active", index: true })
+  groupStatus?: string;
+
+  @Prop({ type: Boolean, default: false, index: true })
+  featured?: boolean;
+
+  /** Small square logo; photoUrl stays the cover image. */
+  @Prop({ type: String, default: null })
+  logoUrl?: string | null;
+
+  @Prop({ type: String, default: "" })
+  mission?: string;
+
+  @Prop({ type: String, default: "" })
+  objectives?: string;
+
+  @Prop({ type: String, default: "" })
+  language?: string;
+
+  /** GroupSettings: visibility, joining, services, meeting plan, finance… */
+  @Prop({ type: Object, default: undefined })
+  groupSettings?: Record<string, unknown>;
+
+  /** Soft delete (restorable by church leadership). */
+  @Prop({ type: Date, default: null, index: true })
+  deletedAt?: Date | null;
+
+  @Prop({ type: Types.ObjectId, ref: "User", default: null })
+  deletedByUserId?: Types.ObjectId | null;
+
+  /* =========================================================================
      ARCHIVE
      ========================================================================= */
 

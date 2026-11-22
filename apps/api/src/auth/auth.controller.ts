@@ -65,7 +65,9 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post("login")
   login(@Body() body: LoginDto, @Req() request: Request) {
-    return this.authService.login(body.email, body.password, request);
+    return this.authService.login(body.email, body.password, request, {
+      rememberMe: body.rememberMe === true,
+    });
   }
 
   @Public()
@@ -169,6 +171,90 @@ export class AuthController {
       String(userId),
       currentPassword,
       mfaCode,
+      {
+        tokenIat: Number(user?.tokenIssuedAt) || null,
+        request,
+      },
     );
+  }
+
+  // ==========================================================================
+  // REAUTHENTICATION
+  //
+  // Returns a short-lived token for the X-Fockis-Reauth header, required by
+  // sensitive actions (security policy changes, account recovery, two-factor
+  // changes) according to the platform security policy.
+  // ==========================================================================
+
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post("reauthenticate")
+  reauthenticate(
+    @Body("password") password: string,
+    @Body("code") code: string,
+    @Req() request: Request,
+  ) {
+    return this.authService.reauthenticate(
+      this.currentUserId(request),
+      String(password ?? ""),
+      code === undefined || code === null ? undefined : String(code),
+      request,
+    );
+  }
+
+  // ==========================================================================
+  // SELF-SERVICE TWO-FACTOR
+  // ==========================================================================
+
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post("mfa/enroll/start")
+  startMfaEnrollment(@Req() request: Request) {
+    return this.authService.startSelfServiceEnrollment(
+      this.currentUserId(request),
+      request,
+    );
+  }
+
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post("mfa/enroll/confirm")
+  confirmMfaEnrollment(@Body("code") code: string, @Req() request: Request) {
+    return this.authService.confirmSelfServiceEnrollment(
+      this.currentUserId(request),
+      String(code ?? "").trim(),
+      request,
+    );
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post("mfa/recovery-codes/regenerate")
+  regenerateRecoveryCodes(@Body("code") code: string, @Req() request: Request) {
+    return this.authService.regenerateRecoveryCodes(
+      this.currentUserId(request),
+      String(code ?? "").trim(),
+      request,
+    );
+  }
+
+  // ==========================================================================
+  // SESSIONS
+  // ==========================================================================
+
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post("sessions/revoke-others")
+  revokeOtherSessions(@Req() request: Request) {
+    return this.authService.revokeOtherSessions(
+      this.currentUserId(request),
+      request,
+    );
+  }
+
+  private currentUserId(request: Request): string {
+    const user = request.user as any;
+    const userId = user?.userId ?? user?.id ?? user?.sub;
+
+    if (!userId) {
+      throw new UnauthorizedException("Authenticated user ID is missing.");
+    }
+
+    return String(userId);
   }
 }

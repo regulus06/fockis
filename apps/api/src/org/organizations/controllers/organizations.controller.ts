@@ -45,6 +45,9 @@ import {
   OrganizationsService,
 } from '../services/organizations.service';
 
+// Settings & Roles: "Allow membership requests" switch.
+import { AdminCenterService } from '../../admin-center/admin-center.service';
+
 import {
   OrganizationStatus,
 } from '../../enums/organization-status.enum';
@@ -471,6 +474,9 @@ export class OrganizationsController {
   constructor(
     private readonly organizationsService:
       OrganizationsService,
+
+    private readonly adminCenter:
+      AdminCenterService,
   ) {}
 
   /* ==========================================================================
@@ -985,6 +991,11 @@ export class OrganizationsController {
 
     const text = (v: unknown, max: number) =>
       typeof v === 'string' ? v.trim().slice(0, max) : '';
+
+    // Settings & Roles → Quick Settings → Allow membership requests.
+    await this.adminCenter.assertJoinAllowed(
+      organizationId,
+    );
 
     return this.organizationsService.join(
       organizationId,

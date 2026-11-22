@@ -1,0 +1,53 @@
+/* Church card at the top of the organization side menu (cover + logo + name). */
+
+.church-sidebar__brand {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  margin: -12px -12px 10px;
+  padding: 0 12px 14px;
+  border-bottom: 1px solid var(--church-border, #dce4ea);
+  text-align: center;
+
+  @media (max-width: 899px) {
+    display: none;
+  }
+}
+
+.church-sidebar__brand-cover {
+  width: calc(100% + 24px);
+  height: 92px;
+  margin: 0 -12px;
+  border-radius: var(--church-radius-md, 14px) var(--church-radius-md, 14px) 0 0;
+  background: linear-gradient(135deg, #cfe0fb, #eaf2ff) center / cover no-repeat;
+}
+
+.church-sidebar__brand-logo {
+  width: 64px;
+  height: 64px;
+  margin-top: -40px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(15, 27, 61, 0.16);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: var(--church-primary, #0d47b8);
+  font-size: 24px;
+  font-weight: 800;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.church-sidebar__brand-name {
+  margin-top: 8px;
+  color: var(--church-ink, #0b1f4d);
+  font-size: 1.02rem;
+  font-weight: 800;
+  line-height: 1.25;
+}

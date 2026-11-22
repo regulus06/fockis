@@ -200,7 +200,7 @@ export default function OrganizationGroupCard({
   const groupUrl =
     "/organizations/" +
     encodeURIComponent(organizationId) +
-    "/groups#" +
+    "/groups/" +
     encodeURIComponent(group.id);
 
   /* ==========================================================================

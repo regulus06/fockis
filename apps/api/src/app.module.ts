@@ -185,6 +185,7 @@ import { TranslationModule } from "./translation/translation.module";
 // ============================================================================
 
 import { RedisModule } from "./redis/redis.module";
+import { PlatformSecurityModule } from "./admin/security/platform-security/platform-security.module";
 
 // ============================================================================
 // FOCKIS AI
@@ -192,6 +193,8 @@ import { RedisModule } from "./redis/redis.module";
 
 import { AiModule } from "./ai/ai.module";
 import { AiAdminModule } from "./fockis-ai-admin/ai-admin.module";
+import { WebsiteStudioModule } from "./website-studio/website-studio.module";
+import { NewsModule } from "./news/news.module";
 
 // ============================================================================
 // AUTHORIZATION / SECURITY GUARDS
@@ -352,6 +355,10 @@ import {
     // ========================================================================
 
     AcademyModule,
+
+    // Platform security policy (global): must load before AuthModule users.
+    PlatformSecurityModule,
+
     AuthModule,
     UsersModule,
 
@@ -486,6 +493,15 @@ import {
 
     AiModule,
     AiAdminModule,
+
+    // ========================================================================
+    // FOCKIS WEBSITE STUDIO
+    // ========================================================================
+
+    WebsiteStudioModule,
+
+    // Fockis News & Media
+    NewsModule,
   ],
 
   controllers: [

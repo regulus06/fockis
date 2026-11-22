@@ -13,6 +13,7 @@ import * as crypto from "crypto";
 import * as nodemailer from "nodemailer";
 
 import { User, UserDocument } from "../user.schema";
+import { AccountSecurityService } from "../../admin/security/platform-security/account-security.service";
 
 const CODE_TTL_MS = 10 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 60 * 1000;
@@ -24,6 +25,7 @@ export class EmailChangeService {
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
     private readonly configService: ConfigService,
+    private readonly accountSecurity: AccountSecurityService,
   ) {}
 
   private getMailer() {
@@ -159,7 +161,11 @@ export class EmailChangeService {
     };
   }
 
-  async verifyChange(userId: string, suppliedCode: string) {
+  async verifyChange(
+    userId: string,
+    suppliedCode: string,
+    options: { tokenIat?: number | null } = {},
+  ) {
     if (!isValidObjectId(userId)) {
       throw new BadRequestException("Invalid user ID.");
     }
@@ -258,6 +264,13 @@ export class EmailChangeService {
         "The email address could not be updated. Please try again.",
       );
     }
+
+    // Email change protection: sign out other sessions and notify, as the
+    // security policy requires. The current session stays signed in.
+    await this.accountSecurity.onSecurityChange(userId, "email_changed", {
+      exceptIat: options.tokenIat ?? null,
+      user: user.toObject() as any,
+    });
 
     return {
       success: true,

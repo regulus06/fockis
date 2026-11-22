@@ -19,6 +19,8 @@ import { UserSecurityService } from "./services/user-security.service";
 import { UserSearchService } from "./services/user-search.service";
 import { UserProfileService } from "./services/user-profile.service";
 import { EmailChangeService } from "./services/email-change.service";
+import { LoginHistoryService } from "./services/login-history.service";
+import { LoginEvent, LoginEventSchema } from "./login-event.schema";
 
 import { FriendsModule } from "../friends/friends.module";
 
@@ -32,6 +34,10 @@ import { FriendsModule } from "../friends/friends.module";
       {
         name: FockisIdSettings.name,
         schema: FockisIdSettingsSchema,
+      },
+      {
+        name: LoginEvent.name,
+        schema: LoginEventSchema,
       },
     ]),
 
@@ -49,6 +55,7 @@ import { FriendsModule } from "../friends/friends.module";
     UserSearchService,
     UserProfileService,
     EmailChangeService,
+    LoginHistoryService,
   ],
 
   exports: [
@@ -58,6 +65,7 @@ import { FriendsModule } from "../friends/friends.module";
     UserSearchService,
     UserProfileService,
     EmailChangeService,
+    LoginHistoryService,
     MongooseModule,
   ],
 })

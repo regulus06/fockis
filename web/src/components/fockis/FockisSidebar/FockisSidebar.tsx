@@ -12,6 +12,7 @@ import {
   CircleHelp,
   Clapperboard,
   CreditCard,
+  Globe,
   Home,
   Landmark,
   LayoutDashboard,
@@ -21,6 +22,7 @@ import {
   Megaphone,
   MessageSquareText,
   Music,
+  Newspaper,
   Plane,
   Radio,
   Settings,
@@ -191,11 +193,15 @@ export default function FockisSidebar({ collapsed = false, mobileOpen = false, o
       { to: "/fockis-preview", label: "Home (Feed)", icon: Home, end: true },
       { to: "/waves", label: "Waves (Reels)", icon: Clapperboard },
       { to: "/shop", label: "Fockis Shop", icon: ShoppingBag },
+      // Fockis News & Media: central news, media directory and newsrooms.
+      { to: "/news", label: "News & Media", icon: Newspaper },
       { to: "/messages", label: "Messages", icon: MessageSquareText, badge: unreadMessages },
       { to: "/notifications", label: "Notifications", icon: Bell, badge: unreadCount },
       { to: "/groups", label: "Groups", icon: Users },
       { to: "/events", label: "Events", icon: CalendarDays },
       { to: "/organizations", label: "Organizations", icon: Building2 },
+      // Website Studio: create, edit and publish websites with templates or AI.
+      { to: "/website-studio", label: "Website Studio", icon: Globe },
       // Job seekers: every Careers page except the Employer Center.
       { to: "/careers", label: "Careers", icon: Briefcase, end: true, match: CAREERS_SEEKER_PATHS },
       // Employers: post jobs, see applicants (the form to become an employer is here too).
@@ -293,6 +299,7 @@ export default function FockisSidebar({ collapsed = false, mobileOpen = false, o
           </button>
           {moreOpen && <div className="fk-nav__sub">{MORE_ITEMS.map(renderItem)}</div>}
           {showAdmin && renderItem({ to: "/admin/dashboard", label: "Admin Dashboard", icon: LayoutDashboard, match: ["/admin/"] })}
+          {showAdmin && renderItem({ to: "/website-studio/admin", label: "Website Studio Admin", icon: Globe })}
         </div>
 
         <hr className="fk-nav__divider" />

@@ -1,11 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { Pencil } from "lucide-react";
 
 import type { ChurchPermissions } from "../types/organization.types";
 
 import { useFockisTranslation } from "../../../i18n/useFockisTranslation";
 
 import "../styles/OrganizationComponents.scss";
+import "./OrganizationSidebarBrand.scss";
+import { PageThumb } from "../branding/PageBrandingParts";
+import PageBrandingEditor from "../branding/PageBrandingEditor";
+import { pageKeyFromPath } from "../branding/pageBrandingApi";
+import { usePageBranding } from "../branding/usePageBranding";
 
 /* ============================================================================
    TYPES
@@ -23,6 +29,7 @@ export type ChurchSidebarSection =
   | "attendance"
   | "communication"
   | "media"
+  | "myBadge"
   | "myHistory"
   | "visits";
 
@@ -59,6 +66,13 @@ export interface ChurchSidebarProps {
    * They must never be passed through the translation system.
    */
   organizationName?: string;
+
+  /**
+   * Optional church card at the top of the menu (cover image + logo + name).
+   * Without them the menu shows the plain name heading as before.
+   */
+  organizationLogoUrl?: string | null;
+  organizationCoverUrl?: string | null;
 
   /**
    * Current viewer authorization information.
@@ -198,6 +212,13 @@ const NAV_ITEMS: NavItem[] = [
   },
 
   {
+    key: "myBadge",
+    translationKey: "church.navigation.myBadge",
+    path: (id) => orgPath(id, "/my-badge"),
+    member: true,
+  },
+
+  {
     key: "myHistory",
     translationKey: "church.navigation.myHistory",
     path: (id) => orgPath(id, "/my-history"),
@@ -284,6 +305,8 @@ function canViewItem(item: NavItem, viewer?: ChurchSidebarViewer): boolean {
 export default function OrganizationSidebar({
   organizationId,
   organizationName,
+  organizationLogoUrl,
+  organizationCoverUrl,
   viewer,
   visibleSections,
   className,
@@ -311,18 +334,36 @@ export default function OrganizationSidebar({
    */
   const encodedOrganizationId = encodeURIComponent(organizationId.trim());
 
+  // Per-page thumbnails (same keys as the main app sidebar).
+  const branding = usePageBranding(organizationId.trim());
+  const [editing, setEditing] = useState<{ key: string; label: string } | null>(null);
+  const keyOf = (item: NavItem) => pageKeyFromPath(item.path(encodedOrganizationId), organizationId.trim());
+
   return (
     <nav
       className={["church-sidebar", className ?? ""].filter(Boolean).join(" ")}
       aria-label={t("church.navigation.organizationNavigation")}
     >
-      {organizationName && organizationName.trim() && (
-        <div className="church-sidebar__heading">{organizationName}</div>
+      {(organizationLogoUrl || organizationCoverUrl) && organizationName?.trim() ? (
+        <div className="church-sidebar__brand">
+          <div
+            className="church-sidebar__brand-cover"
+            style={organizationCoverUrl ? { backgroundImage: `url("${organizationCoverUrl}")` } : undefined}
+            aria-hidden="true"
+          />
+          <span className="church-sidebar__brand-logo" aria-hidden="true">
+            {organizationLogoUrl ? <img src={organizationLogoUrl} alt="" /> : organizationName.trim().slice(0, 1).toUpperCase()}
+          </span>
+          <strong className="church-sidebar__brand-name">{organizationName}</strong>
+        </div>
+      ) : (
+        organizationName &&
+        organizationName.trim() && <div className="church-sidebar__heading">{organizationName}</div>
       )}
 
       <ul className="church-sidebar__list">
         {items.map((item) => (
-          <li key={item.key} className="church-sidebar__item">
+          <li key={item.key} className={"church-sidebar__item" + (branding.canEdit ? " pb-navrow" : "")}>
             <NavLink
               to={item.path(encodedOrganizationId)}
               end={item.end}
@@ -340,11 +381,32 @@ export default function OrganizationSidebar({
                   .join(" ");
               }}
             >
+              <PageThumb content={branding.publishedFor(keyOf(item))} size={22} className="church-sidebar__thumb" />
               {t(item.translationKey)}
             </NavLink>
+            {branding.canEdit && (
+              <button
+                type="button"
+                className="pb-navrow__edit"
+                title="Edit thumbnail"
+                aria-label={`Edit thumbnail for ${t(item.translationKey)}`}
+                onClick={() => setEditing({ key: keyOf(item), label: t(item.translationKey) })}
+              >
+                <Pencil aria-hidden="true" />
+              </button>
+            )}
           </li>
         ))}
       </ul>
+
+      {editing && (
+        <PageBrandingEditor
+          organizationId={organizationId.trim()}
+          pageKey={editing.key}
+          pageLabel={editing.label}
+          onClose={() => setEditing(null)}
+        />
+      )}
     </nav>
   );
 }

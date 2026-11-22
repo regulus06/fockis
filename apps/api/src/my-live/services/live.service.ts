@@ -4,7 +4,12 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  Optional,
 } from "@nestjs/common";
+
+import { EventEmitter2, OnEvent } from "@nestjs/event-emitter";
+
+import { canWatchOrganizationLive } from "../../org/live/live-access";
 
 import { InjectModel } from "@nestjs/mongoose";
 
@@ -57,7 +62,90 @@ export class LiveService {
     private readonly userModel: Model<UserDocument>,
 
     private readonly recordingService: LiveRecordingService,
+
+    @Optional()
+    private readonly events?: EventEmitter2,
   ) {}
+
+  // ===========================================================================
+  // ORGANIZATION LIVESTREAMS
+  // ===========================================================================
+
+  /**
+   * May this user watch the stream? Ordinary Fockis Live streams: yes.
+   * Streams linked to an organization livestream: the host, or whoever the
+   * organization's access rules allow (members, groups, invitations…).
+   */
+  async canViewerAccess(
+    stream: { hostId?: unknown; orgLiveEventId?: unknown },
+    userId: string | null,
+  ): Promise<boolean> {
+    if (!stream?.orgLiveEventId) return true;
+    if (userId && String(stream.hostId) === String(userId)) return true;
+    const result = await canWatchOrganizationLive(
+      this.liveModel.db,
+      stream.orgLiveEventId,
+      userId,
+    );
+    return result.allowed;
+  }
+
+  /** Linked organization livestream that is not public (thumbnails / chat history stay private). */
+  async isRestrictedOrganizationStream(
+    streamId: string,
+  ): Promise<boolean> {
+    if (!isValidObjectId(streamId)) return false;
+    const stream = await this.liveModel
+      .findById(streamId)
+      .select("orgLiveEventId")
+      .lean();
+    if (!stream?.orgLiveEventId) return false;
+    const event = await this.liveModel.db
+      .collection("church_live_events")
+      .findOne(
+        { _id: stream.orgLiveEventId },
+        { projection: { visibility: 1 } },
+      );
+    return event?.visibility !== "public";
+  }
+
+  /** Organization livestreams can turn chat off. Ordinary streams: always on. */
+  async organizationChatAllowed(stream: { orgLiveEventId?: unknown }): Promise<boolean> {
+    if (!stream?.orgLiveEventId) return true;
+    const event = await this.liveModel.db
+      .collection("church_live_events")
+      .findOne(
+        { _id: stream.orgLiveEventId as never },
+        { projection: { "settings.enableChat": 1 } },
+      );
+    return event?.settings?.enableChat !== false;
+  }
+
+  /** Replays allowed by the organization for this broadcast. */
+  async organizationReplayAllowed(stream: { orgLiveEventId?: unknown }): Promise<boolean> {
+    if (!stream.orgLiveEventId) return false;
+    const event = await this.liveModel.db
+      .collection("church_live_events")
+      .findOne(
+        { _id: stream.orgLiveEventId as never },
+        { projection: { "settings.allowReplay": 1, state: 1, isArchived: 1 } },
+      );
+    return Boolean(event && event.state === "ended" && !event.isArchived && event.settings?.allowReplay !== false);
+  }
+
+  /** The organization ended its livestream from the admin dashboard. */
+  @OnEvent("organization-live.end")
+  async endForOrganization(payload: { liveStreamId?: string }) {
+    const id = String(payload?.liveStreamId ?? "");
+    if (!isValidObjectId(id)) return;
+    const stream = await this.liveModel.findById(id);
+    if (!stream || !stream.orgLiveEventId || stream.status === "ended") return;
+    stream.status = "ended";
+    stream.endedAt = new Date();
+    stream.viewerCount = 0;
+    await stream.save();
+    void this.recordingService.stopForStream(id).catch(() => undefined);
+  }
 
   // ===========================================================================
   // CREATE
@@ -203,6 +291,8 @@ export class LiveService {
   ) {
     const filter: Record<string, unknown> = {
       status: "live",
+      // Organization livestreams are listed by their organization, never here.
+      orgLiveEventId: null,
     };
 
     const normalizedCategory =
@@ -370,6 +460,14 @@ export class LiveService {
     stream.viewerCount = 0;
 
     await stream.save();
+
+    if (stream.orgLiveEventId) {
+      // The organization livestream ends with its broadcast.
+      this.events?.emit("live.stream.ended", {
+        streamId,
+        orgLiveEventId: String(stream.orgLiveEventId),
+      });
+    }
 
     /*
      * Finalize the LiveKit recording. This runs in the background
@@ -1430,4 +1528,4 @@ export class LiveService {
       );
     }
   }
-}
+}

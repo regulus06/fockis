@@ -36,6 +36,17 @@ import { EmployerRoutes } from "./features/employer/routes/EmployerRoutes";
 import { shopRoutes } from "./features/fockis-shop/routes/shopRoutes";
 
 // ============================================================================
+// FOCKIS WEBSITE STUDIO
+// ============================================================================
+
+import {
+  HostedWebsiteRoute,
+  PublicWebsiteRoute,
+  WebsiteStudioRoutes,
+  isWebsiteStudioHost,
+} from "./features/website-studio/routes/WebsiteStudioRoutes";
+
+// ============================================================================
 // FOCKIS TRAVEL
 // ============================================================================
 
@@ -54,20 +65,29 @@ import AcademyRoutes from "./fockis-src/routes/AcademyRoutes";
 import OrganizationsHomePage from "./features/organizations/pages/OrganizationsHomePage";
 import OrganizationsPage from "./features/organizations/pages/OrganizationsPage";
 import OrganizationPage from "./features/organizations/pages/OrganizationPage";
+import MinistryPublicPage from "./features/organizations/pages/MinistryPublicPage";
+import MinistryCheckInPage from "./features/organizations/pages/MinistryCheckInPage";
 import OrganizationMembersPage from "./features/organizations/pages/OrganizationMembersPage";
 import OrganizationMemberProfilePage from "./features/organizations/pages/OrganizationMemberProfilePage";
 import OrganizationDepartmentsPage from "./features/organizations/pages/OrganizationDepartmentsPage";
-import OrganizationGroupsPage from "./features/organizations/pages/OrganizationGroupsPage";
+import GroupsPage from "./features/organizations/communities/GroupsPage";
+import NewsRoutes from "./features/news/NewsRoutes";
+import GroupProfilePage from "./features/organizations/communities/GroupProfilePage";
+import InviteLinkPage from "./features/organizations/communities/InviteLinkPage";
 import OrganizationEventsPage from "./features/organizations/pages/OrganizationEventsPage";
 import OrganizationLivePage from "./features/organizations/pages/OrganizationLivePage";
+import LiveWatchPage from "./features/organizations/live-center/LiveWatchPage";
 import OrganizationLivestreamPage from "./features/organizations/pages/OrganizationLivestreamPage";
 import OrganizationAttendancePage from "./features/organizations/pages/OrganizationAttendancePage";
+import OrganizationAttendanceHubPage from "./features/organizations/pages/OrganizationAttendanceHubPage";
 import OrganizationCommunicationPage from "./features/organizations/pages/OrganizationCommunicationPage";
 import OrganizationMediaLibrary from "./features/organizations/pages/OrganizationMediaLibrary";
 import OrganizationPlanVisitPage from "./features/organizations/pages/OrganizationPlanVisitPage";
 import OrganizationJoinPage from "./features/organizations/pages/OrganizationJoinPage";
 import OrganizationMyHistoryPage from "./features/organizations/pages/OrganizationMyHistoryPage";
 import OrganizationVisitRequestsPage from "./features/organizations/admin/OrganizationVisitRequestsPage";
+import RequestsPage from "./features/organizations/requests/RequestsPage";
+import GivingAdminPage from "./features/organizations/giving/GivingAdminPage";
 import OrganizationBadgesPage from "./features/organizations/admin/OrganizationBadgesPage";
 import OrganizationMyBadgePage from "./features/organizations/pages/OrganizationMyBadgePage";
 import BadgeVerifyPage from "./features/organizations/badges/BadgeVerifyPage";
@@ -85,14 +105,16 @@ import OrganizationMemberSettingsPage from "./features/organizations/pages/Organ
 
 import OrganizationAdminDashboard from "./features/organizations/admin/OrganizationAdminDashboard";
 import OrganizationDepartmentManagement from "./features/organizations/admin/OrganizationDepartmentManagement";
+import MinistriesPage from "./features/organizations/ministries/MinistriesPage";
 import OrganizationEventManagement from "./features/organizations/admin/OrganizationEventManagement";
-import OrganizationGroupManagement from "./features/organizations/admin/OrganizationGroupManagement";
 import OrganizationMemberManagement from "./features/organizations/admin/OrganizationMemberManagement";
 import OrganizationMembersAdminPage from "./features/organizations/admin/OrganizationMembersAdminPage";
 import CreateOrganizationWizard from "./features/organizations/admin/CreateOrganizationWizard";
 import RequireOrgAdmin, { LegacyAdminRedirect } from "./features/organizations/ui/RequireOrgAdmin";
-import OrganizationForm from "./features/organizations/admin/OrganizationForm";
+// Profile & Locations (redesigned edit view of the organization profile; same APIs).
+import ProfileLocationsPage from "./features/organizations/admin/ProfileLocationsPage";
 import OrganizationSettingsPage from "./features/organizations/admin/OrganizationSettingsPage";
+import SettingsRolesPage from "./features/organizations/settings-center/SettingsRolesPage";
 import OrganizationAdminLivestreamPage from "./features/organizations/admin/live/OrganizationAdminLivestreamPage";
 
 // ============================================================================
@@ -239,6 +261,10 @@ import EditEventPage from "./features/events/pages/EditEventPage";
 import EventDetailsPage from "./features/events/pages/EventDetailsPage";
 import MyEventsPage from "./features/events/pages/MyEventsPage";
 import MyRsvpsPage from "./features/events/pages/MyRsvpsPage";
+import EventRegistrationPage from "./features/events/registrations/RegistrationPage";
+import RegistrationConfirmationPage from "./features/events/registrations/RegistrationConfirmationPage";
+import EventRegistrationsPage from "./features/events/registrations/EventRegistrationsPage";
+import EventCheckInPage from "./features/events/registrations/EventCheckInPage";
 import MyModerationPage from "./features/reports/pages/MyModerationPage";
 
 // ============================================================================
@@ -381,7 +407,7 @@ function OrganizationGroupsRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <OrganizationGroupsPage />;
+  return <GroupsPage />;
 }
 
 // ============================================================================
@@ -495,7 +521,8 @@ function OrganizationAttendanceRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <OrganizationAttendancePage />;
+  // Attendance is now per ministry; this page links to each one.
+  return <OrganizationAttendanceHubPage />;
 }
 
 function OrganizationVisitRoute(): React.JSX.Element {
@@ -557,7 +584,9 @@ function OrganizationAdminDepartmentsRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <OrganizationDepartmentManagement />;
+  // Ministries dashboard (faith organizations); other organization types keep
+  // the departments screen — MinistriesPage switches by organization type.
+  return <MinistriesPage />;
 }
 
 function OrganizationAdminGroupsRoute(): React.JSX.Element {
@@ -568,7 +597,7 @@ function OrganizationAdminGroupsRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <OrganizationGroupManagement />;
+  return <GroupsPage />;
 }
 
 function OrganizationAdminEventsRoute(): React.JSX.Element {
@@ -612,7 +641,8 @@ function OrganizationAdminSettingsRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <OrganizationSettingsPage />;
+  // Settings & Roles (Organization Administration Center).
+  return <SettingsRolesPage />;
 }
 
 // ============================================================================
@@ -961,6 +991,12 @@ function WaveRedirect() {
 }
 
 function App(): React.JSX.Element {
+  // Customer websites opened on their own subdomain / custom domain render
+  // without the Fockis app shell (Website Studio public hosting).
+  if (isWebsiteStudioHost()) {
+    return <HostedWebsiteRoute />;
+  }
+
   return (
     <>
     {/* Incoming / outgoing calls ring on every page, not only in Messages. */}
@@ -988,6 +1024,29 @@ function App(): React.JSX.Element {
       <Route
         path="/reset-password"
         element={<ResetPassword />}
+      />
+
+      {/* ====================================================================
+          FOCKIS WEBSITE STUDIO (full-screen, outside the app layout)
+      ==================================================================== */}
+
+      <Route
+        path="/website-studio/*"
+        element={<WebsiteStudioRoutes />}
+      />
+
+      <Route
+        path="/s/:siteSlug/*"
+        element={<PublicWebsiteRoute />}
+      />
+
+      {/* ====================================================================
+          FOCKIS NEWS & MEDIA (own frame: Fockis sidebar + news masthead)
+      ==================================================================== */}
+
+      <Route
+        path="/news/*"
+        element={<NewsRoutes />}
       />
 
       {/* ====================================================================
@@ -1195,6 +1254,12 @@ function App(): React.JSX.Element {
         element={<BadgeVerifyPage />}
       />
 
+      {/* Current badge QR codes. Public. */}
+      <Route
+        path="/verify/church-member/:token"
+        element={<BadgeVerifyPage />}
+      />
+
       {/* A member's own history in this organization. */}
       <Route
         path="/organizations/:organizationId/my-history"
@@ -1216,6 +1281,24 @@ function App(): React.JSX.Element {
         element={<OrganizationMemberProfileRoute />}
       />
 
+      {/* QR / self check-in for one ministry meeting date. */}
+      <Route
+        path="/organizations/:organizationId/ministries/:ministryId/check-in/:sessionId"
+        element={<MinistryCheckInPage />}
+      />
+
+      {/* Ministries dashboard for members (proposals, applications, my ministries). */}
+      <Route
+        path="/organizations/:organizationId/ministries"
+        element={<MinistriesPage />}
+      />
+
+      {/* A ministry's public page on its church website. */}
+      <Route
+        path="/organizations/:organizationId/ministries/:ministryId"
+        element={<MinistryPublicPage />}
+      />
+
       <Route
         path="/organizations/:organizationId/departments"
         element={<OrganizationDepartmentsRoute />}
@@ -1224,6 +1307,16 @@ function App(): React.JSX.Element {
       <Route
         path="/organizations/:organizationId/groups"
         element={<OrganizationGroupsRoute />}
+      />
+
+      <Route
+        path="/organizations/:organizationId/groups/:groupId"
+        element={<GroupProfilePage />}
+      />
+
+      <Route
+        path="/organizations/:organizationId/group-invite/:token"
+        element={<InviteLinkPage />}
       />
 
       {/* ====================================================================
@@ -1255,6 +1348,17 @@ function App(): React.JSX.Element {
         element={<OrganizationLiveRoute />}
       />
 
+      {/* One organization livestream (access checked by the server). */}
+      <Route
+        path="/organizations/:organizationId/live/:liveId"
+        element={<LiveWatchPage />}
+      />
+
+      <Route
+        path="/church/organizations/:organizationId/live/:liveId"
+        element={<LiveWatchPage />}
+      />
+
       <Route
         path="/organizations/:organizationId/media"
         element={<OrganizationMediaRoute />}
@@ -1268,6 +1372,12 @@ function App(): React.JSX.Element {
       <Route
         path="/organizations/:organizationId/attendance"
         element={<OrganizationAttendanceRoute />}
+      />
+
+      {/* Previous church-event check-in page (kept for existing records). */}
+      <Route
+        path="/organizations/:organizationId/attendance/events"
+        element={<OrganizationAttendancePage />}
       />
 
       {/* ====================================================================
@@ -1301,7 +1411,19 @@ function App(): React.JSX.Element {
         element={<RequireOrgAdmin><OrganizationBadgesPage /></RequireOrgAdmin>}
       />
 
-      {/* "Plan a visit" requests sent to this organization. */}
+      {/* Requests & Inquiries (under Communication). Staff only, checked by the API. */}
+      <Route
+        path="/organizations/:organizationId/admin/requests"
+        element={<RequestsPage />}
+      />
+
+      {/* Give Online: settings and gifts. Giving managers only, checked by the API. */}
+      <Route
+        path="/organizations/:organizationId/admin/giving"
+        element={<GivingAdminPage />}
+      />
+
+      {/* Plan-a-visit requests (dates, party size). */}
       <Route
         path="/organizations/:organizationId/admin/visits"
         element={<RequireOrgAdmin><OrganizationVisitRequestsPage /></RequireOrgAdmin>}
@@ -1478,7 +1600,12 @@ function App(): React.JSX.Element {
 
       <Route
         path="/church/organizations/:organizationId/groups"
-        element={<OrganizationGroupsPage />}
+        element={<GroupsPage />}
+      />
+
+      <Route
+        path="/church/organizations/:organizationId/groups/:groupId"
+        element={<GroupProfilePage />}
       />
 
       <Route
@@ -1523,12 +1650,12 @@ function App(): React.JSX.Element {
 
       <Route
         path="/church/organizations/:organizationId/admin/departments"
-        element={<RequireOrgAdmin><OrganizationDepartmentManagement /></RequireOrgAdmin>}
+        element={<RequireOrgAdmin><MinistriesPage /></RequireOrgAdmin>}
       />
 
       <Route
         path="/church/organizations/:organizationId/admin/groups"
-        element={<RequireOrgAdmin><OrganizationGroupManagement /></RequireOrgAdmin>}
+        element={<RequireOrgAdmin><GroupsPage /></RequireOrgAdmin>}
       />
 
       <Route
@@ -1629,9 +1756,7 @@ function App(): React.JSX.Element {
       <Route
         path="/church/admin/organizations/:organizationId/edit"
         element={<RequireOrgAdmin>
-          <OrganizationForm
-            mode="edit"
-          />
+          <ProfileLocationsPage />
         </RequireOrgAdmin>}
       />
 
@@ -2101,6 +2226,28 @@ function App(): React.JSX.Element {
         <Route
           path="/events/my-rsvps"
           element={<MyRsvpsPage />}
+        />
+
+        {/* Registration: ticket / confirmation (guests open it with ?key=). */}
+        <Route
+          path="/events/registrations/:registrationId"
+          element={<RegistrationConfirmationPage />}
+        />
+
+        <Route
+          path="/events/:eventId/register"
+          element={<EventRegistrationPage />}
+        />
+
+        {/* Organizer: registrations dashboard and QR check-in (API checks access). */}
+        <Route
+          path="/events/:eventId/registrations"
+          element={<EventRegistrationsPage />}
+        />
+
+        <Route
+          path="/events/:eventId/check-in"
+          element={<EventCheckInPage />}
         />
 
         <Route

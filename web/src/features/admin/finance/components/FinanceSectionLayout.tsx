@@ -24,6 +24,7 @@ const TABS: { to: string; label: string; anyOf: string[] }[] = [
   { to: "/admin/finance/refunds", label: "Refunds", anyOf: [P.FINANCE_REFUNDS] },
   { to: "/admin/finance/transactions", label: "Transactions", anyOf: [P.FINANCE_TRANSACTIONS] },
   { to: "/admin/finance/payouts", label: "Payouts", anyOf: [P.FINANCE_PAYOUTS] },
+  { to: "/admin/finance/marketplace", label: "Marketplace payouts", anyOf: [P.FINANCE_PAYOUTS] },
   { to: "/admin/finance/invoices", label: "Invoices", anyOf: [P.FINANCE_VIEW] },
   { to: "/admin/finance/revenue", label: "Revenue", anyOf: [P.FINANCE_EARNINGS, P.FINANCE_VIEW] },
   { to: "/admin/finance/fees", label: "Fees", anyOf: [P.FINANCE_VIEW] },

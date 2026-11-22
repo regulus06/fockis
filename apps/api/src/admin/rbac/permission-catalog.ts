@@ -621,6 +621,48 @@ export const ADMIN_PERMISSION_CATALOG: AdminPermissionDefinition[] = [
       "Manage platform security controls.",
     module: "security",
   },
+  {
+    key: "security.policies.manage",
+    label: "Edit Authentication Policies",
+    description:
+      "Change password, login-protection, alert, account-protection and audit-retention policies.",
+    module: "security",
+  },
+  {
+    key: "security.mfa.manage",
+    label: "Manage Two-Factor Requirements",
+    description:
+      "Change two-factor and reauthentication requirements.",
+    module: "security",
+  },
+  {
+    key: "security.sessions.manage",
+    label: "Manage Session Policies",
+    description:
+      "Change session timeouts and revocation rules, and sign users out.",
+    module: "security",
+  },
+  {
+    key: "security.audit.view",
+    label: "View Security Audit Logs",
+    description:
+      "View and export security events.",
+    module: "security",
+  },
+  {
+    key: "security.org_defaults.manage",
+    label: "Manage Organization Security Defaults",
+    description:
+      "Set the managed-identity baseline and choose which settings organizations may tighten.",
+    module: "security",
+  },
+  {
+    key: "security.account_recovery",
+    label: "Account Security Recovery",
+    description:
+      "Unlock accounts, sign users out and reset two-factor during account recovery.",
+    module: "security",
+  },
 
   // ============================================================
   // AUDIT

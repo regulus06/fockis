@@ -79,7 +79,9 @@ export default function EditEventPage() {
               coverImageUrl: event.coverImageUrl,
               coverVideoUrl: event.coverVideoUrl,
               coverMediaType: event.coverMediaType,
+              registration: event.registrationSettings,
             }}
+            hasRegistrations={(event.registration?.registeredSeats ?? 0) > 0}
             onCancel={() => navigate(`/events/${event.id}`)}
             onSubmit={async (values) => {
               const updated = await eventsApi.update(event.id, values);

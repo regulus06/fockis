@@ -1,0 +1,286 @@
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationAdminDashboard.tsx:52: if (a.status === "active") return "Membership approved / reactivated";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationAdminDashboard.tsx:53: if (a.status === "inactive") return "Membership suspended";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationAdminDashboard.tsx:54: if (a.status === "archived") return "Application declined or membership archived";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationAdminDashboard.tsx:89: const total = c && c.totalMembers !== null ? c.totalMembers + (c.inactiveMembers ?? 0) : null;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:22: * - Restore archived departments
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:28: * - Preserves archived department history
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:49: archiveDepartment,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:65: type DepartmentView = "active" | "archived";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:147: includeArchived: true,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:225: !department.isArchived,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:230: const archivedDepartments = useMemo(
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:234: department.isArchived,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:241: view === "archived"
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:242: ? archivedDepartments
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:278: archivedDepartments,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:294: const archivedCount =
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:295: archivedDepartments.length;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:303: if (department.isArchived) {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:305: "Archived departments must be restored before they can be edited.",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:437: if (department.isArchived) {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:439: "This department is already archived.",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:463: await archiveDepartment(
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:475: isArchived: true,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:476: archivedAt:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:507: if (!department.isArchived) {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:641: {archivedCount}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:645: Archived
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:904: Active departments are available to the organization. Archived departments remain preserved for historical records.
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:945: view === "archived"
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:948: view === "archived"
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:954: "archived",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:958: Archived
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:960: {archivedCount}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:1123: "archived"
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:1130: "archived"
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:1131: ? "No archived departments"
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:1139: "archived"
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:1140: ? "Archived departments will appear here while their historical records remain preserved."
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:1244: {department.isArchived &&
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:1245: department.archivedAt && (
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:1247: Archived{" "}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:1249: department.archivedAt,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:1286: department.isArchived
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:1287: ? "organization-department-management__status organization-department-management__status--archived"
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:1295: {department.isArchived
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:1296: ? "Archived"
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:1307: {!department.isArchived && (
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationDepartmentManagement.tsx:1345: {department.isArchived && (
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationMembersAdminPage.tsx:9: *   approve / reject applications (also in bulk) · suspend / reactivate
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationMembersAdminPage.tsx:145: {status === MembershipStatus.Inactive && can("update_member") && (
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationMembersAdminPage.tsx:146: <button type="button" className="fo-menu__item" role="menuitem" onClick={() => act("reactivate")}>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationMembersAdminPage.tsx:147: <RotateCcw aria-hidden="true" /> Reactivate membership
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationMembersAdminPage.tsx:278: if (kind === "suspend" && !window.confirm(`Suspend ${name}'s membership? They keep their history and can be reactivated.`)) return;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationMembersAdminPage.tsx:285: else if (kind === "reactivate") await enableMember(organizationId, member.id);
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationMembersAdminPage.tsx:292: reactivate: `${name}'s membership was reactivated.`,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationMembersAdminPage.tsx:397: <option value={MembershipStatus.Inactive}>Suspended</option>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationMembersAdminPage.tsx:398: <option value={MembershipStatus.Archived}>Rejected / archived</option>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationSettingsPage.tsx:482: const archived = organization?.status === OrganizationStatus.Archived;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationSettingsPage.tsx:491: deactivates member access. This can be reversed by an Owner from account support.
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationSettingsPage.tsx:494: <button type="button" className="fko-btn fko-btn--secondary" onClick={handleArchive} disabled={isArchiving || archived}>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\admin\OrganizationSettingsPage.tsx:495: {isArchiving ? 'Archiving…' : archived ? 'Already archived' : 'Archive organization'}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\api\dashboardApi.ts:57: inactiveMembers: number | null;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\api\departmentsApi.ts:32: * Administrators can request archived departments.
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\api\departmentsApi.ts:34: includeArchived?: boolean;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\api\departmentsApi.ts:61: includeArchived:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\api\departmentsApi.ts:62: query.includeArchived,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\api\departmentsApi.ts:249: export async function archiveDepartment(
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\api\membersApi.ts:11: *   active   -> inactive     = disable
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\api\membersApi.ts:12: *   inactive -> active       = enable
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\api\membersApi.ts:13: *   pending  -> archived     = reject
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\api\membersApi.ts:22: *   MembershipStatus.Archived
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\api\membersApi.ts:467: *   inactive
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\api\membersApi.ts:468: *   archived
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\api\membersApi.ts:515: MembershipStatus.Inactive,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\api\membersApi.ts:551: *   pending -> archived
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\api\organizationsApi.ts:104: isActiveMember?: boolean;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\api\organizationsApi.ts:125: isActiveMember?: boolean;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\api\organizationsApi.ts:1296: OrganizationStatus.Archived,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\badgeApi.ts:68: export type BadgeVerifyState = "verified" | "pending" | "suspended" | "membership_inactive" | "revoked" | "expired" | "not_member";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\badgeApi.ts:218: setStatus: (organizationId: string, membershipId: string, action: "suspend" | "revoke" | "reactivate", reason = "") =>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\badgeApi.ts:238: membership_inactive: "Inactive",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\badgeApi.ts:248: membership_inactive: "yellow",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeCard.tsx:105: const inactive = !badge.active || badge.status !== "active";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeCard.tsx:124: const shared = { className: `badge badge--${design.template}${inactive ? " badge--inactive" : ""}`, style };
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeCard.tsx:146: {inactive && <span className="badge-void">NOT VALID</span>}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeCard.tsx:171: {inactive && <span className="badge-void">NOT VALID</span>}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeCard.tsx:195: {inactive && <span className="badge-void">NOT VALID</span>}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeCard.tsx:216: {inactive && <span className="badge-void">NOT VALID</span>}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeDialogs.tsx:7: *   BadgeManageDialog   admin: details, suspend / revoke / reactivate,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeDialogs.tsx:76: const state = badge.verifyState ?? (badge.active ? "verified" : "membership_inactive");
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeDialogs.tsx:252: reactivated: "Reactivated",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeDialogs.tsx:298: async function status(action: "suspend" | "revoke" | "reactivate") {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeDialogs.tsx:300: if (action !== "reactivate" && reason.trim().length < 3) return setError("Give a short reason first.");
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeDialogs.tsx:306: update(next, action === "suspend" ? "Badge suspended." : action === "revoke" ? "Badge revoked." : "Badge reactivated.");
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeDialogs.tsx:386: <p className="mbd-note">Only the owner or an administrator can suspend, revoke or reactivate badges.</p>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeDialogs.tsx:390: <button type="button" className="mb-btn mb-btn--primary" disabled={busy !== null} onClick={() => void status("reactivate")}>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeDialogs.tsx:391: <PlayCircle aria-hidden="true" /> {busy === "reactivate" ? "Reactivating…" : "Reactivate badge"}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeVerifyPage.tsx:9: * YELLOW pending, suspended or inactive membership
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeVerifyPage.tsx:33: membership_inactive: "Membership Inactive",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeVerifyPage.tsx:42: suspended: (org) => `${org} has suspended this badge. Don't accept it until it is reactivated.`,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeVerifyPage.tsx:43: membership_inactive: (org) => `This person's membership with ${org} is currently inactive.`,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\BadgeVerifyPage.tsx:75: const state: BadgeVerifyState | null = check ? (check.state ?? (check.valid ? "verified" : "membership_inactive")) : null;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\OfficialBadge.tsx:88: membership_inactive: "INACTIVE",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\badges\OfficialBadge.tsx:147: const state = badge.verifyState ?? (badge.active ? "verified" : "membership_inactive");
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\communitiesApi.ts:39: inactive: "Inactive",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\communitiesApi.ts:42: archived: "Archived",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\communitiesApi.ts:148: counts: { all: number; mine: number; featured: number; joined: number; archived: number; requests: number; invitations: number; deleted: number };
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\communitiesApi.ts:205: status?: "active" | "inactive" | "draft";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\communitiesApi.ts:339: status: "open" | "praying" | "answered" | "archived";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupProfilePage.tsx:162: const archived = group?.status === "archived";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupProfilePage.tsx:268: {v.isMember && !archived && (v.canInvite || v.canManageMembers) && (
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupProfilePage.tsx:278: {v.canManage && !archived && (
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupProfilePage.tsx:297: {archived && <p className="mn-callout">This group is archived. Its history is kept and it is read-only.</p>}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupsPage.tsx:9: * Archived tabs, search + category / type / status / sort filters, grid or
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupsPage.tsx:66: type Tab = "all" | "mine" | "featured" | "joined" | "archived";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupsPage.tsx:92: const tab = (["all", "mine", "featured", "joined", "archived"].includes(params.get("tab") ?? "") ? params.get("tab") : "all") as Tab;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupsPage.tsx:158: if (tab === "archived") list = list.filter((g) => g.status === "archived");
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupsPage.tsx:160: list = list.filter((g) => g.status !== "archived");
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupsPage.tsx:206: if ((g.canManage || g.isLeading) && g.status !== "archived") items.push({ label: "Invite Members", icon: Mail, onSelect: () => setDialog({ invite: g }) });
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupsPage.tsx:207: if (adminView && g.canManage && g.status !== "archived") {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupsPage.tsx:212: if (g.status !== "archived")
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupsPage.tsx:214: if (g.status === "archived") items.push({ label: "Restore Group", icon: ArchiveRestore, onSelect: () => run(g.id, () => communitiesApi.archive(organizationId, g.id, true), `${g.name} was restored.`) });
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupsPage.tsx:220: onSelect: () => window.confirm(`Archive ${g.name}? Members and history are kept.`) && run(g.id, () => communitiesApi.archive(organizationId, g.id), `${g.name} was archived.`),
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupsPage.tsx:394: ["archived", "Archived", Archive, data?.counts.archived],
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupsPage.tsx:516: <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Status" disabled={tab === "archived"}>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupsPage.tsx:519: <option value="inactive">Status: Inactive</option>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupsPage.tsx:557: : tab === "archived"
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupsPage.tsx:558: ? "No archived groups"
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsAdmin.tsx:143: const archived = group.status === "archived";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsAdmin.tsx:210: {!archived && (
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsAdmin.tsx:215: onChange={(e) => run("status", () => communitiesApi.update(organizationId, group.id, { status: e.target.value as "active" | "inactive" | "draft" }), "Status updated.")}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsAdmin.tsx:218: <option value="inactive">Inactive</option>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsAdmin.tsx:229: <p className="mn-muted">Archived groups are read-only and hidden from members' lists. Deleted groups can be restored by church leadership from Deleted Groups.</p>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsAdmin.tsx:236: if (!archived && !window.confirm(`Archive ${group.name}?`)) return;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsAdmin.tsx:237: void run("archive", () => communitiesApi.archive(organizationId, group.id, archived), archived ? "Group restored." : "Group archived.");
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsAdmin.tsx:240: {archived ? <RotateCcw aria-hidden="true" /> : <Archive aria-hidden="true" />} {archived ? "Restore group" : "Archive group"}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsContent.tsx:581: const [archived, setArchived] = useState(false);
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsContent.tsx:582: const list = useLoad((s) => communitiesApi.prayers(organizationId, group.id, archived ? "archived" : undefined, s), [organizationId, group.id, archived]);
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsContent.tsx:601: <button type="button" role="tab" aria-selected={!archived} className={!archived ? "is-on" : ""} onClick={() => setArchived(false)}>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsContent.tsx:604: <button type="button" role="tab" aria-selected={archived} className={archived ? "is-on" : ""} onClick={() => setArchived(true)}>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsContent.tsx:605: Archived
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsContent.tsx:633: <Tone tone={p.status === "answered" ? "green" : p.status === "praying" ? "purple" : p.status === "archived" ? "gray" : "blue"}>{p.status}</Tone>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsContent.tsx:652: {list.data?.canManage && p.status !== "archived" && (
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsContent.tsx:665: {(list.data?.canManage || p.isMine) && p.status !== "answered" && p.status !== "archived" && (
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsContent.tsx:670: {(list.data?.canManage || p.isMine) && p.status !== "archived" && (
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsContent.tsx:671: <button type="button" className="mn-btn mn-btn--ghost mn-btn--sm" onClick={() => setStatus(p, "archived")}>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsPeople.tsx:594: {t.name} {t.status === "inactive" && <Tone tone="gray">inactive</Tone>}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupTabsPeople.tsx:718: <option value="inactive">Inactive</option>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupWizard.tsx:155: if (canGovern) input.status = publish ? (editing && status === "inactive" ? "inactive" : "active") : "draft";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\communities\GroupWizard.tsx:472: <option value="inactive">Inactive</option>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\MemberCard.tsx:26: case MembershipStatus.Inactive:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\MemberCard.tsx:27: return "church-status--inactive";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\MemberCard.tsx:29: case MembershipStatus.Archived:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\MemberCard.tsx:30: return "church-status--archived";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\OrganizationCard.tsx:156: const isInactive =
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\OrganizationCard.tsx:157: organization.currentUserMembershipStatus === MembershipStatus.Inactive;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\OrganizationCard.tsx:167: : isInactive
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\OrganizationHeader.tsx:371: className={({ isActive }) =>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\OrganizationHeader.tsx:372: ["church-header__nav-link", isActive ? "is-active" : ""]
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\OrganizationHeader.tsx:406: className={({ isActive }) =>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\OrganizationHeader.tsx:407: [isActive ? "is-active" : ""].filter(Boolean).join(" ")
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\OrganizationHeader.tsx:731: className={({ isActive }) =>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\OrganizationHeader.tsx:732: ["church-header__nav-link", isActive ? "is-active" : ""]
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\OrganizationHeader.tsx:756: className={({ isActive }) =>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\OrganizationHeader.tsx:757: ["church-header__nav-link", isActive ? "is-active" : ""]
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\OrganizationSidebar.tsx:45: isActiveMember?: boolean;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\OrganizationSidebar.tsx:275: if (!viewer.isActiveMember) {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\OrganizationSidebar.tsx:370: className={({ isActive }) => {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\components\OrganizationSidebar.tsx:375: const active = hash ? isActive && location.hash === hash : isActive;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\hooks\useSidebarViewer.ts:25: isActiveMember: v.isActiveMember ?? a.isActiveMember ?? a.currentUserMembershipStatus === "active",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\member-profile\memberProfileApi.ts:265: inactive: "Inactive",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\member-profile\memberProfileApi.ts:266: archived: "Archived",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\member-profile\ProfileCards.tsx:136: const tone = status === "active" ? "green" : status === "pending" ? "amber" : status === "archived" ? "gray" : "red";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\member-profile\ProfileDialogs.tsx:765: [MembershipStatus.Inactive, "Keeps the record; the member loses access until reactivated."],
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\member-profile\ProfileDialogs.tsx:766: [MembershipStatus.Archived, "Moves the member out of active lists."],
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\DashboardTabs.tsx:436: const live = rows.filter((r) => r.status !== "archived");
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\ministriesApi.ts:52: inactive: "Inactive",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\ministriesApi.ts:55: archived: "Archived",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\ministriesApi.ts:382: ministryStatus?: "active" | "draft" | "inactive";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\MinistriesPage.tsx:169: else list = list.filter((m) => m.status !== "archived");
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\MinistriesPage.tsx:202: if (m.canManage && m.status !== "archived") {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\MinistriesPage.tsx:217: items.push({ label: "Deactivate", icon: Power, divider: true, onSelect: () => run(m.id, () => ministriesApi.update(organizationId, m.id, { ministryStatus: "inactive" }), `${m.name} is now inactive.`) });
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\MinistriesPage.tsx:218: if (m.status === "inactive")
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\MinistriesPage.tsx:220: if (m.status === "archived") items.push({ label: "Restore", icon: ArchiveRestore, onSelect: () => run(m.id, () => ministriesApi.restore(organizationId, m.id), `${m.name} was restored.`) });
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\MinistriesPage.tsx:227: if (window.confirm(`Archive ${m.name}? Members and history are kept and it can be restored later.`)) run(m.id, () => ministriesApi.archive(organizationId, m.id), `${m.name} was archived.`);
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\MinistriesPage.tsx:236: const managed = (data?.ministries ?? []).filter((m) => m.canManage && m.status !== "archived");
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\MinistriesPage.tsx:501: <option value="inactive">Inactive</option>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\MinistriesPage.tsx:504: {viewer?.canCreate && <option value="archived">Archived</option>}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\MinistryManageTabs.tsx:887: archived: "Archived",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\MinistryManageTabs.tsx:913: async function setStatus(status: "active" | "inactive") {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\MinistryManageTabs.tsx:917: toast.show("ok", status === "active" ? "Ministry activated." : "Ministry deactivated.");
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\MinistryManageTabs.tsx:934: toast.show("error", errorMessage(err, "The ministry could not be archived."));
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\MinistryManageTabs.tsx:981: <button type="button" className="mn-btn mn-btn--outline" disabled={busy} onClick={() => setStatus("inactive")}>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\MinistryManageTabs.tsx:982: <Power aria-hidden="true" /> Deactivate
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\MinistryWizard.tsx:140: input.ministryStatus = publish ? (editing && status === "inactive" ? "inactive" : "active") : "draft";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministries\MinistryWizard.tsx:414: <option value="inactive">Inactive</option>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministry\attendance\attendanceApi.ts:10: export type SessionStatus = "upcoming" | "open" | "in_progress" | "awaiting_review" | "finalized" | "canceled" | "archived";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministry\attendance\attendanceApi.ts:51: state: "scheduled" | "finalized" | "canceled" | "archived";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ministry\attendance\attendanceApi.ts:295: archived: "Archived",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\MinistryPublicPage.tsx:94: viewer?: { isOwner?: boolean; isActiveMember?: boolean; permissions?: Permissions | null } | null;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\MinistryPublicPage.tsx:295: const isMember = isOwner || org?.viewer?.isActiveMember === true || org?.currentUserMembershipStatus === MembershipStatus.Active;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationDepartmentsPage.tsx:201: includeArchived: false,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationDepartmentsPage.tsx:213: !department.isArchived,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationDepartmentsPage.tsx:585: !department.isArchived,
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationMemberPortalPage.tsx:73: : e.status === "inactive"
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationMemberSettingsPage.tsx:246: () => rows.filter((r) => r.membership && (r.membership.isOwner || r.membership.status === MembershipStatus.Active || r.membership.status === MembershipStatus.Inactive)),
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationMembersPage.tsx:752: MembershipStatus.Inactive
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationMembersPage.tsx:1586: const isActive =
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationMembersPage.tsx:1590: const isInactive =
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationMembersPage.tsx:1592: MembershipStatus.Inactive;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationMembersPage.tsx:1620: isInactive;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationMembersPage.tsx:1626: isActive;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationMembersPage.tsx:1762: INACTIVE
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationMembersPage.tsx:1765: {isInactive &&
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationMembersPage.tsx:1798: {isActive &&
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationMyBadgePage.tsx:143: const tone = badge ? VERIFY_STATE_TONE[badge.verifyState ?? (badge.active ? "verified" : "membership_inactive")] : "green";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationMyHistoryPage.tsx:69: } else if (h.status === "inactive") {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationMyHistoryPage.tsx:70: list.push({ at: h.at, title: "Membership Suspended", text: "Your membership was set to inactive.", tone: "warn", icon: Clock });
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationMyHistoryPage.tsx:71: } else if (h.status === "archived") {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationMyHistoryPage.tsx:72: list.push({ at: h.at, title: "Membership Archived", text: "This membership was archived.", tone: "muted", icon: Clock });
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationPage.tsx:83: type Viewer = { isAuthenticated?: boolean; isActiveMember?: boolean; isOwner?: boolean; permissions?: Permissions | null };
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationPage.tsx:222: const isMember = v.isActiveMember === true || status === MembershipStatus.Active || isOwner;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\pages\OrganizationPage.tsx:279: setOrg((o) => (o ? { ...o, currentUserMembershipStatus: null, viewer: { ...o.viewer, isActiveMember: false, permissions: null } } : o));
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestDetailsPanel.tsx:31: onStatus: (status: Exclude<RequestStatus, "archived">) => void;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestDetailsPanel.tsx:57: const primary: { label: string; status: Exclude<RequestStatus, "archived">; icon: typeof Check } | null =
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestDetailsPanel.tsx:149: disabled={!access?.canAssign || busy || request.status === "archived"}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestDetailsPanel.tsx:163: {request.status === "archived" ? (
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestDetailsPanel.tsx:186: <button type="button" className="rq-btn rq-btn--soft" onClick={() => onOpenWorkspace("conversation")} disabled={request.status === "archived"}>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestDetailsPanel.tsx:198: {request.status === "archived" ? (
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestDialogs.tsx:419: {request.status !== "archived" &&
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestDialogs.tsx:523: disabled={request.status === "archived" || busy !== null}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestDialogs.tsx:524: onChange={(e) => void patch({ status: e.target.value as Exclude<RequestStatus, "archived"> }, "Status updated.")}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestDialogs.tsx:526: {STATUS_OPTIONS.filter((s) => s.value !== "archived" || request.status === "archived").map((s) => (
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestDialogs.tsx:606: export function StatusDialog({ request, onClose, onSave }: { request: RequestDetail; onClose: () => void; onSave: (s: Exclude<RequestStatus, "archived">) => Promise<void> }) {
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestDialogs.tsx:607: const [status, setStatus] = useState<RequestStatus>(request.status === "archived" ? "new" : request.status);
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestDialogs.tsx:628: await onSave(status as Exclude<RequestStatus, "archived">);
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestDialogs.tsx:640: {STATUS_OPTIONS.filter((s) => s.value !== "archived").map((s) => (
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\requestsApi.ts:21: export type RequestStatus = "new" | "in_progress" | "waiting" | "resolved" | "archived";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\requestsApi.ts:23: export type RequestTab = "all" | "member" | "public" | "mine" | "archived";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\requestsApi.ts:59: { value: "archived", label: "Archived" },
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\requestsApi.ts:62: export const STATUS_SHORT: Record<RequestStatus, string> = { new: "New", in_progress: "In Progress", waiting: "Waiting", resolved: "Resolved", archived: "Archived" };
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\requestsApi.ts:132: archivedAt: string | null;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\requestsApi.ts:202: status?: Exclude<RequestStatus, "archived">;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\requestsApi.ts:276: archived: "Request archived",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestsPage.tsx:70: { key: "archived", label: "Archived", icon: Folder },
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestsPage.tsx:250: const setStatusOf = (id: string, s: Exclude<RequestStatus, "archived">) =>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestsPage.tsx:276: { label: "Assign Request", icon: UserPlus, onSelect: () => void openFor(r.id, { kind: "assign" }), hidden: !access?.canAssign || r.status === "archived" },
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestsPage.tsx:277: { label: "Change Status", icon: RefreshCw, onSelect: () => void openFor(r.id, { kind: "status" }), hidden: r.status === "archived" },
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestsPage.tsx:278: { label: "Reply", icon: Send, onSelect: () => void openFor(r.id, { kind: "workspace", tab: "conversation" }), hidden: r.status === "archived" },
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestsPage.tsx:283: hidden: r.status === "resolved" || r.status === "archived",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestsPage.tsx:285: { label: "Archive", icon: Archive, onSelect: () => void quick(r.id, (id) => requestsApi.archive(organizationId, id), "Request archived."), hidden: !access?.canAssign || r.status === "archived" },
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestsPage.tsx:286: { label: "Restore", icon: ArchiveRestore, onSelect: () => void quick(r.id, (id) => requestsApi.restore(organizationId, id), "Request restored."), hidden: !access?.canAssign || r.status !== "archived" },
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestsPage.tsx:303: onArchive={() => detail && void run(() => requestsApi.archive(organizationId, detail.id), "Request archived.")}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestsPage.tsx:380: setStatus(t.key === "archived" ? "" : status === "archived" ? "" : status);
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\requests\RequestsPage.tsx:434: <strong>{q || type || status ? "No requests match these filters" : tab === "archived" ? "Nothing archived" : tab === "mine" ? "Nothing assigned to you" : "No requests yet"}</strong>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\settings-center\adminCenterApi.ts:115: status: (id: string, status: "active" | "archived") => churchPost<Overview>(`${base(id)}/status`, { status }),
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\settings-center\permissionCatalog.ts:71: { id: "archive_organization", label: "Archive / reactivate", action: "manage", dangerous: true },
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\settings-center\SettingsTabs.tsx:73: const STATUS_LABEL: Record<string, string> = { active: "Active", pending: "Pending review", suspended: "Suspended", archived: "Deactivated" };
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\settings-center\SettingsTabsMore.tsx:364: const archived = overview.organization.status === "archived";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\settings-center\SettingsTabsMore.tsx:393: const next = archived ? "active" : "archived";
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\settings-center\SettingsTabsMore.tsx:394: if (next === "archived" && !window.confirm(`Deactivate ${name}? It will be hidden and archived. You can reactivate it later.`)) return;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\settings-center\SettingsTabsMore.tsx:398: notify("ok", next === "archived" ? "Organization deactivated." : "Organization reactivated.");
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\settings-center\SettingsTabsMore.tsx:484: <Card icon={Power} title={archived ? "Reactivate organization" : "Deactivate organization"} sub={archived ? "Bring the organization back." : "Archive the organization. Nothing is deleted and you can reactivate it."}>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\settings-center\SettingsTabsMore.tsx:488: <button type="button" className={"pl-btn " + (archived ? "pl-btn--primary" : "sr-btn-danger-ghost")} onClick={() => void toggleStatus()} disabled={busy === "status"}>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\settings-center\SettingsTabsMore.tsx:489: {busy === "status" ? <Loader2 className="pl-spin" aria-hidden="true" /> : <Power aria-hidden="true" />} {archived ? "Reactivate" : "Deactivate"}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\types\organization.types.ts:1125: Archived = "archived",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\types\organization.types.ts:1359: * `isArchived`, `archivedAt`, and `archivedByUserId` implement the
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\types\organization.types.ts:1392: isArchived: boolean;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\types\organization.types.ts:1394: archivedAt?: ISODateString | null;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\types\organization.types.ts:1396: archivedByUserId?: string | null;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\types\organization.types.ts:1398: archivedBy?: UserRef | null;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\types\organization.types.ts:1436: archived?: boolean;
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\types\organization.types.ts:1443: | "archived"
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\types\organization.types.ts:1551: Inactive = "inactive",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\types\organization.types.ts:1553: Archived = "archived",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\types\organization.types.ts:1566: [MembershipStatus.Inactive]:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\types\organization.types.ts:1567: "Inactive",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\types\organization.types.ts:1569: [MembershipStatus.Archived]:
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\types\organization.types.ts:1570: "Archived",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ui\OrgAppShell.tsx:235: const isActiveItem = (item: NavItem) =>
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ui\OrgAppShell.tsx:245: .filter((item) => isActiveItem(item))
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ui\OrgAppShell.tsx:266: className={() => "fo-nav__link" + (isActiveItem(item) ? " is-active" : "")}
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ui\orgUi.tsx:187: inactive: "muted",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ui\orgUi.tsx:188: archived: "danger",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ui\orgUi.tsx:194: inactive: "Suspended",
+C:\Users\elinc\OneDrive\Desktop\my-social-app1\web\src\features\organizations\ui\orgUi.tsx:195: archived: "Rejected / archived",

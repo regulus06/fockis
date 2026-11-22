@@ -31,6 +31,7 @@ import PublicPlacesReviewRoutes from "../map-addresses/PublicPlacesReviewPages";
 import AcademyAdminCenterRoutes from "../academy/AcademyAdminCenterPages";
 import LegalRoutes from "../legal/LegalRoutes";
 import PolicyComplianceRoutes from "../policy-compliance/PolicyComplianceRoutes";
+import SecurityRoutes from "../security/SecurityRoutes";
 
 /* ================================================================
    SUBSCRIPTION PLAN MANAGEMENT
@@ -980,46 +981,10 @@ export function AdminRoutes(): React.ReactElement {
           ====================================================== */}
 
           <Route
-            path="security"
+            path="security/*"
             element={guarded(
               [P.SECURITY_VIEW],
-              <ModulePendingPage
-                title="Security Center"
-                description="Security events, sessions, and policies."
-              />,
-            )}
-          />
-
-          <Route
-            path="security/events"
-            element={guarded(
-              [P.SECURITY_EVENTS],
-              <ModulePendingPage
-                title="Security Events"
-                description="Failed logins and suspicious activity."
-              />,
-            )}
-          />
-
-          <Route
-            path="security/sessions"
-            element={guarded(
-              [P.SECURITY_SESSIONS],
-              <ModulePendingPage
-                title="Admin Sessions"
-                description="Active administrator sessions."
-              />,
-            )}
-          />
-
-          <Route
-            path="security/policies"
-            element={guarded(
-              [P.SECURITY_POLICIES],
-              <ModulePendingPage
-                title="Security Policies"
-                description="Platform security policy configuration."
-              />,
+              <SecurityRoutes />,
             )}
           />
 

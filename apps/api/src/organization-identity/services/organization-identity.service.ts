@@ -65,6 +65,21 @@ export interface SecurityPolicyResponse {
   protectOrganizationOwner: boolean;
   protectLastAdministrator: boolean;
   securityAuditLog: boolean;
+
+  /**
+   * How the platform governs this organization's policy: which settings the
+   * organization may tighten, which are locked by Fockis, and the Fockis
+   * baseline. Values above are the effective (enforced) values.
+   */
+  governance?: {
+    delegatedFields: string[];
+    lockedFields: string[];
+    overriddenFields: string[];
+    customized: boolean;
+    platformVersion: number;
+    platformBaseline: Record<string, boolean | number>;
+    fields: unknown[];
+  };
 }
 
 export interface OrganizationIdentityStatsResponse {

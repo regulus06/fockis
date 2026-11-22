@@ -4,7 +4,7 @@
  * Read-only figures for the organization admin dashboard and a CSV export of
  * member records, plus logo uploads for the organization profile.
  *
- *   GET  /church/organizations/:organizationId/dashboard?days=30
+ *   GET  /church/organizations/:organizationId/dashboard?days=30  (or ?from=&to= ISO)
  *   GET  /church/organizations/:organizationId/members-export
  *   POST /church/organizations/:organizationId/logo
  *
@@ -36,7 +36,15 @@ import { randomBytes } from 'crypto';
 import { Membership } from '../members/schemas/membership.schema';
 import { Department } from '../departments/schemas/department.schema';
 import { ChurchGroup } from '../groups/schemas/church-group.schema';
-import { ChurchEvent } from '../events/schemas/church-event.schema';
+import { ChurchEvent, RsvpStatus } from '../events/schemas/church-event.schema';
+import { Announcement } from '../communication/schemas/announcement.schema';
+import { ChurchGift } from '../giving/church-giving.schemas';
+import { MinistryAuditLog } from '../ministries/ministry.schemas';
+import {
+  MinistryAttendanceRecord,
+  MinistryAttendanceSession,
+  MinistryAttendanceStatus,
+} from '../ministry-attendance/ministry-attendance.schemas';
 import { AttendanceEntry } from '../attendance/schemas/attendance.schema';
 import { Branch } from '../branches/schemas/branch.schema';
 import { Organization } from '../organizations/schemas/organization.schema';
@@ -45,7 +53,24 @@ import { ChurchPermission } from '../enums/permission.enum';
 import { MembershipStatus } from '../enums/membership-status.enum';
 
 const ALLOWED_RANGES = [7, 30, 90, 365] as const;
-const GROWTH_POINTS = 8;
+const MAX_RANGE_MS = 3 * 366 * 86_400_000;
+const ACTIVITY_PER_SOURCE = 12;
+const ACTIVITY_LIMIT = 25;
+const GIVING_ROLES = new Set(['administrator', 'pastor_director']);
+
+export interface ActivityItem {
+  id: string;
+  type: 'member' | 'event' | 'ministry' | 'announcement' | 'donation' | 'attendance';
+  actorName: string;
+  avatarUrl: string | null;
+  /** Machine action key (e.g. "joined", "event.created"); the web app writes the sentence. */
+  action: string;
+  detail: string | null;
+  status: string | null;
+  at: string;
+  memberId: string | null;
+  targetId: string | null;
+}
 const EXPORT_LIMIT = 5000;
 
 const LOGO_DIRECTORY = resolve(process.cwd(), 'uploads', 'organization-logos');
@@ -83,6 +108,11 @@ export class OrganizationDashboardService {
     @InjectModel(AttendanceEntry.name) private readonly attendanceModel: Model<any>,
     @InjectModel(Branch.name) private readonly branchModel: Model<any>,
     @InjectModel(Organization.name) private readonly organizationModel: Model<any>,
+    @InjectModel(Announcement.name) private readonly announcementModel: Model<any>,
+    @InjectModel(ChurchGift.name) private readonly giftModel: Model<any>,
+    @InjectModel(MinistryAuditLog.name) private readonly ministryAuditModel: Model<any>,
+    @InjectModel(MinistryAttendanceRecord.name) private readonly ministryRecordModel: Model<any>,
+    @InjectModel(MinistryAttendanceSession.name) private readonly ministrySessionModel: Model<any>,
     private readonly members: MembersService,
   ) {}
 
@@ -109,34 +139,68 @@ export class OrganizationDashboardService {
      DASHBOARD
   ========================================================================== */
 
-  async getDashboard(organizationId: string, userId: string, rawDays?: string) {
+  /**
+   * Resolve the reporting window. The web app sends `from`/`to` (ISO, computed
+   * in the viewer's time zone for Today / This year / Custom range); the older
+   * `days` (7, 30, 90, 365) still works.
+   */
+  private window(rawDays?: string, rawFrom?: string, rawTo?: string): { since: Date; until: Date; days: number; custom: boolean } {
+    const now = new Date();
+    if (rawFrom || rawTo) {
+      const since = new Date(String(rawFrom ?? ''));
+      const until = rawTo ? new Date(String(rawTo)) : now;
+      if (Number.isNaN(since.getTime()) || Number.isNaN(until.getTime())) {
+        throw new BadRequestException('Invalid date range.');
+      }
+      if (since >= until) throw new BadRequestException('The start date must be before the end date.');
+      if (until.getTime() - since.getTime() > MAX_RANGE_MS) throw new BadRequestException('Choose a range of 3 years or less.');
+      const capped = until > now ? now : until;
+      if (since >= capped) throw new BadRequestException('Choose a range that has already started.');
+      return { since, until: capped, days: Math.max(1, Math.round((capped.getTime() - since.getTime()) / 86_400_000)), custom: true };
+    }
+    const requested = Number(rawDays);
+    const days = (ALLOWED_RANGES as readonly number[]).includes(requested) ? requested : 30;
+    return { since: new Date(now.getTime() - days * 86_400_000), until: now, days, custom: false };
+  }
+
+  async getDashboard(organizationId: string, userId: string, rawDays?: string, rawFrom?: string, rawTo?: string) {
     const orgId = this.oid(organizationId, 'organization ID');
     const access = await this.members.requireAdminDashboardAccess(organizationId, userId);
 
     const granted = new Set<string>(access.permissions ?? []);
     const can = (p: ChurchPermission) => access.isOwner || granted.has(p);
 
-    const requested = Number(rawDays);
-    const days = (ALLOWED_RANGES as readonly number[]).includes(requested) ? requested : 30;
+    const { since, until, days, custom } = this.window(rawDays, rawFrom, rawTo);
     const now = new Date();
-    const since = new Date(now.getTime() - days * 86_400_000);
-    const previousSince = new Date(since.getTime() - days * 86_400_000);
+    const span = until.getTime() - since.getTime();
+    const previousSince = new Date(since.getTime() - span);
+    const inRange = { $gte: since, $lte: until };
 
     const canMembers = can(ChurchPermission.ViewMembers);
     const canAttendance = can(ChurchPermission.ViewAttendance) || can(ChurchPermission.ManageAttendance);
     const canEvents = can(ChurchPermission.ViewEvents) || can(ChurchPermission.ManageEvents);
     const canDepartments = can(ChurchPermission.ViewDepartments) || can(ChurchPermission.ManageDepartments);
     const canGroups = can(ChurchPermission.ViewGroups) || can(ChurchPermission.ManageGroups);
+    const canCommunication = can(ChurchPermission.ViewCommunication) || can(ChurchPermission.ManageCommunication);
+    // Same rule as Giving: the owner, administrators / pastors, or the Settings permission.
+    const canGiving =
+      access.isOwner || GIVING_ROLES.has(String(access.role)) || can(ChurchPermission.ManageSettings);
 
     const notArchived = { organizationId: orgId, isArchived: { $ne: true } };
+    const joinedIn = (range: Record<string, Date>) => ({
+      $or: [{ joinedAt: range }, { joinedAt: null, createdAt: range }],
+    });
 
     const [
       totalMembers,
       pendingApplications,
       inactiveMembers,
       newMembers,
+      previousNewMembers,
       departments,
+      newDepartments,
       groups,
+      newGroups,
       branches,
       upcomingEventCount,
     ] = await Promise.all([
@@ -144,35 +208,44 @@ export class OrganizationDashboardService {
       canMembers ? this.membershipModel.countDocuments({ organizationId: orgId, status: MembershipStatus.Pending }) : null,
       canMembers ? this.membershipModel.countDocuments({ organizationId: orgId, status: MembershipStatus.Inactive }) : null,
       canMembers
+        ? this.membershipModel.countDocuments({ organizationId: orgId, status: MembershipStatus.Active, ...joinedIn(inRange) })
+        : null,
+      canMembers
         ? this.membershipModel.countDocuments({
             organizationId: orgId,
             status: MembershipStatus.Active,
-            $or: [{ joinedAt: { $gte: since } }, { joinedAt: null, createdAt: { $gte: since } }],
+            ...joinedIn({ $gte: previousSince, $lt: since }),
           })
         : null,
       canDepartments ? this.departmentModel.countDocuments(notArchived) : null,
+      canDepartments ? this.departmentModel.countDocuments({ ...notArchived, createdAt: inRange }) : null,
       canGroups ? this.groupModel.countDocuments(notArchived) : null,
+      canGroups ? this.groupModel.countDocuments({ ...notArchived, createdAt: inRange }) : null,
       this.branchModel.countDocuments({ organizationId: orgId }),
       canEvents ? this.eventModel.countDocuments({ organizationId: orgId, startsAt: { $gte: now } }) : null,
     ]);
 
     /* ---------------------------------------------------------- growth */
 
-    let growth: { points: { date: string; total: number }[]; changePercent: number | null } | null = null;
+    let growth: { points: { date: string; total: number }[]; changePercent: number | null; added: number } | null = null;
 
     if (canMembers) {
-      const step = (now.getTime() - since.getTime()) / (GROWTH_POINTS - 1);
-      const stamps = Array.from({ length: GROWTH_POINTS }, (_, i) => new Date(since.getTime() + step * i));
+      const count = days <= 1 ? 7 : days <= 7 ? 8 : days <= 31 ? 9 : 12;
+      const step = span / (count - 1);
+      const stamps = Array.from({ length: count }, (_, i) => new Date(since.getTime() + step * i));
       const totals = await Promise.all(stamps.map((at) => this.activeAt(orgId, at)));
       const start = totals[0] ?? 0;
       const end = totals[totals.length - 1] ?? 0;
       growth = {
         points: stamps.map((at, i) => ({ date: at.toISOString(), total: totals[i] })),
         changePercent: start > 0 ? Math.round(((end - start) / start) * 1000) / 10 : null,
+        added: end - start,
       };
     }
 
     /* ------------------------------------------------------ attendance */
+    // Two record kinds exist: organization check-ins / absence reports
+    // (church_attendance) and ministry attendance (ministry_attendance_records).
 
     let attendance: {
       checkIns: number;
@@ -184,70 +257,65 @@ export class OrganizationDashboardService {
     } | null = null;
 
     if (canAttendance) {
-      const [checkIns, previousCheckIns, absences, distinct, weekly] = await Promise.all([
-        this.attendanceModel.countDocuments({ organizationId: orgId, kind: 'check_in', occurredAt: { $gte: since } }),
-        this.attendanceModel.countDocuments({
-          organizationId: orgId,
-          kind: 'check_in',
-          occurredAt: { $gte: previousSince, $lt: since },
-        }),
-        this.attendanceModel.countDocuments({ organizationId: orgId, kind: 'absence_report', occurredAt: { $gte: since } }),
-        this.attendanceModel.distinct('memberId', { organizationId: orgId, kind: 'check_in', occurredAt: { $gte: since } }),
-        this.attendanceModel
-          .aggregate<{ _id: Date; checkIns: number }>([
-            { $match: { organizationId: orgId, kind: 'check_in', occurredAt: { $gte: since } } },
-            { $group: { _id: { $dateTrunc: { date: '$occurredAt', unit: 'week' } }, checkIns: { $sum: 1 } } },
-            { $sort: { _id: 1 } },
-          ])
-          .exec(),
-      ]);
+      const presentStatuses = [MinistryAttendanceStatus.Present, MinistryAttendanceStatus.Late];
+      const [checkIns, previousCheckIns, absences, distinct, weekly, mCheckIns, mPrevious, mExcused, mDistinct, mWeekly] =
+        await Promise.all([
+          this.attendanceModel.countDocuments({ organizationId: orgId, kind: 'check_in', occurredAt: inRange }),
+          this.attendanceModel.countDocuments({ organizationId: orgId, kind: 'check_in', occurredAt: { $gte: previousSince, $lt: since } }),
+          this.attendanceModel.countDocuments({ organizationId: orgId, kind: 'absence_report', occurredAt: inRange }),
+          this.attendanceModel.distinct('memberId', { organizationId: orgId, kind: 'check_in', occurredAt: inRange }),
+          this.attendanceModel
+            .aggregate<{ _id: Date; checkIns: number }>([
+              { $match: { organizationId: orgId, kind: 'check_in', occurredAt: inRange } },
+              { $group: { _id: { $dateTrunc: { date: '$occurredAt', unit: 'week' } }, checkIns: { $sum: 1 } } },
+            ])
+            .exec(),
+          this.ministryRecordModel.countDocuments({ organizationId: orgId, status: { $in: presentStatuses }, scheduledStartAt: inRange }),
+          this.ministryRecordModel.countDocuments({
+            organizationId: orgId,
+            status: { $in: presentStatuses },
+            scheduledStartAt: { $gte: previousSince, $lt: since },
+          }),
+          this.ministryRecordModel.countDocuments({ organizationId: orgId, status: MinistryAttendanceStatus.Excused, scheduledStartAt: inRange }),
+          this.ministryRecordModel.distinct('membershipId', { organizationId: orgId, status: { $in: presentStatuses }, scheduledStartAt: inRange }),
+          this.ministryRecordModel
+            .aggregate<{ _id: Date; checkIns: number }>([
+              { $match: { organizationId: orgId, status: { $in: presentStatuses }, scheduledStartAt: inRange } },
+              { $group: { _id: { $dateTrunc: { date: '$scheduledStartAt', unit: 'week' } }, checkIns: { $sum: 1 } } },
+            ])
+            .exec(),
+        ]);
 
       const activeCount = typeof totalMembers === 'number'
         ? totalMembers
         : await this.membershipModel.countDocuments({ organizationId: orgId, status: MembershipStatus.Active });
+      const present = new Set([...distinct, ...mDistinct].map((id) => String(id)));
+      const weeks = new Map<string, number>();
+      for (const w of [...weekly, ...mWeekly]) {
+        const key = new Date(w._id).toISOString();
+        weeks.set(key, (weeks.get(key) ?? 0) + w.checkIns);
+      }
 
       attendance = {
-        checkIns,
-        previousCheckIns,
-        absences,
-        membersPresent: distinct.length,
-        participationRate: activeCount > 0 ? Math.round((distinct.length / activeCount) * 1000) / 10 : null,
-        byWeek: weekly.map((w) => ({ weekStart: new Date(w._id).toISOString(), checkIns: w.checkIns })),
+        checkIns: checkIns + mCheckIns,
+        previousCheckIns: previousCheckIns + mPrevious,
+        absences: absences + mExcused,
+        membersPresent: present.size,
+        participationRate: activeCount > 0 ? Math.min(100, Math.round((present.size / activeCount) * 1000) / 10) : null,
+        byWeek: [...weeks.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([weekStart, n]) => ({ weekStart, checkIns: n })),
       };
     }
 
     /* ------------------------------------------------- recent activity */
 
-    let recentActivity: {
-      memberId: string;
-      name: string;
-      avatarUrl: string | null;
-      at: string;
-      status: string | null;
-      role: string | null;
-      note: string | null;
-    }[] | null = null;
-
-    if (canMembers) {
-      const rows = await this.membershipModel
-        .aggregate<any>([
-          { $match: { organizationId: orgId } },
-          { $project: { profile: 1, history: 1 } },
-          { $unwind: '$history' },
-          { $sort: { 'history.at': -1 } },
-          { $limit: 10 },
-        ])
-        .exec();
-      recentActivity = rows.map((r) => ({
-        memberId: String(r._id),
-        name: r.profile?.displayName ?? 'Member',
-        avatarUrl: r.profile?.avatarUrl ?? null,
-        at: new Date(r.history?.at ?? Date.now()).toISOString(),
-        status: r.history?.status ?? null,
-        role: r.history?.role ?? null,
-        note: r.history?.note ?? null,
-      }));
-    }
+    const recentActivity = await this.activity(orgId, {
+      members: canMembers,
+      events: canEvents,
+      ministries: canDepartments,
+      announcements: canCommunication,
+      donations: canGiving,
+      attendance: canAttendance,
+    });
 
     /* -------------------------------------------------- upcoming events */
 
@@ -257,7 +325,7 @@ export class OrganizationDashboardService {
             .find({ organizationId: orgId, startsAt: { $gte: now } })
             .sort({ startsAt: 1 })
             .limit(5)
-            .select('title startsAt endsAt location eventType')
+            .select('title startsAt endsAt location eventType coverImageUrl isOnline capacity requiresRsvp rsvps.status')
             .lean<any[]>()
             .exec()
         ).map((e) => ({
@@ -267,12 +335,18 @@ export class OrganizationDashboardService {
           endsAt: e.endsAt ? new Date(e.endsAt).toISOString() : null,
           location: e.location ?? null,
           eventType: e.eventType ?? null,
+          coverImageUrl: e.coverImageUrl ?? null,
+          isOnline: Boolean(e.isOnline),
+          capacity: typeof e.capacity === 'number' ? e.capacity : null,
+          requiresRsvp: Boolean(e.requiresRsvp),
+          going: (e.rsvps ?? []).filter((r: { status?: string }) => r?.status === RsvpStatus.Going).length,
         }))
       : null;
 
     return {
       organizationId,
       rangeDays: days,
+      range: { from: since.toISOString(), to: until.toISOString(), custom },
       generatedAt: now.toISOString(),
       viewer: {
         isOwner: access.isOwner,
@@ -282,10 +356,13 @@ export class OrganizationDashboardService {
       counts: {
         totalMembers,
         newMembers,
+        previousNewMembers,
         pendingApplications,
         inactiveMembers,
         departments,
+        newDepartments,
         groups,
+        newGroups,
         branches,
         upcomingEvents: upcomingEventCount,
       },
@@ -294,6 +371,171 @@ export class OrganizationDashboardService {
       recentActivity,
       upcomingEvents,
     };
+  }
+
+  /* ==========================================================================
+     RECENT ACTIVITY (one feed from each source the viewer may see)
+  ========================================================================== */
+
+  private async activity(
+    orgId: Types.ObjectId,
+    allow: { members: boolean; events: boolean; ministries: boolean; announcements: boolean; donations: boolean; attendance: boolean },
+  ): Promise<ActivityItem[] | null> {
+    if (!Object.values(allow).some(Boolean)) return null;
+    const N = ACTIVITY_PER_SOURCE;
+    const items: ActivityItem[] = [];
+    const iso = (d: unknown) => new Date((d as Date) ?? Date.now()).toISOString();
+
+    const [history, events, ministryLogs, announcements, gifts, sessions] = await Promise.all([
+      allow.members
+        ? this.membershipModel
+            .aggregate<any>([
+              { $match: { organizationId: orgId } },
+              { $project: { profile: 1, history: 1 } },
+              { $unwind: '$history' },
+              { $sort: { 'history.at': -1 } },
+              { $limit: N },
+            ])
+            .exec()
+        : [],
+      allow.events
+        ? this.eventModel.find({ organizationId: orgId }).sort({ createdAt: -1 }).limit(N).select('title startsAt createdAt coverImageUrl').lean<any[]>().exec()
+        : [],
+      allow.ministries
+        ? this.ministryAuditModel.find({ organizationId: orgId }).sort({ createdAt: -1 }).limit(N).lean<any[]>().exec()
+        : [],
+      allow.announcements
+        ? this.announcementModel.find({ organizationId: orgId }).sort({ createdAt: -1 }).limit(N).select('title authorId createdAt publishedAt').lean<any[]>().exec()
+        : [],
+      allow.donations
+        ? this.giftModel
+            .find({ organizationId: orgId, status: 'paid' })
+            .sort({ paidAt: -1 })
+            .limit(N)
+            .select('giverName anonymous amount currency fundLabel paidAt membershipId')
+            .lean<any[]>()
+            .exec()
+        : [],
+      allow.attendance
+        ? this.ministryRecordModel
+            .aggregate<{ _id: Types.ObjectId; at: Date; count: number }>([
+              { $match: { organizationId: orgId, status: { $in: [MinistryAttendanceStatus.Present, MinistryAttendanceStatus.Late] } } },
+              { $group: { _id: '$sessionId', at: { $max: '$recordedAt' }, count: { $sum: 1 } } },
+              { $sort: { at: -1 } },
+              { $limit: N },
+            ])
+            .exec()
+        : [],
+    ]);
+
+    // Names and avatars of people referenced by id.
+    const memberIds = [
+      ...announcements.map((a) => a.authorId),
+      ...gifts.filter((g) => !g.anonymous && g.membershipId).map((g) => g.membershipId),
+    ].filter(Boolean);
+    const people = memberIds.length
+      ? await this.membershipModel.find({ _id: { $in: memberIds }, organizationId: orgId }).select('profile').lean<any[]>().exec()
+      : [];
+    const person = new Map(people.map((m) => [String(m._id), { name: m.profile?.displayName ?? 'Member', avatar: m.profile?.avatarUrl ?? null }]));
+
+    for (const r of history) {
+      items.push({
+        id: `m-${r._id}-${new Date(r.history?.at ?? 0).getTime()}`,
+        type: 'member',
+        actorName: r.profile?.displayName ?? 'Member',
+        avatarUrl: r.profile?.avatarUrl ?? null,
+        action: r.history?.note ?? r.history?.status ?? 'updated',
+        detail: r.history?.role ?? null,
+        status: r.history?.status ?? null,
+        at: iso(r.history?.at),
+        memberId: String(r._id),
+        targetId: String(r._id),
+      });
+    }
+    for (const e of events) {
+      if (!e.createdAt) continue;
+      items.push({
+        id: `e-${e._id}`,
+        type: 'event',
+        actorName: e.title ?? 'Event',
+        avatarUrl: e.coverImageUrl ?? null,
+        action: 'event.created',
+        detail: e.startsAt ? new Date(e.startsAt).toISOString() : null,
+        status: null,
+        at: iso(e.createdAt),
+        memberId: null,
+        targetId: String(e._id),
+      });
+    }
+    for (const l of ministryLogs) {
+      items.push({
+        id: `a-${l._id}`,
+        type: 'ministry',
+        actorName: l.actorName || 'Ministry team',
+        avatarUrl: null,
+        action: l.action ?? 'updated',
+        detail: l.detail || null,
+        status: null,
+        at: iso(l.createdAt),
+        memberId: null,
+        targetId: l.ministryId ? String(l.ministryId) : null,
+      });
+    }
+    for (const a of announcements) {
+      const who = person.get(String(a.authorId));
+      items.push({
+        id: `n-${a._id}`,
+        type: 'announcement',
+        actorName: who?.name ?? 'Administrator',
+        avatarUrl: who?.avatar ?? null,
+        action: 'announcement.published',
+        detail: a.title ?? null,
+        status: null,
+        at: iso(a.publishedAt ?? a.createdAt),
+        memberId: a.authorId ? String(a.authorId) : null,
+        targetId: String(a._id),
+      });
+    }
+    for (const g of gifts) {
+      const who = !g.anonymous && g.membershipId ? person.get(String(g.membershipId)) : null;
+      items.push({
+        id: `g-${g._id}`,
+        type: 'donation',
+        actorName: g.anonymous ? 'Anonymous giver' : (who?.name ?? g.giverName ?? 'Giver'),
+        avatarUrl: who?.avatar ?? null,
+        action: 'donation.received',
+        detail: `${g.amount} ${g.currency}${g.fundLabel ? ` · ${g.fundLabel}` : ''}`,
+        status: null,
+        at: iso(g.paidAt),
+        memberId: !g.anonymous && g.membershipId ? String(g.membershipId) : null,
+        targetId: String(g._id),
+      });
+    }
+    if (sessions.length) {
+      const docs = await this.ministrySessionModel
+        .find({ _id: { $in: sessions.map((s) => s._id) }, organizationId: orgId })
+        .select('title ministryId')
+        .lean<any[]>()
+        .exec();
+      const title = new Map(docs.map((d) => [String(d._id), d]));
+      for (const s of sessions) {
+        const doc = title.get(String(s._id));
+        items.push({
+          id: `s-${s._id}`,
+          type: 'attendance',
+          actorName: doc?.title || 'Attendance',
+          avatarUrl: null,
+          action: 'attendance.recorded',
+          detail: String(s.count),
+          status: null,
+          at: iso(s.at),
+          memberId: null,
+          targetId: doc?.ministryId ? String(doc.ministryId) : null,
+        });
+      }
+    }
+
+    return items.sort((a, b) => b.at.localeCompare(a.at)).slice(0, ACTIVITY_LIMIT);
   }
 
   /* ==========================================================================

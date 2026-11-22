@@ -29,6 +29,9 @@ export interface VisibilityFields {
   attendeeIds?: Array<Types.ObjectId | string>;
   interestedIds?: Array<Types.ObjectId | string>;
   invitedIds?: Array<Types.ObjectId | string>;
+  organizationId?: Types.ObjectId | string | null;
+  isDraft?: boolean;
+  isArchived?: boolean;
 }
 
 function toObjectIds(ids: string[]): Types.ObjectId[] {
@@ -67,9 +70,17 @@ export function buildEventVisibilityFilter(
         { invitedIds: viewer },
       ],
     });
+
+    // Members-only organization events: active members of that organization.
+    const memberOrgs = toObjectIds(relationships.memberOrganizationIds ?? []);
+    if (memberOrgs.length) {
+      audience.push({ visibility: EventVisibility.ORGANIZATION, organizationId: { $in: memberOrgs } });
+    }
   }
 
-  const filter: Record<string, unknown> = { $or: audience };
+  // Drafts and archived organization events never appear in lists
+  // (organizers manage them from the organization admin console).
+  const filter: Record<string, unknown> = { $or: audience, isDraft: { $ne: true }, isArchived: { $ne: true } };
 
   if (relationships.blockedIds.length) {
     filter.creatorId = { $nin: toObjectIds(relationships.blockedIds) };
@@ -89,6 +100,16 @@ export function canViewEvent(
     return true;
   }
 
+  const orgId = event.organizationId ? String(event.organizationId) : "";
+  if (orgId && viewerId && (relationships.managedOrganizationIds ?? []).includes(orgId)) {
+    return true;
+  }
+
+  // Drafts and archived events: organizer and event managers only.
+  if (event.isDraft || event.isArchived) {
+    return false;
+  }
+
   if (relationships.blockedIds.includes(creator)) {
     return false;
   }
@@ -101,6 +122,10 @@ export function canViewEvent(
 
   if (!viewerId) {
     return false;
+  }
+
+  if (visibility === EventVisibility.ORGANIZATION && orgId && (relationships.memberOrganizationIds ?? []).includes(orgId)) {
+    return true;
   }
 
   if (visibility === EventVisibility.FRIENDS) {

@@ -28,6 +28,7 @@ import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { ChangeEmailDto } from "./dto/change-email.dto";
 import { EmailChangeService } from "./services/email-change.service";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { LoginHistoryService } from "./services/login-history.service";
 
 const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024;
 
@@ -91,7 +92,23 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly blockVisibilityService: BlockVisibilityService,
     private readonly emailChangeService: EmailChangeService,
+    private readonly loginHistoryService: LoginHistoryService,
   ) {}
+
+  // GET /users/me/login-history — the signed-in person's own sign-ins only.
+  @Get("me/login-history")
+  @UseGuards(JwtAuthGuard)
+  async getMyLoginHistory(@Req() req: any) {
+    const userId = this.getAuthenticatedUserId(req);
+    const forwarded = req?.headers?.["x-forwarded-for"];
+    const ip =
+      (typeof forwarded === "string" && forwarded.split(",")[0]?.trim()) ||
+      (typeof req?.headers?.["x-real-ip"] === "string" && req.headers["x-real-ip"].trim()) ||
+      req?.ip ||
+      null;
+    const userAgent = typeof req?.headers?.["user-agent"] === "string" ? req.headers["user-agent"] : null;
+    return this.loginHistoryService.list(userId, { ip, userAgent });
+  }
 
   // GET /users/me
   @Get("me")
@@ -301,6 +318,7 @@ export class UsersController {
     return this.emailChangeService.verifyChange(
       id,
       String(body?.code ?? ""),
+      { tokenIat: Number(req?.user?.tokenIssuedAt) || null },
     );
   }
 
@@ -317,21 +335,36 @@ export class UsersController {
   ) {
     this.verifyOwner(req, id);
 
+    // Length, strength and reuse rules come from the security policy and
+    // are checked by the service.
     if (
       typeof body?.currentPassword !== "string" ||
       typeof body?.newPassword !== "string" ||
       !body.currentPassword ||
-      body.newPassword.length < 12
+      !body.newPassword
     ) {
       throw new BadRequestException(
-        "Provide your current password and a new password of at least 12 characters.",
+        "Provide your current password and a new password.",
       );
     }
+
+    const forwarded = req?.headers?.["x-forwarded-for"];
 
     return this.usersService.changePassword(
       id,
       body.currentPassword,
       body.newPassword,
+      {
+        tokenIat: Number(req?.user?.tokenIssuedAt) || null,
+        ip:
+          (typeof forwarded === "string" && forwarded.split(",")[0]?.trim()) ||
+          req?.ip ||
+          null,
+        userAgent:
+          typeof req?.headers?.["user-agent"] === "string"
+            ? req.headers["user-agent"]
+            : null,
+      },
     );
   }
 

@@ -30,6 +30,7 @@ import EventSkeleton from "../components/EventSkeleton";
 import EventSocialProof from "../components/EventSocialProof";
 import EventStatusBadge from "../components/EventStatusBadge";
 import EventsShell from "../components/EventsShell";
+import EventRegistrationPanel from "../registrations/EventRegistrationPanel";
 import { categoryMeta } from "../constants/eventCategories";
 import { publishEventPatch, useSyncedEvent } from "../hooks/eventSync";
 import { useEventClock } from "../hooks/useEventClock";
@@ -44,6 +45,7 @@ import {
   getEventStatus,
   isEventActive,
 } from "../utils/eventTime";
+import { isRichText, sanitizeRichText } from "../utils/richText";
 
 const VISIBILITY_LABEL: Record<string, { label: string; icon: typeof Globe }> = {
   public: { label: "Public event", icon: Globe },
@@ -223,6 +225,7 @@ function Details({ initial, onChanged }: { initial: FockisEvent; onChanged: (eve
                 </button>
               )}
             </div>
+            <EventRegistrationPanel event={event} active={active} />
             <EventSocialProof event={event} className="fke-details__proof" />
           </section>
 
@@ -249,7 +252,13 @@ function Details({ initial, onChanged }: { initial: FockisEvent; onChanged: (eve
                         </a>
                       ) : null
                     ) : (
-                      active && <small>The link appears once you're going or interested.</small>
+                      active && (
+                        <small>
+                          {!event.registration || (event.registration.mode === "rsvp" && event.registration.access === "public")
+                            ? "The link appears once you're going or interested."
+                            : "Use the Join Meeting button above."}
+                        </small>
+                      )
                     )
                   ) : (
                     map && (
@@ -286,7 +295,12 @@ function Details({ initial, onChanged }: { initial: FockisEvent; onChanged: (eve
 
           <section className="fke-panel">
             <h2 className="fke-panel__title">About this event</h2>
-            <p className="fke-description">{event.description || "The organizer hasn't added a description yet."}</p>
+            {isRichText(event.description) ? (
+              // Organization editor descriptions: allow-listed HTML (sanitized again here).
+              <div className="fke-description fke-description--rich" dangerouslySetInnerHTML={{ __html: sanitizeRichText(event.description) }} />
+            ) : (
+              <p className="fke-description">{event.description || "The organizer hasn't added a description yet."}</p>
+            )}
           </section>
 
           <EventDiscoverySection

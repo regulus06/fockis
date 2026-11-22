@@ -276,6 +276,13 @@ export const PERMISSIONS = {
   SECURITY_SESSIONS: "security.sessions",
   SECURITY_EVENTS: "security.events",
   SECURITY_POLICIES: "security.policies",
+  SECURITY_MANAGE: "security.manage",
+  SECURITY_POLICIES_MANAGE: "security.policies.manage",
+  SECURITY_SESSIONS_MANAGE: "security.sessions.manage",
+  SECURITY_MFA_MANAGE: "security.mfa.manage",
+  SECURITY_AUDIT_VIEW: "security.audit.view",
+  SECURITY_ORG_DEFAULTS_MANAGE: "security.org_defaults.manage",
+  SECURITY_ACCOUNT_RECOVERY: "security.account_recovery",
 
   // ============================================================
   // AUDIT

@@ -204,6 +204,7 @@ home: "Accueil",
 organizations: "Organisations",
 myChurch: "Mon organisation",
 planVisit: "Planifier une visite",
+myBadge: "Mon badge",
 myHistory: "Mon historique",
 visitRequests: "Demandes de visite",
 

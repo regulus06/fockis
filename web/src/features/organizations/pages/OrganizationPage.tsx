@@ -75,6 +75,7 @@ import { typeLabel } from "../ui/orgCategories";
 import { categoryInfo, termsFor, welcomesVisitors } from "../ui/orgTerminology";
 import { Alert, Avatar, EmptyState, OrgLogoBox, errorMessage, formatDate, useOrgFonts } from "../ui/orgUi";
 import FockisFMark from "../ui/FockisFMark";
+import ChurchWebsiteTemplate, { isChurchType } from "../website/ChurchWebsiteTemplate";
 import "../ui/fockisOrgTheme.scss";
 import "../styles/OrganizationPublicSite.scss";
 
@@ -317,6 +318,44 @@ export default function OrganizationPage(): React.JSX.Element {
           </EmptyState>
         </div>
       </div>
+    );
+  }
+
+  /* Every organization gets the Fockis public homepage template (words and
+     features adapt to the kind of organization, see website/siteProfile.ts).
+     The previous general page stays available with ?layout=classic. */
+  const classic = new URLSearchParams(window.location.search).get("layout") === "classic";
+  if (!classic || isChurchType(org.organizationType)) {
+    return (
+      <ChurchWebsiteTemplate
+        org={org}
+        signedIn={signedIn}
+        access={access}
+        events={events}
+        departments={departments}
+        announcements={announcements}
+        live={live}
+        follow={follow}
+        followBusy={busy === "follow"}
+        onToggleFollow={toggleFollow}
+        notice={notice ? <Alert tone={notice.tone === "ok" ? "ok" : "error"}>{notice.text}</Alert> : null}
+        adminTools={
+          access.canCover ? (
+            <>
+              <input ref={fileInput} type="file" accept="image/*,video/*" hidden onChange={onCover} />
+              <button type="button" className="cw-btn cw-btn--light cw-btn--sm" disabled={busy === "cover"} onClick={() => fileInput.current?.click()}>
+                {busy === "cover" ? <Loader2 className="fo-spin" aria-hidden="true" /> : <ImagePlus aria-hidden="true" />}
+                {org.bannerUrl ? "Change cover" : "Add cover"}
+              </button>
+              {org.bannerUrl && (
+                <button type="button" className="cw-btn cw-btn--light cw-btn--sm" disabled={busy === "cover"} onClick={removeCover} aria-label="Remove cover">
+                  <Trash2 aria-hidden="true" />
+                </button>
+              )}
+            </>
+          ) : null
+        }
+      />
     );
   }
 

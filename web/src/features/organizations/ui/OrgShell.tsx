@@ -27,12 +27,17 @@ import "../styles/OrganizationForms.scss";
 export function OrgShell({
   organizationId,
   organizationName,
+  organizationLogoUrl,
+  organizationCoverUrl,
   sidebar = Boolean(organizationId),
   narrow = false,
   children,
 }: {
   organizationId?: string;
   organizationName?: string;
+  /** Optional: shows the church card (cover + logo) at the top of the side menu. */
+  organizationLogoUrl?: string | null;
+  organizationCoverUrl?: string | null;
   sidebar?: boolean;
   narrow?: boolean;
   children: ReactNode;
@@ -42,7 +47,12 @@ export function OrgShell({
       <OrganizationHeader organizationId={organizationId} organizationName={organizationName} />
       {sidebar && organizationId ? (
         <div className="church-container church-org-layout">
-          <ShellSidebar organizationId={organizationId} organizationName={organizationName} />
+          <ShellSidebar
+            organizationId={organizationId}
+            organizationName={organizationName}
+            organizationLogoUrl={organizationLogoUrl}
+            organizationCoverUrl={organizationCoverUrl}
+          />
           <main className="church-org-content fko-content">{children}</main>
         </div>
       ) : (
@@ -52,9 +62,27 @@ export function OrgShell({
   );
 }
 
-function ShellSidebar({ organizationId, organizationName }: { organizationId: string; organizationName?: string }) {
+function ShellSidebar({
+  organizationId,
+  organizationName,
+  organizationLogoUrl,
+  organizationCoverUrl,
+}: {
+  organizationId: string;
+  organizationName?: string;
+  organizationLogoUrl?: string | null;
+  organizationCoverUrl?: string | null;
+}) {
   const viewer = useSidebarViewer(organizationId);
-  return <OrganizationSidebar organizationId={organizationId} organizationName={organizationName} viewer={viewer} />;
+  return (
+    <OrganizationSidebar
+      organizationId={organizationId}
+      organizationName={organizationName}
+      organizationLogoUrl={organizationLogoUrl}
+      organizationCoverUrl={organizationCoverUrl}
+      viewer={viewer}
+    />
+  );
 }
 
 /* ------------------------------------------------------------ page head */

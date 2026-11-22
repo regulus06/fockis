@@ -12,6 +12,10 @@ import { eventMediaUrl } from "../utils/eventMedia";
 import { fromLocalInputValue, toLocalInputValue, viewerTimeZone } from "../utils/eventTime";
 import FeaturedEventCard from "./discover/FeaturedEventCard";
 import EventDateTimeFields from "./EventDateTimeFields";
+import RegistrationSettingsForm, {
+  defaultRegistrationSettings,
+  validateRegistrationSettings,
+} from "../registrations/RegistrationSettingsForm";
 
 interface Props {
   initialValues?: Partial<CreateEventInput>;
@@ -22,10 +26,12 @@ interface Props {
   mode?: "create" | "edit";
   onSubmit: (values: CreateEventInput) => Promise<void>;
   onCancel?: () => void;
+  /** Edit mode: registrations already hold places (ticket prices are locked). */
+  hasRegistrations?: boolean;
 }
 
 type Errors = Partial<Record<
-  "title" | "startDate" | "endDate" | "onlineUrl" | "place" | "coordinates" | "capacity" | "media" | "form",
+  "title" | "startDate" | "endDate" | "onlineUrl" | "place" | "coordinates" | "capacity" | "media" | "registration" | "form",
   string
 >>;
 
@@ -60,6 +66,7 @@ export default function EventCreateForm({
   mode = "create",
   onSubmit,
   onCancel,
+  hasRegistrations = false,
 }: Props) {
   const [title, setTitle] = useState(initialValues.title ?? "");
   const [description, setDescription] = useState(initialValues.description ?? "");
@@ -83,6 +90,11 @@ export default function EventCreateForm({
   const [coverImageFile, setCoverImageFile] = useState<File | undefined>();
   const [eventVideoFile, setEventVideoFile] = useState<File | undefined>();
   const [removeCover, setRemoveCover] = useState(false);
+  const [registration, setRegistration] = useState(
+    () => initialValues.registration ?? defaultRegistrationSettings(initialValues.isOnline ?? false),
+  );
+  // Hybrid events (in person + online) also need the Fockis Meeting link.
+  const needsMeetingLink = isOnline || registration.attendanceOptions.includes("online");
   const [errors, setErrors] = useState<Errors>({});
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState(false);
@@ -170,9 +182,11 @@ export default function EventCreateForm({
       next.endDate = "The end time is already in the past.";
     }
 
-    if (isOnline) {
-      if (!/^https?:\/\/\S+\.\S+/i.test(onlineUrl.trim())) next.onlineUrl = "Add a meeting link starting with https://";
-    } else {
+    if (needsMeetingLink && !/^https?:\/\/\S+\.\S+/i.test(onlineUrl.trim())) {
+      next.onlineUrl = "Paste the Fockis Meeting link (starting with https://).";
+    }
+
+    if (!isOnline) {
       if (!locationName.trim() && !address.trim()) next.place = "Add a venue name or an address.";
 
       const lat = numberOrNull(latitude);
@@ -188,6 +202,10 @@ export default function EventCreateForm({
 
       if (!Number.isInteger(value) || value < 1) next.capacity = "Capacity must be a whole number of at least 1.";
     }
+
+    const registrationError = validateRegistrationSettings(registration, endDate ? fromLocalInputValue(endDate) : "");
+
+    if (registrationError) next.registration = registrationError;
 
     return next;
   }
@@ -205,7 +223,7 @@ export default function EventCreateForm({
       endDate: fromLocalInputValue(endDate),
       timeZone,
       isOnline,
-      onlineUrl: isOnline ? onlineUrl.trim() : "",
+      onlineUrl: needsMeetingLink ? onlineUrl.trim() : "",
       locationName: isOnline ? "" : locationName.trim(),
       address: isOnline ? "" : address.trim(),
       latitude: isOnline ? null : lat,
@@ -213,6 +231,15 @@ export default function EventCreateForm({
       capacity: capacity.trim() ? Number(capacity) : null,
       coverImageFile,
       eventVideoFile,
+      registration: {
+        ...registration,
+        ticketTypes: registration.ticketTypes.map((ticket) => ({ ...ticket, name: ticket.name.trim() })),
+        questions: registration.questions.map((question) => ({
+          ...question,
+          label: question.label.trim(),
+          options: question.options.map((option) => option.trim()).filter(Boolean),
+        })),
+      },
       ...(removeCover && !coverImageFile && !eventVideoFile ? { coverImageUrl: "" } : {}),
     };
   }
@@ -388,9 +415,9 @@ export default function EventCreateForm({
             </button>
           </div>
 
-          {isOnline ? (
+          {needsMeetingLink && (
             <label className="fke-field">
-              <span>Meeting link</span>
+              <span>Fockis Meeting link</span>
               <input
                 type="url"
                 inputMode="url"
@@ -399,10 +426,15 @@ export default function EventCreateForm({
                 onChange={(changeEvent) => setOnlineUrl(changeEvent.target.value)}
                 aria-invalid={Boolean(errors.onlineUrl) || undefined}
               />
-              <small className="fke-muted">Only shown to people who are going or interested.</small>
+              <small className="fke-muted">
+                Create and schedule the meeting in Fockis Meeting first, then paste its link here. It's never shown publicly —
+                only people allowed to join get the Join Meeting button.
+              </small>
               {errors.onlineUrl && <small className="fke-error-text">{errors.onlineUrl}</small>}
             </label>
-          ) : (
+          )}
+
+          {!isOnline && (
             <>
               <div className="fke-form-grid">
                 <label className="fke-field">
@@ -524,6 +556,16 @@ export default function EventCreateForm({
             {errors.capacity && <small className="fke-error-text">{errors.capacity}</small>}
           </label>
         </fieldset>
+      </section>
+
+      <section className="fke-form__section">
+        <RegistrationSettingsForm
+          value={registration}
+          onChange={setRegistration}
+          isOnline={isOnline}
+          hasRegistrations={hasRegistrations}
+        />
+        {errors.registration && <small className="fke-error-text">{errors.registration}</small>}
       </section>
 
       <div className="fke-form__actions">

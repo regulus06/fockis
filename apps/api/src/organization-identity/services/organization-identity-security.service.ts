@@ -16,10 +16,35 @@ import type {
   SecurityPolicyResponse,
 } from "./organization-identity.service";
 
+import {
+  PlatformSecurityPolicyService,
+  organizationUpdateProblems,
+} from "../../admin/security/platform-security/platform-security-policy.service";
+
+import {
+  POLICY_FIELDS,
+  POLICY_FIELD_MAP,
+} from "../../admin/security/platform-security/security-policy.definitions";
+
+// ============================================================================
+// ORGANIZATION SECURITY POLICY
+//
+// Platform security is governed by the Fockis Admin Center. An organization
+// administrator can only make the settings Fockis delegates *stricter* than
+// the Fockis baseline for the organization's managed users. Every other
+// setting is shown read-only ("Locked by Fockis").
+// ============================================================================
+
+/** Organization fields that map onto a platform setting with another key. */
+const ALIASES: Record<string, string> = {
+  lockoutAlerts: "notifyUserOnAccountLockout",
+};
+
 @Injectable()
 export class OrganizationIdentitySecurityService {
   constructor(
     private readonly common: OrganizationIdentityCommonService,
+    private readonly platformSecurity: PlatformSecurityPolicyService,
   ) {}
 
   // ==========================================================================
@@ -40,14 +65,61 @@ export class OrganizationIdentitySecurityService {
       actorUserId,
     );
 
-    const policy =
+    // Make sure the organization has a stored policy document.
+    const stored =
       await this.common.getOrCreateSecurityPolicy(
         organization._id,
       );
 
-    return this.common.toPolicyResponse(
-      policy,
+    return this.buildResponse(
+      String(organization._id),
+      stored,
     );
+  }
+
+  private async buildResponse(
+    organizationId: string,
+    stored: any,
+  ): Promise<SecurityPolicyResponse> {
+    const [resolved, platform] = await Promise.all([
+      this.platformSecurity.getOrganizationPolicy(organizationId),
+      this.platformSecurity.getPlatform(),
+    ]);
+
+    const base =
+      this.common.toPolicyResponse(stored) as unknown as Record<string, unknown>;
+
+    // Managed-identity settings: effective values.
+    for (const [key, value] of Object.entries(resolved.values)) {
+      if (key in base) base[key] = value;
+    }
+
+    // Settings only the platform controls: show the platform value.
+    for (const key of Object.keys(base)) {
+      const target = ALIASES[key] ?? key;
+      const field = POLICY_FIELD_MAP.get(target);
+
+      if (!field) continue;
+
+      if (!field.profiles.includes("managed")) {
+        base[key] = platform.accounts[target] ?? base[key];
+      } else if (target !== key) {
+        base[key] = resolved.values[target];
+      }
+    }
+
+    return {
+      ...(base as unknown as SecurityPolicyResponse),
+      governance: {
+        delegatedFields: resolved.delegatedFields,
+        lockedFields: resolved.lockedFields,
+        overriddenFields: resolved.overriddenFields,
+        customized: resolved.customized,
+        platformVersion: resolved.platformVersion,
+        platformBaseline: platform.managed,
+        fields: POLICY_FIELDS.filter((field) => field.profiles.includes("managed")),
+      },
+    };
   }
 
   // ==========================================================================
@@ -69,279 +141,88 @@ export class OrganizationIdentitySecurityService {
       actorUserId,
     );
 
-    // ------------------------------------------------------------------------
-    // VALIDATION
-    // ------------------------------------------------------------------------
-
-    if (
-      dto.minimumPasswordLength !==
-      undefined &&
-      (
-        dto.minimumPasswordLength < 8 ||
-        dto.minimumPasswordLength > 128
-      )
-    ) {
-      throw new BadRequestException(
-        "Minimum password length must be between 8 and 128 characters.",
-      );
-    }
-
-    if (
-      dto.passwordHistoryCount !==
-      undefined &&
-      (
-        dto.passwordHistoryCount < 0 ||
-        dto.passwordHistoryCount > 50
-      )
-    ) {
-      throw new BadRequestException(
-        "Password history count must be between 0 and 50.",
-      );
-    }
-
-    if (
-      dto.passwordExpirationDays !==
-      undefined &&
-      (
-        dto.passwordExpirationDays < 1 ||
-        dto.passwordExpirationDays > 3650
-      )
-    ) {
-      throw new BadRequestException(
-        "Password expiration must be between 1 and 3650 days.",
-      );
-    }
-
-    if (
-      dto.maxFailedLoginAttempts !==
-      undefined &&
-      (
-        dto.maxFailedLoginAttempts < 1 ||
-        dto.maxFailedLoginAttempts > 100
-      )
-    ) {
-      throw new BadRequestException(
-        "Maximum failed login attempts must be between 1 and 100.",
-      );
-    }
-
-    if (
-      dto.loginRetryDelaySeconds !==
-      undefined &&
-      (
-        dto.loginRetryDelaySeconds < 0 ||
-        dto.loginRetryDelaySeconds > 86400
-      )
-    ) {
-      throw new BadRequestException(
-        "Login retry delay must be between 0 and 86400 seconds.",
-      );
-    }
-
-    if (
-      dto.accountLockoutDurationMinutes !==
-      undefined &&
-      (
-        dto.accountLockoutDurationMinutes < 1 ||
-        dto.accountLockoutDurationMinutes > 10080
-      )
-    ) {
-      throw new BadRequestException(
-        "Account lockout duration must be between 1 and 10080 minutes.",
-      );
-    }
-
-    if (
-      dto.failedLoginResetMinutes !==
-      undefined &&
-      (
-        dto.failedLoginResetMinutes < 1 ||
-        dto.failedLoginResetMinutes > 10080
-      )
-    ) {
-      throw new BadRequestException(
-        "Failed-login reset duration must be between 1 and 10080 minutes.",
-      );
-    }
-
-    if (
-      dto.repeatedLockoutNotificationThreshold !==
-      undefined &&
-      (
-        dto.repeatedLockoutNotificationThreshold < 1 ||
-        dto.repeatedLockoutNotificationThreshold > 100
-      )
-    ) {
-      throw new BadRequestException(
-        "Repeated-lockout notification threshold must be between 1 and 100.",
-      );
-    }
-
-    if (
-      dto.inactivityTimeoutMinutes !==
-      undefined &&
-      (
-        dto.inactivityTimeoutMinutes < 0 ||
-        dto.inactivityTimeoutMinutes > 10080
-      )
-    ) {
-      throw new BadRequestException(
-        "Inactivity timeout must be between 0 and 10080 minutes.",
-      );
-    }
-
-    if (
-      dto.maximumSessionHours !==
-      undefined &&
-      (
-        dto.maximumSessionHours < 0 ||
-        dto.maximumSessionHours > 720
-      )
-    ) {
-      throw new BadRequestException(
-        "Maximum session duration must be between 0 and 720 hours.",
-      );
-    }
-
-    if (
-      dto.rememberMeDays !==
-      undefined &&
-      (
-        dto.rememberMeDays < 0 ||
-        dto.rememberMeDays > 3650
-      )
-    ) {
-      throw new BadRequestException(
-        "Remember-me duration must be between 0 and 3650 days.",
-      );
-    }
+    const orgId = String(organization._id);
 
     const existingPolicy =
       await this.common.getOrCreateSecurityPolicy(
         organization._id,
       );
 
-    const update:
-      Record<string, unknown> = {};
+    const current =
+      await this.buildResponse(orgId, existingPolicy);
+
+    const platform =
+      await this.platformSecurity.getPlatform();
+
+    const resolved =
+      await this.platformSecurity.getOrganizationPolicy(orgId);
 
     // ------------------------------------------------------------------------
-    // PASSWORD
+    // Split the request: managed-identity settings vs. platform-only ones.
+    // Older clients send every field; unchanged platform-only values are
+    // ignored, changed ones are refused.
     // ------------------------------------------------------------------------
 
-    const passwordFields = [
-      "strongPasswords",
-      "minimumPasswordLength",
-      "passwordHistoryCount",
-      "requirePasswordChange",
-      "forcePasswordChangeAfterAdminReset",
-      "passwordExpirationEnabled",
-      "passwordExpirationDays",
-      "preventPasswordReuse",
-    ] as const;
+    const requested: Record<string, unknown> = {};
+    const problems: string[] = [];
 
-    for (const field of passwordFields) {
-      if (dto[field] !== undefined) {
-        update[field] = dto[field];
+    for (const [rawKey, value] of Object.entries(dto ?? {})) {
+      if (value === undefined) continue;
+
+      const key = ALIASES[rawKey] ?? rawKey;
+      const field = POLICY_FIELD_MAP.get(key);
+
+      if (!field) continue;
+
+      if (!field.profiles.includes("managed")) {
+        if (value !== (current as any)[rawKey]) {
+          problems.push(
+            `"${field.label}" is managed by Fockis and cannot be changed by organizations.`,
+          );
+        }
+
+        continue;
       }
+
+      requested[key] = value;
+    }
+
+    problems.push(
+      ...organizationUpdateProblems(platform, resolved.values, requested),
+    );
+
+    if (problems.length) {
+      throw new BadRequestException({
+        message: problems[0],
+        errors: problems,
+      });
     }
 
     // ------------------------------------------------------------------------
-    // LOCKOUT
+    // Only delegated settings are stored for the organization.
     // ------------------------------------------------------------------------
 
-    const lockoutFields = [
-      "loginLockoutEnabled",
-      "maxFailedLoginAttempts",
-      "loginRetryDelaySeconds",
-      "accountLockoutDurationMinutes",
-      "failedLoginResetMinutes",
-      "progressiveLockout",
-      "notifyUserOnAccountLockout",
-      "notifyAdminOnRepeatedLockout",
-      "repeatedLockoutNotificationThreshold",
-    ] as const;
+    const delegated = new Set(platform.delegatedFields);
+    const update: Record<string, unknown> = {};
+    const changes: Array<{ profile: "managed"; field: string; from: unknown; to: unknown }> = [];
 
-    for (const field of lockoutFields) {
-      if (dto[field] !== undefined) {
-        update[field] = dto[field];
+    for (const [key, value] of Object.entries(requested)) {
+      if (!delegated.has(key)) continue;
+
+      if (value !== resolved.values[key]) {
+        changes.push({
+          profile: "managed",
+          field: key,
+          from: resolved.values[key],
+          to: value,
+        });
       }
+
+      update[key] = value;
     }
 
-    // ------------------------------------------------------------------------
-    // SESSION
-    // ------------------------------------------------------------------------
-
-    const sessionFields = [
-      "inactivityTimeoutMinutes",
-      "maximumSessionHours",
-      "rememberMeDays",
-      "revokeSessionsAfterPasswordChange",
-      "revokeSessionsAfterSecurityChange",
-    ] as const;
-
-    for (const field of sessionFields) {
-      if (dto[field] !== undefined) {
-        update[field] = dto[field];
-      }
-    }
-
-    // ------------------------------------------------------------------------
-    // 2FA / REAUTH
-    // ------------------------------------------------------------------------
-
-    const twoFactorFields = [
-      "requireTwoFactor",
-      "requireTwoFactorForAdministrators",
-      "allowUserTwoFactor",
-      "allowRecoveryCodes",
-      "requireReauthenticationForSensitiveActions",
-      "requireReauthenticationForSecurityChanges",
-      "requireAdminReauthentication",
-    ] as const;
-
-    for (const field of twoFactorFields) {
-      if (dto[field] !== undefined) {
-        update[field] = dto[field];
-      }
-    }
-
-    // ------------------------------------------------------------------------
-    // LOGIN NOTIFICATIONS
-    // ------------------------------------------------------------------------
-
-    const notificationFields = [
-      "loginAlerts",
-      "failedLoginAlerts",
-      "suspiciousLoginAlerts",
-      "newDeviceAlerts",
-      "newLocationAlerts",
-      "lockoutAlerts",
-      "securityChangeNotifications",
-    ] as const;
-
-    for (const field of notificationFields) {
-      if (dto[field] !== undefined) {
-        update[field] = dto[field];
-      }
-    }
-
-    // ------------------------------------------------------------------------
-    // ACCOUNT PROTECTION
-    // ------------------------------------------------------------------------
-
-    const protectionFields = [
-      "requireVerifiedEmail",
-      "passwordResetProtection",
-      "emailChangeProtection",
-      "protectOrganizationOwner",
-      "protectLastAdministrator",
-      "securityAuditLog",
-    ] as const;
-
-    for (const field of protectionFields) {
-      if (dto[field] !== undefined) {
-        update[field] = dto[field];
-      }
+    if (!Object.keys(update).length) {
+      return current;
     }
 
     const policy =
@@ -371,8 +252,17 @@ export class OrganizationIdentitySecurityService {
       );
     }
 
-    return this.common.toPolicyResponse(
-      policy as any,
+    // Change history, audit record and cache invalidation (all instances).
+    // This also marks the policy as explicitly configured by the organization.
+    await this.platformSecurity.recordOrganizationChange(
+      orgId,
+      changes,
+      { id: actorUserId, name: "Organization administrator" },
+    );
+
+    return this.buildResponse(
+      orgId,
+      policy,
     );
   }
 }

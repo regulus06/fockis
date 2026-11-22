@@ -16,9 +16,10 @@
 
 import { CHURCH_API_BASE, ChurchApiError, ChurchAuthError, getAuthToken } from "../api/organizationApi";
 
-export type BadgeTemplate = "classic" | "modern" | "minimal" | "bold";
+export type BadgeTemplate = "official" | "classic" | "modern" | "minimal" | "bold";
 
 export const BADGE_TEMPLATES: { id: BadgeTemplate; name: string; description: string }[] = [
+  { id: "official", name: "Official", description: "Upright ID card with blue waves, a large photo, the ministry and the QR code. Same design as My Badge." },
   { id: "classic", name: "Classic", description: "Upright card with a coloured header, photo in the middle and the QR code below." },
   { id: "modern", name: "Modern", description: "Wide card: photo on the left, details in the middle, QR code on the right." },
   { id: "minimal", name: "Minimal", description: "White card with a thin colour stripe and a large QR code. Prints well in black and white." },
@@ -45,6 +46,59 @@ export interface Badge {
   memberDomain: string | null;
   active: boolean;
   issuedAt: string;
+  /* Added with the official badge (older API responses leave them out). */
+  memberName?: string;
+  customName?: string | null;
+  customTitle?: string | null;
+  ministryName?: string | null;
+  ministry?: string | null;
+  organizationLocation?: string | null;
+  organizationBannerUrl?: string | null;
+  badgeStatus?: BadgeAdminStatus;
+  statusReason?: string | null;
+  statusChangedAt?: string | null;
+  expiresAt?: string | null;
+  verifyState?: BadgeVerifyState;
+  tokenIssuedAt?: string | null;
+  photo?: BadgePhotoSettings | null;
+  access?: BadgeAccess;
+}
+
+export type BadgeAdminStatus = "active" | "suspended" | "revoked";
+export type BadgeVerifyState = "verified" | "pending" | "suspended" | "membership_inactive" | "revoked" | "expired" | "not_member";
+export type PhotoShape = "circle" | "rounded" | "square" | "rectangle" | "oval" | "custom";
+
+export interface BadgePhotoSettings {
+  originalUrl?: string | null;
+  shape: PhotoShape;
+  /** custom shape: corner radius in % of the shorter side (0–50) */
+  cornerRadius: number;
+  x: number;
+  y: number;
+  zoom: number;
+  rotation: number;
+  aspect: number;
+  fit: "fill" | "fit";
+  cropX: number;
+  cropY: number;
+  cropWidth: number;
+  cropHeight: number;
+  outputWidth: number;
+  outputHeight: number;
+}
+
+export interface BadgeAccess {
+  isSelf: boolean;
+  canEdit: boolean;
+  canEditPhoto: boolean;
+  canManageStatus: boolean;
+}
+
+export interface BadgeManageView {
+  badge: Badge;
+  history: { at: string; action: string; note: string; actorName: string }[];
+  verifications: { id: string; at: string; result: BadgeVerifyState; device: string }[];
+  ministryOptions: string[];
 }
 
 export interface BadgeDesign {
@@ -59,11 +113,14 @@ export interface BadgeDesign {
   showGroups: boolean;
   showMemberDomain: boolean;
   footerText: string;
+  allowMemberPhotoEdit?: boolean;
+  showPhotoOnVerify?: boolean;
+  showMinistryOnVerify?: boolean;
   canEdit?: boolean;
 }
 
 export const DEFAULT_DESIGN: BadgeDesign = {
-  template: "classic",
+  template: "official",
   accentColor: "#005a8d",
   badgeTitle: "Member",
   numberPrefix: "",
@@ -73,6 +130,9 @@ export const DEFAULT_DESIGN: BadgeDesign = {
   showGroups: false,
   showMemberDomain: false,
   footerText: "",
+  allowMemberPhotoEdit: true,
+  showPhotoOnVerify: true,
+  showMinistryOnVerify: true,
 };
 
 export interface BadgeCheck {
@@ -88,6 +148,14 @@ export interface BadgeCheck {
   memberSince: string | null;
   issuedAt: string;
   checkedAt: string;
+  state?: BadgeVerifyState;
+  tone?: "green" | "yellow" | "red";
+  title?: string | null;
+  membershipType?: string;
+  ministry?: string | null;
+  photoShape?: PhotoShape;
+  organizationLocation?: string | null;
+  expiresAt?: string | null;
 }
 
 /** API root: the /church base without "/church". */
@@ -133,11 +201,24 @@ export const badgeApi = {
   issueAll: (organizationId: string) => call<{ issued: number; total: number }>("POST", `${org(organizationId)}/issue-all`),
   member: (organizationId: string, membershipId: string) => call<Badge | null>("GET", `${org(organizationId)}/members/${encodeURIComponent(membershipId)}`),
   rebuild: (organizationId: string, membershipId: string) => call<Badge>("POST", `${org(organizationId)}/members/${encodeURIComponent(membershipId)}/rebuild`),
-  uploadPhoto: (organizationId: string, membershipId: string, file: File) => {
+  uploadPhoto: (organizationId: string, membershipId: string, file: File, extra?: { original?: File | null; settings?: Omit<BadgePhotoSettings, "originalUrl"> }) => {
     const form = new FormData();
     form.append("file", file);
+    if (extra?.original) form.append("original", extra.original);
+    if (extra?.settings) form.append("settings", JSON.stringify(extra.settings));
     return call<{ avatarUrl: string; badge: Badge | null }>("POST", `${org(organizationId)}/members/${encodeURIComponent(membershipId)}/photo`, form);
   },
+  manage: (organizationId: string, membershipId: string) =>
+    call<BadgeManageView>("GET", `${org(organizationId)}/members/${encodeURIComponent(membershipId)}/manage`),
+  updateDetails: (
+    organizationId: string,
+    membershipId: string,
+    body: { customName?: string | null; customTitle?: string | null; ministryName?: string | null; expiresAt?: string | null },
+  ) => call<Badge>("PATCH", `${org(organizationId)}/members/${encodeURIComponent(membershipId)}`, body),
+  setStatus: (organizationId: string, membershipId: string, action: "suspend" | "revoke" | "reactivate", reason = "") =>
+    call<Badge>("POST", `${org(organizationId)}/members/${encodeURIComponent(membershipId)}/status`, { action, reason }),
+  regenerateQr: (organizationId: string, membershipId: string) =>
+    call<Badge>("POST", `${org(organizationId)}/members/${encodeURIComponent(membershipId)}/regenerate-qr`),
   removePhoto: (organizationId: string, membershipId: string) =>
     call<{ avatarUrl: null; badge: Badge | null }>("DELETE", `${org(organizationId)}/members/${encodeURIComponent(membershipId)}/photo`),
   verify: (token: string) => call<BadgeCheck>("GET", `/badges/verify/${encodeURIComponent(token)}`, undefined, false),
@@ -147,8 +228,28 @@ export const badgeApi = {
 export function badgeVerifyUrl(token: string | null | undefined): string {
   if (!token) return "";
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  return `${origin}/badges/verify/${encodeURIComponent(token)}`;
+  return `${origin}/verify/church-member/${encodeURIComponent(token)}`;
 }
+
+export const VERIFY_STATE_LABEL: Record<BadgeVerifyState, string> = {
+  verified: "Active",
+  pending: "Pending",
+  suspended: "Suspended",
+  membership_inactive: "Inactive",
+  revoked: "Revoked",
+  expired: "Expired",
+  not_member: "Not a member",
+};
+
+export const VERIFY_STATE_TONE: Record<BadgeVerifyState, "green" | "yellow" | "red"> = {
+  verified: "green",
+  pending: "yellow",
+  suspended: "yellow",
+  membership_inactive: "yellow",
+  revoked: "red",
+  expired: "red",
+  not_member: "red",
+};
 
 /** Photos uploaded for a badge are served by the API (/badges/photos/…); other photo links are used as they are. */
 export function badgePhotoSrc(url: string | null | undefined): string | null {
@@ -158,3 +259,5 @@ export function badgePhotoSrc(url: string | null | undefined): string | null {
 
 export const BADGE_PHOTO_MAX_BYTES = 8 * 1024 * 1024;
 export const BADGE_PHOTO_ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
+/** The photo editor takes these (GIF animations can't be cropped). */
+export const BADGE_EDITOR_ACCEPT = "image/jpeg,image/png,image/webp";

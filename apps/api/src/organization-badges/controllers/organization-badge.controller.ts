@@ -27,6 +27,8 @@ import {
   Body,
   Controller,
   Delete,
+  Headers,
+  Patch,
   ForbiddenException,
   Get,
   Header,
@@ -37,13 +39,15 @@ import {
   Query,
   Req,
   StreamableFile,
-  UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
+import { Public } from '../../auth/public.decorator';
 import { createReadStream } from 'fs';
 import { memoryStorage } from 'multer';
 
@@ -78,7 +82,7 @@ export class OrganizationBadgeController {
 
   @Get('me')
   getMyBadge(@Param('organizationId') organizationId: string, @Req() req: AuthenticatedRequest) {
-    return this.badgeService.getMyBadge(organizationId, actorUserId(req));
+    return this.badgeService.getMyBadgeWithAccess(organizationId, actorUserId(req));
   }
 
   @Get('design')
@@ -133,20 +137,77 @@ export class OrganizationBadgeController {
     return this.badgeService.rebuildBadgeFor(organizationId, membershipId, actorUserId(req));
   }
 
+  /** (admin) badge, its history and recent QR scans */
+  @Get('members/:membershipId/manage')
+  manage(
+    @Param('organizationId') organizationId: string,
+    @Param('membershipId') membershipId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.badgeService.getManage(organizationId, membershipId, actorUserId(req));
+  }
+
+  /** (admin) name / title / ministry / expiry printed on the badge */
+  @Patch('members/:membershipId')
+  updateDetails(
+    @Param('organizationId') organizationId: string,
+    @Param('membershipId') membershipId: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.badgeService.updateDetails(organizationId, membershipId, actorUserId(req), body ?? {});
+  }
+
+  /** (owner/administrator) { action: "suspend" | "revoke" | "reactivate", reason } */
+  @Post('members/:membershipId/status')
+  setStatus(
+    @Param('organizationId') organizationId: string,
+    @Param('membershipId') membershipId: string,
+    @Body() body: { action?: string; reason?: string },
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.badgeService.setStatus(organizationId, membershipId, actorUserId(req), body?.action, body?.reason);
+  }
+
+  /** (owner/administrator) new QR code; the old one stops working */
+  @Post('members/:membershipId/regenerate-qr')
+  regenerateQr(
+    @Param('organizationId') organizationId: string,
+    @Param('membershipId') membershipId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.badgeService.regenerateToken(organizationId, membershipId, actorUserId(req));
+  }
+
+  /** Fields: file (edited picture, required), original (untouched upload), settings (JSON). */
   @Post('members/:membershipId/photo')
   @UseInterceptors(
-    FileInterceptor('file', {
-      storage: memoryStorage(),
-      limits: { fileSize: MAX_BADGE_PHOTO_BYTES, files: 1 },
-    }),
+    FileFieldsInterceptor(
+      [
+        { name: 'file', maxCount: 1 },
+        { name: 'original', maxCount: 1 },
+      ],
+      {
+        storage: memoryStorage(),
+        limits: { fileSize: MAX_BADGE_PHOTO_BYTES, files: 2 },
+      },
+    ),
   )
   uploadPhoto(
     @Param('organizationId') organizationId: string,
     @Param('membershipId') membershipId: string,
-    @UploadedFile() file: UploadedBadgePhoto | undefined,
+    @UploadedFiles() files: { file?: UploadedBadgePhoto[]; original?: UploadedBadgePhoto[] } | undefined,
+    @Body('settings') settings: string | undefined,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.badgeService.uploadPhoto(organizationId, membershipId, actorUserId(req), file);
+    return this.badgeService.uploadPhoto(
+      organizationId,
+      membershipId,
+      actorUserId(req),
+      files?.file?.[0],
+      files?.original?.[0],
+      settings,
+    );
   }
 
   @Delete('members/:membershipId/photo')
@@ -160,13 +221,15 @@ export class OrganizationBadgeController {
 }
 
 /** No sign-in needed: anyone who scans a badge can check it. */
+@Public()
 @Controller('badges')
 export class BadgeVerifyController {
   constructor(private readonly badgeService: OrganizationBadgeService) {}
 
   @Get('verify/:token')
-  verify(@Param('token') token: string) {
-    return this.badgeService.verify(token);
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  verify(@Param('token') token: string, @Headers('user-agent') userAgent?: string) {
+    return this.badgeService.verify(token, userAgent);
   }
 
   @Get('photos/:filename')

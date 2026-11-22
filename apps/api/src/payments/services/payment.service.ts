@@ -3,7 +3,10 @@ import {
   Injectable,
   NotFoundException,
   Logger,
+  Optional,
 } from '@nestjs/common';
+
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { InjectModel } from '@nestjs/mongoose';
 
@@ -46,6 +49,13 @@ export class UniversalPaymentService {
     private readonly stripeService: FockisStripeService,
 
     private readonly usersService: UsersService,
+
+    /*
+     * Optional: lets other modules (e.g. Website Studio orders) react to
+     * successful payments without this service knowing about them.
+     */
+    @Optional()
+    private readonly events?: EventEmitter2,
   ) {}
 
   // ============================================================
@@ -741,8 +751,21 @@ export class UniversalPaymentService {
     // ==========================================================
 
     this.logger.log(
-      `Payment ${payment.id} succeeded for purpose "${payment.purpose}". No service-specific fulfillment is registered yet.`,
+      `Payment ${payment.id} succeeded for purpose "${payment.purpose}".`,
     );
+
+    // ==========================================================
+    // NOTIFY LISTENERS (e.g. Website Studio marks orders paid).
+    // Listeners must be idempotent: this can fire more than once.
+    // ==========================================================
+
+    this.events?.emit('payments.succeeded', {
+      paymentId: payment.id,
+      purpose: payment.purpose,
+      referenceId: payment.referenceId,
+      paymentIntentId: intent.id,
+      userId: String(payment.userId),
+    });
 
     return {
       success: true,

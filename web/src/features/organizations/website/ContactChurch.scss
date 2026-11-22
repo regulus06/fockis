@@ -1,0 +1,460 @@
+/* "Contact Our Church" section of the public church website (uses --cw-* tokens). */
+
+/* "Contact Our Church" / "Contact Our Organization" section of the public
+   homepage (uses --cw-* tokens). Two columns: blue information panel + form. */
+
+.cw-contact {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.82fr) minmax(0, 1.18fr);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--cw-border);
+  border-radius: var(--cw-radius);
+  background: #fff;
+  box-shadow: var(--cw-shadow);
+  scroll-margin-top: 90px;
+
+  &__panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    overflow: hidden;
+    background: linear-gradient(160deg, var(--cw-dark) 0%, color-mix(in srgb, var(--cw-primary) 82%, #000) 70%, var(--cw-primary) 100%);
+    color: #fff;
+  }
+
+  &__photo {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.18;
+    mix-blend-mode: luminosity;
+  }
+
+  &__panelin {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    padding: 24px 22px 70px;
+
+    h2,
+    .cw & h2 {
+      margin: 2px 0 0;
+      color: #fff;
+      font-family: var(--cw-display);
+      font-weight: 700;
+      font-size: clamp(20px, 2vw, 24px);
+      line-height: 1.2;
+    }
+
+    > p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  }
+
+  &__icon {
+    width: 34px;
+    height: 34px;
+    color: #fff;
+  }
+
+  &__info {
+    display: grid;
+    gap: 10px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    li > span:first-child {
+      display: grid;
+      place-items: center;
+      flex: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #fff;
+      color: var(--cw-primary);
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    a,
+    li > span:last-child {
+      min-width: 0;
+      color: #fff;
+      text-decoration: none;
+      overflow-wrap: anywhere;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__socials {
+    margin-top: 6px;
+  }
+
+  &__wave {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 56px;
+  }
+
+  &__right {
+    display: grid;
+    align-content: start;
+    gap: 12px;
+    min-width: 0;
+    padding: 20px 22px;
+  }
+
+  &__hint {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: -4px 0 0;
+    color: var(--cw-text);
+    font-size: 13px;
+
+    svg {
+      width: 16px;
+      height: 16px;
+      color: var(--cw-primary);
+    }
+
+    a {
+      color: var(--cw-primary);
+      font-weight: 700;
+    }
+  }
+
+  &__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__form {
+    display: grid;
+    gap: 12px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 14px;
+
+    label {
+      position: relative;
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+
+      > span {
+        color: var(--cw-ink);
+        font-size: 13.5px;
+        font-weight: 600;
+      }
+
+      small {
+        color: #c0262d;
+        font-size: 12.5px;
+      }
+
+      em {
+        position: absolute;
+        right: 8px;
+        bottom: 8px;
+        color: var(--cw-muted);
+        font-size: 11px;
+        font-style: normal;
+      }
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 40px;
+      padding: 8px 12px;
+      border: 1px solid var(--cw-border);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--cw-text);
+      font: inherit;
+      font-size: 15px;
+
+      &:focus {
+        outline: none;
+        border-color: var(--cw-primary);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--cw-primary) 15%, transparent);
+      }
+
+      &[aria-invalid="true"] {
+        border-color: #e35d63;
+      }
+    }
+
+    textarea {
+      resize: vertical;
+      line-height: 1.5;
+    }
+  }
+
+  &__full {
+    grid-column: 1 / -1;
+  }
+
+  &__trap {
+    position: absolute !important;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  &__privacy {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: var(--cw-soft);
+
+    svg {
+      width: 18px;
+      height: 18px;
+      flex: none;
+      margin-top: 2px;
+      color: var(--cw-primary);
+    }
+
+    p {
+      margin: 0;
+      color: var(--cw-text);
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
+  }
+
+  &__consent {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 14px;
+    color: var(--cw-text);
+    cursor: pointer;
+
+    input {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      accent-color: var(--cw-primary);
+    }
+  }
+
+  &__err {
+    margin-top: -8px;
+    color: #c0262d;
+    font-size: 12.5px;
+  }
+
+  &__error {
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #fdecec;
+    color: #c0262d;
+    font-size: 14px;
+  }
+
+  &__send {
+    justify-self: start;
+    min-height: 46px;
+    padding: 0 22px;
+
+    svg {
+      width: 17px;
+      height: 17px;
+    }
+  }
+
+  &__done {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 10px;
+    padding: 30px 20px;
+    border-radius: 14px;
+    background: #f0fbf4;
+    text-align: center;
+
+    svg {
+      width: 46px;
+      height: 46px;
+      color: #16a34a;
+    }
+
+    h3 {
+      margin: 0;
+      color: var(--cw-ink);
+    }
+
+    p {
+      margin: 0;
+      max-width: 440px;
+      color: var(--cw-text);
+      line-height: 1.55;
+    }
+  }
+
+  &__mine {
+    padding-top: 10px;
+    border-top: 1px solid var(--cw-border);
+
+    > summary {
+      color: var(--cw-primary);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 4px 0 8px;
+    }
+
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    li {
+      border: 1px solid var(--cw-border);
+      border-radius: 12px;
+      background: #fbfcfe;
+    }
+
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      list-style: none;
+
+      strong {
+        display: block;
+        font-size: 14px;
+        color: var(--cw-ink);
+      }
+
+      small {
+        color: var(--cw-muted);
+        font-size: 12px;
+      }
+    }
+
+    details > :not(summary) {
+      margin: 0 12px 10px;
+    }
+  }
+
+  &__msg {
+    color: var(--cw-text);
+    font-size: 13.5px;
+    white-space: pre-wrap;
+  }
+
+  &__reply {
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: var(--cw-soft);
+
+    small {
+      color: var(--cw-muted);
+      font-size: 12px;
+    }
+
+    p {
+      margin: 4px 0 0;
+      font-size: 13.5px;
+      white-space: pre-wrap;
+    }
+  }
+
+  &__none {
+    color: var(--cw-muted);
+    font-size: 13px;
+  }
+
+  &__status {
+    flex: none;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    background: #e2edfd;
+    color: #1d5fd6;
+
+    &--in_progress,
+    &--waiting {
+      background: #fff4dc;
+      color: #a15c00;
+    }
+
+    &--resolved {
+      background: #dcf5e4;
+      color: #15803d;
+    }
+  }
+}
+
+@media (max-width: 860px) {
+  .cw-contact {
+    grid-template-columns: minmax(0, 1fr);
+
+    &__panelin {
+      padding: 20px 18px 64px;
+    }
+
+    &__right {
+      padding: 18px 16px;
+    }
+
+    &__grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    &__send {
+      width: 100%;
+    }
+  }
+}

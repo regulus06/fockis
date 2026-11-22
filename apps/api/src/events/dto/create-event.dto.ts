@@ -1,9 +1,12 @@
+import { Transform } from "class-transformer";
 import {
   IsBoolean,
+  IsObject,
   IsDateString,
   IsEnum,
   IsInt,
   IsLatitude,
+  IsMongoId,
   IsLongitude,
   IsNotEmpty,
   IsOptional,
@@ -43,7 +46,9 @@ export class CreateEventDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(5000, { message: "The description can be at most 5,000 characters." })
+  // Raw length: formatted descriptions carry markup. The visible-text limit
+  // (5,000, or 2,000 for organization events) is checked in EventsService.
+  @MaxLength(20000, { message: "The description is too long." })
   description?: string;
 
   @IsOptional()
@@ -121,4 +126,55 @@ export class CreateEventDto {
   @IsOptional()
   @IsEnum(EventCoverMediaType)
   coverMediaType?: EventCoverMediaType;
+
+  /**
+   * Registration settings (see events/registrations/registration-settings.ts).
+   * Multipart requests send it as a JSON string. Every field is checked in
+   * normalizeSettings(); null resets to the default (optional RSVP).
+   */
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value !== "string") return value;
+    if (value === "" || value === "null") return null;
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  })
+  @ValidateIf((_, value) => value !== null)
+  @IsObject({ message: "Registration settings are invalid." })
+  registration?: Record<string, unknown> | null;
+
+  /* ---------------------------------------------- organization events */
+
+  /** Create the event for this organization (needs its Manage events permission). */
+  @IsOptional()
+  @EmptyToUndefined()
+  @IsMongoId({ message: "Invalid organization." })
+  organizationId?: string;
+
+  @IsOptional()
+  @EmptyToUndefined()
+  @IsString()
+  @MaxLength(60)
+  @Matches(/^[a-z0-9_-]+$/i, { message: "Choose a valid event type." })
+  eventType?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  orgCategory?: string;
+
+  /** Save without publishing (only organizers and event managers see drafts). */
+  @IsOptional()
+  @OptionalBoolean()
+  @IsBoolean()
+  isDraft?: boolean;
+
+  /** Notify the organization's active members when the event is published. */
+  @IsOptional()
+  @OptionalBoolean()
+  @IsBoolean()
+  notifyMembers?: boolean;
 }

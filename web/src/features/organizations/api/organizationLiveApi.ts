@@ -10,6 +10,8 @@ import {
   churchGet,
   churchPatch,
   churchPost,
+  churchRequest,
+  getAuthToken,
 } from "./organizationApi";
 
 import {
@@ -66,12 +68,16 @@ export async function getCurrentLiveService(
   organizationId: string,
   signal?: AbortSignal,
 ): Promise<LiveEvent | null> {
-  return churchGet<LiveEvent | null>(
+  // Visitors can see a public broadcast too (the server decides what to return).
+  return churchRequest<LiveEvent | null>(
     `/organizations/${encodeURIComponent(
       organizationId,
     )}/live/current`,
-    undefined,
-    signal,
+    {
+      method: "GET",
+      signal,
+      anonymous: !getAuthToken(),
+    },
   );
 }
 

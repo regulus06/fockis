@@ -1,0 +1,66 @@
+PayoutsService integration
+
+1. Add this import:
+import { MarketplaceCommissionService } from "./services/marketplace-commission.service";
+
+2. Add it to the constructor:
+private readonly commissionService: MarketplaceCommissionService,
+
+3. Remove the old commissionPercent() method that reads
+PLATFORM_COMMISSION_PERCENT from process.env.
+
+4. In releaseShipmentPayout(), after calculating subtotalCents, use:
+
+const existingRate = shipment.payoutCommissionRate;
+let quote;
+
+if (
+  existingRate !== null &&
+  existingRate !== undefined &&
+  shipment.payoutSellerAmount !== null &&
+  shipment.payoutSellerAmount !== undefined &&
+  shipment.payoutCommission !== null &&
+  shipment.payoutCommission !== undefined
+) {
+  // Reuse the immutable snapshot; never recalculate an old order.
+  quote = {
+    rate: existingRate,
+    subtotalCents:
+      shipment.payoutSubtotal ?? subtotalCents,
+    commissionCents: Math.round(shipment.payoutCommission * 100),
+    sellerCents: Math.round(shipment.payoutSellerAmount * 100),
+    source: shipment.payoutCommissionSource || "snapshot",
+  };
+} else {
+  quote = await this.commissionService.quote({
+    subtotalCents,
+    storeId: String(store._id),
+    // Add categoryId here only if your order item schema stores a stable
+    // category ID. Do not guess a category from product display text.
+  });
+
+  // Persist the quote before creating the Stripe transfer.
+  shipment.payoutCommissionRate = quote.rate;
+  shipment.payoutSubtotal = quote.subtotalCents / 100;
+  shipment.payoutCommission = quote.commissionCents / 100;
+  shipment.payoutSellerAmount = quote.sellerCents / 100;
+  shipment.payoutCommissionSource = quote.source;
+  shipment.payoutQuoteAt = new Date();
+  await order.save();
+}
+
+const commissionCents = quote.commissionCents;
+const sellerCents = quote.sellerCents;
+
+5. Keep the existing Stripe transfer creation, but use sellerCents and
+commissionCents from the quote.
+
+IMPORTANT:
+This snapshot is locked immediately before the first payout attempt, not
+at customer payment time. For the stronger business rule discussed earlier
+(the rate is fixed at successful payment), call commissionService.quote()
+from the payment-success/order-paid workflow and save the same snapshot
+fields there. Then releaseShipmentPayout() will reuse it.
+
+6. Ensure PayoutsModule registers MarketplaceCommissionSchema and provides
+MarketplaceCommissionService, as shown in payouts.module.integration.ts.

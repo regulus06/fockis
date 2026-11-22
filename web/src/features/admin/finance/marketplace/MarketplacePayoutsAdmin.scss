@@ -1,0 +1,834 @@
+/* ============================================================================
+   Admin Center (Financial Management) — Marketplace payouts
+   Same look as the Fockis payout design: navy menu header, white cards,
+   soft blue lines, teal primary buttons.
+============================================================================ */
+
+.mpa {
+  --mpa-navy: #0a2540;
+  --mpa-navy-2: #0d3b66;
+  --mpa-teal: #0e7490;
+  --mpa-blue: #0369a1;
+  --mpa-soft: #eaf3fc;
+  --mpa-soft-2: #f5f9fe;
+  --mpa-line: #d7e5f3;
+  --mpa-text: #0f1f33;
+  --mpa-text-2: #50627a;
+  --mpa-green: #16a34a;
+  --mpa-orange: #f59e0b;
+  --mpa-red: #dc2626;
+  --mpa-shadow: 0 1px 2px rgba(10, 37, 64, 0.06), 0 10px 28px -16px rgba(10, 37, 64, 0.28);
+
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  padding: 4px 0 24px;
+  color: var(--mpa-text);
+
+  @media (max-width: 980px) {
+    grid-template-columns: 1fr;
+  }
+
+  a {
+    color: var(--mpa-blue);
+  }
+
+  small {
+    color: var(--mpa-text-2);
+  }
+}
+
+/* ----------------------------- Menu ------------------------------------- */
+
+.mpa-menu {
+  position: sticky;
+  top: 12px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--mpa-line);
+  box-shadow: var(--mpa-shadow);
+
+  @media (max-width: 980px) {
+    position: static;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 18px;
+    background: linear-gradient(120deg, var(--mpa-navy), var(--mpa-navy-2) 70%, #0f5a8a);
+    color: #fff;
+    font-weight: 800;
+    font-size: 17px;
+
+    small {
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 600;
+      font-size: 13px;
+    }
+  }
+
+  nav {
+    display: grid;
+    padding: 6px 10px 10px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 10px;
+    border-bottom: 1px solid #eef3f8;
+    color: var(--mpa-text) !important;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    border-radius: 8px;
+
+    svg:first-child {
+      color: var(--mpa-blue);
+    }
+
+    &:last-child {
+      border-bottom: 0;
+    }
+
+    &:hover {
+      background: var(--mpa-soft-2);
+    }
+
+    &.is-active {
+      background: var(--mpa-soft);
+      color: var(--mpa-navy) !important;
+      font-weight: 800;
+    }
+  }
+
+  &__chev {
+    margin-left: auto;
+    color: #8aa2bb;
+  }
+}
+
+/* ----------------------------- Panels ----------------------------------- */
+
+.mpa-main {
+  min-width: 0;
+}
+
+.mpa-panel {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--mpa-line);
+  box-shadow: var(--mpa-shadow);
+
+  @media (max-width: 640px) {
+    padding: 14px;
+  }
+}
+
+.mpa-head {
+  h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--mpa-navy);
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: var(--mpa-text-2);
+    font-size: 14px;
+    max-width: 760px;
+  }
+
+  &--row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+}
+
+.mpa-subpanel {
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--mpa-soft-2);
+  border: 1px solid var(--mpa-line);
+
+  h2 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    color: var(--mpa-navy);
+  }
+
+  p {
+    margin: 0 0 10px;
+  }
+}
+
+.mpa-config-box {
+  padding: 16px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--mpa-line);
+  background: linear-gradient(180deg, #f6faff, #fff);
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px;
+    font-size: 16px;
+    color: var(--mpa-navy);
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 8px 18px;
+  }
+
+  li {
+    position: relative;
+    padding-left: 26px;
+    font-size: 14px;
+
+    &::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      top: -1px;
+      display: grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      background: var(--mpa-green);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+    }
+  }
+}
+
+/* ----------------------------- Stats ------------------------------------ */
+
+.mpa-stats {
+  display: grid;
+  gap: 12px;
+
+  &--small {
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  }
+}
+
+.mpa-stat-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.mpa-stat {
+  display: grid;
+  gap: 3px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--mpa-line);
+  background: #fff;
+
+  span {
+    color: var(--mpa-text-2);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  strong {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--mpa-navy);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__text {
+    font-size: 17px !important;
+  }
+
+  &--rev {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+
+    strong {
+      color: #15803d;
+    }
+  }
+
+  &--warn {
+    background: #fff7ed;
+    border-color: #fed7aa;
+
+    strong {
+      color: #c2410c;
+    }
+  }
+}
+
+/* ----------------------------- Forms ------------------------------------ */
+
+.mpa-form {
+  display: grid;
+  gap: 14px;
+
+  label {
+    display: grid;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--mpa-text);
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px 11px;
+    border: 1px solid var(--mpa-line);
+    border-radius: 9px;
+    background: #fff;
+    font: inherit;
+    font-weight: 500;
+    color: var(--mpa-text);
+
+    &:focus {
+      outline: 2px solid rgba(3, 105, 161, 0.25);
+      border-color: var(--mpa-blue);
+    }
+  }
+}
+
+.mpa-editor {
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--mpa-line);
+  background: var(--mpa-soft-2);
+
+  &__title {
+    margin: 0;
+    color: var(--mpa-navy);
+  }
+}
+
+.mpa-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.mpa-span2 {
+  grid-column: span 2;
+
+  @media (max-width: 640px) {
+    grid-column: auto;
+  }
+}
+
+.mpa-fieldset {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--mpa-line);
+  border-radius: 12px;
+  background: #fff;
+
+  legend {
+    padding: 0 6px;
+    font-weight: 800;
+    color: var(--mpa-navy);
+  }
+}
+
+.mpa-prefix,
+.mpa-suffix {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--mpa-line);
+  border-radius: 9px;
+  background: #fff;
+  overflow: hidden;
+
+  span {
+    padding: 0 10px;
+    color: var(--mpa-text-2);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  input {
+    border: 0 !important;
+    border-radius: 0 !important;
+    min-width: 0;
+  }
+}
+
+.mpa-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+
+  &:has(> :nth-child(4)) {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.mpa-check {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600 !important;
+
+  input {
+    width: 16px !important;
+    height: 16px;
+    accent-color: var(--mpa-blue);
+  }
+
+  &--small {
+    font-size: 13px;
+  }
+}
+
+.mpa-hint {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--mpa-text-2);
+}
+
+.mpa-example {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  color: #14532d;
+  font-size: 13.5px;
+}
+
+.mpa-tiers {
+  display: grid;
+  gap: 8px;
+}
+
+.mpa-actions,
+.mpa-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mpa-row-actions {
+  justify-content: flex-end;
+}
+
+/* ----------------------------- Buttons ---------------------------------- */
+
+.mpa-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &--primary {
+    color: #fff !important;
+    background: linear-gradient(135deg, var(--mpa-teal), var(--mpa-blue));
+  }
+
+  &--soft {
+    color: var(--mpa-navy) !important;
+    background: var(--mpa-soft);
+    border-color: var(--mpa-line);
+  }
+
+  &--ghost {
+    color: var(--mpa-navy) !important;
+    background: #fff;
+    border-color: var(--mpa-line);
+  }
+}
+
+/* ----------------------------- Tables ----------------------------------- */
+
+.mpa-table-wrap {
+  overflow-x: auto;
+}
+
+.mpa-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+
+  th {
+    text-align: left;
+    padding: 10px;
+    background: var(--mpa-soft-2);
+    color: var(--mpa-text-2);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid var(--mpa-line);
+  }
+
+  td {
+    padding: 11px 10px;
+    border-bottom: 1px solid #eef3f8;
+    vertical-align: top;
+  }
+
+  .num {
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.mpa-sub {
+  display: block;
+  margin-top: 2px;
+}
+
+.mpa-empty,
+.mpa-empty-cell {
+  padding: 18px;
+  text-align: center;
+  color: var(--mpa-text-2);
+}
+
+.mpa-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: capitalize;
+  background: #e2e8f0;
+  color: #334155;
+
+  &--blue,
+  &--state-available {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  &--active,
+  &--state-transferred,
+  &--req-completed {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  &--inactive,
+  &--state-pending,
+  &--req-partial,
+  &--req-processing {
+    background: #fff4dc;
+    color: #9a3412;
+  }
+
+  &--held,
+  &--state-held {
+    background: #ffedd5;
+    color: #c2410c;
+  }
+
+  &--archived,
+  &--state-refunded,
+  &--req-failed {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+}
+
+/* ----------------------------- Holds ------------------------------------ */
+
+.mpa-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+
+  select,
+  input {
+    padding: 8px 10px;
+    border: 1px solid var(--mpa-line);
+    border-radius: 9px;
+    font: inherit;
+    background: #fff;
+  }
+}
+
+.mpa-count {
+  margin-left: auto;
+  color: var(--mpa-text-2);
+  font-size: 13px;
+}
+
+.mpa-hold-list {
+  display: grid;
+  gap: 12px;
+}
+
+.mpa-hold {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--mpa-line);
+  background: #fff;
+
+  &.is-active {
+    border-left: 4px solid var(--mpa-orange);
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    .mpa-tag {
+      margin-left: 0;
+    }
+  }
+
+  dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px 14px;
+  }
+
+  dt {
+    font-size: 12px;
+    color: var(--mpa-text-2);
+    font-weight: 700;
+  }
+
+  dd {
+    margin: 2px 0 0;
+    font-size: 13.5px;
+    word-break: break-all;
+  }
+
+  details summary {
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--mpa-blue);
+  }
+
+  &__amount {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #fff4dc;
+    color: #c2410c;
+    font-weight: 800;
+    font-size: 13px;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    input {
+      padding: 8px 10px;
+      border: 1px solid var(--mpa-line);
+      border-radius: 9px;
+      font: inherit;
+      min-width: 160px;
+    }
+  }
+}
+
+.mpa-overdue {
+  color: var(--mpa-red);
+  font-weight: 700;
+}
+
+/* ----------------------------- Store picker ----------------------------- */
+
+.mpa-picker {
+  display: grid;
+  gap: 8px;
+}
+
+.mpa-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 4px 12px;
+  border: 1px solid var(--mpa-line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--mpa-text-2);
+
+  input {
+    flex: 1;
+    border: 0 !important;
+    padding: 6px 0 !important;
+    outline: none !important;
+    font: inherit;
+  }
+}
+
+.mpa-results {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  max-height: 260px;
+  overflow: auto;
+
+  button {
+    width: 100%;
+    display: grid;
+    gap: 2px;
+    text-align: left;
+    padding: 9px 12px;
+    border-radius: 9px;
+    border: 1px solid var(--mpa-line);
+    background: #fff;
+    cursor: pointer;
+    font: inherit;
+
+    &:hover {
+      background: var(--mpa-soft-2);
+    }
+  }
+}
+
+.mpa-picked {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--mpa-soft);
+  border: 1px solid var(--mpa-line);
+  font-weight: 600;
+}
+
+.mpa-record-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  h2 {
+    margin: 0;
+    font-size: 19px;
+    color: var(--mpa-navy);
+  }
+
+  .mpa-btn {
+    margin-left: auto;
+  }
+}
+
+.mpa-assign select {
+  padding: 9px 11px;
+  border: 1px solid var(--mpa-line);
+  border-radius: 9px;
+  font: inherit;
+}
+
+/* ----------------------------- Misc ------------------------------------- */
+
+.mpa-log {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+
+  &--table li {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 7px 0;
+    border-bottom: 1px solid #eef3f8;
+  }
+}
+
+.mpa-alert {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+
+  &--error {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  &--ok {
+    background: #dcfce7;
+    color: #14532d;
+  }
+}
+
+.mpa-busy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  color: var(--mpa-text-2);
+  font-weight: 600;
+}
+
+.mpa-spin {
+  animation: mpa-spin 0.9s linear infinite;
+}
+
+@keyframes mpa-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

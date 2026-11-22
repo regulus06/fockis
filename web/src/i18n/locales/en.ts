@@ -184,6 +184,7 @@ const en = {
       organizations: "Organizations",
       myChurch: "My Organization",
       planVisit: "Plan a Visit",
+      myBadge: "My Badge",
       myHistory: "My History",
       visitRequests: "Visit Requests",
 
@@ -906,4 +907,4 @@ const en = {
   },
 } as const;
 
-export default en;
+export default en;

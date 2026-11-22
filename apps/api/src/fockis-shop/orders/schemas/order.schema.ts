@@ -349,6 +349,43 @@ export class OrderShipment {
 
   @Prop({ type: Date, default: null })
   payoutAt!: Date | null;
+
+  // Marketplace payout snapshot. Frozen when the seller is paid, so later
+  // commission or fee changes never alter this record.
+
+  @Prop({ type: Number, min: 0, max: 100, default: null })
+  payoutCommissionRate!: number | null;
+
+  @Prop({ type: String, default: "" })
+  payoutCommissionSource!: string;
+
+  @Prop({ type: Number, min: 0, default: null })
+  payoutSubtotal!: number | null;
+
+  /** Seller share before any early payout fee. */
+  @Prop({ type: Number, min: 0, default: null })
+  payoutSellerAmount!: number | null;
+
+  @Prop({ type: Date, default: null })
+  payoutQuoteAt!: Date | null;
+
+  /** "standard" (paid when the label was bought) or "early" (seller asked to be paid early). */
+  @Prop({ type: String, default: "" })
+  payoutType!: string;
+
+  /** Early payout fee kept by Fockis for this shipment, in cents. */
+  @Prop({ type: Number, min: 0, default: null })
+  payoutEarlyFeeCents!: number | null;
+
+  @Prop({ type: String, default: "" })
+  payoutEarlyRequestId!: string;
+
+  /** Set while a transfer is being made, so two transfers can't start at once. */
+  @Prop({ type: String, default: "" })
+  payoutClaimId!: string;
+
+  @Prop({ type: Date, default: null })
+  payoutClaimedAt!: Date | null;
 }
 
 export const OrderShipmentSchema =

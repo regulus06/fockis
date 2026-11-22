@@ -1,0 +1,149 @@
+/* OrgBanner.tsx — ob-* (explicit spacing: global styles touch bare elements) */
+
+.ob {
+  --ob-primary: #0b63d1;
+  --ob-accent: #e3192d;
+  --ob-a: 0.55;
+  position: relative;
+  overflow: hidden;
+  min-height: 150px;
+  border-radius: var(--fo-radius, 14px);
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--ob-primary) 52%, #000) 0%,
+    var(--ob-primary) 58%,
+    color-mix(in srgb, var(--ob-primary) 70%, #4fb3ff) 100%
+  );
+  color: #fff;
+  text-align: left;
+
+  &__photo {
+    position: absolute;
+    inset: 0 0 0 36%;
+    background-size: cover;
+    background-position: center;
+    mask-image: linear-gradient(90deg, transparent 0%, #000 36%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 36%);
+  }
+
+  &--image::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--ob-primary) 30%, #061a4a) 0%,
+      transparent 78%
+    );
+    opacity: calc(var(--ob-a) + 0.25);
+    pointer-events: none;
+  }
+
+  &--solid {
+    background: var(--ob-primary);
+  }
+
+  &__inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    min-height: 150px;
+    padding: 22px clamp(18px, 3vw, 36px);
+  }
+
+  &__text {
+    min-width: 0;
+
+    strong {
+      display: block;
+      max-width: 640px;
+      color: #fff;
+      font-family: var(--fo-display, inherit);
+      font-size: clamp(22px, 2.5vw, 34px);
+      font-weight: 800;
+      line-height: 1.12;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+    }
+
+    i {
+      display: block;
+      width: 210px;
+      max-width: 60%;
+      height: 4px;
+      margin: 10px 0 8px;
+      border-radius: 4px;
+      background: var(--ob-accent);
+    }
+
+    span {
+      display: block;
+      font-size: clamp(14px, 1.4vw, 18px);
+      font-style: italic;
+      line-height: 1.35;
+      opacity: 0.96;
+    }
+  }
+
+  &__logo {
+    flex: none;
+    width: 88px;
+    height: 88px;
+    padding: 6px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.95);
+    object-fit: contain;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+
+    &--empty {
+      display: grid;
+      place-items: center;
+      color: var(--ob-primary);
+      font-size: 38px;
+      font-weight: 800;
+    }
+  }
+
+  &--compact {
+    min-height: 0;
+
+    .ob__inner {
+      min-height: 92px;
+      gap: 12px;
+      padding: 12px 16px;
+    }
+
+    .ob__logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+    }
+
+    .ob__text strong {
+      font-size: 17px;
+    }
+
+    .ob__text i {
+      width: 90px;
+      height: 3px;
+      margin: 6px 0 4px;
+    }
+
+    .ob__text span {
+      font-size: 12px;
+    }
+  }
+}
+
+@media (max-width: 760px) {
+  .ob__photo {
+    inset: 0;
+    opacity: 0.4;
+  }
+
+  .ob__logo {
+    width: 60px;
+    height: 60px;
+  }
+}

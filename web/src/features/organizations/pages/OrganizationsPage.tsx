@@ -9,7 +9,7 @@
  */
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Compass, MapPin, Plus, Search, UsersRound } from "lucide-react";
 
 import { listOrganizations } from "../api/organizationsApi";
@@ -26,6 +26,7 @@ const CATEGORY_IDS = PLATFORM_CATEGORIES.map((c) => c.id);
 
 export default function OrganizationsPage(): React.JSX.Element {
   const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
   const search = params.get("search") ?? "";
   const rawCategory = params.get("category") as PlatformCategory | null;
   const category: PlatformCategory | "" = rawCategory && CATEGORY_IDS.includes(rawCategory) ? rawCategory : "";
@@ -186,7 +187,18 @@ export default function OrganizationsPage(): React.JSX.Element {
               const status = o.currentUserMembershipStatus ?? null;
               const to = `/organizations/${encodeURIComponent(o.id)}`;
               return (
-                <article key={o.id} className="fod-card">
+                <article
+                  key={o.id}
+                  className="fod-card fod-card--clickable"
+                  onClick={(e) => {
+                    // Clicking anywhere on the card opens the organization's public
+                    // website — the same page as the View button. Inner links and
+                    // buttons (View, Ask to join) keep their own behaviour.
+                    if ((e.target as HTMLElement).closest("a, button, input, select, textarea")) return;
+                    if (window.getSelection()?.toString()) return;
+                    navigate(to);
+                  }}
+                >
                   <Link to={to} className="fod-card__top">
                     <OrgLogoBox name={o.name} url={o.logoUrl} icon={cat.icon} className="fod-card__logo" />
                     <span>

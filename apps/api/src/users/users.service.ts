@@ -522,6 +522,21 @@ export class UsersService {
   }
 
 
+  async recordFailedLoginAttempt(
+    userId: string,
+    ip?: string,
+    userAgent?: string,
+    locked = false,
+  ) {
+    return this.userSecurityService.recordFailedLoginAttempt(
+      userId,
+      ip,
+      userAgent,
+      locked,
+    );
+  }
+
+
   async updateActivity(
     userId: string,
   ) {
@@ -549,10 +564,14 @@ export class UsersService {
   }
 
 
+  /**
+   * `forceChange` defaults to the security policy
+   * (force password change after administrator reset).
+   */
   async setPasswordForSecurityReset(
     userId: string,
     newPassword: string,
-    forceChange = true,
+    forceChange?: boolean,
   ) {
     return this.userSecurityService.setPasswordForSecurityReset(
       userId,
@@ -566,11 +585,17 @@ export class UsersService {
     id: string,
     currentPassword: string,
     newPassword: string,
+    options: {
+      tokenIat?: number | null;
+      ip?: string | null;
+      userAgent?: string | null;
+    } = {},
   ) {
     return this.userSecurityService.changePassword(
       id,
       currentPassword,
       newPassword,
+      options,
     );
   }
 
@@ -607,4 +632,4 @@ export class UsersService {
       currentPassword,
     );
   }
-}
+}

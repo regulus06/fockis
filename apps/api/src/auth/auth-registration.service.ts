@@ -133,7 +133,7 @@ export class AuthRegistrationService {
       throw new BadRequestException("Email already exists.");
     }
 
-    this.securityService.validatePassword(password);
+    await this.securityService.validateNewPassword(password);
 
     const hash = await bcrypt.hash(
       password,

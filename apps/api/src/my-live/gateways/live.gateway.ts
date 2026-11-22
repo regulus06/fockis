@@ -429,6 +429,18 @@ export class LiveGateway
       );
     }
 
+    // Organization livestreams: chat and viewer counts only for allowed viewers.
+    if (
+      !(await this.liveService.canViewerAccess(
+        stream,
+        user.userId,
+      ))
+    ) {
+      throw new WsException(
+        "You do not have access to this livestream.",
+      );
+    }
+
     const room =
       this.room(
         streamId,
@@ -739,6 +751,16 @@ export class LiveGateway
     ) {
       throw new WsException(
         "Comments are closed for this LIVE stream.",
+      );
+    }
+
+    // Organization livestreams: only allowed viewers, and only when chat is on.
+    if (
+      !(await this.liveService.canViewerAccess(stream, user.userId)) ||
+      !(await this.liveService.organizationChatAllowed(stream))
+    ) {
+      throw new WsException(
+        "Chat is not available for this livestream.",
       );
     }
 

@@ -169,6 +169,7 @@ home: "Akèy",
 organizations: "Òganizasyon yo",
 myChurch: "Òganizasyon mwen",
 planVisit: "Planifye yon vizit",
+myBadge: "Badj mwen",
 myHistory: "Istwa mwen",
 visitRequests: "Demann vizit",
 
@@ -862,4 +863,4 @@ groups: {
   },
 } as const;
 
-export default ht;
+export default ht;

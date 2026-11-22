@@ -14,6 +14,9 @@ import { MEMBER_ROLE_LABELS, MembershipStatus, type Organization } from "../type
 import { errorMessage } from "../ui/orgUi";
 import type { ShellOrganization, ShellViewer } from "../ui/OrgAppShell";
 
+/** Dispatched (with { organizationId }) after an organization record changes. */
+export const ORG_UPDATED_EVENT = "fockis:organization-updated";
+
 // Same rule as the server (ADMIN_MEMBER_ROLES): leaders and members are not administrators.
 const ADMIN_ROLES = new Set(["owner", "administrator", "pastor_director"]);
 
@@ -61,6 +64,16 @@ export function useOrgAdmin(organizationId: string): OrgAdminState {
   }, [organizationId, tick]);
 
   const reload = useCallback(() => setTick((t) => t + 1), []);
+
+  // Customize Page (logo) and other editors announce organization changes.
+  useEffect(() => {
+    const onUpdated = (e: Event) => {
+      const id = (e as CustomEvent<{ organizationId?: string }>).detail?.organizationId;
+      if (!id || id === organizationId) reload();
+    };
+    window.addEventListener(ORG_UPDATED_EVENT, onUpdated);
+    return () => window.removeEventListener(ORG_UPDATED_EVENT, onUpdated);
+  }, [organizationId, reload]);
 
   const can = useCallback(
     (permission: string) => Boolean(me?.isOwner || (Array.isArray(me?.permissions) && me.permissions.includes(permission))),
