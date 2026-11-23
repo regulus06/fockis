@@ -1,4 +1,4 @@
-import { contentTypeFor, isValidMediaRef, objectKeyFor, parseMediaUrl } from "./media-storage.service";
+import { contentTypeFor, isValidMediaRef, objectKeyFor, parseMediaUrl, parseRange } from "./media-storage.service";
 
 describe("organization media storage helpers", () => {
   const org = "6af924931e00f42af01d9a27";
@@ -23,5 +23,16 @@ describe("organization media storage helpers", () => {
     expect(contentTypeFor(name)).toBe("video/mp4");
     expect(contentTypeFor("x.PNG")).toBe("image/png");
     expect(contentTypeFor("x.bin")).toBe("application/octet-stream");
+  });
+
+  it("parses byte ranges for video seeking", () => {
+    expect(parseRange(undefined, 1000)).toBeNull();
+    expect(parseRange("bytes=0-", 1000)).toEqual({ start: 0, end: 999 });
+    expect(parseRange("bytes=100-199", 1000)).toEqual({ start: 100, end: 199 });
+    expect(parseRange("bytes=900-5000", 1000)).toEqual({ start: 900, end: 999 });
+    expect(parseRange("bytes=-100", 1000)).toEqual({ start: 900, end: 999 });
+    expect(parseRange("bytes=1000-", 1000)).toBe("invalid");
+    expect(parseRange("bytes=5-2", 1000)).toBe("invalid");
+    expect(parseRange("items=0-1", 1000)).toBe("invalid");
   });
 });

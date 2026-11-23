@@ -6,8 +6,8 @@
  *
  * Files keep their existing URLs (/uploads/organization-media/<orgId>/<name>):
  *   - if the file is on this server's disk, the static file server sends it
- *   - otherwise GET …/uploads/organization-media/<orgId>/<name> redirects to a
- *     short-lived signed Google Cloud Storage URL (see media-files.controller)
+ *   - otherwise GET …/uploads/organization-media/<orgId>/<name> streams the
+ *     copy from Google Cloud Storage (see media-files.controller)
  *
  * Object key: organization-media/<orgId>/<name>
  *
@@ -133,15 +133,22 @@ export class MediaStorageService implements OnApplicationBootstrap {
     }
   }
 
-  /** Short-lived link for a file that is only in the bucket (null if missing). */
-  async signedUrl(orgId: string, name: string): Promise<string | null> {
+  /** Size and type of the bucket copy (null if it is not there). */
+  async info(orgId: string, name: string): Promise<{ size: number; contentType: string } | null> {
     if (!isValidMediaRef(orgId, name)) return null;
 
     const key = objectKeyFor(orgId, name);
 
     if (!(await this.cloud.objectExists(key))) return null;
 
-    return this.cloud.getSignedUrl(key, { expiresInSeconds: 60 * 60, responseType: contentTypeFor(name) });
+    const meta = await this.cloud.getObjectInfo(key);
+
+    return { size: meta.size, contentType: contentTypeFor(name) };
+  }
+
+  /** Read the bucket copy, optionally one inclusive byte range. */
+  stream(orgId: string, name: string, range?: { start: number; end: number }) {
+    return this.cloud.openReadStream(objectKeyFor(orgId, name), range);
   }
 
   // ==========================================================================
@@ -181,4 +188,36 @@ export class MediaStorageService implements OnApplicationBootstrap {
 
     return { uploaded, checked };
   }
+}
+
+/**
+ * Parses a single "bytes=start-end" Range header.
+ * Returns null (whole file), a range, or "invalid" (answer 416).
+ */
+export function parseRange(
+  header: string | undefined,
+  size: number,
+): { start: number; end: number } | null | "invalid" {
+  if (!header) return null;
+
+  const match = /^bytes=(\d*)-(\d*)$/.exec(header.trim());
+
+  if (!match || (!match[1] && !match[2]) || size <= 0) return "invalid";
+
+  let start: number;
+  let end: number;
+
+  if (!match[1]) {
+    const suffix = Number(match[2]);
+    if (suffix <= 0) return "invalid";
+    start = Math.max(0, size - suffix);
+    end = size - 1;
+  } else {
+    start = Number(match[1]);
+    end = match[2] ? Math.min(Number(match[2]), size - 1) : size - 1;
+  }
+
+  if (start >= size || start > end) return "invalid";
+
+  return { start, end };
 }
