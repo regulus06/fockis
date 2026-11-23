@@ -900,6 +900,37 @@ export class UniversalPaymentService {
     return this.executeRefund(payment, amount, actorId, reason);
   }
 
+  /**
+   * Internal refund for modules that already checked their own permission
+   * (e.g. a news outlet's finance admin refunding a donation). The payment
+   * must belong to `payerUserId`. Not reachable from any HTTP route.
+   */
+  async refund(
+    payerUserId: string,
+    paymentRef: string,
+    amount?: number,
+    reason = '',
+  ) {
+    const ref = String(paymentRef ?? '').trim();
+    if (!ref) {
+      throw new BadRequestException('Invalid payment ID.');
+    }
+
+    const payment = await this.paymentModel
+      .findOne(
+        Types.ObjectId.isValid(ref)
+          ? { $or: [{ _id: new Types.ObjectId(ref) }, { id: ref }] }
+          : { id: ref },
+      )
+      .exec();
+
+    if (!payment || String(payment.userId) !== String(payerUserId)) {
+      throw new NotFoundException('Payment was not found.');
+    }
+
+    return this.executeRefund(payment, amount, 'internal', reason);
+  }
+
   private async executeRefund(
     payment: PaymentDocument,
     amount: number | undefined,
