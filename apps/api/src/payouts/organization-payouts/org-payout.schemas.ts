@@ -139,13 +139,19 @@ export type OrgPayoutAccountDocument = HydratedDocument<OrgPayoutAccount>;
 
 /* ---------------------------------------------------------------- the ledger */
 
-export type LedgerKind = "income" | "refund";
-export type LedgerStatus = "pending" | "in_payout" | "paid";
+export type LedgerKind = "income" | "refund" | "dispute" | "dispute_won";
+/**
+ * reserved: held while the organization refunds the gift (never paid out).
+ * cancelled: the gift was refunded before payout; it and its refund cancel out.
+ */
+export type LedgerStatus = "pending" | "in_payout" | "paid" | "reserved" | "cancelled";
 
 /**
  * One line of money owed to an organization.
- *   income: a paid gift (gross − Fockis fee = net)
- *   refund: money taken back after a refund (negative net)
+ *   income:      a paid gift (gross − Fockis fee = net)
+ *   refund:      money taken back after a refund (negative net)
+ *   dispute:     money taken back while a card dispute is open (negative net)
+ *   dispute_won: returned when Fockis wins the dispute (positive net)
  * "pending" lines become payable once availableAt has passed.
  */
 @Schema({ timestamps: true, collection: "org_payout_ledger" })
@@ -153,7 +159,7 @@ export class OrgLedgerEntry {
   @Prop({ type: Types.ObjectId, ref: "Organization", required: true, index: true })
   organizationId!: Types.ObjectId;
 
-  @Prop({ type: String, enum: ["income", "refund"], required: true })
+  @Prop({ type: String, enum: ["income", "refund", "dispute", "dispute_won"], required: true })
   kind!: LedgerKind;
 
   /** What the money came from, e.g. "church_gift". */
@@ -167,7 +173,7 @@ export class OrgLedgerEntry {
   @Prop({ type: String, required: true, index: true })
   paymentId!: string;
 
-  /** Unique per entry: "income:<paymentId>" or "refund:<paymentId>:<refundedCents>". */
+  /** Unique per entry: "income:<paymentId>", "refund:<paymentId>:<refundedCents>", "dispute:<id>", "dispute_won:<id>". */
   @Prop({ type: String, required: true, unique: true })
   dedupeKey!: string;
 
@@ -199,7 +205,7 @@ export class OrgLedgerEntry {
   @Prop({ type: Object, default: {} })
   feeRule!: Record<string, unknown>;
 
-  @Prop({ type: String, enum: ["pending", "in_payout", "paid"], default: "pending", index: true })
+  @Prop({ type: String, enum: ["pending", "in_payout", "paid", "reserved", "cancelled"], default: "pending", index: true })
   status!: LedgerStatus;
 
   @Prop({ type: Date, required: true, index: true })

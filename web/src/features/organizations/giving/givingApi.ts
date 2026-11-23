@@ -59,8 +59,14 @@ export interface Gift {
   amount: number;
   currency: string;
   note: string;
-  status: "pending" | "paid" | "failed";
+  status: "pending" | "paid" | "failed" | "refunded";
   receiptNumber: string;
+  coverFee?: number;
+  refundedAmount?: number;
+  refundedAt?: string | null;
+  refundRequested?: boolean;
+  /** Staff only. */
+  refundRequestReason?: string;
   anonymous: boolean;
   giverName: string;
   createdAt: string | null;
@@ -96,6 +102,8 @@ export interface GivingAdmin {
   };
   items: Gift[];
   truncated: boolean;
+  /** Only the owner can refund gifts (before they are paid out). */
+  canRefund?: boolean;
 }
 
 const base = (id: string) => `/organizations/${encodeURIComponent(id)}/giving`;
@@ -111,6 +119,10 @@ export const givingApi = {
   mine: (organizationId: string, signal?: AbortSignal) => churchRequest<{ items: Gift[] }>(`${base(organizationId)}/mine`, { signal }),
   admin: (organizationId: string, query: { fund?: string; from?: string; to?: string }, signal?: AbortSignal) =>
     churchRequest<GivingAdmin>(`${base(organizationId)}/admin`, { query, signal }),
+  refund: (organizationId: string, giftId: string, reason: string) =>
+    churchRequest<Gift>(`${base(organizationId)}/admin/gifts/${encodeURIComponent(giftId)}/refund`, { method: "POST", body: { reason } }),
+  requestRefund: (organizationId: string, giftId: string, reason: string) =>
+    churchRequest<Gift>(`${base(organizationId)}/${encodeURIComponent(giftId)}/refund-request`, { method: "POST", body: { reason } }),
   saveSettings: (organizationId: string, input: Partial<Omit<GivingSettings, "updatedAt" | "saved">>) =>
     churchRequest<GivingSettings>(`${base(organizationId)}/admin/settings`, { method: "PUT", body: input }),
 };

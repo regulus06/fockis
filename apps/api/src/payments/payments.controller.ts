@@ -5,12 +5,19 @@ import {
   Param,
   Post,
   Req,
+  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { ConfirmPaymentDto } from './dto/confirm-payment.dto';
 import { RefundPaymentDto } from './dto/refund-payment.dto';
 import { UniversalPaymentService } from './services/payment.service';
+import { Public } from '../auth/public.decorator';
+import { RbacGuard } from '../admin/rbac/rbac.guard';
+import { Roles } from '../admin/rbac/roles.decorator';
+import { Role } from '../admin/rbac/roles.enum';
+import { SuperAdminGuard } from '../admin/safety/super-admin.guard';
 
 @Controller('payments')
 export class PaymentsController {
@@ -26,7 +33,7 @@ export class PaymentsController {
       req.user?.sub;
 
     if (!id) {
-      throw new Error('Authenticated user ID is missing.');
+      throw new UnauthorizedException('Sign in to continue.');
     }
 
     return String(id);
@@ -54,19 +61,30 @@ export class PaymentsController {
     );
   }
 
+  /**
+   * Refunds are no longer available to the person who paid (they could
+   * refund themselves after receiving the goods or after a church was paid
+   * out). Fockis super admins only. Church owners refund gifts through the
+   * giving page, which checks the gift rules first.
+   */
   @Post(':paymentId/refund')
+  @UseGuards(RbacGuard, SuperAdminGuard)
+  @Roles(Role.SUPER_ADMIN)
   async refund(
     @Req() req: any,
     @Param('paymentId') paymentId: string,
     @Body() dto: RefundPaymentDto,
   ) {
-    return this.payments.refund(
-      this.userId(req),
+    return this.payments.refundAsPlatform(
       paymentId,
-      dto.amount,
+      dto?.amount,
+      this.userId(req),
+      String(dto?.reason ?? ''),
     );
   }
 
+  /** Stripe → Fockis. Public so Stripe can reach it; every event's signature is verified. */
+  @Public()
   @Post('webhook')
   async webhook(
     @Req() req: any,

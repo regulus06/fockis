@@ -9,6 +9,8 @@
  *   GET    /mine                 my own gifts to this church (signed in)
  *   GET    /admin                settings, totals and gifts (giving managers)
  *   PUT    /admin/settings       save settings (giving managers)
+ *   POST   /admin/gifts/:id/refund   owner: refund a gift before it is paid out
+ *   POST   /:giftId/refund-request   giver: ask the church for a refund
  *
  * Permissions are enforced in ChurchGivingService; organization IDs come from
  * the URL and are always checked against the stored gift / membership.
@@ -62,6 +64,20 @@ export class ChurchGivingController {
   @Put('admin/settings')
   saveSettings(@Param('organizationId') organizationId: string, @Body() body: Payload, @Req() req: Request) {
     return this.giving.saveSettings(organizationId, userIdOf(req), body ?? {});
+  }
+
+  /** Owner only: refund a gift in full before it has been paid out to the church. */
+  @Throttle({ default: { limit: 10, ttl: 10 * 60 * 1000 } })
+  @Post('admin/gifts/:giftId/refund')
+  refund(@Param('organizationId') organizationId: string, @Param('giftId') giftId: string, @Body() body: Payload, @Req() req: Request) {
+    return this.giving.refundGift(organizationId, userIdOf(req), giftId, body?.reason);
+  }
+
+  /** The giver asks the church for a refund. */
+  @Throttle({ default: { limit: 5, ttl: 10 * 60 * 1000 } })
+  @Post(':giftId/refund-request')
+  requestRefund(@Param('organizationId') organizationId: string, @Param('giftId') giftId: string, @Body() body: Payload, @Req() req: Request) {
+    return this.giving.requestRefund(organizationId, userIdOf(req), giftId, body?.reason);
   }
 
   @Post(':giftId/confirm')

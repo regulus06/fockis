@@ -17,6 +17,7 @@ import type { Model } from 'mongoose';
 import Stripe from 'stripe';
 
 import { FockisStripeService } from '../../payments/services/stripe.service';
+import { Public } from '../../auth/public.decorator';
 
 import {
   BillingInterval,
@@ -43,6 +44,8 @@ export class StripeWebhookController {
     private readonly webhookEvents: Model<StripeWebhookEvent>,
   ) {}
 
+  // Public so Stripe can reach it (it can't sign in); the signature is verified below.
+  @Public()
   @Post('stripe')
   @HttpCode(HttpStatus.OK)
   async handleStripeWebhook(

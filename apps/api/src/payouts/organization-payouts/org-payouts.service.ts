@@ -292,9 +292,30 @@ export class OrgPayoutsService implements OnModuleInit, OnModuleDestroy {
   /** Takes refunded money back from the organization (negative line). */
   async recordRefund(paymentId: string): Promise<void> {
     const income = (await this.ledgerModel.findOne({ dedupeKey: `income:${paymentId}` }).lean().exec()) as Lean | null;
-    if (!income) return;
+    if (!income || income.status === "cancelled") return;
     const payment = (await this.connection.collection("payments").findOne({ id: paymentId })) as Lean | null;
     if (!payment) return;
+
+    // A partial refund can't cancel a gift held for refunding: let it be paid normally.
+    const fully0 = Number(payment.refundedAmount ?? 0) >= Number(payment.chargedAmount ?? 0) - 0.000001;
+    if (!fully0 && income.status === "reserved") {
+      await this.ledgerModel.updateOne({ _id: income._id, status: "reserved" }, { $set: { status: "pending" } }).exec();
+    }
+
+    // Refunded in full before it was paid out: the gift simply never counts.
+    const fully = Number(payment.refundedAmount ?? 0) >= Number(payment.chargedAmount ?? 0) - 0.000001;
+    if (fully && (income.status === "reserved" || income.status === "pending")) {
+      const hasRefundLines = await this.ledgerModel.exists({ paymentId, kind: { $in: ["refund", "dispute", "dispute_won"] } });
+      if (!hasRefundLines) {
+        const res = await this.ledgerModel
+          .updateOne({ _id: income._id, status: { $in: ["reserved", "pending"] }, payoutId: null }, { $set: { status: "cancelled" } })
+          .exec();
+        if (res.modifiedCount === 1) {
+          await this.audit.record("org_gift_cancelled_by_refund", "organization", String(income.organizationId), "system", { paymentId });
+          return;
+        }
+      }
+    }
     const refundedCharged = toCents(Number(payment.refundedAmount ?? 0));
     const chargedTotal = toCents(Number(payment.chargedAmount ?? 0));
     const previous = (await this.ledgerModel.find({ paymentId, kind: "refund" }).lean().exec()) as Lean[];
@@ -334,6 +355,103 @@ export class OrgPayoutsService implements OnModuleInit, OnModuleDestroy {
       throw e;
     }
     await this.audit.record("org_refund_recorded", "organization", String(income.organizationId), "system", { paymentId, ...add });
+  }
+
+  @OnEvent("payments.disputed", { async: true })
+  async onDisputed(payload: { paymentId?: string; disputeId?: string; status?: string; amountCents?: number; closed?: boolean }) {
+    if (!payload?.paymentId || !payload.disputeId) return;
+    try {
+      await this.recordDispute(payload as Required<typeof payload>);
+    } catch (e) {
+      this.logger.error(`Dispute ${payload.disputeId} could not be applied to the organization ledger: ${this.msg(e)}`);
+    }
+  }
+
+  /**
+   * A card dispute takes the money back from the organization while it is
+   * open; if Fockis wins, it is given back. Stripe's dispute fee is paid by
+   * Fockis (Stripe doesn't allow passing it to connected accounts).
+   */
+  async recordDispute(d: { paymentId: string; disputeId: string; status: string; amountCents: number; closed: boolean }) {
+    const income = (await this.ledgerModel.findOne({ dedupeKey: `income:${d.paymentId}` }).lean().exec()) as Lean | null;
+    if (!income || income.status === "cancelled") return;
+    const payment = (await this.connection.collection("payments").findOne({ id: d.paymentId })) as Lean | null;
+    if (!payment) return;
+    const chargedCents = toCents(Number(payment.chargedAmount ?? 0));
+    const zero = { grossCents: 0, feeCents: 0, netCents: 0 };
+    const won = d.closed && (d.status === "won" || d.status === "warning_closed");
+
+    // Open (or lost): make sure the money is taken back once.
+    const take = refundReversal(
+      { grossCents: Number(income.grossCents), feeCents: Number(income.feeCents), netCents: Number(income.netCents) },
+      Number(d.amountCents),
+      chargedCents,
+      zero,
+    );
+    const base = {
+      organizationId: income.organizationId,
+      sourceType: income.sourceType,
+      sourceId: income.sourceId,
+      paymentId: d.paymentId,
+      stripeMode: income.stripeMode,
+      currency: income.currency,
+      coveredFeeCents: 0,
+      stripeFeeCents: 0,
+      feeRule: income.feeRule ?? {},
+      status: "pending",
+      availableAt: new Date(),
+    };
+    const created = await this.insertOnce({
+      ...base,
+      kind: "dispute",
+      dedupeKey: `dispute:${d.disputeId}`,
+      ...take,
+      description: `Card dispute — ${String(income.description ?? "").slice(0, 170)}`,
+    });
+    if (created) await this.audit.record("org_dispute_recorded", "organization", String(income.organizationId), "system", { paymentId: d.paymentId, disputeId: d.disputeId, ...take });
+
+    if (won) {
+      const returned = await this.insertOnce({
+        ...base,
+        kind: "dispute_won",
+        dedupeKey: `dispute_won:${d.disputeId}`,
+        grossCents: -take.grossCents,
+        feeCents: -take.feeCents,
+        netCents: -take.netCents,
+        description: `Dispute won — ${String(income.description ?? "").slice(0, 170)}`,
+      });
+      if (returned) await this.audit.record("org_dispute_won", "organization", String(income.organizationId), "system", { paymentId: d.paymentId, disputeId: d.disputeId });
+    }
+  }
+
+  private async insertOnce(doc: Lean): Promise<boolean> {
+    try {
+      await this.ledgerModel.create(doc);
+      return true;
+    } catch (e) {
+      if ((e as { code?: number })?.code === 11000) return false;
+      throw e;
+    }
+  }
+
+  /**
+   * Holds a gift so it can't be paid out while the organization refunds it.
+   * Returns false when it was already paid out (or is being paid out).
+   * Gifts recorded before payouts existed have no line: allowed.
+   */
+  async reserveForRefund(paymentId: string): Promise<"reserved" | "no_line" | "paid_out"> {
+    const line = (await this.ledgerModel.findOne({ dedupeKey: `income:${paymentId}` }).lean().exec()) as Lean | null;
+    if (!line) return "no_line";
+    if (line.status === "reserved") return "reserved";
+    const res = await this.ledgerModel
+      .updateOne({ _id: line._id, status: "pending", payoutId: null }, { $set: { status: "reserved" } })
+      .exec();
+    return res.modifiedCount === 1 ? "reserved" : "paid_out";
+  }
+
+  /** The refund didn't go through: the gift can be paid out again. */
+  async releaseReservation(paymentId: string) {
+    await this.ledgerModel.updateOne({ dedupeKey: `income:${paymentId}`, status: "reserved" }, { $set: { status: "pending" } }).exec();
   }
 
   /* ======================================================================
@@ -769,8 +887,8 @@ export class OrgPayoutsService implements OnModuleInit, OnModuleDestroy {
             available: { $sum: { $cond: [{ $and: [{ $eq: ["$status", "pending"] }, { $lte: ["$availableAt", now] }] }, "$netCents", 0] } },
             inPayout: { $sum: { $cond: [{ $eq: ["$status", "in_payout"] }, "$netCents", 0] } },
             paid: { $sum: { $cond: [{ $eq: ["$status", "paid"] }, "$netCents", 0] } },
-            fees: { $sum: "$feeCents" },
-            gross: { $sum: "$grossCents" },
+            fees: { $sum: { $cond: [{ $eq: ["$status", "cancelled"] }, 0, "$feeCents"] } },
+            gross: { $sum: { $cond: [{ $eq: ["$status", "cancelled"] }, 0, "$grossCents"] } },
           },
         },
         { $sort: { _id: 1 } },
@@ -788,7 +906,7 @@ export class OrgPayoutsService implements OnModuleInit, OnModuleDestroy {
   }
 
   private lineView(l: Lean, now: Date) {
-    const state = l.status === "pending" ? (new Date(l.availableAt) > now ? "waiting" : "available") : l.status;
+    const state = l.status === "pending" ? (new Date(l.availableAt) > now ? "waiting" : "available") : l.status === "reserved" ? "refunding" : l.status;
     return {
       id: String(l._id),
       kind: l.kind,

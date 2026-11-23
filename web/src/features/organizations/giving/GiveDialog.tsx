@@ -340,8 +340,24 @@ function MyGiving({ organizationId, onBack }: { organizationId: string; onBack: 
     return () => controller.abort();
   }, [organizationId]);
 
+  const [asking, setAsking] = useState<string | null>(null);
+
+  async function askRefund(g: Gift) {
+    const reason = window.prompt(`Ask the church to refund your ${money(g.amount, g.currency)} gift (${g.fundLabel})? Tell them why:`);
+    if (!reason?.trim()) return;
+    setAsking(g.id);
+    try {
+      const updated = await givingApi.requestRefund(organizationId, g.id, reason.trim());
+      setItems((cur) => (cur ? cur.map((x) => (x.id === g.id ? { ...x, ...updated } : x)) : cur));
+    } catch (err) {
+      setError(errorText(err, "Your request could not be sent."));
+    } finally {
+      setAsking(null);
+    }
+  }
+
   const totals = new Map<string, number>();
-  for (const g of items ?? []) totals.set(g.currency, (totals.get(g.currency) ?? 0) + g.amount);
+  for (const g of items ?? []) if (g.status !== "refunded") totals.set(g.currency, (totals.get(g.currency) ?? 0) + g.amount);
 
   return (
     <div className="gv-body">
@@ -365,7 +381,13 @@ function MyGiving({ organizationId, onBack }: { organizationId: string; onBack: 
                   <small>
                     {fmtDate(g.paidAt)} · {g.receiptNumber}
                     {g.anonymous ? " · anonymous" : ""}
+                    {g.status === "refunded" ? " · refunded" : g.refundRequested ? " · refund requested" : ""}
                   </small>
+                  {g.status === "paid" && !g.refundRequested && (
+                    <button type="button" className="gv-history__refund" disabled={asking !== null} onClick={() => void askRefund(g)}>
+                      {asking === g.id ? "Sending…" : "Request a refund"}
+                    </button>
+                  )}
                 </span>
                 <b>{money(g.amount, g.currency)}</b>
               </li>

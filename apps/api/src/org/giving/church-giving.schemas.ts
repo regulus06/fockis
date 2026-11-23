@@ -104,8 +104,19 @@ export class ChurchGift {
   @Prop({ type: String, default: '', maxlength: 300 })
   note!: string;
 
-  @Prop({ type: String, enum: ['pending', 'paid', 'failed'], default: 'pending', index: true })
-  status!: 'pending' | 'paid' | 'failed';
+  @Prop({ type: String, enum: ['pending', 'paid', 'failed', 'refunded'], default: 'pending', index: true })
+  status!: 'pending' | 'paid' | 'failed' | 'refunded';
+
+  /** Refunded so far, in the gift currency (gift + covered fee). */
+  @Prop({ type: Number, default: 0, min: 0 })
+  refundedAmount!: number;
+
+  @Prop({ type: Date, default: null })
+  refundedAt!: Date | null;
+
+  /** The giver asked the church for a refund. */
+  @Prop({ type: Object, default: null })
+  refundRequest!: { at: Date; reason: string } | null;
 
   @Prop({ type: String, default: null })
   paymentId!: string | null;

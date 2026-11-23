@@ -148,6 +148,16 @@ export class UniversalPaymentService {
   // STRIPE MINOR UNITS
   // ============================================================
 
+  private fromMinorUnits(
+    minor: number,
+    currency: string,
+  ): number {
+    const zeroDecimal = new Set(['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF']);
+    return zeroDecimal.has(String(currency).toUpperCase())
+      ? Number(minor)
+      : Math.round(Number(minor)) / 100;
+  }
+
   private amountInMinorUnits(
     amount: number,
     currency: string,
@@ -858,154 +868,137 @@ export class UniversalPaymentService {
   // REFUND
   // ============================================================
 
-  async refund(
-    userId: string,
-    paymentId: string,
-    amount?: number,
+  /**
+   * Refunds a payment. NOT exposed to the person who paid: refunds are
+   * started by Fockis finance admins (PaymentsController) or by a module
+   * that checked its own rules first (e.g. a church owner refunding a gift
+   * that hasn't been paid out). `actorId` is recorded on the payment.
+   */
+  async refundAsPlatform(
+    paymentRef: string,
+    amount: number | undefined,
+    actorId: string,
+    reason = '',
   ) {
-    if (
-      !paymentId ||
-      !Types.ObjectId.isValid(
-        paymentId,
-      )
-    ) {
-      throw new BadRequestException(
-        'Invalid payment ID.',
-      );
+    const ref = String(paymentRef ?? '').trim();
+    if (!ref) {
+      throw new BadRequestException('Invalid payment ID.');
     }
 
-    const payment =
-      await this.paymentModel
-        .findOne({
-          _id:
-            new Types.ObjectId(
-              paymentId,
-            ),
-
-          userId:
-            this.objectId(userId),
-        })
-        .exec();
+    const payment = await this.paymentModel
+      .findOne(
+        Types.ObjectId.isValid(ref)
+          ? { $or: [{ _id: new Types.ObjectId(ref) }, { id: ref }] }
+          : { id: ref },
+      )
+      .exec();
 
     if (!payment) {
-      throw new NotFoundException(
-        'Payment was not found.',
-      );
+      throw new NotFoundException('Payment was not found.');
     }
 
-    if (
-      !payment.stripePaymentIntentId
-    ) {
+    return this.executeRefund(payment, amount, actorId, reason);
+  }
+
+  private async executeRefund(
+    payment: PaymentDocument,
+    amount: number | undefined,
+    actorId: string,
+    reason: string,
+  ) {
+    if (!payment.stripePaymentIntentId) {
       throw new BadRequestException(
         'This payment does not have a Stripe payment intent.',
       );
     }
 
     if (
-      payment.status !==
-        PaymentStatus.PAID &&
-      payment.status !==
-        PaymentStatus.PARTIALLY_REFUNDED
+      payment.status !== PaymentStatus.PAID &&
+      payment.status !== PaymentStatus.PARTIALLY_REFUNDED
     ) {
       throw new BadRequestException(
         'Only successful payments can be refunded.',
       );
     }
 
-    const alreadyRefunded =
-      Number(
-        payment.refundedAmount ||
-          0,
-      );
-
-    const remaining =
-      Number(
-        payment.chargedAmount,
-      ) -
-      alreadyRefunded;
+    const alreadyRefunded = Number(payment.refundedAmount || 0);
+    const remaining = Number(payment.chargedAmount) - alreadyRefunded;
 
     const requestedAmount =
-      amount === undefined ||
-      amount === null
+      amount === undefined || amount === null
         ? remaining
-        : this.normalizeAmount(
-            amount,
-          );
+        : this.normalizeAmount(amount);
 
-    if (
-      requestedAmount >
-      remaining
-    ) {
+    if (requestedAmount <= 0 || requestedAmount > remaining + 0.000001) {
       throw new BadRequestException(
         'Refund amount exceeds the remaining payment balance.',
       );
     }
 
-    const stripeRefundAmount =
-      this.amountInMinorUnits(
-        requestedAmount,
-        payment.chargedCurrency,
-      );
-
     try {
       await this.stripeService.client.refunds.create(
         {
-          payment_intent:
-            payment.stripePaymentIntentId,
-
-          amount:
-            stripeRefundAmount,
+          payment_intent: payment.stripePaymentIntentId,
+          amount: this.amountInMinorUnits(requestedAmount, payment.chargedCurrency),
+          metadata: {
+            fockisPaymentId: payment.id,
+            refundedBy: String(actorId).slice(0, 100),
+            reason: String(reason ?? '').slice(0, 300),
+          },
+        },
+        {
+          // Same payment, same cumulative amount → the same Stripe refund.
+          idempotencyKey: `fockis_refund_${payment.id}_${Math.round((alreadyRefunded + requestedAmount) * 100)}`,
         },
       );
     } catch (error) {
       const message =
-        error instanceof
-        Stripe.errors.StripeError
+        error instanceof Stripe.errors.StripeError
           ? error.message
           : error instanceof Error
             ? error.message
             : 'Stripe refund failed.';
 
-      throw new BadRequestException(
-        message,
-      );
+      throw new BadRequestException(message);
     }
 
-    payment.refundedAmount =
-      alreadyRefunded +
-      requestedAmount;
-
-    if (
-      payment.refundedAmount >=
-      payment.chargedAmount
-    ) {
-      payment.refundedAmount =
-        payment.chargedAmount;
-
-      payment.status =
-        PaymentStatus.REFUNDED;
-
-      payment.refundedAt =
-        new Date();
-    } else {
-      payment.status =
-        PaymentStatus.PARTIALLY_REFUNDED;
-    }
-
+    // The charge.refunded webhook may also update this; both set the
+    // same cumulative total, so the order doesn't matter.
+    this.applyRefundedTotal(payment, alreadyRefunded + requestedAmount);
+    payment.metadata = {
+      ...(payment.metadata ?? {}),
+      lastRefundBy: String(actorId).slice(0, 100),
+      ...(reason ? { lastRefundReason: String(reason).slice(0, 300) } : {}),
+    };
     await payment.save();
+    this.emitRefunded(payment);
 
-    // Lets organization payouts take the refunded money back.
+    return this.publicPayment(payment, null);
+  }
+
+  /** Sets refundedAmount / status from a cumulative refunded total (major units). */
+  private applyRefundedTotal(payment: PaymentDocument, refundedTotal: number) {
+    const charged = Number(payment.chargedAmount);
+    const total = Math.min(Math.max(0, Math.round(refundedTotal * 100) / 100), charged);
+    if (total <= Number(payment.refundedAmount || 0)) return;
+    payment.refundedAmount = total;
+    if (total >= charged) {
+      payment.status = PaymentStatus.REFUNDED;
+      payment.refundedAt = payment.refundedAt ?? new Date();
+    } else {
+      payment.status = PaymentStatus.PARTIALLY_REFUNDED;
+    }
+  }
+
+  /** Lets organization payouts (and other modules) take refunded money back. */
+  private emitRefunded(payment: PaymentDocument) {
     this.events?.emit('payments.refunded', {
       paymentId: payment.id,
       purpose: payment.purpose,
+      referenceId: payment.referenceId,
       refundedAmount: payment.refundedAmount,
       chargedAmount: payment.chargedAmount,
     });
-
-    return this.publicPayment(
-      payment,
-      null,
-    );
   }
 
   // ============================================================
@@ -1110,6 +1103,75 @@ export class UniversalPaymentService {
       // ========================================================
       // PAYMENT CANCELED
       // ========================================================
+
+      // ========================================================
+      // REFUNDS (also ones made in the Stripe dashboard)
+      // ========================================================
+
+      case 'charge.refunded': {
+        const charge =
+          event.data.object as Stripe.Charge;
+        const intentId =
+          typeof charge.payment_intent === 'string'
+            ? charge.payment_intent
+            : charge.payment_intent?.id;
+        if (!intentId) break;
+
+        const payment = await this.paymentModel
+          .findOne({ stripePaymentIntentId: intentId })
+          .exec();
+        if (!payment) break;
+
+        const before = Number(payment.refundedAmount || 0);
+        this.applyRefundedTotal(
+          payment,
+          this.fromMinorUnits(charge.amount_refunded, charge.currency),
+        );
+        if (Number(payment.refundedAmount || 0) > before) {
+          await payment.save();
+          this.emitRefunded(payment);
+        }
+        break;
+      }
+
+      // ========================================================
+      // DISPUTES (chargebacks)
+      // ========================================================
+
+      case 'charge.dispute.created':
+      case 'charge.dispute.closed': {
+        const dispute =
+          event.data.object as Stripe.Dispute;
+        const intentId =
+          typeof dispute.payment_intent === 'string'
+            ? dispute.payment_intent
+            : dispute.payment_intent?.id;
+        if (!intentId) break;
+
+        const payment = await this.paymentModel
+          .findOne({ stripePaymentIntentId: intentId })
+          .exec();
+        if (!payment) break;
+
+        payment.metadata = {
+          ...(payment.metadata ?? {}),
+          disputeId: dispute.id,
+          disputeStatus: dispute.status,
+        };
+        await payment.save();
+
+        this.events?.emit('payments.disputed', {
+          paymentId: payment.id,
+          purpose: payment.purpose,
+          referenceId: payment.referenceId,
+          disputeId: dispute.id,
+          status: dispute.status,
+          amountCents: dispute.amount,
+          currency: dispute.currency,
+          closed: event.type === 'charge.dispute.closed',
+        });
+        break;
+      }
 
       case 'payment_intent.canceled': {
         const intent =

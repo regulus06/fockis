@@ -44,6 +44,7 @@ export default function GivingAdminPage() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
   const [tick, setTick] = useState(0);
+  const [refunding, setRefunding] = useState<string | null>(null);
 
   useEffect(() => {
     if (!organizationId) return;
@@ -121,6 +122,25 @@ export default function GivingAdminPage() {
     }
   }
 
+  async function refundGift(g: GivingAdmin["items"][number]) {
+    const reason = window.prompt(
+      `Refund ${money(g.amount + (g.coverFee ?? 0), g.currency)} to ${g.anonymous ? "this giver" : g.giverName || "this giver"}?\n\nThe full amount goes back to their card. This can't be undone. Reason (shown in your records):`,
+      g.refundRequestReason || "",
+    );
+    if (reason === null) return;
+    setRefunding(g.id);
+    try {
+      const updated = await givingApi.refund(organizationId, g.id, reason.trim());
+      setData((cur) => (cur ? { ...cur, items: cur.items.map((x) => (x.id === g.id ? { ...x, ...updated } : x)) } : cur));
+      setToast({ tone: "ok", text: "The gift was refunded. The giver has been notified." });
+      setTick((t) => t + 1);
+    } catch (err) {
+      setToast({ tone: "error", text: errorText(err, "The gift could not be refunded.") });
+    } finally {
+      setRefunding(null);
+    }
+  }
+
   function setFund(i: number, patch: Partial<GivingFund>) {
     setDraft((d) => (d ? { ...d, funds: d.funds.map((f, j) => (j === i ? { ...f, ...patch } : f)) } : d));
   }
@@ -128,7 +148,7 @@ export default function GivingAdminPage() {
   function exportCsv() {
     if (!data) return;
     const rows = [["Date", "Giver", "Fund", "Amount", "Currency", "Receipt", "Note"]];
-    for (const g of data.items) rows.push([g.paidAt?.slice(0, 10) ?? "", g.anonymous ? "Anonymous" : g.giverName, g.fundLabel, g.amount.toFixed(2), g.currency, g.receiptNumber, g.note]);
+    for (const g of data.items) rows.push([g.paidAt?.slice(0, 10) ?? "", g.anonymous ? "Anonymous" : g.giverName, g.fundLabel, g.amount.toFixed(2), g.currency, g.receiptNumber, g.status === "refunded" ? `REFUNDED. ${g.note}` : g.note]);
     const csv = rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
     const url = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
@@ -308,6 +328,7 @@ export default function GivingAdminPage() {
                         <th className="gva-num">Amount</th>
                         <th>Receipt</th>
                         <th>Note</th>
+                        <th />
                       </tr>
                     </thead>
                     <tbody>
@@ -318,7 +339,24 @@ export default function GivingAdminPage() {
                           <td>{g.fundLabel}</td>
                           <td className="gva-num">{money(g.amount, g.currency)}</td>
                           <td className="gva-mono">{g.receiptNumber}</td>
-                          <td>{g.note}</td>
+                          <td>
+                            {g.note}
+                            {g.refundRequested && g.status === "paid" && (
+                              <div className="gva-refund-req">
+                                <b>Refund requested</b>
+                                {g.refundRequestReason ? `: ${g.refundRequestReason}` : ""}
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                            {g.status === "refunded" ? (
+                              <span className="pay-badge is-failed">Refunded</span>
+                            ) : data.canRefund ? (
+                              <button type="button" className="gv-btn gv-btn--ghost gv-btn--sm" disabled={refunding !== null} onClick={() => void refundGift(g)}>
+                                {refunding === g.id ? <Loader2 className="gv-spin" aria-hidden="true" /> : null} Refund
+                              </button>
+                            ) : null}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

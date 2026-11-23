@@ -57,6 +57,7 @@ const DEFAULT_SUGGESTED = [10, 25, 50, 100];
 const str = (v: unknown, max: number) => String(v ?? '').trim().slice(0, max);
 const iso = (d: unknown) => (d instanceof Date ? d.toISOString() : d ? new Date(String(d)).toISOString() : null);
 const round2 = (n: number) => Math.round(n * 100) / 100;
+const money2 = (n: number, currency: string) => `${round2(n).toFixed(2)} ${String(currency).toUpperCase()}`;
 const sameId = (a: unknown, b: unknown) => a != null && b != null && String(a) === String(b);
 const slugKey = (v: string) =>
   v
@@ -198,6 +199,11 @@ export class ChurchGivingService {
       note: g.note ?? '',
       status: g.status,
       receiptNumber: g.receiptNumber ?? '',
+      coverFee: Number(g.coverFee ?? 0),
+      refundedAmount: Number(g.refundedAmount ?? 0),
+      refundedAt: iso(g.refundedAt),
+      refundRequested: Boolean(g.refundRequest?.at),
+      refundRequestReason: forStaff ? String(g.refundRequest?.reason ?? '') : '',
       anonymous: Boolean(g.anonymous),
       giverName: forStaff && g.anonymous ? '' : (g.giverName ?? ''),
       createdAt: iso(g.createdAt),
@@ -405,7 +411,7 @@ export class ChurchGivingService {
   /** The signed-in person's own gifts to this church. */
   async myGifts(organizationId: string, userId: string) {
     const rows = (await this.giftModel
-      .find({ organizationId: this.oid(organizationId, 'Organization ID'), userId: new Types.ObjectId(userId), status: 'paid' })
+      .find({ organizationId: this.oid(organizationId, 'Organization ID'), userId: new Types.ObjectId(userId), status: { $in: ['paid', 'refunded'] } })
       .sort({ paidAt: -1 })
       .limit(200)
       .lean()
@@ -447,7 +453,7 @@ export class ChurchGivingService {
       this.giftModel
         .aggregate([{ $match: filter }, { $group: { _id: { fund: '$fundKey', label: '$fundLabel', currency: '$currency' }, total: { $sum: '$amount' }, count: { $sum: 1 } } }, { $sort: { total: -1 } }])
         .exec(),
-      this.giftModel.find(filter).sort({ paidAt: -1 }).limit(500).lean().exec() as Promise<Lean[]>,
+      this.giftModel.find({ ...filter, status: { $in: ['paid', 'refunded'] } }).sort({ paidAt: -1 }).limit(500).lean().exec() as Promise<Lean[]>,
     ]);
 
     return {
@@ -462,7 +468,131 @@ export class ChurchGivingService {
       },
       items: rows.map((g) => this.giftView(g, true)),
       truncated: rows.length >= 500,
+      /** Only the owner can refund gifts (before they are paid out). */
+      canRefund: sameId(org.createdByUserId, userId),
     };
+  }
+
+  /* ======================================================================
+     Refunds
+       - The giver can ask for a refund (the church is notified).
+       - The church owner can refund a gift in full until it has been sent to
+         the church's bank account (payouts). After that, Fockis support
+         handles it and the amount is taken from the church's next payout.
+       - Refunds made by Fockis admins or in Stripe arrive through
+         "payments.refunded" and update the gift the same way.
+     ====================================================================== */
+
+  async requestRefund(organizationId: string, userId: string, giftId: string, reasonInput: unknown) {
+    const gift = (await this.giftModel
+      .findOne({ _id: this.oid(giftId, 'Gift ID'), organizationId: this.oid(organizationId, 'Organization ID') })
+      .lean()
+      .exec()) as Lean | null;
+    if (!gift || !sameId(gift.userId, userId)) throw new NotFoundException('Gift not found.');
+    if (gift.status !== 'paid') throw new BadRequestException('Only a received gift can be refunded.');
+    if (gift.refundRequest?.at) throw new BadRequestException('You already asked for a refund of this gift.');
+    const reason = str(reasonInput, 300);
+    if (reason.length < 3) throw new BadRequestException('Tell the church why you are asking for a refund.');
+    await this.giftModel.updateOne({ _id: gift._id }, { $set: { refundRequest: { at: new Date(), reason } } }).exec();
+
+    const org = (await this.organizationModel.findById(gift.organizationId).select('name createdByUserId').lean().exec()) as Lean | null;
+    if (org) {
+      const managers = await this.managerIds(org._id, org.createdByUserId);
+      await this.bell(
+        managers,
+        'Refund requested',
+        `${gift.anonymous ? 'A giver' : gift.giverName || 'A giver'} asked for a refund of ${Number(gift.amount).toFixed(2)} ${gift.currency} (${gift.fundLabel}): ${reason}`,
+        `/organizations/${String(org._id)}/admin/giving`,
+        String(gift._id),
+      );
+    }
+    const fresh = (await this.giftModel.findById(gift._id).lean().exec()) as Lean;
+    return this.giftView(fresh, false);
+  }
+
+  async refundGift(organizationId: string, userId: string, giftId: string, reasonInput: unknown) {
+    const org = await this.organization(organizationId);
+    if (!sameId(org.createdByUserId, userId)) throw new ForbiddenException("Only the church's owner can refund gifts.");
+    const gift = (await this.giftModel.findOne({ _id: this.oid(giftId, 'Gift ID'), organizationId: org._id }).lean().exec()) as Lean | null;
+    if (!gift) throw new NotFoundException('Gift not found.');
+    if (gift.status !== 'paid' || !gift.paymentId) throw new BadRequestException('Only a received gift can be refunded.');
+    const reason = str(reasonInput, 300) || 'Refunded by the church';
+
+    // The gift must not have been sent to the church's bank yet.
+    let reserved = false;
+    if (this.orgPayouts) {
+      const state = await this.orgPayouts.reserveForRefund(String(gift.paymentId));
+      if (state === 'paid_out') {
+        throw new BadRequestException('This gift was already sent to your bank account. Contact Fockis support to refund it; the amount will be taken from your next payout.');
+      }
+      reserved = state === 'reserved';
+      if (state === 'no_line') {
+        const days = Number((await this.orgPayouts.getConfig()).holdDays ?? 7);
+        const paidAt = gift.paidAt ? new Date(gift.paidAt).getTime() : 0;
+        if (Date.now() - paidAt > days * 86_400_000) {
+          throw new BadRequestException(`Gifts can be refunded here within ${days} days. Contact Fockis support for older gifts.`);
+        }
+      }
+    }
+
+    try {
+      await this.payments.refundAsPlatform(String(gift.paymentId), undefined, userId, reason);
+    } catch (e) {
+      if (reserved) await this.orgPayouts?.releaseReservation(String(gift.paymentId));
+      throw e;
+    }
+    // The "payments.refunded" event updates the gift and the payout ledger;
+    // apply it here too so the response is up to date.
+    await this.applyRefund(String(gift.paymentId));
+    const fresh = (await this.giftModel.findById(gift._id).lean().exec()) as Lean;
+    return this.giftView(fresh, true);
+  }
+
+  @OnEvent('payments.refunded')
+  async onPaymentRefunded(payload: { paymentId?: string; purpose?: string; referenceId?: string }) {
+    if (payload?.purpose !== PaymentPurpose.CHURCH || !String(payload.referenceId ?? '').startsWith(REF_PREFIX) || !payload.paymentId) return;
+    try {
+      await this.applyRefund(payload.paymentId);
+    } catch (err) {
+      this.logger.error(`Refund of church gift payment ${payload.paymentId} could not be applied: ${String(err)}`);
+    }
+  }
+
+  /** Mirrors the payment's refunded total on the gift (idempotent). */
+  private async applyRefund(paymentId: string) {
+    const record = (await this.connection.collection('payments').findOne({ id: paymentId })) as Lean | null;
+    if (!record || !String(record.referenceId).startsWith(REF_PREFIX)) return;
+    const id = String(record.referenceId).slice(REF_PREFIX.length);
+    if (!Types.ObjectId.isValid(id)) return;
+    const gift = (await this.giftModel.findById(id).lean().exec()) as Lean | null;
+    if (!gift || (gift.status !== 'paid' && gift.status !== 'refunded')) return;
+
+    const charged = Number(record.chargedAmount ?? 0);
+    const refunded = Number(record.refundedAmount ?? 0);
+    if (charged <= 0 || refunded <= 0) return;
+    const full = refunded >= charged - 0.000001;
+    const giftTotal = round2(Number(gift.amount) + Number(gift.coverFee ?? 0));
+    const refundedInGiftCurrency = full ? giftTotal : round2((giftTotal * refunded) / charged);
+    if (refundedInGiftCurrency <= Number(gift.refundedAmount ?? 0) && (!full || gift.status === 'refunded')) return;
+
+    const updated = (await this.giftModel
+      .findOneAndUpdate(
+        { _id: gift._id, refundedAmount: { $lt: refundedInGiftCurrency } },
+        { $set: { refundedAmount: refundedInGiftCurrency, ...(full ? { status: 'refunded', refundedAt: new Date() } : {}) } },
+        { new: true },
+      )
+      .lean()
+      .exec()) as Lean | null;
+    if (!updated) return;
+
+    const org = (await this.organizationModel.findById(gift.organizationId).select('name').lean().exec()) as Lean | null;
+    await this.bell(
+      [String(gift.userId)],
+      full ? 'Your gift was refunded' : 'Part of your gift was refunded',
+      `${money2(refundedInGiftCurrency - Number(gift.refundedAmount ?? 0), gift.currency)} for ${gift.fundLabel}${org?.name ? ` to ${org.name}` : ''} is being returned to your card. It can take 5–10 business days to appear.`,
+      `/organizations/${String(gift.organizationId)}#give`,
+      String(gift._id),
+    );
   }
 
   async saveSettings(organizationId: string, userId: string, input: Lean) {
