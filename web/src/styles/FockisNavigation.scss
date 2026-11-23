@@ -69,6 +69,20 @@
   }
 }
 
+/* Leave room for the bar at the end of every page, so the last buttons,
+   cards and form fields can be scrolled above it. A spacer (not padding)
+   because some pages force padding: 0 !important. Maps and Messages are
+   full-height screens that already reserve the space themselves. */
+@media (max-width: 767px) {
+  body.fk-bnav-on:not(.fk-hide-bottom-nav):not(.fk-reel-open)
+    .fk-app-content:not(.fk-app-content--map):not(.fk-app-content--messages)::after {
+    content: "";
+    display: block;
+    height: var(--fk-bnav-h);
+    pointer-events: none;
+  }
+}
+
 /* Full-screen experiences. */
 body.fk-reel-open .fk-bottom-nav,
 body.fk-hide-bottom-nav .fk-bottom-nav {

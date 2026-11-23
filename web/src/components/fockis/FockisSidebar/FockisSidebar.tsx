@@ -42,6 +42,7 @@ import { useAdminSessionStore } from "../../../features/admin/store/adminSession
 import { buildFockisUploadUrl } from "../../../config/fockisConfig";
 import { getToken } from "../../../utils/auth";
 import FockisMark from "../FockisMark";
+import { useHideBottomNav } from "../FockisBottomNav";
 
 import "./FockisNav.scss";
 
@@ -159,6 +160,10 @@ export default function FockisSidebar({ collapsed = false, mobileOpen = false, o
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const signedIn = Boolean(getToken());
+
+  // The phone bottom bar sits above every page layer; hide it while the
+  // drawer is open so it can't cover the drawer's account section.
+  useHideBottomNav(mobileOpen);
 
   const { profile } = useFockisProfile();
   const currentAdmin = useAdminSessionStore((state) => state.currentAdmin);
