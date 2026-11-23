@@ -299,14 +299,25 @@ export default function ChurchWebsiteTemplate({
     return () => controller.abort();
   }, [org.id, signedIn]);
 
-  // Coming back from sign-in with ?give=1 opens the giving form.
+  // ?give=1 (a giving QR code / link, or coming back from sign-in) opens
+  // the giving form; &fund=<key> preselects a fund. Givers must be signed
+  // in, so a signed-out visitor goes to sign-in first and comes back here.
+  const [giveFund, setGiveFund] = useState<string | undefined>(undefined);
   useEffect(() => {
-    if (params.get("give") !== "1" || !giving?.enabled || !signedIn) return;
+    if (params.get("give") !== "1" || !giving?.enabled) return;
+    const fund = params.get("fund") ?? "";
+    if (!signedIn) {
+      navigate("/login?returnTo=" + encodeURIComponent(p("?give=1" + (fund ? "&fund=" + encodeURIComponent(fund) : "") + "#give")), { replace: true });
+      return;
+    }
+    setGiveFund(fund || undefined);
+    setGiveHistory(false);
     setGiveOpen(true);
     const next = new URLSearchParams(params);
     next.delete("give");
+    next.delete("fund");
     setParams(next, { replace: true });
-  }, [params, giving?.enabled, signedIn, setParams]);
+  }, [params, giving?.enabled, signedIn, setParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Sermons + (for viewers who can't read departments) public ministries. */
   useEffect(() => {
@@ -1226,7 +1237,7 @@ export default function ChurchWebsiteTemplate({
           }}
         />
       )}
-      {giveOpen && giving?.enabled && <GiveDialog organizationId={org.id} info={giving} initialHistory={giveHistory} onClose={() => setGiveOpen(false)} />}
+      {giveOpen && giving?.enabled && <GiveDialog organizationId={org.id} info={giving} initialHistory={giveHistory} initialFund={giveFund} onClose={() => (setGiveOpen(false), setGiveFund(undefined))} />}
       {aboutEditor && <PageBrandingEditor organizationId={org.id} pageKey={ABOUT_KEY} pageLabel="About section image" icon={Church} initialTab="banner" onClose={() => setAboutEditor(false)} />}
     </div>
   );

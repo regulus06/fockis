@@ -31,9 +31,9 @@ function viewerCountry(): string {
 
 const fmtDate = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "");
 
-export default function GiveDialog({ organizationId, info, onClose, initialHistory = false }: { organizationId: string; info: GivingInfo; onClose: () => void; /** Open on "My giving" (member portal link). */ initialHistory?: boolean }) {
+export default function GiveDialog({ organizationId, info, onClose, initialHistory = false, initialFund }: { organizationId: string; info: GivingInfo; onClose: () => void; /** Open on "My giving" (member portal link). */ initialHistory?: boolean; /** Fund chosen by a QR code / link (ignored if not offered). */ initialFund?: string }) {
   const [step, setStep] = useState<Step>(initialHistory ? { kind: "history" } : { kind: "form" });
-  const [fundKey, setFundKey] = useState(info.funds[0]?.key ?? "");
+  const [fundKey, setFundKey] = useState((initialFund && info.funds.some((f) => f.key === initialFund) ? initialFund : null) ?? info.funds[0]?.key ?? "");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [anonymous, setAnonymous] = useState(false);

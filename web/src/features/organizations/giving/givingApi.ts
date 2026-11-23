@@ -108,6 +108,16 @@ export interface GivingAdmin {
 
 const base = (id: string) => `/organizations/${encodeURIComponent(id)}/giving`;
 
+export interface GivingQr {
+  url: string;
+  svg: string;
+  /** PNG data URL, 1024 px. */
+  png: string;
+  organizationName: string;
+  fund: { key: string; label: string } | null;
+  givingEnabled: boolean;
+}
+
 export const givingApi = {
   info: (organizationId: string, signal?: AbortSignal) => churchRequest<GivingInfo>(base(organizationId), { signal, anonymous: !getAuthToken() }),
   coverQuote: (organizationId: string, amount: number, signal?: AbortSignal) =>
@@ -116,6 +126,9 @@ export const givingApi = {
     churchRequest<GiftStart>(base(organizationId), { method: "POST", body: input }),
   confirm: (organizationId: string, giftId: string, paymentIntentId: string) =>
     churchRequest<Gift & { thankYouMessage: string }>(`${base(organizationId)}/${encodeURIComponent(giftId)}/confirm`, { method: "POST", body: { paymentIntentId } }),
+  /** QR code that opens the giving form (link built by the server). */
+  qr: (organizationId: string, fund?: string, signal?: AbortSignal) =>
+    churchRequest<GivingQr>(`${base(organizationId)}/qr`, { query: fund ? { fund } : undefined, signal, anonymous: !getAuthToken() }),
   mine: (organizationId: string, signal?: AbortSignal) => churchRequest<{ items: Gift[] }>(`${base(organizationId)}/mine`, { signal }),
   admin: (organizationId: string, query: { fund?: string; from?: string; to?: string }, signal?: AbortSignal) =>
     churchRequest<GivingAdmin>(`${base(organizationId)}/admin`, { query, signal }),

@@ -23,6 +23,7 @@ import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Connection, Model, Types } from 'mongoose';
 import { randomBytes } from 'crypto';
+import * as QRCode from 'qrcode';
 
 import { Organization, OrganizationDocument } from '../organizations/schemas/organization.schema';
 import { Membership, MembershipDocument } from '../members/schemas/membership.schema';
@@ -36,6 +37,7 @@ import { PaymentReceiptService } from '../../payments/services/payment-receipt.s
 import { OrgPayoutsService } from '../../payouts/organization-payouts/org-payouts.service';
 import { ChurchGift, ChurchGiftDocument, ChurchGivingSettings, ChurchGivingSettingsDocument } from './church-giving.schemas';
 import { OrganizationPreferences, OrganizationPreferencesDocument } from '../admin-center/admin-center.schemas';
+import { OrganizationHandlesService } from '../organizations/services/organization-handles.service';
 
 type Lean = Record<string, any>;
 
@@ -99,6 +101,8 @@ export class ChurchGivingService {
     @Optional() private readonly receipts?: PaymentReceiptService,
     /** Records what the church is owed (after the Fockis fee) for payouts. */
     @Optional() private readonly orgPayouts?: OrgPayoutsService,
+    /** Public link name (fockis.com/o/<name>) used in the giving QR code. */
+    @Optional() private readonly handles?: OrganizationHandlesService,
   ) {}
 
   /* ======================================================================
@@ -229,6 +233,55 @@ export class ChurchGivingService {
       minAmount: MIN_AMOUNT,
       signedIn: Boolean(viewerId),
       canManage: await this.canManage(organizationId, viewerId),
+    };
+  }
+
+  /* ======================================================================
+     QR code that opens the giving form (print it, or show it on a screen)
+     ====================================================================== */
+
+  /**
+   * The link is built here from the organization's own public address, never
+   * from anything the caller sends. An optional fund key is accepted only if
+   * it is one of the church's active funds. Public: it encodes a public link.
+   */
+  async givingQr(organizationId: string, fundInput?: string) {
+    const org = (await this.organizationModel
+      .findById(this.oid(organizationId, 'Organization ID'))
+      .select('name status domain handle logoUrl')
+      .lean()
+      .exec()) as Lean | null;
+    if (!org || String(org.status ?? 'active') !== 'active') throw new NotFoundException('Organization not found.');
+    const s = await this.settingsOf(org._id);
+
+    const key = String(fundInput ?? '').trim();
+    const fund = key ? s.funds.find((f: Lean) => f.active !== false && f.key === key) : null;
+    if (key && !fund) throw new BadRequestException('This fund is not available.');
+
+    const site = String(process.env.PUBLIC_SITE_URL || process.env.FRONTEND_URL || 'https://www.fockis.com').trim().replace(/\/+$/, '');
+    let page = `${site}/organizations/${String(org._id)}`;
+    if (this.handles) {
+      try {
+        page = this.handles.publicUrl(await this.handles.ensureHandle(org));
+      } catch (err) {
+        this.logger.warn(`Giving QR: no public name for ${String(org._id)}: ${(err as Error).message}`);
+      }
+    }
+    const url = `${page}?give=1${fund ? `&fund=${encodeURIComponent(String(fund.key))}` : ''}`;
+
+    const options = { errorCorrectionLevel: 'M' as const, margin: 2 };
+    const [svg, png] = await Promise.all([
+      QRCode.toString(url, { ...options, type: 'svg' }),
+      QRCode.toDataURL(url, { ...options, width: 1024 }),
+    ]);
+
+    return {
+      url,
+      svg,
+      png,
+      organizationName: String(org.name ?? ''),
+      fund: fund ? { key: String(fund.key), label: String(fund.label ?? '') } : null,
+      givingEnabled: s.enabled,
     };
   }
 

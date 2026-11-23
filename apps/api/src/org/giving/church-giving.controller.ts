@@ -6,6 +6,7 @@
  *   GET    /                     public: is giving on, funds, currency (any visitor)
  *   POST   /                     start a gift (signed in) → Stripe client secret
  *   POST   /:giftId/confirm      after Stripe confirms the card (signed in)
+ *   GET    /qr?fund=             public: QR code that opens the giving form
  *   GET    /mine                 my own gifts to this church (signed in)
  *   GET    /admin                settings, totals and gifts (giving managers)
  *   PUT    /admin/settings       save settings (giving managers)
@@ -49,6 +50,13 @@ export class ChurchGivingController {
   @Post()
   start(@Param('organizationId') organizationId: string, @Body() body: Payload, @Req() req: Request) {
     return this.giving.startGift(organizationId, userIdOf(req), body ?? {});
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 60, ttl: 60 * 1000 } })
+  @Get('qr')
+  qr(@Param('organizationId') organizationId: string, @Query('fund') fund?: string) {
+    return this.giving.givingQr(organizationId, typeof fund === 'string' ? fund.slice(0, 60) : undefined);
   }
 
   @Get('mine')

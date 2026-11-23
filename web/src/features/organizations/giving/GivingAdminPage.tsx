@@ -13,6 +13,7 @@ import { Banknote, Download, ExternalLink, HandHeart, Loader2, Plus, Save, Trash
 
 import { useOrgAdmin } from "../hooks/useOrgAdmin";
 import OrgAppShell from "../ui/OrgAppShell";
+import GivingQrCard from "./GivingQrCard";
 import { givingApi, money, type GivingAdmin, type GivingFund, type Total } from "./givingApi";
 import "../ui/fockisOrgTheme.scss";
 import "./giving.scss";
@@ -218,6 +219,8 @@ export default function GivingAdminPage() {
                 </div>
               ))}
             </section>
+
+            <GivingQrCard organizationId={organizationId} funds={data.settings.funds} enabled={data.settings.enabled} />
 
             <section className="gva-panel">
               <h2>Settings</h2>
