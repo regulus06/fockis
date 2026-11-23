@@ -118,6 +118,13 @@ export class Payment {
   })
   refundedAt!: Date | null;
 
+  /** Set when the payer's receipt was sent (PaymentReceiptService). */
+  @Prop({
+    type: Date,
+    default: null,
+  })
+  receiptSentAt!: Date | null;
+
   @Prop({
     type: Number,
     default: 0,

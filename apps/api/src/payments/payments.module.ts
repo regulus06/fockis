@@ -19,6 +19,12 @@ import {
 
 import { UsersModule } from "../users/users.module";
 
+import { NotificationsModule } from "../notifications/notifications.module";
+
+import { PaymentReceiptService } from "./services/payment-receipt.service";
+
+import { RegistrationMailer } from "../events/registrations/registration-mailer";
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -29,6 +35,8 @@ import { UsersModule } from "../users/users.module";
     ]),
 
     forwardRef(() => UsersModule),
+
+    NotificationsModule,
   ],
 
   controllers: [
@@ -40,6 +48,8 @@ import { UsersModule } from "../users/users.module";
     CurrencyService,
     ExchangeRateService,
     FockisStripeService,
+    PaymentReceiptService,
+    RegistrationMailer,
   ],
 
   exports: [
@@ -47,6 +57,7 @@ import { UsersModule } from "../users/users.module";
     CurrencyService,
     ExchangeRateService,
     FockisStripeService,
+    PaymentReceiptService,
   ],
 })
 export class PaymentsModule {}

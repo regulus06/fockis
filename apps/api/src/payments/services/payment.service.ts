@@ -733,6 +733,17 @@ export class UniversalPaymentService {
     }
 
     // ==========================================================
+    // RECEIPT (every purpose). PaymentReceiptService sends the
+    // payer's receipt email + notification once per payment.
+    // ==========================================================
+
+    this.events?.emit('payments.paid', {
+      paymentId: payment.id,
+      purpose: payment.purpose,
+      userId,
+    });
+
+    // ==========================================================
     // FOCKIS ID
     // ==========================================================
 

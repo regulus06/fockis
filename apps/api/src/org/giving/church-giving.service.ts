@@ -18,7 +18,7 @@
  * -----------------------------------------------------------------------------
  */
 
-import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, Optional } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Connection, Model, Types } from 'mongoose';
@@ -32,6 +32,7 @@ import { MembershipStatus } from '../enums/membership-status.enum';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { UniversalPaymentService } from '../../payments/services/payment.service';
 import { PaymentPurpose } from '../../payments/constants/payment-purpose.constants';
+import { PaymentReceiptService } from '../../payments/services/payment-receipt.service';
 import { ChurchGift, ChurchGiftDocument, ChurchGivingSettings, ChurchGivingSettingsDocument } from './church-giving.schemas';
 import { OrganizationPreferences, OrganizationPreferencesDocument } from '../admin-center/admin-center.schemas';
 
@@ -92,6 +93,8 @@ export class ChurchGivingService {
     private readonly members: MembersService,
     private readonly notifications: NotificationsService,
     private readonly payments: UniversalPaymentService,
+    /** Emails the giver's receipt (with the church's thank-you message). */
+    @Optional() private readonly receipts?: PaymentReceiptService,
   ) {}
 
   /* ======================================================================
@@ -351,6 +354,18 @@ export class ChurchGivingService {
       `/organizations/${orgId}#give`,
       String(gift._id),
     );
+    // Email receipt + thank-you (the notification above is the in-app one).
+    const givingSettings = await this.settingsOf(org._id);
+    await this.receipts
+      ?.sendReceipt(record.id, {
+        receiptNumber: String(updated.receiptNumber ?? ''),
+        description: `${gift.fundLabel} — ${org.name}`,
+        payeeName: String(org.name ?? ''),
+        thankYou: String(givingSettings.thankYouMessage ?? ''),
+        link: `/organizations/${orgId}#give`,
+        notify: false,
+      })
+      .catch((e) => this.logger.warn(`Gift receipt email not sent: ${e?.message ?? e}`));
     // Settings & Roles → Notifications → Donation notifications (on unless turned off).
     const prefs = (await this.prefsModel.findOne({ organizationId: org._id }).select('notifications').lean().exec()) as Lean | null;
     if (prefs?.notifications?.donations === false) return;
