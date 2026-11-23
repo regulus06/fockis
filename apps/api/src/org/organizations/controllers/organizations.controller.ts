@@ -10,8 +10,12 @@ import {
   Query,
   Req,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+
+import { Public } from '../../../auth/public.decorator';
+import { OptionalJwtAuthGuard } from '../../../auth/optional-jwt-auth.guard';
 
 import {
   FileInterceptor,
@@ -589,6 +593,11 @@ export class OrganizationsController {
      GET /church/organizations/:organizationId
   ========================================================================== */
 
+  // Public: the church page (fockis.com/o/<name>, QR codes) must open for
+  // signed-out visitors. Signed-in viewers still get their role/permissions;
+  // anonymous viewers get the public profile only (see the service).
+  @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Get(':organizationId')
   async getById(
     @Param('organizationId')
@@ -1141,4 +1150,4 @@ export class OrganizationsController {
         actorUserId,
       );
   }
-}
+}

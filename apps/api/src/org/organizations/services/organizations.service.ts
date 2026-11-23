@@ -2579,6 +2579,30 @@ export class OrganizationsService {
             ChurchPermission.ManageLeadership,
       );
 
+    /*
+     * Signed-out visitors (public church page, QR codes, search engines) get
+     * the public profile only: no leader emails, no owner ID, and no
+     * locations when the organization hides them from the public.
+     */
+    const anonymous = !viewerUserId;
+    let visibleBranches = branches;
+    if (anonymous) {
+      const prefs = (await this.organizationModel.db
+        .collection('organization_preferences')
+        .findOne({ organizationId: organization._id }, { projection: { showLocationsPublicly: 1 } })) as { showLocationsPublicly?: boolean } | null;
+      if (prefs?.showLocationsPublicly === false) visibleBranches = [];
+    }
+    const visibleLeadership = anonymous
+      ? leadership.map((l) => ({
+          ...l,
+          user: {
+            ...l.user,
+            email: null,
+            displayName: String(l.user?.displayName ?? '').includes('@') ? 'Church Member' : l.user?.displayName,
+          },
+        }))
+      : leadership;
+
     return {
       id:
         organizationId,
@@ -2641,7 +2665,7 @@ export class OrganizationsService {
         organization.status,
 
       createdByUserId:
-        ownerUserId,
+        anonymous ? null : ownerUserId,
 
       currentUserIsOwner,
 
@@ -2653,9 +2677,9 @@ export class OrganizationsService {
 
       canManage,
 
-      leadership,
+      leadership: visibleLeadership,
 
-      branches,
+      branches: visibleBranches,
 
       counts: {
         members:
@@ -2666,7 +2690,7 @@ export class OrganizationsService {
         groups,
 
         branches:
-          branches.length,
+          visibleBranches.length,
 
         upcomingEvents,
       },
@@ -3917,4 +3941,4 @@ export class OrganizationsService {
       permissions,
     };
   }
-}
+}
