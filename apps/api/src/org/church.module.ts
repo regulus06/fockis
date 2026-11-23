@@ -1,3 +1,12 @@
+import { NotificationsModule } from '../notifications/notifications.module';
+import { MessagesModule } from '../messages/messages.module';
+import { RegistrationMailer } from '../events/registrations/registration-mailer';
+import { CommunitiesController, GroupContentController } from './communities/communities.controller';
+import { CommunityFinanceService } from './communities/community-finance.service';
+import { CommunityContentService } from './communities/community-content.service';
+import { CommunitiesService } from './communities/communities.service';
+import { CommunityAccessService } from './communities/community-access.service';
+import { COMMUNITY_MODELS } from './communities/community.schemas';
 /**
  * church.module.ts
  * -----------------------------------------------------------------------------
@@ -233,6 +242,8 @@ import { OrganizationFollowController } from './followers/organization-follow.co
 
 @Module({
   imports: [
+    MessagesModule,
+    NotificationsModule,
     // ------------------------------------------------------------------------
     // ORGANIZATION BADGES
     // ------------------------------------------------------------------------
@@ -256,6 +267,7 @@ import { OrganizationFollowController } from './followers/organization-follow.co
     // ------------------------------------------------------------------------
 
     MongooseModule.forFeature([
+    ...COMMUNITY_MODELS,
       // Followers of an organization's public updates (not membership).
       { name: OrganizationFollow.name, schema: OrganizationFollowSchema },
 
@@ -410,6 +422,8 @@ import { OrganizationFollowController } from './followers/organization-follow.co
   // ==========================================================================
 
   controllers: [
+    CommunitiesController,
+    GroupContentController,
     // Before OrganizationsController so "domain-availability" is not read as an ID.
     OrganizationDashboardController,
     OrganizationFollowController,
@@ -435,6 +449,11 @@ import { OrganizationFollowController } from './followers/organization-follow.co
   // ==========================================================================
 
   providers: [
+    CommunityAccessService,
+    CommunitiesService,
+    CommunityContentService,
+    CommunityFinanceService,
+    RegistrationMailer,
     OrganizationsService,
     LeadershipService,
     BranchesService,

@@ -296,6 +296,47 @@ export class ChurchMediaService {
     }
   }
 
+  async storeAuthorizedUpload(organizationId: string, file?: UploadedMediaFile, onlyType?: ChurchMediaType) {
+    const orgId = this.oid(organizationId, "organization ID");
+    try {
+      if (onlyType && MEDIA_UPLOAD_TYPES[String(file?.mimetype ?? "").toLowerCase()]?.type !== onlyType) {
+        throw new BadRequestException("Choose an image (JPG, PNG, WebP or GIF).");
+      }
+      return await this.moveIntoLibrary(String(orgId), file);
+    } catch (error) {
+      if (file?.path) await fs.unlink(file.path).catch(() => undefined);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a file stored by storeAuthorizedUpload (caller has checked the
+   * permission). Only files inside this organization's folder are touched.
+   */
+  async deleteAuthorizedUpload(organizationId: string, url?: string | null): Promise<void> {
+    await this.deleteUploadedFile(String(this.oid(organizationId, "organization ID")), url);
+  }
+
+  private async moveIntoLibrary(orgId: string, file?: UploadedMediaFile) {
+      if (!file?.path) throw new BadRequestException("Choose a file to upload.");
+      const kind = MEDIA_UPLOAD_TYPES[String(file.mimetype ?? "").toLowerCase()];
+      if (!kind) throw new BadRequestException("This file type is not supported.");
+
+      const directory = join(MEDIA_UPLOAD_ROOT, String(orgId));
+      await fs.mkdir(directory, { recursive: true });
+      const name = basename(file.path);
+      if (!STORED_NAME.test(name)) throw new BadRequestException("Invalid upload.");
+      await fs.rename(file.path, join(directory, name));
+
+      return {
+        fileUrl: `${MEDIA_PUBLIC_PREFIX}/${String(orgId)}/${name}`,
+        fileName: String(file.originalname ?? name).slice(0, 255),
+        mimeType: file.mimetype ?? null,
+        fileSize: file.size ?? null,
+        mediaType: kind.type,
+      };
+  }
+
   private async deleteUploadedFile(organizationId: string, url?: string | null): Promise<void> {
     const prefix = `${MEDIA_PUBLIC_PREFIX}/${organizationId}/`;
     if (!url || !url.startsWith(prefix)) return;
