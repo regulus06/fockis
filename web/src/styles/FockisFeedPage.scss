@@ -2085,6 +2085,10 @@ body {
        without Safari's toolbars, which hid the account section / Log out. */
     bottom: 0 !important;
     height: auto !important;
+    /* FockisSidebar.scss gives phone drawers min/max-height: 100dvh; that
+       would make this drawer (which starts 60px down) a full screen tall. */
+    min-height: 0 !important;
+    max-height: none !important;
 
     max-width: min(310px, 86vw) !important;
     min-width: 0 !important;
@@ -2174,6 +2178,10 @@ body {
        without Safari's toolbars, which hid the account section / Log out. */
     bottom: 0 !important;
     height: auto !important;
+    /* FockisSidebar.scss gives phone drawers min/max-height: 100dvh; that
+       would make this drawer (which starts 60px down) a full screen tall. */
+    min-height: 0 !important;
+    max-height: none !important;
 
     margin: 0 !important;
     padding: 0 !important;
@@ -2251,6 +2259,10 @@ body {
        without Safari's toolbars, which hid the account section / Log out. */
     bottom: 0 !important;
     height: auto !important;
+    /* FockisSidebar.scss gives phone drawers min/max-height: 100dvh; that
+       would make this drawer (which starts 60px down) a full screen tall. */
+    min-height: 0 !important;
+    max-height: none !important;
 
     z-index: 100001 !important;
   }
@@ -2261,6 +2273,10 @@ body {
        without Safari's toolbars, which hid the account section / Log out. */
     bottom: 0 !important;
     height: auto !important;
+    /* FockisSidebar.scss gives phone drawers min/max-height: 100dvh; that
+       would make this drawer (which starts 60px down) a full screen tall. */
+    min-height: 0 !important;
+    max-height: none !important;
 
     z-index: 100000 !important;
   }
