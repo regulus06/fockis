@@ -15,7 +15,7 @@ import { ArrowLeft, CheckCircle2, HandHeart, History, Loader2, Lock, ShieldCheck
 
 import StripeProvider from "../../payments/StripeProvider";
 import CheckoutForm from "../../payments/components/CheckoutForm";
-import { givingApi, money, type Gift, type GiftStart, type GivingInfo } from "./givingApi";
+import { givingApi, money, type CoverQuote, type Gift, type GiftStart, type GivingInfo } from "./givingApi";
 import "./giving.scss";
 
 type Step = { kind: "form" } | { kind: "pay"; start: GiftStart } | { kind: "done"; gift: Gift & { thankYouMessage: string } } | { kind: "history" };
@@ -40,6 +40,8 @@ export default function GiveDialog({ organizationId, info, onClose, initialHisto
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cardComplete, setCardComplete] = useState(false);
+  const [coverFee, setCoverFee] = useState(false);
+  const [quote, setQuote] = useState<CoverQuote | null>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && !busy && onClose();
@@ -54,6 +56,29 @@ export default function GiveDialog({ organizationId, info, onClose, initialHisto
 
   const fund = info.funds.find((f) => f.key === fundKey) ?? null;
   const value = Number(amount);
+  const validAmount = value >= info.minAmount && value <= 100000;
+
+  // "Add the fee so the church receives the full gift" (the server recalculates it).
+  useEffect(() => {
+    if (!validAmount) {
+      setQuote(null);
+      return;
+    }
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      givingApi
+        .coverQuote(organizationId, Math.round(value * 100) / 100, controller.signal)
+        .then(setQuote)
+        .catch(() => !controller.signal.aborted && setQuote(null));
+    }, 300);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [organizationId, value, validAmount]);
+
+  const canCover = Boolean(quote?.enabled && quote.cover > 0 && validAmount);
+  const total = validAmount ? Math.round((value + (coverFee && canCover ? quote!.cover : 0)) * 100) / 100 : 0;
 
   async function begin(e: FormEvent) {
     e.preventDefault();
@@ -62,7 +87,7 @@ export default function GiveDialog({ organizationId, info, onClose, initialHisto
     setBusy(true);
     setError(null);
     try {
-      const start = await givingApi.start(organizationId, { fundKey: fund.key, amount: Math.round(value * 100) / 100, note: note.trim() || undefined, anonymous, country: viewerCountry() });
+      const start = await givingApi.start(organizationId, { fundKey: fund.key, amount: Math.round(value * 100) / 100, note: note.trim() || undefined, anonymous, country: viewerCountry(), coverFee: coverFee && canCover });
       setCardComplete(false);
       setStep({ kind: "pay", start });
     } catch (err) {
@@ -74,6 +99,7 @@ export default function GiveDialog({ organizationId, info, onClose, initialHisto
 
   function again() {
     setAmount("");
+    setCoverFee(false);
     setNote("");
     setError(null);
     setStep({ kind: "form" });
@@ -150,6 +176,18 @@ export default function GiveDialog({ organizationId, info, onClose, initialHisto
               </span>
             </label>
 
+            {canCover && (
+              <label className="gv-check">
+                <input type="checkbox" checked={coverFee} onChange={(e) => setCoverFee(e.target.checked)} />
+                <span>
+                  Add {money(quote!.cover, info.currency)} to cover the fees
+                  <small>
+                    So {info.organization.name} receives your full {money(value, info.currency)}.
+                  </small>
+                </span>
+              </label>
+            )}
+
             {error && (
               <p className="gv-error" role="alert">
                 {error}
@@ -158,7 +196,7 @@ export default function GiveDialog({ organizationId, info, onClose, initialHisto
 
             <button type="submit" className="gv-btn gv-btn--primary gv-btn--block" disabled={busy || !fund}>
               {busy ? <Loader2 className="gv-spin" aria-hidden="true" /> : <Lock aria-hidden="true" />}
-              {value >= info.minAmount ? `Continue to payment · ${money(value, info.currency)}` : "Continue to payment"}
+              {validAmount ? `Continue to payment · ${money(total, info.currency)}` : "Continue to payment"}
             </button>
             <p className="gv-secure">
               <ShieldCheck aria-hidden="true" /> Secure card payment through Fockis. Your card details go directly to Stripe and are never stored by Fockis or the church.
@@ -172,7 +210,10 @@ export default function GiveDialog({ organizationId, info, onClose, initialHisto
         {step.kind === "pay" && (
           <div className="gv-body">
             <div className="gv-summary">
-              <span>{step.start.fundLabel}</span>
+              <span>
+                {step.start.fundLabel}
+                {step.start.coverFee ? <small> · includes {money(step.start.coverFee, info.currency)} to cover fees</small> : null}
+              </span>
               <b>{money(step.start.amount, step.start.currency)}</b>
             </div>
             <StripeProvider>

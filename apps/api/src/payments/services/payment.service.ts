@@ -994,6 +994,14 @@ export class UniversalPaymentService {
 
     await payment.save();
 
+    // Lets organization payouts take the refunded money back.
+    this.events?.emit('payments.refunded', {
+      paymentId: payment.id,
+      purpose: payment.purpose,
+      refundedAmount: payment.refundedAmount,
+      chargedAmount: payment.chargedAmount,
+    });
+
     return this.publicPayment(
       payment,
       null,

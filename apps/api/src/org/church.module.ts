@@ -47,6 +47,8 @@ import { CommunityContentService } from './communities/community-content.service
 import { CommunityFinanceService } from './communities/community-finance.service';
 // Give Online (tithes, offerings, special gifts) on the church website.
 import { ChurchGivingController } from './giving/church-giving.controller';
+import { OrgPayoutsController } from './giving/org-payouts.controller';
+import { PayoutsModule } from '../payouts/payouts.module';
 import { ChurchGivingService } from './giving/church-giving.service';
 import { ChurchGift, ChurchGiftSchema, ChurchGivingSettings, ChurchGivingSettingsSchema } from './giving/church-giving.schemas';
 // Settings & Roles (Organization Administration Center): preferences, audit log.
@@ -324,6 +326,8 @@ import { PageBrandingController } from './page-branding/page-branding.controller
 
     // Group contributions use the existing universal payment service.
     forwardRef(() => PaymentsModule),
+    // Organization payouts (Fockis fee, scheduled transfers to the organization).
+    PayoutsModule,
     MessagesModule,
 
     // ------------------------------------------------------------------------
@@ -531,6 +535,7 @@ import { PageBrandingController } from './page-branding/page-branding.controller
     MemberProfileController,
     ChurchRequestsController,
     ChurchGivingController,
+    OrgPayoutsController,
     AdminCenterController,
     OrganizationsController,
     LeadershipController,

@@ -94,6 +94,10 @@ export class ChurchGift {
   @Prop({ type: Number, required: true, min: 0 })
   amount!: number;
 
+  /** Added by the giver so the church receives the full amount (same currency). */
+  @Prop({ type: Number, default: 0, min: 0 })
+  coverFee!: number;
+
   @Prop({ type: String, required: true, uppercase: true, maxlength: 3 })
   currency!: string;
 

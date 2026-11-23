@@ -33,6 +33,7 @@ import { NotificationsService } from '../../notifications/notifications.service'
 import { UniversalPaymentService } from '../../payments/services/payment.service';
 import { PaymentPurpose } from '../../payments/constants/payment-purpose.constants';
 import { PaymentReceiptService } from '../../payments/services/payment-receipt.service';
+import { OrgPayoutsService } from '../../payouts/organization-payouts/org-payouts.service';
 import { ChurchGift, ChurchGiftDocument, ChurchGivingSettings, ChurchGivingSettingsDocument } from './church-giving.schemas';
 import { OrganizationPreferences, OrganizationPreferencesDocument } from '../admin-center/admin-center.schemas';
 
@@ -95,6 +96,8 @@ export class ChurchGivingService {
     private readonly payments: UniversalPaymentService,
     /** Emails the giver's receipt (with the church's thank-you message). */
     @Optional() private readonly receipts?: PaymentReceiptService,
+    /** Records what the church is owed (after the Fockis fee) for payouts. */
+    @Optional() private readonly orgPayouts?: OrgPayoutsService,
   ) {}
 
   /* ======================================================================
@@ -236,6 +239,12 @@ export class ChurchGivingService {
     if (!fund) throw new BadRequestException('Choose what your gift is for.');
     const amount = this.amountOf(input.amount);
     const currency = s.currency;
+    // Optional: the giver adds the Fockis fee so the church receives the full gift.
+    let coverFee = 0;
+    if (input.coverFee === true && this.orgPayouts) {
+      const quote = await this.orgPayouts.coverQuote(organizationId, amount, currency);
+      if (quote.enabled) coverFee = round2(quote.cover);
+    }
     const membership = (await this.members.getMembershipOrNull(organizationId, userId)) as unknown as Lean | null;
     const giverName = str(membership?.profile?.displayName, 120) || (await this.userName(userId));
 
@@ -248,6 +257,7 @@ export class ChurchGivingService {
       fundKey: fund.key,
       fundLabel: fund.label,
       amount,
+      coverFee,
       currency,
       note: str(input.note, 300),
       status: 'pending',
@@ -256,7 +266,7 @@ export class ChurchGivingService {
     const res = (await this.payments.createPayment(userId, {
       purpose: PaymentPurpose.CHURCH,
       referenceId: `${REF_PREFIX}${String(gift._id)}`,
-      baseAmount: amount,
+      baseAmount: round2(amount + coverFee),
       baseCurrency: currency,
       country: /^[A-Za-z]{2}$/.test(String(input.country ?? '')) ? String(input.country).toUpperCase() : 'US',
       idempotencyKey: `church-gift-${String(gift._id)}`,
@@ -275,6 +285,8 @@ export class ChurchGivingService {
       amount: res.chargedAmount,
       currency: res.chargedCurrency,
       fundLabel: fund.label,
+      giftAmount: amount,
+      coverFee,
     };
   }
 
@@ -319,7 +331,7 @@ export class ChurchGivingService {
     if (!gift || gift.status === 'paid') return;
     const amount = Number(record.baseAmount ?? record.chargedAmount);
     const currency = String(record.baseCurrency ?? record.chargedCurrency).toUpperCase();
-    if (!sameId(gift.userId, record.userId) || currency !== String(gift.currency).toUpperCase() || Math.abs(amount - Number(gift.amount)) > 0.005) {
+    if (!sameId(gift.userId, record.userId) || currency !== String(gift.currency).toUpperCase() || Math.abs(amount - round2(Number(gift.amount) + Number(gift.coverFee ?? 0))) > 0.005) {
       this.logger.error(`Payment ${record.id} does not match church gift ${id}.`);
       return;
     }
@@ -354,6 +366,17 @@ export class ChurchGivingService {
       `/organizations/${orgId}#give`,
       String(gift._id),
     );
+    // What the church is owed after the Fockis fee (paid out on its schedule).
+    await this.orgPayouts
+      ?.recordIncome({
+        organizationId: orgId,
+        sourceType: 'church_gift',
+        sourceId: String(gift._id),
+        paymentId: record.id,
+        description: `${gift.fundLabel} — ${gift.anonymous ? 'Anonymous' : gift.giverName || 'Giver'}`,
+        coveredFee: Number(gift.coverFee ?? 0),
+      })
+      .catch((e) => this.logger.error(`Gift ${String(gift._id)} could not be added to payouts: ${e?.message ?? e}`));
     // Email receipt + thank-you (the notification above is the in-app one).
     const givingSettings = await this.settingsOf(org._id);
     await this.receipts

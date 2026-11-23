@@ -50,6 +50,20 @@ import { FinanceAuditService } from "./marketplace-finance/services/finance-audi
 import { PayoutHoldsService } from "./marketplace-finance/services/payout-holds.service";
 import { PayoutPlansService } from "./marketplace-finance/services/payout-plans.service";
 import { SellerFinanceService } from "./marketplace-finance/services/seller-finance.service";
+// Organization payouts (gifts to organizations, Fockis fee, scheduled transfers).
+import { NotificationsModule } from "../notifications/notifications.module";
+import { AdminOrgPayoutsController } from "./organization-payouts/admin-org-payouts.controller";
+import { OrgPayoutsService } from "./organization-payouts/org-payouts.service";
+import {
+  OrgLedgerEntry,
+  OrgLedgerEntrySchema,
+  OrgPayout,
+  OrgPayoutAccount,
+  OrgPayoutAccountSchema,
+  OrgPayoutConfig,
+  OrgPayoutConfigSchema,
+  OrgPayoutSchema,
+} from "./organization-payouts/org-payout.schemas";
 
 @Module({
   imports: [
@@ -62,8 +76,13 @@ import { SellerFinanceService } from "./marketplace-finance/services/seller-fina
       { name: PayoutHold.name, schema: PayoutHoldSchema },
       { name: EarlyPayoutRequest.name, schema: EarlyPayoutRequestSchema },
       { name: FinanceAuditLog.name, schema: FinanceAuditLogSchema },
+      { name: OrgPayoutConfig.name, schema: OrgPayoutConfigSchema },
+      { name: OrgPayoutAccount.name, schema: OrgPayoutAccountSchema },
+      { name: OrgLedgerEntry.name, schema: OrgLedgerEntrySchema },
+      { name: OrgPayout.name, schema: OrgPayoutSchema },
     ]),
     PaymentsModule,
+    NotificationsModule,
   ],
   controllers: [
     PayoutsController,
@@ -71,6 +90,7 @@ import { SellerFinanceService } from "./marketplace-finance/services/seller-fina
     SellerFinanceController,
     MarketplaceCommissionController,
     AdminMarketplaceFinanceController,
+    AdminOrgPayoutsController,
   ],
   providers: [
     PayoutsService,
@@ -79,7 +99,8 @@ import { SellerFinanceService } from "./marketplace-finance/services/seller-fina
     PayoutPlansService,
     PayoutHoldsService,
     SellerFinanceService,
+    OrgPayoutsService,
   ],
-  exports: [PayoutsService, MarketplaceCommissionService],
+  exports: [PayoutsService, MarketplaceCommissionService, OrgPayoutsService],
 })
 export class PayoutsModule {}

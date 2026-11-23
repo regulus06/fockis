@@ -9,7 +9,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Download, ExternalLink, HandHeart, Loader2, Plus, Save, Trash2 } from "lucide-react";
+import { Banknote, Download, ExternalLink, HandHeart, Loader2, Plus, Save, Trash2 } from "lucide-react";
 
 import { useOrgAdmin } from "../hooks/useOrgAdmin";
 import OrgAppShell from "../ui/OrgAppShell";
@@ -152,6 +152,9 @@ export default function GivingAdminPage() {
             <h1>Giving</h1>
             <p>Tithes, offerings and special gifts given online through your church website.</p>
           </div>
+          <Link to={p("/admin/payouts")} className="gv-btn gv-btn--ghost">
+            <Banknote aria-hidden="true" /> Payouts
+          </Link>
           <Link to={`${p("")}#give`} className="gv-btn gv-btn--ghost">
             <ExternalLink aria-hidden="true" /> View on website
           </Link>

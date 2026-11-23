@@ -88,6 +88,7 @@ import OrganizationMyHistoryPage from "./features/organizations/pages/Organizati
 import OrganizationVisitRequestsPage from "./features/organizations/admin/OrganizationVisitRequestsPage";
 import RequestsPage from "./features/organizations/requests/RequestsPage";
 import GivingAdminPage from "./features/organizations/giving/GivingAdminPage";
+import OrgPayoutsPage from "./features/organizations/giving/OrgPayoutsPage";
 import OrganizationBadgesPage from "./features/organizations/admin/OrganizationBadgesPage";
 import OrganizationMyBadgePage from "./features/organizations/pages/OrganizationMyBadgePage";
 import BadgeVerifyPage from "./features/organizations/badges/BadgeVerifyPage";
@@ -1421,6 +1422,12 @@ function App(): React.JSX.Element {
       <Route
         path="/organizations/:organizationId/admin/giving"
         element={<GivingAdminPage />}
+      />
+
+      {/* Payouts: gifts minus the Fockis fee, sent to the organization's Stripe account. Checked by the API. */}
+      <Route
+        path="/organizations/:organizationId/admin/payouts"
+        element={<OrgPayoutsPage />}
       />
 
       {/* Plan-a-visit requests (dates, party size). */}

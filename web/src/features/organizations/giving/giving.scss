@@ -934,3 +934,150 @@ textarea.gv-input {
     border-radius: 18px 18px 0 0;
   }
 }
+
+/* ---------------------------------------------------------------- payouts */
+
+.pay-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.pay-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-weight: 600;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    flex: none;
+  }
+
+  &.is-ok svg {
+    color: $gv-green;
+  }
+}
+
+.pay-country {
+  min-width: 220px;
+}
+
+.pay-reqs {
+  margin: 0;
+  padding-left: 20px;
+  color: $gv-text;
+  font-size: 14px;
+}
+
+.pay-hold {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border-color: #f3c46b;
+  background: #fff8e6;
+
+  svg {
+    width: 26px;
+    height: 26px;
+    flex: none;
+    color: #b7791f;
+  }
+
+  h2,
+  p {
+    margin: 0;
+  }
+}
+
+.pay-ok {
+  border-color: #b7e4c7;
+  background: #eefaf2;
+  color: #166534;
+  font-weight: 600;
+}
+
+.pay-stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 12px;
+
+  .gva-stat {
+    display: grid;
+    padding: 12px 14px;
+    border: 1px solid $gv-border;
+    border-radius: 12px;
+  }
+}
+
+.pay-table-wrap {
+  overflow-x: auto;
+}
+
+.pay-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th,
+  td {
+    padding: 10px 8px;
+    border-bottom: 1px solid $gv-border;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  th {
+    color: $gv-muted;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  td small {
+    color: $gv-muted;
+  }
+
+  tr.is-refund td {
+    color: $gv-red;
+  }
+}
+
+.pay-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: $gv-soft;
+  color: $gv-ink;
+  font-size: 12.5px;
+  font-weight: 700;
+
+  &.is-paid {
+    background: #e7f7ee;
+    color: #166534;
+  }
+
+  &.is-available {
+    background: #e8f0fd;
+    color: #1463d9;
+  }
+
+  &.is-failed {
+    background: #fdecec;
+    color: #b42318;
+  }
+}
+
+@media (max-width: 720px) {
+  .pay-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

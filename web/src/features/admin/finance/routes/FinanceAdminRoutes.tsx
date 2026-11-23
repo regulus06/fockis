@@ -15,6 +15,7 @@ import CoinsPage from "../pages/CoinsPage";
 import FinancialReportsPage from "../pages/FinancialReportsPage";
 import ShopOrderFinancePage from "../pages/ShopOrderFinancePage";
 import MarketplacePayoutsAdminPage from "../marketplace/MarketplacePayoutsAdminPage";
+import OrgPayoutsAdminPage from "../organization-payouts/OrgPayoutsAdminPage";
 
 import { PermissionRouteGuard } from "../../routes/PermissionRouteGuard";
 import { PERMISSIONS } from "../../permissions/permission.constants";
@@ -89,6 +90,14 @@ export default function FinanceAdminRoutes(): React.ReactElement {
         )}
       />
 
+      {/* ORGANIZATION PAYOUTS (gifts to churches/organizations, Fockis fee, schedules, holds) */}
+      <Route
+        path="organizations"
+        element={guarded(
+          [P.FINANCE_PAYOUTS],
+          <OrgPayoutsAdminPage />,
+        )}
+      />
       <Route
         path="payouts"
         element={guarded(

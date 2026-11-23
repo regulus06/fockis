@@ -6,6 +6,7 @@
  *   POST /organizations/:id/giving/:giftId/confirm after Stripe confirms the card
  *   GET  /organizations/:id/giving/mine            my gifts to this church
  *   GET  /organizations/:id/giving/admin           settings, totals, gifts (managers)
+ *   GET  /organizations/:id/payouts/cover-quote    public: extra to cover the Fockis fee
  *   PUT  /organizations/:id/giving/admin/settings  save settings (managers)
  *
  * Card details never pass through this API: they go from Stripe Elements
@@ -40,6 +41,15 @@ export interface GiftStart {
   amount: number;
   currency: string;
   fundLabel: string;
+  /** The gift itself, and what the giver added to cover the Fockis fee. */
+  giftAmount?: number;
+  coverFee?: number;
+}
+
+export interface CoverQuote {
+  enabled: boolean;
+  cover: number;
+  currency: string;
 }
 
 export interface Gift {
@@ -92,7 +102,9 @@ const base = (id: string) => `/organizations/${encodeURIComponent(id)}/giving`;
 
 export const givingApi = {
   info: (organizationId: string, signal?: AbortSignal) => churchRequest<GivingInfo>(base(organizationId), { signal, anonymous: !getAuthToken() }),
-  start: (organizationId: string, input: { fundKey: string; amount: number; note?: string; anonymous?: boolean; country?: string }) =>
+  coverQuote: (organizationId: string, amount: number, signal?: AbortSignal) =>
+    churchRequest<CoverQuote>(`/organizations/${encodeURIComponent(organizationId)}/payouts/cover-quote`, { query: { amount: String(amount) }, signal, anonymous: !getAuthToken() }),
+  start: (organizationId: string, input: { fundKey: string; amount: number; note?: string; anonymous?: boolean; country?: string; coverFee?: boolean }) =>
     churchRequest<GiftStart>(base(organizationId), { method: "POST", body: input }),
   confirm: (organizationId: string, giftId: string, paymentIntentId: string) =>
     churchRequest<Gift & { thankYouMessage: string }>(`${base(organizationId)}/${encodeURIComponent(giftId)}/confirm`, { method: "POST", body: { paymentIntentId } }),
