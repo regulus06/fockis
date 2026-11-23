@@ -248,8 +248,35 @@ export class UniversalPaymentService {
     userId: string,
     dto: CreatePaymentDto,
   ) {
-    const mongoUserId =
-      this.objectId(userId);
+    return this.createPaymentFor(
+      this.objectId(userId),
+      null,
+      dto,
+    );
+  }
+
+  /**
+   * A payment by someone without a Fockis account (e.g. giving to a church
+   * from a QR code). The payment has no userId; the payer's name and email
+   * are kept for the receipt. Only modules that allow guests call this.
+   */
+  async createGuestPayment(
+    payer: { email: string; name: string },
+    dto: CreatePaymentDto,
+  ) {
+    const email = String(payer?.email ?? '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+      throw new BadRequestException('Enter a valid email address.');
+    }
+    const name = String(payer?.name ?? '').trim().slice(0, 120);
+    return this.createPaymentFor(null, { email, name }, dto);
+  }
+
+  private async createPaymentFor(
+    mongoUserId: Types.ObjectId | null,
+    guest: { email: string; name: string } | null,
+    dto: CreatePaymentDto,
+  ) {
 
     const purpose =
       String(
@@ -382,6 +409,12 @@ export class UniversalPaymentService {
         userId:
           mongoUserId,
 
+        payerEmail:
+          guest?.email ?? null,
+
+        payerName:
+          guest?.name ?? null,
+
         purpose,
 
         referenceId,
@@ -448,7 +481,10 @@ export class UniversalPaymentService {
               paymentId:
                 payment.id,
 
-              userId,
+              userId:
+                mongoUserId ? String(mongoUserId) : '',
+
+              ...(guest ? { guest: 'true' } : {}),
 
               purpose,
 
@@ -528,6 +564,26 @@ export class UniversalPaymentService {
     userId: string,
     paymentIntentId: string,
   ) {
+    return this.confirmPaymentFor(
+      this.objectId(userId),
+      paymentIntentId,
+    );
+  }
+
+  /** Confirms a guest payment (no Fockis account; see createGuestPayment). */
+  async confirmGuestPayment(
+    paymentIntentId: string,
+  ) {
+    return this.confirmPaymentFor(
+      null,
+      paymentIntentId,
+    );
+  }
+
+  private async confirmPaymentFor(
+    owner: Types.ObjectId | null,
+    paymentIntentId: string,
+  ) {
     const cleanIntentId =
       String(
         paymentIntentId || '',
@@ -542,8 +598,10 @@ export class UniversalPaymentService {
     const payment =
       await this.paymentModel
         .findOne({
-          userId:
-            this.objectId(userId),
+          // A guest payment only matches a payment that has no user.
+          ...(owner
+            ? { userId: owner }
+            : { userId: null, payerEmail: { $type: 'string' } }),
 
           stripePaymentIntentId:
             cleanIntentId,
@@ -731,12 +789,19 @@ export class UniversalPaymentService {
       };
     }
 
-    const userId =
-      String(
-        payment.userId,
-      );
+    // Guest payments (no Fockis account) have no userId but a payer email.
+    const isGuest =
+      !payment.userId &&
+      Boolean(payment.payerEmail);
 
-    if (!Types.ObjectId.isValid(userId)) {
+    const userId =
+      isGuest
+        ? ''
+        : String(
+            payment.userId,
+          );
+
+    if (!isGuest && !Types.ObjectId.isValid(userId)) {
       throw new BadRequestException(
         'Payment contains an invalid user ID.',
       );
@@ -759,7 +824,8 @@ export class UniversalPaymentService {
 
     if (
       payment.purpose ===
-      'fockis_id'
+      'fockis_id' &&
+      !isGuest
     ) {
       return this.fulfillFockisId(
         userId,
@@ -785,7 +851,7 @@ export class UniversalPaymentService {
       purpose: payment.purpose,
       referenceId: payment.referenceId,
       paymentIntentId: intent.id,
-      userId: String(payment.userId),
+      userId,
     });
 
     return {

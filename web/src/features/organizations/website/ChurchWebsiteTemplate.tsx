@@ -302,14 +302,15 @@ export default function ChurchWebsiteTemplate({
   }, [org.id, signedIn]);
 
   // ?give=1 (a giving QR code / link, or coming back from sign-in) opens
-  // the giving form; &fund=<key> preselects a fund. Givers must be signed
-  // in, so a signed-out visitor goes to sign-in first and comes back here.
+  // the giving form; &fund=<key> preselects a fund. Signed-out visitors give
+  // as guests (name + email) when the church allows it; otherwise they sign
+  // in first and come back here.
   const [giveFund, setGiveFund] = useState<string | undefined>(undefined);
   const [qrOpen, setQrOpen] = useState(false);
   useEffect(() => {
     if (params.get("give") !== "1" || !giving?.enabled) return;
     const fund = params.get("fund") ?? "";
-    if (!signedIn) {
+    if (!signedIn && !giving.allowGuests) {
       navigate("/login?returnTo=" + encodeURIComponent(p("?give=1" + (fund ? "&fund=" + encodeURIComponent(fund) : "") + "#give")), { replace: true });
       return;
     }
@@ -944,9 +945,9 @@ export default function ChurchWebsiteTemplate({
               <button
                 type="button"
                 className="cw-btn cw-btn--white"
-                onClick={() => (signedIn ? (setGiveHistory(false), setGiveOpen(true)) : navigate("/login?returnTo=" + encodeURIComponent(p("?give=1#give"))))}
+                onClick={() => (signedIn || giving?.allowGuests ? (setGiveHistory(false), setGiveOpen(true)) : navigate("/login?returnTo=" + encodeURIComponent(p("?give=1#give"))))}
               >
-                {signedIn ? profile.give.button : "Sign in to Give"} <ArrowRight aria-hidden="true" />
+                {signedIn || giving?.allowGuests ? profile.give.button : "Sign in to Give"} <ArrowRight aria-hidden="true" />
               </button>
               <small className="cw-give__secure">
                 <Lock aria-hidden="true" /> Secure card payment
@@ -1244,7 +1245,7 @@ export default function ChurchWebsiteTemplate({
         />
       )}
       {qrOpen && givingOn && <GivingQrDialog organizationId={org.id} organizationName={org.name} onClose={() => setQrOpen(false)} />}
-      {giveOpen && giving?.enabled && <GiveDialog organizationId={org.id} info={giving} initialHistory={giveHistory} initialFund={giveFund} onClose={() => (setGiveOpen(false), setGiveFund(undefined))} />}
+      {giveOpen && giving?.enabled && <GiveDialog organizationId={org.id} info={giving} initialHistory={giveHistory} initialFund={giveFund} signedIn={signedIn} signInHref={"/login?returnTo=" + encodeURIComponent(p("?give=1" + (giveFund ? "&fund=" + encodeURIComponent(giveFund) : "") + "#give"))} onClose={() => (setGiveOpen(false), setGiveFund(undefined))} />}
       {aboutEditor && <PageBrandingEditor organizationId={org.id} pageKey={ABOUT_KEY} pageLabel="About section image" icon={Church} initialTab="banner" onClose={() => setAboutEditor(false)} />}
     </div>
   );

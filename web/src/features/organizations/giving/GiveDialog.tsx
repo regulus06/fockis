@@ -7,11 +7,16 @@
  *   3. The server re-checks the payment with Stripe, then shows the receipt.
  *
  * Also shows the signed-in person's own giving history at this church.
+ *
+ * Signed out (e.g. after scanning the church's QR code) and the church allows
+ * it: give as a guest with a name and an email for the receipt — no Fockis
+ * account needed. The server applies the guest rules (minimum, limits).
  */
 
 import { useEffect, useState, type FormEvent } from "react";
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
-import { ArrowLeft, CheckCircle2, HandHeart, History, Loader2, Lock, ShieldCheck, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowLeft, CheckCircle2, HandHeart, History, Loader2, Lock, LogIn, ShieldCheck, X } from "lucide-react";
 
 import StripeProvider from "../../payments/StripeProvider";
 import CheckoutForm from "../../payments/components/CheckoutForm";
@@ -31,8 +36,31 @@ function viewerCountry(): string {
 
 const fmtDate = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "");
 
-export default function GiveDialog({ organizationId, info, onClose, initialHistory = false, initialFund }: { organizationId: string; info: GivingInfo; onClose: () => void; /** Open on "My giving" (member portal link). */ initialHistory?: boolean; /** Fund chosen by a QR code / link (ignored if not offered). */ initialFund?: string }) {
-  const [step, setStep] = useState<Step>(initialHistory ? { kind: "history" } : { kind: "form" });
+export default function GiveDialog({
+  organizationId,
+  info,
+  onClose,
+  initialHistory = false,
+  initialFund,
+  signedIn = true,
+  signInHref,
+}: {
+  organizationId: string;
+  info: GivingInfo;
+  onClose: () => void;
+  /** Open on "My giving" (member portal link). */
+  initialHistory?: boolean;
+  /** Fund chosen by a QR code / link (ignored if not offered). */
+  initialFund?: string;
+  /** False: give as a guest (name + email), when the church allows it. */
+  signedIn?: boolean;
+  /** Where "Sign in" goes for guests (comes back to this form). */
+  signInHref?: string;
+}) {
+  const guest = !signedIn;
+  const [step, setStep] = useState<Step>(initialHistory && !guest ? { kind: "history" } : { kind: "form" });
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
   const [fundKey, setFundKey] = useState((initialFund && info.funds.some((f) => f.key === initialFund) ? initialFund : null) ?? info.funds[0]?.key ?? "");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
@@ -56,7 +84,8 @@ export default function GiveDialog({ organizationId, info, onClose, initialHisto
 
   const fund = info.funds.find((f) => f.key === fundKey) ?? null;
   const value = Number(amount);
-  const validAmount = value >= info.minAmount && value <= 100000;
+  const minAmount = guest ? Math.max(info.minAmount, info.guestMinAmount ?? info.minAmount) : info.minAmount;
+  const validAmount = value >= minAmount && value <= 100000;
 
   // "Add the fee so the church receives the full gift" (the server recalculates it).
   useEffect(() => {
@@ -83,11 +112,16 @@ export default function GiveDialog({ organizationId, info, onClose, initialHisto
   async function begin(e: FormEvent) {
     e.preventDefault();
     if (!fund) return setError("Choose what your gift is for.");
-    if (!(value >= info.minAmount)) return setError(`Enter an amount of at least ${money(info.minAmount, info.currency)}.`);
+    if (!(value >= minAmount)) return setError(`Enter an amount of at least ${money(minAmount, info.currency)}.`);
+    if (guest && guestName.trim().length < 2) return setError("Enter your name.");
+    if (guest && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail.trim())) return setError("Enter a valid email address for your receipt.");
     setBusy(true);
     setError(null);
     try {
-      const start = await givingApi.start(organizationId, { fundKey: fund.key, amount: Math.round(value * 100) / 100, note: note.trim() || undefined, anonymous, country: viewerCountry(), coverFee: coverFee && canCover });
+      const input = { fundKey: fund.key, amount: Math.round(value * 100) / 100, note: note.trim() || undefined, anonymous, country: viewerCountry(), coverFee: coverFee && canCover };
+      const start = guest
+        ? await givingApi.startGuest(organizationId, { ...input, name: guestName.trim(), email: guestEmail.trim() })
+        : await givingApi.start(organizationId, input);
       setCardComplete(false);
       setStep({ kind: "pay", start });
     } catch (err) {
@@ -153,7 +187,7 @@ export default function GiveDialog({ organizationId, info, onClose, initialHisto
                 id="gv-amount"
                 className="gv-input gv-input--amount"
                 type="number"
-                min={info.minAmount}
+                min={minAmount}
                 max={100000}
                 step="0.01"
                 inputMode="decimal"
@@ -162,6 +196,20 @@ export default function GiveDialog({ organizationId, info, onClose, initialHisto
                 onChange={(e) => setAmount(e.target.value)}
               />
             </div>
+
+            {guest && (
+              <>
+                <div className="gv-field">
+                  <label htmlFor="gv-name">Your name</label>
+                  <input id="gv-name" className="gv-input" maxLength={120} autoComplete="name" value={guestName} onChange={(e) => setGuestName(e.target.value)} required />
+                </div>
+                <div className="gv-field">
+                  <label htmlFor="gv-email">Email for your receipt</label>
+                  <input id="gv-email" className="gv-input" type="email" maxLength={254} autoComplete="email" inputMode="email" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} required />
+                  <small className="gv-hint">Only used to send your receipt. The church doesn't see it.</small>
+                </div>
+              </>
+            )}
 
             <div className="gv-field">
               <label htmlFor="gv-note">Note to the church (optional)</label>
@@ -201,9 +249,17 @@ export default function GiveDialog({ organizationId, info, onClose, initialHisto
             <p className="gv-secure">
               <ShieldCheck aria-hidden="true" /> Secure card payment through Fockis. Your card details go directly to Stripe and are never stored by Fockis or the church.
             </p>
-            <button type="button" className="gv-link" onClick={() => setStep({ kind: "history" })}>
-              <History aria-hidden="true" /> View my giving
-            </button>
+            {guest ? (
+              signInHref && (
+                <Link className="gv-link" to={signInHref}>
+                  <LogIn aria-hidden="true" /> Have a Fockis account? Sign in to keep your giving history
+                </Link>
+              )
+            ) : (
+              <button type="button" className="gv-link" onClick={() => setStep({ kind: "history" })}>
+                <History aria-hidden="true" /> View my giving
+              </button>
+            )}
           </form>
         )}
 
@@ -255,6 +311,7 @@ export default function GiveDialog({ organizationId, info, onClose, initialHisto
                 <dd>{step.gift.receiptNumber}</dd>
               </div>
             </dl>
+            {guest && guestEmail.trim() && <p className="gv-fineprint">A receipt was sent to {guestEmail.trim()}.</p>}
             <p className="gv-fineprint">This is a payment confirmation from Fockis. Ask the church if you need an official giving statement.</p>
             <div className="gv-row">
               <button type="button" className="gv-btn gv-btn--ghost" onClick={again}>
@@ -304,7 +361,11 @@ function PayButton({
       const intentId = result.paymentIntent?.id ?? start.paymentIntentId;
       if (!intentId) throw new Error("The payment could not be verified.");
       // The server re-checks the payment with Stripe before recording the gift.
-      onPaid(await givingApi.confirm(organizationId, start.giftId, intentId));
+      onPaid(
+        start.guestKey
+          ? await givingApi.confirmGuest(organizationId, start.giftId, intentId, start.guestKey)
+          : await givingApi.confirm(organizationId, start.giftId, intentId),
+      );
     } catch (err) {
       setError(errorText(err, "The payment didn't go through."));
     } finally {

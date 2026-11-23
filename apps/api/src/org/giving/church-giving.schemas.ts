@@ -60,6 +60,10 @@ export class ChurchGivingSettings {
   @Prop({ type: String, default: '', maxlength: 400 })
   thankYouMessage!: string;
 
+  /** People without a Fockis account may give (name + email). On unless turned off. */
+  @Prop({ type: Boolean, default: true })
+  allowGuests!: boolean;
+
   @Prop({ type: Types.ObjectId, ref: 'User', default: null })
   updatedByUserId!: Types.ObjectId | null;
 }
@@ -72,8 +76,18 @@ export class ChurchGift {
   @Prop({ type: Types.ObjectId, ref: 'Organization', required: true, index: true })
   organizationId!: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
+  /** Null for a guest gift (no Fockis account): see guestEmail. */
+  @Prop({ type: Types.ObjectId, ref: 'User', default: null, index: true })
+  // Null only for guest gifts (guestEmail set); typed non-null for existing code.
   userId!: Types.ObjectId;
+
+  /** Guest gifts only: where the receipt goes. Never shown to church staff. */
+  @Prop({ type: String, default: null, lowercase: true, trim: true, maxlength: 254, index: true })
+  guestEmail!: string | null;
+
+  /** Guest gifts only: SHA-256 of the one-time key the guest's browser uses to confirm. */
+  @Prop({ type: String, default: null, select: false })
+  guestKeyHash!: string | null;
 
   @Prop({ type: Types.ObjectId, default: null })
   membershipId!: Types.ObjectId | null;

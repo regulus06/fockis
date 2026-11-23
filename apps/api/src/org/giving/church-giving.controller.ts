@@ -6,6 +6,9 @@
  *   GET    /                     public: is giving on, funds, currency (any visitor)
  *   POST   /                     start a gift (signed in) → Stripe client secret
  *   POST   /:giftId/confirm      after Stripe confirms the card (signed in)
+ *   POST   /guest                public: start a gift without a Fockis account
+ *                                (name + email; church can turn this off)
+ *   POST   /:giftId/guest-confirm  public: confirm it with the one-time key
  *   GET    /qr?fund=             public: QR code that opens the giving form
  *   GET    /mine                 my own gifts to this church (signed in)
  *   GET    /admin                settings, totals and gifts (giving managers)
@@ -50,6 +53,26 @@ export class ChurchGivingController {
   @Post()
   start(@Param('organizationId') organizationId: string, @Body() body: Payload, @Req() req: Request) {
     return this.giving.startGift(organizationId, userIdOf(req), body ?? {});
+  }
+
+  /**
+   * Giving without a Fockis account. Limited per device/network here (a
+   * whole congregation can share one church Wi-Fi address, so this is not
+   * tight) and per email address in the service; guests also have a higher
+   * minimum and Stripe screens every card.
+   */
+  @Public()
+  @Throttle({ default: { limit: 30, ttl: 60 * 60 * 1000 } })
+  @Post('guest')
+  startGuest(@Param('organizationId') organizationId: string, @Body() body: Payload) {
+    return this.giving.startGuestGift(organizationId, body ?? {});
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 60, ttl: 60 * 60 * 1000 } })
+  @Post(':giftId/guest-confirm')
+  confirmGuest(@Param('organizationId') organizationId: string, @Param('giftId') giftId: string, @Body() body: Payload) {
+    return this.giving.confirmGuestGift(organizationId, giftId, String(body?.paymentIntentId ?? ''), String(body?.guestKey ?? ''));
   }
 
   @Public()

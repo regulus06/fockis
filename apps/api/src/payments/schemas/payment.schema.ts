@@ -16,13 +16,35 @@ export class Payment {
   })
   id!: string;
 
+  /** The Fockis account that paid. Null for a guest payment (see payerEmail). */
   @Prop({
     type: Types.ObjectId,
     ref: 'User',
-    required: true,
+    default: null,
     index: true,
   })
+  // Typed non-null for existing code; it is null only for guest payments
+  // (payerEmail set), which only guest-aware code creates and reads.
   userId!: Types.ObjectId;
+
+  /** Guest payments only: where the receipt goes (no Fockis account). */
+  @Prop({
+    type: String,
+    default: null,
+    lowercase: true,
+    trim: true,
+    maxlength: 254,
+  })
+  payerEmail!: string | null;
+
+  /** Guest payments only: the name the payer typed. */
+  @Prop({
+    type: String,
+    default: null,
+    trim: true,
+    maxlength: 120,
+  })
+  payerName!: string | null;
 
   @Prop({
     type: String,

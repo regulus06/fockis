@@ -33,6 +33,7 @@ interface Draft {
   suggested: string;
   message: string;
   thankYouMessage: string;
+  allowGuests: boolean;
 }
 
 export default function GivingAdminPage() {
@@ -63,6 +64,7 @@ export default function GivingAdminPage() {
             suggested: r.settings.suggestedAmounts.join(", "),
             message: r.settings.message,
             thankYouMessage: r.settings.thankYouMessage,
+            allowGuests: r.settings.allowGuests !== false,
           },
         );
       })
@@ -84,6 +86,7 @@ export default function GivingAdminPage() {
       draft.currency !== s.currency ||
       draft.message !== s.message ||
       draft.thankYouMessage !== s.thankYouMessage ||
+      draft.allowGuests !== (s.allowGuests !== false) ||
       draft.suggested !== s.suggestedAmounts.join(", ") ||
       JSON.stringify(draft.funds) !== JSON.stringify(s.funds.map((f) => ({ ...f, active: f.active !== false })))
     );
@@ -105,6 +108,7 @@ export default function GivingAdminPage() {
         suggestedAmounts,
         message: d.message,
         thankYouMessage: d.thankYouMessage,
+        allowGuests: d.allowGuests,
       });
       setDraft({
         enabled: saved.enabled,
@@ -113,6 +117,7 @@ export default function GivingAdminPage() {
         suggested: saved.suggestedAmounts.join(", "),
         message: saved.message,
         thankYouMessage: saved.thankYouMessage,
+        allowGuests: saved.allowGuests !== false,
       });
       setData((cur) => (cur ? { ...cur, settings: saved } : cur));
       setToast({ tone: "ok", text: next?.enabled !== undefined ? (saved.enabled ? "Online giving is on." : "Online giving is off.") : "Giving settings saved." });
@@ -133,7 +138,7 @@ export default function GivingAdminPage() {
     try {
       const updated = await givingApi.refund(organizationId, g.id, reason.trim());
       setData((cur) => (cur ? { ...cur, items: cur.items.map((x) => (x.id === g.id ? { ...x, ...updated } : x)) } : cur));
-      setToast({ tone: "ok", text: "The gift was refunded. The giver has been notified." });
+      setToast({ tone: "ok", text: g.guest ? "The gift was refunded. The money goes back to the giver's card." : "The gift was refunded. The giver has been notified." });
       setTick((t) => t + 1);
     } catch (err) {
       setToast({ tone: "error", text: errorText(err, "The gift could not be refunded.") });
@@ -149,7 +154,7 @@ export default function GivingAdminPage() {
   function exportCsv() {
     if (!data) return;
     const rows = [["Date", "Giver", "Fund", "Amount", "Currency", "Receipt", "Note"]];
-    for (const g of data.items) rows.push([g.paidAt?.slice(0, 10) ?? "", g.anonymous ? "Anonymous" : g.giverName, g.fundLabel, g.amount.toFixed(2), g.currency, g.receiptNumber, g.status === "refunded" ? `REFUNDED. ${g.note}` : g.note]);
+    for (const g of data.items) rows.push([g.paidAt?.slice(0, 10) ?? "", g.anonymous ? "Anonymous" : g.guest ? `${g.giverName} (guest)` : g.giverName, g.fundLabel, g.amount.toFixed(2), g.currency, g.receiptNumber, g.status === "refunded" ? `REFUNDED. ${g.note}` : g.note]);
     const csv = rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
     const url = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
@@ -196,7 +201,7 @@ export default function GivingAdminPage() {
                 <h2>Online giving is {data.settings.enabled ? "on" : "off"}</h2>
                 <p>
                   {data.settings.enabled
-                    ? "Visitors can give by card from the Give Online section of your website. Givers must be signed in to Fockis."
+                    ? `Visitors can give by card from the Give Online section of your website, your giving link or QR code. ${data.settings.allowGuests !== false ? "People without a Fockis account can give too (name + email)." : "Givers must be signed in to Fockis."}`
                     : "Your website shows Give Online, but the button only points people to your contact details until you turn this on."}
                 </p>
               </div>
@@ -276,6 +281,16 @@ export default function GivingAdminPage() {
                 <textarea className="gv-input" rows={2} maxLength={400} value={draft.thankYouMessage} onChange={(e) => setDraft({ ...draft, thankYouMessage: e.target.value })} placeholder="e.g. God bless you for your generosity!" />
               </label>
 
+              <label className="gv-check">
+                <input type="checkbox" checked={draft.allowGuests} onChange={(e) => setDraft({ ...draft, allowGuests: e.target.checked })} />
+                <span>
+                  Allow giving without a Fockis account
+                  <small>
+                    Anyone with your giving link or QR code can give with their name and email (receipt by email). Guests give at least 5.00 and are limited to a few attempts per hour to stop stolen-card testing. Turn off to require signing in.
+                  </small>
+                </span>
+              </label>
+
               <div className="gv-row">
                 <button type="button" className="gv-btn gv-btn--primary" disabled={saving || !dirty} onClick={() => void save()}>
                   {saving ? <Loader2 className="gv-spin" aria-hidden="true" /> : <Save aria-hidden="true" />} Save settings
@@ -338,7 +353,14 @@ export default function GivingAdminPage() {
                       {data.items.map((g) => (
                         <tr key={g.id}>
                           <td>{fmtDate(g.paidAt)}</td>
-                          <td>{g.anonymous ? <i>Anonymous</i> : g.giverName || "—"}</td>
+                          <td>
+                            {g.anonymous ? <i>Anonymous</i> : g.giverName || "—"}
+                            {g.guest && (
+                              <span className="gva-guest" title="Gave without a Fockis account">
+                                Guest
+                              </span>
+                            )}
+                          </td>
                           <td>{g.fundLabel}</td>
                           <td className="gva-num">{money(g.amount, g.currency)}</td>
                           <td className="gva-mono">{g.receiptNumber}</td>

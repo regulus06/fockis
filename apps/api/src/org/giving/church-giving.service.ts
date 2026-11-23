@@ -22,7 +22,7 @@ import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundEx
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Connection, Model, Types } from 'mongoose';
-import { randomBytes } from 'crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'crypto';
 import * as QRCode from 'qrcode';
 
 import { Organization, OrganizationDocument } from '../organizations/schemas/organization.schema';
@@ -48,6 +48,12 @@ const ADMIN_ROLES = ['administrator', 'pastor_director'];
 export const GIVING_CURRENCIES = ['USD', 'HTG', 'CAD', 'EUR', 'GBP', 'DOP', 'MXN', 'BRL', 'CHF', 'AUD'];
 const MIN_AMOUNT = 1;
 const MAX_AMOUNT = 100_000;
+/** Guests (no Fockis account) give at least this much: small charges are how stolen cards get tested. */
+const GUEST_MIN_AMOUNT = 5;
+/** Guest gift attempts allowed per email address per hour (on top of the per-device limit in the controller). */
+const GUEST_ATTEMPTS_PER_EMAIL_PER_HOUR = 5;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const sha256 = (v: string) => createHash('sha256').update(v).digest('hex');
 
 export const DEFAULT_FUNDS = [
   { key: 'tithe', label: 'Tithe', description: '', active: true },
@@ -72,7 +78,8 @@ const slugKey = (v: string) =>
 
 interface PaymentRecord {
   id: string;
-  userId: Types.ObjectId;
+  userId: Types.ObjectId | null;
+  payerEmail?: string | null;
   purpose: string;
   referenceId: string;
   status: string;
@@ -134,6 +141,7 @@ export class ChurchGivingService {
       suggestedAmounts: Array.isArray(s?.suggestedAmounts) && s!.suggestedAmounts.length ? s!.suggestedAmounts : DEFAULT_SUGGESTED,
       message: s?.message ?? '',
       thankYouMessage: s?.thankYouMessage ?? '',
+      allowGuests: s?.allowGuests !== false,
       updatedAt: iso(s?.updatedAt),
       saved: Boolean(s),
     };
@@ -209,6 +217,8 @@ export class ChurchGivingService {
       refundRequested: Boolean(g.refundRequest?.at),
       refundRequestReason: forStaff ? String(g.refundRequest?.reason ?? '') : '',
       anonymous: Boolean(g.anonymous),
+      /** Given without a Fockis account (their email is never shown to staff). */
+      guest: !g.userId,
       giverName: forStaff && g.anonymous ? '' : (g.giverName ?? ''),
       createdAt: iso(g.createdAt),
       paidAt: iso(g.paidAt),
@@ -231,6 +241,9 @@ export class ChurchGivingService {
       suggestedAmounts: s.suggestedAmounts,
       message: s.message,
       minAmount: MIN_AMOUNT,
+      /** People without a Fockis account can give (name + email). */
+      allowGuests: s.allowGuests,
+      guestMinAmount: GUEST_MIN_AMOUNT,
       signedIn: Boolean(viewerId),
       canManage: await this.canManage(organizationId, viewerId),
     };
@@ -290,13 +303,40 @@ export class ChurchGivingService {
      ====================================================================== */
 
   async startGift(organizationId: string, userId: string, input: Lean) {
+    return this.beginGift(organizationId, input, { userId });
+  }
+
+  /**
+   * A gift from someone without a Fockis account (e.g. scanned the church's
+   * QR code). Needs a name and an email (for the receipt), a higher minimum,
+   * and is limited per email here and per device in the controller. Returns
+   * a one-time key the browser sends back to confirm this gift only.
+   */
+  async startGuestGift(organizationId: string, input: Lean) {
+    const name = str(input.name, 120);
+    const email = str(input.email, 254).toLowerCase();
+    if (name.length < 2) throw new BadRequestException('Enter your name.');
+    if (!EMAIL_RE.test(email)) throw new BadRequestException('Enter a valid email address for your receipt.');
+    const since = new Date(Date.now() - 60 * 60 * 1000);
+    const recent = await this.giftModel.countDocuments({ guestEmail: email, createdAt: { $gte: since } }).exec();
+    if (recent >= GUEST_ATTEMPTS_PER_EMAIL_PER_HOUR) {
+      throw new BadRequestException('Too many attempts with this email. Please try again in an hour, or sign in to Fockis to give.');
+    }
+    return this.beginGift(organizationId, input, { guest: { name, email } });
+  }
+
+  private async beginGift(organizationId: string, input: Lean, giver: { userId?: string; guest?: { name: string; email: string } }) {
     const org = await this.organization(organizationId);
     if (String(org.status ?? 'active') !== 'active') throw new BadRequestException('This church is not receiving gifts right now.');
     const s = await this.settingsOf(org._id);
     if (!s.enabled) throw new BadRequestException('Online giving is not turned on for this church.');
+    if (giver.guest && !s.allowGuests) throw new BadRequestException('Please sign in to Fockis to give to this church.');
     const fund = s.funds.find((f: Lean) => f.active !== false && f.key === String(input.fundKey ?? ''));
     if (!fund) throw new BadRequestException('Choose what your gift is for.');
     const amount = this.amountOf(input.amount);
+    if (giver.guest && amount < GUEST_MIN_AMOUNT) {
+      throw new BadRequestException(`The minimum gift without a Fockis account is ${GUEST_MIN_AMOUNT.toFixed(2)}. Sign in to give a smaller amount.`);
+    }
     const currency = s.currency;
     // Optional: the giver adds the Fockis fee so the church receives the full gift.
     let coverFee = 0;
@@ -304,12 +344,19 @@ export class ChurchGivingService {
       const quote = await this.orgPayouts.coverQuote(organizationId, amount, currency);
       if (quote.enabled) coverFee = round2(quote.cover);
     }
-    const membership = (await this.members.getMembershipOrNull(organizationId, userId)) as unknown as Lean | null;
-    const giverName = str(membership?.profile?.displayName, 120) || (await this.userName(userId));
+
+    const userId = giver.userId ?? null;
+    const membership = userId ? ((await this.members.getMembershipOrNull(organizationId, userId)) as unknown as Lean | null) : null;
+    const giverName = giver.guest
+      ? giver.guest.name
+      : str(membership?.profile?.displayName, 120) || (await this.userName(String(userId)));
+    const guestKey = giver.guest ? randomBytes(24).toString('base64url') : null;
 
     const gift = await this.giftModel.create({
       organizationId: org._id,
-      userId: new Types.ObjectId(userId),
+      userId: userId ? new Types.ObjectId(userId) : null,
+      guestEmail: giver.guest?.email ?? null,
+      guestKeyHash: guestKey ? sha256(guestKey) : null,
       membershipId: membership?._id ?? null,
       giverName,
       anonymous: Boolean(input.anonymous),
@@ -322,7 +369,7 @@ export class ChurchGivingService {
       status: 'pending',
     });
 
-    const res = (await this.payments.createPayment(userId, {
+    const paymentInput = {
       purpose: PaymentPurpose.CHURCH,
       referenceId: `${REF_PREFIX}${String(gift._id)}`,
       baseAmount: round2(amount + coverFee),
@@ -330,12 +377,17 @@ export class ChurchGivingService {
       country: /^[A-Za-z]{2}$/.test(String(input.country ?? '')) ? String(input.country).toUpperCase() : 'US',
       idempotencyKey: `church-gift-${String(gift._id)}`,
       metadata: { organizationId: String(org._id), giftId: String(gift._id), fund: fund.key },
-    } as never)) as { paymentId: string; clientSecret: string | null; stripePaymentIntentId?: string | null; chargedAmount: number; chargedCurrency: string };
-
-    if (!res?.clientSecret) {
-      await this.giftModel.updateOne({ _id: gift._id }, { $set: { status: 'failed' } }).exec();
-      throw new BadRequestException('The secure payment could not be started. Please try again.');
+    } as never;
+    type Started = { paymentId: string; clientSecret: string | null; stripePaymentIntentId?: string | null; chargedAmount: number; chargedCurrency: string };
+    let res: Started | null = null;
+    try {
+      res = (giver.guest
+        ? await this.payments.createGuestPayment(giver.guest, paymentInput)
+        : await this.payments.createPayment(String(userId), paymentInput)) as Started;
+    } finally {
+      if (!res?.clientSecret) await this.giftModel.updateOne({ _id: gift._id }, { $set: { status: 'failed' } }).exec();
     }
+    if (!res?.clientSecret) throw new BadRequestException('The secure payment could not be started. Please try again.');
     await this.giftModel.updateOne({ _id: gift._id }, { $set: { paymentId: res.paymentId, paymentIntentId: res.stripePaymentIntentId ?? null } }).exec();
     return {
       giftId: String(gift._id),
@@ -346,6 +398,7 @@ export class ChurchGivingService {
       fundLabel: fund.label,
       giftAmount: amount,
       coverFee,
+      ...(guestKey ? { guestKey } : {}),
     };
   }
 
@@ -356,10 +409,28 @@ export class ChurchGivingService {
       .lean()
       .exec()) as Lean | null;
     if (!gift || !sameId(gift.userId, userId)) throw new NotFoundException('Gift not found.');
+    return this.finishConfirm(gift, paymentIntentId, () => this.payments.confirmPayment(userId, str(paymentIntentId, 200)));
+  }
+
+  /** Guest version: proven by the one-time key returned when the gift started. */
+  async confirmGuestGift(organizationId: string, giftId: string, paymentIntentId: string, guestKey: string) {
+    const gift = (await this.giftModel
+      .findOne({ _id: this.oid(giftId, 'Gift ID'), organizationId: this.oid(organizationId, 'Organization ID'), userId: null })
+      .select('+guestKeyHash')
+      .lean()
+      .exec()) as Lean | null;
+    const key = str(guestKey, 100);
+    const expected = Buffer.from(String(gift?.guestKeyHash ?? ''), 'utf8');
+    const given = Buffer.from(key ? sha256(key) : '', 'utf8');
+    if (!gift || !key || expected.length !== given.length || !timingSafeEqual(expected, given)) throw new NotFoundException('Gift not found.');
+    return this.finishConfirm(gift, paymentIntentId, () => this.payments.confirmGuestPayment(str(paymentIntentId, 200)));
+  }
+
+  private async finishConfirm(gift: Lean, paymentIntentId: string, confirm: () => Promise<unknown>) {
     const intent = str(paymentIntentId, 200);
     if (!intent) throw new BadRequestException('The payment could not be verified.');
     if (gift.status !== 'paid') {
-      await this.payments.confirmPayment(userId, intent);
+      await confirm();
       const record = (await this.connection.collection('payments').findOne({ stripePaymentIntentId: intent })) as unknown as PaymentRecord | null;
       if (!record || record.referenceId !== `${REF_PREFIX}${String(gift._id)}`) throw new BadRequestException("This payment doesn't belong to this gift.");
       await this.fulfill(record);
@@ -390,7 +461,11 @@ export class ChurchGivingService {
     if (!gift || gift.status === 'paid') return;
     const amount = Number(record.baseAmount ?? record.chargedAmount);
     const currency = String(record.baseCurrency ?? record.chargedCurrency).toUpperCase();
-    if (!sameId(gift.userId, record.userId) || currency !== String(gift.currency).toUpperCase() || Math.abs(amount - round2(Number(gift.amount) + Number(gift.coverFee ?? 0))) > 0.005) {
+    // Member gift: same account. Guest gift: no account on either side and the same email.
+    const sameGiver = gift.userId
+      ? sameId(gift.userId, record.userId)
+      : !record.userId && Boolean(gift.guestEmail) && String(record.payerEmail ?? '').toLowerCase() === String(gift.guestEmail).toLowerCase();
+    if (!sameGiver || currency !== String(gift.currency).toUpperCase() || Math.abs(amount - round2(Number(gift.amount) + Number(gift.coverFee ?? 0))) > 0.005) {
       this.logger.error(`Payment ${record.id} does not match church gift ${id}.`);
       return;
     }
@@ -655,6 +730,7 @@ export class ChurchGivingService {
     const set: Lean = { updatedByUserId: new Types.ObjectId(userId) };
 
     if (input.enabled !== undefined) set.enabled = Boolean(input.enabled);
+    if (input.allowGuests !== undefined) set.allowGuests = Boolean(input.allowGuests);
     if (input.currency !== undefined) {
       const c = String(input.currency).toUpperCase();
       if (!GIVING_CURRENCIES.includes(c)) throw new BadRequestException('Choose a supported currency.');

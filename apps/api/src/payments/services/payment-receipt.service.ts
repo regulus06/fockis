@@ -126,7 +126,8 @@ export class PaymentReceiptService {
       String(payment.baseCurrency ?? "").toUpperCase() !== String(payment.chargedCurrency ?? "").toUpperCase();
     const baseAmount = baseDiffers ? formatAmount(payment.baseAmount, payment.baseCurrency) : "";
     const paidAt = payment.paidAt ? new Date(payment.paidAt) : new Date();
-    const name = String(user?.name || user?.fullName || user?.displayName || user?.username || "").trim();
+    // Guest payments (no Fockis account) carry the payer's own name/email.
+    const name = String(user?.name || user?.fullName || user?.displayName || user?.username || payment.payerName || "").trim();
     const thankYou =
       details.thankYou?.trim() ||
       (isGift
@@ -149,7 +150,7 @@ export class PaymentReceiptService {
     }
 
     // Email receipt.
-    const email = String(user?.email ?? "").trim();
+    const email = String(user?.email ?? payment.payerEmail ?? "").trim();
     if (!email) {
       this.logger.warn(`Payment ${payment.id}: payer has no email address; receipt email skipped.`);
       return false;

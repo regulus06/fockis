@@ -30,6 +30,10 @@ export interface GivingInfo {
   suggestedAmounts: number[];
   message: string;
   minAmount: number;
+  /** People without a Fockis account can give (name + email). */
+  allowGuests?: boolean;
+  /** Minimum gift for guests. */
+  guestMinAmount?: number;
   signedIn: boolean;
   canManage: boolean;
 }
@@ -44,6 +48,8 @@ export interface GiftStart {
   /** The gift itself, and what the giver added to cover the Fockis fee. */
   giftAmount?: number;
   coverFee?: number;
+  /** Guest gifts only: one-time key that confirms this gift. Kept in memory only. */
+  guestKey?: string;
 }
 
 export interface CoverQuote {
@@ -68,6 +74,8 @@ export interface Gift {
   /** Staff only. */
   refundRequestReason?: string;
   anonymous: boolean;
+  /** Given without a Fockis account. */
+  guest?: boolean;
   giverName: string;
   createdAt: string | null;
   paidAt: string | null;
@@ -80,6 +88,8 @@ export interface GivingSettings {
   suggestedAmounts: number[];
   message: string;
   thankYouMessage: string;
+  /** People without a Fockis account can give. */
+  allowGuests: boolean;
   updatedAt: string | null;
   saved: boolean;
 }
@@ -124,6 +134,11 @@ export const givingApi = {
     churchRequest<CoverQuote>(`/organizations/${encodeURIComponent(organizationId)}/payouts/cover-quote`, { query: { amount: String(amount) }, signal, anonymous: !getAuthToken() }),
   start: (organizationId: string, input: { fundKey: string; amount: number; note?: string; anonymous?: boolean; country?: string; coverFee?: boolean }) =>
     churchRequest<GiftStart>(base(organizationId), { method: "POST", body: input }),
+  /** Giving without a Fockis account (name + email for the receipt). */
+  startGuest: (organizationId: string, input: { fundKey: string; amount: number; note?: string; anonymous?: boolean; country?: string; coverFee?: boolean; name: string; email: string }) =>
+    churchRequest<GiftStart>(`${base(organizationId)}/guest`, { method: "POST", body: input, anonymous: true }),
+  confirmGuest: (organizationId: string, giftId: string, paymentIntentId: string, guestKey: string) =>
+    churchRequest<Gift & { thankYouMessage: string }>(`${base(organizationId)}/${encodeURIComponent(giftId)}/guest-confirm`, { method: "POST", body: { paymentIntentId, guestKey }, anonymous: true }),
   confirm: (organizationId: string, giftId: string, paymentIntentId: string) =>
     churchRequest<Gift & { thankYouMessage: string }>(`${base(organizationId)}/${encodeURIComponent(giftId)}/confirm`, { method: "POST", body: { paymentIntentId } }),
   /** QR code that opens the giving form (link built by the server). */
