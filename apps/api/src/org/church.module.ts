@@ -232,6 +232,7 @@ import {
 } from './media/schemas/church-media.schema';
 
 import { ChurchMediaService } from './media/services/church-media.service';
+import { MediaTranscodeService } from './media/services/media-transcode.service';
 
 import { ChurchMediaController } from './media/controllers/church-media.controller';
 
@@ -568,6 +569,7 @@ import { PageBrandingController } from './page-branding/page-branding.controller
     AttendanceService,
     ChurchCommunicationService,
     ChurchMediaService,
+    MediaTranscodeService,
     OrganizationVisitsService,
     MemberHistoryService,
     OrganizationDashboardService,

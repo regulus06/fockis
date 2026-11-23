@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import React from "react";
 import {
   Navigate,
+  useParams,
   Route,
   Routes,
 } from "react-router-dom";
@@ -53,6 +54,8 @@ import AdminPermissionsPage from "../pages/AdminPermissionsPage";
 ================================================================ */
 
 import UserAdminRoutes from "../users/routes/UserAdminRoutes";
+import AdminNotificationsPage from "../notifications/AdminNotificationsPage";
+import { AdminDisputeDetailPage, AdminDisputesPage } from "../disputes/DisputePages";
 
 /* ================================================================
    MUSIC ADMIN
@@ -140,6 +143,11 @@ function guarded(
   );
 }
 
+function RecoveryRedirect(): React.ReactElement {
+  const { id = "" } = useParams();
+  return <Navigate to={`/admin/security/recovery/${encodeURIComponent(id)}`} replace />;
+}
+
 /* ================================================================
    MESSAGE SETTINGS ROUTE
 ================================================================ */
@@ -170,6 +178,16 @@ export function AdminRoutes(): React.ReactElement {
                 replace
               />
             }
+          />
+
+          {/* ======================================================
+              NOTIFICATIONS (every administrator; the API filters
+              each notification by the reader's permissions)
+          ====================================================== */}
+
+          <Route
+            path="notifications"
+            element={<AdminNotificationsPage />}
           />
 
           {/* ======================================================
@@ -382,26 +400,15 @@ export function AdminRoutes(): React.ReactElement {
             )}
           />
 
+          {/* Account recovery lives in Security & Identity. */}
           <Route
             path="recovery"
-            element={guarded(
-              [P.USERS_RECOVERY],
-              <ModulePendingPage
-                title="Account Recovery"
-                description="Identity verification and password reset cases."
-              />,
-            )}
+            element={<Navigate to="/admin/security/recovery" replace />}
           />
 
           <Route
             path="recovery/:id"
-            element={guarded(
-              [P.USERS_RECOVERY],
-              <ModulePendingPage
-                title="Recovery Case"
-                description="Case detail and verification steps."
-              />,
-            )}
+            element={<RecoveryRedirect />}
           />
 
           {/* ======================================================
@@ -455,11 +462,16 @@ export function AdminRoutes(): React.ReactElement {
           <Route
             path="marketplace/disputes"
             element={guarded(
-              [P.MARKETPLACE_DISPUTES_MANAGE],
-              <ModulePendingPage
-                title="Disputes"
-                description="Buyer and seller disputes awaiting resolution."
-              />,
+              [P.MARKETPLACE_ORDERS_VIEW, P.MARKETPLACE_DISPUTES_MANAGE],
+              <AdminDisputesPage />,
+            )}
+          />
+
+          <Route
+            path="marketplace/disputes/:id"
+            element={guarded(
+              [P.MARKETPLACE_ORDERS_VIEW, P.MARKETPLACE_DISPUTES_MANAGE],
+              <AdminDisputeDetailPage />,
             )}
           />
 

@@ -28,6 +28,9 @@ import {
 NotificationsGateway,
 } from "./gateways/notifications.gateway";
 
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { JwtModule } from "@nestjs/jwt";
+
 
 
 @Module({
@@ -45,6 +48,15 @@ schema:NotificationSchema,
 },
 
 ]),
+
+// Verifies access tokens on the notifications socket.
+JwtModule.registerAsync({
+  imports: [ConfigModule],
+  inject: [ConfigService],
+  useFactory: (config: ConfigService) => ({
+    secret: String(config.get<string>("JWT_SECRET") ?? ""),
+  }),
+}),
 
 ],
 

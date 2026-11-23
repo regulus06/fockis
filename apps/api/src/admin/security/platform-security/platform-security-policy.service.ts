@@ -1,3 +1,5 @@
+import { EventEmitter2 } from "@nestjs/event-emitter";
+import { ADMIN_NOTIFICATION_EVENT } from "../../notifications/admin-notification.types";
 import {
   BadRequestException,
   ConflictException,
@@ -429,6 +431,8 @@ export class PlatformSecurityPolicyService
     private readonly redis: RedisService,
 
     private readonly events: SecurityEventsService,
+
+    private readonly emitter: EventEmitter2,
   ) {}
 
   // ==========================================================================
@@ -842,6 +846,21 @@ export class PlatformSecurityPolicyService
     apply("accounts", nextAccounts, input.accounts);
     apply("managed", nextManaged, input.managed);
 
+    // Monitoring thresholds must rise: warning < high risk < critical.
+    {
+      const warn = Number(nextAccounts.loginWarningThreshold);
+      const high = Number(nextAccounts.loginHighRiskThreshold);
+      const critical = Number(nextAccounts.loginCriticalThreshold);
+
+      if (Number.isFinite(warn) && Number.isFinite(high) && Number.isFinite(critical)) {
+        if (!(warn < high && high < critical)) {
+          errors.push(
+            "Monitoring thresholds must increase: warning < high risk < critical.",
+          );
+        }
+      }
+    }
+
     let nextDelegation = current.delegatedFields;
 
     if (Array.isArray(input.delegatedFields)) {
@@ -1132,6 +1151,29 @@ export class PlatformSecurityPolicyService
         reason,
       },
     });
+
+    if (plan.risks.length) {
+      const labels = plan.risks
+        .map((risk) => POLICY_FIELD_MAP.get(risk.field)?.label ?? risk.field)
+        .slice(0, 5)
+        .join(", ");
+
+      this.emitter.emit(ADMIN_NOTIFICATION_EVENT, {
+        type: "security.policy_high_risk_change",
+        category: "security",
+        priority: "high",
+        title: "High-risk security policy change",
+        message: `${actor.name} changed: ${labels} (version ${updated.version}).`,
+        groupKey: `security_policy:v${updated.version}`,
+        entityType: "security_policy",
+        entityId: `v${updated.version}`,
+        link: "/admin/security/audit",
+        requiredPermissions: ["security.manage", "security.policies.manage"],
+        actionRequired: false,
+        excludeUserIds: actor.id ? [actor.id] : [],
+        metadata: { version: Number(updated.version), changes: plan.risks.length },
+      });
+    }
 
     await this.publishInvalidation();
 

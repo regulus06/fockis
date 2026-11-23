@@ -8,7 +8,7 @@ import {
 } from './schemas/dispute.schema';
 
 
-import { DisputesController } from './disputes.controller';
+import { AdminDisputesController, DisputesController } from './disputes.controller';
 import { DisputesService } from './disputes.service';
 
 
@@ -29,7 +29,8 @@ MongooseModule.forFeature([
 
 
 controllers:[
- DisputesController
+ DisputesController,
+ AdminDisputesController
 ],
 
 

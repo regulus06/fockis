@@ -10,6 +10,13 @@ import PolicySectionPage from "./pages/PolicySectionPage";
 import OrganizationPoliciesPage from "./pages/OrganizationPoliciesPage";
 import SecurityAuditPage from "./pages/SecurityAuditPage";
 import { AccountRecoveryCard, LockedAccountsCard } from "./components/AccountCards";
+import {
+  RecoveryCaseDetailPage,
+  RecoveryCasesPage,
+  SecurityIncidentDetailPage,
+  SecurityIncidentsPage,
+  SecurityRestrictionsPage,
+} from "./pages/IncidentPages";
 
 const P = PERMISSIONS;
 
@@ -46,6 +53,25 @@ export default function SecurityRoutes() {
           }
         />
         <Route path="organizations" element={<OrganizationPoliciesPage />} />
+        <Route path="incidents" element={<SecurityIncidentsPage />} />
+        <Route path="incidents/:id" element={<SecurityIncidentDetailPage />} />
+        <Route path="restrictions" element={<SecurityRestrictionsPage />} />
+        <Route
+          path="recovery"
+          element={
+            <PermissionRouteGuard requireAny={[P.SECURITY_ACCOUNT_RECOVERY]}>
+              <RecoveryCasesPage />
+            </PermissionRouteGuard>
+          }
+        />
+        <Route
+          path="recovery/:id"
+          element={
+            <PermissionRouteGuard requireAny={[P.SECURITY_ACCOUNT_RECOVERY]}>
+              <RecoveryCaseDetailPage />
+            </PermissionRouteGuard>
+          }
+        />
         <Route
           path="audit"
           element={

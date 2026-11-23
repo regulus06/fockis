@@ -56,3 +56,44 @@ export async function mfaVerifyRequest(
     { headers: jsonHeaders },
   );
 }
+
+/* ============================================================
+   SIGN-IN VERIFICATION (after unusual sign-in activity)
+============================================================ */
+
+export async function verificationEmailRequest(verificationToken: string) {
+  return axios.post<{ sent: boolean; maskedEmail: string; expiresInSeconds: number; resendAfterSeconds: number }>(
+    `${API_BASE_URL}/auth/login/verification/email`,
+    { verification_token: verificationToken },
+    { headers: jsonHeaders },
+  );
+}
+
+export async function verificationVerifyRequest(
+  verificationToken: string,
+  method: "totp" | "email",
+  code: string,
+) {
+  return axios.post<AuthResponse>(
+    `${API_BASE_URL}/auth/login/verification/verify`,
+    { verification_token: verificationToken, method, code },
+    { headers: jsonHeaders },
+  );
+}
+
+export async function verificationRecoveryRequest(verificationToken: string, message: string) {
+  return axios.post<{ submitted: boolean; caseNumber?: string; message: string }>(
+    `${API_BASE_URL}/auth/login/verification/recovery`,
+    { verification_token: verificationToken, message },
+    { headers: jsonHeaders },
+  );
+}
+
+/** Public recovery form. The answer is the same whether or not the account exists. */
+export async function accountRecoveryRequest(email: string, message: string) {
+  return axios.post<{ submitted: boolean; message: string }>(
+    `${API_BASE_URL}/auth/recovery`,
+    { email: email.trim(), message },
+    { headers: jsonHeaders },
+  );
+}

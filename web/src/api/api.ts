@@ -23,7 +23,7 @@ import {
  *   false = production build
  */
 
-const API_BASE_URL = import.meta.env.DEV
+export const API_BASE_URL = import.meta.env.DEV
   ? FOCKIS_API_URL
   : "https://fockis.onrender.com";
 
@@ -31,7 +31,7 @@ const API_BASE_URL = import.meta.env.DEV
    TOKEN HELPER
 ============================================================ */
 
-function getAuthToken(): string {
+export function getAuthToken(): string {
   /*
    * First use the application's official auth helper.
    */

@@ -2,14 +2,12 @@
 
 import { io, Socket } from "socket.io-client";
 import { FOCKIS_API_URL } from "../config/fockisConfig";
+import { getAuthToken } from "../api/api";
 
 let socket: Socket | null = null;
 
 export const getSocket = (): Socket => {
   if (!socket) {
-    const userId =
-      localStorage.getItem("userId") || "";
-
     socket = io(
       `${FOCKIS_API_URL}/notifications`,
       {
@@ -17,9 +15,9 @@ export const getSocket = (): Socket => {
 
         autoConnect: false,
 
-        auth: {
-          userId,
-        },
+        // The server joins the room of the account in this access token
+        // (a function, so reconnects send the current token).
+        auth: (cb) => cb({ token: getAuthToken() }),
       },
     );
 

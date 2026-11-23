@@ -16,6 +16,7 @@ import { AuthRegistrationService } from "./auth-registration.service";
 import { AuthLoginService } from "./auth-login.service";
 import { AuthTokenService } from "./auth-token.service";
 import { AuthSecurityService } from "./auth-security.service";
+import { LoginVerificationService } from "./login-verification.service";
 
 import { UsersModule } from "../users/users.module";
 
@@ -88,6 +89,7 @@ import {
     AuthSecurityService,
     JwtStrategy,
     MfaService,
+    LoginVerificationService,
   ],
 
   exports: [

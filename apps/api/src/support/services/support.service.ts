@@ -15,6 +15,11 @@ import { SupportTicket, SupportTicketDocument } from "../schemas/support-ticket.
 import { SupportSettings, SupportSettingsDocument } from "../schemas/support-settings.schema";
 import { SupportAttachmentsService, type StoredAttachment } from "./support-attachments.service";
 import { SupportStaffService } from "./support-staff.service";
+import { EventEmitter2 } from "@nestjs/event-emitter";
+import {
+  ADMIN_NOTIFICATION_EVENT,
+  ADMIN_NOTIFICATION_RESOLVED_EVENT,
+} from "../../admin/notifications/admin-notification.types";
 
 type Viewer = "user" | "agent";
 type AnyTicket = Record<string, any>;
@@ -51,7 +56,13 @@ export class SupportService {
     @InjectConnection() private readonly connection: Connection,
     private readonly files: SupportAttachmentsService,
     private readonly staff: SupportStaffService,
+    private readonly emitter: EventEmitter2,
   ) {}
+
+  /** Escalated tickets need action; close that action when the ticket ends. */
+  private resolveEscalation(ticketId: string) {
+    this.emitter.emit(ADMIN_NOTIFICATION_RESOLVED_EVENT, { entityType: "support_ticket", entityId: ticketId });
+  }
 
   /* ------------------------------------------------------------------ */
   /* Serialization                                                       */
@@ -288,6 +299,7 @@ export class SupportService {
     const updated = await this.tickets
       .findOneAndUpdate({ _id: ticket._id }, { $set: { status: "closed", closedAt: new Date() } }, { returnDocument: "after" })
       .exec();
+    this.resolveEscalation(idOf(ticket._id));
     return this.detail(updated, "user");
   }
 
@@ -378,6 +390,7 @@ export class SupportService {
       )
       .exec();
     await this.staff.notify(idOf(ticket.userId), "Fockis Support replied", `New reply on ${ticket.number}: ${ticket.subject}`, this.link(ticket, "user"), idOf(ticket._id), "support_ticket");
+    if (status === "resolved" || status === "closed") this.resolveEscalation(idOf(ticket._id));
     return this.getForAgent(ticketId);
   }
 
@@ -393,6 +406,7 @@ export class SupportService {
     if (status === "resolved" && ticket.status !== "resolved") {
       await this.staff.notify(idOf(ticket.userId), "Support request resolved", `${ticket.number}: ${ticket.subject}`, this.link(ticket, "user"), idOf(ticket._id), "support_ticket");
     }
+    if (status === "resolved" || status === "closed") this.resolveEscalation(idOf(ticket._id));
     return this.getForAgent(ticketId);
   }
 
@@ -416,6 +430,21 @@ export class SupportService {
       )
       .exec();
     await this.staff.notifyStaff(null, "Ticket escalated", `${ticket.number}: ${ticket.subject}`, this.link(ticket, "agent"), idOf(ticket._id), "support_ticket", agentId);
+    this.emitter.emit(ADMIN_NOTIFICATION_EVENT, {
+      type: "support.ticket_escalated",
+      category: "support",
+      priority: priority === "urgent" ? "critical" : "high",
+      title: "Support ticket escalated",
+      message: `${ticket.number}: ${String(ticket.subject ?? "").slice(0, 120)}`,
+      groupKey: `support_ticket:${idOf(ticket._id)}`,
+      entityType: "support_ticket",
+      entityId: idOf(ticket._id),
+      link: this.link(ticket, "agent"),
+      requiredPermissions: ["support.view"],
+      actionRequired: true,
+      excludeUserIds: [agentId, idOf(ticket.userId)],
+      metadata: { ticket: String(ticket.number ?? "") },
+    });
     return this.getForAgent(ticketId);
   }
 

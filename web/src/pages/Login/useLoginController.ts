@@ -17,7 +17,7 @@ import {
   mfaVerifyRequest,
 } from "./loginApi";
 
-import type { AuthResponse, LoginUser, MfaMode } from "./loginTypes";
+import type { AuthResponse, LoginUser, MfaMode, VerificationState } from "./loginTypes";
 
 import {
   extractToken,
@@ -45,6 +45,8 @@ export function useLoginController() {
   const [challengeToken, setChallengeToken] = useState("");
   const [qrCode, setQrCode] = useState("");
   const [mfaSecret, setMfaSecret] = useState("");
+  const [verification, setVerification] = useState<VerificationState | null>(null);
+  const [showRecovery, setShowRecovery] = useState(false);
 
   useEffect(() => {
     return subscribeToLanguage((nextLanguage) => {
@@ -244,6 +246,67 @@ export function useLoginController() {
     }
   };
 
+  /** Next step after the password (or after the extra verification). */
+  const handleLoginData = async (data: AuthResponse) => {
+    if (data.requiresVerification === true) {
+      if (typeof data.verification_token !== "string" || !data.verification_token) {
+        throw new Error("Verification is required, but the backend did not return a verification token.");
+      }
+
+      setVerification({
+        token: data.verification_token,
+        methods: Array.isArray(data.verificationMethods) && data.verificationMethods.length ? data.verificationMethods : ["recovery"],
+        maskedEmail: typeof data.maskedEmail === "string" ? data.maskedEmail : null,
+        message: typeof data.message === "string" ? data.message : "",
+      });
+      return;
+    }
+
+    setVerification(null);
+
+    const token = extractToken(data);
+    const user = extractUser(data);
+
+    const setupRequired =
+      data.mfaSetup === true ||
+      data.mfaSetupRequired === true;
+
+    if (setupRequired) {
+      const nextSetupToken = extractSetupToken(data);
+
+      if (!nextSetupToken) {
+        throw new Error(
+          "MFA setup is required, but the backend did not return a setup token.",
+        );
+      }
+
+      await startMfaSetup(nextSetupToken);
+      return;
+    }
+
+    if (data.requiresMfa === true) {
+      const nextChallenge = extractChallengeToken(data);
+
+      if (nextChallenge) {
+        setChallengeToken(nextChallenge);
+        setMfaCode("");
+        setMfaMode("verify");
+        return;
+      }
+
+      throw new Error(
+        "MFA is required, but the backend did not return an MFA challenge token.",
+      );
+    }
+
+    if (token) {
+      await establishSession(data, user);
+      return;
+    }
+
+    throw new Error("Backend did not return a JWT token.");
+  };
+
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -267,47 +330,8 @@ export function useLoginController() {
           : [],
       );
 
-      const token = extractToken(data);
-      const user = extractUser(data);
-
-      const setupRequired =
-        data.mfaSetup === true ||
-        data.mfaSetupRequired === true;
-
-      if (setupRequired) {
-        const nextSetupToken = extractSetupToken(data);
-
-        if (!nextSetupToken) {
-          throw new Error(
-            "MFA setup is required, but the backend did not return a setup token.",
-          );
-        }
-
-        await startMfaSetup(nextSetupToken);
-        return;
-      }
-
-      if (data.requiresMfa === true) {
-        const nextChallenge = extractChallengeToken(data);
-
-        if (nextChallenge) {
-          setChallengeToken(nextChallenge);
-          setMfaCode("");
-          setMfaMode("verify");
-          return;
-        }
-
-        throw new Error(
-          "MFA is required, but the backend did not return an MFA challenge token.",
-        );
-      }
-
-      if (token) {
-        await establishSession(data, user);
-        return;
-      }
-
-      throw new Error("Backend did not return a JWT token.");
+      await handleLoginData(data);
+      return;
     } catch (err: unknown) {
       console.error("[FOCKIS AUTH] LOGIN ERROR:", err);
 
@@ -370,7 +394,17 @@ export function useLoginController() {
     setChallengeToken("");
   };
 
+  const cancelVerification = () => {
+    setVerification(null);
+    setPassword("");
+  };
+
   return {
+    verification,
+    handleLoginData,
+    cancelVerification,
+    showRecovery,
+    setShowRecovery,
     email,
     password,
     showPassword,

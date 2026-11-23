@@ -2,7 +2,7 @@ import { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { t } from "../../i18n";
 import LanguageSelector from "../../i18n/components/LanguageSelector";
-import type { MfaMode } from "./loginTypes";
+import type { AuthResponse, MfaMode, VerificationState } from "./loginTypes";
 import {
   IconMail,
   IconLock,
@@ -10,6 +10,8 @@ import {
   IconEyeOff,
 } from "./LoginIcons";
 import MfaVerification from "./MfaVerification";
+import LoginVerification from "./LoginVerification";
+import AccountRecoveryRequest from "./AccountRecoveryRequest";
 
 type Props = {
   mfaMode: MfaMode;
@@ -28,6 +30,11 @@ type Props = {
   onConfirmSetup: () => void;
   onVerify: () => void;
   onSwitchToSetup: () => void;
+  verification?: VerificationState | null;
+  onVerified?: (data: AuthResponse) => Promise<void>;
+  onCancelVerification?: () => void;
+  showRecovery?: boolean;
+  onShowRecovery?: (show: boolean) => void;
 };
 
 export default function LoginForm({
@@ -47,6 +54,11 @@ export default function LoginForm({
   onConfirmSetup,
   onVerify,
   onSwitchToSetup,
+  verification,
+  onVerified,
+  onCancelVerification,
+  showRecovery,
+  onShowRecovery,
 }: Props) {
   return (
     <div className="form-panel">
@@ -61,7 +73,11 @@ export default function LoginForm({
           <p className="form-header__body">{t("login.formDescription")}</p>
         </div>
 
-        {mfaMode === "login" ? (
+        {verification && onVerified && onCancelVerification ? (
+          <LoginVerification verification={verification} onVerified={onVerified} onCancel={onCancelVerification} />
+        ) : showRecovery && onShowRecovery ? (
+          <AccountRecoveryRequest initialEmail={email} onBack={() => onShowRecovery(false)} />
+        ) : mfaMode === "login" ? (
           <form onSubmit={onSubmit}>
             <div className="field">
               <label htmlFor="email">{t("login.email")}</label>
@@ -118,6 +134,16 @@ export default function LoginForm({
               >
                 {t("login.forgotPassword")}
               </Link>
+              {onShowRecovery && (
+                <button
+                  type="button"
+                  className="forgot-password-link"
+                  onClick={() => onShowRecovery(true)}
+                  style={{ background: "none", border: 0, cursor: "pointer", padding: 0 }}
+                >
+                  Can't sign in? Request recovery
+                </button>
+              )}
             </div>
 
             <button

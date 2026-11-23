@@ -99,7 +99,8 @@ export class AuthService {
   // Render's free tier blocks outbound SMTP ports (25/465/587).
   // When RESEND_API_KEY is set, mail goes over HTTPS (port 443) instead.
 
-  private async sendEmail(options: {
+  /** Also used by sign-in verification codes. */
+  async sendEmail(options: {
     to: string;
     subject: string;
     text: string;
@@ -1134,6 +1135,7 @@ export class AuthService {
             ? user.mfaSecret
             : encryptMfaSecret(secret as string),
           mfaVerifiedAt: new Date(),
+          mfaEnabledAt: new Date(),
           mfaRecoveryCodes: hashedRecoveryCodes,
           mfaRecoveryCodesGeneratedAt: hashedRecoveryCodes.length ? new Date() : null,
         },

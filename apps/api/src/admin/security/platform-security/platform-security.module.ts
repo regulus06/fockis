@@ -23,6 +23,23 @@ import {
   AdminAuditLogsController,
   SecurityAdminController,
 } from "./security-admin.controller";
+import {
+  AuthRestriction,
+  AuthRestrictionSchema,
+  LoginFailureCounter,
+  LoginFailureCounterSchema,
+  LoginVerificationChallenge,
+  LoginVerificationChallengeSchema,
+  RecoveryCase,
+  RecoveryCaseSchema,
+  SecurityIncident,
+  SecurityIncidentSchema,
+} from "../incidents/security-incident.schema";
+import { LoginMonitorService } from "../incidents/login-monitor.service";
+import { AuthRestrictionService } from "../incidents/auth-restriction.service";
+import { RecoveryCaseService } from "../incidents/recovery-case.service";
+import { SecurityIncidentsService } from "../incidents/security-incidents.service";
+import { SecurityIncidentsController } from "../incidents/security-incidents.controller";
 
 /**
  * Platform security policy, enforcement helpers and the Admin Center
@@ -39,6 +56,11 @@ import {
       { name: SecurityPolicyRevision.name, schema: SecurityPolicyRevisionSchema },
       { name: LoginThrottle.name, schema: LoginThrottleSchema },
       { name: AuditLog.name, schema: AuditLogSchema },
+      { name: LoginFailureCounter.name, schema: LoginFailureCounterSchema },
+      { name: SecurityIncident.name, schema: SecurityIncidentSchema },
+      { name: AuthRestriction.name, schema: AuthRestrictionSchema },
+      { name: LoginVerificationChallenge.name, schema: LoginVerificationChallengeSchema },
+      { name: RecoveryCase.name, schema: RecoveryCaseSchema },
     ]),
 
     NotificationsModule,
@@ -63,7 +85,7 @@ import {
     }),
   ],
 
-  controllers: [SecurityAdminController, AdminAuditLogsController],
+  controllers: [SecurityAdminController, AdminAuditLogsController, SecurityIncidentsController],
 
   providers: [
     PlatformSecurityPolicyService,
@@ -71,9 +93,18 @@ import {
     SecurityNotificationsService,
     AccountSecurityService,
     SecurityOverviewService,
+    LoginMonitorService,
+    AuthRestrictionService,
+    RecoveryCaseService,
+    SecurityIncidentsService,
   ],
 
   exports: [
+    LoginMonitorService,
+    AuthRestrictionService,
+    RecoveryCaseService,
+    SecurityIncidentsService,
+    MongooseModule,
     PlatformSecurityPolicyService,
     SecurityEventsService,
     SecurityNotificationsService,

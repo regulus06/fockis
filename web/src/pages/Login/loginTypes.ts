@@ -30,6 +30,10 @@ export type AuthResponse = {
     [key: string]: unknown;
   };
   requiresMfa?: boolean;
+  requiresVerification?: boolean;
+  verification_token?: string;
+  verificationMethods?: VerificationMethod[];
+  maskedEmail?: string | null;
   mfaSetup?: boolean;
   mfaSetupRequired?: boolean;
   mfaVerified?: boolean;
@@ -47,4 +51,13 @@ export type AuthResponse = {
   secret?: string;
   message?: string;
   [key: string]: unknown;
+};
+
+export type VerificationMethod = "totp" | "email" | "recovery";
+
+export type VerificationState = {
+  token: string;
+  methods: VerificationMethod[];
+  maskedEmail: string | null;
+  message: string;
 };

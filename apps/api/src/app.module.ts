@@ -186,6 +186,7 @@ import { TranslationModule } from "./translation/translation.module";
 
 import { RedisModule } from "./redis/redis.module";
 import { PlatformSecurityModule } from "./admin/security/platform-security/platform-security.module";
+import { AdminNotificationsModule } from "./admin/notifications/admin-notifications.module";
 
 // ============================================================================
 // FOCKIS AI
@@ -357,6 +358,7 @@ import {
     AcademyModule,
 
     // Platform security policy (global): must load before AuthModule users.
+    AdminNotificationsModule,
     PlatformSecurityModule,
 
     AuthModule,

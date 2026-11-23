@@ -147,6 +147,12 @@ export class ChurchMediaController {
     return this.mediaService.update(organizationId, mediaId, dto, requiredUserId(req));
   }
 
+  /** Try the browser-compatibility conversion of a video again. */
+  @Post(":mediaId/retry-processing")
+  retryProcessing(@Param("organizationId") organizationId: string, @Param("mediaId") mediaId: string, @Req() req: Request) {
+    return this.mediaService.retryProcessing(organizationId, mediaId, requiredUserId(req));
+  }
+
   @Delete(":mediaId")
   remove(@Param("organizationId") organizationId: string, @Param("mediaId") mediaId: string, @Req() req: Request) {
     return this.mediaService.remove(organizationId, mediaId, requiredUserId(req));

@@ -15,10 +15,68 @@ import { AuthService } from "../auth/auth.service";
 import { CreateUserDto } from "../dto/create-user.dto";
 import { LoginDto } from "../dto/login.dto";
 import { Public } from "./public.decorator";
+import { LoginVerificationService } from "./login-verification.service";
+import { PublicRecoveryRequestDto } from "../admin/security/incidents/security-incidents.dto";
 
 @Controller("auth")
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly verification: LoginVerificationService,
+  ) {}
+
+  // ============================================================
+  // SIGN-IN VERIFICATION (after high-risk activity)
+  // ============================================================
+
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post("login/verification/email")
+  sendVerificationEmail(
+    @Body("verification_token") token: string,
+    @Req() request: Request,
+  ) {
+    return this.verification.sendEmailCode(String(token ?? ""), request);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post("login/verification/verify")
+  verifyLogin(
+    @Body("verification_token") token: string,
+    @Body("method") method: string,
+    @Body("code") code: string,
+    @Req() request: Request,
+  ) {
+    if (method !== "totp" && method !== "email") {
+      throw new BadRequestException("Choose a verification method.");
+    }
+
+    return this.verification.verify(String(token ?? ""), method, String(code ?? ""), request);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @Post("login/verification/recovery")
+  verificationRecovery(
+    @Body("verification_token") token: string,
+    @Body("message") message: string,
+    @Req() request: Request,
+  ) {
+    return this.verification.requestRecoveryFromVerification(
+      String(token ?? ""),
+      String(message ?? "").slice(0, 1000),
+      request,
+    );
+  }
+
+  /** Public account recovery request. Same answer whether or not the account exists. */
+  @Public()
+  @Throttle({ default: { limit: 3, ttl: 60 * 60_000 } })
+  @Post("recovery")
+  requestRecovery(@Body() body: PublicRecoveryRequestDto, @Req() request: Request) {
+    return this.verification.requestRecovery(body.email, body.message, request);
+  }
 
   @Public()
   @Throttle({ default: { limit: 5, ttl: 60_000 } })

@@ -1,18 +1,19 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { DisputesService } from './disputes.service';
+import { nextDisputeStatus } from './disputes.service';
 
-describe('DisputesService', () => {
-  let service: DisputesService;
-
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [DisputesService],
-    }).compile();
-
-    service = module.get<DisputesService>(DisputesService);
+describe('DisputesService state machine', () => {
+  it('moves open disputes into review', () => {
+    expect(nextDisputeStatus('open', 'start_review')).toBe('under_review');
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  it('resolves open or reviewed disputes', () => {
+    expect(nextDisputeStatus('open', 'resolve_buyer')).toBe('resolved_buyer');
+    expect(nextDisputeStatus('under_review', 'resolve_seller')).toBe('resolved_seller');
+    expect(nextDisputeStatus('under_review', 'close')).toBe('closed');
+  });
+
+  it('refuses changes to decided disputes', () => {
+    expect(nextDisputeStatus('resolved_buyer', 'start_review')).toBeNull();
+    expect(nextDisputeStatus('closed', 'resolve_buyer')).toBeNull();
+    expect(nextDisputeStatus('under_review', 'start_review')).toBeNull();
   });
 });

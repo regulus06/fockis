@@ -250,6 +250,7 @@ export class EmailChangeService {
 
     const oldEmail = user.email;
     user.email = pendingEmail;
+    (user as any).emailChangedAt = new Date();
 
     (user as any).pendingEmail = null;
     (user as any).emailChangeCodeHash = null;

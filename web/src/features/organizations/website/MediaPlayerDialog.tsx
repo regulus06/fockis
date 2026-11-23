@@ -8,8 +8,9 @@
  *   video file           → <video> player
  *   audio file           → <audio> player
  *   PDF / document       → shown inline
- * If the browser can't decode the file (e.g. an iPhone video saved as HEVC
- * .mov), it says so and offers the download instead.
+ * Uploaded videos are converted by the server to H.264 MP4 so every browser
+ * can play them; while that runs, this says so. If the browser still can't
+ * decode a file, it says so and offers the download instead.
  * -----------------------------------------------------------------------------
  */
 
@@ -23,6 +24,8 @@ export interface PlayableMedia {
   mediaType?: string | null;
   mimeType?: string | null;
   posterUrl?: string | null;
+  /** The server is still converting this video to a format every browser plays. */
+  processing?: boolean;
 }
 
 function embedUrl(url: string): string | null {
@@ -72,10 +75,15 @@ export default function MediaPlayerDialog({ media, onClose }: { media: PlayableM
         </div>
 
         <div className="mpl__stage">
-          {failed ? (
+          {media.processing && kind === "video" ? (
+            <div className="mpl__error" role="status">
+              <p>This video is being prepared so it plays in every browser.</p>
+              <p>It's usually ready within a few minutes. Please check back soon.</p>
+            </div>
+          ) : failed ? (
             <div className="mpl__error">
-              <p>This file can't be played in this browser. Videos recorded on some phones (HEVC .mov) only play in Safari.</p>
-              <p>Download it to watch, or ask the church to upload it as an MP4.</p>
+              <p>This file can't be played in this browser.</p>
+              <p>If it was uploaded recently, it may still be converting. Try again in a few minutes, or download it to watch now.</p>
               <a href={media.url} download className="cw-btn cw-btn--white">
                 <Download aria-hidden="true" /> Download
               </a>
@@ -94,7 +102,7 @@ export default function MediaPlayerDialog({ media, onClose }: { media: PlayableM
           )}
         </div>
 
-        {!failed && kind !== "embed" && (
+        {!failed && !(media.processing && kind === "video") && kind !== "embed" && (
           <div className="mpl__foot">
             <a href={media.url} download>
               <Download aria-hidden="true" /> Download

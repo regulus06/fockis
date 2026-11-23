@@ -151,6 +151,7 @@ export const PERMISSIONS = {
   MARKETPLACE_SELLERS_APPROVE: "marketplace.sellers.approve",
   MARKETPLACE_SELLERS_SUSPEND: "marketplace.sellers.suspend",
   MARKETPLACE_ORDERS_VIEW: "marketplace.orders.view",
+  MARKETPLACE_ORDERS_MANAGE: "marketplace.orders.manage",
   MARKETPLACE_DISPUTES_MANAGE: "marketplace.disputes.manage",
   MARKETPLACE_REVIEWS_MANAGE: "marketplace.reviews.manage",
 

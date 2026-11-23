@@ -346,7 +346,181 @@ export const securityAdminApi = {
   async organizations(params: { search?: string; page?: number } = {}): Promise<Paged<OrganizationSecurityRow> & { platformVersion: number }> {
     return (await api.get(`${BASE}/organizations`, { params })).data;
   },
+
+  // ---------------------------------------------------------------- incidents
+
+  async incidents(params: Record<string, string | number> = {}): Promise<IncidentPage> {
+    return (await api.get(`${BASE}/incidents`, { params })).data;
+  },
+
+  async incident(id: string): Promise<SecurityIncident> {
+    return (await api.get(`${BASE}/incidents/${encodeURIComponent(id)}`)).data;
+  },
+
+  async acknowledgeIncident(id: string, note: string): Promise<SecurityIncident> {
+    return (await api.patch(`${BASE}/incidents/${encodeURIComponent(id)}/acknowledge`, note ? { note } : {})).data;
+  },
+
+  async resolveIncident(id: string, note: string, liftRestriction: boolean) {
+    return (await api.patch(`${BASE}/incidents/${encodeURIComponent(id)}/resolve`, { note, liftRestriction }, { headers: reauthHeaders() })).data as {
+      incident: SecurityIncident;
+      restrictionLifted: boolean;
+    };
+  },
+
+  // ------------------------------------------------------------- restrictions
+
+  async restrictions(params: Record<string, string | number> = {}): Promise<Paged<AuthRestrictionRow>> {
+    return (await api.get(`${BASE}/restrictions`, { params })).data;
+  },
+
+  async reviewRestriction(id: string, action: "lift" | "keep", note: string, extendHours = 0): Promise<AuthRestrictionRow> {
+    return (
+      await api.post(
+        `${BASE}/restrictions/${encodeURIComponent(id)}/review`,
+        { action, note, ...(action === "keep" && extendHours ? { extendHours } : {}) },
+        { headers: reauthHeaders() },
+      )
+    ).data;
+  },
+
+  // ----------------------------------------------------------------- recovery
+
+  async recoveryCases(params: Record<string, string | number> = {}): Promise<Paged<RecoveryCaseRow>> {
+    return (await api.get(`${BASE}/recovery`, { params })).data;
+  },
+
+  async recoveryCase(id: string): Promise<RecoveryCaseDetail> {
+    return (await api.get(`${BASE}/recovery/${encodeURIComponent(id)}`)).data;
+  },
+
+  async reviewRecovery(
+    id: string,
+    input: { action: "start_review" | "approve" | "reject" | "close"; note?: string; revokeSessions?: boolean; requirePasswordChange?: boolean },
+  ) {
+    return (await api.post(`${BASE}/recovery/${encodeURIComponent(id)}/review`, input, { headers: reauthHeaders() })).data as {
+      case: RecoveryCaseRow;
+      effects: string[];
+    };
+  },
 };
+
+/* ============================================================================
+   INCIDENTS, RESTRICTIONS, RECOVERY
+============================================================================ */
+
+export type IncidentStatus =
+  | "detected"
+  | "monitoring"
+  | "high_risk"
+  | "verification_pending"
+  | "restricted"
+  | "verified"
+  | "under_review"
+  | "resolved"
+  | "expired";
+
+export type IncidentLevel = "warning" | "high" | "critical";
+
+export interface TimelineEntry {
+  at: string;
+  action: string;
+  actorId: string | null;
+  actorName: string | null;
+  note: string;
+}
+
+export interface AuthRestrictionRow {
+  id: string;
+  userId: string;
+  username?: string | null;
+  incidentId: string | null;
+  level: "step_up" | "critical";
+  status: "verification_pending" | "verified" | "lifted" | "expired";
+  active: boolean;
+  reasonCodes: string[];
+  expiresAt: string;
+  verifiedMethod: string | null;
+  verifiedAt: string | null;
+  liftedBy: string | null;
+  liftedAt: string | null;
+  reviewNote: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SecurityIncident {
+  id: string;
+  number: string;
+  kind: "account_failed_logins" | "unknown_account_failed_logins" | "source_abuse" | "suspicious_sign_in";
+  status: IncidentStatus;
+  open: boolean;
+  level: IncidentLevel;
+  riskScore: number;
+  reasonCodes: string[];
+  reasons: Array<{ code: string; label: string }>;
+  subjectUserId: string | null;
+  subjectLabel: string;
+  username: string | null;
+  privileged: boolean;
+  sourceIp: string | null;
+  windowFailures: number;
+  totalFailures: number;
+  blockedAttempts: number;
+  distinctSources: number;
+  distinctTargets: number;
+  firstSeenAt: string;
+  lastActivityAt: string;
+  restrictionId: string | null;
+  restriction: AuthRestrictionRow | null;
+  verifiedAt: string | null;
+  sessionsRevokedAt: string | null;
+  successAfterFailuresAt: string | null;
+  acknowledgedBy: string | null;
+  acknowledgedAt: string | null;
+  resolvedBy: string | null;
+  resolvedAt: string | null;
+  resolutionNote: string;
+  timeline: TimelineEntry[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IncidentPage extends Paged<SecurityIncident> {
+  openByLevel: Partial<Record<IncidentLevel, number>>;
+}
+
+export interface RecoveryCaseRow {
+  id: string;
+  number: string;
+  userId: string;
+  username: string | null;
+  source: "public_form" | "login_verification";
+  status: "open" | "in_review" | "approved" | "rejected" | "closed";
+  message: string;
+  restrictionId: string | null;
+  incidentId: string | null;
+  requestIp: string | null;
+  requestDevice: string | null;
+  assignedTo: string | null;
+  decidedBy: string | null;
+  decidedAt: string | null;
+  timeline: TimelineEntry[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RecoveryCaseDetail extends RecoveryCaseRow {
+  account: {
+    id: string;
+    username: string;
+    role: string;
+    mfaEnabled: boolean;
+    isActive: boolean;
+    lockedUntil: string | null;
+  } | null;
+  activeRestriction: AuthRestrictionRow | null;
+}
 
 /* ============================================================================
    FORMATTING

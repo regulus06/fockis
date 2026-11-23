@@ -45,6 +45,7 @@ import { UpdateMediaDto } from "../dto/update-media.dto";
 import { MembersService } from "../../members/services/members.service";
 import { ChurchPermission } from "../../enums/permission.enum";
 import { MembershipStatus } from "../../enums/membership-status.enum";
+import { MediaTranscodeService } from "./media-transcode.service";
 
 /* ============================================================================
    UPLOAD SETTINGS
@@ -133,6 +134,9 @@ function toResponse(doc: ChurchMediaDocument) {
     publishedAt: doc.publishedAt ?? null,
     createdAt: doc.createdAt ?? null,
     tags: doc.tags ?? [],
+    /** "ready" | "pending" | "processing" | "failed" (videos being made browser-compatible). */
+    processingStatus: doc.processingStatus ?? "ready",
+    processingError: doc.processingStatus === "failed" ? doc.processingError ?? null : null,
   };
 }
 
@@ -172,6 +176,8 @@ export class ChurchMediaService {
     private readonly mediaModel: Model<ChurchMediaDocument>,
 
     private readonly membersService: MembersService,
+
+    private readonly transcoder: MediaTranscodeService,
   ) {}
 
   private oid(id: string, what: string): Types.ObjectId {
@@ -367,7 +373,11 @@ export class ChurchMediaService {
       publishedAt: dto.published === false ? null : new Date(),
       uploadedByUserId: this.oid(actorUserId, "user ID"),
       uploadedByMembershipId: actor?._id ?? null,
+      processingStatus: MediaTranscodeService.needsCheck(dto.mediaType, dto.fileUrl) ? "pending" : "ready",
+      processingAttempts: 0,
     });
+
+    if (created.processingStatus === "pending") this.transcoder.enqueue(String(created._id));
 
     return toResponse(created);
   }
@@ -404,12 +414,37 @@ export class ChurchMediaService {
       if (!dto.published) doc.publishedAt = null;
     }
 
+    const recheck = oldFile !== doc.fileUrl || dto.mediaType !== undefined;
+
+    if (recheck) {
+      const needs = MediaTranscodeService.needsCheck(doc.mediaType, doc.fileUrl);
+      doc.processingStatus = needs ? "pending" : "ready";
+      doc.processingError = null;
+      doc.processingAttempts = 0;
+    }
+
     await doc.save();
+
+    if (recheck && doc.processingStatus === "pending") this.transcoder.enqueue(String(doc._id));
 
     if (oldFile !== doc.fileUrl) await this.deleteUploadedFile(organizationId, oldFile);
     if (oldThumb && oldThumb !== doc.thumbnailUrl) await this.deleteUploadedFile(organizationId, oldThumb);
 
     return toResponse(doc);
+  }
+
+  /* ------------------------------------------------- retry conversion */
+
+  async retryProcessing(organizationId: string, mediaId: string, actorUserId: string) {
+    await this.requireManager(organizationId, actorUserId);
+    const doc = await this.findOrThrow(organizationId, mediaId);
+
+    if (doc.processingStatus !== "failed") {
+      throw new BadRequestException("This item is not waiting for a retry.");
+    }
+
+    await this.transcoder.retry(organizationId, String(doc._id));
+    return toResponse((await this.findOrThrow(organizationId, mediaId)));
   }
 
   /* ---------------------------------------------------------- remove */

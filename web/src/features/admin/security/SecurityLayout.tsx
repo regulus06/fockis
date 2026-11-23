@@ -14,6 +14,9 @@ import {
   Timer,
   UserCheck,
   type LucideIcon,
+  LifeBuoy,
+  Siren,
+  UserLock,
 } from "lucide-react";
 
 import { PERMISSIONS } from "../permissions/permission.constants";
@@ -52,6 +55,9 @@ const NAV: NavEntry[] = [
   { to: `${SECURITY_BASE}/two-factor`, label: "Two-Factor Authentication", icon: Smartphone, anyOf: [P.SECURITY_VIEW] },
   { to: `${SECURITY_BASE}/alerts`, label: "Login Alerts", icon: BellRing, anyOf: [P.SECURITY_VIEW] },
   { to: `${SECURITY_BASE}/account-protection`, label: "Account Protection", icon: UserCheck, anyOf: [P.SECURITY_VIEW] },
+  { to: `${SECURITY_BASE}/incidents`, label: "Security Incidents", icon: Siren, anyOf: [P.SECURITY_VIEW] },
+  { to: `${SECURITY_BASE}/restrictions`, label: "Sign-in Restrictions", icon: UserLock, anyOf: [P.SECURITY_VIEW] },
+  { to: `${SECURITY_BASE}/recovery`, label: "Recovery Cases", icon: LifeBuoy, anyOf: [P.SECURITY_ACCOUNT_RECOVERY] },
   { to: `${SECURITY_BASE}/organizations`, label: "Organization Identity Policies", icon: Building2, anyOf: [P.SECURITY_VIEW] },
   {
     to: `${SECURITY_BASE}/audit`,

@@ -1003,3 +1003,165 @@
     scroll-margin-top: 90px;
   }
 }
+
+/* ============================================================================
+   INCIDENTS, RESTRICTIONS, RECOVERY
+============================================================================ */
+
+.fksec-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fk-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--fk-text-primary);
+    text-decoration: underline;
+  }
+}
+
+.fksec-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fksec-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fksec-card-title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+
+  &:not(:first-child) {
+    margin-top: 18px;
+  }
+}
+
+.fksec-dl {
+  display: grid;
+  grid-template-columns: minmax(120px, max-content) 1fr;
+  gap: 8px 16px;
+  margin: 0;
+  font-size: 13px;
+
+  dt {
+    color: var(--fk-text-secondary);
+  }
+
+  dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+
+    p {
+      margin: 4px 0 0;
+      color: var(--fk-text-secondary);
+    }
+  }
+}
+
+.fksec-reasons {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+
+  code {
+    margin-left: 6px;
+    color: var(--fk-text-tertiary);
+    font-size: 11px;
+  }
+}
+
+.fksec-timeline {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    grid-template-columns: 170px 1fr;
+    gap: 2px 14px;
+    padding-left: 12px;
+    border-left: 2px solid var(--fk-border);
+    font-size: 13px;
+
+    time {
+      grid-row: span 3;
+      color: var(--fk-text-tertiary);
+      font-size: 12px;
+    }
+
+    p {
+      margin: 0;
+      color: var(--fk-text-secondary);
+    }
+  }
+
+  @media (max-width: 640px) {
+    li {
+      grid-template-columns: 1fr;
+
+      time {
+        grid-row: auto;
+      }
+    }
+  }
+}
+
+.fksec-message {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  background: rgba(16, 36, 61, 0.04);
+  border-radius: 8px;
+  font-size: 13px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.fksec-checks {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.fksec-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.fksec-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Pages outside Security & Identity that reuse its page layout. */
+.fksm.fksec.fksec-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  text-align: left;
+}

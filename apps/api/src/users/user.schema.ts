@@ -431,6 +431,14 @@ export class User {
 
   emailChangeAttempts!: number;
 
+  /** When the email address last changed (recent changes are not trusted for verification). */
+  @Prop({ type: Date, default: null })
+  emailChangedAt!: Date | null;
+
+  /** When two-factor was last turned on (recent enrollment is not trusted for verification). */
+  @Prop({ type: Date, default: null })
+  mfaEnabledAt!: Date | null;
+
   @Prop({
 
     required: true,

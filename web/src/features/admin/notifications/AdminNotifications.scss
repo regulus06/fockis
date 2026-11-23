@@ -1,0 +1,390 @@
+/* ============================================================================
+   ADMIN NOTIFICATIONS — bell panel additions and the notifications page.
+   Extends the existing .fk-notif-* styles (AdminComponents.scss).
+============================================================================ */
+
+.fk-notif-panel {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  max-height: min(540px, 80vh);
+  overflow: hidden;
+  width: 380px;
+
+  @media (max-width: 520px) {
+    position: fixed;
+    top: 60px;
+    right: 8px;
+    left: 8px;
+    width: auto;
+  }
+}
+
+.fk-notif-panel__tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--fk-border);
+}
+
+.fk-notif-tabs {
+  display: inline-flex;
+  padding: 2px;
+  background: var(--fk-bg-subtle, rgba(16, 36, 61, 0.05));
+  border-radius: 999px;
+
+  button {
+    padding: 4px 12px;
+    color: var(--fk-text-secondary);
+    background: transparent;
+    border: 0;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &.is-active {
+      color: var(--fk-text-primary);
+      background: var(--fk-bg-elevated, #fff);
+      box-shadow: 0 1px 3px rgba(16, 36, 61, 0.14);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--fk-accent);
+      outline-offset: 1px;
+    }
+  }
+}
+
+.fk-notif-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  color: var(--fk-accent-strong);
+  background: none;
+  border: 0;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    color: var(--fk-text-tertiary);
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fk-accent);
+    border-radius: 4px;
+  }
+}
+
+.fk-notif-list {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.fk-notif-state {
+  padding: 28px 16px;
+  color: var(--fk-text-secondary);
+  font-size: 13px;
+  text-align: center;
+}
+
+.fk-notif-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 0;
+
+  &--critical {
+    box-shadow: inset 3px 0 0 var(--fk-danger);
+  }
+
+  &--high {
+    box-shadow: inset 3px 0 0 var(--fk-warning);
+  }
+}
+
+.fk-notif-item__row {
+  display: flex;
+  flex: 1;
+  gap: 10px;
+  min-width: 0;
+  padding: 11px 6px 11px 14px;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(16, 36, 61, 0.04);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fk-accent);
+    outline-offset: -2px;
+  }
+}
+
+.fk-notif-item__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.fk-notif-item__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fk-notif-item__msg {
+  overflow-wrap: anywhere;
+}
+
+.fk-notif-item__time {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.fk-notif-item__read {
+  flex: none;
+  margin: 10px 10px 0 0;
+  padding: 4px;
+  color: var(--fk-text-tertiary);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--fk-text-primary);
+    border-color: var(--fk-border);
+    outline: none;
+  }
+}
+
+.fk-notif-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  background: var(--fk-accent);
+  border-radius: 50%;
+}
+
+.fk-notif-cat {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  color: var(--fk-info);
+  background: var(--fk-info-dim);
+  border-radius: 8px;
+
+  &--security {
+    color: var(--fk-danger);
+    background: var(--fk-danger-dim);
+  }
+
+  &--marketplace {
+    color: var(--fk-accent-strong);
+    background: var(--fk-accent-dim);
+  }
+
+  &--legal,
+  &--accounts {
+    color: var(--fk-success);
+    background: var(--fk-success-dim);
+  }
+}
+
+.fk-notif-sev {
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+
+  &--critical {
+    color: #fff;
+    background: var(--fk-danger);
+  }
+
+  &--high {
+    color: #7a4a00;
+    background: var(--fk-warning-dim);
+  }
+
+  &--medium {
+    color: var(--fk-info);
+    background: var(--fk-info-dim);
+  }
+
+  &--low {
+    color: var(--fk-text-secondary);
+    background: rgba(16, 36, 61, 0.06);
+  }
+
+  &--resolved {
+    color: var(--fk-success);
+    background: var(--fk-success-dim);
+  }
+}
+
+.fk-notif-count {
+  color: var(--fk-text-tertiary);
+  font-size: 11px;
+}
+
+.fk-notif-panel__footer {
+  padding: 10px 14px;
+  border-top: 1px solid var(--fk-border);
+  text-align: center;
+
+  a {
+    color: var(--fk-accent-strong);
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   /admin/notifications
+--------------------------------------------------------------------------- */
+
+.fkn-page {
+  text-align: left;
+  display: grid;
+  gap: 16px;
+  max-width: 1100px;
+}
+
+.fkn-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+
+  h1 {
+    margin: 0;
+    font-size: 22px;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: var(--fk-text-secondary);
+  }
+}
+
+.fkn-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.fkn-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fkn-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--fk-border);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &.is-unread {
+    background: var(--fk-gold-50, var(--fk-accent-dim));
+  }
+
+  &--critical {
+    box-shadow: inset 3px 0 0 var(--fk-danger);
+  }
+
+  &--high {
+    box-shadow: inset 3px 0 0 var(--fk-warning);
+  }
+}
+
+.fkn-row__main {
+  flex: 1;
+  min-width: 0;
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 3px;
+    font-size: 14px;
+  }
+
+  p {
+    margin: 0;
+    color: var(--fk-text-secondary);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+}
+
+.fkn-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+  color: var(--fk-text-tertiary);
+  font-size: 12px;
+}
+
+.fkn-row__actions {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.fkn-prefs {
+  display: grid;
+  gap: 10px;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 720px) {
+  .fkn-row {
+    flex-wrap: wrap;
+  }
+
+  .fkn-row__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

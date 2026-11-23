@@ -21,6 +21,15 @@ import { PlatformSecurityPolicyService } from "../admin/security/platform-securi
 import { AccountSecurityService } from "../admin/security/platform-security/account-security.service";
 import { SecurityEventsService } from "../admin/security/platform-security/security-events.service";
 import { isPasswordExpired } from "../admin/security/platform-security/password-policy";
+import {
+  AuthRestrictionService,
+  availableMethods,
+} from "../admin/security/incidents/auth-restriction.service";
+
+/** Token for the extra sign-in check after high-risk activity. */
+export const LOGIN_VERIFICATION_TOKEN_TYPE = "login_verification";
+const LOGIN_VERIFICATION_TTL_SECONDS = 15 * 60;
+import { maskEmail } from "./login-verification.util";
 
 /**
  * Compared against when the email address has no account, so a sign-in for an
@@ -32,6 +41,11 @@ const TIMING_EQUALIZER_HASH =
 
 export interface LoginOptions {
   rememberMe?: boolean;
+}
+
+export interface SignInContext {
+  ip: string | null;
+  userAgent: string | null;
 }
 
 @Injectable()
@@ -53,6 +67,8 @@ export class AuthLoginService {
     private readonly accountSecurity: AccountSecurityService,
 
     private readonly securityEvents: SecurityEventsService,
+
+    private readonly restrictions: AuthRestrictionService,
   ) {}
 
   async login(
@@ -162,6 +178,7 @@ export class AuthLoginService {
       await this.accountSecurity.reserveAttempt(
         userId,
         policy,
+        context,
       );
 
     // ------------------------------------------------------------
@@ -241,6 +258,9 @@ export class AuthLoginService {
       effective.requiresTwoFactor ||
       Boolean(user.mfaEnabled);
 
+    const restriction =
+      await this.restrictions.activeFor(userId);
+
     // Alerts compare with earlier sign-ins, so run before the history
     // entry for this sign-in is written.
     await this.accountSecurity.onPasswordVerified(
@@ -250,9 +270,132 @@ export class AuthLoginService {
       {
         ...context,
         mfaPending:
-          challengeTwoFactor,
+          challengeTwoFactor ||
+          Boolean(restriction),
       },
     );
+
+    // ------------------------------------------------------------
+    // STEP-UP VERIFICATION (after high-risk failed-login activity)
+    //
+    // The password was right, but the account had a burst of failed
+    // attempts: the owner must also verify before getting a session.
+    // Only someone who knows the password sees this step, so it does
+    // not reveal anything about the account to others.
+    // ------------------------------------------------------------
+
+    if (restriction) {
+      return this.verificationChallenge(
+        user,
+        restriction,
+        options.rememberMe === true,
+        context,
+      );
+    }
+
+    return this.completeSignIn(
+      user as UserDocument,
+      {
+        context,
+        rememberMe: options.rememberMe === true,
+        mfaSatisfied: false,
+      },
+    );
+  }
+
+  // ==============================================================
+  // STEP-UP CHALLENGE
+  // ==============================================================
+
+  private async verificationChallenge(
+    user: any,
+    restriction: any,
+    rememberMe: boolean,
+    context: SignInContext,
+  ) {
+    const userId = String(user._id);
+    const platform = await this.securityPolicy.getPlatform();
+
+    const fullUser = await this.userModel
+      .findById(userId)
+      .select("+mfaSecret")
+      .lean()
+      .exec();
+
+    const methods = availableMethods(fullUser ?? user, {
+      emailCodesAllowed: Boolean(platform.accounts.loginVerificationEmailCodes),
+    });
+
+    const verificationToken = this.jwtService.sign(
+      {
+        sub: userId,
+        purpose: LOGIN_VERIFICATION_TOKEN_TYPE,
+        tokenType: LOGIN_VERIFICATION_TOKEN_TYPE,
+        restrictionId: String(restriction._id),
+        rememberMe,
+      },
+      { expiresIn: LOGIN_VERIFICATION_TTL_SECONDS },
+    );
+
+    await this.securityEvents.record({
+      action: "auth.login.verification_required",
+      outcome: "denied",
+      severity: "medium",
+      targetId: userId,
+      targetType: "user",
+      ...context,
+      metadata: {
+        restriction: String(restriction._id),
+        methods: methods.join(","),
+      },
+    });
+
+    return {
+      requiresVerification: true,
+      requiresMfa: false,
+      mfaVerified: false,
+      verification_token: verificationToken,
+      verificationMethods: methods,
+      maskedEmail: methods.includes("email") ? maskEmail(String(user.email ?? "")) : null,
+      expiresInSeconds: LOGIN_VERIFICATION_TTL_SECONDS,
+      message:
+        "We noticed unusual sign-in activity on this account. Confirm it's you to continue.",
+    };
+  }
+
+  // ==============================================================
+  // COMPLETE SIGN-IN
+  //
+  // Everything after the password (and any step-up verification):
+  // two-factor, password expiry and the session token.
+  // `mfaSatisfied` is true when the step-up check already used the
+  // authenticator app, so it is not asked for twice.
+  // ==============================================================
+
+  async completeSignIn(
+    user: UserDocument,
+    options: {
+      context: SignInContext;
+      rememberMe: boolean;
+      mfaSatisfied: boolean;
+    },
+  ) {
+    const userId = String(user._id);
+    const context = options.context;
+    const ip = context.ip ?? undefined;
+    const userAgent = context.userAgent ?? undefined;
+
+    const effective =
+      await this.securityPolicy.getEffectiveForUser(
+        user as any,
+      );
+
+    const policy = effective.values;
+
+    const challengeTwoFactor =
+      (effective.requiresTwoFactor ||
+        Boolean(user.mfaEnabled)) &&
+      !(options.mfaSatisfied && user.mfaEnabled);
 
     const updatedUser =
       await this.usersService.recordSuccessfulLogin(
@@ -334,6 +477,9 @@ export class AuthLoginService {
 
     const rememberMe =
       options.rememberMe === true;
+
+    const mfaVerified =
+      options.mfaSatisfied && Boolean(loginUser.mfaEnabled);
 
     // ------------------------------------------------------------
     // TWO-FACTOR
@@ -477,7 +623,7 @@ export class AuthLoginService {
       this.tokenService.createAccessToken(
         loginUser,
         userId,
-        false,
+        mfaVerified,
         this.accountSecurity.accessTokenExpiresIn(
           policy,
           rememberMe,
@@ -495,8 +641,7 @@ export class AuthLoginService {
       requiresMfa:
         false,
 
-      mfaVerified:
-        false,
+      mfaVerified,
 
       mustChangePassword:
         Boolean(
@@ -512,3 +657,4 @@ export class AuthLoginService {
     };
   }
 }
+

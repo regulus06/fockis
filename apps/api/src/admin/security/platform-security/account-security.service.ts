@@ -19,6 +19,9 @@ import { PlatformSecurityPolicyService } from "./platform-security-policy.servic
 import { SecurityEventsService } from "./security-events.service";
 import { SecurityNotificationsService } from "./security-notifications.service";
 import { describeUserAgent } from "../../../users/services/login-history.service";
+import { EventEmitter2 } from "@nestjs/event-emitter";
+import { LoginMonitorService } from "../incidents/login-monitor.service";
+import { SESSIONS_REVOKED_EVENT } from "../../notifications/admin-notification.types";
 
 // ============================================================================
 // ACCOUNT SECURITY
@@ -142,6 +145,8 @@ export class AccountSecurityService {
     private readonly events: SecurityEventsService,
     private readonly notifications: SecurityNotificationsService,
     private readonly jwt: JwtService,
+    private readonly monitor: LoginMonitorService,
+    private readonly emitter: EventEmitter2,
   ) {}
 
   private get users() {
@@ -163,6 +168,7 @@ export class AccountSecurityService {
   async reserveAttempt(
     userId: string,
     values: PolicyValues,
+    context: RequestContext = {},
   ): Promise<AttemptReservation> {
     const id = new Types.ObjectId(userId);
     const now = new Date();
@@ -230,6 +236,8 @@ export class AccountSecurityService {
     );
 
     if (!updated) {
+      // Refused during lockout / retry delay: still counts for monitoring.
+      await this.monitor.recordFailure({ userId, ip: context.ip, blocked: true });
       throw tooManyAttempts(await this.retryAfterForUser(id, values));
     }
 
@@ -237,6 +245,7 @@ export class AccountSecurityService {
 
     if (values.loginLockoutEnabled && attempt > Number(values.maxFailedLoginAttempts)) {
       // A parallel request already used the last allowed attempt.
+      await this.monitor.recordFailure({ userId, ip: context.ip, blocked: true });
       const lock = await this.lockUser(userId, values);
       throw tooManyAttempts(lock ? lock.durationMs / 1000 : 60);
     }
@@ -317,6 +326,8 @@ export class AccountSecurityService {
   ): Promise<void> {
     const userId = String(user._id);
     const max = Number(values.maxFailedLoginAttempts || 5);
+
+    await this.monitor.recordFailure({ userId, ip: context.ip });
 
     await this.events.record({
       action: "auth.login.failed",
@@ -560,6 +571,7 @@ export class AccountSecurityService {
     }
 
     if (!doc) {
+      await this.monitor.recordFailure({ emailHash: keyHash, ip: context.ip, blocked: true });
       const existing = await this.throttleModel.findOne({ keyHash }).lean().exec();
       const lockedMs = existing?.lockedUntil
         ? new Date(existing.lockedUntil).getTime() - now.getTime()
@@ -582,6 +594,8 @@ export class AccountSecurityService {
       metadata: { attempt: doc.failures, reason: "unknown_account" },
       retentionDays: Number(values.authEventRetentionDays || 180),
     });
+
+    await this.monitor.recordFailure({ emailHash: keyHash, ip: context.ip });
 
     if (
       values.loginLockoutEnabled &&
@@ -663,6 +677,8 @@ export class AccountSecurityService {
 
     const previousFailures = reservation?.previousFailures ?? 0;
     const suspicious = previousFailures >= 3 || (newDevice && newNetwork);
+
+    await this.monitor.recordPasswordVerified(userId, { previousFailures, newDevice, newNetwork });
 
     let alert: string | null = null;
     let delivered = false;
@@ -756,6 +772,7 @@ export class AccountSecurityService {
     );
 
     this.policy.invalidateUser(userId);
+    this.emitter.emit(SESSIONS_REVOKED_EVENT, { userId });
 
     await this.events.record({
       action: "session.revoked",

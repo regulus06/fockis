@@ -217,6 +217,33 @@ export class ChurchMedia {
   fileSize?: number | null;
 
   /* --------------------------------------------------------------------------
+   * BROWSER-COMPATIBILITY PROCESSING (videos)
+   *
+   * Uploaded videos are checked and, when needed, converted to H.264 MP4 by
+   * MediaTranscodeService. Missing on items created before this existed
+   * (those are checked once at startup).
+   * ------------------------------------------------------------------------ */
+
+  @Prop({
+    type: String,
+    enum: ['ready', 'pending', 'processing', 'failed'],
+    index: true,
+  })
+  processingStatus?: 'ready' | 'pending' | 'processing' | 'failed';
+
+  @Prop({
+    type: String,
+    default: null,
+  })
+  processingError?: string | null;
+
+  @Prop({
+    type: Number,
+    default: 0,
+  })
+  processingAttempts?: number;
+
+  /* --------------------------------------------------------------------------
    * CATEGORY
    * ------------------------------------------------------------------------ */
 

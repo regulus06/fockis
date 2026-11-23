@@ -99,6 +99,7 @@ const NON_ACCESS_TOKEN_TYPES = new Set([
   "mfa_setup",
   "mfa_challenge",
   "reauth",
+  "login_verification",
 ]);
 
 // ============================================================================

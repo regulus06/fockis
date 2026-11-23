@@ -29,6 +29,11 @@ export default function Login() {
         onConfirmSetup={login.confirmMfaSetup}
         onVerify={login.verifyMfaLogin}
         onSwitchToSetup={login.switchToMfaSetup}
+        verification={login.verification}
+        onVerified={login.handleLoginData}
+        onCancelVerification={login.cancelVerification}
+        showRecovery={login.showRecovery}
+        onShowRecovery={login.setShowRecovery}
       />
     </div>
   );

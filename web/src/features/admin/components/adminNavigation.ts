@@ -89,6 +89,9 @@ export const ADMIN_NAV: AdminNavItem[] = [
       { label: "Two-Factor Authentication", path: "/admin/security/two-factor", anyOf: [P.SECURITY_VIEW] },
       { label: "Login Alerts", path: "/admin/security/alerts", anyOf: [P.SECURITY_VIEW] },
       { label: "Account Protection", path: "/admin/security/account-protection", anyOf: [P.SECURITY_VIEW] },
+      { label: "Security Incidents", path: "/admin/security/incidents", anyOf: [P.SECURITY_VIEW] },
+      { label: "Sign-in Restrictions", path: "/admin/security/restrictions", anyOf: [P.SECURITY_VIEW] },
+      { label: "Recovery Cases", path: "/admin/security/recovery", anyOf: [P.SECURITY_ACCOUNT_RECOVERY] },
       { label: "Organization Identity Policies", path: "/admin/security/organizations", anyOf: [P.SECURITY_VIEW] },
       {
         label: "Security Audit Logs",
@@ -107,6 +110,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
       { label: "Sellers", path: "/admin/shop/sellers", anyOf: [P.MARKETPLACE_VIEW] },
       { label: "Stores", path: "/admin/shop/stores", anyOf: [P.MARKETPLACE_VIEW] },
       { label: "Orders", path: "/admin/marketplace/orders", anyOf: [P.MARKETPLACE_ORDERS_VIEW] },
+      { label: "Disputes", path: "/admin/marketplace/disputes", anyOf: [P.MARKETPLACE_ORDERS_VIEW] },
       { label: "Reviews", path: "/admin/marketplace/reviews", anyOf: [P.MARKETPLACE_REVIEWS_MANAGE] },
       { label: "Shipping", path: "/admin/shipping", anyOf: [P.SHIPPING_VIEW] },
       { label: "Moderation", path: "/admin/shop/moderation", anyOf: [P.MARKETPLACE_VIEW] },

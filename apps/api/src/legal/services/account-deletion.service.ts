@@ -9,6 +9,8 @@ import { PAGE_SIZE } from "../legal.constants";
 import { AccountDeletion, AccountDeletionDocument, LegalHold, LegalHoldDocument } from "../schemas/legal.schemas";
 import { LegalAuditService } from "./legal-audit.service";
 import { LegalCommonService } from "./legal-common.service";
+import { EventEmitter2 } from "@nestjs/event-emitter";
+import { ADMIN_NOTIFICATION_EVENT, ADMIN_NOTIFICATION_RESOLVED_EVENT } from "../../admin/notifications/admin-notification.types";
 
 const STAFF_ROLES = ["moderator", "admin", "super_admin"];
 
@@ -37,6 +39,7 @@ export class AccountDeletionService implements AccountDeletionHandler {
     @InjectConnection() private readonly connection: Connection,
     private readonly common: LegalCommonService,
     private readonly audit: LegalAuditService,
+    private readonly emitter: EventEmitter2,
   ) {}
 
   async activeHolds(userId: string) {
@@ -116,6 +119,11 @@ export class AccountDeletionService implements AccountDeletionHandler {
 
       const status = holdNumbers.size ? "completed_with_hold" : "completed";
       await this.deletions.updateOne({ _id: record._id }, { $set: { status, completedAt: new Date(), holdNumbers: Array.from(holdNumbers), summary } }).exec();
+      // An earlier failed attempt for this account no longer needs action.
+      const earlierFailures = await this.deletions.find({ userId: String(userId), status: "failed" }).select("_id").lean().exec();
+      for (const failed of earlierFailures) {
+        this.emitter.emit(ADMIN_NOTIFICATION_RESOLVED_EVENT, { entityType: "account_deletion", entityId: String(failed._id) });
+      }
       await this.audit.record({
         actorId: requestedBy,
         action: status === "completed" ? "account_deleted" : "account_deleted_with_hold",
@@ -126,12 +134,40 @@ export class AccountDeletionService implements AccountDeletionHandler {
         metadata: { source, ...summary },
       });
       if (holdNumbers.size) {
+        this.emitter.emit(ADMIN_NOTIFICATION_EVENT, {
+          type: "legal.deletion_review",
+          category: "legal",
+          priority: "medium",
+          title: "Account deletion needs legal review",
+          message: `${number}: the account was closed, but records were kept under ${Array.from(holdNumbers).join(", ")}.`,
+          groupKey: `account_deletion:${record._id}`,
+          entityType: "account_deletion",
+          entityId: String(record._id),
+          link: "/admin/legal/deletions",
+          requiredPermissions: ["legal.deletions.view"],
+          actionRequired: false,
+          metadata: { deletion: number, holds: holdNumbers.size },
+        });
         await this.common.notifyStaff("Deletion limited by legal hold", `${number}: some records were kept under ${Array.from(holdNumbers).join(", ")}.`, "/admin/legal/deletions", String(record._id), "account_deletion");
       }
       return { number, status };
     } catch (error) {
       this.logger.error(`Account deletion ${number} failed: ${String(error)}`);
       await this.deletions.updateOne({ _id: record._id }, { $set: { status: "failed", error: String((error as Error)?.message ?? error).slice(0, 300) } }).exec();
+      this.emitter.emit(ADMIN_NOTIFICATION_EVENT, {
+        type: "legal.deletion_failed",
+        category: "legal",
+        priority: "high",
+        title: "Account deletion failed",
+        message: `${number} did not finish. Review the account and run the deletion again.`,
+        groupKey: `account_deletion:${record._id}`,
+        entityType: "account_deletion",
+        entityId: String(record._id),
+        link: "/admin/legal/deletions",
+        requiredPermissions: ["legal.deletions.view"],
+        actionRequired: true,
+        metadata: { deletion: number },
+      });
       throw error;
     }
   }

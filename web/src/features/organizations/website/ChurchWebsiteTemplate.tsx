@@ -252,6 +252,7 @@ export default function ChurchWebsiteTemplate({
       mediaType: item.mediaType,
       mimeType: item.mimeType,
       posterUrl: mediaUrl(item.thumbnailUrl),
+      processing: item.processingStatus === "pending" || item.processingStatus === "processing",
     });
   };
 

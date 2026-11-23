@@ -54,6 +54,9 @@ export interface MediaItem {
   publishedAt: string | null;
   createdAt: string | null;
   tags: string[];
+  /** Videos: being converted so every browser can play them. */
+  processingStatus?: "ready" | "pending" | "processing" | "failed";
+  processingError?: string | null;
 }
 
 export interface MediaList {
