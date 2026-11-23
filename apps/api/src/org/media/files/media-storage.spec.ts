@@ -36,3 +36,25 @@ describe("organization media storage helpers", () => {
     expect(parseRange("items=0-1", 1000)).toBe("invalid");
   });
 });
+
+import { normalizeUploadPath } from "./uploads-mirror.service";
+
+describe("uploads mirror paths", () => {
+  it("accepts public upload paths", () => {
+    expect(normalizeUploadPath(["organization-logos", "logo-1.png"])).toBe("organization-logos/logo-1.png");
+    expect(normalizeUploadPath("church-organization-covers/a%20b.jpg")).toBe("church-organization-covers/a b.jpg");
+    expect(normalizeUploadPath("1782404551184.jpg")).toBe("1782404551184.jpg");
+  });
+
+  it("rejects traversal, hidden files and private folders", () => {
+    expect(normalizeUploadPath("../.env")).toBeNull();
+    expect(normalizeUploadPath("logos/%2e%2e/secret")).toBeNull();
+    expect(normalizeUploadPath("music/track.mp3")).toBeNull();
+    expect(normalizeUploadPath("Documents/id.pdf")).toBeNull();
+    expect(normalizeUploadPath("scans/passport.jpg")).toBeNull();
+    expect(normalizeUploadPath("organization-media/x/y.png")).toBeNull();
+    expect(normalizeUploadPath("logos/.hidden")).toBeNull();
+    expect(normalizeUploadPath("media/abc.mp4")).toBeNull();
+    expect(normalizeUploadPath("")).toBeNull();
+  });
+});

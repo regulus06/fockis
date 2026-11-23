@@ -1,41 +1,77 @@
 /**
  * media-files.controller.ts
  * -----------------------------------------------------------------------------
- * GET /uploads/organization-media/:orgId/:name
+ * GET /uploads/<path>
  *
- * The static file server answers first when the file is on this server's
- * disk. When it is not (a new server, a restart on Render, or a file uploaded
- * from another server), this route streams the copy from Google Cloud
- * Storage. Byte ranges are supported, so videos and audio can seek.
+ * The static file server (main.ts) answers first when the file is on this
+ * server's disk. When it is not (a new server, a restart or deploy on Render,
+ * or a file uploaded from another machine that shares the database), this
+ * route streams the copy from Google Cloud Storage:
  *
- * Same visibility as before: the static uploads folder was already public.
+ *   /uploads/organization-media/<orgId>/<name>  → media-storage.service
+ *   any other public upload folder              → uploads-mirror.service
+ *
+ * Byte ranges are supported, so videos and audio can seek. Visibility is the
+ * same as the static uploads folder (public); private/excluded folders
+ * (music, documents, scans, …) are never served here. Anything this route
+ * does not serve is passed on (next()), so other /uploads/* routes such as
+ * GET /uploads/media/* keep working and unknown files still get a 404.
  * -----------------------------------------------------------------------------
  */
 
-import { Controller, Get, NotFoundException, Param, Req, Res } from "@nestjs/common";
-import type { Request, Response } from "express";
+import { Controller, Get, Next, Param, Req, Res } from "@nestjs/common";
+import type { NextFunction, Request, Response } from "express";
+import type { Readable } from "stream";
 
 import { Public } from "../../../auth/public.decorator";
 import { MediaStorageService, isValidMediaRef, parseRange } from "./media-storage.service";
+import { UploadsMirrorService, normalizeUploadPath } from "./uploads-mirror.service";
 
 @Public()
-@Controller("uploads/organization-media")
+@Controller("uploads")
 export class MediaFilesController {
-  constructor(private readonly storage: MediaStorageService) {}
+  constructor(
+    private readonly storage: MediaStorageService,
+    private readonly mirror: UploadsMirrorService,
+  ) {}
 
-  @Get(":orgId/:name")
+  @Get("*path")
   async file(
-    @Param("orgId") orgId: string,
-    @Param("name") name: string,
+    @Param("path") rawPath: string | string[],
     @Req() req: Request,
     @Res() res: Response,
+    @Next() next: NextFunction,
   ) {
-    if (!isValidMediaRef(orgId, name)) throw new NotFoundException("File not found.");
+    const segments = (Array.isArray(rawPath) ? rawPath : String(rawPath ?? "").split("/")).filter(Boolean);
 
-    const info = await this.storage.info(orgId, name);
+    // Organization media library.
+    if (segments[0] === "organization-media" && segments.length === 3) {
+      const [, orgId, name] = segments;
 
-    if (!info) throw new NotFoundException("File not found.");
+      if (!isValidMediaRef(orgId, name)) return next();
 
+      const info = await this.storage.info(orgId, name);
+      if (!info) return next();
+
+      return this.send(req, res, info, (range) => this.storage.stream(orgId, name, range));
+    }
+
+    // Every other public upload folder.
+    const path = normalizeUploadPath(segments);
+    if (!path) return next();
+
+    const info = await this.mirror.info(path);
+    if (!info) return next();
+
+    return this.send(req, res, info, (range) => this.mirror.stream(path, range));
+  }
+
+  private send(
+    req: Request,
+    res: Response,
+    info: { size: number; contentType: string },
+    open: (range?: { start: number; end: number }) => Readable,
+  ): void {
     res.setHeader("Content-Type", info.contentType);
     res.setHeader("Accept-Ranges", "bytes");
     res.setHeader("Cache-Control", "public, max-age=86400");
@@ -63,7 +99,7 @@ export class MediaFilesController {
       return;
     }
 
-    const stream = this.storage.stream(orgId, name, range ?? undefined);
+    const stream = open(range ?? undefined);
 
     stream.on("error", () => {
       if (!res.headersSent) res.status(502);
