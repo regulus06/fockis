@@ -24,10 +24,12 @@ import {
   CircleCheck,
   ClipboardCheck,
   Clock,
+  HandHeart,
   IdCard,
   LogIn,
   MapPin,
   Plus,
+  QrCode,
   UsersRound,
 } from "lucide-react";
 
@@ -42,6 +44,8 @@ import { MEMBER_ROLE_LABELS, MembershipStatus, type MemberRole, type Organizatio
 import { typeLabel } from "../ui/orgCategories";
 import OrgAppShell from "../ui/OrgAppShell";
 import MemberLiveCard from "../live-center/MemberLiveCard";
+import { givingApi } from "../giving/givingApi";
+import GivingQrDialog from "../giving/GivingQrDialog";
 import { categoryInfo, termsFor } from "../ui/orgTerminology";
 import { Alert, Avatar, EmptyState, Skeleton, StatCard, errorMessage, formatDate, formatDateTime } from "../ui/orgUi";
 import "../styles/OrganizationMemberScreens.scss";
@@ -150,6 +154,21 @@ export default function OrganizationMemberPortalPage(): React.JSX.Element {
     };
   }, [orgId]);
 
+  // Online giving for the selected organization (shown only when it's on).
+  const [givingOn, setGivingOn] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
+  useEffect(() => {
+    setGivingOn(false);
+    setQrOpen(false);
+    if (!orgId) return;
+    const controller = new AbortController();
+    givingApi
+      .info(orgId, controller.signal)
+      .then((info) => !controller.signal.aborted && setGivingOn(Boolean(info.enabled)))
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, [orgId]);
+
   const pick = (id: string) => {
     const next = new URLSearchParams(params);
     next.set("organizationId", id);
@@ -252,6 +271,26 @@ export default function OrganizationMemberPortalPage(): React.JSX.Element {
               to={p("/my-history")}
             />
           </div>
+
+          {givingOn && (
+            <section className="fo-card fom-give" aria-labelledby="fom-give">
+              <div className="fo-card__head">
+                <h2 id="fom-give">
+                  <HandHeart aria-hidden="true" /> Give online
+                </h2>
+              </div>
+              <p className="fom-give__text">Give your tithe or an offering by card, or share the QR code so others can give too.</p>
+              <div className="fom-give__actions">
+                <Link to={p("?give=1#give")} className="fo-btn fo-btn--primary">
+                  <HandHeart aria-hidden="true" /> Give now
+                </Link>
+                <button type="button" className="fo-btn fo-btn--secondary" onClick={() => setQrOpen(true)}>
+                  <QrCode aria-hidden="true" /> QR code
+                </button>
+              </div>
+            </section>
+          )}
+          {qrOpen && org && <GivingQrDialog organizationId={org.id} organizationName={org.name} onClose={() => setQrOpen(false)} />}
 
           <div className="fom-grid">
             <section className="fo-card" aria-labelledby="fom-next">
