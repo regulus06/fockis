@@ -46,6 +46,7 @@ import { MembersService } from "../../members/services/members.service";
 import { ChurchPermission } from "../../enums/permission.enum";
 import { MembershipStatus } from "../../enums/membership-status.enum";
 import { MediaTranscodeService } from "./media-transcode.service";
+import { MediaStorageService } from "../files/media-storage.service";
 
 /* ============================================================================
    UPLOAD SETTINGS
@@ -178,6 +179,8 @@ export class ChurchMediaService {
     private readonly membersService: MembersService,
 
     private readonly transcoder: MediaTranscodeService,
+
+    private readonly storage: MediaStorageService,
   ) {}
 
   private oid(id: string, what: string): Types.ObjectId {
@@ -323,6 +326,9 @@ export class ChurchMediaService {
       if (!STORED_NAME.test(name)) throw new BadRequestException("Invalid upload.");
       await fs.rename(file.path, join(directory, name));
 
+      // Shared copy so every server (and every restart) can serve the file.
+      await this.storage.push(String(orgId), name);
+
       return {
         fileUrl: `${MEDIA_PUBLIC_PREFIX}/${String(orgId)}/${name}`,
         fileName: String(file.originalname ?? name).slice(0, 255),
@@ -343,7 +349,7 @@ export class ChurchMediaService {
       $or: [{ fileUrl: url }, { thumbnailUrl: url }],
     });
     if (stillUsed) return;
-    await fs.unlink(join(MEDIA_UPLOAD_ROOT, organizationId, name)).catch(() => undefined);
+    await this.storage.remove(organizationId, name);
   }
 
   /* ---------------------------------------------------------- create */

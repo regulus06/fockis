@@ -233,6 +233,7 @@ import {
 
 import { ChurchMediaService } from './media/services/church-media.service';
 import { MediaTranscodeService } from './media/services/media-transcode.service';
+import { MediaFilesModule } from './media/files/media-files.module';
 
 import { ChurchMediaController } from './media/controllers/church-media.controller';
 
@@ -299,6 +300,7 @@ import { PageBrandingController } from './page-branding/page-branding.controller
 
 @Module({
   imports: [
+    MediaFilesModule,
     // ------------------------------------------------------------------------
     // ORGANIZATION BADGES
     // ------------------------------------------------------------------------

@@ -21,7 +21,7 @@
  * -----------------------------------------------------------------------------
  */
 
-import { Injectable, Logger, OnApplicationBootstrap, OnModuleDestroy } from "@nestjs/common";
+import { Injectable, Logger, OnApplicationBootstrap, OnModuleDestroy, Optional } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { spawn } from "child_process";
@@ -31,6 +31,7 @@ import { join } from "path";
 
 import { ChurchMedia, ChurchMediaDocument, ChurchMediaType } from "../schemas/church-media.schema";
 import { MEDIA_PUBLIC_PREFIX, MEDIA_UPLOAD_ROOT } from "./church-media.service";
+import { MediaStorageService } from "../files/media-storage.service";
 
 export type MediaProcessingStatus = "ready" | "pending" | "processing" | "failed";
 
@@ -167,6 +168,9 @@ export class MediaTranscodeService implements OnApplicationBootstrap, OnModuleDe
   constructor(
     @InjectModel(ChurchMedia.name)
     private readonly mediaModel: Model<ChurchMediaDocument>,
+
+    /** Optional so the class can be unit-tested without cloud storage. */
+    @Optional() private readonly storage?: MediaStorageService,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -276,6 +280,10 @@ export class MediaTranscodeService implements OnApplicationBootstrap, OnModuleDe
       return;
     }
 
+    // The file may only be in cloud storage (another server uploaded it, or
+    // this server restarted); fetch it first.
+    if (this.storage) await this.storage.ensureLocal(local.orgId, local.name);
+
     const exists = await fs.stat(local.path).then(() => true).catch(() => false);
 
     if (!exists) {
@@ -295,7 +303,10 @@ export class MediaTranscodeService implements OnApplicationBootstrap, OnModuleDe
     if (plan === "none") {
       if (!doc.thumbnailUrl) {
         const thumb = await this.makeThumbnail(local.path, local.orgId, probe.durationSeconds);
-        if (thumb) extras.thumbnailUrl = thumb;
+        if (thumb) {
+          extras.thumbnailUrl = thumb;
+          await this.storage?.pushUrl(thumb);
+        }
       }
 
       await this.mediaModel.updateOne(
@@ -337,6 +348,20 @@ export class MediaTranscodeService implements OnApplicationBootstrap, OnModuleDe
       if (thumb) extras.thumbnailUrl = thumb;
     }
 
+    // Publish the converted file before pointing the item at it.
+    if (this.storage) {
+      const pushed = await this.storage.push(local.orgId, finalName);
+
+      if (!pushed) {
+        await fs.unlink(finalPath).catch(() => undefined);
+        await this.mediaModel.updateOne({ _id: doc._id, fileUrl }, { $set: { processingStatus: "pending" } });
+        this.logger.warn(`Video ${mediaId}: upload of the converted file failed; will retry after restart.`);
+        return;
+      }
+
+      if (typeof extras.thumbnailUrl === "string") await this.storage.pushUrl(extras.thumbnailUrl);
+    }
+
     // 3. Swap — only if nobody replaced the file meanwhile.
     const newUrl = `${MEDIA_PUBLIC_PREFIX}/${local.orgId}/${finalName}`;
     const fileName = String(doc.fileName ?? local.name).replace(/\.[^.]+$/, "") + ".mp4";
@@ -369,7 +394,10 @@ export class MediaTranscodeService implements OnApplicationBootstrap, OnModuleDe
       $or: [{ fileUrl }, { thumbnailUrl: fileUrl }],
     });
 
-    if (!stillUsed) await fs.unlink(local.path).catch(() => undefined);
+    if (!stillUsed) {
+      if (this.storage) await this.storage.remove(local.orgId, local.name);
+      else await fs.unlink(local.path).catch(() => undefined);
+    }
 
     this.logger.log(
       `Video ${mediaId} converted (${plan}, ${probe.videoCodec} → h264) in ${Math.round((Date.now() - started) / 1000)}s.`,
@@ -397,7 +425,9 @@ export class MediaTranscodeService implements OnApplicationBootstrap, OnModuleDe
 
   private async removeLocal(url: string): Promise<void> {
     const local = this.localPath(url);
-    if (local) await fs.unlink(local.path).catch(() => undefined);
+    if (!local) return;
+    if (this.storage) await this.storage.remove(local.orgId, local.name);
+    else await fs.unlink(local.path).catch(() => undefined);
   }
 
   /** Ask for another try after a failure (managers, via the API). */
