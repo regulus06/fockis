@@ -1,3 +1,4 @@
+import { PaymentsModule } from '../payments/payments.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { MessagesModule } from '../messages/messages.module';
 import { RegistrationMailer } from '../events/registrations/registration-mailer';
@@ -242,6 +243,7 @@ import { OrganizationFollowController } from './followers/organization-follow.co
 
 @Module({
   imports: [
+    PaymentsModule,
     MessagesModule,
     NotificationsModule,
     // ------------------------------------------------------------------------
