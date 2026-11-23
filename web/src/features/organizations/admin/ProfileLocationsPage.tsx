@@ -52,6 +52,8 @@ import { mediaUrl } from "../api/dashboardApi";
 import { churchDelete, churchGet, churchPatch, churchPost } from "../api/organizationApi";
 import { deleteOrganizationCover, updateOrganization, uploadOrganizationCover } from "../api/organizationsApi";
 import { pageBrandingApi } from "../branding/pageBrandingApi";
+import ImageCropDialog, { type CropResult } from "../branding/ImageCropDialog";
+import { exportCrop, fetchAsObjectUrl } from "../branding/cropImage";
 import { hasBanner } from "../branding/PageBrandingParts";
 import { usePageBranding } from "../branding/usePageBranding";
 import SidebarAppearance from "../branding/SidebarAppearance";
@@ -64,6 +66,7 @@ import OrgAppShell from "../ui/OrgAppShell";
 import { Avatar, errorMessage } from "../ui/orgUi";
 import type { Address, Branch, ContactInfo, Organization, OrganizationType, UpdateOrganizationInput } from "../types/organization.types";
 import "../ui/fockisOrgTheme.scss";
+import "../branding/pageBranding.scss";
 import "./profileLocations.scss";
 
 /* ============================================================================
@@ -155,6 +158,10 @@ export default function ProfileLocationsPage() {
   const [coverRemoved, setCoverRemoved] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  /** Logo waiting in the crop & shape dialog (object URL of the original). */
+  const [logoCrop, setLogoCrop] = useState<{ src: string; name: string } | null>(null);
+  /** Original of the current unsaved logo, so re-cropping starts from it. */
+  const [logoSource, setLogoSource] = useState<{ src: string; name: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
 
@@ -205,13 +212,53 @@ export default function ProfileLocationsPage() {
     if (file.size > max * 1024 * 1024) return setToast({ tone: "error", text: `The ${kind} can't be larger than ${max} MB.` });
     const url = URL.createObjectURL(file);
     if (kind === "logo") {
-      setLogoFile(file);
-      setLogoPreview(url);
+      // Square crop + shape first; the shaped result becomes the logo file.
+      setLogoCrop({ src: url, name: file.name || "logo" });
     } else {
       setCoverFile(file);
       setCoverPreview(url);
       setCoverRemoved(false);
     }
+  }
+
+  /** Re-open the current logo (unsaved original, or the saved file) in the crop dialog. */
+  async function adjustLogo() {
+    if (logoSource) return setLogoCrop(logoSource);
+    const saved = draft?.logoUrl?.trim();
+    if (!saved) return;
+    const absolute = mediaUrl(saved) ?? saved;
+    const path = absolute.replace(/^https?:\/\/[^/]+/i, "");
+    // The API host may not allow cross-origin reads; the same-origin /uploads
+    // path (proxied on fockis.com) is tried next.
+    for (const candidate of path.startsWith("/uploads/") ? [absolute, path] : [absolute]) {
+      try {
+        return setLogoCrop({ src: await fetchAsObjectUrl(candidate), name: "logo" });
+      } catch {
+        /* try the next address */
+      }
+    }
+    setToast({ tone: "error", text: "This logo can't be opened for editing. Click the logo and choose the image file again." });
+  }
+
+  async function applyLogoCrop(r: CropResult) {
+    if (!logoCrop) return;
+    try {
+      const blob = await exportCrop(r.image, "1:1", 512, r, "image/png", r.shape);
+      const base = logoCrop.name.replace(/\.[^.]+$/, "") || "logo";
+      const file = new File([blob], `${base}.png`, { type: blob.type || "image/png" });
+      if (logoSource && logoSource.src !== logoCrop.src) URL.revokeObjectURL(logoSource.src);
+      setLogoSource(logoCrop);
+      setLogoFile(file);
+      setLogoPreview(URL.createObjectURL(file));
+      setLogoCrop(null);
+    } catch (e) {
+      setToast({ tone: "error", text: errorMessage(e, "The logo could not be prepared.") });
+    }
+  }
+
+  function cancelLogoCrop() {
+    if (logoCrop && logoCrop.src !== logoSource?.src) URL.revokeObjectURL(logoCrop.src);
+    setLogoCrop(null);
   }
 
   function cancel() {
@@ -221,6 +268,7 @@ export default function ProfileLocationsPage() {
     setCoverRemoved(false);
     setLogoFile(null);
     setLogoPreview(null);
+    setLogoSource(null);
   }
 
   async function save() {
@@ -262,6 +310,7 @@ export default function ProfileLocationsPage() {
       setCoverRemoved(false);
       setLogoFile(null);
       setLogoPreview(null);
+      setLogoSource(null);
       admin.reload();
       setToast({ tone: "ok", text: "Profile saved." });
     } catch (err) {
@@ -318,7 +367,7 @@ export default function ProfileLocationsPage() {
                     <div className="pl-grid">
                       <BasicInfo draft={draft} set={set} />
                       <div className="pl-stack">
-                        <BrandingCard logo={logo} cover={cover} coverIsVideo={coverIsVideo} onPick={pickImage} onRemoveCover={() => (setCoverFile(null), setCoverPreview(null), setCoverRemoved(true))} onRemoveLogo={() => (setLogoFile(null), setLogoPreview(null), set({ logoUrl: "" }))} />
+                        <BrandingCard logo={logo} cover={cover} coverIsVideo={coverIsVideo} onPick={pickImage} onRemoveCover={() => (setCoverFile(null), setCoverPreview(null), setCoverRemoved(true))} onRemoveLogo={() => (setLogoFile(null), setLogoPreview(null), setLogoSource(null), set({ logoUrl: "" }))} onAdjustLogo={adjustLogo} />
                         <Card icon={FileText} title="Description">
                           <textarea className="pl-input" rows={5} maxLength={2000} value={draft.description} onChange={(e) => set({ description: e.target.value })} placeholder="Tell people who you are, what you believe and what you do." aria-label="Description" />
                         </Card>
@@ -331,7 +380,7 @@ export default function ProfileLocationsPage() {
                 {tab === "branding" && (
                   <>
                     <SidebarAppearance organization={{ id: org.id, name: org.name, organizationType: org.organizationType, logoUrl: org.logoUrl }} notify={(tone, text) => setToast({ tone, text })} />
-                    <BrandingCard large logo={logo} cover={cover} coverIsVideo={coverIsVideo} onPick={pickImage} onRemoveCover={() => (setCoverFile(null), setCoverPreview(null), setCoverRemoved(true))} onRemoveLogo={() => (setLogoFile(null), setLogoPreview(null), set({ logoUrl: "" }))} />
+                    <BrandingCard large logo={logo} cover={cover} coverIsVideo={coverIsVideo} onPick={pickImage} onRemoveCover={() => (setCoverFile(null), setCoverPreview(null), setCoverRemoved(true))} onRemoveLogo={() => (setLogoFile(null), setLogoPreview(null), setLogoSource(null), set({ logoUrl: "" }))} onAdjustLogo={adjustLogo} />
                     <Card icon={Info} title="More branding">
                       <ul className="pl-list">
                         <li>
@@ -404,6 +453,16 @@ export default function ProfileLocationsPage() {
           </>
         )}
       </div>
+      {logoCrop && (
+        <ImageCropDialog
+          title="Logo — crop & shape"
+          src={logoCrop.src}
+          aspects={["1:1"]}
+          shapes={["rounded", "circle", "square"]}
+          onCancel={cancelLogoCrop}
+          onApply={(r) => void applyLogoCrop(r)}
+        />
+      )}
       {toast && (
         <div className={"pl-toast pl-toast--" + toast.tone} role="status">
           {toast.text}
@@ -512,6 +571,7 @@ function BrandingCard({
   onPick,
   onRemoveCover,
   onRemoveLogo,
+  onAdjustLogo,
 }: {
   logo: string | null;
   cover: string | null;
@@ -520,6 +580,7 @@ function BrandingCard({
   onPick: (e: ChangeEvent<HTMLInputElement>, kind: "logo" | "cover") => void;
   onRemoveCover: () => void;
   onRemoveLogo: () => void;
+  onAdjustLogo: () => void;
 }) {
   const logoRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
@@ -536,9 +597,14 @@ function BrandingCard({
           </button>
           <input ref={logoRef} type="file" accept={IMAGE_TYPES.join(",")} hidden onChange={(e) => onPick(e, "logo")} />
           {logo && (
-            <button type="button" className="pl-linkbtn" onClick={onRemoveLogo}>
-              Remove
-            </button>
+            <span className="pl-brand__actions">
+              <button type="button" className="pl-linkbtn pl-linkbtn--neutral" onClick={onAdjustLogo}>
+                Crop &amp; shape
+              </button>
+              <button type="button" className="pl-linkbtn" onClick={onRemoveLogo}>
+                Remove
+              </button>
+            </span>
           )}
         </div>
         <div className="pl-brand__cover">
@@ -561,7 +627,7 @@ function BrandingCard({
           )}
         </div>
       </div>
-      <p className="pl-help">JPG, PNG or WebP. Logo up to 5 MB (square works best), cover up to 10 MB (wide, at least 1600 px). Uploaded when you save.</p>
+      <p className="pl-help">JPG, PNG or WebP. Logo up to 5 MB: you can crop it and make it rounded, circle or square, cover up to 10 MB (wide, at least 1600 px). Uploaded when you save.</p>
     </Card>
   );
 }

@@ -1111,3 +1111,14 @@ textarea.pl-input {
   }
 
 }
+
+/* Logo: "Crop & shape" next to "Remove". */
+.pl-brand__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pl-linkbtn--neutral {
+  color: var(--fo-primary, #1463d9);
+}

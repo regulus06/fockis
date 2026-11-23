@@ -10,6 +10,8 @@
  * -----------------------------------------------------------------------------
  */
 
+import type { ImageShape } from "./pageBrandingApi";
+
 export interface CropState {
   zoom: number;
   x: number;
@@ -60,8 +62,39 @@ export function moveRoom(img: HTMLImageElement, W: number, H: number, s: CropSta
   return { mx: g.mx, my: g.my };
 }
 
-/** Export at the given long-side size, never larger than the source allows. */
-export function exportCrop(img: HTMLImageElement, aspect: string, longSide: number, s: CropState, type = "image/jpeg"): Promise<Blob> {
+/**
+ * Clip a W×H canvas to the chosen shape (same corner radius as the on-screen
+ * frame). Outside the shape stays transparent, so export as PNG/WebP.
+ */
+function clipShape(ctx: CanvasRenderingContext2D, W: number, H: number, shape: ImageShape) {
+  ctx.beginPath();
+  if (shape === "circle") {
+    ctx.ellipse(W / 2, H / 2, W / 2, H / 2, 0, 0, Math.PI * 2);
+  } else {
+    const r = Math.min(W, H) * 0.14;
+    ctx.moveTo(r, 0);
+    ctx.arcTo(W, 0, W, H, r);
+    ctx.arcTo(W, H, 0, H, r);
+    ctx.arcTo(0, H, 0, 0, r);
+    ctx.arcTo(0, 0, W, 0, r);
+    ctx.closePath();
+  }
+  ctx.clip();
+}
+
+/**
+ * Export at the given long-side size, never larger than the source allows.
+ * With a "rounded" or "circle" shape the corners are cut out of the file
+ * itself (transparent), so the image keeps its shape wherever it is shown.
+ */
+export function exportCrop(
+  img: HTMLImageElement,
+  aspect: string,
+  longSide: number,
+  s: CropState,
+  type = "image/jpeg",
+  shape?: ImageShape,
+): Promise<Blob> {
   const r = ratioOf(aspect);
   let W = r >= 1 ? longSide : Math.round(longSide * r);
   let H = r >= 1 ? Math.round(longSide / r) : longSide;
@@ -76,10 +109,13 @@ export function exportCrop(img: HTMLImageElement, aspect: string, longSide: numb
   canvas.height = H;
   const ctx = canvas.getContext("2d");
   if (!ctx) return Promise.reject(new Error("Your browser cannot edit images."));
+  const masked = shape === "circle" || shape === "rounded";
+  if (masked) type = "image/png";
   if (type === "image/jpeg") {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, W, H);
   }
+  if (masked) clipShape(ctx, W, H, shape);
   drawCrop(ctx, img, W, H, s);
   return new Promise((resolve, reject) =>
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("The image could not be prepared."))), type, 0.9),
