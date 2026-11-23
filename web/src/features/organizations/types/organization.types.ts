@@ -1219,6 +1219,9 @@ export interface Organization
 
   slug: string;
 
+  /** Public link name: fockis.com/o/<handle> (null until assigned). */
+  handle?: string | null;
+
   status: OrganizationStatus;
 
   leadership: LeadershipMember[];

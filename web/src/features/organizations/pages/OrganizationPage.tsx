@@ -123,9 +123,15 @@ function joinLabel(type?: string | null): string {
   return "Become a Member";
 }
 
-export default function OrganizationPage(): React.JSX.Element {
+export default function OrganizationPage({
+  organizationId: organizationIdProp,
+}: {
+  /** Set when the page is opened by its public name (/o/:handle) or own address. */
+  organizationId?: string;
+} = {}): React.JSX.Element {
   useOrgFonts("#f6f9fd");
-  const { organizationId = "" } = useParams<{ organizationId: string }>();
+  const params = useParams<{ organizationId: string }>();
+  const organizationId = organizationIdProp ?? params.organizationId ?? "";
   const fileInput = useRef<HTMLInputElement | null>(null);
   const signedIn = Boolean(getAuthToken());
 

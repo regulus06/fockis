@@ -241,6 +241,27 @@ export class Organization {
   slug!: string;
 
   /**
+   * Public name used in links: fockis.com/o/<handle>. Starts as the Fockis
+   * domain prefix; the owner can change it (OrganizationHandlesService).
+   * Sparse unique: organizations created before this field get one in the
+   * background.
+   */
+  @Prop({
+    type: String,
+    default: undefined,
+    lowercase: true,
+    trim: true,
+  })
+  handle?: string;
+
+  /** Earlier public names; they keep working and redirect to the current one. */
+  @Prop({
+    type: [String],
+    default: [],
+  })
+  previousHandles?: string[];
+
+  /**
    * Permanent Fockis organization namespace.
    *
    * Examples:
@@ -486,6 +507,15 @@ export const OrganizationSchema =
 /* ============================================================================
  * INDEXES
  * ========================================================================== */
+
+/**
+ * Public links: one organization per name.
+ */
+OrganizationSchema.index(
+  { handle: 1 },
+  { unique: true, partialFilterExpression: { handle: { $type: 'string' } } },
+);
+OrganizationSchema.index({ previousHandles: 1 });
 
 /**
  * Organization discovery/search.

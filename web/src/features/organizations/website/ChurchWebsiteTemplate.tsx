@@ -76,6 +76,7 @@ import { churchTheme, churchThemeVars, DEFAULT_CHURCH_THEME } from "./churchThem
 import { listLatestSermons, listLatestVideos, listPublicMinistries, type PublicMinistry } from "./publicSiteApi";
 import { isChurchType, siteProfile } from "./siteProfile";
 import { usePublicSeo } from "./usePublicSeo";
+import { publicPath, publicSiteOrigin } from "./publicLinks";
 import SocialIcons from "./SocialIcons";
 import PageBrandingEditor from "../branding/PageBrandingEditor";
 import { membersApi } from "../api/membersApi";
@@ -460,8 +461,10 @@ export default function ChurchWebsiteTemplate({
   const hasMore = description.length > aboutShort.length || leaders.length > 0;
   const contactImage = banner && org.bannerMediaType !== "video" ? banner : null;
 
-  /* Search engines and link previews (public data only). */
-  const canonicalPath = p();
+  /* Search engines and link previews (public data only).
+     The official address is the public name (fockis.com/o/<handle>). */
+  const publicHandle = (org as { handle?: string | null }).handle;
+  const canonicalPath = publicHandle ? `${publicSiteOrigin()}${publicPath(publicHandle)}` : p();
   usePublicSeo({
     title: tagline ? `${org.name} — ${tagline}` : org.name,
     description: description || tagline || `${org.name} on Fockis Organizations.`,

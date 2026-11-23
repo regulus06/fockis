@@ -2369,6 +2369,10 @@ export class OrganizationsService {
       slug:
         organization.slug,
 
+      /** Public link name: fockis.com/o/<handle>. */
+      handle:
+        (organization as { handle?: string }).handle ?? null,
+
       /**
        * Permanent Fockis organization namespace.
        */
@@ -2581,6 +2585,10 @@ export class OrganizationsService {
 
       slug:
         organization.slug,
+
+      /** Public link name: fockis.com/o/<handle>. */
+      handle:
+        (organization as { handle?: string }).handle ?? null,
 
       /**
        * Permanent Fockis organization namespace.
@@ -2933,9 +2941,22 @@ export class OrganizationsService {
       }
     }
 
+    const byName =
+      await this.organizationModel.findOne({
+        $or: [
+          { slug: idOrSlug },
+          { handle: String(idOrSlug).toLowerCase() },
+        ],
+      });
+
+    if (byName) {
+      return byName;
+    }
+
+    // An old public name still finds the organization.
     return this.organizationModel.findOne({
-      slug:
-        idOrSlug,
+      previousHandles:
+        String(idOrSlug).toLowerCase(),
     });
   }
 

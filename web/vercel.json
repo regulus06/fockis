@@ -5,6 +5,21 @@
       "destination": "https://fockis.onrender.com/uploads/:path*"
     },
     {
+      "source": "/sitemap.xml",
+      "destination": "https://fockis.onrender.com/church/public/sitemap.xml"
+    },
+    {
+      "source": "/o/:handle",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(facebookexternalhit|facebot|twitterbot|whatsapp|linkedinbot|slackbot|telegrambot|discordbot|pinterest|skypeuripreview).*"
+        }
+      ],
+      "destination": "https://fockis.onrender.com/church/public/share/:handle"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

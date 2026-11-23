@@ -88,6 +88,8 @@ import {
 import { OrganizationsService } from './organizations/services/organizations.service';
 
 import { OrganizationsController } from './organizations/controllers/organizations.controller';
+import { OrganizationPublicLinksController } from './organizations/controllers/organization-public-links.controller';
+import { OrganizationHandlesService } from './organizations/services/organization-handles.service';
 
 // ============================================================================
 // LEADERSHIP
@@ -537,6 +539,7 @@ import { PageBrandingController } from './page-branding/page-branding.controller
     ChurchGivingController,
     OrgPayoutsController,
     AdminCenterController,
+    OrganizationPublicLinksController,
     OrganizationsController,
     LeadershipController,
     BranchesController,
@@ -566,6 +569,7 @@ import { PageBrandingController } from './page-branding/page-branding.controller
 
   providers: [
     OrganizationsService,
+    OrganizationHandlesService,
     LeadershipService,
     BranchesService,
     DepartmentsService,
@@ -603,6 +607,7 @@ import { PageBrandingController } from './page-branding/page-branding.controller
 
   exports: [
     OrganizationsService,
+    OrganizationHandlesService,
     LeadershipService,
     BranchesService,
     DepartmentsService,

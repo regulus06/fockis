@@ -58,6 +58,7 @@ import { hasBanner } from "../branding/PageBrandingParts";
 import { usePageBranding } from "../branding/usePageBranding";
 import SidebarAppearance from "../branding/SidebarAppearance";
 import OrgBanner from "../branding/OrgBanner";
+import PublicLinkCard from "../website/PublicLinkCard";
 import { pageKeyFromPath } from "../branding/pageBrandingApi";
 import { useOrgAdmin } from "../hooks/useOrgAdmin";
 import { typeLabel } from "../ui/orgCategories";
@@ -404,6 +405,11 @@ export default function ProfileLocationsPage() {
                     <Link to={p("/admin/domains")} className="pl-btn pl-btn--ghost">
                       <Globe aria-hidden="true" /> Manage Fockis domains
                     </Link>
+                  </Card>
+                )}
+                {tab === "domain" && (
+                  <Card icon={Link2} title="Public link" sub="The address to share and the one Google shows for your organization.">
+                    <PublicLinkCard organizationId={org.id} notify={(tone, text) => setToast({ tone, text })} />
                   </Card>
                 )}
                 {tab === "leadership" && <Leadership org={org} settingsTo={p("/admin/settings")} />}

@@ -65,6 +65,7 @@ import AcademyRoutes from "./fockis-src/routes/AcademyRoutes";
 import OrganizationsHomePage from "./features/organizations/pages/OrganizationsHomePage";
 import OrganizationsPage from "./features/organizations/pages/OrganizationsPage";
 import OrganizationPage from "./features/organizations/pages/OrganizationPage";
+import { OrgHandleRoute, OrganizationHostRoute, OrganizationIdRoute, isOrganizationHost } from "./features/organizations/website/OrgPublicRoutes";
 import MinistryPublicPage from "./features/organizations/pages/MinistryPublicPage";
 import MinistryCheckInPage from "./features/organizations/pages/MinistryCheckInPage";
 import OrganizationMembersPage from "./features/organizations/pages/OrganizationMembersPage";
@@ -361,7 +362,8 @@ function OrganizationHomeRoute(): React.JSX.Element {
     return <Navigate to="/organizations" replace />;
   }
 
-  return <OrganizationPage />;
+  // Old /organizations/:id links show the organization's public name instead.
+  return <OrganizationIdRoute />;
 }
 
 function OrganizationMembersRoute(): React.JSX.Element {
@@ -992,12 +994,23 @@ function WaveRedirect() {
 }
 
 function App(): React.JSX.Element {
+  // An organization's own Fockis address (e.g. methodiste.fockis.church)
+  // shows its page; if no organization owns it, the usual app (or a Website
+  // Studio site) is shown instead.
+  if (isOrganizationHost()) {
+    return <OrganizationHostRoute fallback={isWebsiteStudioHost() ? <HostedWebsiteRoute /> : <FockisApp />} />;
+  }
+
   // Customer websites opened on their own subdomain / custom domain render
   // without the Fockis app shell (Website Studio public hosting).
   if (isWebsiteStudioHost()) {
     return <HostedWebsiteRoute />;
   }
 
+  return <FockisApp />;
+}
+
+function FockisApp(): React.JSX.Element {
   return (
     <>
     {/* Incoming / outgoing calls ring on every page, not only in Messages. */}
@@ -1235,6 +1248,12 @@ function App(): React.JSX.Element {
       <Route
         path="/organizations/:organizationId"
         element={<OrganizationHomeRoute />}
+      />
+
+      {/* Public name: fockis.com/o/methodiste (old names redirect to the current one). */}
+      <Route
+        path="/o/:handle"
+        element={<OrgHandleRoute />}
       />
 
       {/* Shareable join link: a short form to ask to join. */}
