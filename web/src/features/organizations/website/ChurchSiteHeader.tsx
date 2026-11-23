@@ -64,6 +64,15 @@ export function ChurchLogo({ logoUrl, className }: { logoUrl?: string | null; cl
   return <CrossMark className={className} />;
 }
 
+/** Signed-in person's photo; falls back to initials (or an icon) when missing or unreachable. */
+function HeaderAvatar({ url, name }: { url?: string | null; name?: string | null }) {
+  const src = mediaUrl(url);
+  const [broken, setBroken] = useState(false);
+  useEffect(() => setBroken(false), [src]);
+  if (src && !broken) return <img src={src} alt="" onError={() => setBroken(true)} />;
+  return name ? <b>{initials(name)}</b> : <UserRound aria-hidden="true" />;
+}
+
 type NavKey = "home" | "about" | "ministries" | "sermons" | "events" | "give" | "media" | "contact";
 
 export interface ChurchHeaderLabels {
@@ -242,7 +251,7 @@ export default function ChurchSiteHeader({ org, signedIn, active, onHomePage, mi
           )}
           {signedIn && (
             <Link to={viewer?.profileHref ?? "/profile"} className="cw-header__me" aria-label="My profile" title={viewer?.name ?? "My profile"}>
-              {viewer?.avatarUrl && mediaUrl(viewer.avatarUrl) ? <img src={mediaUrl(viewer.avatarUrl) ?? ""} alt="" /> : viewer?.name ? <b>{initials(viewer.name)}</b> : <UserRound aria-hidden="true" />}
+              <HeaderAvatar url={viewer?.avatarUrl} name={viewer?.name} />
             </Link>
           )}
           <Link to={signedIn ? portal : signIn} className="cw-btn cw-btn--primary cw-header__portal">

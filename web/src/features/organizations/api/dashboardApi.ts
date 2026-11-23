@@ -193,10 +193,20 @@ export function uploadOrganizationLogo(organizationId: string, file: File): Prom
  */
 const COVER_MEDIA = /^\/church\/organizations\/([a-f0-9]{24})\/cover\/media\/([^/?#]+)$/i;
 
+/**
+ * Older records may hold a full address of the developer machine
+ * (http://localhost:3000/uploads/…, http://192.168.x.x:3000/uploads/…).
+ * Those hosts are unreachable from fockis.com, so keep only the /uploads/ path
+ * and serve it from the configured API.
+ */
+const LOCAL_UPLOAD = /^https?:\/\/(?:localhost|127\.0\.0\.1|10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})(?::\d+)?(\/uploads\/.*)$/i;
+
 export function mediaUrl(value?: string | null): string | null {
   if (!value) return null;
   const cover = value.match(COVER_MEDIA);
   if (cover) value = `/uploads/church-organization-covers/${cover[1]}/${cover[2]}`;
+  const local = value.match(LOCAL_UPLOAD);
+  if (local) value = local[1];
   if (!value.startsWith("/uploads/")) return value;
   const apiRoot = CHURCH_API_BASE.replace(/\/church\/?$/, "");
   return `${apiRoot}${value}`;
