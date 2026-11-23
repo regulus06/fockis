@@ -21,6 +21,16 @@ export class RedisService
 
   public readonly client: Redis;
 
+  /**
+   * Separate connection for SUBSCRIBE. A Redis connection that has
+   * subscribed can only run subscribe commands, so subscribing on `client`
+   * would break every other command (publish, brpop, get, …).
+   * Created on first subscribe().
+   */
+  private subscriber: Redis | null = null;
+
+  private redisOptions!: RedisOptions;
+
   private readonly subscriptions =
     new Map<
       string,
@@ -87,6 +97,8 @@ export class RedisService
 
       autoResendUnfulfilledCommands: true,
     };
+
+    this.redisOptions = options;
 
     this.client = new Redis(
       redisUrl,
@@ -186,25 +198,57 @@ export class RedisService
       },
     );
 
-    /*
-     * ONE global Redis message listener.
-     *
-     * Application subscriptions are maintained
-     * inside this service instead of creating a
-     * separate Redis listener for every callback.
-     */
-    this.client.on(
-      "message",
-      (
-        channel: string,
-        message: string,
-      ) => {
-        this.handleMessage(
-          channel,
-          message,
+  }
+
+  /**
+   * The subscribe-only connection (same server and options as `client`).
+   * ONE message listener; application callbacks are kept in
+   * `subscriptions`. On every (re)connect all channels are subscribed
+   * again, so channels added before Redis was ready are not lost.
+   */
+  private getSubscriber(): Redis {
+    if (this.subscriber) {
+      return this.subscriber;
+    }
+
+    const subscriber = this.client.duplicate({
+      ...this.redisOptions,
+      autoResubscribe: false,
+    });
+
+    subscriber.on("message", (channel: string, message: string) => {
+      this.handleMessage(channel, message);
+    });
+
+    subscriber.on("ready", () => {
+      const channels = Array.from(this.subscriptions.keys());
+
+      if (channels.length === 0) {
+        return;
+      }
+
+      void subscriber.subscribe(...channels).catch((error) => {
+        this.logger.error(
+          `Failed to subscribe to Redis channels: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
         );
-      },
-    );
+      });
+    });
+
+    subscriber.on("error", (error: unknown) => {
+      if (!this.shuttingDown) {
+        this.logger.error(
+          `Redis subscriber connection error: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+    });
+
+    this.subscriber = subscriber;
+
+    return subscriber;
   }
 
   /**
@@ -276,13 +320,13 @@ export class RedisService
       );
 
       /*
-       * If Redis is already ready, subscribe now.
-       *
-       * Otherwise ioredis will reconnect and
-       * auto-resubscribe.
+       * Subscribe now when the subscriber connection is ready; otherwise
+       * its "ready" handler subscribes every channel in the map.
        */
-      if (this.isReady()) {
-        void this.client
+      const subscriber = this.getSubscriber();
+
+      if (subscriber.status === "ready") {
+        void subscriber
           .subscribe(channel)
           .catch((error) => {
             this.logger.error(
@@ -328,8 +372,8 @@ export class RedisService
         channel,
       );
 
-      if (this.isReady()) {
-        void this.client
+      if (this.subscriber?.status === "ready") {
+        void this.subscriber
           .unsubscribe(channel)
           .catch((error) => {
             this.logger.error(
@@ -408,6 +452,18 @@ export class RedisService
     this.shuttingDown = true;
 
     this.subscriptions.clear();
+
+    if (this.subscriber) {
+      try {
+        if (this.subscriber.status === "ready") {
+          await this.subscriber.quit();
+        } else {
+          this.subscriber.disconnect();
+        }
+      } catch {
+        this.subscriber.disconnect();
+      }
+    }
 
     try {
       if (
