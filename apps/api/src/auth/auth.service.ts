@@ -1,3 +1,4 @@
+import { decryptMfaSecret } from "./mfa-secret-crypto";
 import {
   BadRequestException,
   Injectable,
@@ -476,7 +477,7 @@ export class AuthService {
       throw new BadRequestException("MFA setup has expired or is invalid.");
     }
 
-    const valid = await this.mfaService.verifyTotp(code, user.mfaSecret);
+    const valid = await this.mfaService.verifyTotp(code, decryptMfaSecret(user.mfaSecret) ?? "");
 
     if (!valid) {
       throw new UnauthorizedException("Invalid MFA code.");
@@ -533,7 +534,7 @@ export class AuthService {
       throw new UnauthorizedException("MFA is not configured.");
     }
 
-    const valid = await this.mfaService.verifyTotp(code, user.mfaSecret);
+    const valid = await this.mfaService.verifyTotp(code, decryptMfaSecret(user.mfaSecret) ?? "");
 
     if (!valid) {
       throw new UnauthorizedException("Invalid MFA code.");
@@ -697,7 +698,7 @@ export class AuthService {
         throw new BadRequestException("MFA configuration is invalid.");
       }
 
-      const valid = await this.mfaService.verifyTotp(mfaCode, user.mfaSecret);
+      const valid = await this.mfaService.verifyTotp(mfaCode, decryptMfaSecret(user.mfaSecret) ?? "");
 
       if (!valid) {
         throw new UnauthorizedException("Invalid MFA code.");
