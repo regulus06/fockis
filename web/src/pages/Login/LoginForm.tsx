@@ -12,6 +12,7 @@ import {
 import MfaVerification from "./MfaVerification";
 import LoginVerification from "./LoginVerification";
 import AccountRecoveryRequest from "./AccountRecoveryRequest";
+import { withReturnTo } from "../../utils/returnTo";
 
 type Props = {
   mfaMode: MfaMode;
@@ -172,7 +173,7 @@ export default function LoginForm({
 
         <p className="create-account">
           {t("login.noAccount")}{" "}
-          <Link to="/register">{t("login.register")}</Link>
+          <Link to={withReturnTo("/register")}>{t("login.register")}</Link>
         </p>
       </div>
     </div>

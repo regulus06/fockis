@@ -9,6 +9,7 @@ import { getLanguage, subscribeToLanguage, t } from "../../i18n";
 import type { FockisLanguage } from "../../i18n/language";
 
 import { setToken, setUserId } from "../../utils/auth";
+import { safeReturnTo } from "../../utils/returnTo";
 
 import {
   loginRequest,
@@ -100,9 +101,9 @@ export function useLoginController() {
       "[FOCKIS AUTH] Authentication established successfully.",
     );
 
-    // Always send the user to the Fockis Feed after successful login.
-    // This also applies after MFA verification/setup.
-    navigate("/feed", { replace: true });
+    // Back to the page that asked for sign-in (e.g. a giving QR code), if it
+    // is a page on this site; otherwise the Fockis Feed. Also after MFA.
+    navigate(safeReturnTo() ?? "/feed", { replace: true });
   };
 
   const startMfaSetup = async (token: string) => {

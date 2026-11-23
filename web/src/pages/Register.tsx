@@ -29,6 +29,7 @@ import {
 
 
 import axios from "axios";
+import { withReturnTo } from "../utils/returnTo";
 
 
 
@@ -3172,7 +3173,7 @@ export default function Register() {
 
 
 
-      navigate("/login", {
+      navigate(withReturnTo("/login"), {
 
         replace: true,
 
@@ -4910,7 +4911,7 @@ export default function Register() {
 
 
 
-            <Link to="/login">
+            <Link to={withReturnTo("/login")}>
 
               Login
 
