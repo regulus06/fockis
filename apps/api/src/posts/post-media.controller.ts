@@ -1,168 +1,164 @@
-import {
-  Controller,
-  Get,
-  Head,
-  NotFoundException,
-  Param,
-  Req,
-  Res,
-} from "@nestjs/common";
-import { File, Storage } from "@google-cloud/storage";
-import { createReadStream, existsSync } from "fs";
-import { stat } from "fs/promises";
-import { basename, resolve } from "path";
-import type { Request, Response } from "express";
-import { Public } from "../auth/public.decorator";
+import { Controller, Get, Head, NotFoundException, Param, Req, Res } from '@nestjs/common';
+import { File, Storage } from '@google-cloud/storage';
+import { createReadStream, existsSync } from 'fs';
+import { stat } from 'fs/promises';
+import { basename, resolve } from 'path';
+import type { Request, Response } from 'express';
+import type { Readable } from 'stream';
+import { pipeline } from 'stream/promises';
+import { Public } from '../auth/public.decorator';
 
 type ResolvedMedia =
-  | { source: "gcs"; file: File; objectName: string }
-  | { source: "local"; filePath: string; objectName: string };
+  | { source: 'gcs'; file: File; objectName: string; size: number; contentType: string }
+  | { source: 'local'; filePath: string; objectName: string; size: number; contentType: string };
 
-@Controller("post-media")
+@Controller('post-media')
 @Public()
 export class PostMediaController {
   private readonly storage: Storage;
-  private readonly bucketName = process.env.GOOGLE_CLOUD_STORAGE_BUCKET?.trim() || "";
+  private readonly bucketName = process.env.GOOGLE_CLOUD_STORAGE_BUCKET?.trim() || '';
   private readonly localUploadDirectories = [
-    resolve(process.cwd(), "uploads"),
-    resolve(process.cwd(), "apps", "api", "uploads"),
+    resolve(process.cwd(), 'uploads'),
+    resolve(process.cwd(), 'apps', 'api', 'uploads'),
   ].filter((directory, index, all) => all.indexOf(directory) === index);
-
-  // Keep legacy locations while also checking the folder used for uploaded images.
-  private readonly mediaPrefixes = [
-    "posts",
-    "posts/images",
-    "posts/videos",
-    "post-media",
-    "stories",
-    "story-media",
-  ];
+  private readonly mediaPrefixes = ['posts', 'posts/images', 'posts/videos', 'post-media', 'stories', 'story-media'];
+  private readonly metadataCache = new Map<string, { expiresAt: number; value: ResolvedMedia }>();
+  private readonly cacheTtlMs = 30_000;
+  private readonly maxCacheEntries = 500;
+  private readonly videoChunkSize = 2 * 1024 * 1024;
 
   constructor() {
     this.storage = this.createStorage();
-    if (!this.bucketName) {
-      console.error("[PostMedia] GOOGLE_CLOUD_STORAGE_BUCKET is not configured.");
-    } else {
-      console.log(`[PostMedia] Configured storage bucket: ${this.bucketName}`);
-    }
-    console.log("[PostMedia] Local upload directories:", this.localUploadDirectories);
+    if (!this.bucketName) console.warn('[PostMedia] GOOGLE_CLOUD_STORAGE_BUCKET is not configured.');
   }
 
-  @Get(":filename")
-  async getMedia(@Param("filename") filename: string, @Req() req: Request, @Res() res: Response): Promise<void> {
-    await this.streamMedia(filename, req, res);
+  @Get(':filename')
+  async getMedia(@Param('filename') filename: string, @Req() req: Request, @Res() res: Response): Promise<void> {
+    await this.serve(filename, req, res, false);
   }
 
-  @Head(":filename")
-  async headMedia(@Param("filename") filename: string, @Res() res: Response): Promise<void> {
+  @Head(':filename')
+  async headMedia(@Param('filename') filename: string, @Req() req: Request, @Res() res: Response): Promise<void> {
+    await this.serve(filename, req, res, true);
+  }
+
+  private async serve(filename: string, req: Request, res: Response, head: boolean): Promise<void> {
     const safeFilename = this.sanitizeFilename(filename);
-    if (!safeFilename) throw new NotFoundException("Invalid media filename.");
-    const resolved = await this.findMediaFile(safeFilename);
-    if (!resolved) throw new NotFoundException("Media file not found.");
+    if (!safeFilename) throw new NotFoundException('Invalid media filename.');
 
-    try {
-      let contentType = this.detectContentType(safeFilename);
-      let contentLength: number;
-      if (resolved.source === "local") {
-        contentLength = (await stat(resolved.filePath)).size;
-      } else {
-        const [metadata] = await resolved.file.getMetadata();
-        contentLength = Number(metadata.size || 0);
-        contentType = metadata.contentType || contentType;
-      }
-      res.status(200);
-      this.setMediaHeaders(res, { contentType, contentLength });
-      res.end();
-    } catch (error) {
-      console.error(`[PostMedia] HEAD failed for ${safeFilename}:`, this.errorMessage(error));
-      if (!res.headersSent) throw new NotFoundException("Media file not found.");
-      res.end();
-    }
-  }
-
-  private async streamMedia(filename: string, req: Request, res: Response): Promise<void> {
-    const safeFilename = this.sanitizeFilename(filename);
-    if (!safeFilename) throw new NotFoundException("Invalid media filename.");
-    const resolved = await this.findMediaFile(safeFilename);
-    if (!resolved) {
-      console.error(`[PostMedia] Media not found in cloud storage or local uploads: ${safeFilename}`);
-      throw new NotFoundException("Media file not found.");
+    // If the browser disconnects during an asynchronous GCS lookup, do not start a stream.
+    if (res.destroyed) return;
+    const media = await this.findMediaFile(safeFilename);
+    if (!media) throw new NotFoundException('Media file not found.');
+    if (res.destroyed) return;
+    if (!Number.isSafeInteger(media.size) || media.size <= 0) {
+      if (!res.headersSent) res.status(404).end();
+      return;
     }
 
-    try {
-      let totalSize: number;
-      let contentType = this.detectContentType(safeFilename);
-      if (resolved.source === "local") {
-        totalSize = (await stat(resolved.filePath)).size;
-      } else {
-        const [metadata] = await resolved.file.getMetadata();
-        totalSize = Number(metadata.size || 0);
-        contentType = metadata.contentType || contentType;
-      }
-      if (!Number.isFinite(totalSize) || totalSize <= 0) throw new Error("Media file has an invalid size.");
+    const rangeHeader = req.headers.range;
+    const isVideo = media.contentType.startsWith('video/');
+    let start = 0;
+    let end = media.size - 1;
+    let partial = false;
 
-      console.log(`[PostMedia] Streaming ${safeFilename} from ${resolved.source}: ${resolved.objectName}`);
-      const openStream = (start?: number, end?: number) => resolved.source === "local"
-        ? createReadStream(resolved.filePath, start !== undefined && end !== undefined ? { start, end } : undefined)
-        : resolved.file.createReadStream(start !== undefined && end !== undefined ? { start, end } : undefined);
-
-      const rangeHeader = req.headers.range;
-      if (!rangeHeader) {
-        res.status(200);
-        this.setMediaHeaders(res, { contentType, contentLength: totalSize });
-        const stream = openStream();
-        stream.on("error", (error) => this.handleStreamError(error, res, safeFilename));
-        stream.pipe(res);
+    if (rangeHeader) {
+      const parsed = this.parseRange(rangeHeader, media.size);
+      if (!parsed) {
+        res.status(416).setHeader('Content-Range', `bytes */${media.size}`);
+        this.setCrossOriginHeaders(res);
+        res.end();
         return;
       }
-
-      const match = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader);
-      if (!match) return this.sendRangeNotSatisfiable(res, totalSize);
-      const startText = match[1] || "";
-      const endText = match[2] || "";
-      let start = startText ? Number(startText) : 0;
-      let end = endText ? Number(endText) : totalSize - 1;
-      if (!startText && endText) {
-        const suffixLength = Number(endText);
-        if (!Number.isFinite(suffixLength) || suffixLength <= 0) return this.sendRangeNotSatisfiable(res, totalSize);
-        start = Math.max(totalSize - suffixLength, 0);
-        end = totalSize - 1;
-      }
-      if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end < start || start >= totalSize) {
-        return this.sendRangeNotSatisfiable(res, totalSize);
-      }
-      end = Math.min(end, totalSize - 1);
-      res.status(206);
-      this.setMediaHeaders(res, {
-        contentType,
-        contentLength: end - start + 1,
-        contentRange: `bytes ${start}-${end}/${totalSize}`,
-      });
-      const stream = openStream(start, end);
-      stream.on("error", (error) => this.handleStreamError(error, res, safeFilename));
-      stream.pipe(res);
-    } catch (error) {
-      console.error(`[PostMedia] Media request failed for ${safeFilename}:`, this.errorMessage(error));
-      if (!res.headersSent) throw new NotFoundException("Media file not found.");
-      res.end();
+      start = parsed.start;
+      end = parsed.end;
+      partial = true;
     }
+
+    // For video, serve a bounded chunk even when the browser asks for an open-ended range.
+    // This avoids long-lived full-file streams and lets the browser request the next segment.
+    if (isVideo && !head && (rangeHeader || media.size > this.videoChunkSize)) {
+      end = Math.min(end, start + this.videoChunkSize - 1);
+      partial = true;
+    }
+
+    res.status(partial ? 206 : 200);
+    this.setMediaHeaders(res, {
+      contentType: media.contentType,
+      contentLength: end - start + 1,
+      contentRange: partial ? `bytes ${start}-${end}/${media.size}` : undefined,
+    });
+    if (head) {
+      res.end();
+      return;
+    }
+
+    const stream: Readable = media.source === 'local'
+      ? createReadStream(media.filePath, { start, end })
+      : media.file.createReadStream({ start, end, validation: false });
+
+    const abort = () => stream.destroy();
+    res.once('close', abort);
+    try {
+      await pipeline(stream, res);
+    } catch (error) {
+      // A client navigating away from a video is expected, not a server failure.
+      const code = (error as NodeJS.ErrnoException)?.code;
+      if (!res.destroyed && code !== 'ERR_STREAM_PREMATURE_CLOSE' && code !== 'ECONNRESET') {
+        console.error(`[PostMedia] Stream failed for ${safeFilename}:`, this.errorMessage(error));
+        if (!res.headersSent) res.status(502).end();
+        else res.destroy();
+      }
+    } finally {
+      res.off('close', abort);
+      stream.destroy();
+    }
+  }
+
+  private parseRange(header: string, size: number): { start: number; end: number } | null {
+    const match = /^bytes=(\d*)-(\d*)$/.exec(header.trim());
+    if (!match || (!match[1] && !match[2])) return null;
+    let start: number;
+    let end: number;
+    if (!match[1]) {
+      const suffix = Number(match[2]);
+      if (!Number.isSafeInteger(suffix) || suffix <= 0) return null;
+      start = Math.max(0, size - suffix);
+      end = size - 1;
+    } else {
+      start = Number(match[1]);
+      end = match[2] ? Number(match[2]) : size - 1;
+    }
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || start >= size || end < start) return null;
+    return { start, end: Math.min(end, size - 1) };
   }
 
   private async findMediaFile(filename: string): Promise<ResolvedMedia | null> {
+    const now = Date.now();
+    const cached = this.metadataCache.get(filename);
+    if (cached && cached.expiresAt > now) return cached.value;
+    if (cached) this.metadataCache.delete(filename);
+
     if (this.bucketName) {
       const bucket = this.storage.bucket(this.bucketName);
       for (const prefix of this.mediaPrefixes) {
         const objectName = `${prefix}/${filename}`;
         const file = bucket.file(objectName);
         try {
-          await file.getMetadata();
-          console.log(`[PostMedia] Cloud media found: gs://${this.bucketName}/${objectName}`);
-          return { source: "gcs", file, objectName };
+          const [metadata] = await file.getMetadata();
+          const value: ResolvedMedia = {
+            source: 'gcs', file, objectName,
+            size: Number(metadata.size || 0),
+            contentType: metadata.contentType || this.detectContentType(filename),
+          };
+          this.cacheMedia(filename, value);
+          return value;
         } catch (error) {
-          const message = this.errorMessage(error);
-          // Do not spam logs for normal missing-object results. Surface auth failures clearly.
-          if (!/\b(404|Not Found)\b/i.test(message)) {
-            console.error(`[PostMedia] GCS lookup failed for ${objectName}: ${message}`);
+          const code = (error as { code?: number })?.code;
+          if (code !== 404) {
+            console.error(`[PostMedia] GCS lookup failed for ${objectName}:`, this.errorMessage(error));
+            // Do not silently fall back to another location on auth or network errors.
+            throw error;
           }
         }
       }
@@ -173,111 +169,97 @@ export class PostMediaController {
       if (basename(filePath) !== filename) continue;
       try {
         const metadata = await stat(filePath);
-        if (metadata.isFile()) return { source: "local", filePath, objectName: `uploads/${filename}` };
-      } catch {
-        // Try the next known local upload directory.
-      }
+        if (metadata.isFile()) {
+          const value: ResolvedMedia = {
+            source: 'local', filePath, objectName: `uploads/${filename}`,
+            size: metadata.size, contentType: this.detectContentType(filename),
+          };
+          this.cacheMedia(filename, value);
+          return value;
+        }
+      } catch { /* Try next local directory. */ }
     }
     return null;
   }
 
-  private createStorage(): Storage {
-    const projectId = process.env.GOOGLE_CLOUD_PROJECT?.trim() || "fockis";
-    const rawServiceAccount = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  private cacheMedia(filename: string, value: ResolvedMedia): void {
+    if (this.metadataCache.size >= this.maxCacheEntries) {
+      const oldest = this.metadataCache.keys().next().value;
+      if (oldest !== undefined) this.metadataCache.delete(oldest);
+    }
+    this.metadataCache.set(filename, { value, expiresAt: Date.now() + this.cacheTtlMs });
+  }
 
-    // Match CloudStorageService's preferred credential source so both use the same identity.
+  private createStorage(): Storage {
+    const projectId = process.env.GOOGLE_CLOUD_PROJECT?.trim() || 'fockis';
+    const rawServiceAccount = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
     if (rawServiceAccount) {
       let account: { project_id?: string; client_email?: string; private_key?: string };
-      try {
-        account = JSON.parse(rawServiceAccount);
-      } catch {
-        throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON is not valid JSON.");
-      }
+      try { account = JSON.parse(rawServiceAccount); }
+      catch { throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON is not valid JSON.'); }
       if (!account.client_email || !account.private_key) {
-        throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON is missing client_email or private_key.");
+        throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON is missing client_email or private_key.');
       }
       return new Storage({
-        projectId: projectId || account.project_id,
+        projectId: process.env.GOOGLE_CLOUD_PROJECT?.trim() || account.project_id || projectId,
         credentials: {
           client_email: account.client_email,
-          private_key: account.private_key.replace(/\\n/g, "\n"),
+          private_key: account.private_key.replace(/\\n/g, '\n'),
         },
       });
     }
-
     const configuredPath = process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim();
     if (configuredPath) {
       const credentialsPath = resolve(configuredPath);
-      if (!existsSync(credentialsPath)) {
-        throw new Error(`[PostMedia] GOOGLE_APPLICATION_CREDENTIALS file not found: ${credentialsPath}`);
-      }
+      if (!existsSync(credentialsPath)) throw new Error(`[PostMedia] GOOGLE_APPLICATION_CREDENTIALS file not found: ${credentialsPath}`);
       return new Storage({ projectId, keyFilename: credentialsPath });
     }
-
-    // Allow Google Application Default Credentials in deployed environments.
     return new Storage({ projectId });
   }
 
   private sanitizeFilename(filename: string): string {
     let decoded: string;
-    try { decoded = decodeURIComponent(String(filename || "")); } catch { return ""; }
-    const clean = decoded.replace(/\\/g, "/").split("/").pop()?.trim() || "";
-    if (!clean || clean === "." || clean === ".." || clean.includes("..")) return "";
-    return clean;
+    try { decoded = decodeURIComponent(String(filename || '')); }
+    catch { return ''; }
+    // Reject encoded paths rather than allowing a caller to choose a basename from a path.
+    if (decoded.includes('/') || decoded.includes('\\') || decoded.includes('..')) return '';
+    return decoded.trim();
   }
 
   private detectContentType(filename: string): string {
     const lower = filename.toLowerCase();
-    if (lower.endsWith(".mp4") || lower.endsWith(".m4v")) return "video/mp4";
-    if (lower.endsWith(".webm")) return "video/webm";
-    if (lower.endsWith(".mov")) return "video/quicktime";
-    if (lower.endsWith(".avi")) return "video/x-msvideo";
-    if (lower.endsWith(".mkv")) return "video/x-matroska";
-    if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
-    if (lower.endsWith(".png")) return "image/png";
-    if (lower.endsWith(".gif")) return "image/gif";
-    if (lower.endsWith(".webp")) return "image/webp";
-    if (lower.endsWith(".avif")) return "image/avif";
-    if (lower.endsWith(".svg")) return "image/svg+xml";
-    return "application/octet-stream";
+    if (lower.endsWith('.mp4') || lower.endsWith('.m4v')) return 'video/mp4';
+    if (lower.endsWith('.webm')) return 'video/webm';
+    if (lower.endsWith('.mov')) return 'video/quicktime';
+    if (lower.endsWith('.avi')) return 'video/x-msvideo';
+    if (lower.endsWith('.mkv')) return 'video/x-matroska';
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.gif')) return 'image/gif';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    if (lower.endsWith('.avif')) return 'image/avif';
+    if (lower.endsWith('.svg')) return 'image/svg+xml';
+    return 'application/octet-stream';
   }
 
   private setMediaHeaders(res: Response, options: { contentType: string; contentLength: number; contentRange?: string }): void {
-    res.setHeader("Content-Type", options.contentType);
-    res.setHeader("Content-Length", String(options.contentLength));
-    res.setHeader("Accept-Ranges", "bytes");
-    res.setHeader("Cache-Control", "public, max-age=3600");
-    res.setHeader("Content-Disposition", "inline");
-    res.setHeader("X-Content-Type-Options", "nosniff");
-    if (options.contentRange) res.setHeader("Content-Range", options.contentRange);
-    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Range, Cache-Control, Pragma, Content-Type");
-    res.setHeader("Access-Control-Expose-Headers", "Content-Length, Content-Range, Accept-Ranges, Content-Type");
-    res.setHeader("Vary", "Origin");
-  }
-
-  private sendRangeNotSatisfiable(res: Response, totalSize: number): void {
-    res.status(416);
-    res.setHeader("Content-Range", `bytes */${totalSize}`);
+    res.setHeader('Content-Type', options.contentType);
+    res.setHeader('Content-Length', String(options.contentLength));
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Content-Disposition', 'inline');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    if (options.contentRange) res.setHeader('Content-Range', options.contentRange);
     this.setCrossOriginHeaders(res);
-    res.end();
   }
 
   private setCrossOriginHeaders(res: Response): void {
-    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Range, Cache-Control, Pragma, Content-Type");
-    res.setHeader("Access-Control-Expose-Headers", "Content-Length, Content-Range, Accept-Ranges, Content-Type");
-    res.setHeader("Vary", "Origin");
-  }
-
-  private handleStreamError(error: unknown, res: Response, filename: string): void {
-    console.error(`[PostMedia] Stream failed for ${filename}:`, this.errorMessage(error));
-    if (!res.headersSent) res.status(404).end();
-    else res.end();
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Range, Cache-Control, Pragma, Content-Type');
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges, Content-Type');
+    res.setHeader('Vary', 'Origin');
   }
 
   private errorMessage(error: unknown): string {
