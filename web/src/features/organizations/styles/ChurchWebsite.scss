@@ -2870,3 +2870,25 @@
     font-size: 13px;
   }
 }
+
+/* "QR code" link in the Give Online card */
+.cw-give__qr {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 13.5px;
+  text-decoration: underline;
+  cursor: pointer;
+  opacity: 0.95;
+
+  svg {
+    width: 15px;
+    height: 15px;
+  }
+}

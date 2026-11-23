@@ -43,6 +43,7 @@ import {
   LayoutDashboard,
   Loader2,
   Lock,
+  QrCode,
   Mail,
   Map as MapIcon,
   MapPin,
@@ -84,6 +85,7 @@ import MediaPlayerDialog, { type PlayableMedia } from "./MediaPlayerDialog";
 import ContactChurchSection from "./ContactChurchSection";
 import LiveServicesSection from "../live-center/LiveServicesSection";
 import GiveDialog from "../giving/GiveDialog";
+import GivingQrDialog from "../giving/GivingQrDialog";
 import HeroBackgroundDialog, { HERO_KEY, HeroBackdrop, heroFromBranding, heroFromCover, removeHeroBackground, saveHeroBackground, type HeroBg } from "./HeroBackground";
 import { usePageBranding } from "../branding/usePageBranding";
 import { givingApi, type GivingInfo } from "../giving/givingApi";
@@ -303,6 +305,7 @@ export default function ChurchWebsiteTemplate({
   // the giving form; &fund=<key> preselects a fund. Givers must be signed
   // in, so a signed-out visitor goes to sign-in first and comes back here.
   const [giveFund, setGiveFund] = useState<string | undefined>(undefined);
+  const [qrOpen, setQrOpen] = useState(false);
   useEffect(() => {
     if (params.get("give") !== "1" || !giving?.enabled) return;
     const fund = params.get("fund") ?? "";
@@ -948,6 +951,9 @@ export default function ChurchWebsiteTemplate({
               <small className="cw-give__secure">
                 <Lock aria-hidden="true" /> Secure card payment
               </small>
+              <button type="button" className="cw-give__qr" onClick={() => setQrOpen(true)}>
+                <QrCode aria-hidden="true" /> Show QR code to share
+              </button>
               {giving?.canManage && (
                 <Link to={p("/admin/giving")} className="cw-give__admin">
                   Manage giving (turn off, funds, gifts received)
@@ -1237,6 +1243,7 @@ export default function ChurchWebsiteTemplate({
           }}
         />
       )}
+      {qrOpen && givingOn && <GivingQrDialog organizationId={org.id} organizationName={org.name} onClose={() => setQrOpen(false)} />}
       {giveOpen && giving?.enabled && <GiveDialog organizationId={org.id} info={giving} initialHistory={giveHistory} initialFund={giveFund} onClose={() => (setGiveOpen(false), setGiveFund(undefined))} />}
       {aboutEditor && <PageBrandingEditor organizationId={org.id} pageKey={ABOUT_KEY} pageLabel="About section image" icon={Church} initialTab="banner" onClose={() => setAboutEditor(false)} />}
     </div>
