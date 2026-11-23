@@ -524,12 +524,24 @@ export class OrgPayoutsService implements OnModuleInit, OnModuleDestroy {
       const country = /^[A-Za-z]{2}$/.test(countryInput) ? countryInput.toLowerCase() : "us";
       const giving = (await this.connection.collection("church_giving_settings").findOne({ organizationId: org._id })) as Lean | null;
       const currency = String(giving?.currency ?? "USD").toLowerCase();
-      const email = String(org.contact?.email ?? "").trim();
+      // Stripe requires a contact email on recipient accounts. Use the
+      // organization's contact email, or else the owner's own login email
+      // (the owner is the one connecting; checked by requireOwner above).
+      let email = String(org.contact?.email ?? "").trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        const owner = Types.ObjectId.isValid(userId)
+          ? ((await this.connection.collection("users").findOne({ _id: new Types.ObjectId(userId) }, { projection: { email: 1 } })) as Lean | null)
+          : null;
+        email = String(owner?.email ?? "").trim();
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new BadRequestException("Add a contact email to your organization profile (Profile & Locations → Profile) before connecting Stripe.");
+      }
       const website = String(org.website ?? org.contact?.website ?? "").trim();
       const created = await this.stripe.v2.core.accounts.create(
         {
           display_name: String(org.name).slice(0, 100),
-          ...(email ? { contact_email: email } : {}),
+          contact_email: email,
           dashboard: "express",
           identity: { country: country as never },
           defaults: {
