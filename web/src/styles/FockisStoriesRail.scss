@@ -1004,7 +1004,17 @@
   }
 }
 
-@media (max-width: 600px) {
+/* Phones, and tablets (touch screens up to iPad Pro size, either way up):
+   the story fills the whole screen. */
+@media (max-width: 600px), (hover: none) and (pointer: coarse) and (max-width: 1366px) {
+  .fk-story-viewer {
+    gap: 0;
+  }
+
+  .fk-story-viewer__nav {
+    display: none;
+  }
+
   .fk-story-viewer__stage {
     width: 100vw;
     height: 100dvh;
