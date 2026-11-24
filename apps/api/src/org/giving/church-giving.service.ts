@@ -354,7 +354,8 @@ export class ChurchGivingService {
 
     const gift = await this.giftModel.create({
       organizationId: org._id,
-      userId: userId ? new Types.ObjectId(userId) : null,
+      // Null for a guest gift (the schema allows it; see guestEmail).
+      userId: (userId ? new Types.ObjectId(userId) : null) as unknown as Types.ObjectId,
       guestEmail: giver.guest?.email ?? null,
       guestKeyHash: guestKey ? sha256(guestKey) : null,
       membershipId: membership?._id ?? null,
