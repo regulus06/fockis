@@ -430,8 +430,22 @@ export function useFockisFeed(mode: FeedMode = "for-you") {
           error,
         );
 
+        // Show the server's reason (e.g. "Unsupported media type.") instead
+        // of a generic message, so the problem can be fixed.
+        const response = (error as { response?: { status?: number; data?: { message?: unknown } } })?.response;
+        const serverMessage = response?.data?.message;
+        const reason = Array.isArray(serverMessage)
+          ? serverMessage.join(" ")
+          : typeof serverMessage === "string" && serverMessage.trim()
+            ? serverMessage
+            : error instanceof Error && error.message
+              ? error.message
+              : "";
+
         window.alert(
-          "Unable to create your story. Please try again.",
+          reason
+            ? `Unable to create your story: ${reason}`
+            : "Unable to create your story. Please try again.",
         );
       }
     },

@@ -183,7 +183,9 @@ export const storyApi = {
     formData.append("file", file);
 
     // The shared client defaults to JSON; a file upload must be multipart
-    // (axios adds the boundary).
+    // (axios adds the boundary). The shared client also gives up after 15
+    // seconds, which is too short for a video: sending it and processing it
+    // on the server can take minutes on a slow connection.
     const response = await api.post(
       "/uploads?context=story",
       formData,
@@ -191,6 +193,7 @@ export const storyApi = {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        timeout: 10 * 60 * 1000,
       },
     );
 

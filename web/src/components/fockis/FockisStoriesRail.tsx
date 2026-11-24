@@ -1006,8 +1006,14 @@ export default function FockisStoriesRail({
 function StoryBubble({ group, onOpen }: { group: StoryGroup; onOpen: () => void }) {
   const latest = group.stories[group.stories.length - 1];
   const cover = latest ? storyMediaCandidates(latest)[0] || "" : "";
-  const photo = group.avatar ? mediaUrl(group.avatar) : latest?.type === "video" ? "" : cover;
+  // The circle previews the latest story itself (a photo, or the first frame
+  // of a video); if that can't load, the person's photo, then their initial.
+  const isVideo = latest?.type === "video";
+  const avatar = group.avatar ? mediaUrl(group.avatar) : "";
+  const [coverFailed, setCoverFailed] = useState(false);
   const [failed, setFailed] = useState(false);
+  const showCover = Boolean(cover) && !coverFailed;
+  const photo = avatar;
   const age = formatAge(latest?.createdAt);
   const state = group.isOwn ? "own" : group.hasUnseen ? "unseen" : "seen";
   return (
@@ -1021,7 +1027,18 @@ function StoryBubble({ group, onOpen }: { group: StoryGroup; onOpen: () => void 
     >
       <span className="fk-sb__ring">
         <span className="fk-sb__photo">
-          {photo && !failed ? <img src={photo} alt="" loading="lazy" decoding="async" onError={() => setFailed(true)} /> : initialOf(group.username)}
+          {showCover ? (
+            isVideo ? (
+              // "#t=0.1" makes browsers (iPhone Safari too) paint the first frame.
+              <video src={`${cover}#t=0.1`} muted playsInline preload="metadata" aria-hidden="true" onError={() => setCoverFailed(true)} />
+            ) : (
+              <img src={cover} alt="" loading="lazy" decoding="async" onError={() => setCoverFailed(true)} />
+            )
+          ) : photo && !failed ? (
+            <img src={photo} alt="" loading="lazy" decoding="async" onError={() => setFailed(true)} />
+          ) : (
+            initialOf(group.username)
+          )}
         </span>
         {latest?.type === "video" && (
           <span className="fk-sb__chip" title="Video story">
