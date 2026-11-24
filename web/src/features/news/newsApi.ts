@@ -5,7 +5,29 @@
 
 import { api } from "../../api/api";
 
-const data = <T,>(p: Promise<{ data: T }>) => p.then((r) => r.data);
+/*
+ * Media addresses. Files are served at /uploads/media/<key> by the API, and
+ * fockis.com forwards /uploads/* to the API (vercel.json; Vite does the same
+ * locally), so a relative "/uploads/..." address works everywhere.
+ * Articles saved from a local PC may hold "http://localhost:3000/uploads/...",
+ * which only works on that PC: shown as the relative address instead.
+ */
+const LOCAL_UPLOADS = /https?:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?\/uploads\//gi;
+
+function fixMediaAddresses<T>(value: T): T {
+  if (typeof value === "string") {
+    return (value.includes("/uploads/") ? value.replace(LOCAL_UPLOADS, "/uploads/") : value) as T;
+  }
+  if (Array.isArray(value)) return value.map((v) => fixMediaAddresses(v)) as T;
+  if (value && typeof value === "object" && Object.getPrototypeOf(value) === Object.prototype) {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) out[k] = fixMediaAddresses(v);
+    return out as T;
+  }
+  return value;
+}
+
+const data = <T,>(p: Promise<{ data: T }>) => p.then((r) => fixMediaAddresses(r.data));
 const e = encodeURIComponent;
 
 export function newsError(err: unknown, fallback = "Something went wrong. Please try again."): string {
@@ -561,14 +583,14 @@ const N = "/news/newsroom";
 const o = (id: string) => `${N}/outlets/${e(id)}`;
 
 export const newsApi = {
-  /** Uploads through the existing Fockis /uploads pipeline; returns a permanent URL. */
+  /** Uploads through the existing Fockis /uploads pipeline; returns a permanent address (/uploads/media/...). */
   uploadFile: async (file: File): Promise<string> => {
     const form = new FormData();
     form.append("file", file);
     const up = await api.post(`/uploads`, form, { params: { context: "news" }, headers: { "Content-Type": "multipart/form-data" }, timeout: 180000 });
     const u = up.data as { storageKey?: string; media?: string; url?: string };
-    const apiBase = String(api.defaults.baseURL ?? "").replace(/\/+$/, "");
-    const url = u.storageKey ? `${apiBase}/uploads/media/${String(u.storageKey).replace(/^\/+/, "")}` : u.media ?? u.url ?? "";
+    // Relative on purpose: works on fockis.com and on a local PC alike (see above).
+    const url = u.storageKey ? `/uploads/media/${String(u.storageKey).replace(/^\/+/, "")}` : u.media ?? u.url ?? "";
     if (!url) throw new Error("Upload succeeded but no file URL was returned.");
     return url;
   },

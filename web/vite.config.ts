@@ -36,6 +36,13 @@ export default defineConfig({
 
   server: {
     proxy: {
+      // Uploaded media (/uploads/media/<key>): served by the API, like the
+      // /uploads rewrite in vercel.json does on fockis.com.
+      "/uploads": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+        secure: false,
+      },
       "/api": {
         target: "http://localhost:3000",
         changeOrigin: true,
