@@ -23,7 +23,11 @@ import {
   type PushTokens,
 } from "./calls/nativeCalls";
 
-const WEBSITE_URL = "https://fockis.vercel.app";
+import Constants from "expo-constants";
+
+// The real Fockis address (fockis.com redirects here). Overridable with
+// EXPO_PUBLIC_WEB_URL for testing (see app.config.js).
+const WEBSITE_URL = String(Constants.expoConfig?.extra?.fockisWebUrl || "https://www.fockis.com").replace(/\/+$/, "");
 
 export default function WebViewApp() {
   const [error, setError] = useState(false);
