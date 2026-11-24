@@ -68,6 +68,7 @@ import { Alert, errorMessage, useOrgFonts } from "../ui/orgUi";
 import ChurchSiteHeader from "../website/ChurchSiteHeader";
 import MinistryBanner from "../website/MinistryBanner";
 import MediaPlayerDialog, { type PlayableMedia } from "../website/MediaPlayerDialog";
+import PhotoLightbox from "../website/PhotoLightbox";
 import { churchTheme, churchThemeVars, DEFAULT_CHURCH_THEME } from "../website/churchThemes";
 import { listPublicMinistries, type PublicMinistry } from "../website/publicSiteApi";
 import {
@@ -232,6 +233,7 @@ export default function MinistryPublicPage(): React.JSX.Element {
   const [navOpen, setNavOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [playing, setPlaying] = useState<PlayableMedia | null>(null);
+  const [photoIndex, setPhotoIndex] = useState<number | null>(null);
   // What the viewer may do with attendance (server-decided).
   const [att, setAtt] = useState<AttendanceAccess | null>(null);
   // What the viewer may do with this ministry (server-decided).
@@ -574,6 +576,13 @@ export default function MinistryPublicPage(): React.JSX.Element {
       </ul>
     );
 
+  // Photos open in a viewer over the page (with a close button), not a new tab.
+  const lightboxPhotos = data.photos.map((p) => ({ src: mediaUrl(p.url) ?? "", title: p.title })).filter((p) => p.src);
+  const openPhoto = (id: string) => {
+    const i = data.photos.filter((p) => mediaUrl(p.url)).findIndex((p) => p.id === id);
+    if (i >= 0) setPhotoIndex(i);
+  };
+
   const photoGrid = (limit: number) =>
     data.photos.length === 0 ? (
       <Empty hint={access.manageMedia ? "Use Quick Actions → Upload Photo." : undefined}>No photos yet.</Empty>
@@ -583,9 +592,9 @@ export default function MinistryPublicPage(): React.JSX.Element {
           const src = mediaUrl(p.thumbnailUrl || p.url);
           return (
             <li key={p.id}>
-              <a href={mediaUrl(p.url) ?? "#"} target="_blank" rel="noreferrer" title={p.title}>
+              <button type="button" className="mp-photo-btn" onClick={() => openPhoto(p.id)} title={p.title} aria-label={p.title ? `Open photo: ${p.title}` : "Open photo"}>
                 <img src={src ?? ""} alt={p.title} loading="lazy" />
-              </a>
+              </button>
             </li>
           );
         })}
@@ -1092,6 +1101,9 @@ export default function MinistryPublicPage(): React.JSX.Element {
       </div>
 
       {playing && <MediaPlayerDialog media={playing} onClose={() => setPlaying(null)} />}
+      {photoIndex !== null && lightboxPhotos.length > 0 && (
+        <PhotoLightbox photos={lightboxPhotos} index={Math.min(photoIndex, lightboxPhotos.length - 1)} onIndex={setPhotoIndex} onClose={() => setPhotoIndex(null)} />
+      )}
       {dialog === "apply" && ma && (
         <ApplyDialog
           organizationId={organizationId}
