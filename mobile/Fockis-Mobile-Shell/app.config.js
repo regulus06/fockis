@@ -1,8 +1,8 @@
 /* ============================================================================
    Expo config for the Fockis app.
 
-   Firebase Cloud Messaging, PushKit and CallKit configuration.
-   Firebase 27.x uses Swift Package Manager with dynamic iOS linkage.
+   Calls: Android rings through Firebase Cloud Messaging (google-services.json
+   in this folder); iPhone rings through PushKit VoIP pushes + CallKit.
 ============================================================================ */
 
 const fs = require("fs");
@@ -12,24 +12,19 @@ module.exports = ({ config }) => {
   const has = (file) => fs.existsSync(path.join(__dirname, file));
 
   const androidFirebase = has("google-services.json");
-  const iosFirebase = has("GoogleService-Info.plist");
 
   const plugins = [...(config.plugins ?? [])];
 
-  // iOS native build configuration.
-  plugins.push([
-    "expo-build-properties",
-    {
-      ios: {
-        useFrameworks: "dynamic",
-        buildReactNativeFromSource: true,
-      },
-    },
-  ]);
+  // Expo packages that ship config plugins (added by `npx expo install --fix`).
+  for (const name of ["expo-build-properties", "expo-status-bar"]) {
+    if (!plugins.some((p) => (Array.isArray(p) ? p[0] : p) === name)) plugins.push(name);
+  }
 
-  // Firebase native integration.
-  // Configuration files are required for platform-specific Firebase setup.
-  if (androidFirebase || iosFirebase) {
+  // Firebase is used on ANDROID only (call pushes through FCM). iPhones ring
+  // through Apple's VoIP push (PushKit + CallKit) and never load Firebase:
+  // react-native.config.js keeps the Firebase pods out of the iOS build.
+  // (Firebase's iOS Swift packages are what broke `pod install` before.)
+  if (androidFirebase) {
     plugins.push("@react-native-firebase/app");
     plugins.push("@react-native-firebase/messaging");
   }
@@ -44,10 +39,6 @@ module.exports = ({ config }) => {
 
     ios: {
       ...config.ios,
-
-      ...(iosFirebase
-        ? { googleServicesFile: "./GoogleService-Info.plist" }
-        : {}),
 
       infoPlist: {
         ...config.ios?.infoPlist,
@@ -75,7 +66,7 @@ module.exports = ({ config }) => {
 
       fockisWebUrl:
         process.env.EXPO_PUBLIC_WEB_URL ||
-        "https://fockis.vercel.app",
+        "https://www.fockis.com",
 
       fockisApiUrl:
         process.env.EXPO_PUBLIC_API_URL ||
@@ -83,7 +74,8 @@ module.exports = ({ config }) => {
 
       pushConfigured: {
         android: androidFirebase,
-        ios: iosFirebase,
+        // iPhone: VoIP push (APNs), no Firebase file needed.
+        ios: true,
       },
     },
   };

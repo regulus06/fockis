@@ -76,3 +76,10 @@ subscription-redesign-backup-20261016/
 mobile/Fockis-Mobile-Shell/fockis-ios-build-log.txt
 
 organizations-redesign-backup-20261108/
+
+# Mobile app push config and keys: never on GitHub.
+# (EAS still gets google-services.json: it reads .easignore, not .gitignore.)
+**/google-services.json
+**/GoogleService-Info.plist
+*.p8
+*firebase-adminsdk*.json

@@ -21,6 +21,7 @@ import {
 
 import { useFockisTheme } from "../../../context/ThemeContext";
 import { startCall } from "../../calls/callSession";
+import { isNativeShell } from "../../calls/nativeBridge";
 import { callsService, devicesService, messagesService, peopleService, type CallView, type InboxMessage, type InboxUser } from "../inboxApi";
 import { previewText, startDirect, unblockUser } from "../inboxActions";
 import { useInbox } from "../inboxStore";
@@ -387,6 +388,19 @@ export function SettingsView() {
           </div>
         </section>
 
+        {isNativeShell() ? (
+          // Inside the Fockis phone app: calls ring through the app (Firebase /
+          // Apple VoIP), not browser notifications.
+          <section>
+            <h4>Calls on this phone</h4>
+            <p className="fki-muted">
+              <Bell size={15} /> This phone rings for Fockis calls even when the app is closed. It appears under "Phones that ring for calls" below.
+            </p>
+            <p className="fki-muted fki-small">
+              Not listed? Allow notifications for Fockis in your phone's settings (Apps → Fockis → Notifications), then close and reopen the app.
+            </p>
+          </section>
+        ) : (
         <section>
           <h4>Notifications on this browser</h4>
           {permission === "granted" ? (
@@ -407,6 +421,7 @@ export function SettingsView() {
           )}
           <p className="fki-muted fki-small">To have your phone ring when Fockis is closed or locked, sign in to the Fockis app on that phone.</p>
         </section>
+        )}
 
         <section>
           <h4>Phones that ring for calls</h4>
