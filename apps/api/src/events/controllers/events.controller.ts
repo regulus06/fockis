@@ -35,6 +35,7 @@ import {
   DiscoverEventsQueryDto,
   EventSectionsQueryDto,
   ListEventsQueryDto,
+  PastEventsQueryDto,
 } from "../dto/discover-events.dto";
 
 import { EventRsvpStatus } from "../schemas/event.schema";
@@ -227,6 +228,26 @@ export class EventsController {
     return this.eventsService.myRsvps(this.getUserId(req));
   }
 
+  /** Real counts for the "My Events" card. */
+  @Get("my-summary")
+  @Header("Cache-Control", "no-store")
+  mySummary(@Req() req: AuthenticatedRequest) {
+    return this.eventsService.mySummary(this.getUserId(req));
+  }
+
+  @Get("saved")
+  @Header("Cache-Control", "no-store")
+  saved(@Req() req: AuthenticatedRequest) {
+    return this.eventsService.savedEvents(this.getUserId(req));
+  }
+
+  /** Ended events: public archive, or the ones the viewer attended / hosted. */
+  @Get("past")
+  @Header("Cache-Control", "no-store")
+  past(@Req() req: AuthenticatedRequest, @Query() query: PastEventsQueryDto) {
+    return this.eventsService.pastEvents(this.getUserId(req), query.scope ?? "public", query.page ?? 1, query.limit ?? 18);
+  }
+
   /* --------------------------------------------------------------- details */
 
   @Get(":id/attendees")
@@ -287,6 +308,26 @@ export class EventsController {
     @Body() dto: CancelEventDto,
   ) {
     return this.eventsService.cancel(this.getUserId(req), id, dto?.reason);
+  }
+
+  /** Postpone (date to be announced). Setting new dates with PATCH /events/:id lifts it. */
+  @Patch(":id/postpone")
+  postpone(
+    @Req() req: AuthenticatedRequest,
+    @Param("id") id: string,
+    @Body() dto: CancelEventDto,
+  ) {
+    return this.eventsService.postpone(this.getUserId(req), id, dto?.reason);
+  }
+
+  @Post(":id/save")
+  save(@Req() req: AuthenticatedRequest, @Param("id") id: string) {
+    return this.eventsService.setSaved(this.getUserId(req), id, true);
+  }
+
+  @Delete(":id/save")
+  unsave(@Req() req: AuthenticatedRequest, @Param("id") id: string) {
+    return this.eventsService.setSaved(this.getUserId(req), id, false);
   }
 
   @Delete(":id")

@@ -20,13 +20,15 @@ import { eventsApi, isAbortError } from "../services/eventsApi";
 import type {
   EventAvailability,
   EventFormat,
+  EventPrice,
   EventSections,
   EventSort,
   EventWhen,
   FockisEvent,
 } from "../types/event.types";
+import { countryName, countryOptions } from "../utils/countries";
 import { eventCover } from "../utils/eventMedia";
-import { eventDayKey, eventsByDay, isSameMonth, longDayLabel, parseDayKey } from "../utils/eventCalendar";
+import { eventDayKey, eventsByDay, longDayLabel, parseDayKey } from "../utils/eventCalendar";
 
 /* ============================================================================
    FOCKIS EVENTS — DISCOVER
@@ -42,14 +44,48 @@ import { eventDayKey, eventsByDay, isSameMonth, longDayLabel, parseDayKey } from
    All filters live in the URL so a filtered view can be shared.
 ============================================================================ */
 
-type View = "upcoming" | "week" | "month" | "interests";
+type View =
+  | "upcoming"
+  | "today"
+  | "tomorrow"
+  | "week"
+  | "weekend"
+  | "month"
+  | "interests"
+  | "free"
+  | "paid"
+  | "online"
+  | "in-person"
+  | "hybrid";
 
 const VIEWS: Array<[View, string]> = [
-  ["upcoming", "Upcoming"],
+  ["upcoming", "All Events"],
+  ["today", "Today"],
+  ["tomorrow", "Tomorrow"],
   ["week", "This Week"],
+  ["weekend", "This Weekend"],
   ["month", "This Month"],
   ["interests", "My Interests"],
+  ["free", "Free"],
+  ["paid", "Paid"],
+  ["online", "Online"],
+  ["in-person", "In Person"],
+  ["hybrid", "Hybrid"],
 ];
+
+/** What each view adds to the server query (all filtering happens in MongoDB). */
+const VIEW_QUERY: Partial<Record<View, { when?: EventWhen; price?: EventPrice; format?: EventFormat }>> = {
+  today: { when: "today" },
+  tomorrow: { when: "tomorrow" },
+  week: { when: "this-week" },
+  weekend: { when: "this-weekend" },
+  month: { when: "this-month" },
+  free: { price: "free" },
+  paid: { price: "paid" },
+  online: { format: "online" },
+  "in-person": { format: "in-person" },
+  hybrid: { format: "hybrid" },
+};
 
 const PAGE_SIZE = 18;
 const CALENDAR_PAGE = 50;
@@ -70,6 +106,9 @@ const EMPTY_SECTIONS: EventSections = {
 interface PageState extends EventFilterValues {
   view: View;
   date: string;
+  price: EventPrice;
+  country: string;
+  city: string;
 }
 
 function readState(params: URLSearchParams): PageState {
@@ -87,6 +126,9 @@ function readState(params: URLSearchParams): PageState {
     radiusKm: Number.isFinite(radius) && radius > 0 ? radius : "",
     view: view && VIEWS.some(([id]) => id === view) ? view : "upcoming",
     date: parseDayKey(params.get("date")) ? (params.get("date") as string) : "",
+    price: (["free", "paid"].includes(params.get("price") ?? "") ? params.get("price") : "any") as EventPrice,
+    country: /^[A-Za-z]{2}$/.test(params.get("country") ?? "") ? (params.get("country") as string).toUpperCase() : "",
+    city: (params.get("city") ?? "").slice(0, 120),
   };
 }
 
@@ -102,6 +144,9 @@ function writeState(values: PageState): URLSearchParams {
   if (values.radiusKm !== "") params.set("radiusKm", String(values.radiusKm));
   if (values.view !== "upcoming") params.set("view", values.view);
   if (values.date) params.set("date", values.date);
+  if (values.price !== "any") params.set("price", values.price);
+  if (values.country) params.set("country", values.country);
+  if (values.city.trim()) params.set("city", values.city.trim());
 
   return params;
 }
@@ -131,8 +176,15 @@ export default function EventsPage() {
   const state = useMemo(() => readState(params), [params]);
   const [draftQuery, setDraftQuery] = useState(state.q);
   const [showFilters, setShowFilters] = useState(
-    state.format !== "any" || state.availability !== "any" || state.sort !== "relevance" || state.when !== "any",
+    state.format !== "any" ||
+      state.availability !== "any" ||
+      state.sort !== "relevance" ||
+      state.when !== "any" ||
+      state.price !== "any" ||
+      Boolean(state.country || state.city),
   );
+  const [draftCity, setDraftCity] = useState(state.city);
+  useEffect(() => setDraftCity(state.city), [state.city]);
   const upcomingRef = useRef<HTMLElement>(null);
   const { location, status: locationStatus, request: requestLocation, clear: clearLocation } = useViewerLocation();
 
@@ -192,8 +244,10 @@ export default function EventsPage() {
 
   /* ------------------------------------------------ upcoming (paged list) */
 
-  const serverWhen: EventWhen =
-    state.view === "week" ? "this-week" : state.view === "month" ? "next-30-days" : state.when;
+  const viewQuery = VIEW_QUERY[state.view] ?? {};
+  const serverWhen: EventWhen = viewQuery.when ?? state.when;
+  const serverPrice: EventPrice = viewQuery.price ?? state.price;
+  const serverFormat: EventFormat = viewQuery.format ?? state.format;
 
   const [results, setResults] = useState<FockisEvent[]>([]);
   const [page, setPage] = useState(1);
@@ -207,7 +261,11 @@ export default function EventsPage() {
     q: state.q,
     category: state.category,
     when: serverWhen,
-    format: state.format,
+    format: serverFormat,
+    price: serverPrice,
+    country: state.country,
+    city: state.city,
+    interests: state.view === "interests",
     availability: state.availability,
     sort: state.sort,
     radiusKm: state.radiusKm,
@@ -230,7 +288,11 @@ export default function EventsPage() {
             q: state.q || undefined,
             category: state.category || undefined,
             when: serverWhen,
-            format: state.format,
+            format: serverFormat,
+            price: serverPrice,
+            country: state.country || undefined,
+            city: state.city || undefined,
+            interests: state.view === "interests" || undefined,
             availability: state.availability,
             // Upcoming is chronological unless the viewer picked a sort.
             sort: state.sort === "relevance" && !state.q ? "date" : state.sort,
@@ -265,12 +327,10 @@ export default function EventsPage() {
   );
 
   useEffect(() => {
-    if (state.view === "interests") return;
-
     void loadPage(1);
 
     return () => controllerRef.current?.abort();
-  }, [loadPage, revalidate, state.view]);
+  }, [loadPage, revalidate]);
 
   /* ---------------------------------------------- calendar (dots + days) */
 
@@ -359,30 +419,15 @@ export default function EventsPage() {
       return activeCalendar.filter((event) => eventDayKey(event) === state.date);
     }
 
-    if (state.view === "interests") {
-      return yours.events
-        .filter((event) => !event.isCancelled && new Date(event.endDate).getTime() > now)
-        .filter((event) => !state.category || event.category === state.category)
-        .filter((event) => matchesText(event, state.q));
-    }
-
-    if (state.view === "month") {
-      const month = new Date(now);
-
-      return activeResults.filter((event) => isSameMonth(event.startDate, month));
-    }
-
     return activeResults;
-  }, [state.date, state.view, state.category, state.q, activeCalendar, yours.events, activeResults, now]);
+  }, [state.date, activeCalendar, activeResults]);
 
-  const listLoading = state.date
-    ? calendarLoading && calendarEvents.length === 0
-    : state.view === "interests"
-      ? yours.loading && yours.events.length === 0
-      : resultsLoading;
-  const listError = state.date ? "" : state.view === "interests" ? yours.error : resultsError;
-  const paged = !state.date && state.view !== "interests";
-  const filtered = Boolean(state.q || state.category || state.radiusKm !== "" || state.date);
+  const listLoading = state.date ? calendarLoading && calendarEvents.length === 0 : resultsLoading;
+  const listError = state.date ? "" : resultsError;
+  const paged = !state.date;
+  const filtered = Boolean(
+    state.q || state.category || state.radiusKm !== "" || state.date || state.country || state.city || state.price !== "any",
+  );
   const heroCover = featured.map((event) => eventCover(event)).find((cover) => cover.type === "image")?.url;
 
   const resetAll = () => {
@@ -485,7 +530,7 @@ export default function EventsPage() {
             </p>
           </div>
 
-          <div className="fkd-tabs" role="tablist" aria-label="Show">
+          <div className="fkd-tabs fkd-tabs--scroll" role="tablist" aria-label="Show">
             {VIEWS.map(([id, label]) => (
               <button
                 key={id}
@@ -514,7 +559,7 @@ export default function EventsPage() {
 
         {showFilters && (
           <div className="fkd-filters" id="fkd-more-filters">
-            {state.view === "upcoming" && (
+            {!VIEW_QUERY[state.view]?.when && (
               <label>
                 <span>When</span>
                 <select value={state.when} onChange={(changeEvent) => update({ when: changeEvent.target.value as EventWhen, date: "" })}>
@@ -523,17 +568,56 @@ export default function EventsPage() {
                   <option value="today">Today</option>
                   <option value="tomorrow">Tomorrow</option>
                   <option value="this-weekend">This weekend</option>
+                  <option value="this-month">This month</option>
                   <option value="next-30-days">Next 30 days</option>
                 </select>
               </label>
             )}
+            {!VIEW_QUERY[state.view]?.format && (
+              <label>
+                <span>Format</span>
+                <select value={state.format} onChange={(changeEvent) => update({ format: changeEvent.target.value as EventFormat })}>
+                  <option value="any">Any format</option>
+                  <option value="in-person">In person</option>
+                  <option value="online">Online</option>
+                  <option value="hybrid">Hybrid</option>
+                </select>
+              </label>
+            )}
+            {!VIEW_QUERY[state.view]?.price && (
+              <label>
+                <span>Price</span>
+                <select value={state.price} onChange={(changeEvent) => update({ price: changeEvent.target.value as EventPrice })}>
+                  <option value="any">Free &amp; paid</option>
+                  <option value="free">Free</option>
+                  <option value="paid">Paid</option>
+                </select>
+              </label>
+            )}
             <label>
-              <span>Format</span>
-              <select value={state.format} onChange={(changeEvent) => update({ format: changeEvent.target.value as EventFormat })}>
-                <option value="any">In person &amp; online</option>
-                <option value="in-person">In person</option>
-                <option value="online">Online</option>
+              <span>Country</span>
+              <select value={state.country} onChange={(changeEvent) => update({ country: changeEvent.target.value, date: "" })}>
+                <option value="">Anywhere</option>
+                {countryOptions().map((option) => (
+                  <option key={option.code} value={option.code}>
+                    {option.name}
+                  </option>
+                ))}
               </select>
+            </label>
+            <label>
+              <span>City</span>
+              <input
+                type="search"
+                value={draftCity}
+                maxLength={120}
+                placeholder="Any city"
+                onChange={(changeEvent) => setDraftCity(changeEvent.target.value)}
+                onBlur={() => draftCity.trim() !== state.city && update({ city: draftCity.trim(), date: "" })}
+                onKeyDown={(keyEvent) => {
+                  if (keyEvent.key === "Enter") update({ city: draftCity.trim(), date: "" });
+                }}
+              />
             </label>
             <label>
               <span>Availability</span>
@@ -550,6 +634,7 @@ export default function EventsPage() {
               <select value={state.sort} onChange={(changeEvent) => update({ sort: changeEvent.target.value as EventSort })}>
                 <option value="relevance">Date</option>
                 <option value="popularity">Most popular</option>
+                <option value="price">Price: low to high</option>
                 <option value="distance" disabled={!location}>
                   Nearest{location ? "" : " (share location)"}
                 </option>
@@ -575,6 +660,21 @@ export default function EventsPage() {
                 {state.category.charAt(0).toUpperCase() + state.category.slice(1)} <X size={14} aria-label="Remove" />
               </button>
             )}
+            {state.country && (
+              <button type="button" className="fkd-chip" onClick={() => update({ country: "" })}>
+                {countryName(state.country)} <X size={14} aria-label="Remove" />
+              </button>
+            )}
+            {state.city && (
+              <button type="button" className="fkd-chip" onClick={() => update({ city: "" })}>
+                {state.city} <X size={14} aria-label="Remove" />
+              </button>
+            )}
+            {state.price !== "any" && (
+              <button type="button" className="fkd-chip" onClick={() => update({ price: "any" })}>
+                {state.price === "free" ? "Free" : "Paid"} <X size={14} aria-label="Remove" />
+              </button>
+            )}
             {state.radiusKm !== "" && location && (
               <button type="button" className="fkd-chip" onClick={() => update({ radiusKm: "" })}>
                 Within {state.radiusKm} km <X size={14} aria-label="Remove" />
@@ -595,7 +695,7 @@ export default function EventsPage() {
               <button
                 type="button"
                 className="fke-btn fke-btn--primary"
-                onClick={() => (state.view === "interests" ? yours.refresh() : void loadPage(1))}
+                onClick={() => void loadPage(1)}
               >
                 Try again
               </button>
@@ -606,8 +706,8 @@ export default function EventsPage() {
         {!listError && !listLoading && listed.length === 0 && (
           <EventEmptyState
             title={
-              state.view === "interests" && !state.date
-                ? "Nothing saved yet"
+              state.view === "interests" && !state.date && !filtered
+                ? "Nothing matches your interests yet"
                 : state.date
                   ? "No events on this day"
                   : filtered
@@ -615,8 +715,8 @@ export default function EventsPage() {
                     : "No upcoming events yet"
             }
             body={
-              state.view === "interests" && !state.date
-                ? "Tap Interested or Going on any event and it will be listed here."
+              state.view === "interests" && !state.date && !filtered
+                ? "Your interests come from the events you join. Browse all events to find more."
                 : state.date
                   ? "Pick another day in the calendar, or browse everything coming up."
                   : filtered

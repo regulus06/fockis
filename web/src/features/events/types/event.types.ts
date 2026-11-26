@@ -10,7 +10,12 @@ export type EventCategory =
   | "technology" | "environment" | "political" | "civic" | "arts" | "other";
 
 export type EventVisibility = "public" | "friends" | "private" | "organization";
-export type EventStatus = "upcoming" | "live" | "ended" | "cancelled";
+/**
+ * "live" = happening now by the clock (not a livestream). "postponed" = new date
+ * to be announced. "scheduled" = not published yet (managers only).
+ */
+export type EventStatus = "upcoming" | "live" | "ended" | "cancelled" | "postponed" | "scheduled";
+export type EventFormatKind = "in_person" | "online" | "hybrid";
 export type EventCoverMediaType = "image" | "video";
 export type EventRsvpStatus = "going" | "interested";
 
@@ -153,6 +158,28 @@ export interface FockisEvent {
   canManage?: boolean;
   /** Recognized meeting service of the pasted link (managers only). */
   meetingProvider?: string;
+  /** In person / online / hybrid (in person with an online option). */
+  format: EventFormatKind;
+  /** ISO country code of the venue ("" if unknown or online). */
+  country: string;
+  city: string;
+  isPostponed: boolean;
+  postponedAt: string | null;
+  postponementReason: string;
+  /** Scheduled publication time (managers only). */
+  publishAt: string | null;
+  /** The viewer saved (bookmarked) it. */
+  isSaved: boolean;
+}
+
+/** Real counts for the "My Events" card (GET /events/my-summary). */
+export interface MyEventsSummary {
+  upcoming: number;
+  registered: number;
+  tickets: number;
+  saved: number;
+  hosted: number;
+  past: number;
 }
 
 export interface CreateEventInput {
@@ -185,6 +212,11 @@ export interface CreateEventInput {
   isDraft?: boolean;
   /** Notify the organization's active members when the event is published. */
   notifyMembers?: boolean;
+  /** Scheduled publication (ISO). null / "" = publish now. */
+  publishAt?: string | null;
+  /** ISO country code of the venue. */
+  country?: string;
+  city?: string;
 }
 
 export type UpdateEventInput = Partial<CreateEventInput>;
@@ -212,10 +244,11 @@ export interface EventAttendeesResponse {
 }
 
 export type EventWhen =
-  | "any" | "live" | "today" | "tomorrow" | "this-week" | "this-weekend" | "next-30-days";
-export type EventFormat = "any" | "online" | "in-person";
+  | "any" | "live" | "today" | "tomorrow" | "this-week" | "this-weekend" | "this-month" | "next-30-days";
+export type EventFormat = "any" | "online" | "in-person" | "hybrid";
 export type EventAvailability = "any" | "open";
-export type EventSort = "relevance" | "date" | "popularity" | "distance";
+export type EventSort = "relevance" | "date" | "popularity" | "distance" | "price";
+export type EventPrice = "any" | "free" | "paid";
 
 export interface EventDiscoverQuery {
   q?: string;
@@ -223,6 +256,12 @@ export interface EventDiscoverQuery {
   when?: EventWhen;
   format?: EventFormat;
   availability?: EventAvailability;
+  price?: EventPrice;
+  /** ISO country code. */
+  country?: string;
+  city?: string;
+  /** Only categories the viewer engages with most. */
+  interests?: boolean;
   sort?: EventSort;
   lat?: number;
   lng?: number;

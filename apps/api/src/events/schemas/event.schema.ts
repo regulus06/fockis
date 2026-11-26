@@ -13,7 +13,20 @@ export enum EventCategory {
 }
 export enum EventVisibility { PUBLIC = "public", FRIENDS = "friends", PRIVATE = "private", ORGANIZATION = "organization" }
 export enum EventCoverMediaType { IMAGE = "image", VIDEO = "video" }
-export enum EventStatus { UPCOMING = "upcoming", LIVE = "live", ENDED = "ended", CANCELLED = "cancelled" }
+/**
+ * Lifecycle (see utils/event-lifecycle.ts). LIVE means "happening now" by
+ * the clock; it does NOT mean a livestream is on. POSTPONED and SCHEDULED
+ * (publication time not reached, organizers only) take precedence over the
+ * clock, CANCELLED over everything.
+ */
+export enum EventStatus {
+  UPCOMING = "upcoming",
+  LIVE = "live",
+  ENDED = "ended",
+  CANCELLED = "cancelled",
+  POSTPONED = "postponed",
+  SCHEDULED = "scheduled",
+}
 export enum EventRsvpStatus { GOING = "going", INTERESTED = "interested" }
 export type EventDocument = HydratedDocument<Event>;
 
@@ -109,6 +122,36 @@ export class Event {
   @Prop({ default: "", maxlength: 1000 })
   cancellationReason!: string;
 
+  /* ---------------------------------------------- lifecycle (phase 1) */
+
+  /** Postponed: new date not set yet. Hidden from discovery, no new sign-ups. Cleared by rescheduling. */
+  @Prop({ type: Boolean, default: false, index: true })
+  isPostponed?: boolean;
+
+  @Prop({ type: Date, default: null })
+  postponedAt?: Date | null;
+
+  @Prop({ default: "", maxlength: 1000 })
+  postponementReason?: string;
+
+  /** Scheduled publication: invisible to everyone but its managers until this instant. Null = published. */
+  @Prop({ type: Date, default: null, index: true })
+  publishAt?: Date | null;
+
+  /* ---------------------------------------------- location (discovery) */
+
+  /** ISO 3166-1 alpha-2 ("HT", "US", "FR"…), for country filters. "" when unknown. */
+  @Prop({ type: String, default: "", uppercase: true, trim: true, maxlength: 2, index: true })
+  country?: string;
+
+  /** City name as the organizer typed it, for city filters. */
+  @Prop({ type: String, default: "", trim: true, maxlength: 120 })
+  city?: string;
+
+  /** People who saved the event (bookmark; separate from Going / Interested). */
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: "User" }], default: [] })
+  savedIds?: Types.ObjectId[];
+
   /**
    * Registration settings (mode, tickets, questions, check-in…), validated by
    * registrations/registration-settings.ts. Null on events created before
@@ -176,4 +219,7 @@ EventSchema.index({ organizationId: 1, isArchived: 1, startDate: -1 });
 EventSchema.index({ attendeeIds: 1, startDate: 1 });
 EventSchema.index({ interestedIds: 1, startDate: 1 });
 EventSchema.index({ invitedIds: 1, startDate: 1 });
+EventSchema.index({ savedIds: 1, startDate: 1 });
+EventSchema.index({ country: 1, isCancelled: 1, endDate: 1, startDate: 1 });
+EventSchema.index({ isCancelled: 1, endDate: -1 });
 EventSchema.index({ title: "text", description: "text", locationName: "text", address: "text" });

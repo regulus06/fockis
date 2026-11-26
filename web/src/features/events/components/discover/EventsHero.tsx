@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
-import { CalendarDays, Check, ChevronDown, Globe2, LocateFixed, MapPin, Megaphone, Search, Users } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, Globe2, Heart, History, LocateFixed, MapPin, Search, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import type { LocationStatus } from "../../hooks/useViewerLocation";
@@ -193,8 +193,11 @@ export default function EventsHero({
         <Link to="/events/create">
           <CalendarDays size={24} aria-hidden="true" /> Create Events
         </Link>
-        <Link to="/events/my-events">
-          <Megaphone size={24} aria-hidden="true" /> Promote &amp; Share
+        <Link to="/events/my-events?tab=saved">
+          <Heart size={24} aria-hidden="true" /> Saved Events
+        </Link>
+        <Link to="/events/past">
+          <History size={24} aria-hidden="true" /> Past Events
         </Link>
         <Link to="/ads">
           <Users size={24} aria-hidden="true" /> Grow Your Audience

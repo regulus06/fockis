@@ -91,6 +91,7 @@ export type AvailabilityState =
   | "closed"
   | "ended"
   | "cancelled"
+  | "postponed"
   | "not_required";
 
 export interface Availability {
@@ -490,6 +491,7 @@ export class EventRegistrationsService implements OnModuleInit, OnModuleDestroy 
     const base = { capacity, spotsLeft };
     if (event.isCancelled) return { ...base, state: "cancelled", message: "This event was cancelled." };
     if (now.getTime() >= new Date(event.endDate).getTime()) return { ...base, state: "ended", message: "This event has ended." };
+    if ((event as { isPostponed?: boolean }).isPostponed) return { ...base, state: "postponed", message: "This event has been postponed. Registration reopens once it has a new date." };
     if (s.mode !== RegistrationMode.REQUIRED) return { ...base, state: "not_required", message: "This event doesn't require registration." };
     if (s.opensAt && now < s.opensAt) return { ...base, state: "not_open", message: `Registration opens ${whenText({ startDate: s.opensAt, endDate: s.opensAt, timeZone: event.timeZone }).split(" – ")[0]}.` };
     if (s.closesAt && now >= s.closesAt) return { ...base, state: "closed", message: "Registration for this event has closed." };
@@ -526,7 +528,7 @@ export class EventRegistrationsService implements OnModuleInit, OnModuleDestroy 
       });
     }
     const res = await this.eventModel
-      .updateOne({ _id: eventId, isCancelled: false, $expr: { $and: conds } } as Record<string, unknown>, {
+      .updateOne({ _id: eventId, isCancelled: false, isPostponed: { $ne: true }, endDate: { $gt: new Date() }, $expr: { $and: conds } } as Record<string, unknown>, {
         $inc: { registeredSeats: n, [`ticketSeats.${ticket.id}`]: n },
       })
       .exec();

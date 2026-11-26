@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 import { categoryMeta } from "../../constants/eventCategories";
 import { useSyncedEvent } from "../../hooks/eventSync";
-import { useEventRsvp } from "../../hooks/useEventRsvp";
+import { useEventSave } from "../../hooks/useEventSave";
 import type { FockisEvent } from "../../types/event.types";
 import { eventPlace, eventUrl } from "../../utils/eventMedia";
 import { getEventStatus, relativeDay, timeLabel } from "../../utils/eventTime";
@@ -27,20 +27,26 @@ function whenLine(event: FockisEvent, now: number): string {
 }
 
 /**
- * Featured card: photo, live/soon flag, heart (= Interested), date tile,
- * title, place, time, tags and attendance. The heart uses the real RSVP
- * endpoint, so saving here shows up in "Your Events".
+ * Featured card: photo, "Happening now"/"Starting soon" flag, heart (= Save),
+ * date tile, title, place, time, tags and attendance. The heart uses the real
+ * save endpoint, so saved events show up under Saved in My Events.
+ * "Happening now" is by the clock; Fockis has no livestream yet, so the card
+ * never claims an event is streaming live.
  */
 export default function FeaturedEventCard({ event: source, now, preview = false }: Props) {
   const event = useSyncedEvent(source);
-  const { choose, pending, error } = useEventRsvp(event);
+  const { saved, toggle, pending, error } = useEventSave(event);
   const category = categoryMeta(event.category);
   const status = getEventStatus(event, now);
   const startsIn = new Date(event.startDate).getTime() - now;
   const flag =
-    status === "live" ? "Live now" : status === "upcoming" && startsIn > 0 && startsIn <= SOON_MS ? "Live soon" : "";
-  const hearted = event.viewerRsvp === "interested" || event.viewerRsvp === "going";
-  const canHeart = !event.isOwner && (status === "upcoming" || status === "live") && event.viewerRsvp !== "going";
+    status === "live"
+      ? "Happening now"
+      : status === "postponed"
+        ? "Postponed"
+        : status === "upcoming" && startsIn > 0 && startsIn <= SOON_MS
+          ? "Starting soon"
+          : "";
   const href = eventUrl(event.id);
 
   return (
@@ -61,23 +67,17 @@ export default function FeaturedEventCard({ event: source, now, preview = false 
           </span>
         )}
 
-        {!event.isOwner && !preview && (
+        {!preview && (
           <button
             type="button"
-            className={`fkd-heart ${hearted ? "is-active" : ""}`}
-            aria-pressed={hearted}
-            aria-label={
-              event.viewerRsvp === "going"
-                ? `You're going to ${event.title}`
-                : hearted
-                  ? `Remove ${event.title} from your interests`
-                  : `Save ${event.title} as interested`
-            }
-            title={event.viewerRsvp === "going" ? "You're going" : hearted ? "Interested" : "Mark as interested"}
-            disabled={!canHeart || pending !== null}
-            onClick={() => void choose("interested")}
+            className={`fkd-heart ${saved ? "is-active" : ""}`}
+            aria-pressed={saved}
+            aria-label={saved ? `Remove ${event.title} from saved events` : `Save ${event.title}`}
+            title={saved ? "Saved" : "Save"}
+            disabled={pending}
+            onClick={() => void toggle()}
           >
-            <Heart size={20} strokeWidth={2.2} fill={hearted ? "currentColor" : "none"} aria-hidden="true" />
+            <Heart size={20} strokeWidth={2.2} fill={saved ? "currentColor" : "none"} aria-hidden="true" />
           </button>
         )}
       </div>
@@ -101,7 +101,8 @@ export default function FeaturedEventCard({ event: source, now, preview = false 
 
           <div className="fkd-feat__foot">
             <span className={`fkd-tag fkd-tag--${categoryTone(event.category)}`}>{category.label}</span>
-            {event.isOnline && <span className="fkd-tag fkd-tag--muted">Online</span>}
+            {event.format === "online" && <span className="fkd-tag fkd-tag--muted">Online</span>}
+            {event.format === "hybrid" && <span className="fkd-tag fkd-tag--muted">Hybrid</span>}
             <span className="fkd-feat__going" title={`${event.attendeeCount} going`}>
               <Users size={13} aria-hidden="true" />
               {event.attendeeCount.toLocaleString()}

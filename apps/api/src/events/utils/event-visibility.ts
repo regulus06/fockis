@@ -21,6 +21,7 @@
 import { Types } from "mongoose";
 
 import { EventVisibility } from "../schemas/event.schema";
+import { isScheduled } from "./event-lifecycle";
 import type { EventViewerRelationships } from "./viewer-relationships";
 
 export interface VisibilityFields {
@@ -32,6 +33,7 @@ export interface VisibilityFields {
   organizationId?: Types.ObjectId | string | null;
   isDraft?: boolean;
   isArchived?: boolean;
+  publishAt?: Date | string | null;
 }
 
 function toObjectIds(ids: string[]): Types.ObjectId[] {
@@ -82,6 +84,11 @@ export function buildEventVisibilityFilter(
   // (organizers manage them from the organization admin console).
   const filter: Record<string, unknown> = { $or: audience, isDraft: { $ne: true }, isArchived: { $ne: true } };
 
+  // Scheduled publication: hidden until its time, except from its creator.
+  const published: Record<string, unknown>[] = [{ publishAt: null }, { publishAt: { $lte: new Date() } }];
+  if (viewerId && Types.ObjectId.isValid(viewerId)) published.push({ creatorId: new Types.ObjectId(viewerId) });
+  filter.$and = [{ $or: published }];
+
   if (relationships.blockedIds.length) {
     filter.creatorId = { $nin: toObjectIds(relationships.blockedIds) };
   }
@@ -105,8 +112,8 @@ export function canViewEvent(
     return true;
   }
 
-  // Drafts and archived events: organizer and event managers only.
-  if (event.isDraft || event.isArchived) {
+  // Drafts, archived and not-yet-published events: organizer and event managers only.
+  if (event.isDraft || event.isArchived || isScheduled(event)) {
     return false;
   }
 

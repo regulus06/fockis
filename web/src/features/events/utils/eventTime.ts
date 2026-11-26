@@ -8,7 +8,8 @@
 
 import type { EventStatus, FockisEvent } from "../types/event.types";
 
-type Timed = Pick<FockisEvent, "startDate" | "endDate" | "isCancelled">;
+type Timed = Pick<FockisEvent, "startDate" | "endDate" | "isCancelled"> &
+  Partial<Pick<FockisEvent, "isPostponed" | "publishAt">>;
 
 const ms = (value: string) => new Date(value).getTime();
 
@@ -19,6 +20,9 @@ export function getEventStatus(event: Timed, now: number = Date.now()): EventSta
   const start = ms(event.startDate);
 
   if (Number.isFinite(end) && now >= end) return "ended";
+  // Same order as the server: cancelled > ended > postponed > scheduled.
+  if (event.isPostponed) return "postponed";
+  if (event.publishAt && ms(event.publishAt) > now) return "scheduled";
   if (Number.isFinite(start) && now < start) return "upcoming";
 
   return "live";
@@ -37,7 +41,11 @@ export function nextTransition(events: Timed[], now: number = Date.now()): numbe
   for (const event of events) {
     if (event.isCancelled) continue;
 
-    for (const value of [ms(event.startDate), ms(event.endDate)]) {
+    const times = event.isPostponed ? [ms(event.endDate)] : [ms(event.startDate), ms(event.endDate)];
+
+    if (event.publishAt) times.push(ms(event.publishAt));
+
+    for (const value of times) {
       if (Number.isFinite(value) && value > now && (next === null || value < next)) {
         next = value;
       }
@@ -171,6 +179,9 @@ export function countdown(event: Timed, now: number = Date.now()): string {
 
   if (status === "upcoming") return `Starts in ${span}`;
   if (status === "live") return `Ends in ${span}`;
+
+  if (status === "postponed") return "Postponed";
+  if (status === "scheduled") return "Not published yet";
 
   return status === "cancelled" ? "Cancelled" : "Ended";
 }

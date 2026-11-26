@@ -2,7 +2,8 @@ import type { FockisEvent } from "../types/event.types";
 import { getEventStatus, relativeDay } from "../utils/eventTime";
 
 interface Props {
-  event: Pick<FockisEvent, "startDate" | "endDate" | "isCancelled" | "isFull">;
+  event: Pick<FockisEvent, "startDate" | "endDate" | "isCancelled" | "isFull"> &
+    Partial<Pick<FockisEvent, "isPostponed" | "publishAt">>;
   now?: number;
   /** Show "Today"/"Tomorrow" for upcoming events instead of "Upcoming". */
   relative?: boolean;
@@ -22,6 +23,8 @@ export default function EventStatusBadge({ event, now = Date.now(), relative = t
 
   if (status === "cancelled") return <span className="fke-status fke-status--cancelled">Cancelled</span>;
   if (status === "ended") return <span className="fke-status fke-status--ended">Ended</span>;
+  if (status === "postponed") return <span className="fke-status fke-status--postponed">Postponed</span>;
+  if (status === "scheduled") return <span className="fke-status fke-status--scheduled">Scheduled</span>;
   if (event.isFull) return <span className="fke-status fke-status--full">Full</span>;
 
   const day = relative ? relativeDay(event.startDate, now) : "";

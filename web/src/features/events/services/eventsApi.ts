@@ -8,6 +8,7 @@ import type {
   EventRsvpStatus,
   EventSections,
   FockisEvent,
+  MyEventsSummary,
   RsvpResponse,
   UpdateEventInput,
   ViewerLocation,
@@ -167,6 +168,14 @@ export function normalizeEvent(raw: any): FockisEvent {
     isArchived: Boolean(raw?.isArchived),
     canManage: Boolean(raw?.canManage ?? raw?.isOwner),
     ...(raw?.meetingProvider ? { meetingProvider: String(raw.meetingProvider) } : {}),
+    format: raw?.format === "online" || raw?.format === "hybrid" ? raw.format : raw?.isOnline ? "online" : "in_person",
+    country: String(raw?.country ?? ""),
+    city: String(raw?.city ?? ""),
+    isPostponed: Boolean(raw?.isPostponed),
+    postponedAt: raw?.postponedAt ?? null,
+    postponementReason: String(raw?.postponementReason ?? ""),
+    publishAt: raw?.publishAt ?? null,
+    isSaved: Boolean(raw?.isSaved),
   };
 }
 
@@ -435,6 +444,45 @@ export const eventsApi = {
 
   async getMyRsvps(signal?: AbortSignal) {
     return list(await request<any>(`${EVENTS_URL}/my-rsvps`, { signal }));
+  },
+
+  /** Postpone (date to be announced). Saving new dates lifts it. */
+  async postpone(id: string, reason?: string) {
+    const payload = await request<any>(`${path(id)}/postpone`, {
+      method: "PATCH",
+      body: JSON.stringify(reason?.trim() ? { reason: reason.trim() } : {}),
+    });
+    return normalizeEvent(payload?.event ?? payload);
+  },
+
+  /** Save / unsave (bookmark). Idempotent on the server. */
+  async setSaved(id: string, saved: boolean) {
+    return request<{ success: boolean; eventId: string; saved: boolean }>(`${path(id)}/save`, {
+      method: saved ? "POST" : "DELETE",
+    });
+  },
+
+  async getSaved(signal?: AbortSignal) {
+    return list(await request<any>(`${EVENTS_URL}/saved`, { signal }));
+  },
+
+  async mySummary(signal?: AbortSignal): Promise<MyEventsSummary> {
+    const p = await request<any>(`${EVENTS_URL}/my-summary`, { signal });
+    const n = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+    return { upcoming: n(p?.upcoming), registered: n(p?.registered), tickets: n(p?.tickets), saved: n(p?.saved), hosted: n(p?.hosted), past: n(p?.past) };
+  },
+
+  /** Ended events: "public" archive or "mine" (attended / hosted). */
+  async past(params: { scope?: "public" | "mine"; page?: number; limit?: number } = {}, signal?: AbortSignal): Promise<EventPage> {
+    const payload = await request<any>(`${EVENTS_URL}/past${query(params)}`, { signal });
+    return {
+      items: list(payload?.items ?? []),
+      page: Number(payload?.page ?? params.page ?? 1),
+      limit: Number(payload?.limit ?? params.limit ?? 18),
+      total: Number(payload?.total ?? 0),
+      hasMore: Boolean(payload?.hasMore),
+      serverTime: String(payload?.serverTime ?? new Date().toISOString()),
+    };
   },
 
   async getNearby(latitude: number, longitude: number, radiusKm = 50, signal?: AbortSignal) {
