@@ -213,6 +213,36 @@ export class EventRegistration {
   @Prop({ type: String, default: null })
   accessKeyHash!: string | null;
 
+  /**
+   * Why admission is blocked while the registration stays on record
+   * (e.g. "dispute" while a card payment is being disputed). null = no hold.
+   */
+  @Prop({ type: String, default: null })
+  admissionHold!: string | null;
+
+  /** Re-entries allowed by the organizer: how many times and when last. */
+  @Prop({ type: Number, default: 0 })
+  entryCount!: number;
+
+  @Prop({ type: Date, default: null })
+  lastEntryAt!: Date | null;
+
+  /** Check-in audit (last 50 attempts): who scanned, how, and what happened. No codes are stored. */
+  @Prop({
+    type: [
+      {
+        _id: false,
+        at: { type: Date, required: true },
+        by: { type: MongooseSchema.Types.ObjectId, default: null },
+        method: { type: String, enum: ["qr", "manual"], required: true },
+        result: { type: String, required: true, maxlength: 40 },
+        identityConfirmed: { type: Boolean, default: false },
+      },
+    ],
+    default: [],
+  })
+  checkInLog!: { at: Date; by: Types.ObjectId | null; method: "qr" | "manual"; result: string; identityConfirmed: boolean }[];
+
   /* ------------------------------------------------------------ messaging */
 
   @Prop({ type: Date, required: true, index: true })

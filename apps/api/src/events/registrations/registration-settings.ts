@@ -61,6 +61,10 @@ export interface TicketType {
   quantity: number | null;
 }
 
+/** Standard: live QR, account-bound, single use. Enhanced adds a staff identity check. */
+export type TicketSecurityMode = "standard" | "enhanced";
+export const QR_TTL_CHOICES = [15, 30, 60] as const;
+
 export interface EventRegistrationSettings {
   mode: RegistrationMode;
   opensAt: Date | null;
@@ -102,6 +106,14 @@ export interface EventRegistrationSettings {
   earlyJoinMinutes: number;
   /** People (besides the organizer) who may check attendees in. */
   checkInStaffIds: string[];
+  /** Ticket security (live QR, identity check). Core checks can't be turned off. */
+  ticketSecurity: TicketSecurityMode;
+  /** How long one live admission QR stays valid. */
+  qrTtlSeconds: number;
+  /** Let a checked-in ticket be scanned again (people leaving and coming back). */
+  allowReentry: boolean;
+  /** Show the holder's profile photo to staff when they scan. */
+  showHolderPhoto: boolean;
 }
 
 export const MAX_QUESTIONS = 20;
@@ -185,6 +197,10 @@ export function defaultSettings(isOnline = false): EventRegistrationSettings {
     selectedGroupIds: [],
     earlyJoinMinutes: 15,
     checkInStaffIds: [],
+    ticketSecurity: "standard",
+    qrTtlSeconds: 30,
+    allowReentry: false,
+    showHolderPhoto: false,
   };
 }
 
@@ -295,7 +311,16 @@ export function normalizeSettings(
   s.checkInStaffIds = ids(r.checkInStaffIds, 50);
   s.earlyJoinMinutes = int(r.earlyJoinMinutes, 0, 120, 15);
 
+  s.ticketSecurity = r.ticketSecurity === "enhanced" ? "enhanced" : "standard";
+  const ttl = Number(r.qrTtlSeconds);
+  s.qrTtlSeconds = (QR_TTL_CHOICES as readonly number[]).includes(ttl) ? ttl : 30;
+  s.allowReentry = bool(r.allowReentry, false);
+  // Enhanced security always shows staff the holder's photo when there is one.
+  s.showHolderPhoto = s.ticketSecurity === "enhanced" || bool(r.showHolderPhoto, false);
+
   if (s.access !== RegistrationAccess.PUBLIC) s.allowGuests = false;
+  // Enhanced tickets are tied to a Fockis account: no guest registrations.
+  if (s.ticketSecurity === "enhanced") s.allowGuests = false;
   return s;
 }
 
@@ -314,6 +339,10 @@ export function settingsOf(event: { registration?: unknown; isOnline?: boolean }
     attendanceOptions: Array.isArray(raw.attendanceOptions) && raw.attendanceOptions.length ? raw.attendanceOptions : base.attendanceOptions,
     selectedGroupIds: Array.isArray(raw.selectedGroupIds) ? raw.selectedGroupIds : [],
     checkInStaffIds: Array.isArray(raw.checkInStaffIds) ? raw.checkInStaffIds : [],
+    ticketSecurity: raw.ticketSecurity === "enhanced" ? "enhanced" : "standard",
+    qrTtlSeconds: (QR_TTL_CHOICES as readonly number[]).includes(Number(raw.qrTtlSeconds)) ? Number(raw.qrTtlSeconds) : 30,
+    allowReentry: raw.allowReentry === true,
+    showHolderPhoto: raw.ticketSecurity === "enhanced" || raw.showHolderPhoto === true,
   };
 }
 

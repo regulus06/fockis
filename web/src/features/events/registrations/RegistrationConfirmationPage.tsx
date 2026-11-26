@@ -33,7 +33,7 @@ import type { EventCategory } from "../types/event.types";
 import { downloadIcs } from "../utils/eventCalendar";
 import { absoluteEventUrl } from "../utils/eventMedia";
 import RegistrationPayment from "./RegistrationPayment";
-import TicketQr from "./TicketQr";
+import LiveTicket from "./LiveTicket";
 import {
   ATTENDANCE_LABEL,
   eventWhen,
@@ -263,14 +263,28 @@ export default function RegistrationConfirmationPage() {
                       )}
                     </div>
 
-                    {reg.ticketCode && (
-                      <div className="fkr-ticketcard__qr">
-                        <TicketQr code={reg.ticketCode} size={176} label={`QR ticket ${reg.registrationNumber}`} />
-                        <small>Show this code at the entrance</small>
-                      </div>
-                    )}
                   </div>
                 </section>
+
+                {reg.liveTicket && !reg.isOrganizerView && (
+                  <LiveTicket
+                    registrationId={reg.id}
+                    accessKey={key}
+                    registrationNumber={reg.registrationNumber}
+                    ticketName={reg.ticketName}
+                    isGuest={reg.isGuest}
+                  />
+                )}
+                {reg.status === "confirmed" && reg.admissionHold && (
+                  <div className="fkr-alert fkr-alert--warn" role="status">
+                    Entry for this ticket is on hold while a payment issue is reviewed. Contact the organizer.
+                  </div>
+                )}
+                {reg.status === "confirmed" && (
+                  <p className="fkr-printonly">
+                    Booking confirmation — not an entry ticket. Open your live ticket in Fockis at the entrance.
+                  </p>
+                )}
 
                 <div className="fkr-ticket-actions fkr-noprint">
                   {reg.status === "confirmed" && online && signedIn && (
@@ -288,9 +302,9 @@ export default function RegistrationConfirmationPage() {
                       </a>
                     </>
                   )}
-                  {reg.ticketCode && (
+                  {reg.status === "confirmed" && (
                     <button type="button" className="fkr-btn fkr-btn--outline" onClick={() => window.print()}>
-                      <Printer size={18} aria-hidden="true" /> Download / Print Ticket
+                      <Printer size={18} aria-hidden="true" /> Print booking confirmation
                     </button>
                   )}
                   <EventShareButton event={{ id: ev.id, title: ev.title }} label="Share Event" className="fkr-share" />

@@ -24,6 +24,19 @@ import {
 } from "./calls/nativeCalls";
 
 import Constants from "expo-constants";
+import * as ScreenCapture from "expo-screen-capture";
+
+/** Live event tickets ask the app to block screenshots / screen recording while open. */
+const SECURE_SCREEN_KEY = "fockis-live-ticket";
+
+async function setSecureScreen(on: boolean) {
+  try {
+    if (on) await ScreenCapture.preventScreenCaptureAsync(SECURE_SCREEN_KEY);
+    else await ScreenCapture.allowScreenCaptureAsync(SECURE_SCREEN_KEY);
+  } catch {
+    // Not supported on this device: the live QR still expires within seconds.
+  }
+}
 
 // The real Fockis address (fockis.com redirects here). Overridable with
 // EXPO_PUBLIC_WEB_URL for testing (see app.config.js).
@@ -114,6 +127,8 @@ export default function WebViewApp() {
         await pushTokensToWeb();
       } else if (message.type === "fockis:call-state") {
         await onWebCallState(String(message.callId ?? "").toLowerCase(), String(message.state ?? ""));
+      } else if (message.type === "fockis:secure-screen") {
+        await setSecureScreen(message.on === true);
       }
     },
     [pushTokensToWeb],
@@ -185,7 +200,11 @@ export default function WebViewApp() {
           event.nativeEvent.description
         );
       }}
-      onLoadStart={() => setError(false)}
+      onLoadStart={() => {
+        setError(false);
+        // A full page load leaves any ticket screen: allow screenshots again.
+        void setSecureScreen(false);
+      }}
       renderLoading={() => (
         <View style={styles.loading}>
           <ActivityIndicator size="large" />

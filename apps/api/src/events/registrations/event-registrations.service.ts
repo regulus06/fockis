@@ -70,7 +70,15 @@ import {
   type StoredAnswer,
   type TicketType,
 } from "./registration-settings";
-import { parseCode, qrDataUrl, signatureMatches, ticketCode } from "./registration-qr";
+import {
+  checkAdmission,
+  checkCheckInGrant,
+  isAdmissionCode,
+  issueAdmissionCode,
+  issueCheckInGrant,
+  parseAdmission,
+  parseCode,
+} from "./registration-qr";
 import { layout, RegistrationMailer, type MailEvent } from "./registration-mailer";
 import { buildCsv, buildXlsx, type Cell } from "./xlsx-lite";
 
@@ -197,8 +205,15 @@ export interface RegistrationView {
   isGuest: boolean;
   canCancel: boolean;
   canPay: boolean;
-  /** QR ticket text (confirmed registrations with QR check-in enabled). */
+  /**
+   * Always null now: fixed QR codes are no longer issued (they could be
+   * screenshotted and shared). Kept so older clients don't break.
+   */
   ticketCode: string | null;
+  /** The holder can open a live, auto-refreshing admission QR (GET .../admission). */
+  liveTicket: { securityMode: "standard" | "enhanced"; ttlSeconds: number } | null;
+  /** Admission is blocked for now (e.g. "dispute"). */
+  admissionHold: string | null;
   event: RegistrationEventSummary | null;
 }
 
@@ -246,14 +261,51 @@ export interface OrganizerListResult {
   stats: RegistrationStats;
   ticketTypes: { id: string; name: string }[];
   questions: EventRegistrationSettings["questions"];
-  settings: { individualCheckIn: boolean; qrCheckIn: boolean; requireApproval: boolean; waitlistEnabled: boolean };
+  settings: {
+    individualCheckIn: boolean;
+    qrCheckIn: boolean;
+    requireApproval: boolean;
+    waitlistEnabled: boolean;
+    ticketSecurity: "standard" | "enhanced";
+    allowReentry: boolean;
+  };
   isOwner: boolean;
 }
 
+export interface CheckInHolder {
+  name: string;
+  /** Profile photo of the account holder, when the organizer asked for photo checks. */
+  photoUrl: string | null;
+  ticketName: string;
+  registrationNumber: string;
+  attendeeCount: number;
+  isGuest: boolean;
+}
+
 export interface CheckInResult {
-  result: "checked_in" | "already_checked_in" | "undone" | "preview";
+  /**
+   * verify  = valid ticket; staff must confirm the person's identity (send `grant` back).
+   * reentry = already checked in and the organizer allows re-entry.
+   */
+  result: "checked_in" | "already_checked_in" | "undone" | "preview" | "verify" | "reentry";
   message: string;
   registration: RegistrationView;
+  holder?: CheckInHolder;
+  /** Short-lived permission to complete this check-in (verify / preview). */
+  grant?: string;
+  securityMode?: "standard" | "enhanced";
+}
+
+export interface AdmissionTicket {
+  token: string;
+  issuedAt: string;
+  expiresAt: string;
+  ttlSeconds: number;
+  serverTime: string;
+  securityMode: "standard" | "enhanced";
+  attendanceStatus: AttendanceStatus;
+  checkedInAt: string | null;
+  holder: { name: string; photoUrl: string | null };
 }
 
 export interface JoinResult {
@@ -558,9 +610,15 @@ export class EventRegistrationsService implements OnModuleInit, OnModuleDestroy 
 
   private view(reg: LeanReg, event: EventLean | null, eventSummary: RegistrationEventSummary | null, withCode: boolean): RegistrationView {
     const s = event ? settingsOf(event) : null;
-    const code =
-      withCode && reg.status === RegistrationStatus.CONFIRMED && s?.qrCheckIn
-        ? ticketCode({ id: String(reg._id), eventId: String(reg.eventId), registrationNumber: reg.registrationNumber, qrVersion: reg.qrVersion ?? 1 })
+    const live =
+      withCode &&
+      s?.qrCheckIn &&
+      reg.status === RegistrationStatus.CONFIRMED &&
+      !reg.admissionHold &&
+      event &&
+      !event.isCancelled &&
+      new Date(event.endDate).getTime() > Date.now()
+        ? { securityMode: s.ticketSecurity, ttlSeconds: s.qrTtlSeconds }
         : null;
     return {
       id: String(reg._id),
@@ -596,7 +654,9 @@ export class EventRegistrationsService implements OnModuleInit, OnModuleDestroy 
       isGuest: !reg.userId,
       canCancel: this.canCancel(reg, event),
       canPay: reg.status === RegistrationStatus.PENDING_PAYMENT && Boolean(reg.userId),
-      ticketCode: code,
+      ticketCode: null,
+      liveTicket: live,
+      admissionHold: reg.admissionHold ?? null,
       event: eventSummary,
     };
   }
@@ -606,7 +666,8 @@ export class EventRegistrationsService implements OnModuleInit, OnModuleDestroy 
     const v = this.view(reg, event, summary, opts.withCode);
     return {
       ...v,
-      qrImage: v.ticketCode ? await qrDataUrl(v.ticketCode) : null,
+      // Fixed QR images are no longer issued; the ticket page shows a live code.
+      qrImage: null,
       cancellationPolicy: settingsOf(event).cancellationPolicy,
       isOrganizerView: opts.organizerView,
     };
@@ -988,7 +1049,7 @@ export class EventRegistrationsService implements OnModuleInit, OnModuleDestroy 
         paid
           ? `Payment received: <strong>${money(reg.totalAmount, reg.currency)}</strong>. Thank you!`
           : `This event is free. <strong>No payment was required.</strong>`,
-        s.qrCheckIn ? "Show the QR code on your ticket at the entrance to check in." : "",
+        s.qrCheckIn ? "At the entrance, open your ticket in Fockis and show the live QR code (it changes every few seconds, so screenshots and printouts won't work)." : "",
         event.isOnline || reg.attendanceMode === "online" ? "The Join Meeting button appears on your ticket shortly before the event starts." : "",
       ].filter(Boolean);
       const { html, text } = layout(paid ? "Payment confirmed — you're registered" : "You're registered!", lines, this.mailEvent(event), {
@@ -1200,6 +1261,66 @@ export class EventRegistrationsService implements OnModuleInit, OnModuleDestroy 
     return this.detail(reg, event, { organizerView, withCode: !organizerView });
   }
 
+  /**
+   * Live admission QR for the ticket holder only. Account tickets need the
+   * holder signed in (a shared link shows nothing); guest tickets (free public
+   * events, Standard security) use their private access key. Organizers and
+   * staff never receive admission codes.
+   */
+  async admission(registrationId: string, viewerId: string | undefined, accessKey: string | undefined): Promise<AdmissionTicket> {
+    const reg = (await this.regModel.findById(oid(registrationId, "registration ID")).lean().exec()) as unknown as LeanReg | null;
+    if (!reg) throw new NotFoundException("Ticket not found.");
+    const event = await this.loadEvent(reg.eventId);
+    const s = settingsOf(event);
+
+    if (reg.userId) {
+      if (!viewerId || String(reg.userId) !== viewerId) {
+        throw new NotFoundException("This ticket belongs to another Fockis account. Sign in with the account that registered.");
+      }
+    } else {
+      const keyOk = Boolean(accessKey && reg.accessKeyHash && sha256(accessKey) === reg.accessKeyHash);
+      if (!keyOk) throw new NotFoundException("Ticket not found.");
+      if (s.ticketSecurity === "enhanced") {
+        throw new ForbiddenException("This event requires a Fockis account for entry. Contact the organizer.");
+      }
+    }
+
+    if (reg.status !== RegistrationStatus.CONFIRMED) throw new ConflictException("This registration isn't confirmed, so it has no entry code.");
+    if (reg.admissionHold) throw new ForbiddenException("Entry for this ticket is on hold. Contact the organizer.");
+    if (!s.qrCheckIn) throw new BadRequestException("This event doesn't use QR check-in.");
+    if (event.isCancelled) throw new ConflictException("This event was cancelled.");
+    if (new Date(event.endDate).getTime() <= Date.now()) throw new ConflictException("This event has ended.");
+
+    const code = issueAdmissionCode(
+      { id: String(reg._id), eventId: String(reg.eventId), registrationNumber: reg.registrationNumber, qrVersion: reg.qrVersion ?? 1 },
+      s.qrTtlSeconds,
+    );
+    const photo = reg.userId ? await this.profilePhoto(reg.userId) : null;
+    return {
+      token: code.token,
+      issuedAt: code.issuedAt.toISOString(),
+      expiresAt: code.expiresAt.toISOString(),
+      ttlSeconds: s.qrTtlSeconds,
+      serverTime: new Date().toISOString(),
+      securityMode: s.ticketSecurity,
+      attendanceStatus: reg.attendanceStatus ?? AttendanceStatus.NOT_CHECKED_IN,
+      checkedInAt: iso(reg.checkedInAt),
+      holder: { name: reg.attendeeName, photoUrl: photo },
+    };
+  }
+
+  private async profilePhoto(userId: Types.ObjectId): Promise<string | null> {
+    const userModel = this.connection.models["User"];
+    if (!userModel) return null;
+    try {
+      const u = (await userModel.findById(userId).select("profilePicture").lean().exec()) as { profilePicture?: string } | null;
+      const url = String(u?.profilePicture ?? "").trim();
+      return url || null;
+    } catch {
+      return null;
+    }
+  }
+
   async mine(userId: string): Promise<{ items: RegistrationView[] }> {
     const regs = (await this.regModel
       .find({ userId: oid(userId, "user ID"), status: { $ne: RegistrationStatus.EXPIRED } })
@@ -1364,7 +1485,14 @@ export class EventRegistrationsService implements OnModuleInit, OnModuleDestroy 
       stats,
       ticketTypes: s.ticketTypes.map((t) => ({ id: t.id, name: t.name })),
       questions: s.questions,
-      settings: { individualCheckIn: s.individualCheckIn, qrCheckIn: s.qrCheckIn, requireApproval: s.requireApproval, waitlistEnabled: s.waitlistEnabled },
+      settings: {
+        individualCheckIn: s.individualCheckIn,
+        qrCheckIn: s.qrCheckIn,
+        requireApproval: s.requireApproval,
+        waitlistEnabled: s.waitlistEnabled,
+        ticketSecurity: s.ticketSecurity,
+        allowReentry: s.allowReentry,
+      },
       isOwner: await this.manages(event, userId),
     };
   }
@@ -1503,19 +1631,50 @@ export class EventRegistrationsService implements OnModuleInit, OnModuleDestroy 
   async checkIn(eventId: string, staffId: string, dto: CheckInDto): Promise<CheckInResult> {
     const event = await this.staffEvent(eventId, staffId, false);
     const s = settingsOf(event);
+    const enhanced = s.ticketSecurity === "enhanced";
     let reg: LeanReg | null = null;
+    /** How this ticket was identified: a live QR, or staff looking it up. */
+    let method: "qr" | "manual" = "manual";
+    /** Staff already looked at the person (grant from a verify / preview step). */
+    let granted = false;
 
     if (dto.code) {
-      const parsed = parseCode(dto.code);
-      if (!parsed) throw new BadRequestException("This isn't a Fockis event ticket.");
-      reg = (await this.regModel.findOne({ registrationNumber: parsed.registrationNumber }).lean().exec()) as unknown as LeanReg | null;
-      if (!reg) throw new NotFoundException("No registration with this ID.");
-      if (parsed.signature && !signatureMatches(parsed.signature, { id: String(reg._id), eventId: String(reg.eventId), qrVersion: reg.qrVersion ?? 1 })) {
-        throw new ForbiddenException("This QR code is no longer valid (it was replaced or cancelled).");
+      const text = dto.code.trim();
+      if (isAdmissionCode(text)) {
+        const parsed = parseAdmission(text);
+        if (!parsed) throw new BadRequestException("This isn't a valid Fockis ticket code.");
+        reg = (await this.regModel.findOne({ registrationNumber: parsed.registrationNumber }).lean().exec()) as unknown as LeanReg | null;
+        if (!reg) throw new NotFoundException("No registration with this ticket.");
+        if (!s.qrCheckIn) throw new BadRequestException("QR check-in is turned off for this event.");
+        const verdict = checkAdmission(parsed, { id: String(reg._id), eventId: String(reg.eventId), qrVersion: reg.qrVersion ?? 1 });
+        if (verdict !== "valid") {
+          await this.logCheckIn(reg._id, staffId, "qr", verdict === "expired" ? "expired_code" : "invalid_code", false);
+          throw new ForbiddenException(
+            verdict === "expired"
+              ? "This QR code has expired. Ask the attendee to open their live ticket in Fockis — the code refreshes automatically."
+              : "This QR code isn't valid (it was copied, replaced or the ticket changed).",
+          );
+        }
+        method = "qr";
+      } else {
+        const parsed = parseCode(text);
+        if (!parsed) throw new BadRequestException("This isn't a Fockis event ticket.");
+        if (parsed.signature) {
+          // Old fixed codes (FKREG1) could be screenshotted and shared; they no longer admit anyone.
+          throw new ForbiddenException("This is an old fixed QR code and is no longer accepted. Ask the attendee to open their live ticket in Fockis.");
+        }
+        reg = (await this.regModel.findOne({ registrationNumber: parsed.registrationNumber }).lean().exec()) as unknown as LeanReg | null;
+        if (!reg) throw new NotFoundException("No registration with this ID.");
       }
-      if (parsed.signature && !s.qrCheckIn) throw new BadRequestException("QR check-in is turned off for this event.");
     } else if (dto.registrationId) {
       reg = (await this.regModel.findById(oid(dto.registrationId, "registration ID")).lean().exec()) as unknown as LeanReg | null;
+      if (reg && !dto.undo) {
+        const grantMethod = dto.grant ? checkCheckInGrant(dto.grant, String(reg._id), staffId) : null;
+        if (grantMethod) {
+          method = grantMethod;
+          granted = true;
+        }
+      }
     } else {
       throw new BadRequestException("Scan a ticket or enter a registration ID.");
     }
@@ -1530,12 +1689,61 @@ export class EventRegistrationsService implements OnModuleInit, OnModuleDestroy 
         rejected: "not approved",
         expired: "expired",
       };
+      await this.logCheckIn(reg._id, staffId, method, `denied_${reg.status}`, false);
       throw new ConflictException(`This registration is ${label[reg.status] ?? reg.status} and can't be checked in.`);
     }
-
-    if (dto.preview) {
-      return { result: "preview", message: `${reg.attendeeName} · ${reg.attendeeCount} ${reg.attendeeCount === 1 ? "person" : "people"}`, registration: this.view(reg, event, null, false) };
+    if (reg.admissionHold && !dto.undo) {
+      await this.logCheckIn(reg._id, staffId, method, "denied_hold", false);
+      throw new ForbiddenException("Entry for this ticket is on hold (payment under review). Ask the attendee to contact the organizer.");
     }
+
+    const holder = async (): Promise<CheckInHolder> => ({
+      name: reg!.attendeeName,
+      photoUrl: s.showHolderPhoto && reg!.userId ? await this.profilePhoto(reg!.userId) : null,
+      ticketName: reg!.ticketName,
+      registrationNumber: reg!.registrationNumber,
+      attendeeCount: reg!.attendeeCount,
+      isGuest: !reg!.userId,
+    });
+
+    // Group tickets: show who is on it first (staff then check people in one by one).
+    if (dto.preview) {
+      return {
+        result: "preview",
+        message: `${reg.attendeeName} · ${reg.attendeeCount} ${reg.attendeeCount === 1 ? "person" : "people"}`,
+        registration: this.view(reg, event, null, false),
+        holder: await holder(),
+        grant: issueCheckInGrant(String(reg._id), staffId, method),
+        securityMode: s.ticketSecurity,
+      };
+    }
+
+    // Staff must look at the person when: security is Enhanced, or the ticket was
+    // looked up by number instead of scanned (a number alone proves nothing).
+    const needsIdentity = !dto.undo && (enhanced || method === "manual");
+    if (needsIdentity && !(granted && dto.identityConfirmed === true)) {
+      if (granted && dto.identityConfirmed === false) {
+        await this.logCheckIn(reg._id, staffId, method, "denied_identity", false);
+        return {
+          result: "verify",
+          message: "Identity not confirmed — the person was not checked in.",
+          registration: this.view(reg, event, null, false),
+          holder: await holder(),
+          securityMode: s.ticketSecurity,
+        };
+      }
+      return {
+        result: "verify",
+        message: enhanced
+          ? "Valid ticket. Check that the person matches the ticket holder, then confirm."
+          : "Ticket found by number. Check that the person matches the ticket holder, then confirm.",
+        registration: this.view(reg, event, null, false),
+        holder: await holder(),
+        grant: issueCheckInGrant(String(reg._id), staffId, method),
+        securityMode: s.ticketSecurity,
+      };
+    }
+    const identityConfirmed = needsIdentity && dto.identityConfirmed === true;
 
     const staff = new Types.ObjectId(staffId);
     const now = new Date();
@@ -1551,9 +1759,10 @@ export class EventRegistrationsService implements OnModuleInit, OnModuleDestroy 
       }
       outcome = "undone";
     } else if (index !== null) {
+      // Atomic: only one scanner can set this attendee's check-in time.
       const res = await this.regModel
         .updateOne(
-          { _id: reg._id, status: RegistrationStatus.CONFIRMED, [`attendees.${index}.checkedInAt`]: null } as Record<string, unknown>,
+          { _id: reg._id, status: RegistrationStatus.CONFIRMED, admissionHold: null, [`attendees.${index}.checkedInAt`]: null } as Record<string, unknown>,
           { $set: { [`attendees.${index}.checkedInAt`]: now, [`attendees.${index}.checkedInBy`]: staff } },
         )
         .exec();
@@ -1561,12 +1770,18 @@ export class EventRegistrationsService implements OnModuleInit, OnModuleDestroy 
     } else {
       const res = await this.regModel
         .updateOne(
-          { _id: reg._id, status: RegistrationStatus.CONFIRMED, checkedInAt: null },
+          { _id: reg._id, status: RegistrationStatus.CONFIRMED, admissionHold: null, checkedInAt: null },
           { $set: { checkedInAt: now, checkedInBy: staff, "attendees.$[a].checkedInAt": now, "attendees.$[a].checkedInBy": staff } },
           { arrayFilters: [{ "a.checkedInAt": null }] },
         )
         .exec();
       if (res.modifiedCount === 0) outcome = "already_checked_in";
+    }
+
+    // Re-entry (organizer setting): an already-used ticket may come back in; count it.
+    if (outcome === "already_checked_in" && s.allowReentry) {
+      await this.regModel.updateOne({ _id: reg._id, status: RegistrationStatus.CONFIRMED }, { $inc: { entryCount: 1 }, $set: { lastEntryAt: now } }).exec();
+      outcome = "reentry";
     }
 
     // Recompute the attendance status from the attendees.
@@ -1575,6 +1790,7 @@ export class EventRegistrationsService implements OnModuleInit, OnModuleDestroy 
     const attendance = inCount === 0 ? AttendanceStatus.NOT_CHECKED_IN : inCount >= after.attendeeCount ? AttendanceStatus.CHECKED_IN : AttendanceStatus.PARTIALLY_CHECKED_IN;
     const firstIn = (after.attendees ?? []).map((a) => a.checkedInAt).filter(Boolean).sort()[0] ?? null;
     await this.regModel.updateOne({ _id: reg._id }, { $set: { attendanceStatus: attendance, checkedInAt: inCount ? (after.checkedInAt ?? firstIn) : null } }).exec();
+    await this.logCheckIn(reg._id, staffId, method, outcome, identityConfirmed);
     const final = (await this.regModel.findById(reg._id).lean().exec()) as unknown as LeanReg;
 
     const who = index !== null ? (final.attendees?.[index]?.name ?? final.attendeeName) : final.attendeeName;
@@ -1583,9 +1799,79 @@ export class EventRegistrationsService implements OnModuleInit, OnModuleDestroy 
       outcome === "undone"
         ? `Check-in undone for ${who}.`
         : outcome === "already_checked_in"
-          ? `${who} was already checked in${at ? ` at ${new Date(at).toISOString()}` : ""}.`
-          : `${who} is checked in.`;
-    return { result: outcome, message, registration: this.view(final, event, null, false) };
+          ? `${who} was already checked in${at ? ` at ${new Date(at).toISOString()}` : ""}. This ticket can't be used again.`
+          : outcome === "reentry"
+            ? `Re-entry for ${who} (first checked in${at ? ` at ${new Date(at).toISOString()}` : ""}).`
+            : `${who} is checked in.`;
+    return { result: outcome, message, registration: this.view(final, event, null, false), holder: await holder(), securityMode: s.ticketSecurity };
+  }
+
+  /** Check-in audit trail on the registration (last 50). Never stores codes or IDs documents. */
+  private async logCheckIn(regId: Types.ObjectId, staffId: string, method: "qr" | "manual", result: string, identityConfirmed: boolean): Promise<void> {
+    try {
+      await this.regModel
+        .updateOne(
+          { _id: regId },
+          {
+            $push: {
+              checkInLog: {
+                $each: [{ at: new Date(), by: Types.ObjectId.isValid(staffId) ? new Types.ObjectId(staffId) : null, method, result: result.slice(0, 40), identityConfirmed }],
+                $slice: -50,
+              },
+            },
+          },
+        )
+        .exec();
+    } catch (e) {
+      this.logger.warn(`Check-in log failed: ${String(e)}`);
+    }
+  }
+
+  /* ==========================================================================
+     PAYMENT REVERSALS (refunds and disputes revoke admission)
+  ========================================================================== */
+
+  /** A full refund (also from the Stripe dashboard) cancels the ticket; old QR codes stop working. */
+  @OnEvent("payments.refunded")
+  async onPaymentRefunded(payload: { paymentId?: string; purpose?: string; referenceId?: string; refundedAmount?: number; chargedAmount?: number }): Promise<void> {
+    if (payload?.purpose !== PaymentPurpose.EVENT || !payload.referenceId || !Types.ObjectId.isValid(payload.referenceId)) return;
+    const full = Number(payload.refundedAmount ?? 0) >= Number(payload.chargedAmount ?? Number.POSITIVE_INFINITY) - 0.005;
+    if (!full) return; // partial refunds keep the ticket (organizer decides)
+    try {
+      const reg = (await this.regModel.findById(payload.referenceId).lean().exec()) as unknown as LeanReg | null;
+      if (!reg || (payload.paymentId && reg.paymentId && String(reg.paymentId) !== String(payload.paymentId))) return;
+      await this.regModel.updateOne({ _id: reg._id }, { $set: { paymentStatus: RegistrationPaymentStatus.REFUNDED }, $inc: { qrVersion: 1 } }).exec();
+      const released = await this.release(reg, RegistrationStatus.CANCELLED, null, "Payment refunded");
+      if (released) {
+        await this.notify(reg.userId, "Ticket cancelled after refund", "Your payment was refunded, so this ticket no longer gives entry.", `/events/registrations/${String(reg._id)}`, String(reg._id));
+      }
+    } catch (e) {
+      this.logger.error(`Refund for registration ${payload.referenceId} could not be applied: ${String(e)}`);
+    }
+  }
+
+  /** While a card payment is disputed the ticket can't be used; a lost dispute cancels it. */
+  @OnEvent("payments.disputed")
+  async onPaymentDisputed(payload: { paymentId?: string; purpose?: string; referenceId?: string; status?: string; closed?: boolean }): Promise<void> {
+    if (payload?.purpose !== PaymentPurpose.EVENT || !payload.referenceId || !Types.ObjectId.isValid(payload.referenceId)) return;
+    try {
+      const reg = (await this.regModel.findById(payload.referenceId).lean().exec()) as unknown as LeanReg | null;
+      if (!reg) return;
+      if (!payload.closed) {
+        await this.regModel.updateOne({ _id: reg._id }, { $set: { admissionHold: "dispute" }, $inc: { qrVersion: 1 } }).exec();
+        return;
+      }
+      if (payload.status === "won") {
+        await this.regModel.updateOne({ _id: reg._id, admissionHold: "dispute" }, { $set: { admissionHold: null } }).exec();
+        return;
+      }
+      if (payload.status === "lost") {
+        await this.regModel.updateOne({ _id: reg._id }, { $set: { admissionHold: null }, $inc: { qrVersion: 1 } }).exec();
+        await this.release(reg, RegistrationStatus.CANCELLED, null, "Payment reversed");
+      }
+    } catch (e) {
+      this.logger.error(`Dispute for registration ${payload.referenceId} could not be applied: ${String(e)}`);
+    }
   }
 
   /* ==========================================================================

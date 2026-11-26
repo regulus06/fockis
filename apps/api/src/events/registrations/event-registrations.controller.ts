@@ -9,6 +9,7 @@
  *
  *   GET    /events/registrations/my                  my registrations
  *   GET    /events/registrations/:id                 one registration (owner, guest key, staff)
+ *   GET    /events/registrations/:id/admission       live entry QR (ticket holder only, short-lived)
  *   POST   /events/registrations/:id/cancel          cancel my registration
  *   POST   /events/registrations/:id/payment         resume payment (client secret)
  *   POST   /events/registrations/:id/confirm-payment verify payment and confirm
@@ -83,6 +84,16 @@ export class EventRegistrationsController {
   @Header("Cache-Control", "no-store")
   one(@Param("registrationId") id: string, @Req() req: Request, @Query("key") key?: string) {
     return this.registrations.getOne(id, optionalUserId(req), key);
+  }
+
+  /** Live admission code: holder only; refreshed by the ticket page every few seconds. */
+  @Public()
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 90, ttl: 60_000 } })
+  @Get("registrations/:registrationId/admission")
+  @Header("Cache-Control", "no-store")
+  admission(@Param("registrationId") id: string, @Req() req: Request, @Query("key") key?: string) {
+    return this.registrations.admission(id, optionalUserId(req), key);
   }
 
   @Public()

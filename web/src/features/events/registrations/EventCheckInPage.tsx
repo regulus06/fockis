@@ -1,19 +1,21 @@
 /* ============================================================================
    ORGANIZER — QR CHECK-IN  /events/:eventId/check-in
-   Scan tickets with the camera (BarcodeDetector, where the browser has it) or
-   type a registration ID. The server validates the signed code, the event,
-   the registration status and prevents double check-ins; it also records the
-   time and the staff member.
+   Scan live ticket codes with the camera (BarcodeDetector, where the browser
+   has it) or type a registration ID. The server checks the code's signature
+   and expiry, the event, the registration status and payment, and lets each
+   ticket in once (atomically, even with several scanners). When the event
+   uses Enhanced security, or a ticket is looked up by number, staff must
+   confirm the person matches the ticket holder before check-in.
 ============================================================================ */
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Camera, CameraOff, CircleAlert, CircleCheck, Keyboard, LoaderCircle, RotateCcw, UserCheck } from "lucide-react";
+import { ArrowLeft, Camera, CameraOff, CircleAlert, CircleCheck, Keyboard, LoaderCircle, RotateCcw, ShieldCheck, UserCheck, UserX } from "lucide-react";
 
 import EventsShell from "../components/EventsShell";
 import EventEmptyState from "../components/EventEmptyState";
 import { EventsApiError } from "../services/eventsApi";
-import { eventWhen, registrationApi, type OrganizerList, type Registration } from "./registrationApi";
+import { eventWhen, registrationApi, type CheckInBody, type CheckInHolder, type OrganizerList, type Registration } from "./registrationApi";
 import "./registration.scss";
 
 interface Detector {
@@ -26,8 +28,22 @@ interface Outcome {
   title: string;
   message: string;
   registration?: Registration;
+  holder?: CheckInHolder;
   at: number;
 }
+
+/** A ticket waiting for staff to confirm the person's identity. */
+interface Pending {
+  registration: Registration;
+  holder: CheckInHolder;
+  grant: string;
+  message: string;
+  /** Group tickets: the attendee being checked in. */
+  attendeeIndex?: number;
+}
+
+const clock = (iso: string | null | undefined) =>
+  iso ? new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
 
 export default function EventCheckInPage() {
   const { eventId = "" } = useParams<{ eventId: string }>();
@@ -36,6 +52,10 @@ export default function EventCheckInPage() {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [pending, setPending] = useState<Pending | null>(null);
+  /** Group tickets: grant from the preview, and whether staff checked identity. */
+  const [groupGrant, setGroupGrant] = useState<string | undefined>(undefined);
+  const [groupIdentity, setGroupIdentity] = useState(false);
   const [log, setLog] = useState<Outcome[]>([]);
   const [camera, setCamera] = useState<"off" | "starting" | "on" | "unsupported" | "denied">("off");
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -61,7 +81,7 @@ export default function EventCheckInPage() {
   }, []);
 
   const submit = useCallback(
-    async (body: { code?: string; registrationId?: string; attendeeIndex?: number; undo?: boolean; preview?: boolean }) => {
+    async (body: CheckInBody) => {
       if (busyRef.current) return;
       busyRef.current = true;
       setBusy(true);
@@ -69,17 +89,48 @@ export default function EventCheckInPage() {
         const res = await registrationApi.checkIn(eventId, body);
         const r = res.registration;
         const group = Boolean(info?.settings.individualCheckIn && r.attendeeCount > 1);
-        if (res.result === "preview") {
-          setOutcome({ tone: "ok", title: "Valid ticket", message: `${r.attendeeName} · choose who is here`, registration: r, at: Date.now() });
+        if (res.result === "verify") {
+          if (res.grant && res.holder) {
+            setPending({ registration: r, holder: res.holder, grant: res.grant, message: res.message, attendeeIndex: body.attendeeIndex });
+            setOutcome(null);
+          } else {
+            setPending(null);
+            record({ tone: "error", title: "Access denied", message: res.message, registration: r, holder: res.holder, at: Date.now() });
+          }
+        } else if (res.result === "preview") {
+          setPending(null);
+          setGroupGrant(res.grant);
+          setGroupIdentity(false);
+          setOutcome({ tone: "ok", title: "Valid ticket", message: `${r.attendeeName} · choose who is here`, registration: r, holder: res.holder, at: Date.now() });
         } else if (res.result === "already_checked_in") {
-          record({ tone: "warn", title: "Already checked in", message: res.message, registration: r, at: Date.now() });
+          setPending(null);
+          record({
+            tone: "error",
+            title: "Access denied — ticket already used",
+            message: r.checkedInAt ? `Previously checked in at ${clock(r.checkedInAt)}.` : res.message,
+            registration: r,
+            holder: res.holder,
+            at: Date.now(),
+          });
+        } else if (res.result === "reentry") {
+          setPending(null);
+          record({ tone: "warn", title: "Re-entry allowed", message: `First checked in at ${clock(r.checkedInAt)}.`, registration: r, holder: res.holder, at: Date.now() });
         } else {
-          record({ tone: "ok", title: res.result === "undone" ? "Check-in undone" : "Checked in", message: res.message, registration: r, at: Date.now() });
+          setPending(null);
+          record({
+            tone: "ok",
+            title: res.result === "undone" ? "Check-in undone" : "Access granted",
+            message: res.message,
+            registration: r,
+            holder: res.holder,
+            at: Date.now(),
+          });
         }
         if (!group) setCode("");
         refresh();
       } catch (caught) {
-        record({ tone: "error", title: "Not checked in", message: caught instanceof Error ? caught.message : "Check-in failed.", at: Date.now() });
+        setPending(null);
+        record({ tone: "error", title: "Access denied", message: caught instanceof Error ? caught.message : "Check-in failed.", at: Date.now() });
       } finally {
         busyRef.current = false;
         setBusy(false);
@@ -236,7 +287,7 @@ export default function EventCheckInPage() {
                 <form className="fkr-manual" onSubmit={manual}>
                   <label className="fkr-field" htmlFor="fkr-code">
                     <span className="fkr-label">
-                      <Keyboard size={16} aria-hidden="true" /> Registration ID or ticket code
+                      <Keyboard size={16} aria-hidden="true" /> Registration ID (you'll confirm the person's identity)
                     </span>
                     <span className="fkr-row">
                       <input id="fkr-code" className="fkr-input fkr-mono" placeholder="FKE-XXXX-XXXX" value={code} onChange={(e) => setCode(e.target.value)} autoComplete="off" autoCapitalize="characters" spellCheck={false} />
@@ -249,8 +300,57 @@ export default function EventCheckInPage() {
               </section>
 
               <section className="fkr-card fkr-result" aria-live="assertive" aria-label="Result">
-                {!outcome && <p className="fkr-muted">Scan a ticket or type a registration ID. Results appear here.</p>}
-                {outcome && (
+                {pending && (
+                  <div className="fkr-verify" role="group" aria-label="Confirm identity">
+                    <div className="fkr-verify__head">
+                      <ShieldCheck size={22} aria-hidden="true" />
+                      <strong>Check identity</strong>
+                    </div>
+                    <div className="fkr-verify__person">
+                      {pending.holder.photoUrl ? (
+                        <img src={pending.holder.photoUrl} alt={`Profile photo of ${pending.holder.name}`} />
+                      ) : (
+                        <span className="fkr-verify__initial" aria-hidden="true">
+                          {pending.holder.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                      <div>
+                        <h2>{pending.holder.name}</h2>
+                        <p>
+                          {pending.holder.attendeeCount} × {pending.holder.ticketName}
+                        </p>
+                        <p className="fkr-mono">{pending.holder.registrationNumber}</p>
+                        {pending.holder.isGuest && <p className="fkr-muted">Guest registration (no Fockis account)</p>}
+                        {!pending.holder.photoUrl && !pending.holder.isGuest && <p className="fkr-muted">No profile photo — check the name with an ID if needed.</p>}
+                      </div>
+                    </div>
+                    <p className="fkr-muted">{pending.message}</p>
+                    <div className="fkr-actions">
+                      <button
+                        type="button"
+                        className="fkr-btn fkr-btn--primary"
+                        disabled={busy}
+                        onClick={() =>
+                          void submit({ registrationId: pending.registration.id, attendeeIndex: pending.attendeeIndex, grant: pending.grant, identityConfirmed: true })
+                        }
+                      >
+                        <UserCheck size={18} aria-hidden="true" /> Identity confirmed — check in
+                      </button>
+                      <button
+                        type="button"
+                        className="fkr-btn fkr-btn--danger"
+                        disabled={busy}
+                        onClick={() =>
+                          void submit({ registrationId: pending.registration.id, attendeeIndex: pending.attendeeIndex, grant: pending.grant, identityConfirmed: false })
+                        }
+                      >
+                        <UserX size={18} aria-hidden="true" /> Doesn't match
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {!outcome && !pending && <p className="fkr-muted">Scan a ticket or type a registration ID. Results appear here.</p>}
+                {outcome && !pending && (
                   <div className={`fkr-result__box fkr-result__box--${outcome.tone}`}>
                     {outcome.tone === "ok" ? <CircleCheck size={40} aria-hidden="true" /> : <CircleAlert size={40} aria-hidden="true" />}
                     <div>
@@ -258,34 +358,47 @@ export default function EventCheckInPage() {
                       <p>{outcome.message}</p>
                       {current && (
                         <p className="fkr-muted">
-                          {current.registrationNumber} · {current.attendeeCount} × {current.ticketName}
+                          {current.attendeeName} · {current.registrationNumber} · {current.attendeeCount} × {current.ticketName}
                         </p>
                       )}
                     </div>
+                    {outcome.holder?.photoUrl && <img className="fkr-result__photo" src={outcome.holder.photoUrl} alt={`Profile photo of ${outcome.holder.name}`} />}
                   </div>
                 )}
-                {group && current && (
+                {group && current && !pending && (
                   <ul className="fkr-group">
+                    <li>
+                      <label className="fkr-toggle">
+                        <input type="checkbox" checked={groupIdentity} onChange={(e) => setGroupIdentity(e.target.checked)} />
+                        <span>I've checked the identity of the people I check in</span>
+                      </label>
+                    </li>
                     {current.attendees.map((a, i) => (
                       <li key={i}>
                         <span>
                           {a.name}
                           <small>{a.checkedInAt ? `In at ${new Date(a.checkedInAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}` : "Not checked in"}</small>
                         </span>
-                        <button type="button" className={`fkr-btn fkr-btn--sm ${a.checkedInAt ? "fkr-btn--ghost" : "fkr-btn--primary"}`} disabled={busy} onClick={() => void submit({ registrationId: current.id, attendeeIndex: i, undo: Boolean(a.checkedInAt) })}>
+                        <button type="button" className={`fkr-btn fkr-btn--sm ${a.checkedInAt ? "fkr-btn--ghost" : "fkr-btn--primary"}`} disabled={busy} onClick={() =>
+                            void submit(
+                              a.checkedInAt
+                                ? { registrationId: current.id, attendeeIndex: i, undo: true }
+                                : { registrationId: current.id, attendeeIndex: i, grant: groupGrant, identityConfirmed: groupIdentity },
+                            )
+                          }>
                           {a.checkedInAt ? "Undo" : "Check in"}
                         </button>
                       </li>
                     ))}
                     <li>
                       <span>Everyone on this ticket</span>
-                      <button type="button" className="fkr-btn fkr-btn--sm fkr-btn--outline" disabled={busy} onClick={() => void submit({ registrationId: current.id })}>
+                      <button type="button" className="fkr-btn fkr-btn--sm fkr-btn--outline" disabled={busy} onClick={() => void submit({ registrationId: current.id, grant: groupGrant, identityConfirmed: groupIdentity })}>
                         Check in all
                       </button>
                     </li>
                   </ul>
                 )}
-                {current && !group && outcome?.tone !== "error" && current.attendanceStatus !== "not_checked_in" && (
+                {current && !group && !pending && outcome?.tone === "ok" && current.attendanceStatus !== "not_checked_in" && (
                   <button type="button" className="fkr-link-btn" onClick={() => void submit({ registrationId: current.id, undo: true })} disabled={busy}>
                     <RotateCcw size={14} aria-hidden="true" /> Undo this check-in
                   </button>

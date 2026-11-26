@@ -138,4 +138,14 @@ export class CheckInDto {
   @IsOptional()
   @IsBoolean()
   preview?: boolean;
+  /** Grant returned by a scan that needs staff to confirm the person's identity. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  grant?: string;
+
+  /** Staff confirm they checked the person's identity against the ticket holder. */
+  @IsOptional()
+  @IsBoolean()
+  identityConfirmed?: boolean;
 }

@@ -5,12 +5,10 @@ import { CalendarDays, Clock, MapPin, QrCode, Ticket, Video } from "lucide-react
 import EventCover from "../components/EventCover";
 import type { EventCategory } from "../types/event.types";
 import { JoinMeetingButton } from "./EventRegistrationPanel";
-import TicketQr from "./TicketQr";
 import { eventWhen, formatMoney, registrationApi, STATUS_LABEL, type Registration } from "./registrationApi";
 
-/** One registration in My Events: status, ticket, QR, details, cancel, join. */
+/** One registration in My Events: status, ticket, live-ticket link, details, cancel, join. */
 export default function MyRegistrationCard({ reg, onChanged }: { reg: Registration; onChanged: (next: Registration) => void }) {
-  const [showQr, setShowQr] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -64,11 +62,6 @@ export default function MyRegistrationCard({ reg, onChanged }: { reg: Registrati
             {error}
           </small>
         )}
-        {showQr && reg.ticketCode && (
-          <div className="fkr-mycard__qr">
-            <TicketQr code={reg.ticketCode} size={150} label={`QR ticket ${reg.registrationNumber}`} />
-          </div>
-        )}
         {confirming ? (
           <div className="fkr-mycard__confirm" role="group" aria-label="Confirm cancellation">
             <span>Cancel this registration?</span>
@@ -89,10 +82,10 @@ export default function MyRegistrationCard({ reg, onChanged }: { reg: Registrati
                 Complete payment
               </Link>
             )}
-            {reg.ticketCode && (
-              <button type="button" className="fke-btn fke-btn--ghost fke-btn--sm" aria-expanded={showQr} onClick={() => setShowQr((v) => !v)}>
-                <QrCode size={15} aria-hidden="true" /> {showQr ? "Hide QR" : "Show QR"}
-              </button>
+            {reg.liveTicket && (
+              <Link to={`/events/registrations/${reg.id}`} className="fke-btn fke-btn--primary fke-btn--sm">
+                <QrCode size={15} aria-hidden="true" /> Open live ticket
+              </Link>
             )}
             {reg.status === "confirmed" && online && upcoming && <JoinMeetingButton eventId={ev.id} />}
             {reg.canCancel && (

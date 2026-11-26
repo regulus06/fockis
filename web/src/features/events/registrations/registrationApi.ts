@@ -115,9 +115,26 @@ export interface Registration {
   isGuest: boolean;
   canCancel: boolean;
   canPay: boolean;
+  /** Always null: fixed QR codes are no longer issued. */
   ticketCode: string | null;
+  /** The holder can open the live, auto-refreshing entry QR. */
+  liveTicket?: { securityMode: "standard" | "enhanced"; ttlSeconds: number } | null;
+  /** Entry blocked for now (e.g. "dispute"). */
+  admissionHold?: string | null;
   event: RegistrationEventSummary | null;
   userId?: string | null;
+}
+
+export interface AdmissionTicket {
+  token: string;
+  issuedAt: string;
+  expiresAt: string;
+  ttlSeconds: number;
+  serverTime: string;
+  securityMode: "standard" | "enhanced";
+  attendanceStatus: AttendanceStatus;
+  checkedInAt: string | null;
+  holder: { name: string; photoUrl: string | null };
 }
 
 export interface RegistrationDetail extends Registration {
@@ -178,7 +195,14 @@ export interface OrganizerList {
   stats: RegistrationStats;
   ticketTypes: { id: string; name: string }[];
   questions: RegistrationQuestion[];
-  settings: { individualCheckIn: boolean; qrCheckIn: boolean; requireApproval: boolean; waitlistEnabled: boolean };
+  settings: {
+    individualCheckIn: boolean;
+    qrCheckIn: boolean;
+    requireApproval: boolean;
+    waitlistEnabled: boolean;
+    ticketSecurity?: "standard" | "enhanced";
+    allowReentry?: boolean;
+  };
   isOwner: boolean;
 }
 
@@ -193,10 +217,33 @@ export interface OrganizerQuery {
   limit?: number;
 }
 
+export interface CheckInHolder {
+  name: string;
+  photoUrl: string | null;
+  ticketName: string;
+  registrationNumber: string;
+  attendeeCount: number;
+  isGuest: boolean;
+}
+
 export interface CheckInResult {
-  result: "checked_in" | "already_checked_in" | "undone" | "preview";
+  /** verify = staff must confirm the person's identity; reentry = allowed second entry. */
+  result: "checked_in" | "already_checked_in" | "undone" | "preview" | "verify" | "reentry";
   message: string;
   registration: Registration;
+  holder?: CheckInHolder;
+  grant?: string;
+  securityMode?: "standard" | "enhanced";
+}
+
+export interface CheckInBody {
+  code?: string;
+  registrationId?: string;
+  attendeeIndex?: number;
+  undo?: boolean;
+  preview?: boolean;
+  grant?: string;
+  identityConfirmed?: boolean;
 }
 
 const e = encodeURIComponent;
@@ -236,8 +283,11 @@ export const registrationApi = {
   setStatus: (registrationId: string, action: "approve" | "reject" | "cancel" | "promote", reason?: string) =>
     request<Registration>(`${EVENTS_URL}/registrations/${e(registrationId)}/status`, { method: "PATCH", body: JSON.stringify({ action, reason }) }),
 
-  checkIn: (eventId: string, body: { code?: string; registrationId?: string; attendeeIndex?: number; undo?: boolean; preview?: boolean }) =>
-    request<CheckInResult>(`${EVENTS_URL}/${e(eventId)}/check-in`, json(body)),
+  checkIn: (eventId: string, body: CheckInBody) => request<CheckInResult>(`${EVENTS_URL}/${e(eventId)}/check-in`, json(body)),
+
+  /** Live entry QR for the ticket holder (short-lived; refresh before expiresAt). */
+  admission: (registrationId: string, key?: string | null, signal?: AbortSignal) =>
+    request<AdmissionTicket>(`${EVENTS_URL}/registrations/${e(registrationId)}/admission${qs({ key })}`, { signal }),
 
   /** Downloads CSV / Excel through the authenticated API and saves it. */
   async exportFile(eventId: string, format: "csv" | "xlsx", query: OrganizerQuery): Promise<void> {

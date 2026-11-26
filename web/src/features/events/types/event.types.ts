@@ -83,6 +83,12 @@ export interface RegistrationSettingsInput {
   selectedGroupIds: string[];
   earlyJoinMinutes: number;
   checkInStaffIds: string[];
+  /** Standard: live QR, account-bound, single use. Enhanced: + staff identity check, no guests. */
+  ticketSecurity?: "standard" | "enhanced";
+  /** Lifetime of one live entry QR: 15, 30 or 60 seconds. */
+  qrTtlSeconds?: number;
+  allowReentry?: boolean;
+  showHolderPhoto?: boolean;
 }
 
 /** Registration facts every viewer gets with an event. */

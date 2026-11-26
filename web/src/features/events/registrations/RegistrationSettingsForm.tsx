@@ -6,7 +6,7 @@
 ============================================================================ */
 
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronUp, ClipboardCheck, Globe, Plus, Ticket, Trash2, Users, UserRoundCheck, Lock, Ban } from "lucide-react";
+import { ChevronDown, ChevronUp, ClipboardCheck, Globe, Plus, ShieldCheck, Ticket, Trash2, Users, UserRoundCheck, Lock, Ban } from "lucide-react";
 
 import { EVENTS_URL, request } from "../services/eventsApi";
 import type { AttendanceOption, QuestionType, RegistrationQuestion, RegistrationSettingsInput, TicketTypeInput } from "../types/event.types";
@@ -43,6 +43,10 @@ export function defaultRegistrationSettings(isOnline: boolean): RegistrationSett
     selectedGroupIds: [],
     earlyJoinMinutes: 15,
     checkInStaffIds: [],
+    ticketSecurity: "standard",
+    qrTtlSeconds: 30,
+    allowReentry: false,
+    showHolderPhoto: false,
   };
 }
 
@@ -223,7 +227,12 @@ export default function RegistrationSettingsForm({
           <div className="fkr-toggles">
             <Toggle checked={s.waitlistEnabled} onChange={(v) => set({ waitlistEnabled: v })} label="Waitlist" hint="When full, people join a waitlist and move in automatically when places open." />
             <Toggle checked={s.requireApproval} onChange={(v) => set({ requireApproval: v })} label="Approve each registration" hint="You review registrations before they're confirmed." />
-            <Toggle checked={s.allowGuests && !paid} onChange={(v) => set({ allowGuests: v })} label="Allow guests without a Fockis account" hint={paid ? "Only for free events." : "Public free events only."} />
+            <Toggle
+              checked={s.allowGuests && !paid && s.ticketSecurity !== "enhanced"}
+              onChange={(v) => set({ allowGuests: v })}
+              label="Allow guests without a Fockis account"
+              hint={paid ? "Only for free events." : s.ticketSecurity === "enhanced" ? "Not available with Enhanced ticket security." : "Public free events only."}
+            />
           </div>
 
           <h4 className="fkr-subhead">
@@ -386,6 +395,60 @@ export default function RegistrationSettingsForm({
             <Toggle checked={s.confirmationEmail} onChange={(v) => set({ confirmationEmail: v })} label="Send a confirmation email" />
             <Toggle checked={s.reminders} onChange={(v) => set({ reminders: v })} label="Send a reminder 24 hours before" />
           </div>
+
+          {s.qrCheckIn && (
+            <>
+              <h4 className="fkr-subhead">
+                <ShieldCheck size={16} aria-hidden="true" /> Ticket security
+              </h4>
+              <p className="fke-muted">
+                Every ticket shows a live QR code that changes on its own and only opens for the person who registered. Screenshots and
+                copies stop working within seconds, and each ticket gets in once. These protections are always on.
+              </p>
+              <div className="fke-choice-grid" role="radiogroup" aria-label="Ticket security">
+                {[
+                  { v: "standard" as const, l: "Standard", h: "Live QR, linked to the attendee's account, one entry per ticket." },
+                  { v: "enhanced" as const, l: "Enhanced", h: "Standard, plus staff confirm each person's identity (name and profile photo). Fockis account required." },
+                ].map((o) => (
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={(s.ticketSecurity ?? "standard") === o.v}
+                    key={o.v}
+                    className={`fke-choice ${(s.ticketSecurity ?? "standard") === o.v ? "is-active" : ""}`}
+                    onClick={() => set({ ticketSecurity: o.v, ...(o.v === "enhanced" ? { allowGuests: false, showHolderPhoto: true } : {}) })}
+                  >
+                    <ShieldCheck size={18} aria-hidden="true" />
+                    <strong>{o.l}</strong>
+                    <small>{o.h}</small>
+                  </button>
+                ))}
+              </div>
+              <label className="fke-field fke-field--narrow">
+                <span>QR code changes every</span>
+                <select value={s.qrTtlSeconds ?? 30} onChange={(e) => set({ qrTtlSeconds: Number(e.target.value) })}>
+                  <option value={15}>15 seconds</option>
+                  <option value={30}>30 seconds (recommended)</option>
+                  <option value={60}>60 seconds</option>
+                </select>
+              </label>
+              <div className="fkr-toggles">
+                <Toggle
+                  checked={Boolean(s.allowReentry)}
+                  onChange={(v) => set({ allowReentry: v })}
+                  label="Allow re-entry"
+                  hint="A checked-in ticket can be scanned again (for people who step out). Off: each ticket gets in once."
+                />
+                {s.ticketSecurity !== "enhanced" && (
+                  <Toggle
+                    checked={Boolean(s.showHolderPhoto)}
+                    onChange={(v) => set({ showHolderPhoto: v })}
+                    label="Show staff the attendee's profile photo when scanning"
+                  />
+                )}
+              </div>
+            </>
+          )}
         </>
       )}
 
