@@ -7,7 +7,10 @@ import {
   MessageCircle,
   ExternalLink,
   Globe,
+  Heart,
+  History,
   Lock,
+  PauseCircle,
   MapPin,
   Pencil,
   Trash2,
@@ -34,6 +37,7 @@ import EventRegistrationPanel from "../registrations/EventRegistrationPanel";
 import { categoryMeta } from "../constants/eventCategories";
 import { publishEventPatch, useSyncedEvent } from "../hooks/eventSync";
 import { useEventClock } from "../hooks/useEventClock";
+import { useEventSave } from "../hooks/useEventSave";
 import { eventsApi, EventsApiError, isAbortError } from "../services/eventsApi";
 import type { FockisEvent } from "../types/event.types";
 import { downloadIcs } from "../utils/eventCalendar";
@@ -85,7 +89,8 @@ function Details({ initial, onChanged }: { initial: FockisEvent; onChanged: (eve
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [inviting, setInviting] = useState(false);
-  const [confirming, setConfirming] = useState<"cancel" | "delete" | null>(null);
+  const [confirming, setConfirming] = useState<"cancel" | "delete" | "postpone" | null>(null);
+  const save = useEventSave(event);
   const [reason, setReason] = useState("");
   const [related, setRelated] = useState<FockisEvent[]>([]);
   const [relatedLoading, setRelatedLoading] = useState(true);
@@ -135,6 +140,30 @@ function Details({ initial, onChanged }: { initial: FockisEvent; onChanged: (eve
       setNotice("Event cancelled. It no longer appears in discovery or the feed.");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to cancel the event.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function postponeEvent() {
+    setBusy(true);
+    setError("");
+
+    try {
+      const updated = await eventsApi.postpone(event.id, reason);
+
+      publishEventPatch({
+        id: updated.id,
+        isPostponed: true,
+        status: "postponed",
+        postponedAt: updated.postponedAt,
+        postponementReason: updated.postponementReason,
+      });
+      onChanged(updated);
+      setConfirming(null);
+      setNotice("Event postponed. Edit the event and set the new date when you have it.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to postpone the event.");
     } finally {
       setBusy(false);
     }
@@ -190,13 +219,44 @@ function Details({ initial, onChanged }: { initial: FockisEvent; onChanged: (eve
           </div>
         </div>
       )}
-      {status === "ended" && (
-        <div className="fke-banner" role="status">
-          <CalendarClock size={18} aria-hidden="true" />
-          <strong>This event has ended.</strong>
+      {status === "postponed" && (
+        <div className="fke-banner fke-banner--warning" role="status">
+          <PauseCircle size={18} aria-hidden="true" />
+          <div>
+            <strong>This event has been postponed.</strong>
+            <p>{event.postponementReason || "The organizer will share the new date. Registrations are paused until then."}</p>
+          </div>
         </div>
       )}
+      {status === "scheduled" && event.publishAt && (
+        <div className="fke-banner" role="status">
+          <CalendarClock size={18} aria-hidden="true" />
+          <div>
+            <strong>Not published yet.</strong>
+            <p>Only you and your event managers can see it until{" "}
+              {new Date(event.publishAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}.</p>
+          </div>
+        </div>
+      )}
+      {status === "ended" && (
+        <section className="fke-ended" role="status" aria-labelledby="fke-ended-title">
+          <CalendarClock size={22} aria-hidden="true" />
+          <div>
+            <h2 id="fke-ended-title">This event has ended</h2>
+            <p>It took place {fullRange(event)}. The page stays here so links keep working.</p>
+            <div className="fke-ended__actions">
+              <Link to="/events" className="fke-btn fke-btn--primary fke-btn--sm">
+                Find upcoming events
+              </Link>
+              <Link to="/events/past" className="fke-btn fke-btn--ghost fke-btn--sm">
+                <History size={15} aria-hidden="true" /> Past events
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
       {error && <div className="fke-banner fke-banner--danger" role="alert">{error}</div>}
+      {save.error && <div className="fke-banner fke-banner--danger" role="alert">{save.error}</div>}
       {notice && <div className="fke-banner fke-banner--success" role="status">{notice}</div>}
 
       <div className="fke-details__layout">
@@ -205,6 +265,16 @@ function Details({ initial, onChanged }: { initial: FockisEvent; onChanged: (eve
             <div className="fke-details__actions">
               <EventRsvpActions event={event} now={now} />
               <EventShareButton event={event} />
+              <button
+                type="button"
+                className={`fke-btn fke-btn--ghost fke-save ${save.saved ? "is-active" : ""}`}
+                aria-pressed={save.saved}
+                disabled={save.pending}
+                onClick={() => void save.toggle()}
+              >
+                <Heart size={16} fill={save.saved ? "currentColor" : "none"} aria-hidden="true" />
+                {save.saved ? "Saved" : "Save"}
+              </button>
               {active && (
                 <button
                   type="button"
@@ -327,7 +397,18 @@ function Details({ initial, onChanged }: { initial: FockisEvent; onChanged: (eve
                     <Pencil size={16} aria-hidden="true" /> Edit event
                   </Link>
                 )}
-                {active && (
+                {(active || status === "scheduled") && (
+                  <button
+                    type="button"
+                    className="fke-btn fke-btn--outline"
+                    disabled={busy}
+                    aria-expanded={confirming === "postpone"}
+                    onClick={() => setConfirming(confirming === "postpone" ? null : "postpone")}
+                  >
+                    <PauseCircle size={16} aria-hidden="true" /> Postpone
+                  </button>
+                )}
+                {(active || status === "postponed" || status === "scheduled") && (
                   <button
                     type="button"
                     className="fke-btn fke-btn--danger-ghost"
@@ -348,6 +429,27 @@ function Details({ initial, onChanged }: { initial: FockisEvent; onChanged: (eve
                   <Trash2 size={16} aria-hidden="true" /> Delete
                 </button>
               </div>
+
+              {confirming === "postpone" && (
+                <div className="fke-confirm" role="group" aria-label="Confirm postponement">
+                  <p>
+                    Postponing keeps the event and everyone's registrations, but pauses new registrations and tells
+                    people the date will change. Edit the dates later to put it back on the calendar.
+                  </p>
+                  <label className="fke-field">
+                    <span>Reason (optional, shown on the event)</span>
+                    <textarea rows={2} maxLength={1000} value={reason} onChange={(changeEvent) => setReason(changeEvent.target.value)} />
+                  </label>
+                  <div className="fke-confirm__actions">
+                    <button type="button" className="fke-btn fke-btn--ghost" onClick={() => setConfirming(null)} disabled={busy}>
+                      Keep date
+                    </button>
+                    <button type="button" className="fke-btn fke-btn--primary" onClick={() => void postponeEvent()} disabled={busy}>
+                      {busy ? "Postponing…" : "Postpone event"}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {confirming === "cancel" && (
                 <div className="fke-confirm" role="group" aria-label="Confirm cancellation">

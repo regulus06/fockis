@@ -172,6 +172,24 @@ export class CreateEventDto {
   @IsBoolean()
   isDraft?: boolean;
 
+  /** Scheduled publication (ISO date). Empty or past = publish now. */
+  @IsOptional()
+  @Transform(({ value }) => (value === "null" ? null : value))
+  @ValidateIf((_, value) => value !== null && value !== "")
+  @IsDateString({}, { message: "Enter a valid publication date and time." })
+  publishAt?: string | null;
+
+  /** ISO 3166-1 alpha-2 country of the venue. */
+  @IsOptional()
+  @IsString()
+  @Matches(/^$|^[A-Za-z]{2}$/, { message: "Choose a valid country." })
+  country?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  city?: string;
+
   /** Notify the organization's active members when the event is published. */
   @IsOptional()
   @OptionalBoolean()

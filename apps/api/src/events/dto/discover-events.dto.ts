@@ -27,17 +27,20 @@ export const EVENT_WHEN_VALUES = [
   "tomorrow",
   "this-week",
   "this-weekend",
+  "this-month",
   "next-30-days",
 ] as const;
 
-export const EVENT_FORMAT_VALUES = ["any", "online", "in-person"] as const;
+export const EVENT_FORMAT_VALUES = ["any", "online", "in-person", "hybrid"] as const;
+export const EVENT_PRICE_VALUES = ["any", "free", "paid"] as const;
 export const EVENT_AVAILABILITY_VALUES = ["any", "open"] as const;
-export const EVENT_SORT_VALUES = ["relevance", "date", "popularity", "distance"] as const;
+export const EVENT_SORT_VALUES = ["relevance", "date", "popularity", "distance", "price"] as const;
 
 export type EventWhen = (typeof EVENT_WHEN_VALUES)[number];
 export type EventFormat = (typeof EVENT_FORMAT_VALUES)[number];
 export type EventAvailability = (typeof EVENT_AVAILABILITY_VALUES)[number];
 export type EventSort = (typeof EVENT_SORT_VALUES)[number];
+export type EventPrice = (typeof EVENT_PRICE_VALUES)[number];
 
 /**
  * GET /events/discover
@@ -95,6 +98,29 @@ export class DiscoverEventsQueryDto {
   @EmptyToUndefined()
   @IsIn(EVENT_AVAILABILITY_VALUES as unknown as string[])
   availability?: EventAvailability;
+
+  @IsOptional()
+  @EmptyToUndefined()
+  @IsIn(EVENT_PRICE_VALUES as unknown as string[])
+  price?: EventPrice;
+
+  /** ISO 3166-1 alpha-2 country code. */
+  @IsOptional()
+  @EmptyToUndefined()
+  @Matches(/^[A-Za-z]{2}$/, { message: "Choose a valid country." })
+  country?: string;
+
+  @IsOptional()
+  @EmptyToUndefined()
+  @IsString()
+  @MaxLength(120)
+  city?: string;
+
+  /** Only the categories the viewer engages with most ("My Interests"). */
+  @IsOptional()
+  @OptionalBoolean()
+  @IsBoolean()
+  interests?: boolean;
 
   @IsOptional()
   @EmptyToUndefined()
@@ -180,4 +206,28 @@ export class ListEventsQueryDto {
   @OptionalBoolean()
   @IsBoolean()
   includeEnded?: boolean;
+}
+
+/** GET /events/past */
+export class PastEventsQueryDto {
+  @IsOptional()
+  @EmptyToUndefined()
+  @IsIn(["public", "mine"])
+  scope?: "public" | "mine";
+
+  @IsOptional()
+  @EmptyToUndefined()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(500)
+  page?: number;
+
+  @IsOptional()
+  @EmptyToUndefined()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  limit?: number;
 }

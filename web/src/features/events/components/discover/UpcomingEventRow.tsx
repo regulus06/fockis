@@ -5,6 +5,7 @@ import {
   Clock,
   ExternalLink,
   Globe,
+  Heart,
   Link2,
   MapPin,
   MoreHorizontal,
@@ -17,6 +18,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { useSyncedEvent } from "../../hooks/eventSync";
 import { useEventRsvp } from "../../hooks/useEventRsvp";
+import { useEventSave } from "../../hooks/useEventSave";
 import type { FockisEvent } from "../../types/event.types";
 import { downloadIcs } from "../../utils/eventCalendar";
 import { absoluteEventUrl, eventPlace, eventUrl } from "../../utils/eventMedia";
@@ -35,6 +37,7 @@ export default function UpcomingEventRow({ event: source, now }: Props) {
   const navigate = useNavigate();
   const event = useSyncedEvent(source);
   const { choose, pending, error } = useEventRsvp(event);
+  const save = useEventSave(event);
   const active = isEventActive(event, now);
   const going = event.viewerRsvp === "going";
   const interested = event.viewerRsvp === "interested";
@@ -160,6 +163,18 @@ export default function UpcomingEventRow({ event: source, now }: Props) {
 
         {active && event.isOwner && <span className="fkd-pill fkd-pill--navy">Hosting</span>}
 
+        <button
+          type="button"
+          className={`fkd-save ${save.saved ? "is-active" : ""}`}
+          aria-pressed={save.saved}
+          aria-label={save.saved ? `Remove ${event.title} from saved events` : `Save ${event.title}`}
+          title={save.saved ? "Saved" : "Save"}
+          disabled={save.pending}
+          onClick={() => void save.toggle()}
+        >
+          <Heart size={17} strokeWidth={2.2} fill={save.saved ? "currentColor" : "none"} aria-hidden="true" />
+        </button>
+
         <div className="fkd-menu" ref={menuRef}>
           <button
             type="button"
@@ -206,9 +221,9 @@ export default function UpcomingEventRow({ event: source, now }: Props) {
         </div>
       </div>
 
-      {(error || copied) && (
-        <small className={copied ? "fkd-row__note" : "fke-rsvp__error"} role={error ? "alert" : "status"}>
-          {error || "Link copied"}
+      {(error || save.error || copied) && (
+        <small className={copied ? "fkd-row__note" : "fke-rsvp__error"} role={error || save.error ? "alert" : "status"}>
+          {error || save.error || "Link copied"}
         </small>
       )}
     </article>

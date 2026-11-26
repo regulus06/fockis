@@ -13,15 +13,25 @@ import { eventsApi, isAbortError } from "../services/eventsApi";
 import type { FockisEvent } from "../types/event.types";
 import { getEventStatus } from "../utils/eventTime";
 
-export type MyEventsTab = "all" | "registered" | "upcoming" | "going" | "interested" | "hosting" | "past" | "cancelled";
+export type MyEventsTab =
+  | "all"
+  | "registered"
+  | "upcoming"
+  | "going"
+  | "interested"
+  | "saved"
+  | "hosting"
+  | "past"
+  | "cancelled";
 
-/* "going" = Attending and "interested" = Saved (ids kept so old links work). */
+/* "going" = Attending (id kept so old links work). "saved" = private bookmarks. */
 const TABS: Array<{ id: MyEventsTab; label: string }> = [
   { id: "all", label: "All" },
   { id: "registered", label: "Registered" },
   { id: "upcoming", label: "Upcoming" },
   { id: "going", label: "Attending" },
-  { id: "interested", label: "Saved" },
+  { id: "interested", label: "Interested" },
+  { id: "saved", label: "Saved" },
   { id: "hosting", label: "Hosting" },
   { id: "past", label: "Past" },
   { id: "cancelled", label: "Cancelled" },
@@ -33,7 +43,8 @@ const EMPTY: Record<MyEventsTab, string> = {
   upcoming: "Nothing on your calendar yet.",
   hosting: "You haven't created any events yet.",
   going: "You haven't said you're attending anything yet.",
-  interested: "Events you save (Interested) show up here.",
+  interested: "Events you mark as Interested show up here.",
+  saved: "Tap the heart on any event to save it for later.",
   past: "Events you went to or hosted will be kept here.",
   cancelled: "No cancelled events or registrations.",
 };
@@ -50,6 +61,7 @@ export default function MyEventsPage({ initialTab = "all" }: { initialTab?: MyEv
   const tab: MyEventsTab = isTab(tabParam) ? tabParam : initialTab;
   const [created, setCreated] = useState<FockisEvent[]>([]);
   const [rsvps, setRsvps] = useState<FockisEvent[]>([]);
+  const [saved, setSaved] = useState<FockisEvent[]>([]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -69,11 +81,13 @@ export default function MyEventsPage({ initialTab = "all" }: { initialTab?: MyEv
         if (isAbortError(caught)) throw caught;
         return { items: [] as Registration[] };
       }),
+      eventsApi.getSaved(controller.signal),
     ])
-      .then(([mine, joined, regs]) => {
+      .then(([mine, joined, regs, bookmarks]) => {
         setCreated(mine);
         setRsvps(joined);
         setRegistrations(regs.items);
+        setSaved(bookmarks);
       })
       .catch((caught) => {
         if (!isAbortError(caught)) setError(caught instanceof Error ? caught.message : "Unable to load your events.");
@@ -97,7 +111,8 @@ export default function MyEventsPage({ initialTab = "all" }: { initialTab?: MyEv
 
   const lists = useMemo(() => {
     const status = (event: FockisEvent) => getEventStatus(event, now);
-    const isActive = (event: FockisEvent) => ["upcoming", "live"].includes(status(event));
+    // Postponed and not-yet-published events still belong on your calendar.
+    const isActive = (event: FockisEvent) => !["ended", "cancelled"].includes(status(event));
     const asc = (a: FockisEvent, b: FockisEvent) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
     const desc = (a: FockisEvent, b: FockisEvent) => -asc(a, b);
 
@@ -108,10 +123,11 @@ export default function MyEventsPage({ initialTab = "all" }: { initialTab?: MyEv
       hosting: created.filter(isActive).sort(asc),
       going: rsvps.filter((event) => event.viewerRsvp === "going" && isActive(event)).sort(asc),
       interested: rsvps.filter((event) => event.viewerRsvp === "interested" && isActive(event)).sort(asc),
+      saved: [...saved].sort(asc),
       past: all.filter((event) => status(event) === "ended").sort(desc),
       cancelled: all.filter((event) => status(event) === "cancelled").sort(desc),
     } satisfies Record<MyEventsTab, FockisEvent[]>;
-  }, [all, created, rsvps, now]);
+  }, [all, created, rsvps, saved, now]);
 
   const regLists = useMemo(() => {
     const ended = (r: Registration) => !r.event || new Date(r.event.endDate).getTime() <= now;

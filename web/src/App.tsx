@@ -262,6 +262,7 @@ import CreateEventPage from "./features/events/pages/CreateEventPage";
 import EditEventPage from "./features/events/pages/EditEventPage";
 import EventDetailsPage from "./features/events/pages/EventDetailsPage";
 import MyEventsPage from "./features/events/pages/MyEventsPage";
+import PastEventsPage from "./features/events/pages/PastEventsPage";
 import MyRsvpsPage from "./features/events/pages/MyRsvpsPage";
 import EventRegistrationPage from "./features/events/registrations/RegistrationPage";
 import RegistrationConfirmationPage from "./features/events/registrations/RegistrationConfirmationPage";
@@ -2252,6 +2253,11 @@ function FockisApp(): React.JSX.Element {
         <Route
           path="/events/my-rsvps"
           element={<MyRsvpsPage />}
+        />
+
+        <Route
+          path="/events/past"
+          element={<PastEventsPage />}
         />
 
         {/* Registration: ticket / confirmation (guests open it with ?key=). */}

@@ -41,6 +41,7 @@ import {
   activeEventFilter,
   getEventStatus,
   isEventActive,
+  isScheduled,
 } from "../utils/event-lifecycle";
 
 import {
@@ -160,6 +161,28 @@ export interface SerializedEvent {
   canManage: boolean;
   /** Host of the meeting link ("meet.fockis.com", "zoom.us"…), managers only. */
   meetingProvider?: string;
+  /** in_person | online | hybrid (in person with an online option). */
+  format: EventFormatKind;
+  country: string;
+  city: string;
+  isPostponed: boolean;
+  postponedAt: string | null;
+  postponementReason: string;
+  /** Scheduled publication time (managers only; others never see unpublished events). */
+  publishAt: string | null;
+  isSaved: boolean;
+}
+
+export type EventFormatKind = "in_person" | "online" | "hybrid";
+
+/** Counts for the "My Events" card (all real, from the database). */
+export interface MyEventsSummary {
+  upcoming: number;
+  registered: number;
+  tickets: number;
+  saved: number;
+  hosted: number;
+  past: number;
 }
 
 export interface RsvpResult {
@@ -207,6 +230,30 @@ function meetingProviderOf(url: string): string {
     return "";
   }
 }
+
+/** In person / online / hybrid, from what is stored (no extra field to keep in sync). */
+export function formatOf(event: { isOnline?: boolean; registration?: unknown }): EventFormatKind {
+  if (event.isOnline) return "online";
+  const options = (event.registration as { attendanceOptions?: unknown } | null | undefined)?.attendanceOptions;
+  return Array.isArray(options) && options.includes("online") ? "hybrid" : "in_person";
+}
+
+/** MongoDB filters matching formatOf(). */
+export function formatFilter(format: string | undefined): Filter {
+  if (format === "online") return { isOnline: true };
+  if (format === "hybrid") return { isOnline: { $ne: true }, "registration.attendanceOptions": "online" };
+  if (format === "in-person") return { isOnline: { $ne: true }, "registration.attendanceOptions": { $ne: "online" } };
+  return {};
+}
+
+/** Free: no registration settings (RSVP events) or settings marked free. Paid: at least one priced ticket. */
+export function priceFilter(price: string | undefined): Filter {
+  if (price === "free") return { "registration.isFree": { $ne: false } };
+  if (price === "paid") return { "registration.isFree": false };
+  return {};
+}
+
+const COUNTRY_CODE = /^[A-Z]{2}$/;
 
 function and(...filters: Filter[]): Filter {
   const parts = filters.filter((filter) => filter && Object.keys(filter).length);
@@ -519,6 +566,14 @@ export class EventsService {
       isArchived: Boolean(event.isArchived),
       canManage: manager,
       ...(manager && event.onlineUrl ? { meetingProvider: meetingProviderOf(event.onlineUrl) } : {}),
+      format: formatOf(event),
+      country: event.country ?? "",
+      city: event.city ?? "",
+      isPostponed: Boolean(event.isPostponed),
+      postponedAt: isoOrNull(event.postponedAt),
+      postponementReason: event.postponementReason ?? "",
+      publishAt: manager ? isoOrNull(event.publishAt) : null,
+      isSaved: Boolean(viewerId && idList(event.savedIds).includes(viewerId)),
     };
   }
 
@@ -688,6 +743,8 @@ export class EventsService {
       }
 
       const isOnline = dto.isOnline ?? false;
+      const publishAt = this.publishAtOf(dto.publishAt, endDate);
+      const country = this.countryOf(dto.country);
 
       // Organization events: only the organization's event managers.
       const organizationId = dto.organizationId ? this.objectId(dto.organizationId, "organization") : null;
@@ -778,9 +835,14 @@ export class EventsService {
         interestedIds: [],
         invitedIds: [],
         isCancelled: false,
+        publishAt,
+        country: isOnline ? "" : country,
+        city: isOnline ? "" : (dto.city ?? "").trim().slice(0, 120),
+        savedIds: [],
       });
 
-      if (organizationId && !event.isDraft && dto.notifyMembers) await this.notifyMembers(event);
+      // Members hear about it once it is visible: now, or when its publication time comes (not sent then).
+      if (organizationId && !event.isDraft && !publishAt && dto.notifyMembers) await this.notifyMembers(event);
 
       const [serialized] = await this.serializeMany(
         [event.toObject() as unknown as EventLean],
@@ -917,6 +979,16 @@ export class EventsService {
       }
       case "next-30-days":
         return { startDate: { $lt: new Date(now.getTime() + 30 * DAY_MS) } };
+      case "this-month": {
+        // Until the first day of next month in the viewer's calendar
+        // (dayStart is the viewer's local midnight, as a UTC instant).
+        const local = new Date(start + 12 * 3_600_000);
+        const day = Number(
+          new Intl.DateTimeFormat("en-US", { day: "numeric", timeZone: timeZone || "UTC" }).format(local),
+        );
+        const daysInMonth = new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth() + 1, 0)).getUTCDate();
+        return { startDate: { $lt: new Date(start + (daysInMonth - day + 1) * DAY_MS) } };
+      }
       default:
         return {};
     }
@@ -971,10 +1043,24 @@ export class EventsService {
       filters.push({ startDate: { $lte: new Date(query.to) } });
     }
 
-    if (query.format === "online") {
-      filters.push({ isOnline: true });
-    } else if (query.format === "in-person") {
-      filters.push({ isOnline: { $ne: true } });
+    filters.push(formatFilter(query.format));
+    filters.push(priceFilter(query.price));
+
+    if (query.country) {
+      filters.push({ country: query.country.toUpperCase() });
+    }
+
+    if (query.city?.trim()) {
+      const cityPattern = new RegExp(`^\\s*${escapeRegex(query.city.trim())}\\s*$`, "i");
+      // Events created before the city field: match the city inside the address.
+      filters.push({ $or: [{ city: cityPattern }, { address: new RegExp(escapeRegex(query.city.trim()), "i") }] });
+    }
+
+    if (query.interests && viewerId) {
+      const affinity = await this.categoryAffinity(viewerId);
+      const top = Array.from(affinity.entries()).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([category]) => category);
+      // No history yet: nothing to narrow by, show everything.
+      if (top.length) filters.push({ category: { $in: top } });
     }
 
     if (query.availability === "open") {
@@ -1013,6 +1099,17 @@ export class EventsService {
       },
     };
 
+    if (sort === "price") {
+      // Lowest ticket price; RSVP events (no settings) count as free.
+      computed._price = {
+        $cond: [
+          { $eq: ["$registration.isFree", false] },
+          { $min: { $ifNull: ["$registration.ticketTypes.price", [0]] } },
+          0,
+        ],
+      };
+    }
+
     if (q) {
       computed._titleHit = {
         $cond: [{ $regexMatch: { input: "$title", regex: escapeRegex(q), options: "i" } }, 1, 0],
@@ -1037,7 +1134,9 @@ export class EventsService {
     }
 
     const sortStage: Record<string, 1 | -1> =
-      sort === "popularity"
+      sort === "price"
+        ? { _price: 1, startDate: 1, _id: 1 }
+        : sort === "popularity"
         ? { _pop: -1, startDate: 1, _id: 1 }
         : sort === "distance"
           ? { _dist2: 1, startDate: 1, _id: 1 }
@@ -1339,6 +1438,28 @@ export class EventsService {
       if (dto.visibility !== undefined) event.visibility = dto.visibility;
       if (dto.timeZone !== undefined) event.timeZone = dto.timeZone;
       if (dto.capacity !== undefined) event.capacity = dto.capacity;
+      if (dto.publishAt !== undefined) {
+        // Once an event is public it can't be "unpublished" by a future time (people may be registered).
+        const alreadyPublic = !isScheduled(event) && !event.isDraft;
+        const next = this.publishAtOf(dto.publishAt, endDate);
+        if (next && alreadyPublic && Number(event.registeredSeats ?? 0) + idList(event.attendeeIds).length > 1) {
+          throw new BadRequestException("This event is already published and people have joined it, so it can't be scheduled for later.");
+        }
+        event.publishAt = next;
+      }
+      if (dto.country !== undefined) event.country = isOnline ? "" : this.countryOf(dto.country);
+      if (dto.city !== undefined) event.city = isOnline ? "" : dto.city.trim().slice(0, 120);
+      if (isOnline) {
+        event.country = "";
+        event.city = "";
+      }
+
+      // New dates end a postponement (the event is back on the calendar).
+      if (datesChanged && event.isPostponed) {
+        event.isPostponed = false;
+        event.postponedAt = null;
+        event.postponementReason = "";
+      }
 
       // Never shrink below what registrations already hold.
       const heldSeats = Number(event.registeredSeats ?? 0);
@@ -1658,6 +1779,154 @@ export class EventsService {
   }
 
   /* ==========================================================================
+     POSTPONE (date to be announced). Rescheduling via update() lifts it.
+  ========================================================================== */
+
+  async postpone(userId: string, eventId: string, reason?: string) {
+    const event = await this.eventModel.findById(this.objectId(eventId)).exec();
+    if (!event) throw new NotFoundException("Event not found.");
+    if (!(await this.canManageEvent(event, userId))) {
+      throw new ForbiddenException("Only the event creator or the organization's event managers can postpone this event.");
+    }
+    const status = getEventStatus(event);
+    if (status === EventStatus.CANCELLED) throw new BadRequestException("A cancelled event can't be postponed.");
+    if (status === EventStatus.ENDED) throw new BadRequestException("This event has already ended.");
+
+    if (!event.isPostponed) {
+      event.isPostponed = true;
+      event.postponedAt = new Date();
+      event.postponementReason = (reason ?? "").trim().slice(0, 1000);
+      event.updatedBy = this.objectId(userId, "user");
+      await event.save();
+      // Registrants are told the date changed (same channel as a reschedule).
+      this.emitter?.emit("events.updated", { eventId: String(event._id), timeChanged: true, locationChanged: false, postponed: true });
+    }
+
+    const [serialized] = await this.serializeMany([event.toObject() as unknown as EventLean], userId, undefined, undefined,
+      event.organizationId ? [String(event.organizationId)] : undefined);
+    return { success: true, event: serialized };
+  }
+
+  /* ==========================================================================
+     SAVED (bookmarks)
+  ========================================================================== */
+
+  async setSaved(userId: string, eventId: string, saved: boolean) {
+    const { event } = await this.loadVisible(eventId, userId);
+    const user = this.objectId(userId, "user");
+    await this.eventModel
+      .updateOne({ _id: event._id }, saved ? { $addToSet: { savedIds: user } } : { $pull: { savedIds: user } })
+      .exec();
+    return { success: true, eventId: String(event._id), saved };
+  }
+
+  /** Saved events the viewer can still see: upcoming first, then past (most recent first). */
+  async savedEvents(userId: string): Promise<SerializedEvent[]> {
+    const user = this.objectId(userId, "user");
+    const { filter } = await this.visibleFilter(userId);
+    const now = new Date();
+    const events = await this.eventModel
+      .find(and(filter, { savedIds: user }))
+      .sort({ startDate: 1 })
+      .limit(MAX_HISTORY)
+      .lean<EventLean[]>()
+      .exec();
+    const active = events.filter((event) => isEventActive(event, now));
+    const rest = events.filter((event) => !isEventActive(event, now)).reverse();
+    return this.serializeMany([...active, ...rest], userId, now);
+  }
+
+  /* ==========================================================================
+     MY EVENTS SUMMARY (real counts for the sidebar card)
+  ========================================================================== */
+
+  async mySummary(userId: string): Promise<MyEventsSummary> {
+    const user = this.objectId(userId, "user");
+    const now = new Date();
+    const { filter } = await this.visibleFilter(userId);
+    const registrations = this.connection.collection("event_registrations");
+    const activeRegistration = { $in: ["pending_payment", "pending_approval", "confirmed", "waitlisted"] };
+
+    const [upcoming, saved, hosted, past, registered, tickets] = await Promise.all([
+      // Going / Interested / created, still to come (or happening now).
+      this.eventModel.countDocuments(
+        and(activeEventFilter(now), { $or: [{ attendeeIds: user }, { interestedIds: user }, { creatorId: user }] }),
+      ).exec(),
+      this.eventModel.countDocuments(and(filter, activeEventFilter(now), { savedIds: user })).exec(),
+      this.eventModel.countDocuments({ creatorId: user, isArchived: { $ne: true } }).exec(),
+      // Ended events the user went to or hosted.
+      this.eventModel.countDocuments({
+        isCancelled: { $ne: true },
+        endDate: { $lte: now },
+        $or: [{ attendeeIds: user }, { creatorId: user }],
+      }).exec(),
+      registrations.countDocuments({ userId: user, status: activeRegistration, eventEndDate: { $gt: now } }),
+      // Paid admissions held by the user.
+      registrations.countDocuments({ userId: user, status: "confirmed", paymentStatus: "paid" }),
+    ]);
+
+    return { upcoming, registered, tickets, saved, hosted, past };
+  }
+
+  /* ==========================================================================
+     PAST EVENTS
+  ========================================================================== */
+
+  /**
+   * scope "public": ended events anyone may see (newest first).
+   * scope "mine": ended events the viewer went to, registered for or hosted.
+   * Cancelled events are left out; nothing is ever deleted.
+   */
+  async pastEvents(viewerId: string, scope: "public" | "mine", page = 1, limit = 18) {
+    const now = new Date();
+    const { filter } = await this.visibleFilter(viewerId);
+    const conditions: Filter[] = [filter, { isCancelled: { $ne: true }, endDate: { $lte: now } }];
+
+    if (scope === "mine") {
+      const user = this.objectId(viewerId, "user");
+      const registered = await this.connection
+        .collection("event_registrations")
+        .distinct("eventId", { userId: user, status: "confirmed" });
+      conditions.push({ $or: [{ attendeeIds: user }, { creatorId: user }, { _id: { $in: registered } }] });
+    }
+
+    const query = and(...conditions);
+    const [items, total] = await Promise.all([
+      this.eventModel.find(query).sort({ endDate: -1, _id: -1 }).skip((page - 1) * limit).limit(limit).lean<EventLean[]>().exec(),
+      this.eventModel.countDocuments(query).exec(),
+    ]);
+    return {
+      items: await this.serializeMany(items, viewerId, now),
+      page,
+      limit,
+      total,
+      hasMore: page * limit < total,
+      serverTime: now.toISOString(),
+    };
+  }
+
+  /* ==========================================================================
+     INPUT HELPERS
+  ========================================================================== */
+
+  /** Validates a scheduled publication time. Null / empty = publish now. */
+  private publishAtOf(value: string | null | undefined, endDate: Date): Date | null {
+    if (value === undefined || value === null || value === "") return null;
+    const at = new Date(value);
+    if (Number.isNaN(at.getTime())) throw new BadRequestException("Enter a valid publication date and time.");
+    if (at.getTime() <= Date.now()) return null; // already due: publish now
+    if (at.getTime() >= endDate.getTime()) throw new BadRequestException("The event must be published before it ends.");
+    return at;
+  }
+
+  private countryOf(value: string | undefined): string {
+    const code = (value ?? "").trim().toUpperCase();
+    if (!code) return "";
+    if (!COUNTRY_CODE.test(code)) throw new BadRequestException("Choose a valid country.");
+    return code;
+  }
+
+  /* ==========================================================================
      DELETE (permanent, creator only)
   ========================================================================== */
 
@@ -1723,6 +1992,10 @@ export class EventsService {
 
     if (status === EventStatus.ENDED) {
       throw new BadRequestException("This event has already ended.");
+    }
+
+    if (status === EventStatus.POSTPONED) {
+      throw new BadRequestException("This event has been postponed. You can join once it has a new date.");
     }
 
     if (

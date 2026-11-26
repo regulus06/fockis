@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { ArrowRight, CalendarCheck, Check, Crown, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import type { FockisEvent } from "../../types/event.types";
+import { eventsApi, isAbortError } from "../../services/eventsApi";
+import type { FockisEvent, MyEventsSummary } from "../../types/event.types";
 import { eventUrl } from "../../utils/eventMedia";
 import { dateBadgeParts, isEventActive, timeLabel } from "../../utils/eventTime";
 import EventCover from "../EventCover";
@@ -44,8 +46,39 @@ function StatusPill({ event }: { event: FockisEvent }) {
   );
 }
 
+/** Counts come from GET /events/my-summary (computed in MongoDB). */
+const SUMMARY: Array<{ key: keyof MyEventsSummary; label: string; tab: string }> = [
+  { key: "upcoming", label: "Upcoming", tab: "upcoming" },
+  { key: "registered", label: "Registered", tab: "registered" },
+  { key: "tickets", label: "Tickets", tab: "registered" },
+  { key: "saved", label: "Saved", tab: "saved" },
+  { key: "hosted", label: "Hosting", tab: "hosting" },
+  { key: "past", label: "Past", tab: "past" },
+];
+
+function useMySummary(refreshKey: unknown) {
+  const [summary, setSummary] = useState<MyEventsSummary | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    eventsApi
+      .mySummary(controller.signal)
+      .then(setSummary)
+      .catch((caught) => {
+        // No numbers is better than wrong numbers: hide the strip on failure.
+        if (!isAbortError(caught)) setSummary(null);
+      });
+
+    return () => controller.abort();
+  }, [refreshKey]);
+
+  return summary;
+}
+
 export default function YourEventsCard({ events, loading, error, now, limit = 3 }: Props) {
   const upcoming = events.filter((event) => isEventActive(event, now)).slice(0, limit);
+  const summary = useMySummary(events);
 
   return (
     <section className="fkd-card fkd-yours" aria-labelledby="fkd-yours-title">
@@ -56,6 +89,19 @@ export default function YourEventsCard({ events, loading, error, now, limit = 3 
           View All <ArrowRight size={15} aria-hidden="true" />
         </Link>
       </header>
+
+      {summary && (
+        <ul className="fkd-yours__stats" aria-label="Your event counts">
+          {SUMMARY.map((item) => (
+            <li key={item.key}>
+              <Link to={`/events/my-events?tab=${item.tab}`}>
+                <strong>{summary[item.key].toLocaleString()}</strong>
+                <span>{item.label}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {loading && upcoming.length === 0 && (
         <div className="fkd-yours__list" aria-hidden="true">

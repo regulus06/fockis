@@ -12,10 +12,10 @@
 
 .fk-app,
 .fk-social-scope {
-  --fke-navy: #0a1430;
-  --fke-navy-2: #10235a;
-  --fke-gold: #f6b81a;
-  --fke-gold-2: #ffd75e;
+  --fke-navy: #0b1532;
+  --fke-navy-2: #13235a;
+  --fke-gold: #d4af37;
+  --fke-gold-2: #e9c75a;
   --fke-on-navy: #f2f6ff;
   --fke-radius: 20px;
   --fke-radius-sm: 12px;
@@ -495,6 +495,16 @@
 
   &--cancelled {
     background: rgba(225, 29, 72, 0.92);
+  }
+
+  &--postponed {
+    color: var(--fke-navy);
+    background: var(--fke-gold);
+  }
+
+  &--scheduled {
+    background: rgba(11, 21, 50, 0.88);
+    box-shadow: inset 0 0 0 1px var(--fke-gold);
   }
 }
 
@@ -1547,6 +1557,50 @@
     border-color: var(--fks-green-soft);
     background: var(--fks-green-soft);
   }
+
+  &--warning {
+    color: #8a6a0c;
+    border-color: rgba(212, 175, 55, 0.45);
+    background: rgba(212, 175, 55, 0.14);
+  }
+}
+
+/* "This event has ended" panel (the page stays reachable) */
+.fke-ended {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  background: linear-gradient(135deg, rgba(11, 21, 50, 0.04), rgba(212, 175, 55, 0.1));
+
+  > svg {
+    flex: none;
+    color: var(--fke-gold);
+    margin-top: 2px;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: var(--fks-text-2);
+  }
+}
+
+.fke-ended__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.fke-save.is-active {
+  color: #e11d48;
 }
 
 .fke-organizer {
@@ -2062,4 +2116,10 @@
     margin: 0.5em 0;
     border-radius: 12px;
   }
+}
+
+.fke-load-more {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0 8px;
 }

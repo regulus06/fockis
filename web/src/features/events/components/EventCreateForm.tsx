@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Eye, EyeOff, Globe, ImagePlus, LocateFixed, Lock, MapPin, Trash2, Users, Video } from "lucide-react";
+import { CalendarClock, Eye, EyeOff, Globe, ImagePlus, LocateFixed, Lock, MapPin, Trash2, Users, Video } from "lucide-react";
 
 import { EVENT_CATEGORIES } from "../constants/eventCategories";
 import type {
@@ -8,6 +8,7 @@ import type {
   EventVisibility,
   FockisEvent,
 } from "../types/event.types";
+import { countryOptions } from "../utils/countries";
 import { eventMediaUrl } from "../utils/eventMedia";
 import { fromLocalInputValue, toLocalInputValue, viewerTimeZone } from "../utils/eventTime";
 import FeaturedEventCard from "./discover/FeaturedEventCard";
@@ -31,7 +32,17 @@ interface Props {
 }
 
 type Errors = Partial<Record<
-  "title" | "startDate" | "endDate" | "onlineUrl" | "place" | "coordinates" | "capacity" | "media" | "registration" | "form",
+  | "title"
+  | "startDate"
+  | "endDate"
+  | "onlineUrl"
+  | "place"
+  | "coordinates"
+  | "capacity"
+  | "media"
+  | "registration"
+  | "publishAt"
+  | "form",
   string
 >>;
 
@@ -78,6 +89,14 @@ export default function EventCreateForm({
   const [onlineUrl, setOnlineUrl] = useState(initialValues.onlineUrl ?? "");
   const [locationName, setLocationName] = useState(initialValues.locationName ?? "");
   const [address, setAddress] = useState(initialValues.address ?? "");
+  const [country, setCountry] = useState((initialValues.country ?? "").toUpperCase());
+  const [city, setCity] = useState(initialValues.city ?? "");
+  const initialPublishAt =
+    initialValues.publishAt && new Date(initialValues.publishAt).getTime() > Date.now() ? initialValues.publishAt : "";
+  const [scheduled, setScheduled] = useState(Boolean(initialPublishAt));
+  const [publishAt, setPublishAt] = useState(initialLocal(initialPublishAt || undefined));
+  // An already-published event can't go back to "scheduled" (people may have joined).
+  const canSchedule = mode === "create" || Boolean(initialPublishAt);
   const [latitude, setLatitude] = useState(
     typeof initialValues.latitude === "number" ? String(initialValues.latitude) : "",
   );
@@ -197,6 +216,14 @@ export default function EventCreateForm({
       else if (lng !== null && (Number.isNaN(lng) || lng < -180 || lng > 180)) next.coordinates = "Longitude must be between -180 and 180.";
     }
 
+    if (scheduled) {
+      const at = new Date(publishAt).getTime();
+
+      if (!publishAt || Number.isNaN(at)) next.publishAt = "Choose when the event should be published.";
+      else if (at <= Date.now()) next.publishAt = "The publication time is already in the past.";
+      else if (!Number.isNaN(end) && at >= end) next.publishAt = "The event must be published before it ends.";
+    }
+
     if (capacity.trim()) {
       const value = Number(capacity);
 
@@ -226,6 +253,9 @@ export default function EventCreateForm({
       onlineUrl: needsMeetingLink ? onlineUrl.trim() : "",
       locationName: isOnline ? "" : locationName.trim(),
       address: isOnline ? "" : address.trim(),
+      country: isOnline ? "" : country,
+      city: isOnline ? "" : city.trim(),
+      ...(canSchedule ? { publishAt: scheduled && publishAt ? fromLocalInputValue(publishAt) : null } : {}),
       latitude: isOnline ? null : lat,
       longitude: isOnline ? null : lng,
       capacity: capacity.trim() ? Number(capacity) : null,
@@ -301,6 +331,14 @@ export default function EventCreateForm({
     canRsvp: false,
     createdAt: "",
     updatedAt: "",
+    format: isOnline ? "online" : registration.attendanceOptions?.includes("online") ? "hybrid" : "in_person",
+    country: isOnline ? "" : country,
+    city: isOnline ? "" : city,
+    isPostponed: false,
+    postponedAt: null,
+    postponementReason: "",
+    publishAt: null,
+    isSaved: false,
   };
 
   const errorList = Object.values(errors).filter(Boolean);
@@ -445,7 +483,23 @@ export default function EventCreateForm({
                   <span>Address</span>
                   <input maxLength={500} value={address} onChange={(changeEvent) => setAddress(changeEvent.target.value)} placeholder="Street, city" />
                 </label>
+                <label className="fke-field">
+                  <span>Country</span>
+                  <select value={country} onChange={(changeEvent) => setCountry(changeEvent.target.value)}>
+                    <option value="">Choose a country</option>
+                    {countryOptions().map((option) => (
+                      <option key={option.code} value={option.code}>
+                        {option.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="fke-field">
+                  <span>City</span>
+                  <input maxLength={120} value={city} onChange={(changeEvent) => setCity(changeEvent.target.value)} placeholder="City" />
+                </label>
               </div>
+              <small className="fke-muted">Country and city let people find your event with the location filters.</small>
               {errors.place && <small className="fke-error-text">{errors.place}</small>}
 
               <details className="fke-disclosure" open={Boolean(latitude || longitude)}>
@@ -557,6 +611,37 @@ export default function EventCreateForm({
           </label>
         </fieldset>
       </section>
+
+      {canSchedule && (
+        <section className="fke-form__section">
+          <fieldset className="fke-fieldset">
+            <legend>Publishing</legend>
+            <div className="fke-segmented" role="radiogroup" aria-label="When to publish">
+              <button type="button" role="radio" aria-checked={!scheduled} className={!scheduled ? "is-active" : ""} onClick={() => setScheduled(false)}>
+                Publish now
+              </button>
+              <button type="button" role="radio" aria-checked={scheduled} className={scheduled ? "is-active" : ""} onClick={() => setScheduled(true)}>
+                <CalendarClock size={16} aria-hidden="true" /> Schedule publication
+              </button>
+            </div>
+            {scheduled && (
+              <label className="fke-field fke-field--narrow">
+                <span>Publish on</span>
+                <input
+                  type="datetime-local"
+                  value={publishAt}
+                  onChange={(changeEvent) => setPublishAt(changeEvent.target.value)}
+                  aria-invalid={Boolean(errors.publishAt) || undefined}
+                />
+                <small className="fke-muted">
+                  Until then only you and your event managers can see it. It appears in discovery automatically at this time.
+                </small>
+                {errors.publishAt && <small className="fke-error-text">{errors.publishAt}</small>}
+              </label>
+            )}
+          </fieldset>
+        </section>
+      )}
 
       <section className="fke-form__section">
         <RegistrationSettingsForm
